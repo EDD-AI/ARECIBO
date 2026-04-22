@@ -181,66 +181,166 @@ canvas#starfield-bg {
 
 .singularity-wrap {
   position: absolute;
-  top: 50%;
-  right: -15vmin;
-  width: clamp(420px, 62vmin, 760px);
-  aspect-ratio: 1;
-  transform: translateY(-50%);
+  top: 49.5%;
+  right: -18vmin;
+  width: clamp(560px, 78vmin, 980px);
+  aspect-ratio: 1.68;
+  transform: translateY(-50%) rotate(-.5deg);
   pointer-events: none;
   z-index: 4;
   opacity: 1;
+  animation: singularityDrift 12s ease-in-out infinite;
+  filter: saturate(1.12) contrast(1.08);
 }
-.singularity-core,
+.singularity-lens,
 #singularity-waves {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
-.singularity-core {
+.singularity-lens {
+  z-index: 5;
+  isolation: isolate;
+  filter:
+    drop-shadow(0 0 20px rgba(250,90,31,.32))
+    drop-shadow(0 0 62px rgba(247,255,195,.08));
+}
+.singularity-lens::before {
+  content: '';
+  position: absolute;
+  left: 3%;
+  top: 44%;
+  width: 92%;
+  height: 15%;
   border-radius: 50%;
-  border: 1px solid rgba(247,255,195,.28);
   background:
-    radial-gradient(circle at 16% 50%, rgba(247,255,195,.32) 0 1.5%, rgba(250,90,31,.3) 7%, transparent 29%),
-    radial-gradient(circle at 38% 42%, rgba(247,255,195,.18) 0 1px, transparent 2px 100%),
-    radial-gradient(circle at 44% 48%, #020202 0 45%, rgba(0,0,0,.98) 56%, rgba(0,0,0,.52) 66%, transparent 76%),
-    radial-gradient(circle at 41% 48%, rgba(250,90,31,.78) 0 1.4%, rgba(250,90,31,.22) 13%, transparent 32%),
-    radial-gradient(circle at 50% 50%, rgba(247,255,195,.28) 0 45%, rgba(250,90,31,.34) 57%, transparent 72%);
+    linear-gradient(90deg, transparent 0%, rgba(80,9,2,.18) 12%, rgba(190,34,8,.35) 34%, rgba(250,90,31,.76) 55%, rgba(247,255,195,.95) 68%, rgba(250,90,31,.72) 78%, rgba(70,7,0,.32) 91%, transparent 100%),
+    repeating-linear-gradient(0deg, rgba(247,255,195,.2) 0 1px, transparent 1px 5px);
   box-shadow:
-    inset 28px 0 70px rgba(247,255,195,.11),
-    inset -82px 0 130px rgba(0,0,0,.98),
-    0 0 44px rgba(250,90,31,.28),
-    0 0 130px rgba(247,255,195,.14);
-  filter: contrast(1.08);
+    0 0 18px rgba(250,90,31,.55),
+    0 0 48px rgba(250,90,31,.22),
+    inset 0 0 24px rgba(247,255,195,.32);
+  transform: rotate(-.35deg);
+  opacity: .86;
+}
+.singularity-lens::after {
+  content: '';
+  position: absolute;
+  left: 15%;
+  top: 18%;
+  width: 80%;
+  height: 44%;
+  border-radius: 50%;
+  border-top: clamp(18px, 2.8vmin, 30px) solid rgba(250,90,31,.62);
+  border-right: 0;
+  border-left: 0;
+  border-bottom: 0;
+  filter: blur(.55px);
+  transform: rotate(-.4deg) skewX(-5deg);
+  clip-path: polygon(0 8%, 100% 0, 100% 54%, 73% 48%, 51% 42%, 25% 50%, 0 66%);
+  opacity: .76;
+  z-index: 2;
+}
+.singularity-stream {
+  position: absolute;
+  left: 16%;
+  top: -15%;
+  width: 17%;
+  height: 92%;
+  border-radius: 50%;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(250,90,31,.12) 12%, rgba(247,255,195,.9) 48%, rgba(250,90,31,.55) 69%, transparent 100%),
+    repeating-linear-gradient(90deg, rgba(247,255,195,.22) 0 1px, transparent 1px 6px);
+  box-shadow:
+    0 0 26px rgba(247,255,195,.32),
+    0 0 62px rgba(250,90,31,.22);
+  clip-path: polygon(41% 0, 76% 0, 58% 46%, 76% 100%, 29% 100%, 42% 48%);
+  filter: blur(.55px);
+  mix-blend-mode: screen;
+  opacity: .12;
+  transform: rotate(15deg);
+  animation: matterShear 8s ease-in-out infinite;
+  z-index: 1;
+}
+.singularity-arc {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.singularity-arc.back {
+  left: 5%;
+  top: 27%;
+  width: 92%;
+  height: 35%;
+  border-top: 2px solid rgba(247,255,195,.34);
+  border-bottom: 0;
+  box-shadow:
+    0 -8px 26px rgba(250,90,31,.2),
+    inset 0 16px 22px rgba(250,90,31,.1);
+  transform: rotate(-.3deg) skewX(-8deg);
+  clip-path: polygon(0 36%, 52% 4%, 100% 0, 100% 44%, 66% 42%, 33% 55%, 0 70%);
+  opacity: .68;
+  z-index: 2;
+}
+.singularity-arc.front {
+  left: 2%;
+  top: 49%;
+  width: 92%;
+  height: 12%;
+  border-top: 1px solid rgba(247,255,195,.32);
+  border-bottom: 1px solid rgba(250,90,31,.48);
+  box-shadow:
+    0 0 10px rgba(247,255,195,.14),
+    0 8px 18px rgba(250,90,31,.28);
+  transform: rotate(-.25deg);
+  clip-path: polygon(0 38%, 63% 12%, 100% 22%, 100% 100%, 0 100%);
+  opacity: .82;
+  z-index: 5;
+}
+.singularity-core {
+  position: absolute;
+  left: 63%;
+  top: 28%;
+  width: 23%;
+  height: 44%;
+  border-radius: 50%;
+  border: 0;
+  background:
+    radial-gradient(circle at 50% 50%, #000 0 58%, rgba(0,0,0,.98) 69%, rgba(250,90,31,.24) 72%, transparent 78%),
+    radial-gradient(circle at 48% 52%, rgba(0,0,0,1) 0 52%, transparent 72%);
+  box-shadow:
+    inset 0 0 46px rgba(0,0,0,1),
+    inset -18px 0 34px rgba(0,0,0,1),
+    0 0 28px rgba(0,0,0,1),
+    0 0 40px rgba(250,90,31,.15);
+  filter: contrast(1.18);
+  z-index: 8;
 }
 .singularity-core::before {
   content: '';
   position: absolute;
-  inset: 12%;
+  inset: -22%;
   border-radius: 50%;
-  border: 1px solid rgba(247,255,195,.24);
+  border: 1px solid rgba(247,255,195,.06);
   box-shadow:
-    0 0 12px rgba(247,255,195,.08),
-    inset 0 0 42px rgba(0,0,0,.8);
-  transform: rotate(-16deg) scaleX(1.1);
+    0 0 10px rgba(247,255,195,.035),
+    inset 0 0 46px rgba(0,0,0,.86);
+  transform: scaleX(1.28);
 }
 .singularity-core::after {
   content: '';
   position: absolute;
-  left: -2%;
-  top: 45%;
-  width: 84%;
-  height: 16%;
+  inset: 12%;
   border-radius: 50%;
-  border-top: 1px solid rgba(250,90,31,.52);
-  border-bottom: 1px solid rgba(247,255,195,.16);
-  filter: blur(.15px);
-  transform: rotate(-8deg);
-  opacity: .72;
+  background: radial-gradient(circle at 50% 50%, #000 0 58%, rgba(0,0,0,.98) 72%, transparent 100%);
+  box-shadow: 0 0 24px rgba(0,0,0,1);
+  opacity: 1;
 }
 #singularity-waves {
   mix-blend-mode: screen;
-  opacity: .62;
+  opacity: .86;
+  z-index: 3;
 }
 
 /* ===== MENU ===== */
@@ -415,6 +515,17 @@ canvas#starfield-bg {
   50% { transform: perspective(900px) translateZ(0) scale(1.031) rotateX(.24deg) translateY(.35px); }
 }
 
+@keyframes singularityDrift {
+  0%, 100% { transform: translateY(-50%) rotate(-.5deg) translate(0, 0) scale(1); }
+  42% { transform: translateY(-50%) rotate(.15deg) translate(-8px, -4px) scale(1.01); }
+  68% { transform: translateY(-50%) rotate(-.8deg) translate(5px, 3px) scale(.997); }
+}
+
+@keyframes matterShear {
+  0%, 100% { transform: rotate(15deg) translateY(0) scaleY(1); opacity: .5; }
+  50% { transform: rotate(13deg) translateY(9px) scaleY(1.05); opacity: .68; }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -446,7 +557,9 @@ canvas#starfield-bg {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .screen { animation: none; }
+  .screen,
+  .singularity-wrap,
+  .singularity-stream { animation: none; }
   #logo-arecibo:hover .logo-letter,
   #logo-arecibo:hover::before,
   #logo-arecibo:hover::after { animation: none; }
@@ -492,7 +605,12 @@ canvas#starfield-bg {
   </div>
 
   <div class="singularity-wrap" aria-hidden="true">
-    <div class="singularity-core"></div>
+    <div class="singularity-lens">
+      <div class="singularity-stream"></div>
+      <div class="singularity-arc back"></div>
+      <div class="singularity-core"></div>
+      <div class="singularity-arc front"></div>
+    </div>
     <canvas id="singularity-waves"></canvas>
   </div>
 
@@ -553,12 +671,14 @@ canvas#starfield-bg {
   const ctx = canvas.getContext('2d');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let dpr = 1;
-  let size = 0;
+  let width = 0;
+  let height = 0;
 
   function resizeWaves() {
     const rect = wrap.getBoundingClientRect();
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    size = Math.max(1, Math.round(rect.width));
+    width = Math.max(1, Math.round(rect.width));
+    height = Math.max(1, Math.round(rect.height));
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
     canvas.style.width = rect.width + 'px';
@@ -567,33 +687,97 @@ canvas#starfield-bg {
   }
 
   function drawWaves(t) {
-    ctx.clearRect(0, 0, size, size);
-    const cx = size * .5;
-    const cy = size * .5;
-    const base = size * .43;
+    ctx.clearRect(0, 0, width, height);
+    const cx = width * .79 + Math.sin(t * .00034) * width * .004;
+    const cy = height * .5 + Math.cos(t * .00028) * height * .007;
 
-    for (let i = 0; i < 4; i++) {
-      const pulse = ((t * .000055) + i * .24) % 1;
-      const radius = base + pulse * size * .14;
-      const alpha = (1 - pulse) * .13;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+
+    for (let i = 0; i < 28; i++) {
+      const lane = (i - 13.5) / 13.5;
+      const absLane = Math.abs(lane);
+      const wobble = Math.sin(t * .0011 + i * 1.37) * height * .006;
+      const y = cy + lane * height * .06 + wobble;
+      const lift = Math.max(0, -lane) * height * .18;
+      const dip = Math.max(0, lane) * height * .07;
+      const endY = cy + lane * height * .025 - lift * .45 + dip * .18;
+      const bright = i > 10 && i < 19;
+      const alpha = .12 + (1 - absLane) * .32;
 
       ctx.beginPath();
-      ctx.ellipse(cx - size * .045, cy + Math.sin(t * .0007 + i) * size * .006, radius * 1.08, radius * .78, -0.16, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(247,255,195,${alpha})`;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.ellipse(cx - size * .04, cy, radius * .96, radius * .68, -0.16, Math.PI * .05, Math.PI * 1.45);
-      ctx.strokeStyle = `rgba(250,90,31,${alpha * .9})`;
+      ctx.moveTo(width * .015, y + absLane * height * .01);
+      ctx.bezierCurveTo(
+        width * .28,
+        y - lift * .18 + dip * .14,
+        width * .56,
+        cy - lift + lane * height * .035,
+        cx - width * .035,
+        endY
+      );
+      ctx.bezierCurveTo(
+        cx + width * .06,
+        endY + lane * height * .02,
+        width * .98,
+        cy + lane * height * .035,
+        width * 1.05,
+        cy + lane * height * .03
+      );
+      ctx.strokeStyle = bright ? `rgba(247,255,195,${alpha})` : `rgba(250,90,31,${alpha * .85})`;
+      ctx.lineWidth = bright ? 1.5 : .85;
       ctx.stroke();
     }
 
+    for (let i = 0; i < 11; i++) {
+      const lane = i / 10;
+      const ripple = Math.sin(t * .00075 + i) * height * .01;
+      ctx.beginPath();
+      ctx.moveTo(width * (.08 + lane * .015), cy + height * (.015 + lane * .018) + ripple);
+      ctx.bezierCurveTo(
+        width * .36,
+        cy - height * (.02 + lane * .055),
+        width * .58,
+        cy - height * (.19 + lane * .058),
+        width * .93,
+        cy - height * (.18 - lane * .018)
+      );
+      ctx.strokeStyle = i % 3 === 0 ? `rgba(247,255,195,${.1 + lane * .11})` : `rgba(250,90,31,${.12 + lane * .08})`;
+      ctx.lineWidth = i % 3 === 0 ? 1.1 : .75;
+      ctx.stroke();
+    }
+
+    for (let i = 0; i < 9; i++) {
+      const lane = i / 8;
+      const sag = height * (.14 + lane * .075);
+      ctx.beginPath();
+      ctx.moveTo(width * .66, cy + height * (.06 + lane * .018));
+      ctx.bezierCurveTo(
+        width * .73,
+        cy + sag,
+        width * .86,
+        cy + sag * .92,
+        width * .96,
+        cy + height * (.22 + lane * .035)
+      );
+      ctx.strokeStyle = i % 2 === 0 ? `rgba(250,90,31,${.12 + lane * .08})` : `rgba(247,255,195,${.08 + lane * .06})`;
+      ctx.lineWidth = i % 2 === 0 ? 1 : .75;
+      ctx.stroke();
+    }
+
+    const stream = ctx.createLinearGradient(width * .04, cy, width * .82, cy - height * .03);
+    stream.addColorStop(0, 'rgba(250,90,31,0)');
+    stream.addColorStop(.42, 'rgba(250,90,31,.16)');
+    stream.addColorStop(.68, 'rgba(247,255,195,.38)');
+    stream.addColorStop(.83, 'rgba(250,90,31,.14)');
+    stream.addColorStop(1, 'rgba(250,90,31,0)');
     ctx.beginPath();
-    ctx.ellipse(cx - size * .05, cy, size * .36, size * .26, -0.16, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(250,90,31,.18)';
-    ctx.lineWidth = 1.2;
+    ctx.moveTo(width * .02, cy + height * .02);
+    ctx.bezierCurveTo(width * .32, cy - height * .005, width * .58, cy - height * .025, width * .88, cy - height * .01);
+    ctx.lineWidth = height * .062;
+    ctx.strokeStyle = stream;
     ctx.stroke();
+
+    ctx.restore();
 
     if (!reduceMotion.matches) requestAnimationFrame(drawWaves);
   }
