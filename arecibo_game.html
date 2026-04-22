@@ -23,6 +23,10 @@
   --airlock-width:30vh;
   --airlock-height:36.3vh;
   --airlock-radius:clamp(18px, 2.2vh, 28px);
+  --airlock-timer-left:calc(50vw - .16vh);
+  --airlock-timer-top:32.1vh;
+  --airlock-timer-width:10vh;
+  --airlock-timer-height:2.8vh;
 }
 
 @media (min-aspect-ratio: 339/190) {
@@ -32,6 +36,10 @@
     --airlock-width:16.81vw;
     --airlock-height:20.36vw;
     --airlock-radius:clamp(18px, 1.25vw, 28px);
+    --airlock-timer-left:49.91vw;
+    --airlock-timer-top:calc(50vh - 10vw);
+    --airlock-timer-width:5.6vw;
+    --airlock-timer-height:1.55vw;
   }
 }
 
@@ -245,6 +253,25 @@ body::after {
   height:100%;
   display:block;
   filter:blur(.15px);
+}
+
+.airlock-timer {
+  position:absolute;
+  left:var(--airlock-timer-left);
+  top:var(--airlock-timer-top);
+  width:var(--airlock-timer-width);
+  height:var(--airlock-timer-height);
+  transform:translate(-50%, -50%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--orange);
+  font-size:clamp(10px, 1.15vh, 15px);
+  line-height:1;
+  letter-spacing:.08em;
+  text-shadow:0 0 8px rgba(250,90,31,.42);
+  pointer-events:none;
+  z-index:10;
 }
 
 .airlock-shield {
@@ -1129,6 +1156,7 @@ body::after {
     <canvas id="porthole-space"></canvas>
   </div>
   <div class="airlock-shield" aria-hidden="true"></div>
+  <div class="airlock-timer" aria-label="Timer expedition">00:00</div>
   <button class="back-btn" type="button" onclick="goMenu()">&#60; MENU</button>
 
   <section class="personal-window" id="personal-window" aria-label="Package personnel du joueur">
