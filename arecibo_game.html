@@ -1140,24 +1140,186 @@ body::after {
   z-index:10;
 }
 
-.back-btn {
+.corner-tab {
   position:absolute;
-  left:2.4vw;
   bottom:4.8vh;
-  border:1px solid rgba(247,255,195,.22);
-  background:rgba(0,0,0,.16);
-  color:rgba(247,255,195,.55);
-  min-height:36px;
-  padding:0 14px;
+  border:1px solid rgba(247,255,195,.42);
+  background:rgba(0,0,0,.42);
+  color:rgba(247,255,195,.82);
+  min-height:40px;
+  padding:0 16px;
   font-family:'Pixelify Sans', monospace;
-  font-size:11px;
+  font-size:12px;
   letter-spacing:.1em;
   cursor:none;
-  z-index:12;
+  z-index:42;
+  border-radius:3px;
+  box-shadow:
+    0 0 16px rgba(247,255,195,.08),
+    inset 0 0 12px rgba(247,255,195,.035);
+  transition:color .16s ease, border-color .16s ease, background .16s ease, transform .16s ease, box-shadow .16s ease;
 }
-.back-btn:hover {
+.corner-tab:hover {
   color:var(--cream);
-  border-color:rgba(247,255,195,.5);
+  border-color:rgba(247,255,195,.76);
+  background:rgba(0,0,0,.58);
+  transform:translateY(-1px);
+  box-shadow:
+    0 0 20px rgba(247,255,195,.14),
+    inset 0 0 16px rgba(247,255,195,.06);
+}
+.back-btn { left:2.4vw; }
+.settings-tab { left:calc(2.4vw + 98px); }
+
+#settings-overlay {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  z-index:900;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter:blur(2px);
+}
+#settings-overlay.open { display:flex; }
+
+.settings-panel {
+  background:#050505;
+  border:1px solid rgba(247,255,195,.3);
+  width:min(540px, calc(100vw - 48px));
+  font-family:'Pixelify Sans', monospace;
+  opacity:0;
+  transform:scale(.92) translateY(10px);
+  transition:opacity .3s ease, transform .3s ease;
+  cursor:none;
+  border-radius:4px;
+  overflow:hidden;
+  box-shadow:0 0 60px rgba(0,0,0,.78), inset 0 0 40px rgba(247,255,195,.035);
+}
+.settings-panel.visible {
+  opacity:1;
+  transform:scale(1) translateY(0);
+}
+
+.sp-header {
+  display:flex;
+  align-items:center;
+  gap:15px;
+  padding:15px 21px;
+  border-bottom:1px solid rgba(247,255,195,.15);
+}
+.sp-close {
+  width:42px;
+  height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(247,255,195,.05);
+  border:1px solid rgba(247,255,195,.32);
+  color:rgba(247,255,195,.72);
+  font-family:'Pixelify Sans', monospace;
+  font-size:20px;
+  cursor:none;
+  border-radius:4px;
+  transition:all .12s ease;
+}
+.sp-close:hover {
+  color:var(--orange);
+  border-color:var(--orange);
+  background:rgba(255,76,28,.09);
+}
+.sp-title {
+  color:var(--cream);
+  font-size:17px;
+  letter-spacing:.1em;
+}
+.sp-body {
+  padding:22px;
+  display:grid;
+  gap:22px;
+}
+.sp-section-label {
+  color:rgba(255,76,28,.9);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.16em;
+  margin-bottom:11px;
+}
+.sp-slider-row {
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-bottom:12px;
+}
+.sp-slider-label {
+  color:rgba(247,255,195,.74);
+  font-size:14px;
+  width:150px;
+}
+.sp-slider-row input[type="range"] {
+  flex:1;
+  accent-color:var(--orange);
+  cursor:none;
+}
+.sp-val {
+  color:var(--cream);
+  font-size:13px;
+  width:44px;
+  text-align:right;
+}
+.sp-lang-row { display:flex; gap:9px; }
+.lang-btn {
+  background:none;
+  border:1px solid rgba(247,255,195,.3);
+  color:rgba(247,255,195,.6);
+  font-family:'Pixelify Sans', monospace;
+  font-size:14px;
+  letter-spacing:.08em;
+  padding:8px 21px;
+  cursor:none;
+  transition:all .12s;
+  border-radius:4px;
+}
+.lang-btn:hover { border-color:rgba(247,255,195,.6); color:var(--cream); }
+.lang-btn.sel { border-color:var(--orange); color:var(--orange); }
+.sp-toggle-row {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:8px 0;
+  border-bottom:1px solid rgba(247,255,195,.08);
+}
+.sp-toggle-label {
+  color:rgba(247,255,195,.72);
+  font-size:14px;
+}
+.sp-toggle {
+  width:54px;
+  height:24px;
+  border:1px solid rgba(247,255,195,.3);
+  border-radius:3px;
+  position:relative;
+  cursor:none;
+  transition:all .15s ease;
+}
+.sp-toggle::after {
+  content:'';
+  position:absolute;
+  width:16px;
+  height:16px;
+  top:3px;
+  left:4px;
+  background:rgba(247,255,195,.5);
+  transition:left .15s ease, background .15s ease;
+}
+.sp-toggle.on {
+  border-color:var(--orange);
+  background:rgba(255,76,28,.08);
+}
+.sp-toggle.on::after {
+  left:32px;
+  background:var(--orange);
 }
 
 .page-transition {
@@ -1199,7 +1361,13 @@ body::after {
     bottom:7vh;
     width:min(86vw, 330px);
   }
-  .back-btn { left:5vw; bottom:5vh; top:auto; }
+  .corner-tab { bottom:5vh; top:auto; }
+  .back-btn { left:5vw; }
+  .settings-tab { left:calc(5vw + 98px); }
+  .settings-panel { width:calc(100vw - 28px); }
+  .sp-slider-row { align-items:stretch; flex-wrap:wrap; }
+  .sp-slider-label { width:100%; }
+  .sp-slider-row input[type="range"] { min-width:0; }
   .bridge-meta { display:none; }
 }
 </style>
@@ -1220,7 +1388,8 @@ body::after {
   </div>
   <div class="airlock-shield" aria-hidden="true"></div>
   <div class="airlock-timer" aria-label="Timer expedition">00:00</div>
-  <button class="back-btn" type="button" onclick="goMenu()">&#60; MENU</button>
+  <button class="corner-tab back-btn" type="button" onclick="goMenu()">&#60; MENU</button>
+  <button class="corner-tab settings-tab" type="button" onclick="openSettings(event)">&#60; SETTINGS</button>
 
   <section class="personal-window" id="personal-window" aria-label="Package personnel du joueur">
     <div class="message-indicator" aria-label="2 messages personnels">
@@ -1341,6 +1510,54 @@ body::after {
 
   <div class="bridge-meta">MOTOMOTO // SAS EXPEDITION // SALVAGE PROTOCOL</div>
 </main>
+
+<div id="settings-overlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-panel">
+    <div class="sp-header">
+      <button class="sp-close" onclick="closeSettings()">x</button>
+      <span class="sp-title">MENU // SETTINGS //</span>
+    </div>
+    <div class="sp-body">
+      <div>
+        <div class="sp-section-label">Son</div>
+        <div class="sp-slider-row">
+          <span class="sp-slider-label">Volume général</span>
+          <input type="range" min="0" max="100" value="80" oninput="updateSlider(this,'sv1')">
+          <span class="sp-val" id="sv1">80%</span>
+        </div>
+        <div class="sp-slider-row">
+          <span class="sp-slider-label">Musique</span>
+          <input type="range" min="0" max="100" value="60" oninput="updateSlider(this,'sv2')">
+          <span class="sp-val" id="sv2">60%</span>
+        </div>
+        <div class="sp-slider-row">
+          <span class="sp-slider-label">Effets sonores</span>
+          <input type="range" min="0" max="100" value="60" oninput="updateSlider(this,'sv3')">
+          <span class="sp-val" id="sv3">60%</span>
+        </div>
+      </div>
+      <div>
+        <div class="sp-section-label">Langues</div>
+        <div class="sp-lang-row">
+          <button class="lang-btn sel" onclick="selectLang(this)">FR</button>
+          <button class="lang-btn" onclick="selectLang(this)">EN</button>
+          <button class="lang-btn" onclick="selectLang(this)">SP</button>
+        </div>
+      </div>
+      <div>
+        <div class="sp-section-label">Données</div>
+        <div class="sp-toggle-row">
+          <span class="sp-toggle-label">sauvegarde automatique</span>
+          <div class="sp-toggle on" onclick="toggleSwitch(this)"></div>
+        </div>
+        <div class="sp-toggle-row">
+          <span class="sp-toggle-label">Données de session</span>
+          <div class="sp-toggle on" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 const cursor = document.getElementById('cursor');
@@ -2099,6 +2316,44 @@ function goMenu() {
   transition.classList.remove('out');
   setTimeout(() => window.location.href = 'arecibo_menu.html?v=bridge-main', 520);
 }
+
+function openSettings(event) {
+  if (event) event.preventDefault();
+  const overlay = document.getElementById('settings-overlay');
+  if (!overlay) return;
+  overlay.classList.add('open');
+  setTimeout(() => overlay.querySelector('.settings-panel').classList.add('visible'), 10);
+}
+
+function closeSettings() {
+  const overlay = document.getElementById('settings-overlay');
+  if (!overlay) return;
+  const panel = overlay.querySelector('.settings-panel');
+  if (panel) panel.classList.remove('visible');
+  setTimeout(() => overlay.classList.remove('open'), 320);
+}
+
+function updateSlider(el, valId) {
+  const valueNode = document.getElementById(valId);
+  if (valueNode) valueNode.textContent = el.value + '%';
+}
+
+function selectLang(btn) {
+  const row = btn.closest('.sp-lang-row');
+  const buttons = row ? row.querySelectorAll('.lang-btn') : document.querySelectorAll('.lang-btn');
+  buttons.forEach(button => button.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+function toggleSwitch(el) {
+  el.classList.toggle('on');
+}
+
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Escape') return;
+  const overlay = document.getElementById('settings-overlay');
+  if (overlay && overlay.classList.contains('open')) closeSettings();
+});
 
 updateReadyState();
 updateDistance();
