@@ -177,7 +177,9 @@ body::after {
   width:min(42vw, 520px);
   min-width:440px;
   border:1px solid var(--line);
-  background:rgba(0,0,0,.08);
+  background:
+    linear-gradient(rgba(0,0,0,.18), rgba(0,0,0,.18)),
+    rgba(0,0,0,.12);
   color:var(--cream);
   text-shadow:0 0 8px rgba(247,255,195,.16);
   z-index:10;
@@ -191,7 +193,9 @@ body::after {
 .ship-window:hover {
   transform:translate3d(3px, -2px, 0) rotate(.12deg);
   border-color:rgba(247,255,195,.82);
-  background:rgba(0,0,0,.12);
+  background:
+    linear-gradient(rgba(0,0,0,.23), rgba(0,0,0,.23)),
+    rgba(0,0,0,.16);
   box-shadow:
     0 0 16px rgba(247,255,195,.09),
     inset 0 0 24px rgba(247,255,195,.025);
