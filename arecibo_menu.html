@@ -186,14 +186,13 @@ canvas#starfield-bg {
 .singularity-wrap {
   position: absolute;
   top: 50%;
-  right: -2vmin;
-  width: clamp(320px, 42vmin, 520px);
+  right: -18vmin;
+  width: clamp(520px, 74vmin, 920px);
   aspect-ratio: 1;
   transform: translateY(-50%);
   pointer-events: none;
   z-index: 4;
   opacity: 1;
-  animation: singularityDrift 12s ease-in-out infinite;
   filter: contrast(1.08);
 }
 .singularity-lens,
@@ -219,10 +218,13 @@ canvas#starfield-bg {
     radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 0 44%, rgba(0,0,0,.72) 68%, transparent 84%);
   box-shadow:
     inset 0 0 70px rgba(0,0,0,.95),
-    0 0 74px rgba(250,90,31,.18),
+    0 0 92px rgba(250,90,31,.24),
+    0 0 150px rgba(250,90,31,.1),
     0 0 96px rgba(0,0,0,.84);
   filter: blur(5px);
-  opacity: .78;
+  opacity: .82;
+  transform-origin: 50% 50%;
+  animation: singularityGlowPulse 7s ease-in-out infinite;
 }
 .singularity-lens::after {
   content: '';
@@ -235,10 +237,11 @@ canvas#starfield-bg {
   border-left: 1px solid rgba(247,255,195,.05);
   box-shadow:
     inset 0 0 42px rgba(0,0,0,1),
-    0 0 28px rgba(250,90,31,.12),
+    0 0 36px rgba(250,90,31,.17),
     0 0 42px rgba(0,0,0,.9);
-  opacity: .72;
+  opacity: .76;
   z-index: 2;
+  animation: singularityRimIrradiate 5.5s ease-in-out infinite;
 }
 .singularity-stream {
   display: none;
@@ -293,7 +296,7 @@ canvas#starfield-bg {
 }
 #singularity-waves {
   mix-blend-mode: normal;
-  opacity: .68;
+  opacity: .86;
   z-index: 3;
 }
 
@@ -513,10 +516,42 @@ canvas#starfield-bg {
   50% { transform: perspective(900px) translateZ(0) scale(1.031) rotateX(.24deg) translateY(.35px); }
 }
 
-@keyframes singularityDrift {
-  0%, 100% { transform: translateY(-50%) rotate(-.5deg) translate(0, 0) scale(1); }
-  42% { transform: translateY(-50%) rotate(.15deg) translate(-8px, -4px) scale(1.01); }
-  68% { transform: translateY(-50%) rotate(-.8deg) translate(5px, 3px) scale(.997); }
+@keyframes singularityGlowPulse {
+  0%, 100% {
+    opacity: .72;
+    transform: scale(.985) rotate(-.4deg);
+    filter: blur(5px) brightness(.96) saturate(1);
+  }
+  38% {
+    opacity: .94;
+    transform: scale(1.025) rotate(.35deg);
+    filter: blur(6.5px) brightness(1.16) saturate(1.25);
+  }
+  67% {
+    opacity: .8;
+    transform: scale(1.005) rotate(-.15deg);
+    filter: blur(4.8px) brightness(1.04) saturate(1.12);
+  }
+}
+
+@keyframes singularityRimIrradiate {
+  0%, 100% {
+    opacity: .58;
+    transform: scale(.995);
+    box-shadow:
+      inset 0 0 42px rgba(0,0,0,1),
+      0 0 26px rgba(250,90,31,.1),
+      0 0 42px rgba(0,0,0,.9);
+  }
+  48% {
+    opacity: .86;
+    transform: scale(1.018);
+    box-shadow:
+      inset 0 0 46px rgba(0,0,0,1),
+      0 0 54px rgba(250,90,31,.24),
+      0 0 78px rgba(250,90,31,.08),
+      0 0 42px rgba(0,0,0,.9);
+  }
 }
 
 @keyframes matterShear {
@@ -556,8 +591,8 @@ canvas#starfield-bg {
 
 @media (prefers-reduced-motion: reduce) {
   .screen,
-  .singularity-wrap,
-  .singularity-stream { animation: none; }
+  .singularity-lens::before,
+  .singularity-lens::after { animation: none; }
   #logo-arecibo:hover .logo-letter,
   #logo-arecibo:hover::before,
   #logo-arecibo:hover::after { animation: none; }
@@ -695,20 +730,31 @@ canvas#starfield-bg {
 
   function drawWaves(t) {
     ctx.clearRect(0, 0, width, height);
-    const cx = width * .5 + Math.sin(t * .00034) * width * .012;
-    const cy = height * .5 + Math.cos(t * .00028) * height * .012;
+    const cx = width * .5;
+    const cy = height * .5;
 
     ctx.save();
     ctx.globalCompositeOperation = 'source-over';
 
+    const auraPulse = .5 + .5 * Math.sin(t * .0011);
+    const aura = ctx.createRadialGradient(cx, cy, width * (.26 + auraPulse * .01), cx, cy, width * (.55 + auraPulse * .04));
+    aura.addColorStop(0, 'rgba(0,0,0,0)');
+    aura.addColorStop(.42, `rgba(250,90,31,${(.11 + auraPulse * .06).toFixed(3)})`);
+    aura.addColorStop(.68, `rgba(250,168,70,${(.04 + auraPulse * .04).toFixed(3)})`);
+    aura.addColorStop(1, 'rgba(250,90,31,0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(cx, cy, width * .62, 0, Math.PI * 2);
+    ctx.fill();
+
     for (let i = 0; i < 5; i++) {
       const pulse = ((t * .000045) + i * .2) % 1;
       const radius = width * (.28 + pulse * .23);
-      const alpha = (1 - pulse) * .12;
+      const alpha = (1 - pulse) * .18;
 
       ctx.beginPath();
       ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(250,90,31,${alpha * .42})`;
+      ctx.strokeStyle = `rgba(250,90,31,${alpha * .58})`;
       ctx.lineWidth = 1;
       ctx.stroke();
     }
@@ -893,6 +939,8 @@ function toggleSwitch(el) {
 (function() {
   const canvas = document.getElementById('particles-canvas');
   const ctx = canvas.getContext('2d');
+  const singularity = document.querySelector('.singularity-wrap');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   function resize() {
     canvas.width = window.innerWidth;
@@ -901,31 +949,99 @@ function toggleSwitch(el) {
   resize();
   window.addEventListener('resize', resize);
 
-  const COUNT = 22;
-  const particles = Array.from({ length: COUNT }, (_, i) => ({
-    x: Math.random() * window.innerWidth,
-    y: Math.random() * window.innerHeight,
-    size: i < 4 ? 3 : i < 12 ? 2 : 1,
-    vx: (Math.random() - 0.5) * 0.22,
-    vy: (Math.random() - 0.5) * 0.18,
-    opacity: 0.35 + Math.random() * 0.55,
-    twinkle: Math.random() * Math.PI * 2,
-    twinkleSpeed: 0.003 + Math.random() * 0.007,
-  }));
+  const COUNT = 54;
+  const particles = Array.from({ length: COUNT }, (_, i) => createParticle(i / COUNT));
+
+  function getGravityWell() {
+    if (!singularity) {
+      return {
+        x: canvas.width * .84,
+        y: canvas.height * .5,
+        radius: Math.min(canvas.width, canvas.height) * .22
+      };
+    }
+
+    const rect = singularity.getBoundingClientRect();
+    return {
+      x: rect.left + rect.width * .5,
+      y: rect.top + rect.height * .5,
+      radius: rect.width * .28
+    };
+  }
+
+  function createParticle(offset = 0) {
+    const side = Math.random();
+    const fromLeft = side < .58;
+    const fromTop = side >= .58 && side < .79;
+    const x = fromLeft ? -30 - Math.random() * canvas.width * .18 : Math.random() * canvas.width * .72;
+    const y = fromTop ? -30 : side >= .79 ? canvas.height + 30 : Math.random() * canvas.height;
+
+    return {
+      x,
+      y,
+      prevX: x,
+      prevY: y,
+      size: Math.random() > .86 ? 2.4 : Math.random() > .48 ? 1.7 : 1.1,
+      speed: .012 + Math.random() * .018,
+      swirl: (Math.random() - .5) * .028,
+      opacity: .34 + Math.random() * .42,
+      heat: Math.random(),
+      life: offset,
+      seed: Math.random() * Math.PI * 2
+    };
+  }
+
+  function resetParticle(p) {
+    Object.assign(p, createParticle());
+  }
 
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const well = getGravityWell();
+
     particles.forEach(p => {
-      p.twinkle += p.twinkleSpeed;
-      const alpha = p.opacity * (0.5 + 0.5 * Math.sin(p.twinkle));
-      ctx.fillStyle = `rgba(247,255,195,${alpha.toFixed(3)})`;
-      ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
-      p.x += p.vx;
-      p.y += p.vy;
-      if (p.x < -5) { p.x = canvas.width + 5; }
-      if (p.x > canvas.width + 5) { p.x = -5; }
-      if (p.y < -5) { p.y = canvas.height + 5; }
-      if (p.y > canvas.height + 5) { p.y = -5; }
+      p.prevX = p.x;
+      p.prevY = p.y;
+      p.life += p.speed;
+
+      const dx = well.x - p.x;
+      const dy = well.y - p.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      const pull = Math.min(1, well.radius * 2.8 / dist);
+      const nx = dx / dist;
+      const ny = dy / dist;
+      const tangentX = -ny;
+      const tangentY = nx;
+      const falloff = pull * pull;
+      const accel = reduceMotion.matches ? .55 : .95 + falloff * 5.2;
+      const spiral = p.swirl * (1 + falloff * 38) * (dist / Math.max(well.radius, 1));
+
+      p.x += nx * accel + tangentX * spiral + Math.sin(p.life * 18 + p.seed) * .16;
+      p.y += ny * accel + tangentY * spiral + Math.cos(p.life * 14 + p.seed) * .12;
+
+      const swallowed = dist < well.radius * .56;
+      const edgeFade = Math.max(0, Math.min(1, (dist - well.radius * .48) / (well.radius * 1.6)));
+      const glow = 1 - edgeFade;
+      const alpha = p.opacity * (.35 + glow * .72);
+      const heat = p.heat + glow * .65;
+      const color = heat > .9 ? '247,255,195' : heat > .45 ? '250,168,70' : '250,90,31';
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = `rgba(${color},${(alpha * .42).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1, p.size * (1 + glow * .8));
+      ctx.beginPath();
+      ctx.moveTo(p.prevX, p.prevY);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+
+      ctx.fillStyle = `rgba(${color},${alpha.toFixed(3)})`;
+      ctx.fillRect(Math.round(p.x), Math.round(p.y), Math.max(1, Math.round(p.size)), Math.max(1, Math.round(p.size)));
+      ctx.restore();
+
+      if (swallowed || p.x > canvas.width + 120 || p.y < -120 || p.y > canvas.height + 120 || p.life > 12.5) {
+        resetParticle(p);
+      }
     });
     requestAnimationFrame(draw);
   }
