@@ -64,12 +64,7 @@ body::before {
 }
 body::after { display: none; }
 
-.crt-filter-defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
+
 
 .cursor {
   position: fixed;
@@ -92,11 +87,6 @@ body::after { display: none; }
   position: relative;
   width: 100vw; height: 100vh;
   overflow: hidden;
-  border-radius: clamp(18px, 3.8vw, 72px);
-  filter: url(#crt-barrel-warp) contrast(1.06) saturate(.94);
-  transform: perspective(900px) translateZ(0) scale(1.026);
-  transform-origin: center;
-  animation: crtBreath 9s ease-in-out infinite;
 }
 
 /* Fond etoile genere en JS */
@@ -384,10 +374,7 @@ canvas#starfield-bg {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes crtBreath {
-  0%, 100% { transform: perspective(900px) translateZ(0) scale(1.026) rotateX(.16deg); }
-  50% { transform: perspective(900px) translateZ(0) scale(1.031) rotateX(.24deg) translateY(.35px); }
-}
+
 
 @keyframes logoSignalBreak {
   0% { transform: translate(0,0) skewX(0deg) scaleY(1); opacity: 1; }
@@ -430,12 +417,6 @@ canvas#starfield-bg {
 </style>
 </head>
 <body>
-<svg class="crt-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
-  <filter id="crt-barrel-warp" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
-    <feTurbulence type="fractalNoise" baseFrequency=".006 .009" numOctaves="1" seed="14" result="tubeNoise"/>
-    <feDisplacementMap in="SourceGraphic" in2="tubeNoise" scale="3.8" xChannelSelector="R" yChannelSelector="G"/>
-  </filter>
-</svg>
 <div class="cursor" id="cursor"></div>
 <div class="page-transition" id="transition"></div>
 
