@@ -175,12 +175,15 @@ body::before {
   position:absolute;
   left:var(--x);
   top:var(--y);
-  width:clamp(6px, .5vw, 10px);
+  width:clamp(8px, .68vw, 14px);
   aspect-ratio:1;
   border-radius:50%;
   transform:translate(-50%, -50%);
-  background:radial-gradient(circle, rgba(247,255,195,.98) 0 28%, rgba(247,255,195,.42) 58%, transparent 82%);
-  box-shadow:0 0 8px rgba(247,255,195,.52), 0 0 18px rgba(247,255,195,.16);
+  background:radial-gradient(circle, rgba(247,255,195,1) 0 24%, rgba(247,255,195,.74) 50%, rgba(250,224,141,.3) 72%, transparent 88%);
+  box-shadow:
+    0 0 10px rgba(247,255,195,.82),
+    0 0 24px rgba(247,255,195,.34),
+    0 0 38px rgba(250,224,141,.12);
   opacity:0;
   animation:panelLightBlink var(--dur, 3.2s) ease-in-out infinite;
   animation-delay:var(--delay, 0s);
@@ -199,11 +202,21 @@ body::before {
   animation-delay:var(--delay, 0s);
 }
 
+.dust-canvas {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:2;
+  opacity:.42;
+}
+
 .hull-fly {
   position:absolute;
   left:0;
   top:0;
-  width:clamp(14px, 1.15vw, 23px);
+  width:clamp(26px, 1.85vw, 42px);
   height:auto;
   z-index:4;
   pointer-events:none;
@@ -214,7 +227,7 @@ body::before {
     drop-shadow(0 1px 1px rgba(0,0,0,.9))
     sepia(.18)
     saturate(.65)
-    brightness(.62)
+    brightness(.7)
     contrast(1.18);
   transition:
     left var(--fly-duration, 4200ms) cubic-bezier(.18,.48,.38,1),
@@ -224,15 +237,15 @@ body::before {
 }
 
 .hull-fly.visible {
-  opacity:.72;
+  opacity:.86;
 }
 
 .hull-fly.resting {
   transition:
-    left .48s steps(2,end),
-    top .48s steps(2,end),
+    left .78s steps(2,end),
+    top .78s steps(2,end),
     opacity .18s ease,
-    transform .48s steps(2,end);
+    transform .78s steps(2,end);
 }
 
 .screen-area {
@@ -322,19 +335,24 @@ body::before {
 
 @keyframes panelLightBlink {
   0%, 100% {
-    opacity:0;
+    opacity:.04;
     filter:brightness(1);
     transform:translate(-50%, -50%) scale(1);
   }
-  42% {
-    opacity:.94;
+  22% {
+    opacity:.28;
     filter:brightness(1.45);
-    transform:translate(-50%, -50%) scale(1.08);
+    transform:translate(-50%, -50%) scale(1.04);
+  }
+  42% {
+    opacity:1;
+    filter:brightness(2.55);
+    transform:translate(-50%, -50%) scale(1.18);
   }
   58% {
-    opacity:.24;
-    filter:brightness(1.1);
-    transform:translate(-50%, -50%) scale(1.02);
+    opacity:.42;
+    filter:brightness(1.38);
+    transform:translate(-50%, -50%) scale(1.06);
   }
 }
 
@@ -384,7 +402,8 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .panel-light,
   .panel-light::after { animation:none; }
-  .hull-fly { display:none; }
+  .hull-fly,
+  .dust-canvas { display:none; }
 }
 </style>
 <link rel="stylesheet" href="assets/terminal-filter.css?v=global-terminal-filter-amber">
@@ -393,6 +412,7 @@ body::before {
 
 <div class="intro-shell">
   <div class="panel-lights" id="panel-lights" aria-hidden="true"></div>
+  <canvas class="dust-canvas" id="dust-canvas" aria-hidden="true"></canvas>
   <img class="hull-fly" id="hull-fly" src="assets/mouche.svg" alt="" aria-hidden="true">
   <div class="screen-area">
     <div class="scene">
@@ -450,8 +470,8 @@ function buildPanelLights() {
     light.className = 'panel-light';
     light.style.setProperty('--x', `${x}%`);
     light.style.setProperty('--y', `${y}%`);
-    light.style.setProperty('--delay', `${-((index * .37) % 3.4).toFixed(2)}s`);
-    light.style.setProperty('--dur', `${(2.6 + (index % 5) * .34).toFixed(2)}s`);
+    light.style.setProperty('--delay', `${-((index * .29) % 2.7).toFixed(2)}s`);
+    light.style.setProperty('--dur', `${(1.8 + (index % 5) * .24).toFixed(2)}s`);
     fragment.appendChild(light);
   });
 
@@ -464,26 +484,14 @@ function startHullFly() {
   const fly = document.getElementById('hull-fly');
   if (!fly || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  const paths = [
-    { from:[-4, 8.6], to:[104, 8.2], rot:[82, 98], dur:[5200, 7400] },
-    { from:[104, 12.8], to:[84, 12.2], rot:[250, 278], dur:[1800, 3200] },
-    { from:[7.4, 14.5], to:[7.1, 86.8], rot:[168, 190], dur:[5200, 7600] },
-    { from:[96.8, 15.5], to:[96.2, 83.6], rot:[-12, 10], dur:[5200, 7600] },
-    { from:[12.4, 94.8], to:[72.6, 95.2], rot:[78, 100], dur:[4700, 6900] },
-    { from:[88.6, 95.1], to:[101.5, 95.6], rot:[78, 96], dur:[1700, 2800] },
-    { from:[18.2, 5.1], to:[50.5, 5.3], rot:[82, 100], dur:[3100, 4700] },
-    { from:[56.2, 5.2], to:[80.7, 5.4], rot:[82, 100], dur:[2600, 4300] }
+  const walkZones = [
+    { x:[4.6, 8.8], y:[14.8, 84.6], rotDown:[168, 194], rotUp:[-2, 24] },
+    { x:[91.2, 96.4], y:[15.6, 83.2], rotDown:[-14, 12], rotUp:[180, 206] }
   ];
 
-  const perches = [
-    [5.2, 38.5, -18],
-    [11.8, 58.1, 28],
-    [87.3, 45.8, -32],
-    [94.8, 60.3, 16],
-    [22.5, 93.8, 82],
-    [74.8, 93.9, 96],
-    [17.2, 5.5, 88],
-    [82.6, 5.4, 92]
+  const edgeCrawls = [
+    { x:[16.5, 84.5], y:[4.8, 7.3], rot:[78, 104] },
+    { x:[15.2, 84.8], y:[92.6, 95.6], rot:[78, 102] }
   ];
 
   function randomBetween(min, max) {
@@ -498,61 +506,147 @@ function startHullFly() {
 
   function schedule(delayTime) {
     setTimeout(() => {
-      if (Math.random() < .72) runCrossing();
-      else runPerch();
+      if (Math.random() < .82) runSideWalk();
+      else runEdgeCrawl();
     }, delayTime);
   }
 
-  function runCrossing() {
-    const path = paths[Math.floor(Math.random() * paths.length)];
-    const duration = Math.round(randomBetween(path.dur[0], path.dur[1]));
-    const startRot = randomBetween(path.rot[0], path.rot[1]);
-    const endRot = startRot + randomBetween(-18, 18);
-    const scale = randomBetween(.72, 1.08);
+  function walkStep(zone, direction, remaining) {
+    const yStep = randomBetween(2.4, 4.8) * direction;
+    const currentY = parseFloat(fly.dataset.y || `${randomBetween(zone.y[0], zone.y[1])}`);
+    let nextY = currentY + yStep;
 
-    fly.classList.remove('resting', 'visible');
-    fly.style.setProperty('--fly-duration', `${duration}ms`);
-    place(path.from, startRot, scale);
+    if (nextY < zone.y[0] || nextY > zone.y[1]) {
+      direction *= -1;
+      nextY = currentY + Math.abs(yStep) * direction;
+    }
 
-    requestAnimationFrame(() => {
-      fly.classList.add('visible');
-      requestAnimationFrame(() => place(path.to, endRot, scale));
-    });
+    const nextX = randomBetween(zone.x[0], zone.x[1]);
+    const rotRange = direction > 0 ? zone.rotDown : zone.rotUp;
+    fly.dataset.y = String(nextY);
+    place([nextX, nextY], randomBetween(rotRange[0], rotRange[1]), randomBetween(1.02, 1.24));
 
-    setTimeout(() => {
-      fly.classList.remove('visible');
-      schedule(randomBetween(1800, 5200));
-    }, duration + 120);
+    if (remaining > 0) {
+      setTimeout(() => walkStep(zone, direction, remaining - 1), randomBetween(650, 1150));
+    } else {
+      setTimeout(() => {
+        fly.classList.remove('visible');
+        schedule(randomBetween(2400, 6200));
+      }, randomBetween(500, 1100));
+    }
   }
 
-  function runPerch() {
-    const perch = perches[Math.floor(Math.random() * perches.length)];
-    let hops = 0;
+  function runSideWalk() {
+    const zone = walkZones[Math.floor(Math.random() * walkZones.length)];
+    const direction = Math.random() > .5 ? 1 : -1;
+    const startY = direction > 0 ? randomBetween(zone.y[0], zone.y[0] + 18) : randomBetween(zone.y[1] - 18, zone.y[1]);
+    const startX = randomBetween(zone.x[0], zone.x[1]);
+    const rotRange = direction > 0 ? zone.rotDown : zone.rotUp;
+
+    fly.classList.add('resting', 'visible');
+    fly.dataset.y = String(startY);
+    place([startX, startY], randomBetween(rotRange[0], rotRange[1]), randomBetween(1.05, 1.28));
+    setTimeout(() => walkStep(zone, direction, 9 + Math.floor(Math.random() * 8)), randomBetween(600, 1200));
+  }
+
+  function runEdgeCrawl() {
+    const edge = edgeCrawls[Math.floor(Math.random() * edgeCrawls.length)];
+    let direction = Math.random() > .5 ? 1 : -1;
+    let x = direction > 0 ? randomBetween(edge.x[0], edge.x[0] + 12) : randomBetween(edge.x[1] - 12, edge.x[1]);
+    const y = randomBetween(edge.y[0], edge.y[1]);
+    let steps = 5 + Math.floor(Math.random() * 6);
+
     fly.classList.add('resting', 'visible');
 
-    function hop() {
-      hops++;
+    function step() {
+      x += randomBetween(2.8, 5.2) * direction;
+      if (x < edge.x[0] || x > edge.x[1]) direction *= -1;
       const point = [
-        perch[0] + randomBetween(-.7, .7),
-        perch[1] + randomBetween(-.45, .45)
+        Math.max(edge.x[0], Math.min(edge.x[1], x)),
+        y + randomBetween(-.45, .45)
       ];
-      place(point, perch[2] + randomBetween(-18, 18), randomBetween(.72, .98));
+      const rotation = randomBetween(edge.rot[0], edge.rot[1]) + (direction < 0 ? 180 : 0);
+      place(point, rotation, randomBetween(1, 1.2));
 
-      if (hops < 3 + Math.floor(Math.random() * 4)) {
-        setTimeout(hop, randomBetween(280, 720));
+      if (steps-- > 0) {
+        setTimeout(step, randomBetween(720, 1260));
       } else {
         fly.classList.remove('visible');
-        schedule(randomBetween(1600, 4200));
+        schedule(randomBetween(2600, 6800));
       }
     }
 
-    hop();
+    step();
   }
 
   schedule(1200 + Math.random() * 2400);
 }
 
 startHullFly();
+
+function startDustFall() {
+  const canvas = document.getElementById('dust-canvas');
+  if (!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+  const COUNT = 34;
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
+
+  function resizeDust() {
+    const rect = canvas.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = Math.max(1, Math.round(rect.width));
+    height = Math.max(1, Math.round(rect.height));
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function resetDust(p, fromTop = true) {
+    p.x = Math.random() * width;
+    p.y = fromTop ? -Math.random() * height : Math.random() * height;
+    p.size = Math.random() > .72 ? 2 : 1;
+    p.speed = .12 + Math.random() * .28;
+    p.drift = (Math.random() - .5) * .08;
+    p.alpha = .08 + Math.random() * .14;
+    p.phase = Math.random() * Math.PI * 2;
+  }
+
+  function isOnReadableScreen(p) {
+    return p.x > width * .234 && p.x < width * .766 && p.y > height * .194 && p.y < height * .806;
+  }
+
+  function drawDust() {
+    ctx.clearRect(0, 0, width, height);
+    particles.forEach(p => {
+      p.phase += .018;
+      p.x += p.drift + Math.sin(p.phase) * .035;
+      p.y += p.speed;
+
+      if (p.y > height + 8 || p.x < -8 || p.x > width + 8) resetDust(p);
+
+      if (!isOnReadableScreen(p)) {
+        ctx.fillStyle = `rgba(247,255,195,${p.alpha.toFixed(3)})`;
+        ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+      }
+    });
+    requestAnimationFrame(drawDust);
+  }
+
+  resizeDust();
+  window.addEventListener('resize', resizeDust);
+  for (let i = 0; i < COUNT; i++) {
+    const p = {};
+    resetDust(p, false);
+    particles.push(p);
+  }
+  drawDust();
+}
+
+startDustFall();
 
 // Le texte complet — paragraphes séparés par double \n
 const STORY = [
