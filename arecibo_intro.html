@@ -252,8 +252,8 @@ body::before {
 
 /* Ligne de texte principale — grand et lisible */
 #story-text {
-  font-size:clamp(18px, 1.58vw, 30px);
-  line-height:1.62;
+  font-size:clamp(20px, 1.72vw, 32px);
+  line-height:1.42;
   letter-spacing:.03em;
   color:#F7FFC3;
   min-height:8em;
@@ -264,7 +264,7 @@ body::before {
 /* Le prompt >_ */
 .prompt {
   color:#FA5A1F;
-  font-size:clamp(18px, 1.58vw, 30px);
+  font-size:clamp(20px, 1.72vw, 32px);
   letter-spacing:.03em;
   margin-bottom:1em;
   opacity:0;
@@ -423,27 +423,17 @@ buildPanelLights();
 
 // Le texte complet — paragraphes séparés par double \n
 const STORY = [
-  `En 1974, des humains ont pointé une antenne vers les étoiles et envoyé un message dans l'obscurité.`,
+  `En 1974, des humains ont pointé une antenne vers les étoiles et envoyé un message dans l'obscurité.\n\n1679 bits. Une carte de l'humanité. Une bouteille jetée dans l'infini.`,
 
-  `1679 bits. Une carte de l'humanité. Une bouteille jetée dans l'infini.`,
+  `Ce qu'ils ne savaient pas, c'est qu'un trou noir se trouvait sur la trajectoire du signal.\n\nLe message d'Arecibo a été aspiré. Enfermé dans la singularité.\n\nUn trou noir ne détruit pas. Il retient.`,
 
-  `Ce qu'ils ne savaient pas, c'est qu'un trou noir se trouvait sur la trajectoire du signal.\n\nLe message d'Arecibo a été aspiré. Enfermé dans la singularité.`,
+  `Compressé dans son champ gravitationnel, le message tourne encore.\nIl émet une fréquence infime, indéchiffrable depuis la Terre.\nIl attend.\n\nPour s'en approcher, il a fallu des volontaires.\nOu plutôt — des êtres que personne ne regretterait d'envoyer.`,
 
-  `Un trou noir ne détruit pas.\n\nIl retient.`,
-
-  `Compressé dans son champ gravitationnel, le message tourne encore.\nIl émet une fréquence infime, indéchiffrable depuis la Terre.\nIl attend.`,
-
-  `Pour s'en approcher, il a fallu des volontaires.\n\nOu plutôt — des êtres que personne ne regretterait d'envoyer.`,
-
-  `Avant d'envoyer des hommes dans l'espace, on avait envoyé des animaux.\nDes chiens. Des singes. Des chats.\nLaïka. Ham. Félicette.`,
-
-  `Leurs noms sont gravés dans les archives.\nLeurs corps, perdus dans le vide.`,
+  `Avant d'envoyer des hommes dans l'espace, on avait envoyé des animaux.\nDes chiens. Des singes. Des chats.\nLaïka. Ham. Félicette.\n\nLeurs noms sont gravés dans les archives.\nLeurs corps, perdus dans le vide.`,
 
   `Certains ont survécu.\n\nLe programme MOTOMOTO les a récupérés, soignés, entraînés.\nIls ont appris à piloter. À réparer. À survivre là où aucun humain ne voulait aller.`,
 
-  `Leur mission : approcher le trou noir.\n\nRécupérer ce qui dérive sur leur passage.\nAvancer. Réparer le vaisseau. Capter le message.`,
-
-  `Avant que le trou noir n'aspire tout.\n\nY compris eux.`,
+  `Leur mission : approcher le trou noir.\n\nRécupérer ce qui dérive sur leur passage.\nAvancer. Réparer le vaisseau. Capter le message.\n\nAvant que le trou noir n'aspire tout.\nY compris eux.`,
 ];
 
 const BOOT_LINES = [
@@ -479,9 +469,9 @@ let running    = true;
 let bootStarted = false;
 
 // Vitesse de frappe (ms par caractère)
-const SPEED     = 28;
-const PARA_PAUSE = 1600; // pause entre paragraphes
-const END_HOLD   = 2800; // pause avant fadeout
+const SPEED     = 24;
+const PARA_PAUSE = 900; // pause entre paragraphes
+const END_HOLD   = 1800; // pause avant fadeout
 
 function typeChar() {
   if (!running) return;
