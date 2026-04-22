@@ -232,6 +232,78 @@ body::after {
   filter:blur(.15px);
 }
 
+.airlock-shield {
+  position:absolute;
+  left:50%;
+  top:55.6%;
+  width:clamp(280px, 17.2vw, 365px);
+  height:clamp(330px, 38vh, 455px);
+  transform:translate(-50%, -50%);
+  overflow:hidden;
+  border-radius:clamp(18px, 1.4vw, 28px);
+  pointer-events:none;
+  z-index:9;
+  mix-blend-mode:screen;
+  opacity:.72;
+  background:
+    linear-gradient(90deg, transparent 0 8%, rgba(117,216,255,.18) 16%, transparent 24%, rgba(117,216,255,.12) 50%, transparent 76%, rgba(117,216,255,.16) 84%, transparent 92%),
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(117,216,255,.22) 22px 24px, transparent 24px 44px),
+    radial-gradient(ellipse at center, rgba(117,216,255,.16), transparent 66%);
+  box-shadow:
+    inset 0 0 24px rgba(117,216,255,.24),
+    0 0 18px rgba(117,216,255,.16);
+  animation:shieldPulse 3.8s steps(7, end) infinite;
+}
+.airlock-shield::before,
+.airlock-shield::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+.airlock-shield::before {
+  background:
+    linear-gradient(90deg, transparent 48%, rgba(188,240,255,.9) 49.4%, rgba(188,240,255,.24) 50.6%, transparent 52%),
+    linear-gradient(0deg, transparent 0 18%, rgba(117,216,255,.12) 19%, transparent 20% 48%, rgba(117,216,255,.1) 49%, transparent 50% 76%, rgba(117,216,255,.12) 77%, transparent 78%);
+  filter:blur(2px);
+  opacity:.7;
+  animation:shieldSweep 2.9s ease-in-out infinite;
+}
+.airlock-shield::after {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 7px, rgba(117,216,255,.1) 7px 8px),
+    radial-gradient(ellipse at center, transparent 48%, rgba(117,216,255,.16) 68%, transparent 78%);
+  opacity:.62;
+  animation:shieldFlicker 1.8s steps(5, end) infinite;
+}
+@keyframes shieldPulse {
+  0%, 100% {
+    opacity:.62;
+    filter:blur(.2px) saturate(1.05);
+  }
+  38% {
+    opacity:.82;
+    filter:blur(.45px) saturate(1.22);
+  }
+  43% {
+    opacity:.55;
+  }
+  48% {
+    opacity:.78;
+  }
+}
+@keyframes shieldSweep {
+  0%, 100% { transform:translateX(-7%); opacity:.48; }
+  52% { transform:translateX(7%); opacity:.82; }
+}
+@keyframes shieldFlicker {
+  0%, 100% { opacity:.52; }
+  18% { opacity:.75; }
+  21% { opacity:.38; }
+  28% { opacity:.68; }
+  74% { opacity:.58; }
+}
+
 .ambient-dust {
   position:absolute;
   inset:0;
@@ -884,6 +956,7 @@ body::after {
   <div class="space-porthole" aria-hidden="true">
     <canvas id="porthole-space"></canvas>
   </div>
+  <div class="airlock-shield" aria-hidden="true"></div>
   <button class="back-btn" type="button" onclick="goMenu()">&#60; MENU</button>
 
   <section class="ship-window" aria-label="Informations du vaisseau">
