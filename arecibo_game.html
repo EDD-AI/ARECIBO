@@ -351,6 +351,16 @@ body::after {
   opacity:.72;
   filter:blur(.18px);
 }
+.room-fly {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:9;
+  opacity:.82;
+  filter:blur(.08px);
+}
 
 .ship-window {
   position:absolute;
@@ -1204,6 +1214,7 @@ body::after {
   <div class="neon-glow" aria-hidden="true"></div>
   <div class="ship-light-bloom" aria-hidden="true"></div>
   <canvas class="ambient-dust" id="ambient-dust" aria-hidden="true"></canvas>
+  <canvas class="room-fly" id="room-fly" aria-hidden="true"></canvas>
   <div class="space-porthole" aria-hidden="true">
     <canvas id="porthole-space"></canvas>
   </div>
@@ -1717,7 +1728,7 @@ function startAmbientDust() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     motes.length = 0;
-    const count = Math.max(70, Math.round((width * height) / 12500));
+    const count = Math.max(120, Math.round((width * height) / 7600));
     for (let i = 0; i < count; i++) {
       const mote = {};
       resetMote(mote, true);
@@ -1739,7 +1750,7 @@ function startAmbientDust() {
       const heightGlow = 1 - Math.min(1, Math.abs(mote.y - height * .2) / (height * .34));
       const lightBoost = 1 + Math.max(0, ceilingGlow * heightGlow) * 1.75;
       const shimmer = .72 + Math.sin((now * .0012 + mote.baseX * .01) * mote.flicker) * .28;
-      const alpha = fade * shimmer * .24 * lightBoost;
+      const alpha = fade * shimmer * .31 * lightBoost;
 
       mote.x = mote.baseX + Math.sin(now * .00018 + mote.baseY) * 5 + mote.driftX * mote.life * 10;
       mote.y = mote.baseY + mote.driftY * mote.life * 14;
@@ -1749,6 +1760,151 @@ function startAmbientDust() {
       ctx.fillRect(Math.round(mote.x), Math.round(mote.y), mote.size, mote.size);
     });
 
+    ctx.globalAlpha = 1;
+    if (!prefersReducedMotion) requestAnimationFrame(draw);
+  }
+
+  resize();
+  draw();
+  window.addEventListener('resize', resize);
+}
+
+function startRoomFly() {
+  const canvas = document.getElementById('room-fly');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fly = {
+    active: false,
+    x: 0,
+    y: 0,
+    prevX: 0,
+    prevY: 0,
+    vx: 0,
+    vy: 0,
+    targetX: 0,
+    targetY: 0,
+    size: 3,
+    life: 0,
+    maxLife: 0,
+    nextAt: performance.now() + 2200,
+    trail: []
+  };
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
+  let lastTime = performance.now();
+
+  function randomBetween(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function pickTarget() {
+    fly.targetX = randomBetween(width * .18, width * .82);
+    fly.targetY = randomBetween(height * .18, height * .7);
+  }
+
+  function spawnFly(now) {
+    const fromLeft = Math.random() > .5;
+    fly.active = true;
+    fly.x = fromLeft ? -18 : width + 18;
+    fly.y = randomBetween(height * .22, height * .68);
+    fly.prevX = fly.x;
+    fly.prevY = fly.y;
+    fly.vx = (fromLeft ? 1 : -1) * randomBetween(52, 82);
+    fly.vy = randomBetween(-18, 18);
+    fly.size = randomBetween(3, 4.5);
+    fly.life = 0;
+    fly.maxLife = randomBetween(8, 14);
+    fly.trail.length = 0;
+    pickTarget();
+    fly.nextAt = now + randomBetween(16000, 26000);
+  }
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    width = Math.max(1, rect.width);
+    height = Math.max(1, rect.height);
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function updateFly(delta, now) {
+    if (!fly.active) {
+      if (now >= fly.nextAt) spawnFly(now);
+      return;
+    }
+
+    fly.life += delta;
+    fly.prevX = fly.x;
+    fly.prevY = fly.y;
+
+    if (Math.random() < .055 || Math.abs(fly.x - fly.targetX) < 22) pickTarget();
+
+    const steerX = (fly.targetX - fly.x) * .86;
+    const steerY = (fly.targetY - fly.y) * 1.15;
+    const jitterX = Math.sin(now * .026) * 28 + randomBetween(-18, 18);
+    const jitterY = Math.cos(now * .031) * 24 + randomBetween(-20, 20);
+
+    fly.vx += (steerX + jitterX) * delta;
+    fly.vy += (steerY + jitterY) * delta;
+    fly.vx = Math.max(-120, Math.min(120, fly.vx));
+    fly.vy = Math.max(-95, Math.min(95, fly.vy));
+
+    fly.x += fly.vx * delta;
+    fly.y += fly.vy * delta;
+    fly.trail.push({ x: fly.prevX, y: fly.prevY, alpha: .28, size: fly.size });
+    if (fly.trail.length > 16) fly.trail.shift();
+
+    const leftRoom = fly.x < -34 || fly.x > width + 34 || fly.y < height * .06 || fly.y > height * .82;
+    if (fly.life > fly.maxLife || leftRoom) {
+      fly.active = false;
+      fly.trail.length = 0;
+    }
+  }
+
+  function drawFly() {
+    fly.trail.forEach((point, index) => {
+      point.alpha *= .86;
+      ctx.globalAlpha = point.alpha * (index / Math.max(1, fly.trail.length));
+      ctx.fillStyle = '#020201';
+      ctx.fillRect(Math.round(point.x), Math.round(point.y), Math.max(1, point.size - 1), Math.max(1, point.size - 1));
+    });
+
+    if (!fly.active) return;
+
+    ctx.globalAlpha = .24;
+    ctx.strokeStyle = '#020201';
+    ctx.lineWidth = Math.max(1, fly.size * .7);
+    ctx.beginPath();
+    ctx.moveTo(fly.prevX, fly.prevY);
+    ctx.lineTo(fly.x, fly.y);
+    ctx.stroke();
+
+    ctx.globalAlpha = .92;
+    ctx.fillStyle = '#010101';
+    const x = Math.round(fly.x);
+    const y = Math.round(fly.y);
+    const s = Math.round(fly.size);
+    ctx.fillRect(x, y, s, s);
+    ctx.fillRect(x - 2, y + 1, 2, 2);
+    ctx.fillRect(x + s, y + 1, 2, 2);
+
+    ctx.globalAlpha = .28;
+    ctx.fillStyle = '#0b0b08';
+    ctx.fillRect(x - 1, y - 2, 2, 1);
+    ctx.fillRect(x + s - 1, y - 2, 2, 1);
+  }
+
+  function draw(now = performance.now()) {
+    const delta = Math.min((now - lastTime) / 1000, .05);
+    lastTime = now;
+    ctx.clearRect(0, 0, width, height);
+    updateFly(delta, now);
+    drawFly();
     ctx.globalAlpha = 1;
     if (!prefersReducedMotion) requestAnimationFrame(draw);
   }
@@ -1931,6 +2087,7 @@ updateReadyState();
 updateDistance();
 startPortholeSpace();
 startAmbientDust();
+startRoomFly();
 initShipMap();
 initDraggablePersonalWindow();
 </script>
