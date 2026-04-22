@@ -59,32 +59,10 @@ body::after {
 }
 body::before {
   z-index: 9500;
-  border-radius: clamp(28px, 4.8vw, 84px);
-  background:
-    radial-gradient(ellipse at center, transparent 54%, rgba(0,0,0,.24) 78%, rgba(0,0,0,.78) 100%),
-    radial-gradient(ellipse at 50% 50%, rgba(247,255,195,.05) 0%, transparent 52%),
-    repeating-linear-gradient(0deg, rgba(247,255,195,.045) 0 1px, transparent 1px 9px),
-    repeating-linear-gradient(90deg, rgba(247,255,195,.036) 0 1px, transparent 1px 9px);
-  box-shadow:
-    inset 0 0 52px rgba(0,0,0,.92),
-    inset 0 0 150px rgba(0,0,0,.62),
-    inset 0 0 0 2px rgba(247,255,195,.045);
-  filter: blur(.18px);
-  opacity: .66;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.5) 100%);
+  pointer-events: none;
 }
-body::after {
-  inset: clamp(10px, 1.4vw, 22px);
-  z-index: 9600;
-  border: 1px solid rgba(247,255,195,.055);
-  border-radius: clamp(24px, 4.2vw, 78px);
-  background:
-    linear-gradient(115deg, rgba(247,255,195,.045) 0%, transparent 18%, transparent 76%, rgba(250,90,31,.035) 100%),
-    radial-gradient(ellipse at 50% 0%, rgba(247,255,195,.05), transparent 36%);
-  box-shadow:
-    inset 0 0 42px rgba(247,255,195,.035),
-    inset 0 0 95px rgba(0,0,0,.62);
-  opacity: .62;
-}
+body::after { display: none; }
 
 .crt-filter-defs {
   position: absolute;
@@ -138,18 +116,11 @@ canvas#starfield-bg {
 /* Scanlines */
 .screen::after {
   content: '';
-  position: fixed;
+  position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.34) 100%),
-    repeating-linear-gradient(0deg, rgba(247,255,195,.055) 0 1px, transparent 1px 8px),
-    repeating-linear-gradient(90deg, rgba(247,255,195,.045) 0 1px, transparent 1px 8px),
-    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,.18) 3px, rgba(0,0,0,.18) 4px);
-  filter: blur(.22px);
-  mix-blend-mode: screen;
-  opacity: .72;
+  background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);
   pointer-events: none;
-  z-index: 9000;
+  z-index: 20;
 }
 
 /* ===== LIGNES ORANGE ===== */
@@ -372,11 +343,8 @@ canvas#starfield-bg {
   clip-path: inset(0 0 54% 0);
 }
 #logo-arecibo::after {
-  background:
-    repeating-linear-gradient(0deg, rgba(247,255,195,.28) 0 3px, transparent 3px 8px),
-    repeating-linear-gradient(90deg, rgba(250,90,31,.18) 0 4px, transparent 4px 12px);
-  mix-blend-mode: screen;
-  filter: blur(.25px);
+  background: none;
+  mix-blend-mode: normal;
 }
 #logo-arecibo:hover::before {
   opacity: .8;
