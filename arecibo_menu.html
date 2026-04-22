@@ -59,10 +59,32 @@ body::after {
 }
 body::before {
   z-index: 9500;
-  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.5) 100%);
-  pointer-events: none;
+  border-radius: clamp(28px, 4.8vw, 84px);
+  background:
+    radial-gradient(ellipse at center, transparent 54%, rgba(0,0,0,.24) 78%, rgba(0,0,0,.78) 100%),
+    radial-gradient(ellipse at 50% 50%, rgba(247,255,195,.05) 0%, transparent 52%),
+    repeating-linear-gradient(0deg, rgba(247,255,195,.045) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(90deg, rgba(247,255,195,.036) 0 1px, transparent 1px 9px);
+  box-shadow:
+    inset 0 0 52px rgba(0,0,0,.92),
+    inset 0 0 150px rgba(0,0,0,.62),
+    inset 0 0 0 2px rgba(247,255,195,.045);
+  filter: blur(.18px);
+  opacity: .66;
 }
-body::after { display: none; }
+body::after {
+  inset: clamp(10px, 1.4vw, 22px);
+  z-index: 9600;
+  border: 1px solid rgba(247,255,195,.055);
+  border-radius: clamp(24px, 4.2vw, 78px);
+  background:
+    linear-gradient(115deg, rgba(247,255,195,.045) 0%, transparent 18%, transparent 76%, rgba(250,90,31,.035) 100%),
+    radial-gradient(ellipse at 50% 0%, rgba(247,255,195,.05), transparent 36%);
+  box-shadow:
+    inset 0 0 42px rgba(247,255,195,.035),
+    inset 0 0 95px rgba(0,0,0,.62);
+  opacity: .62;
+}
 
 
 
@@ -111,11 +133,18 @@ canvas#starfield-bg {
 /* Scanlines */
 .screen::after {
   content: '';
-  position: absolute;
+  position: fixed;
   inset: 0;
-  background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);
+  background:
+    radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.34) 100%),
+    repeating-linear-gradient(0deg, rgba(247,255,195,.055) 0 1px, transparent 1px 8px),
+    repeating-linear-gradient(90deg, rgba(247,255,195,.045) 0 1px, transparent 1px 8px),
+    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,.18) 3px, rgba(0,0,0,.18) 4px);
+  filter: blur(.22px);
+  mix-blend-mode: screen;
+  opacity: .72;
   pointer-events: none;
-  z-index: 20;
+  z-index: 9000;
 }
 
 /* ===== LIGNES ORANGE ===== */
@@ -153,65 +182,115 @@ canvas#starfield-bg {
 .singularity-wrap {
   position: absolute;
   top: 50%;
-  right: -15vmin;
-  width: clamp(420px, 62vmin, 760px);
+  right: -2vmin;
+  width: clamp(320px, 42vmin, 520px);
   aspect-ratio: 1;
   transform: translateY(-50%);
   pointer-events: none;
   z-index: 4;
   opacity: 1;
+  animation: singularityDrift 12s ease-in-out infinite;
+  filter: contrast(1.08);
 }
-.singularity-core,
+.singularity-lens,
 #singularity-waves {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
-.singularity-core {
+.singularity-lens {
+  z-index: 5;
+  isolation: isolate;
+  filter: drop-shadow(0 0 34px rgba(0,0,0,.95));
+}
+.singularity-lens::before {
+  content: '';
+  position: absolute;
+  inset: -26%;
   border-radius: 50%;
-  border: 1px solid rgba(247,255,195,.28);
   background:
-    radial-gradient(circle at 16% 50%, rgba(247,255,195,.32) 0 1.5%, rgba(250,90,31,.3) 7%, transparent 29%),
-    radial-gradient(circle at 38% 42%, rgba(247,255,195,.18) 0 1px, transparent 2px 100%),
-    radial-gradient(circle at 44% 48%, #020202 0 45%, rgba(0,0,0,.98) 56%, rgba(0,0,0,.52) 66%, transparent 76%),
-    radial-gradient(circle at 41% 48%, rgba(250,90,31,.78) 0 1.4%, rgba(250,90,31,.22) 13%, transparent 32%),
-    radial-gradient(circle at 50% 50%, rgba(247,255,195,.28) 0 45%, rgba(250,90,31,.34) 57%, transparent 72%);
+    radial-gradient(ellipse at 50% 50%, transparent 0 35%, rgba(250,90,31,.36) 43%, rgba(250,90,31,.18) 55%, rgba(80,5,0,.16) 68%, transparent 82%),
+    radial-gradient(ellipse at 50% 44%, transparent 0 42%, rgba(247,255,195,.11) 47%, rgba(250,90,31,.24) 53%, transparent 66%),
+    radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 0 44%, rgba(0,0,0,.72) 68%, transparent 84%);
   box-shadow:
-    inset 28px 0 70px rgba(247,255,195,.11),
-    inset -82px 0 130px rgba(0,0,0,.98),
-    0 0 44px rgba(250,90,31,.28),
-    0 0 130px rgba(247,255,195,.14);
-  filter: contrast(1.08);
+    inset 0 0 70px rgba(0,0,0,.95),
+    0 0 74px rgba(250,90,31,.18),
+    0 0 96px rgba(0,0,0,.84);
+  filter: blur(5px);
+  opacity: .78;
+}
+.singularity-lens::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border-top: 2px solid rgba(250,90,31,.2);
+  border-right: 1px solid rgba(250,90,31,.07);
+  border-bottom: 1px solid rgba(250,90,31,.11);
+  border-left: 1px solid rgba(247,255,195,.05);
+  box-shadow:
+    inset 0 0 42px rgba(0,0,0,1),
+    0 0 28px rgba(250,90,31,.12),
+    0 0 42px rgba(0,0,0,.9);
+  opacity: .72;
+  z-index: 2;
+}
+.singularity-stream {
+  display: none;
+}
+.singularity-arc {
+  display: none;
+}
+.singularity-arc.back {
+  display: none;
+}
+.singularity-arc.front {
+  display: none;
+}
+.singularity-core {
+  position: absolute;
+  left: 8%;
+  top: 8%;
+  width: 84%;
+  height: 84%;
+  border-radius: 50%;
+  border: 1px solid rgba(247,255,195,.15);
+  background:
+    radial-gradient(circle at 50% 50%, #000 0 62%, rgba(0,0,0,.99) 71%, rgba(0,0,0,.86) 78%, transparent 82%),
+    radial-gradient(circle at 50% 50%, rgba(0,0,0,1) 0 100%);
+  box-shadow:
+    inset 0 0 62px rgba(0,0,0,1),
+    0 0 24px rgba(0,0,0,1),
+    0 0 58px rgba(0,0,0,.95),
+    0 0 110px rgba(0,0,0,.72),
+    0 0 0 1px rgba(247,255,195,.045);
+  filter: contrast(1.35);
+  z-index: 8;
 }
 .singularity-core::before {
   content: '';
   position: absolute;
-  inset: 12%;
+  inset: -16%;
   border-radius: 50%;
-  border: 1px solid rgba(247,255,195,.24);
+  border: 1px solid rgba(247,255,195,.13);
   box-shadow:
-    0 0 12px rgba(247,255,195,.08),
-    inset 0 0 42px rgba(0,0,0,.8);
-  transform: rotate(-16deg) scaleX(1.1);
+    0 0 22px rgba(247,255,195,.06),
+    inset 0 0 64px rgba(0,0,0,.98);
 }
 .singularity-core::after {
   content: '';
   position: absolute;
-  left: -2%;
-  top: 45%;
-  width: 84%;
-  height: 16%;
+  inset: 2%;
   border-radius: 50%;
-  border-top: 1px solid rgba(250,90,31,.52);
-  border-bottom: 1px solid rgba(247,255,195,.16);
-  filter: blur(.15px);
-  transform: rotate(-8deg);
-  opacity: .72;
+  background: #000;
+  box-shadow: 0 0 38px rgba(0,0,0,1);
+  opacity: 1;
 }
 #singularity-waves {
-  mix-blend-mode: screen;
-  opacity: .62;
+  mix-blend-mode: normal;
+  opacity: .68;
+  z-index: 3;
 }
 
 /* ===== MENU ===== */
@@ -386,6 +465,17 @@ canvas#starfield-bg {
   50% { transform: perspective(900px) translateZ(0) scale(1.031) rotateX(.24deg) translateY(.35px); }
 }
 
+@keyframes singularityDrift {
+  0%, 100% { transform: translateY(-50%) rotate(-.5deg) translate(0, 0) scale(1); }
+  42% { transform: translateY(-50%) rotate(.15deg) translate(-8px, -4px) scale(1.01); }
+  68% { transform: translateY(-50%) rotate(-.8deg) translate(5px, 3px) scale(.997); }
+}
+
+@keyframes matterShear {
+  0%, 100% { transform: rotate(15deg) translateY(0) scaleY(1); opacity: .5; }
+  50% { transform: rotate(13deg) translateY(9px) scaleY(1.05); opacity: .68; }
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -417,7 +507,9 @@ canvas#starfield-bg {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .screen { animation: none; }
+  .screen,
+  .singularity-wrap,
+  .singularity-stream { animation: none; }
   #logo-arecibo:hover .logo-letter,
   #logo-arecibo:hover::before,
   #logo-arecibo:hover::after { animation: none; }
@@ -458,12 +550,16 @@ canvas#starfield-bg {
       <path id="gravity-v-c" class="gravity-line" d="M1245.08 688.487L1245.08 455.027" stroke="#FA5A1F" stroke-width="1"/>
       <path id="gravity-v-d" class="gravity-line" d="M994.945 688.487L994.945 455.027" stroke="#FA5A1F" stroke-width="1"/>
       <path id="gravity-v-left" class="gravity-line" d="M544.703 821.892L544.703 321.622" stroke="#FA5A1F" stroke-width="1"/>
-      <circle cx="1620" cy="540" r="600" stroke="rgba(247,255,195,.3)" stroke-width="1.2" fill="none"/>
     </svg>
   </div>
 
   <div class="singularity-wrap" aria-hidden="true">
-    <div class="singularity-core"></div>
+    <div class="singularity-lens">
+      <div class="singularity-stream"></div>
+      <div class="singularity-arc back"></div>
+      <div class="singularity-core"></div>
+      <div class="singularity-arc front"></div>
+    </div>
     <canvas id="singularity-waves"></canvas>
   </div>
 
@@ -524,12 +620,14 @@ canvas#starfield-bg {
   const ctx = canvas.getContext('2d');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let dpr = 1;
-  let size = 0;
+  let width = 0;
+  let height = 0;
 
   function resizeWaves() {
     const rect = wrap.getBoundingClientRect();
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    size = Math.max(1, Math.round(rect.width));
+    width = Math.max(1, Math.round(rect.width));
+    height = Math.max(1, Math.round(rect.height));
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
     canvas.style.width = rect.width + 'px';
@@ -538,33 +636,35 @@ canvas#starfield-bg {
   }
 
   function drawWaves(t) {
-    ctx.clearRect(0, 0, size, size);
-    const cx = size * .5;
-    const cy = size * .5;
-    const base = size * .43;
+    ctx.clearRect(0, 0, width, height);
+    const cx = width * .5 + Math.sin(t * .00034) * width * .012;
+    const cy = height * .5 + Math.cos(t * .00028) * height * .012;
 
-    for (let i = 0; i < 4; i++) {
-      const pulse = ((t * .000055) + i * .24) % 1;
-      const radius = base + pulse * size * .14;
-      const alpha = (1 - pulse) * .13;
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+
+    for (let i = 0; i < 5; i++) {
+      const pulse = ((t * .000045) + i * .2) % 1;
+      const radius = width * (.28 + pulse * .23);
+      const alpha = (1 - pulse) * .12;
 
       ctx.beginPath();
-      ctx.ellipse(cx - size * .045, cy + Math.sin(t * .0007 + i) * size * .006, radius * 1.08, radius * .78, -0.16, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(247,255,195,${alpha})`;
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(250,90,31,${alpha * .42})`;
       ctx.lineWidth = 1;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.ellipse(cx - size * .04, cy, radius * .96, radius * .68, -0.16, Math.PI * .05, Math.PI * 1.45);
-      ctx.strokeStyle = `rgba(250,90,31,${alpha * .9})`;
       ctx.stroke();
     }
 
+    const shadow = ctx.createRadialGradient(cx, cy, width * .18, cx, cy, width * .55);
+    shadow.addColorStop(0, 'rgba(0,0,0,1)');
+    shadow.addColorStop(.58, 'rgba(0,0,0,.86)');
+    shadow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = shadow;
     ctx.beginPath();
-    ctx.ellipse(cx - size * .05, cy, size * .36, size * .26, -0.16, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(250,90,31,.18)';
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
+    ctx.arc(cx, cy, width * .55, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
 
     if (!reduceMotion.matches) requestAnimationFrame(drawWaves);
   }
@@ -576,7 +676,7 @@ canvas#starfield-bg {
 
 (function() {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const gravity = { x: 1588, y: 540, radius: 760 };
+  const gravity = { x: 1500, y: 540, radius: 900 };
 
   function line(a, b, steps) {
     return Array.from({ length: steps + 1 }, (_, i) => {
@@ -612,22 +712,25 @@ canvas#starfield-bg {
   ].map(spec => ({ ...spec, el: document.getElementById(spec.id) })).filter(spec => spec.el);
 
   function distortedPoint(point, time, lineIndex, pointIndex) {
-    const gx = gravity.x + Math.sin(time * .00034) * 9;
-    const gy = gravity.y + Math.cos(time * .00028) * 5;
+    const gx = gravity.x + Math.sin(time * .00022) * 3;
+    const gy = gravity.y + Math.cos(time * .0002) * 2;
     const dx = gx - point.x;
     const dy = gy - point.y;
     const dist = Math.max(1, Math.hypot(dx, dy));
     const near = Math.max(0, 1 - dist / gravity.radius);
-    const falloff = near * near;
+    const falloff = near * near * near;
+    const capture = Math.max(0, 1 - dist / 260);
+    const captureForce = capture * capture;
     const ux = dx / dist;
     const uy = dy / dist;
-    const pull = falloff * (26 + Math.sin(time * .001 + lineIndex) * 5);
-    const swirl = falloff * Math.sin(time * .0014 + point.y * .018 + lineIndex) * 15;
-    const drift = Math.sin(time * .0009 + point.x * .014 + lineIndex * 1.7) * (1.2 + falloff * 3.8);
+    const pull = falloff * 130 + captureForce * 190;
+    const bendToCenter = dy * (falloff * .16 + captureForce * .48);
+    const stableShear = Math.sin(lineIndex * .85) * falloff * 10;
+    const slowBreath = Math.sin(time * .00038 + lineIndex * 1.3) * (0.28 + falloff * 1.1);
 
     return {
-      x: point.x + ux * pull - uy * swirl + Math.sin(time * .0007 + pointIndex * .3) * falloff * 2,
-      y: point.y + uy * pull + ux * swirl + drift
+      x: point.x + ux * pull - uy * stableShear,
+      y: point.y + uy * pull + bendToCenter + ux * stableShear + slowBreath
     };
   }
 
