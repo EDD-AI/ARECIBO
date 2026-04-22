@@ -1392,7 +1392,7 @@ function startPortholeSpace() {
   let width = 0;
   let height = 0;
   let dpr = 1;
-  let nextDebrisAt = performance.now() + 2600;
+  let nextDebrisAt = performance.now() + 14000;
 
   function randomBetween(min, max) {
     return min + Math.random() * (max - min);
@@ -1452,20 +1452,29 @@ function startPortholeSpace() {
   }
 
   function spawnDebrisEvent(now = performance.now()) {
-    const big = Math.random() > .34;
-    const size = big ? randomBetween(48, 74) : randomBetween(30, 48);
+    const big = Math.random() > .18;
+    const fromLeft = Math.random() > .5;
+    const direction = fromLeft ? 1 : -1;
+    const speedRoll = Math.random();
+    const speed = speedRoll > .88
+      ? randomBetween(2.4, 4.1)
+      : speedRoll > .58
+        ? randomBetween(.82, 1.45)
+        : randomBetween(.34, .68);
+    const size = big ? randomBetween(50, 78) : randomBetween(34, 50);
     const event = {
-      x: width + size * randomBetween(.9, 1.7),
+      x: fromLeft ? -size * randomBetween(.9, 1.7) : width + size * randomBetween(.9, 1.7),
       y: randomBetween(height * .18, height * .72),
       prevX: 0,
       prevY: 0,
-      vx: -randomBetween(.46, .74),
+      direction,
+      vx: direction * speed,
       vy: randomBetween(-.055, .08),
       size,
       rotation: randomBetween(-.8, .8),
-      spin: randomBetween(-.004, .004),
+      spin: randomBetween(-.004, .004) * (speed > 2 ? 1.8 : 1),
       age: 0,
-      shedRate: big ? .78 : .45,
+      shedRate: speed > 2 ? .92 : big ? .66 : .38,
       fragments: [],
       shape: createDebrisShape(big ? 9 : 7, big ? .34 : .25),
       pixels: createDebrisPixels(size),
@@ -1474,20 +1483,20 @@ function startPortholeSpace() {
     event.prevX = event.x;
     event.prevY = event.y;
     debrisEvents.push(event);
-    nextDebrisAt = now + randomBetween(9800, 16600);
+    nextDebrisAt = now + randomBetween(28000, 52000);
   }
 
   function shedDebris(event) {
     const fragmentCount = Math.random() < event.shedRate ? Math.round(randomBetween(1, 3)) : 0;
     for (let i = 0; i < fragmentCount; i++) {
-      const rearX = event.x + event.size * randomBetween(.14, .42);
+      const rearX = event.x - event.direction * event.size * randomBetween(.14, .42);
       const rearY = event.y + randomBetween(-event.size * .22, event.size * .22);
       event.fragments.push({
         x: rearX,
         y: rearY,
         prevX: rearX,
         prevY: rearY,
-        vx: event.vx * randomBetween(.08, .42) + randomBetween(.02, .18),
+        vx: event.vx * randomBetween(.04, .32) - event.direction * randomBetween(.02, .2),
         vy: event.vy + randomBetween(-.16, .16),
         size: randomBetween(1.4, event.size * .08),
         rotation: randomBetween(-1.6, 1.6),
@@ -1563,7 +1572,7 @@ function startPortholeSpace() {
   }
 
   function updateDebris(now) {
-    if (now >= nextDebrisAt && debrisEvents.length < 2) spawnDebrisEvent(now);
+    if (now >= nextDebrisAt && debrisEvents.length < 1) spawnDebrisEvent(now);
 
     for (let i = debrisEvents.length - 1; i >= 0; i--) {
       const event = debrisEvents[i];
@@ -1574,18 +1583,23 @@ function startPortholeSpace() {
       event.x += event.vx;
       event.y += event.vy + Math.sin(event.age * .027) * .035;
       event.rotation += event.spin;
-      if (event.x > -event.size * .8) shedDebris(event);
+      const stillNearView = event.direction > 0
+        ? event.x < width + event.size * .8
+        : event.x > -event.size * .8;
+      if (stillNearView) shedDebris(event);
 
-      const trail = ctx.createLinearGradient(event.x + event.size * .16, event.y, event.x + event.size * 2.35, event.y);
+      const trailStartX = event.x - event.direction * event.size * .16;
+      const trailEndX = event.x - event.direction * event.size * (Math.abs(event.vx) > 2 ? 3.4 : 2.35);
+      const trail = ctx.createLinearGradient(trailStartX, event.y, trailEndX, event.y);
       trail.addColorStop(0, 'rgba(247,255,220,.18)');
       trail.addColorStop(.28, 'rgba(247,255,220,.08)');
       trail.addColorStop(1, 'rgba(247,255,220,0)');
       ctx.globalAlpha = .7;
       ctx.strokeStyle = trail;
-      ctx.lineWidth = Math.max(2, event.size * .28);
+      ctx.lineWidth = Math.max(2, event.size * (Math.abs(event.vx) > 2 ? .34 : .28));
       ctx.beginPath();
-      ctx.moveTo(event.x + event.size * .2, event.y);
-      ctx.lineTo(event.x + event.size * 2.35, event.y + Math.sin(event.age * .04) * event.size * .12);
+      ctx.moveTo(trailStartX, event.y);
+      ctx.lineTo(trailEndX, event.y + Math.sin(event.age * .04) * event.size * .12);
       ctx.stroke();
 
       event.fragments.forEach(fragment => {
@@ -1609,7 +1623,10 @@ function startPortholeSpace() {
 
       drawDebrisShape(event, .9);
 
-      if (event.x < -event.size * 2 && event.fragments.length === 0) debrisEvents.splice(i, 1);
+      const leftView = event.direction > 0
+        ? event.x > width + event.size * 2
+        : event.x < -event.size * 2;
+      if (leftView && event.fragments.length === 0) debrisEvents.splice(i, 1);
     }
 
     ctx.globalAlpha = 1;
@@ -1627,7 +1644,7 @@ function startPortholeSpace() {
     stars.length = 0;
     dust.length = 0;
     debrisEvents.length = 0;
-    nextDebrisAt = performance.now() + randomBetween(1800, 3600);
+    nextDebrisAt = performance.now() + randomBetween(10000, 20000);
     for (let i = 0; i < 54; i++) {
       const star = {};
       resetStar(star);
