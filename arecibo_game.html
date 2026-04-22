@@ -1291,9 +1291,11 @@ function startPortholeSpace() {
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const stars = [];
   const dust = [];
+  const debrisEvents = [];
   let width = 0;
   let height = 0;
   let dpr = 1;
+  let nextDebrisAt = performance.now() + 2600;
 
   function randomBetween(min, max) {
     return min + Math.random() * (max - min);
@@ -1320,6 +1322,187 @@ function startPortholeSpace() {
     particle.warm = Math.random() > .9;
   }
 
+  function createDebrisShape(points, jagged = .32) {
+    const shape = [];
+    for (let i = 0; i < points; i++) {
+      const angle = (Math.PI * 2 * i) / points;
+      shape.push({
+        x: Math.cos(angle) * randomBetween(1 - jagged, 1 + jagged),
+        y: Math.sin(angle) * randomBetween(1 - jagged, 1 + jagged)
+      });
+    }
+    return shape;
+  }
+
+  function spawnDebrisEvent(now = performance.now()) {
+    const big = Math.random() > .46;
+    const size = big ? randomBetween(42, 68) : randomBetween(30, 48);
+    const event = {
+      x: width + size * randomBetween(.9, 1.7),
+      y: randomBetween(height * .18, height * .72),
+      prevX: 0,
+      prevY: 0,
+      vx: -randomBetween(.58, .92),
+      vy: randomBetween(-.055, .08),
+      size,
+      rotation: randomBetween(-.8, .8),
+      spin: randomBetween(-.008, .008),
+      age: 0,
+      breakAt: randomBetween(86, 132),
+      broken: false,
+      fragments: [],
+      shape: createDebrisShape(big ? 9 : 7, big ? .34 : .25),
+      kind: Math.random() > .5 ? 'asteroid' : 'ship'
+    };
+    event.prevX = event.x;
+    event.prevY = event.y;
+    debrisEvents.push(event);
+    nextDebrisAt = now + randomBetween(9800, 16600);
+  }
+
+  function breakDebris(event) {
+    event.broken = true;
+    const fragmentCount = Math.round(randomBetween(14, 24));
+    for (let i = 0; i < fragmentCount; i++) {
+      const angle = randomBetween(0, Math.PI * 2);
+      const force = randomBetween(.35, 1.35);
+      const radius = randomBetween(0, event.size * .34);
+      event.fragments.push({
+        x: event.x + Math.cos(angle) * radius,
+        y: event.y + Math.sin(angle) * radius,
+        prevX: event.x,
+        prevY: event.y,
+        vx: event.vx * randomBetween(.68, 1.38) + Math.cos(angle) * force,
+        vy: event.vy + Math.sin(angle) * force * .48,
+        size: randomBetween(2.2, event.size * .18),
+        rotation: randomBetween(-1.6, 1.6),
+        spin: randomBetween(-.035, .035),
+        alpha: randomBetween(.42, .88),
+        warm: Math.random() > .68,
+        shape: createDebrisShape(Math.round(randomBetween(4, 7)), .42)
+      });
+    }
+  }
+
+  function drawDebrisShape(item, alpha = 1) {
+    ctx.save();
+    ctx.translate(item.x, item.y);
+    ctx.rotate(item.rotation);
+    ctx.globalAlpha = alpha;
+
+    const gradient = ctx.createRadialGradient(-item.size * .25, -item.size * .3, 0, 0, 0, item.size);
+    gradient.addColorStop(0, item.kind === 'ship' ? 'rgba(247,255,195,.58)' : 'rgba(247,255,195,.36)');
+    gradient.addColorStop(.46, item.kind === 'ship' ? 'rgba(92,96,74,.62)' : 'rgba(73,73,58,.74)');
+    gradient.addColorStop(1, 'rgba(0,0,0,.88)');
+
+    ctx.fillStyle = gradient;
+    ctx.strokeStyle = item.kind === 'ship' ? 'rgba(247,255,195,.5)' : 'rgba(247,255,195,.28)';
+    ctx.lineWidth = Math.max(1, item.size * .035);
+    ctx.beginPath();
+    item.shape.forEach((point, index) => {
+      const x = point.x * item.size * .5;
+      const y = point.y * item.size * .38;
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    if (item.kind === 'ship') {
+      ctx.globalAlpha = alpha * .7;
+      ctx.strokeStyle = 'rgba(247,255,195,.28)';
+      ctx.beginPath();
+      ctx.moveTo(-item.size * .36, -item.size * .03);
+      ctx.lineTo(item.size * .34, item.size * .08);
+      ctx.moveTo(-item.size * .1, -item.size * .24);
+      ctx.lineTo(-item.size * .03, item.size * .27);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawFragment(fragment) {
+    ctx.save();
+    ctx.translate(fragment.x, fragment.y);
+    ctx.rotate(fragment.rotation);
+    ctx.globalAlpha = fragment.alpha * .32;
+    ctx.strokeStyle = fragment.warm ? '#FA5A1F' : '#F7FFC3';
+    ctx.lineWidth = Math.max(1, fragment.size * .25);
+    ctx.beginPath();
+    ctx.moveTo(fragment.prevX - fragment.x, fragment.prevY - fragment.y);
+    ctx.lineTo(0, 0);
+    ctx.stroke();
+
+    ctx.globalAlpha = fragment.alpha;
+    ctx.fillStyle = fragment.warm ? 'rgba(250,90,31,.78)' : 'rgba(247,255,195,.68)';
+    ctx.strokeStyle = fragment.warm ? 'rgba(250,90,31,.42)' : 'rgba(247,255,195,.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    fragment.shape.forEach((point, index) => {
+      const x = point.x * fragment.size;
+      const y = point.y * fragment.size * .78;
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function updateDebris(now) {
+    if (now >= nextDebrisAt && debrisEvents.length < 2) spawnDebrisEvent(now);
+
+    for (let i = debrisEvents.length - 1; i >= 0; i--) {
+      const event = debrisEvents[i];
+      event.age += 1;
+      event.prevX = event.x;
+      event.prevY = event.y;
+
+      if (!event.broken) {
+        event.x += event.vx;
+        event.y += event.vy + Math.sin(event.age * .035) * .045;
+        event.rotation += event.spin;
+
+        const closeToCenter = event.x < width * randomBetween(.46, .66);
+        if (event.age > event.breakAt || closeToCenter) breakDebris(event);
+
+        ctx.globalAlpha = .24;
+        ctx.strokeStyle = event.kind === 'ship' ? 'rgba(247,255,195,.28)' : 'rgba(250,90,31,.2)';
+        ctx.lineWidth = Math.max(1, event.size * .08);
+        ctx.beginPath();
+        ctx.moveTo(event.prevX + event.size * .44, event.prevY);
+        ctx.lineTo(event.x, event.y);
+        ctx.stroke();
+        drawDebrisShape(event, .82);
+      } else {
+        event.fragments.forEach(fragment => {
+          fragment.prevX = fragment.x;
+          fragment.prevY = fragment.y;
+          fragment.x += fragment.vx;
+          fragment.y += fragment.vy;
+          fragment.vx -= .006;
+          fragment.vy += .004;
+          fragment.rotation += fragment.spin;
+          fragment.alpha *= .989;
+          drawFragment(fragment);
+        });
+        event.fragments = event.fragments.filter(fragment =>
+          fragment.alpha > .08 &&
+          fragment.x > -40 &&
+          fragment.x < width + 80 &&
+          fragment.y > -60 &&
+          fragment.y < height + 70
+        );
+        if (event.fragments.length === 0) debrisEvents.splice(i, 1);
+      }
+    }
+
+    ctx.globalAlpha = 1;
+  }
+
   function resize() {
     const rect = canvas.getBoundingClientRect();
     width = Math.max(1, rect.width);
@@ -1331,6 +1514,8 @@ function startPortholeSpace() {
 
     stars.length = 0;
     dust.length = 0;
+    debrisEvents.length = 0;
+    nextDebrisAt = performance.now() + randomBetween(1800, 3600);
     for (let i = 0; i < 54; i++) {
       const star = {};
       resetStar(star);
@@ -1343,7 +1528,7 @@ function startPortholeSpace() {
     }
   }
 
-  function draw() {
+  function draw(now = performance.now()) {
     ctx.fillStyle = 'rgba(0, 0, 0, .42)';
     ctx.fillRect(0, 0, width, height);
 
@@ -1379,6 +1564,8 @@ function startPortholeSpace() {
       ctx.fillStyle = particle.warm ? '#FA5A1F' : '#F7FFC3';
       ctx.fillRect(particle.x, particle.y, particle.r, particle.r);
     });
+
+    updateDebris(now);
 
     ctx.globalAlpha = 1;
     if (!prefersReducedMotion) requestAnimationFrame(draw);
