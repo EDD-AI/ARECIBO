@@ -106,7 +106,7 @@ body::after {
   inset:0;
   pointer-events:none;
   z-index:5;
-  opacity:.55;
+  opacity:.46;
   mix-blend-mode:screen;
   filter:blur(12px) saturate(1.18);
   background:
@@ -117,40 +117,40 @@ body::after {
     radial-gradient(ellipse 8% 12% at 84% 47%, rgba(247,255,195,.2), transparent 72%),
     radial-gradient(ellipse 18% 10% at 73% 75%, rgba(247,255,195,.16), transparent 74%),
     radial-gradient(ellipse 20% 12% at 28% 76%, rgba(247,255,195,.13), transparent 76%);
-  animation:neonBreath 4.8s ease-in-out infinite;
+  animation:neonBreath 7.5s ease-in-out infinite;
 }
 
 @keyframes neonBreath {
   0%, 100% {
-    opacity:.45;
-    filter:blur(11px) saturate(1.08);
+    opacity:.4;
+    filter:blur(10px) saturate(1.04);
   }
   42% {
-    opacity:.68;
-    filter:blur(15px) saturate(1.28);
-  }
-  68% {
     opacity:.52;
     filter:blur(13px) saturate(1.16);
+  }
+  68% {
+    opacity:.45;
+    filter:blur(11px) saturate(1.08);
   }
 }
 
 .space-porthole {
   position:absolute;
   left:50%;
-  top:50.4%;
-  width:clamp(255px, 19.4vw, 390px);
-  height:clamp(156px, 20.6vh, 236px);
+  top:49.8%;
+  width:clamp(360px, 23.6vw, 455px);
+  height:clamp(226px, 27.6vh, 302px);
   transform:translate(-50%, -50%);
   overflow:hidden;
-  border-radius:clamp(28px, 3vw, 52px);
+  border-radius:clamp(38px, 3.8vw, 68px);
   background:
-    radial-gradient(ellipse at center, rgba(247,255,195,.04), transparent 64%),
+    radial-gradient(ellipse at center, rgba(247,255,195,.025), transparent 68%),
     #020301;
   box-shadow:
-    inset 0 0 26px rgba(0,0,0,.95),
-    inset 0 0 42px rgba(247,255,195,.035);
-  opacity:.74;
+    inset 0 0 36px rgba(0,0,0,.98),
+    inset 0 0 58px rgba(247,255,195,.025);
+  opacity:1;
   pointer-events:none;
   z-index:6;
 }
@@ -159,8 +159,8 @@ body::after {
   position:absolute;
   inset:0;
   background:
-    radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.58) 100%),
-    repeating-linear-gradient(0deg, transparent 0 5px, rgba(247,255,195,.025) 5px 6px);
+    radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.48) 100%),
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(247,255,195,.018) 5px 6px);
   pointer-events:none;
 }
 .space-porthole canvas {
@@ -191,7 +191,7 @@ body::after {
     background .22s ease;
 }
 .ship-window:hover {
-  transform:translate3d(3px, -2px, 0) rotate(.12deg);
+  transform:translate3d(1px, -1px, 0) rotate(.04deg);
   border-color:rgba(247,255,195,.82);
   background:
     linear-gradient(rgba(0,0,0,.23), rgba(0,0,0,.23)),
@@ -351,7 +351,7 @@ body::after {
   background:var(--cream);
   opacity:.9;
   transform-origin:bottom center;
-  animation:signalPulse 1.55s steps(3, end) infinite;
+  animation:signalPulse 2.6s steps(3, end) infinite;
 }
 .bar:nth-child(1) { height:8px; }
 .bar:nth-child(2) { height:11px; animation-delay:.16s; }
@@ -360,18 +360,18 @@ body::after {
 .bar:nth-child(5) { height:22px; animation-delay:.64s; }
 @keyframes signalPulse {
   0%, 100% {
-    transform:scaleY(.82);
-    opacity:.7;
+    transform:scaleY(.9);
+    opacity:.76;
     box-shadow:none;
   }
   45% {
-    transform:scaleY(1.16);
-    opacity:1;
-    box-shadow:0 0 8px rgba(247,255,195,.28);
+    transform:scaleY(1.08);
+    opacity:.94;
+    box-shadow:0 0 6px rgba(247,255,195,.2);
   }
   70% {
-    transform:scaleY(.96);
-    opacity:.88;
+    transform:scaleY(.98);
+    opacity:.84;
   }
 }
 .bits {
@@ -718,10 +718,10 @@ function startPortholeSpace() {
   function resetStar(star, fromEdge = false) {
     star.x = fromEdge ? width + randomBetween(0, width * .18) : Math.random() * width;
     star.y = Math.random() * height;
-    star.r = randomBetween(.35, 1.35);
-    star.speed = randomBetween(.018, .072);
-    star.alpha = randomBetween(.18, .78);
-    star.twinkle = randomBetween(.004, .014);
+    star.r = randomBetween(.3, 1.05);
+    star.speed = randomBetween(.006, .026);
+    star.alpha = randomBetween(.14, .58);
+    star.twinkle = randomBetween(.0015, .006);
   }
 
   function resetDust(particle, fromEdge = false) {
@@ -729,11 +729,11 @@ function startPortholeSpace() {
     particle.y = Math.random() * height;
     particle.prevX = particle.x;
     particle.prevY = particle.y;
-    particle.r = randomBetween(.7, 1.9);
-    particle.speed = randomBetween(.14, .36);
-    particle.drift = randomBetween(-.025, .045);
-    particle.alpha = randomBetween(.18, .5);
-    particle.warm = Math.random() > .82;
+    particle.r = randomBetween(.55, 1.55);
+    particle.speed = randomBetween(.045, .13);
+    particle.drift = randomBetween(-.012, .022);
+    particle.alpha = randomBetween(.12, .32);
+    particle.warm = Math.random() > .9;
   }
 
   function resize() {
@@ -747,12 +747,12 @@ function startPortholeSpace() {
 
     stars.length = 0;
     dust.length = 0;
-    for (let i = 0; i < 86; i++) {
+    for (let i = 0; i < 54; i++) {
       const star = {};
       resetStar(star);
       stars.push(star);
     }
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < 10; i++) {
       const particle = {};
       resetDust(particle);
       dust.push(particle);
@@ -760,13 +760,13 @@ function startPortholeSpace() {
   }
 
   function draw() {
-    ctx.fillStyle = 'rgba(0, 0, 0, .34)';
+    ctx.fillStyle = 'rgba(0, 0, 0, .42)';
     ctx.fillRect(0, 0, width, height);
 
     stars.forEach(star => {
       star.x -= star.speed;
       star.alpha += star.twinkle;
-      if (star.alpha > .82 || star.alpha < .16) star.twinkle *= -1;
+      if (star.alpha > .62 || star.alpha < .12) star.twinkle *= -1;
       if (star.x < -4) resetStar(star, true);
 
       ctx.globalAlpha = star.alpha;
@@ -780,10 +780,10 @@ function startPortholeSpace() {
       particle.prevX = particle.x;
       particle.prevY = particle.y;
       particle.x -= particle.speed;
-      particle.y += Math.sin((particle.x + particle.y) * .018) * .12 + particle.drift;
+      particle.y += Math.sin((particle.x + particle.y) * .014) * .045 + particle.drift;
       if (particle.x < -12 || particle.y < -10 || particle.y > height + 10) resetDust(particle, true);
 
-      ctx.globalAlpha = particle.alpha * .52;
+      ctx.globalAlpha = particle.alpha * .36;
       ctx.strokeStyle = particle.warm ? '#FA5A1F' : '#F7FFC3';
       ctx.lineWidth = Math.max(1, particle.r * .65);
       ctx.beginPath();
