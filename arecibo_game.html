@@ -347,6 +347,169 @@ body::after {
     inset 0 0 24px rgba(247,255,195,.025);
 }
 
+.personal-window {
+  position:absolute;
+  left:2.4vw;
+  top:5.4vh;
+  width:min(29vw, 360px);
+  min-width:310px;
+  border:1px solid rgba(117,216,255,.68);
+  background:
+    linear-gradient(rgba(0,12,18,.3), rgba(0,12,18,.3)),
+    rgba(0,0,0,.18);
+  color:#bdf2ff;
+  text-shadow:0 0 9px rgba(117,216,255,.18);
+  z-index:12;
+  transition:
+    transform .22s ease,
+    border-color .22s ease,
+    box-shadow .22s ease,
+    background .22s ease;
+}
+.personal-window:hover {
+  transform:translate3d(1px, -1px, 0) rotate(.03deg);
+  border-color:rgba(117,216,255,.92);
+  box-shadow:
+    0 0 18px rgba(117,216,255,.11),
+    inset 0 0 24px rgba(117,216,255,.04);
+}
+.personal-title {
+  height:42px;
+  display:flex;
+  align-items:center;
+  padding:0 18px;
+  border-bottom:1px solid rgba(117,216,255,.58);
+  font-size:clamp(16px, 1.18vw, 23px);
+  line-height:1;
+  letter-spacing:.045em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.personal-body {
+  padding:14px 16px 15px;
+}
+.personal-line {
+  display:grid;
+  grid-template-columns:94px 1fr;
+  gap:9px;
+  align-items:center;
+  min-height:28px;
+  margin-bottom:9px;
+}
+.personal-line:last-child { margin-bottom:0; }
+.personal-tag {
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  min-height:23px;
+  border:1px solid rgba(117,216,255,.58);
+  padding:2px 7px 3px;
+  background:rgba(0,19,28,.2);
+  color:#bdf2ff;
+  font-size:13px;
+  line-height:1;
+  letter-spacing:.055em;
+  text-transform:uppercase;
+}
+.personal-window .oxygen-pack {
+  border-color:rgba(117,216,255,.42);
+  background:rgba(0,19,28,.2);
+}
+.personal-window .oxygen-dot {
+  background:#bdf2ff;
+  box-shadow:0 0 12px rgba(117,216,255,.38);
+}
+.stress-track {
+  position:relative;
+  height:18px;
+  border:1px solid rgba(250,90,31,.72);
+  background:rgba(0,0,0,.22);
+  overflow:hidden;
+}
+.stress-fill {
+  width:32%;
+  height:100%;
+  background:linear-gradient(90deg, rgba(250,90,31,.78), rgba(247,255,195,.82));
+  box-shadow:0 0 12px rgba(250,90,31,.22);
+}
+.stress-value {
+  position:absolute;
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#050505;
+  font-size:12px;
+  line-height:1;
+  text-shadow:none;
+}
+.message-btn {
+  width:100%;
+  min-height:32px;
+  display:grid;
+  grid-template-columns:28px 1fr 32px;
+  gap:7px;
+  align-items:center;
+  border:1px solid rgba(117,216,255,.62);
+  background:rgba(0,19,28,.18);
+  color:#bdf2ff;
+  font-family:'Pixelify Sans', monospace;
+  font-size:13px;
+  letter-spacing:.055em;
+  text-transform:uppercase;
+  cursor:none;
+  transition:border-color .14s ease, box-shadow .14s ease, background .14s ease;
+}
+.message-btn:hover,
+.message-btn.open {
+  border-color:#75d8ff;
+  background:rgba(117,216,255,.08);
+  box-shadow:0 0 12px rgba(117,216,255,.16);
+}
+.mail-icon {
+  position:relative;
+  width:20px;
+  height:14px;
+  justify-self:center;
+  border:1px solid currentColor;
+}
+.mail-icon::before,
+.mail-icon::after {
+  content:'';
+  position:absolute;
+  top:0;
+  width:13px;
+  height:1px;
+  background:currentColor;
+  transform-origin:top left;
+}
+.mail-icon::before {
+  left:0;
+  transform:rotate(34deg);
+}
+.mail-icon::after {
+  right:-1px;
+  transform:rotate(146deg);
+}
+.message-count {
+  color:var(--orange);
+  text-align:center;
+}
+.personal-messages {
+  display:none;
+  margin-top:10px;
+  border-top:1px solid rgba(117,216,255,.35);
+  padding-top:9px;
+  color:rgba(189,242,255,.82);
+  font-size:11px;
+  letter-spacing:.055em;
+  line-height:1.35;
+  text-transform:uppercase;
+}
+.personal-messages.open { display:block; }
+.personal-messages p { margin-bottom:6px; }
+.personal-messages p:last-child { margin-bottom:0; }
+
 .ship-map-window {
   position:absolute;
   right:9.4vw;
@@ -887,8 +1050,8 @@ body::after {
 
 .back-btn {
   position:absolute;
-  left:13.2vw;
-  top:8.5vh;
+  left:2.4vw;
+  bottom:4.8vh;
   border:1px solid rgba(247,255,195,.22);
   background:rgba(0,0,0,.16);
   color:rgba(247,255,195,.55);
@@ -920,11 +1083,17 @@ body::after {
 }
 
 @media (max-width: 980px) {
+  .personal-window {
+    left:5vw;
+    top:5vh;
+    width:90vw;
+    min-width:0;
+  }
   .ship-window {
     left:5vw;
     width:90vw;
     min-width:0;
-    top:21vh;
+    top:32vh;
   }
   .ship-map-window {
     right:5vw;
@@ -938,7 +1107,7 @@ body::after {
     bottom:7vh;
     width:min(86vw, 330px);
   }
-  .back-btn { left:5vw; top:5vh; }
+  .back-btn { left:5vw; bottom:5vh; top:auto; }
   .bridge-meta { display:none; }
 }
 </style>
@@ -959,6 +1128,40 @@ body::after {
   <div class="airlock-shield" aria-hidden="true"></div>
   <button class="back-btn" type="button" onclick="goMenu()">&#60; MENU</button>
 
+  <section class="personal-window" aria-label="Package personnel du joueur">
+    <header class="personal-title">&#62;PACKAGE PERSONNEL\</header>
+
+    <div class="personal-body">
+      <div class="personal-line">
+        <span class="personal-tag">OXYGENE</span>
+        <div class="oxygen" aria-label="Reserve oxygene personnelle">
+          <span class="oxygen-pack"><span class="oxygen-dot"></span><span class="oxygen-dot"></span><span class="oxygen-dot"></span></span>
+          <span class="oxygen-pack"><span class="oxygen-dot"></span><span class="oxygen-dot"></span><span class="oxygen-dot"></span></span>
+          <span class="oxygen-pack"><span class="oxygen-dot"></span><span class="oxygen-dot"></span><span class="oxygen-dot"></span></span>
+        </div>
+      </div>
+
+      <div class="personal-line">
+        <span class="personal-tag">STRESS</span>
+        <div class="stress-track" aria-label="Niveau de stress personnel">
+          <div class="stress-fill"></div>
+          <span class="stress-value">32%</span>
+        </div>
+      </div>
+
+      <button class="message-btn" id="message-btn" type="button" aria-expanded="false" aria-controls="personal-messages">
+        <span class="mail-icon" aria-hidden="true"></span>
+        <span>MESSAGERIE</span>
+        <span class="message-count">02</span>
+      </button>
+
+      <div class="personal-messages" id="personal-messages">
+        <p>[PRIVE] MOTOMOTO : combinaison nominale.</p>
+        <p>[CHIFFRE] fragment recu : 01000001...</p>
+      </div>
+    </div>
+  </section>
+
   <section class="ship-window" aria-label="Informations du vaisseau">
     <header class="ship-title">&#62;SYSTEME VAISSEAU\</header>
 
@@ -972,14 +1175,6 @@ body::after {
         <div class="fuel">
           <div class="fuel-track"><div class="fuel-fill"></div></div>
           <span class="fuel-value">78%</span>
-        </div>
-      </div>
-      <div class="stat-line">
-        <span class="tag">OXYGENE</span>
-        <div class="oxygen" aria-label="Reserve oxygene">
-          <span class="oxygen-pack"><span class="oxygen-dot"></span><span class="oxygen-dot"></span><span class="oxygen-dot"></span></span>
-          <span class="oxygen-pack"><span class="oxygen-dot"></span><span class="oxygen-dot"></span><span class="oxygen-dot"></span></span>
-          <span class="oxygen-pack"><span class="oxygen-dot"></span><span class="oxygen-dot"></span><span class="oxygen-dot"></span></span>
         </div>
       </div>
     </div>
@@ -1074,6 +1269,8 @@ const distanceValue = document.getElementById('distance-value');
 const roomCurrent = document.getElementById('room-current');
 const roomState = document.getElementById('room-state');
 const mapMessage = document.getElementById('map-message');
+const messageBtn = document.getElementById('message-btn');
+const personalMessages = document.getElementById('personal-messages');
 const initialDistanceMillionKm = 473.65;
 const distanceCountdownSeconds = 10 * 60 * 60;
 const millionKmPerSecond = initialDistanceMillionKm / distanceCountdownSeconds;
@@ -1309,6 +1506,16 @@ function initShipMap() {
   });
 }
 
+function initPersonalPackage() {
+  if (!messageBtn || !personalMessages) return;
+
+  messageBtn.addEventListener('click', () => {
+    const open = personalMessages.classList.toggle('open');
+    messageBtn.classList.toggle('open', open);
+    messageBtn.setAttribute('aria-expanded', String(open));
+  });
+}
+
 function renderCrew() {
   crewEl.innerHTML = '';
   readyState.forEach((ready, index) => {
@@ -1366,6 +1573,7 @@ updateDistance();
 startPortholeSpace();
 startAmbientDust();
 initShipMap();
+initPersonalPackage();
 </script>
 </body>
 </html>
