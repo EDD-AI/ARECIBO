@@ -443,6 +443,15 @@ const BOOT_LINE_PAUSE = 82;
 const HELLO_TYPE_SPEED = 48;
 const HELLO_HOLD = 1500;
 const FINAL_FADE_HOLD = 900;
+const PRELOAD_TIMEOUT = 2600;
+
+const PRELOAD_STATUS = {
+  loaded: 0,
+  total: 1,
+  ready: false,
+  failed: false
+};
+let preloadPromise = null;
 
 const PANEL_LIGHTS = [
   [3.80, 4.62], [11.30, 4.63], [88.73, 4.64], [93.22, 4.68], [98.34, 4.87],
@@ -682,6 +691,85 @@ const BOOT_LINES = [
   { text: ': CHECKING SYSTEMS', className: 'status' }
 ];
 
+function addPreloadTarget(targets, value, baseUrl = location.href) {
+  if (!value || /^(data:|blob:|mailto:|tel:|#)/i.test(value)) return;
+  try {
+    const url = new URL(value, baseUrl);
+    if (url.origin === window.location.origin) targets.add(url.href);
+  } catch (error) {}
+}
+
+function collectCssUrls(cssText, baseUrl, targets) {
+  if (!cssText) return;
+  const urlPattern = /url\(\s*(['"]?)(.*?)\1\s*\)/g;
+  let match;
+  while ((match = urlPattern.exec(cssText)) !== null) {
+    addPreloadTarget(targets, match[2], baseUrl);
+  }
+}
+
+function preloadFetch(url) {
+  return fetch(url, { cache: 'force-cache', credentials: 'same-origin' });
+}
+
+function readPreloadPercent() {
+  if (PRELOAD_STATUS.ready) return 100;
+  const total = Math.max(1, PRELOAD_STATUS.total);
+  return Math.max(0, Math.min(99, Math.round((PRELOAD_STATUS.loaded / total) * 100)));
+}
+
+function preloadFutureScene() {
+  if (preloadPromise) return preloadPromise;
+
+  preloadPromise = (async () => {
+    const pageUrl = new URL(NEXT, location.href);
+    const targets = new Set();
+
+    PRELOAD_STATUS.loaded = 0;
+    PRELOAD_STATUS.total = 1;
+    PRELOAD_STATUS.ready = false;
+    PRELOAD_STATUS.failed = false;
+
+    const response = await preloadFetch(pageUrl.href);
+    if (!response.ok) throw new Error(`Preload failed: ${response.status}`);
+    const html = await response.text();
+    PRELOAD_STATUS.loaded = 1;
+
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    doc.querySelectorAll('link[href], script[src], img[src], source[src], audio[src], video[src]').forEach(node => {
+      addPreloadTarget(targets, node.getAttribute('href') || node.getAttribute('src'), pageUrl.href);
+    });
+    doc.querySelectorAll('style').forEach(node => collectCssUrls(node.textContent, pageUrl.href, targets));
+    doc.querySelectorAll('[style]').forEach(node => collectCssUrls(node.getAttribute('style'), pageUrl.href, targets));
+
+    targets.delete(pageUrl.href);
+    PRELOAD_STATUS.total = Math.max(1, targets.size + 1);
+
+    await Promise.all(Array.from(targets).map(async url => {
+      try {
+        await preloadFetch(url);
+      } catch (error) {
+        // A missing decorative asset should not block the session.
+      } finally {
+        PRELOAD_STATUS.loaded++;
+      }
+    }));
+
+    PRELOAD_STATUS.ready = true;
+    return true;
+  })().catch(() => {
+    PRELOAD_STATUS.failed = true;
+    return false;
+  });
+
+  return preloadPromise;
+}
+
+function waitForPreload(maxWait = PRELOAD_TIMEOUT) {
+  const timeout = new Promise(resolve => delay(() => resolve(PRELOAD_STATUS.ready), maxWait));
+  return Promise.race([preloadFutureScene(), timeout]);
+}
+
 let allTimers = [];
 function delay(fn, ms) { const t = setTimeout(fn, ms); allTimers.push(t); return t; }
 
@@ -750,6 +838,7 @@ function startBootSequence() {
   if (scene) scene.classList.add('boot-hidden');
   if (boot) boot.classList.add('visible');
 
+  preloadFutureScene();
   runBootLines(0);
 }
 
@@ -767,10 +856,13 @@ function appendBootLine(text, className = '', speed = BOOT_TYPE_SPEED) {
 
 function typeBootText(line, text, speed, done) {
   let index = 0;
+  const token = `${Date.now()}-${Math.random()}`;
+  line.dataset.bootTypeToken = token;
   line.textContent = '';
   line.classList.add('boot-cursor');
 
   function tick() {
+    if (line.dataset.bootTypeToken !== token) return;
     line.textContent = text.slice(0, index);
     index++;
 
@@ -784,9 +876,17 @@ function typeBootText(line, text, speed, done) {
   tick();
 }
 
+function replaceBootLine(line, text, className = '', speed = BOOT_TYPE_SPEED) {
+  if (!line) return;
+  line.className = `boot-line ${className}`.trim();
+  typeBootText(line, text, speed, () => {
+    line.classList.remove('boot-cursor');
+  });
+}
+
 function runBootLines(index) {
   if (index >= BOOT_LINES.length) {
-    delay(showHelloWorld, 700);
+    delay(runPreloadLine, 500);
     return;
   }
 
@@ -797,6 +897,39 @@ function runBootLines(index) {
   delay(() => {
     if (line) line.classList.remove('boot-cursor');
     runBootLines(index + 1);
+  }, writeTime + BOOT_LINE_PAUSE);
+}
+
+function runPreloadLine() {
+  const preloadLine = appendBootLine('> PRELOADING EXTRACTION SCENE...', 'command');
+  const writeTime = Math.max(300, '> PRELOADING EXTRACTION SCENE...'.length * BOOT_TYPE_SPEED);
+
+  delay(() => {
+    if (preloadLine) preloadLine.classList.remove('boot-cursor');
+    const statusLine = appendBootLine('[--] SCENE CACHE ............ 00%', 'dim');
+    if (statusLine) {
+      statusLine.dataset.bootTypeToken = 'preload-progress';
+      statusLine.className = 'boot-line dim boot-cursor';
+      statusLine.textContent = `[--] SCENE CACHE ............ ${String(readPreloadPercent()).padStart(2, '0')}%`;
+    }
+
+    const progress = setInterval(() => {
+      if (!statusLine || PRELOAD_STATUS.ready || PRELOAD_STATUS.failed) return;
+      const percent = String(readPreloadPercent()).padStart(2, '0');
+      statusLine.className = 'boot-line dim boot-cursor';
+      statusLine.textContent = `[--] SCENE CACHE ............ ${percent}%`;
+    }, 140);
+
+    waitForPreload(PRELOAD_TIMEOUT).then(ready => {
+      clearInterval(progress);
+      const complete = ready || PRELOAD_STATUS.ready;
+      replaceBootLine(
+        statusLine,
+        complete ? '[OK] SCENE CACHE ............ READY' : '[--] SCENE CACHE ............ PARTIAL',
+        complete ? 'status' : 'dim'
+      );
+      delay(showHelloWorld, complete ? 820 : 980);
+    });
   }, writeTime + BOOT_LINE_PAUSE);
 }
 
@@ -821,12 +954,13 @@ function showHelloWorld() {
 function finishBootSequence() {
   const fade = document.getElementById('fade');
   delay(() => {
-    if (fade) fade.classList.add('active');
+    waitForPreload(1400).then(() => {
+      if (fade) fade.classList.add('active');
+      delay(() => {
+        window.location.href = NEXT;
+      }, FINAL_FADE_HOLD);
+    });
   }, HELLO_HOLD);
-
-  delay(() => {
-    window.location.href = NEXT;
-  }, HELLO_HOLD + FINAL_FADE_HOLD);
 }
 
 // Démarrage
