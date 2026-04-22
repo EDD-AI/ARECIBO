@@ -18,6 +18,21 @@
   --black:#020301;
   --line:rgba(247,255,195,.62);
   --line-soft:rgba(247,255,195,.28);
+  --airlock-left:calc(50vw + .16vh);
+  --airlock-top:55.9vh;
+  --airlock-width:30vh;
+  --airlock-height:36.3vh;
+  --airlock-radius:clamp(18px, 2.2vh, 28px);
+}
+
+@media (min-aspect-ratio: 339/190) {
+  :root {
+    --airlock-left:50.09vw;
+    --airlock-top:calc(50vh + 3.3vw);
+    --airlock-width:16.81vw;
+    --airlock-height:20.36vw;
+    --airlock-radius:clamp(18px, 1.25vw, 28px);
+  }
 }
 
 * { box-sizing:border-box; margin:0; padding:0; }
@@ -201,13 +216,13 @@ body::after {
 
 .space-porthole {
   position:absolute;
-  left:50%;
-  top:55.6%;
-  width:clamp(280px, 17.2vw, 365px);
-  height:clamp(330px, 38vh, 455px);
+  left:var(--airlock-left);
+  top:var(--airlock-top);
+  width:var(--airlock-width);
+  height:var(--airlock-height);
   transform:translate(-50%, -50%);
   overflow:hidden;
-  border-radius:clamp(18px, 1.4vw, 28px);
+  border-radius:var(--airlock-radius);
   background:
     radial-gradient(ellipse at center, rgba(247,255,195,.025), transparent 68%),
     transparent;
@@ -234,13 +249,13 @@ body::after {
 
 .airlock-shield {
   position:absolute;
-  left:50%;
-  top:55.6%;
-  width:clamp(280px, 17.2vw, 365px);
-  height:clamp(330px, 38vh, 455px);
+  left:var(--airlock-left);
+  top:var(--airlock-top);
+  width:var(--airlock-width);
+  height:var(--airlock-height);
   transform:translate(-50%, -50%);
   overflow:hidden;
-  border-radius:clamp(18px, 1.4vw, 28px);
+  border-radius:var(--airlock-radius);
   pointer-events:none;
   z-index:9;
   mix-blend-mode:screen;
