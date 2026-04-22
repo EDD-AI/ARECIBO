@@ -54,6 +54,25 @@ body::before {
   z-index:1;
 }
 
+.boot-sequence {
+  position:fixed;
+  left:50%;
+  top:50%;
+  width:max(100vw, 177.7778vh);
+  height:max(100vh, 56.25vw);
+  transform:translate(-50%, -50%);
+  background-position:center;
+  background-size:cover;
+  background-repeat:no-repeat;
+  opacity:0;
+  pointer-events:none;
+  z-index:180;
+  transition:opacity .42s ease;
+}
+.boot-sequence.booting { background-image:url('assets/boot-system-frame.png'); }
+.boot-sequence.hello { background-image:url('assets/hello-world-frame.png'); }
+.boot-sequence.visible { opacity:1; }
+
 .panel-lights {
   position:absolute;
   inset:0;
@@ -222,6 +241,10 @@ body::before {
   z-index:20;
 }
 #skip:hover { color:rgba(247,255,195,.5); }
+#skip.hidden {
+  opacity:0;
+  pointer-events:none;
+}
 
 /* Fondu */
 #fade {
@@ -254,10 +277,14 @@ body::before {
 <button id="skip" onclick="skipIntro()">PASSER ›</button>
   </div>
 </div>
+<div id="boot-sequence" class="boot-sequence" aria-hidden="true"></div>
 <div id="fade"></div>
 
 <script>
 const NEXT = 'arecibo_game.html?v=solo-prototype';
+const BOOT_HOLD = 3200;
+const HELLO_HOLD = 2600;
+const FINAL_FADE_HOLD = 900;
 
 const PANEL_LIGHTS = [
   [3.80, 4.62], [11.30, 4.63], [88.73, 4.64], [93.22, 4.68], [98.34, 4.87],
@@ -331,6 +358,7 @@ let charIndex  = 0;
 let paraIndex  = 0;
 let fullText   = '';
 let running    = true;
+let bootStarted = false;
 
 // Vitesse de frappe (ms par caractère)
 const SPEED     = 28;
@@ -367,16 +395,36 @@ function typeChar() {
 }
 
 function goNext() {
-  document.getElementById('fade').classList.add('active');
-  delay(() => { window.location.href = NEXT; }, 900);
+  startBootSequence();
 }
 
 function skipIntro() {
+  startBootSequence();
+}
+
+function startBootSequence() {
+  if (bootStarted) return;
+  bootStarted = true;
   running = false;
   allTimers.forEach(clearTimeout);
-  document.getElementById('fade').style.transition = 'opacity .3s ease';
-  document.getElementById('fade').classList.add('active');
-  setTimeout(() => { window.location.href = NEXT; }, 350);
+  const skip = document.getElementById('skip');
+  const boot = document.getElementById('boot-sequence');
+  const fade = document.getElementById('fade');
+
+  if (skip) skip.classList.add('hidden');
+  if (boot) boot.className = 'boot-sequence booting visible';
+
+  delay(() => {
+    if (boot) boot.className = 'boot-sequence hello visible';
+  }, BOOT_HOLD);
+
+  delay(() => {
+    if (fade) fade.classList.add('active');
+  }, BOOT_HOLD + HELLO_HOLD);
+
+  delay(() => {
+    window.location.href = NEXT;
+  }, BOOT_HOLD + HELLO_HOLD + FINAL_FADE_HOLD);
 }
 
 // Démarrage
