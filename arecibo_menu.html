@@ -712,23 +712,25 @@ canvas#starfield-bg {
   ].map(spec => ({ ...spec, el: document.getElementById(spec.id) })).filter(spec => spec.el);
 
   function distortedPoint(point, time, lineIndex, pointIndex) {
-    const gx = gravity.x + Math.sin(time * .00034) * 12;
-    const gy = gravity.y + Math.cos(time * .00028) * 8;
+    const gx = gravity.x + Math.sin(time * .00022) * 3;
+    const gy = gravity.y + Math.cos(time * .0002) * 2;
     const dx = gx - point.x;
     const dy = gy - point.y;
     const dist = Math.max(1, Math.hypot(dx, dy));
     const near = Math.max(0, 1 - dist / gravity.radius);
-    const falloff = near * near;
-    const eventHorizon = Math.max(0, 1 - dist / 180);
+    const falloff = near * near * near;
+    const capture = Math.max(0, 1 - dist / 260);
+    const captureForce = capture * capture;
     const ux = dx / dist;
     const uy = dy / dist;
-    const pull = falloff * (92 + Math.sin(time * .001 + lineIndex) * 12) + eventHorizon * 84;
-    const swirl = falloff * Math.sin(time * .0014 + point.y * .018 + lineIndex) * 54;
-    const drift = Math.sin(time * .0009 + point.x * .014 + lineIndex * 1.7) * (1.2 + falloff * 8.5);
+    const pull = falloff * 130 + captureForce * 190;
+    const bendToCenter = dy * (falloff * .16 + captureForce * .48);
+    const stableShear = Math.sin(lineIndex * .85) * falloff * 10;
+    const slowBreath = Math.sin(time * .00038 + lineIndex * 1.3) * (0.28 + falloff * 1.1);
 
     return {
-      x: point.x + ux * pull - uy * swirl + Math.sin(time * .0007 + pointIndex * .3) * falloff * 3,
-      y: point.y + uy * pull + ux * swirl + drift
+      x: point.x + ux * pull - uy * stableShear,
+      y: point.y + uy * pull + bendToCenter + ux * stableShear + slowBreath
     };
   }
 
