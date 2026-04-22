@@ -358,7 +358,7 @@ body::after {
 
 .personal-window {
   position:absolute;
-  left:2.4vw;
+  left:4.8vw;
   top:5.4vh;
   width:min(29vw, 360px);
   min-width:310px;
@@ -382,6 +382,14 @@ body::after {
     0 0 18px rgba(117,216,255,.11),
     inset 0 0 24px rgba(117,216,255,.04);
 }
+.personal-window.is-dragging {
+  transition:none;
+  transform:none;
+  border-color:rgba(117,216,255,1);
+  box-shadow:
+    0 0 22px rgba(117,216,255,.18),
+    inset 0 0 26px rgba(117,216,255,.055);
+}
 .personal-title {
   height:42px;
   display:flex;
@@ -394,6 +402,9 @@ body::after {
   text-transform:uppercase;
   white-space:nowrap;
   overflow:hidden;
+  cursor:none;
+  user-select:none;
+  touch-action:none;
 }
 .personal-body {
   padding:14px 16px 15px;
@@ -1137,7 +1148,7 @@ body::after {
   <div class="airlock-shield" aria-hidden="true"></div>
   <button class="back-btn" type="button" onclick="goMenu()">&#60; MENU</button>
 
-  <section class="personal-window" aria-label="Package personnel du joueur">
+  <section class="personal-window" id="personal-window" aria-label="Package personnel du joueur">
     <header class="personal-title">&#62;PACKAGE PERSONNEL\</header>
 
     <div class="personal-body">
@@ -1280,6 +1291,8 @@ const roomState = document.getElementById('room-state');
 const mapMessage = document.getElementById('map-message');
 const messageBtn = document.getElementById('message-btn');
 const personalMessages = document.getElementById('personal-messages');
+const personalWindow = document.getElementById('personal-window');
+const personalTitle = personalWindow ? personalWindow.querySelector('.personal-title') : null;
 const initialDistanceMillionKm = 473.65;
 const distanceCountdownSeconds = 10 * 60 * 60;
 const millionKmPerSecond = initialDistanceMillionKm / distanceCountdownSeconds;
@@ -1712,6 +1725,87 @@ function initPersonalPackage() {
   });
 }
 
+function initDraggablePersonalWindow() {
+  if (!personalWindow || !personalTitle) return;
+
+  const storageKey = 'areciboPersonalWindowPosition';
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+  let dragging = false;
+
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  function setPosition(left, top, save = false) {
+    const rect = personalWindow.getBoundingClientRect();
+    const margin = 12;
+    const maxLeft = Math.max(margin, window.innerWidth - rect.width - margin);
+    const maxTop = Math.max(margin, window.innerHeight - rect.height - margin);
+    const nextLeft = clamp(left, margin, maxLeft);
+    const nextTop = clamp(top, margin, maxTop);
+
+    personalWindow.style.left = `${nextLeft}px`;
+    personalWindow.style.top = `${nextTop}px`;
+    personalWindow.style.right = 'auto';
+    personalWindow.style.bottom = 'auto';
+
+    if (save) {
+      localStorage.setItem(storageKey, JSON.stringify({ left: nextLeft, top: nextTop }));
+    }
+  }
+
+  function restorePosition() {
+    const saved = localStorage.getItem(storageKey);
+    if (!saved) return;
+
+    try {
+      const position = JSON.parse(saved);
+      if (Number.isFinite(position.left) && Number.isFinite(position.top)) {
+        requestAnimationFrame(() => setPosition(position.left, position.top));
+      }
+    } catch (error) {
+      localStorage.removeItem(storageKey);
+    }
+  }
+
+  personalTitle.addEventListener('pointerdown', event => {
+    if (event.button !== 0) return;
+
+    const rect = personalWindow.getBoundingClientRect();
+    dragging = true;
+    dragOffsetX = event.clientX - rect.left;
+    dragOffsetY = event.clientY - rect.top;
+    personalWindow.classList.add('is-dragging');
+    personalTitle.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+
+  personalTitle.addEventListener('pointermove', event => {
+    if (!dragging) return;
+    setPosition(event.clientX - dragOffsetX, event.clientY - dragOffsetY);
+  });
+
+  function stopDragging(event) {
+    if (!dragging) return;
+    dragging = false;
+    personalWindow.classList.remove('is-dragging');
+    setPosition(personalWindow.getBoundingClientRect().left, personalWindow.getBoundingClientRect().top, true);
+    if (personalTitle.hasPointerCapture(event.pointerId)) {
+      personalTitle.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  personalTitle.addEventListener('pointerup', stopDragging);
+  personalTitle.addEventListener('pointercancel', stopDragging);
+  window.addEventListener('resize', () => {
+    const rect = personalWindow.getBoundingClientRect();
+    setPosition(rect.left, rect.top, true);
+  });
+
+  restorePosition();
+}
+
 function renderCrew() {
   crewEl.innerHTML = '';
   readyState.forEach((ready, index) => {
@@ -1770,6 +1864,7 @@ startPortholeSpace();
 startAmbientDust();
 initShipMap();
 initPersonalPackage();
+initDraggablePersonalWindow();
 </script>
 </body>
 </html>
