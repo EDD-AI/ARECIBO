@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARECIBO — Mission</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap');
+@font-face { font-family:'Degular'; src:url('fonts/Degular-Black.woff2') format('woff2'); font-weight:900; }
+
+:root { --cream:#F7FFC3; --orange:#FA5A1F; --bg:#000; --border:rgba(247,255,195,.1); }
+* { box-sizing:border-box; margin:0; padding:0; }
+
+body {
+  background: var(--bg);
+  width:100vw; height:100vh;
+  overflow:hidden;
+  font-family:'Pixelify Sans', monospace;
+  color:var(--cream);
+  cursor:none;
+}
+
+.cursor { position:fixed; width:14px; height:14px; border:1.5px solid var(--cream); pointer-events:none; z-index:9999; transform:translate(-50%,-50%); }
+.cursor::after { content:''; position:absolute; top:50%; left:50%; width:3px; height:3px; background:var(--orange); transform:translate(-50%,-50%); }
+
+body::after { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px); pointer-events:none; z-index:900; }
+
+/* Layout */
+.hud {
+  display: grid;
+  grid-template-columns: 220px 1fr 220px;
+  grid-template-rows: 48px 1fr 48px;
+  width:100vw; height:100vh;
+  border: 1px solid var(--border);
+}
+
+/* Header */
+.hud-header {
+  grid-column:1/-1;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 0 20px;
+}
+.hud-title { font-family:'Degular', sans-serif; font-weight:900; font-size:16px; letter-spacing:.06em; }
+.hud-code  { font-size:9px; letter-spacing:.14em; color:rgba(247,255,195,.3); }
+
+/* Timer */
+.timer-wrap { display:flex; align-items:center; gap:10px; }
+.timer-label { font-size:9px; letter-spacing:.1em; color:rgba(247,255,195,.35); }
+.timer-val {
+  font-family:'Degular', sans-serif; font-weight:900;
+  font-size:22px; color:var(--cream);
+  letter-spacing:.04em;
+  transition: color .3s;
+}
+.timer-val.warn { color:var(--orange); }
+.timer-val.crit { color:#ff3333; animation: pulse .5s ease infinite alternate; }
+@keyframes pulse { from{opacity:1} to{opacity:.4} }
+
+/* Panel gauche — status vaisseau */
+.panel-left {
+  border-right:1px solid var(--border);
+  padding:16px 14px;
+  display:flex; flex-direction:column; gap:12px;
+}
+.panel-section-label {
+  font-size:8px; letter-spacing:.14em; color:rgba(247,255,195,.3);
+  border-bottom:1px solid var(--border);
+  padding-bottom:6px; margin-bottom:4px;
+}
+.stat-row { display:flex; justify-content:space-between; align-items:center; }
+.stat-label { font-size:9px; letter-spacing:.06em; color:rgba(247,255,195,.5); }
+.stat-bar { width:80px; height:3px; background:rgba(247,255,195,.1); position:relative; }
+.stat-fill { position:absolute; top:0; left:0; height:100%; background:var(--cream); transition:width .5s; }
+.stat-fill.low { background:var(--orange); }
+.stat-fill.crit { background:#ff3333; }
+
+/* Zone centrale — vaisseau */
+.panel-center {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  position:relative; gap:20px;
+  padding: 20px;
+}
+
+.ship-label {
+  position:absolute; top:16px; left:50%; transform:translateX(-50%);
+  font-size:9px; letter-spacing:.14em; color:rgba(247,255,195,.2);
+}
+
+/* SVG vaisseau placeholder */
+.ship-svg { width:min(320px,50%); opacity:.85; }
+
+/* Bouton extraction */
+.extract-btn {
+  background: var(--orange);
+  border:none;
+  font-family:'Degular', sans-serif; font-weight:900;
+  font-size:15px; letter-spacing:.1em;
+  color:#000;
+  padding:13px 40px;
+  cursor:none;
+  transition:background .15s, transform .1s;
+  z-index:10;
+}
+.extract-btn:hover { background:#ff6b35; transform:scale(1.02); }
+.extract-btn:active { transform:scale(.98); }
+
+.distance-info {
+  font-size:9px; letter-spacing:.1em; color:rgba(247,255,195,.25);
+  text-align:center;
+}
+
+/* Panel droit — terminal */
+.panel-right {
+  border-left:1px solid var(--border);
+  padding:14px;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+.terminal-lines {
+  flex:1; overflow-y:auto;
+  scrollbar-width:none;
+  display:flex; flex-direction:column; justify-content:flex-end;
+  gap:3px;
+}
+.t { font-size:9px; letter-spacing:.05em; line-height:1.6; color:rgba(247,255,195,.4); }
+.t.err { color:rgba(250,90,31,.7); }
+.t.sys { color:rgba(247,255,195,.2); }
+.t.hi  { color:var(--cream); }
+.terminal-input { display:flex; align-items:center; gap:6px; margin-top:8px; border-top:1px solid var(--border); padding-top:8px; }
+.terminal-prompt { font-size:9px; color:var(--orange); }
+.t-cursor-inline { display:inline-block; width:6px; height:10px; background:var(--orange); animation:blink .8s step-end infinite; vertical-align:middle; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* Footer */
+.hud-footer {
+  grid-column:1/-1;
+  border-top:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 0 20px;
+  font-size:8px; color:rgba(247,255,195,.15); letter-spacing:.1em;
+}
+
+.back-btn {
+  background:none; border:none;
+  font-family:'Pixelify Sans', monospace; font-size:9px;
+  letter-spacing:.1em; color:rgba(247,255,195,.25);
+  cursor:none; transition:color .12s;
+}
+.back-btn:hover { color:var(--cream); }
+
+/* Radiation bar */
+.rad-bar-wrap { display:flex; align-items:center; gap:8px; }
+.rad-label { font-size:8px; color:rgba(247,255,195,.25); letter-spacing:.1em; }
+.rad-bar { width:120px; height:3px; background:rgba(247,255,195,.08); }
+.rad-fill { height:100%; width:12%; background:var(--orange); transition:width 1s; }
+
+/* Transition */
+.page-transition { position:fixed; inset:0; background:#000; z-index:1000; opacity:1; transition:opacity .5s ease; pointer-events:all; }
+.page-transition.out { opacity:0; pointer-events:none; }
+</style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div class="page-transition" id="transition"></div>
+
+<div class="hud">
+
+  <!-- HEADER -->
+  <div class="hud-header">
+    <button class="back-btn" onclick="goMenu()">← MENU</button>
+    <span class="hud-title">>MOTOMOTO // EN ORBITE</span>
+    <div class="timer-wrap">
+      <span class="timer-label">EXPOSITION</span>
+      <span class="timer-val" id="timer">00:00</span>
+    </div>
+    <span class="hud-code">SESSION : <span id="session-code"></span></span>
+  </div>
+
+  <!-- PANEL GAUCHE — SYSTÈMES -->
+  <div class="panel-left">
+    <div>
+      <div class="panel-section-label">SYSTÈMES VAISSEAU</div>
+      <div class="stat-row" style="margin-bottom:10px">
+        <span class="stat-label">COQUE</span>
+        <div class="stat-bar"><div class="stat-fill" style="width:61%"></div></div>
+      </div>
+      <div class="stat-row" style="margin-bottom:10px">
+        <span class="stat-label">CARBURANT</span>
+        <div class="stat-bar"><div class="stat-fill low" style="width:34%"></div></div>
+      </div>
+      <div class="stat-row" style="margin-bottom:10px">
+        <span class="stat-label">OXYGÈNE</span>
+        <div class="stat-bar"><div class="stat-fill" style="width:88%"></div></div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">ANTENNE</span>
+        <div class="stat-bar"><div class="stat-fill crit" style="width:12%"></div></div>
+      </div>
+    </div>
+
+    <div style="margin-top:8px">
+      <div class="panel-section-label">DISTANCE — TROU NOIR</div>
+      <div style="font-family:'Degular',sans-serif;font-weight:900;font-size:28px;letter-spacing:.02em;color:var(--cream);margin:4px 0">4.7 AU</div>
+      <div style="font-size:8px;color:rgba(247,255,195,.2);letter-spacing:.1em">PROGRESSION SESSION 1/∞</div>
+    </div>
+
+    <div style="margin-top:8px">
+      <div class="panel-section-label">FRAGMENTS CAPTÉS</div>
+      <div style="font-size:8px;color:rgba(247,255,195,.2);letter-spacing:.06em;line-height:2">
+        <div style="color:rgba(247,255,195,.15)">▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪</div>
+        <div style="font-size:7px;color:rgba(247,255,195,.15);margin-top:2px">0 / 1679 bits récupérés</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTRE — VAISSEAU + EXTRACTION -->
+  <div class="panel-center">
+    <span class="ship-label">MOTOMOTO // VAISSEAU AMIRAL</span>
+
+    <!-- SVG vaisseau placeholder -->
+    <svg class="ship-svg" viewBox="0 0 300 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Corps principal -->
+      <rect x="80" y="70" width="140" height="60" rx="2" stroke="rgba(247,255,195,.25)" stroke-width="1" fill="rgba(247,255,195,.02)"/>
+      <!-- Cockpit -->
+      <rect x="190" y="80" width="50" height="40" rx="1" stroke="rgba(247,255,195,.2)" stroke-width="1" fill="rgba(247,255,195,.03)"/>
+      <!-- Moteurs -->
+      <rect x="60" y="78" width="22" height="14" rx="1" stroke="rgba(250,90,31,.4)" stroke-width="1" fill="rgba(250,90,31,.05)"/>
+      <rect x="60" y="108" width="22" height="14" rx="1" stroke="rgba(250,90,31,.4)" stroke-width="1" fill="rgba(250,90,31,.05)"/>
+      <!-- Flamme moteurs -->
+      <line x1="60" y1="85" x2="40" y2="85" stroke="rgba(250,90,31,.3)" stroke-width="1.5"/>
+      <line x1="60" y1="115" x2="40" y2="115" stroke="rgba(250,90,31,.3)" stroke-width="1.5"/>
+      <!-- Antenne (endommagée) -->
+      <line x1="150" y1="70" x2="148" y2="45" stroke="rgba(247,255,195,.2)" stroke-width="1"/>
+      <line x1="148" y1="45" x2="160" y2="32" stroke="rgba(247,255,195,.12)" stroke-width="1" stroke-dasharray="3 3"/>
+      <!-- Hublots -->
+      <circle cx="200" cy="100" r="5" stroke="rgba(247,255,195,.3)" stroke-width="1" fill="rgba(247,255,195,.05)"/>
+      <circle cx="215" cy="100" r="5" stroke="rgba(247,255,195,.2)" stroke-width="1" fill="rgba(247,255,195,.03)"/>
+      <!-- Dégâts coque -->
+      <line x1="110" y1="70" x2="118" y2="80" stroke="rgba(250,90,31,.25)" stroke-width="1"/>
+      <line x1="145" y1="130" x2="155" y2="125" stroke="rgba(250,90,31,.2)" stroke-width="1"/>
+      <!-- Indicateurs bas -->
+      <circle cx="100" cy="155" r="2" fill="rgba(250,90,31,.7)"/>
+      <circle cx="110" cy="155" r="2" fill="rgba(247,255,195,.15)"/>
+      <circle cx="120" cy="155" r="2" fill="rgba(247,255,195,.15)"/>
+      <!-- Étoile fond -->
+      <circle cx="30"  cy="30"  r="1" fill="rgba(247,255,195,.4)"/>
+      <circle cx="270" cy="50"  r="1" fill="rgba(247,255,195,.3)"/>
+      <circle cx="260" cy="160" r="1" fill="rgba(247,255,195,.5)"/>
+      <circle cx="20"  cy="170" r="1" fill="rgba(247,255,195,.25)"/>
+    </svg>
+
+    <div class="distance-info">
+      Zone d'extraction disponible — débris détectés à proximité
+    </div>
+
+    <button class="extract-btn" onclick="startExtraction()">
+      ▶ LANCER L'EXTRACTION
+    </button>
+  </div>
+
+  <!-- PANEL DROIT — TERMINAL -->
+  <div class="panel-right">
+    <div class="panel-section-label">TERMINAL MOTOMOTO</div>
+    <div class="terminal-lines" id="terminal-lines">
+      <div class="t sys">&gt; BOOT SEQUENCE COMPLETE</div>
+      <div class="t err">&gt; ANTENNE : SIGNAL FAIBLE</div>
+      <div class="t sys">&gt; DISTANCE TROU NOIR : 4.7 AU</div>
+      <div class="t sys">&gt; RADIATIONS : NIVEAU 1 — NOMINAL</div>
+      <div class="t err">&gt; CARBURANT CRITIQUE — 34%</div>
+      <div class="t">&nbsp;</div>
+      <div class="t hi" id="last-line">&gt; EN ATTENTE DE VOS ORDRES.</div>
+    </div>
+    <div class="terminal-input">
+      <span class="terminal-prompt">&gt;</span>
+      <div class="t-cursor-inline"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="hud-footer">
+    <span>MOTOMOTO SYSTEMS // SALVAGE PROTOCOL v0.1</span>
+    <div class="rad-bar-wrap">
+      <span class="rad-label">RADIATION</span>
+      <div class="rad-bar"><div class="rad-fill" id="rad-fill"></div></div>
+    </div>
+    <span id="footer-time">SESSION EN COURS</span>
+  </div>
+
+</div>
+
+<script>
+// Cursor
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top  = e.clientY + 'px';
+});
+
+// Session code
+document.getElementById('session-code').textContent =
+  Math.random().toString(36).substring(2,6).toUpperCase();
+
+// Fade in
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => document.getElementById('transition').classList.add('out'), 80);
+});
+
+// Timer d'exposition (ne tourne que pendant extraction — ici juste pour la démo)
+let seconds = 0;
+const timerEl = document.getElementById('timer');
+
+// Terminal messages
+const messages = [
+  { txt: '&gt; SYSTÈME STABILISÉ.', cls: 'sys', delay: 3000 },
+  { txt: '&gt; ZONE D\'EXTRACTION SCANNÉE.', cls: 'hi',  delay: 5500 },
+  { txt: '&gt; 3 OBJETS DÉTECTÉS À PORTÉE.', cls: 'hi',  delay: 7000 },
+  { txt: '&gt; SIGNAL CHIFFRÉ REÇU — SOURCE INCONNUE.', cls: 'err', delay: 11000 },
+];
+
+function addLine(txt, cls = '') {
+  const lines = document.getElementById('terminal-lines');
+  const div = document.createElement('div');
+  div.className = 't ' + cls;
+  div.innerHTML = txt;
+  lines.appendChild(div);
+  lines.scrollTop = lines.scrollHeight;
+}
+
+messages.forEach(m => {
+  setTimeout(() => addLine(m.txt, m.cls), m.delay);
+});
+
+// Navigation
+function goMenu() {
+  const t = document.getElementById('transition');
+  t.classList.remove('out');
+  setTimeout(() => window.location.href = 'arecibo_menu.html', 500);
+}
+
+function startExtraction() {
+  addLine('&gt; SAS D\'EXTRACTION OUVERT — BONNE CHANCE.', 'hi');
+  addLine('&gt; TIMER D\'EXPOSITION ACTIF.', 'err');
+  // TODO: lancer la session d'extraction
+}
+</script>
+</body>
+</html>

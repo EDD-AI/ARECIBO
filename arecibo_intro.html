@@ -330,7 +330,7 @@ body::after {
 <div id="final-fade"></div>
 
 <script>
-const NEXT_PAGE = 'arecibo_creation.html';
+const NEXT_PAGE = 'arecibo_game.html';
 
 // =====================
 // TIMING
@@ -386,7 +386,7 @@ function startSequence() {
 
   // Redirection
   t(() => {
-    window.location.href = NEXT_PAGE;
+    window.location.href = 'arecibo_game.html';
   }, T_REDIRECT);
 }
 
@@ -397,7 +397,7 @@ function skipIntro() {
   timers.forEach(clearTimeout);
   document.getElementById('final-fade').style.transition = 'opacity .3s ease';
   document.getElementById('final-fade').classList.add('active');
-  setTimeout(() => { window.location.href = NEXT_PAGE; }, 350);
+  setTimeout(() => { window.location.href = 'arecibo_game.html'; }, 350);
 }
 
 // Démarrage
