@@ -561,31 +561,27 @@ body::after {
   text-shadow:0 0 8px rgba(117,216,255,.22);
 }
 .mail-icon {
-  position:relative;
-  width:22px;
-  height:15px;
-  border:1px solid currentColor;
-  box-shadow:
-    0 0 9px rgba(117,216,255,.15),
-    inset 0 0 6px rgba(117,216,255,.05);
+  width:25px;
+  height:19px;
+  display:block;
+  filter:drop-shadow(0 0 7px rgba(117,216,255,.2));
+  shape-rendering:crispEdges;
 }
-.mail-icon::before,
-.mail-icon::after {
-  content:'';
-  position:absolute;
-  top:0;
-  width:13px;
-  height:1px;
-  background:currentColor;
-  transform-origin:top left;
+.mail-icon .mail-border {
+  fill:#02090d;
+  stroke:#bdf2ff;
+  stroke-width:1.6;
 }
-.mail-icon::before {
-  left:0;
-  transform:rotate(34deg);
+.mail-icon .mail-flap {
+  fill:none;
+  stroke:#bdf2ff;
+  stroke-width:1.6;
+  stroke-linecap:square;
+  stroke-linejoin:miter;
 }
-.mail-icon::after {
-  right:-1px;
-  transform:rotate(146deg);
+.mail-icon .mail-pixel {
+  fill:#bdf2ff;
+  opacity:.88;
 }
 .message-count {
   color:var(--orange);
@@ -1217,7 +1213,14 @@ body::after {
 
   <section class="personal-window" id="personal-window" aria-label="Package personnel du joueur">
     <div class="message-indicator" aria-label="2 messages personnels">
-      <span class="mail-icon" aria-hidden="true"></span>
+      <svg class="mail-icon" viewBox="0 0 25 19" aria-hidden="true" focusable="false">
+        <rect class="mail-border" x="2" y="4" width="21" height="13"></rect>
+        <polyline class="mail-flap" points="3,5 12.5,12 22,5"></polyline>
+        <polyline class="mail-flap" points="3,16 10,10"></polyline>
+        <polyline class="mail-flap" points="22,16 15,10"></polyline>
+        <rect class="mail-pixel" x="4" y="6" width="2" height="2"></rect>
+        <rect class="mail-pixel" x="19" y="6" width="2" height="2"></rect>
+      </svg>
       <span class="message-count">02</span>
     </div>
     <header class="personal-title">&#62;PACKAGE PERSONNEL\</header>
