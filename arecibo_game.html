@@ -112,6 +112,20 @@ body::after {
   color:var(--cream);
   text-shadow:0 0 8px rgba(247,255,195,.16);
   z-index:10;
+  transform-origin:46% 52%;
+  transition:
+    transform .22s ease,
+    border-color .22s ease,
+    box-shadow .22s ease,
+    background .22s ease;
+}
+.ship-window:hover {
+  transform:translate3d(3px, -2px, 0) rotate(.12deg);
+  border-color:rgba(247,255,195,.82);
+  background:rgba(0,0,0,.12);
+  box-shadow:
+    0 0 16px rgba(247,255,195,.09),
+    inset 0 0 24px rgba(247,255,195,.025);
 }
 
 .ship-title {
@@ -165,6 +179,22 @@ body::after {
   text-transform:uppercase;
   padding:3px 8px 4px;
   background:rgba(224,59,49,.035);
+  transition:
+    color .18s ease,
+    border-color .18s ease,
+    background .18s ease,
+    box-shadow .18s ease,
+    text-shadow .18s ease;
+}
+.critical:hover,
+.stat-line:hover .critical {
+  color:#ff685c;
+  border-color:rgba(255,104,92,.98);
+  background:rgba(224,59,49,.095);
+  box-shadow:
+    0 0 14px rgba(224,59,49,.23),
+    inset 0 0 10px rgba(224,59,49,.1);
+  text-shadow:0 0 10px rgba(255,104,92,.5);
 }
 
 .fuel {
@@ -245,12 +275,30 @@ body::after {
   width:8px;
   background:var(--cream);
   opacity:.9;
+  transform-origin:bottom center;
+  animation:signalPulse 1.55s steps(3, end) infinite;
 }
 .bar:nth-child(1) { height:8px; }
-.bar:nth-child(2) { height:11px; }
-.bar:nth-child(3) { height:15px; }
-.bar:nth-child(4) { height:8px; }
-.bar:nth-child(5) { height:22px; }
+.bar:nth-child(2) { height:11px; animation-delay:.16s; }
+.bar:nth-child(3) { height:15px; animation-delay:.32s; }
+.bar:nth-child(4) { height:8px; animation-delay:.48s; }
+.bar:nth-child(5) { height:22px; animation-delay:.64s; }
+@keyframes signalPulse {
+  0%, 100% {
+    transform:scaleY(.82);
+    opacity:.7;
+    box-shadow:none;
+  }
+  45% {
+    transform:scaleY(1.16);
+    opacity:1;
+    box-shadow:0 0 8px rgba(247,255,195,.28);
+  }
+  70% {
+    transform:scaleY(.96);
+    opacity:.88;
+  }
+}
 .bits {
   display:flex;
   align-items:center;
@@ -275,6 +323,12 @@ body::after {
   line-height:1;
   font-weight:700;
   letter-spacing:.025em;
+  text-shadow:0 0 10px rgba(247,255,195,.14);
+  transition:text-shadow .18s ease, color .18s ease;
+}
+.ship-section:hover .distance-value {
+  color:#fbffd7;
+  text-shadow:0 0 13px rgba(247,255,195,.3);
 }
 
 .extraction-console {
@@ -325,7 +379,7 @@ body::after {
 }
 .launch-btn:hover {
   transform:translateY(-1px);
-  filter:drop-shadow(0 0 10px rgba(250,90,31,.26));
+  filter:drop-shadow(0 0 13px rgba(250,90,31,.34));
 }
 .launch-icon,
 .launch-label {
@@ -379,6 +433,19 @@ body::after {
   font-size:16px;
   cursor:none;
   opacity:.82;
+  transition:
+    color .14s ease,
+    border-color .14s ease,
+    background .14s ease,
+    box-shadow .14s ease,
+    transform .14s ease;
+}
+.crew-slot:hover {
+  color:var(--orange);
+  border-color:var(--orange);
+  background:rgba(250,90,31,.045);
+  box-shadow:0 0 10px rgba(250,90,31,.16);
+  transform:translateY(-1px);
 }
 .crew-slot.ready {
   color:var(--orange);
@@ -504,7 +571,7 @@ body::after {
 
     <div class="ship-section">
       <div class="distance-label">DISTANCE - TROU NOIR</div>
-      <div class="distance-value">473.65M KM</div>
+      <div class="distance-value" id="distance-value">473.65M KM</div>
     </div>
   </section>
 
@@ -540,6 +607,17 @@ const crewEl = document.getElementById('crew-ready');
 const launchBtn = document.getElementById('launch-btn');
 const launchLabel = launchBtn.querySelector('.launch-label');
 const launchIcon = launchBtn.querySelector('.launch-icon');
+const distanceValue = document.getElementById('distance-value');
+const initialDistanceMillionKm = 473.65;
+const millionKmPerSecond = 0.00035;
+const distanceStart = performance.now();
+
+function updateDistance() {
+  const elapsedSeconds = (performance.now() - distanceStart) / 1000;
+  const currentDistance = Math.max(0, initialDistanceMillionKm - elapsedSeconds * millionKmPerSecond);
+  distanceValue.textContent = `${currentDistance.toFixed(2)}M KM`;
+  requestAnimationFrame(updateDistance);
+}
 
 function renderCrew() {
   crewEl.innerHTML = '';
@@ -594,6 +672,7 @@ function goMenu() {
 }
 
 updateReadyState();
+updateDistance();
 </script>
 </body>
 </html>
