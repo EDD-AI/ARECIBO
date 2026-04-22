@@ -135,6 +135,41 @@ body::after {
   }
 }
 
+.space-porthole {
+  position:absolute;
+  left:50%;
+  top:50.4%;
+  width:clamp(255px, 19.4vw, 390px);
+  height:clamp(156px, 20.6vh, 236px);
+  transform:translate(-50%, -50%);
+  overflow:hidden;
+  border-radius:clamp(28px, 3vw, 52px);
+  background:
+    radial-gradient(ellipse at center, rgba(247,255,195,.04), transparent 64%),
+    #020301;
+  box-shadow:
+    inset 0 0 26px rgba(0,0,0,.95),
+    inset 0 0 42px rgba(247,255,195,.035);
+  opacity:.74;
+  pointer-events:none;
+  z-index:6;
+}
+.space-porthole::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.58) 100%),
+    repeating-linear-gradient(0deg, transparent 0 5px, rgba(247,255,195,.025) 5px 6px);
+  pointer-events:none;
+}
+.space-porthole canvas {
+  width:100%;
+  height:100%;
+  display:block;
+  filter:blur(.15px);
+}
+
 .ship-window {
   position:absolute;
   left:13.2vw;
@@ -560,6 +595,9 @@ body::after {
 <main class="bridge" aria-label="Pont principal du MOTOMOTO">
   <div class="bridge-glass" aria-hidden="true"></div>
   <div class="neon-glow" aria-hidden="true"></div>
+  <div class="space-porthole" aria-hidden="true">
+    <canvas id="porthole-space"></canvas>
+  </div>
 
   <button class="back-btn" type="button" onclick="goMenu()">&#60; MENU</button>
 
@@ -654,6 +692,112 @@ function updateDistance() {
   requestAnimationFrame(updateDistance);
 }
 
+function startPortholeSpace() {
+  const canvas = document.getElementById('porthole-space');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const stars = [];
+  const dust = [];
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
+
+  function randomBetween(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function resetStar(star, fromEdge = false) {
+    star.x = fromEdge ? width + randomBetween(0, width * .18) : Math.random() * width;
+    star.y = Math.random() * height;
+    star.r = randomBetween(.35, 1.35);
+    star.speed = randomBetween(.018, .072);
+    star.alpha = randomBetween(.18, .78);
+    star.twinkle = randomBetween(.004, .014);
+  }
+
+  function resetDust(particle, fromEdge = false) {
+    particle.x = fromEdge ? width + randomBetween(6, width * .2) : Math.random() * width;
+    particle.y = Math.random() * height;
+    particle.prevX = particle.x;
+    particle.prevY = particle.y;
+    particle.r = randomBetween(.7, 1.9);
+    particle.speed = randomBetween(.14, .36);
+    particle.drift = randomBetween(-.025, .045);
+    particle.alpha = randomBetween(.18, .5);
+    particle.warm = Math.random() > .82;
+  }
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    width = Math.max(1, rect.width);
+    height = Math.max(1, rect.height);
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    stars.length = 0;
+    dust.length = 0;
+    for (let i = 0; i < 86; i++) {
+      const star = {};
+      resetStar(star);
+      stars.push(star);
+    }
+    for (let i = 0; i < 24; i++) {
+      const particle = {};
+      resetDust(particle);
+      dust.push(particle);
+    }
+  }
+
+  function draw() {
+    ctx.fillStyle = 'rgba(0, 0, 0, .34)';
+    ctx.fillRect(0, 0, width, height);
+
+    stars.forEach(star => {
+      star.x -= star.speed;
+      star.alpha += star.twinkle;
+      if (star.alpha > .82 || star.alpha < .16) star.twinkle *= -1;
+      if (star.x < -4) resetStar(star, true);
+
+      ctx.globalAlpha = star.alpha;
+      ctx.fillStyle = '#F7FFC3';
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    dust.forEach(particle => {
+      particle.prevX = particle.x;
+      particle.prevY = particle.y;
+      particle.x -= particle.speed;
+      particle.y += Math.sin((particle.x + particle.y) * .018) * .12 + particle.drift;
+      if (particle.x < -12 || particle.y < -10 || particle.y > height + 10) resetDust(particle, true);
+
+      ctx.globalAlpha = particle.alpha * .52;
+      ctx.strokeStyle = particle.warm ? '#FA5A1F' : '#F7FFC3';
+      ctx.lineWidth = Math.max(1, particle.r * .65);
+      ctx.beginPath();
+      ctx.moveTo(particle.prevX + particle.r * 5, particle.prevY);
+      ctx.lineTo(particle.x, particle.y);
+      ctx.stroke();
+
+      ctx.globalAlpha = particle.alpha;
+      ctx.fillStyle = particle.warm ? '#FA5A1F' : '#F7FFC3';
+      ctx.fillRect(particle.x, particle.y, particle.r, particle.r);
+    });
+
+    ctx.globalAlpha = 1;
+    if (!prefersReducedMotion) requestAnimationFrame(draw);
+  }
+
+  resize();
+  draw();
+  window.addEventListener('resize', resize);
+}
+
 function renderCrew() {
   crewEl.innerHTML = '';
   readyState.forEach((ready, index) => {
@@ -708,6 +852,7 @@ function goMenu() {
 
 updateReadyState();
 updateDistance();
+startPortholeSpace();
 </script>
 </body>
 </html>
