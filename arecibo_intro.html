@@ -54,6 +54,40 @@ body::before {
   z-index:1;
 }
 
+.panel-lights {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:3;
+}
+
+.panel-light {
+  position:absolute;
+  left:var(--x);
+  top:var(--y);
+  width:clamp(6px, .5vw, 10px);
+  aspect-ratio:1;
+  border-radius:50%;
+  transform:translate(-50%, -50%);
+  background:radial-gradient(circle, #010101 0 58%, rgba(0,0,0,.96) 72%, transparent 100%);
+  box-shadow:0 0 0 1px rgba(0,0,0,.72), 0 0 5px rgba(0,0,0,.92);
+  opacity:1;
+  animation:panelLightBlink var(--dur, 3.2s) ease-in-out infinite;
+  animation-delay:var(--delay, 0s);
+}
+
+.panel-light::after {
+  content:'';
+  position:absolute;
+  inset:-7px;
+  border:1px solid rgba(247,255,195,.2);
+  border-radius:50%;
+  opacity:0;
+  transform:scale(.45);
+  animation:panelLightRing var(--dur, 3.2s) ease-out infinite;
+  animation-delay:var(--delay, 0s);
+}
+
 .screen-area {
   position:absolute;
   left:23.4%;
@@ -139,6 +173,41 @@ body::before {
 }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
+@keyframes panelLightBlink {
+  0%, 100% {
+    background:radial-gradient(circle, #010101 0 58%, rgba(0,0,0,.96) 72%, transparent 100%);
+    box-shadow:0 0 0 1px rgba(0,0,0,.72), 0 0 5px rgba(0,0,0,.92);
+    filter:brightness(.7);
+    transform:translate(-50%, -50%) scale(1);
+  }
+  42% {
+    background:radial-gradient(circle, #fff8cd 0 18%, rgba(247,255,195,.9) 38%, rgba(247,255,195,.24) 66%, transparent 82%);
+    box-shadow:0 0 7px rgba(247,255,195,.62), 0 0 16px rgba(247,255,195,.2);
+    filter:brightness(1.45);
+    transform:translate(-50%, -50%) scale(1.12);
+  }
+  58% {
+    background:radial-gradient(circle, rgba(247,255,195,.7) 0 16%, rgba(247,255,195,.32) 42%, rgba(0,0,0,.72) 74%, transparent 100%);
+    box-shadow:0 0 4px rgba(247,255,195,.22), 0 0 8px rgba(0,0,0,.64);
+    filter:brightness(.95);
+    transform:translate(-50%, -50%) scale(1.02);
+  }
+}
+
+@keyframes panelLightRing {
+  0%, 44% {
+    opacity:0;
+    transform:scale(.45);
+  }
+  52% {
+    opacity:.34;
+  }
+  100% {
+    opacity:0;
+    transform:scale(1.85);
+  }
+}
+
 /* Bouton passer */
 #skip {
   position:absolute;
@@ -163,11 +232,17 @@ body::before {
   z-index:300;
 }
 #fade.active { opacity:1; pointer-events:all; }
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-light,
+  .panel-light::after { animation:none; }
+}
 </style>
 </head>
 <body>
 
 <div class="intro-shell">
+  <div class="panel-lights" id="panel-lights" aria-hidden="true"></div>
   <div class="screen-area">
     <div class="scene">
   <div class="terminal">
@@ -183,6 +258,42 @@ body::before {
 
 <script>
 const NEXT = 'arecibo_game.html?v=solo-prototype';
+
+const PANEL_LIGHTS = [
+  [3.80, 4.62], [11.30, 4.63], [88.73, 4.64], [93.22, 4.68], [98.34, 4.87],
+  [13.79, 17.85], [7.18, 17.90], [0.43, 17.96], [86.54, 18.22],
+  [3.86, 22.94], [11.00, 22.95], [91.20, 23.15], [98.51, 23.31],
+  [13.49, 27.92], [7.14, 27.92], [0.36, 28.01], [86.54, 28.20], [94.91, 28.25],
+  [3.83, 33.09], [91.30, 33.40], [98.54, 33.40],
+  [7.17, 38.04], [13.40, 38.21], [0.32, 38.25], [95.02, 38.41], [86.65, 38.43],
+  [10.95, 43.44], [91.37, 43.62],
+  [0.31, 56.56], [7.18, 56.59], [13.57, 56.63], [86.66, 56.93], [94.69, 57.40],
+  [3.88, 61.85], [10.91, 61.95], [90.78, 62.39], [98.23, 62.68],
+  [94.65, 67.03], [86.77, 67.06], [0.29, 67.18], [7.15, 67.26], [13.54, 67.38],
+  [98.26, 72.38], [10.91, 72.42], [3.91, 72.61],
+  [94.69, 77.78], [86.68, 77.88], [0.31, 77.89], [7.13, 78.07], [13.60, 78.13],
+  [92.50, 96.64], [98.06, 96.67], [0.19, 96.72], [6.89, 96.80], [13.38, 96.98]
+];
+
+function buildPanelLights() {
+  const holder = document.getElementById('panel-lights');
+  if (!holder) return;
+  const fragment = document.createDocumentFragment();
+
+  PANEL_LIGHTS.forEach(([x, y], index) => {
+    const light = document.createElement('span');
+    light.className = 'panel-light';
+    light.style.setProperty('--x', `${x}%`);
+    light.style.setProperty('--y', `${y}%`);
+    light.style.setProperty('--delay', `${-((index * .37) % 3.4).toFixed(2)}s`);
+    light.style.setProperty('--dur', `${(2.6 + (index % 5) * .34).toFixed(2)}s`);
+    fragment.appendChild(light);
+  });
+
+  holder.appendChild(fragment);
+}
+
+buildPanelLights();
 
 // Le texte complet — paragraphes séparés par double \n
 const STORY = [
