@@ -58,9 +58,11 @@ body::before {
   position:absolute;
   inset:0;
   display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
-  padding:clamp(26px, 3vw, 54px) clamp(34px, 4.4vw, 78px);
+  gap:clamp(10px, 2vh, 18px);
+  padding:clamp(18px, 2.6vh, 34px) clamp(34px, 4.4vw, 78px);
   background:rgba(0,0,0,.12);
   opacity:0;
   pointer-events:none;
@@ -76,7 +78,8 @@ body::before {
 .boot-panel {
   position:relative;
   width:min(86%, 860px);
-  min-height:56%;
+  min-height:0;
+  max-height:calc(100% - clamp(54px, 9vh, 92px));
   border:1px solid rgba(247,255,195,.9);
   color:#F7FFC3;
   background:rgba(0,0,0,.18);
@@ -84,7 +87,8 @@ body::before {
     inset 0 0 28px rgba(247,255,195,.055),
     0 0 14px rgba(247,255,195,.08),
     0 0 12px rgba(0,0,0,.48);
-  padding:clamp(26px, 3vw, 46px) clamp(42px, 5vw, 72px);
+  padding:clamp(18px, 2.4vh, 34px) clamp(42px, 5vw, 72px);
+  overflow:hidden;
 }
 
 .boot-close {
@@ -109,7 +113,7 @@ body::before {
 .boot-close::after { transform:rotate(-45deg); }
 
 .boot-title {
-  margin-bottom:clamp(18px, 2.2vw, 34px);
+  margin-bottom:clamp(12px, 1.8vh, 22px);
   font-size:clamp(12px, 1.08vw, 18px);
   line-height:1.2;
   letter-spacing:.08em;
@@ -120,13 +124,13 @@ body::before {
 
 .boot-log {
   min-height:13.4em;
-  font-size:clamp(12px, 1.05vw, 19px);
-  line-height:1.28;
+  font-size:clamp(10px, .95vw, 16px);
+  line-height:1.22;
   letter-spacing:.055em;
 }
 
 .boot-line {
-  min-height:1.28em;
+  min-height:1.22em;
   color:rgba(247,255,195,.96);
   text-shadow:0 0 8px rgba(247,255,195,.18);
   white-space:pre-wrap;
@@ -149,15 +153,13 @@ body::before {
 }
 
 .boot-footer {
-  position:absolute;
-  left:clamp(28px, 4vw, 56px);
-  right:clamp(28px, 4vw, 56px);
-  bottom:clamp(18px, 2.3vw, 34px);
+  position:static;
+  width:min(90%, 940px);
   border-top:1px solid rgba(247,255,195,.74);
-  padding-top:clamp(8px, 1.1vw, 16px);
+  padding-top:clamp(7px, 1.1vh, 12px);
   text-align:center;
   color:rgba(247,255,195,.9);
-  font-size:clamp(14px, 1.55vw, 28px);
+  font-size:clamp(12px, 1.35vw, 24px);
   line-height:1;
   letter-spacing:.075em;
 }
