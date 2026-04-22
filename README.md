@@ -32,7 +32,7 @@ Avant que le trou noir n'aspire tout. Y compris eux.
 ├── arecibo_game.html       → Prototype session SOLO
 ├── arecibo_creation.html   → Création de personnage (mise de côté)
 ├── arecibo_lobby.html      → Lobby multijoueur (WIP)
-├── starfield.png           → Background étoilé
+├── assets/backgrounds/starfield.png → Background étoilé
 └── fonts/
     ├── PowerGrotesk-Regular.woff2
     ├── Degular-Black.woff2
