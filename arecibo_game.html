@@ -469,26 +469,82 @@ body::after {
 }
 .stress-track {
   position:relative;
-  height:18px;
+  height:26px;
   border:1px solid rgba(250,90,31,.72);
-  background:rgba(0,0,0,.22);
+  background:
+    repeating-linear-gradient(90deg, rgba(250,90,31,.08) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(0deg, rgba(250,90,31,.055) 0 1px, transparent 1px 10px),
+    rgba(0,0,0,.22);
   overflow:hidden;
 }
-.stress-fill {
-  width:32%;
+.stress-track::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg, transparent 0 42%, rgba(250,90,31,.18) 50%, transparent 58% 100%);
+  transform:translateX(-110%);
+  animation:stressSweep 1.65s linear infinite;
+  pointer-events:none;
+}
+.stress-wave {
+  position:absolute;
+  left:5px;
+  top:50%;
+  width:calc(100% - 42px);
+  height:18px;
+  transform:translateY(-50%);
+  overflow:visible;
+}
+.stress-wave polyline {
+  fill:none;
+  stroke:var(--orange);
+  stroke-width:3;
+  stroke-linejoin:round;
+  stroke-linecap:square;
+  vector-effect:non-scaling-stroke;
+  filter:drop-shadow(0 0 4px rgba(250,90,31,.45));
+  stroke-dasharray:130;
+  stroke-dashoffset:130;
+  animation:heartbeatTrace 1.65s steps(14, end) infinite;
+}
+.stress-beat {
+  position:absolute;
+  left:0;
+  top:0;
   height:100%;
-  background:linear-gradient(90deg, rgba(250,90,31,.78), rgba(247,255,195,.82));
-  box-shadow:0 0 12px rgba(250,90,31,.22);
+  width:32%;
+  background:linear-gradient(90deg, rgba(250,90,31,.18), transparent);
+  opacity:.55;
+  animation:stressBeat 1.65s steps(4, end) infinite;
 }
 .stress-value {
   position:absolute;
   right:6px;
   top:50%;
   transform:translateY(-50%);
-  color:#050505;
+  color:var(--orange);
   font-size:12px;
   line-height:1;
-  text-shadow:none;
+  text-shadow:0 0 8px rgba(250,90,31,.44);
+  z-index:1;
+}
+@keyframes heartbeatTrace {
+  0% { stroke-dashoffset:130; opacity:.44; }
+  18% { stroke-dashoffset:0; opacity:1; }
+  42% { stroke-dashoffset:0; opacity:.78; }
+  100% { stroke-dashoffset:-130; opacity:.36; }
+}
+@keyframes stressSweep {
+  0% { transform:translateX(-110%); opacity:.18; }
+  42% { opacity:.46; }
+  100% { transform:translateX(110%); opacity:.12; }
+}
+@keyframes stressBeat {
+  0%, 100% { opacity:.24; }
+  10% { opacity:.7; }
+  18% { opacity:.32; }
+  28% { opacity:.52; }
+  40% { opacity:.22; }
 }
 .message-indicator {
   position:absolute;
@@ -1172,14 +1228,16 @@ body::after {
         <div class="oxygen" aria-label="Reserve oxygene personnelle">
           <span class="oxygen-pack"><span class="oxygen-dot"></span><span class="oxygen-dot"></span><span class="oxygen-dot"></span></span>
           <span class="oxygen-pack"><span class="oxygen-dot"></span><span class="oxygen-dot"></span><span class="oxygen-dot"></span></span>
-          <span class="oxygen-pack"><span class="oxygen-dot"></span><span class="oxygen-dot"></span><span class="oxygen-dot"></span></span>
         </div>
       </div>
 
       <div class="personal-line">
         <span class="personal-tag">STRESS</span>
         <div class="stress-track" aria-label="Niveau de stress personnel">
-          <div class="stress-fill"></div>
+          <div class="stress-beat"></div>
+          <svg class="stress-wave" viewBox="0 0 120 24" aria-hidden="true" focusable="false">
+            <polyline points="0,13 16,13 22,9 28,16 35,13 42,13 48,3 55,22 62,13 76,13 83,10 90,15 98,13 120,13"></polyline>
+          </svg>
           <span class="stress-value">32%</span>
         </div>
       </div>
