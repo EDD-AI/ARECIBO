@@ -394,7 +394,7 @@ body::after {
   height:42px;
   display:flex;
   align-items:center;
-  padding:0 18px;
+  padding:0 82px 0 18px;
   border-bottom:1px solid rgba(117,216,255,.58);
   font-size:clamp(16px, 1.18vw, 23px);
   line-height:1;
@@ -463,35 +463,28 @@ body::after {
   line-height:1;
   text-shadow:none;
 }
-.message-btn {
-  width:100%;
-  min-height:32px;
-  display:grid;
-  grid-template-columns:28px 1fr 32px;
-  gap:7px;
+.message-indicator {
+  position:absolute;
+  right:12px;
+  top:10px;
+  min-width:48px;
+  height:22px;
+  display:flex;
   align-items:center;
-  border:1px solid rgba(117,216,255,.62);
-  background:rgba(0,19,28,.18);
+  justify-content:flex-end;
+  gap:6px;
   color:#bdf2ff;
-  font-family:'Pixelify Sans', monospace;
-  font-size:13px;
-  letter-spacing:.055em;
-  text-transform:uppercase;
-  cursor:none;
-  transition:border-color .14s ease, box-shadow .14s ease, background .14s ease;
-}
-.message-btn:hover,
-.message-btn.open {
-  border-color:#75d8ff;
-  background:rgba(117,216,255,.08);
-  box-shadow:0 0 12px rgba(117,216,255,.16);
+  pointer-events:none;
+  text-shadow:0 0 8px rgba(117,216,255,.22);
 }
 .mail-icon {
   position:relative;
-  width:20px;
-  height:14px;
-  justify-self:center;
+  width:22px;
+  height:15px;
   border:1px solid currentColor;
+  box-shadow:
+    0 0 9px rgba(117,216,255,.15),
+    inset 0 0 6px rgba(117,216,255,.05);
 }
 .mail-icon::before,
 .mail-icon::after {
@@ -513,22 +506,12 @@ body::after {
 }
 .message-count {
   color:var(--orange);
+  font-size:15px;
+  line-height:1;
+  letter-spacing:.04em;
   text-align:center;
+  text-shadow:0 0 9px rgba(250,90,31,.34);
 }
-.personal-messages {
-  display:none;
-  margin-top:10px;
-  border-top:1px solid rgba(117,216,255,.35);
-  padding-top:9px;
-  color:rgba(189,242,255,.82);
-  font-size:11px;
-  letter-spacing:.055em;
-  line-height:1.35;
-  text-transform:uppercase;
-}
-.personal-messages.open { display:block; }
-.personal-messages p { margin-bottom:6px; }
-.personal-messages p:last-child { margin-bottom:0; }
 
 .ship-map-window {
   position:absolute;
@@ -1149,6 +1132,10 @@ body::after {
   <button class="back-btn" type="button" onclick="goMenu()">&#60; MENU</button>
 
   <section class="personal-window" id="personal-window" aria-label="Package personnel du joueur">
+    <div class="message-indicator" aria-label="2 messages personnels">
+      <span class="mail-icon" aria-hidden="true"></span>
+      <span class="message-count">02</span>
+    </div>
     <header class="personal-title">&#62;PACKAGE PERSONNEL\</header>
 
     <div class="personal-body">
@@ -1169,16 +1156,6 @@ body::after {
         </div>
       </div>
 
-      <button class="message-btn" id="message-btn" type="button" aria-expanded="false" aria-controls="personal-messages">
-        <span class="mail-icon" aria-hidden="true"></span>
-        <span>MESSAGERIE</span>
-        <span class="message-count">02</span>
-      </button>
-
-      <div class="personal-messages" id="personal-messages">
-        <p>[PRIVE] MOTOMOTO : combinaison nominale.</p>
-        <p>[CHIFFRE] fragment recu : 01000001...</p>
-      </div>
     </div>
   </section>
 
@@ -1289,8 +1266,6 @@ const distanceValue = document.getElementById('distance-value');
 const roomCurrent = document.getElementById('room-current');
 const roomState = document.getElementById('room-state');
 const mapMessage = document.getElementById('map-message');
-const messageBtn = document.getElementById('message-btn');
-const personalMessages = document.getElementById('personal-messages');
 const personalWindow = document.getElementById('personal-window');
 const personalTitle = personalWindow ? personalWindow.querySelector('.personal-title') : null;
 const initialDistanceMillionKm = 473.65;
@@ -1715,16 +1690,6 @@ function initShipMap() {
   });
 }
 
-function initPersonalPackage() {
-  if (!messageBtn || !personalMessages) return;
-
-  messageBtn.addEventListener('click', () => {
-    const open = personalMessages.classList.toggle('open');
-    messageBtn.classList.toggle('open', open);
-    messageBtn.setAttribute('aria-expanded', String(open));
-  });
-}
-
 function initDraggablePersonalWindow() {
   if (!personalWindow || !personalTitle) return;
 
@@ -1863,7 +1828,6 @@ updateDistance();
 startPortholeSpace();
 startAmbientDust();
 initShipMap();
-initPersonalPackage();
 initDraggablePersonalWindow();
 </script>
 </body>
