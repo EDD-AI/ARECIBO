@@ -227,9 +227,9 @@ body::after {
 .crew-scale-markers {
   position:absolute;
   left:50%;
-  bottom:17.2vh;
-  width:170px;
-  height:130px;
+  bottom:6.8vh;
+  width:clamp(520px, 34vw, 700px);
+  height:clamp(410px, 55vh, 540px);
   transform:translateX(-50%);
   pointer-events:none;
   z-index:8;
@@ -237,13 +237,13 @@ body::after {
 .crew-marker {
   position:absolute;
   bottom:0;
-  width:58px;
-  height:118px;
+  width:clamp(190px, 12vw, 250px);
+  height:clamp(410px, 55vh, 540px);
   color:var(--marker-color);
-  opacity:.78;
+  opacity:.72;
   filter:
-    drop-shadow(0 0 6px color-mix(in srgb, var(--marker-color) 52%, transparent))
-    drop-shadow(0 0 12px rgba(0,0,0,.42));
+    drop-shadow(0 0 8px color-mix(in srgb, var(--marker-color) 48%, transparent))
+    drop-shadow(0 0 18px rgba(0,0,0,.48));
   transform-origin:50% 100%;
   animation:crewIdle 5.6s ease-in-out infinite;
 }
@@ -256,16 +256,17 @@ body::after {
 .crew-marker circle,
 .crew-marker line {
   vector-effect:non-scaling-stroke;
+  stroke-width:5.5;
 }
 .crew-marker-a {
   --marker-color:#9AF7FF;
-  left:28px;
-  transform:scale(.86);
+  left:48px;
+  transform:scale(.94);
 }
 .crew-marker-b {
   --marker-color:#FA5A1F;
-  right:22px;
-  transform:scale(.95);
+  right:42px;
+  transform:scale(1);
   animation-delay:-1.7s;
 }
 @keyframes crewIdle {
