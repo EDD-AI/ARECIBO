@@ -55,23 +55,112 @@ body::before {
 }
 
 .boot-sequence {
-  position:fixed;
-  left:50%;
-  top:50%;
-  width:max(100vw, 177.7778vh);
-  height:max(100vh, 56.25vw);
-  transform:translate(-50%, -50%);
-  background-position:center;
-  background-size:cover;
-  background-repeat:no-repeat;
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:clamp(26px, 3vw, 54px) clamp(34px, 4.4vw, 78px);
+  background:rgba(0,0,0,.12);
   opacity:0;
   pointer-events:none;
-  z-index:180;
+  z-index:7;
   transition:opacity .42s ease;
 }
-.boot-sequence.booting { background-image:url('assets/boot-system-frame.png'); }
-.boot-sequence.hello { background-image:url('assets/hello-world-frame.png'); }
 .boot-sequence.visible { opacity:1; }
+
+.scene.boot-hidden {
+  opacity:0;
+}
+
+.boot-panel {
+  position:relative;
+  width:min(86%, 860px);
+  min-height:56%;
+  border:1px solid rgba(247,255,195,.9);
+  color:#F7FFC3;
+  background:rgba(0,0,0,.18);
+  box-shadow:
+    inset 0 0 28px rgba(247,255,195,.055),
+    0 0 14px rgba(247,255,195,.08),
+    0 0 12px rgba(0,0,0,.48);
+  padding:clamp(26px, 3vw, 46px) clamp(42px, 5vw, 72px);
+}
+
+.boot-close {
+  position:absolute;
+  top:10px;
+  left:10px;
+  width:20px;
+  aspect-ratio:1;
+  border:1px solid rgba(247,255,195,.85);
+}
+.boot-close::before,
+.boot-close::after {
+  content:'';
+  position:absolute;
+  left:3px;
+  right:3px;
+  top:50%;
+  height:1px;
+  background:rgba(247,255,195,.82);
+}
+.boot-close::before { transform:rotate(45deg); }
+.boot-close::after { transform:rotate(-45deg); }
+
+.boot-title {
+  margin-bottom:clamp(18px, 2.2vw, 34px);
+  font-size:clamp(12px, 1.08vw, 18px);
+  line-height:1.2;
+  letter-spacing:.08em;
+  text-align:center;
+  color:#F7FFC3;
+  white-space:nowrap;
+}
+
+.boot-log {
+  min-height:13.4em;
+  font-size:clamp(12px, 1.05vw, 19px);
+  line-height:1.28;
+  letter-spacing:.055em;
+}
+
+.boot-line {
+  min-height:1.28em;
+  color:rgba(247,255,195,.96);
+  text-shadow:0 0 8px rgba(247,255,195,.18);
+  white-space:pre-wrap;
+}
+.boot-line.command,
+.boot-line.status { color:#F7FFC3; }
+.boot-line.dim { color:rgba(247,255,195,.46); }
+.boot-line.error { color:#B92F24; text-shadow:0 0 8px rgba(185,47,36,.18); }
+.boot-line.orange { color:#FA5A1F; text-shadow:0 0 10px rgba(250,90,31,.2); }
+
+.boot-cursor::after {
+  content:'';
+  display:inline-block;
+  width:.54em;
+  height:.92em;
+  margin-left:.12em;
+  background:#FA5A1F;
+  vertical-align:-.08em;
+  animation:blink .75s step-end infinite;
+}
+
+.boot-footer {
+  position:absolute;
+  left:clamp(28px, 4vw, 56px);
+  right:clamp(28px, 4vw, 56px);
+  bottom:clamp(18px, 2.3vw, 34px);
+  border-top:1px solid rgba(247,255,195,.74);
+  padding-top:clamp(8px, 1.1vw, 16px);
+  text-align:center;
+  color:rgba(247,255,195,.9);
+  font-size:clamp(14px, 1.55vw, 28px);
+  line-height:1;
+  letter-spacing:.075em;
+}
 
 .panel-lights {
   position:absolute;
@@ -272,16 +361,26 @@ body::before {
   </div>
 </div>
 
+<div id="boot-sequence" class="boot-sequence" aria-hidden="true">
+  <div class="boot-panel">
+    <div class="boot-close" aria-hidden="true"></div>
+    <div class="boot-title">MOTOMOTO SYSTEMS / BOOT SEQUENCE v0.1.7</div>
+    <div id="boot-log" class="boot-log"></div>
+  </div>
+  <div class="boot-footer">MOTOMOTO // TRANSMISSION LOG // ENTRY 001</div>
+</div>
+
 <button id="skip" onclick="skipIntro()">PASSER ›</button>
   </div>
 </div>
-<div id="boot-sequence" class="boot-sequence" aria-hidden="true"></div>
 <div id="fade"></div>
 
 <script>
 const NEXT = 'arecibo_game.html?v=solo-prototype';
-const BOOT_HOLD = 3200;
-const HELLO_HOLD = 2600;
+const BOOT_TYPE_SPEED = 10;
+const BOOT_LINE_PAUSE = 82;
+const HELLO_TYPE_SPEED = 48;
+const HELLO_HOLD = 1500;
 const FINAL_FADE_HOLD = 900;
 
 const PANEL_LIGHTS = [
@@ -343,6 +442,25 @@ const STORY = [
   `Leur mission : approcher le trou noir.\n\nRécupérer ce qui dérive sur leur passage.\nAvancer. Réparer le vaisseau. Capter le message.`,
 
   `Avant que le trou noir n'aspire tout.\n\nY compris eux.`,
+];
+
+const BOOT_LINES = [
+  { text: '> INIT HARDWARE...', className: 'command' },
+  { text: '[OK] MEMORY BANK A .......... 4096kb' },
+  { text: '[OK] MEMORY BANK B .......... 4096kb' },
+  { text: '[OK] THERMAL SENSORS ........ NOMINAL' },
+  { text: '[OK] LIFE SUPPORT ........... ONLINE' },
+  { text: '> LOADING NAVIGATION CORE...', className: 'command' },
+  { text: '[OK] STAR CHARTS ............ LOADED' },
+  { text: '[OK] PROXIMITY SENSORS ...... ACTIVE' },
+  { text: '[!] SECTOR MAP .............. CORRUPTED', className: 'error' },
+  { text: '[--] UNKNOWN SIGNAL ......... DETECTED?', className: 'dim' },
+  { text: '> ESTABLISHING COMMY LINK...', className: 'command' },
+  { text: '[OK] INTERNAL COMMS ......... ONLINE' },
+  { text: '[!] EXTERNAL SIGNAL ......... ENCRYPTED', className: 'error' },
+  { text: '[--] SOURCE ................. UNKNOWN', className: 'dim' },
+  { text: '> RUNNING DIAGNOSTIC...', className: 'command' },
+  { text: ': CHECKING SYSTEMS', className: 'status' }
 ];
 
 let allTimers = [];
@@ -407,22 +525,89 @@ function startBootSequence() {
   allTimers.forEach(clearTimeout);
   const skip = document.getElementById('skip');
   const boot = document.getElementById('boot-sequence');
-  const fade = document.getElementById('fade');
+  const scene = document.querySelector('.scene');
 
   if (skip) skip.classList.add('hidden');
-  if (boot) boot.className = 'boot-sequence booting visible';
+  if (scene) scene.classList.add('boot-hidden');
+  if (boot) boot.classList.add('visible');
+
+  runBootLines(0);
+}
+
+function appendBootLine(text, className = '', speed = BOOT_TYPE_SPEED) {
+  const log = document.getElementById('boot-log');
+  if (!log) return null;
+  const line = document.createElement('div');
+  line.className = `boot-line ${className}`.trim();
+  log.appendChild(line);
+  typeBootText(line, text, speed, () => {
+    line.classList.remove('boot-cursor');
+  });
+  return line;
+}
+
+function typeBootText(line, text, speed, done) {
+  let index = 0;
+  line.textContent = '';
+  line.classList.add('boot-cursor');
+
+  function tick() {
+    line.textContent = text.slice(0, index);
+    index++;
+
+    if (index <= text.length) {
+      delay(tick, speed);
+    } else {
+      if (done) done();
+    }
+  }
+
+  tick();
+}
+
+function runBootLines(index) {
+  if (index >= BOOT_LINES.length) {
+    delay(showHelloWorld, 700);
+    return;
+  }
+
+  const entry = BOOT_LINES[index];
+  const line = appendBootLine(entry.text, entry.className);
+  const writeTime = Math.max(260, entry.text.length * BOOT_TYPE_SPEED);
 
   delay(() => {
-    if (boot) boot.className = 'boot-sequence hello visible';
-  }, BOOT_HOLD);
+    if (line) line.classList.remove('boot-cursor');
+    runBootLines(index + 1);
+  }, writeTime + BOOT_LINE_PAUSE);
+}
 
+function showHelloWorld() {
+  const log = document.getElementById('boot-log');
+  if (!log) return;
+
+  log.innerHTML = '';
+  appendBootLine(': CHECKING SYSTEMS', 'status');
+
+  delay(() => appendBootLine('> loading session...', 'dim'), 520);
+
+  delay(() => {
+    const hello = appendBootLine('>hello world.', 'orange', HELLO_TYPE_SPEED);
+    delay(() => {
+      if (hello) hello.classList.add('boot-cursor');
+      finishBootSequence();
+    }, 900);
+  }, 1280);
+}
+
+function finishBootSequence() {
+  const fade = document.getElementById('fade');
   delay(() => {
     if (fade) fade.classList.add('active');
-  }, BOOT_HOLD + HELLO_HOLD);
+  }, HELLO_HOLD);
 
   delay(() => {
     window.location.href = NEXT;
-  }, BOOT_HOLD + HELLO_HOLD + FINAL_FADE_HOLD);
+  }, HELLO_HOLD + FINAL_FADE_HOLD);
 }
 
 // Démarrage
