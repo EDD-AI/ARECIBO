@@ -244,56 +244,6 @@ body::after {
   filter:blur(.18px);
 }
 
-.crew-scale-markers {
-  position:absolute;
-  left:50%;
-  bottom:6.8vh;
-  width:clamp(520px, 34vw, 700px);
-  height:clamp(410px, 55vh, 540px);
-  transform:translateX(-50%);
-  pointer-events:none;
-  z-index:8;
-}
-.crew-marker {
-  position:absolute;
-  bottom:0;
-  width:clamp(190px, 12vw, 250px);
-  height:clamp(410px, 55vh, 540px);
-  color:var(--marker-color);
-  opacity:.72;
-  filter:
-    drop-shadow(0 0 8px color-mix(in srgb, var(--marker-color) 48%, transparent))
-    drop-shadow(0 0 18px rgba(0,0,0,.48));
-  transform-origin:50% 100%;
-  animation:crewIdle 5.6s ease-in-out infinite;
-}
-.crew-marker svg {
-  width:100%;
-  height:100%;
-  display:block;
-  overflow:visible;
-}
-.crew-marker circle,
-.crew-marker line {
-  vector-effect:non-scaling-stroke;
-  stroke-width:5.5;
-}
-.crew-marker-a {
-  --marker-color:#9AF7FF;
-  left:48px;
-  transform:scale(.94);
-}
-.crew-marker-b {
-  --marker-color:#FA5A1F;
-  right:42px;
-  transform:scale(1);
-  animation-delay:-1.7s;
-}
-@keyframes crewIdle {
-  0%, 100% { translate:0 0; }
-  50% { translate:0 -2px; }
-}
-
 .ship-window {
   position:absolute;
   left:13.2vw;
@@ -911,7 +861,6 @@ body::after {
     min-width:0;
   }
   .deck-map { height:260px; }
-  .crew-scale-markers { display:none; }
   .extraction-console {
     top:auto;
     bottom:7vh;
@@ -935,31 +884,6 @@ body::after {
   <div class="space-porthole" aria-hidden="true">
     <canvas id="porthole-space"></canvas>
   </div>
-  <div class="crew-scale-markers" aria-hidden="true">
-    <div class="crew-marker crew-marker-a">
-      <svg viewBox="0 0 58 118" fill="none">
-        <circle cx="29" cy="17" r="10" stroke="currentColor" stroke-width="4"/>
-        <line x1="29" y1="29" x2="29" y2="67" stroke="currentColor" stroke-width="4" stroke-linecap="square"/>
-        <line x1="11" y1="43" x2="47" y2="43" stroke="currentColor" stroke-width="4" stroke-linecap="square"/>
-        <line x1="29" y1="67" x2="13" y2="109" stroke="currentColor" stroke-width="4" stroke-linecap="square"/>
-        <line x1="29" y1="67" x2="45" y2="109" stroke="currentColor" stroke-width="4" stroke-linecap="square"/>
-        <line x1="9" y1="112" x2="22" y2="112" stroke="currentColor" stroke-width="4" stroke-linecap="square"/>
-        <line x1="36" y1="112" x2="49" y2="112" stroke="currentColor" stroke-width="4" stroke-linecap="square"/>
-      </svg>
-    </div>
-    <div class="crew-marker crew-marker-b">
-      <svg viewBox="0 0 58 118" fill="none">
-        <circle cx="29" cy="17" r="10" stroke="currentColor" stroke-width="4"/>
-        <line x1="29" y1="29" x2="29" y2="67" stroke="currentColor" stroke-width="4" stroke-linecap="square"/>
-        <line x1="13" y1="45" x2="45" y2="37" stroke="currentColor" stroke-width="4" stroke-linecap="square"/>
-        <line x1="29" y1="67" x2="16" y2="109" stroke="currentColor" stroke-width="4" stroke-linecap="square"/>
-        <line x1="29" y1="67" x2="43" y2="109" stroke="currentColor" stroke-width="4" stroke-linecap="square"/>
-        <line x1="11" y1="112" x2="24" y2="112" stroke="currentColor" stroke-width="4" stroke-linecap="square"/>
-        <line x1="34" y1="112" x2="48" y2="112" stroke="currentColor" stroke-width="4" stroke-linecap="square"/>
-      </svg>
-    </div>
-  </div>
-
   <button class="back-btn" type="button" onclick="goMenu()">&#60; MENU</button>
 
   <section class="ship-window" aria-label="Informations du vaisseau">
