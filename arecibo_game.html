@@ -210,12 +210,12 @@ body::after {
 .space-porthole {
   position:absolute;
   left:50%;
-  top:49.8%;
-  width:clamp(360px, 23.6vw, 455px);
-  height:clamp(226px, 27.6vh, 302px);
+  top:47.6%;
+  width:clamp(390px, 25.8vw, 505px);
+  height:clamp(250px, 29.6vh, 330px);
   transform:translate(-50%, -50%);
   overflow:hidden;
-  border-radius:clamp(38px, 3.8vw, 68px);
+  border-radius:clamp(46px, 4.4vw, 78px);
   background:
     radial-gradient(ellipse at center, rgba(247,255,195,.025), transparent 68%),
     #020301;
@@ -726,13 +726,13 @@ body::after {
   position:absolute;
   left:50%;
   top:50%;
-  width:232px;
+  width:292px;
   transform:translate(-50%, -50%);
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:13px;
+  gap:16px;
   padding:0;
   background:transparent;
   border:0;
@@ -744,20 +744,21 @@ body::after {
   width:100%;
   color:rgba(247,255,195,.94);
   text-align:center;
-  font-size:13px;
-  line-height:1.32;
+  font-size:16px;
+  line-height:1.26;
   letter-spacing:.03em;
+  text-shadow:0 0 8px rgba(247,255,195,.18);
 }
 .console-copy .dim {
   color:rgba(247,255,195,.72);
 }
 
 .launch-btn {
-  width:205px;
-  height:34px;
+  width:258px;
+  height:44px;
   display:grid;
-  grid-template-columns:30px 1fr;
-  gap:5px;
+  grid-template-columns:42px 1fr;
+  gap:7px;
   border:0;
   background:transparent;
   color:var(--orange);
@@ -775,7 +776,7 @@ body::after {
 .launch-icon,
 .launch-label {
   min-width:0;
-  height:34px;
+  height:44px;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -785,13 +786,14 @@ body::after {
 .launch-icon {
   color:var(--orange);
   background:rgba(0,0,0,.3);
-  font-size:18px;
+  font-size:22px;
 }
 .launch-label {
   color:#050505;
   background:var(--orange);
-  padding:0 9px;
+  padding:0 12px;
   white-space:nowrap;
+  font-size:16px;
 }
 .launch-btn.ready {
   color:var(--green);
@@ -811,17 +813,17 @@ body::after {
 .crew-ready {
   display:grid;
   grid-template-columns:repeat(6, 1fr);
-  gap:5px;
-  width:205px;
+  gap:7px;
+  width:258px;
 }
 .crew-slot {
   min-width:0;
-  height:32px;
+  height:40px;
   border:1px solid var(--cream);
   background:rgba(0,0,0,.18);
   color:var(--cream);
   font-family:'Pixelify Sans', monospace;
-  font-size:16px;
+  font-size:18px;
   cursor:none;
   opacity:.82;
   transition:
