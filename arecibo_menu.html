@@ -310,6 +310,8 @@ canvas#starfield-bg {
 
 .menu-item {
   display: block;
+  position: relative;
+  width: max-content;
   font-family: var(--f-title);
   font-weight: 900;
   font-size: clamp(28px, 3.4vw, 48px);
@@ -338,10 +340,38 @@ canvas#starfield-bg {
   font-size: .7em;
   vertical-align: middle;
 }
+.menu-label {
+  position: relative;
+  display: inline-block;
+  transform-origin: left center;
+  transition: text-shadow .12s, filter .12s;
+}
+.menu-label::after {
+  content: '';
+  position: absolute;
+  left: -.08em;
+  right: -.08em;
+  top: 52%;
+  height: .09em;
+  background: linear-gradient(90deg, transparent, rgba(247,255,195,.34), rgba(250,90,31,.3), transparent);
+  opacity: 0;
+  filter: blur(.5px);
+  pointer-events: none;
+}
 .menu-item.active { color: var(--orange); }
 .menu-item.active .arr { color: var(--orange); }
 .menu-item:not(.active):hover { color: #fff; }
 .menu-item:hover .arr { color: var(--orange); transform: translateX(4px); }
+.menu-item:hover .menu-label {
+  animation: menuTabRipple .62s ease-in-out infinite;
+  filter: brightness(1.08);
+  text-shadow:
+    0 0 10px rgba(247,255,195,.16),
+    0 0 16px rgba(250,90,31,.1);
+}
+.menu-item:hover .menu-label::after {
+  animation: menuTabWaveLine .9s ease-out infinite;
+}
 
 /* ===== DISCORD ===== */
 .discord {
@@ -365,7 +395,7 @@ canvas#starfield-bg {
 .sound-toggle {
   position: absolute;
   top: 5.5vh;
-  right: 5.6vw;
+  left: 5.6vw;
   width: 48px;
   height: 48px;
   display: flex;
@@ -564,6 +594,18 @@ canvas#starfield-bg {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes menuTabRipple {
+  0%, 100% { transform: translateY(0) skewX(0deg); }
+  34% { transform: translateY(-1px) skewX(.65deg); }
+  68% { transform: translateY(1px) skewX(-.45deg); }
+}
+
+@keyframes menuTabWaveLine {
+  0% { opacity: 0; transform: translateX(-7%) scaleX(.55); }
+  34% { opacity: .32; }
+  100% { opacity: 0; transform: translateX(7%) scaleX(1.08); }
+}
+
 
 
 @keyframes logoSignalBreak {
@@ -595,7 +637,9 @@ canvas#starfield-bg {
   .singularity-lens::after { animation: none; }
   #logo-arecibo:hover .logo-letter,
   #logo-arecibo:hover::before,
-  #logo-arecibo:hover::after { animation: none; }
+  #logo-arecibo:hover::after,
+  .menu-item:hover .menu-label,
+  .menu-item:hover .menu-label::after { animation: none; }
 }
 
 .page-transition {
@@ -648,10 +692,10 @@ canvas#starfield-bg {
   </div>
 
   <nav class="menu">
-    <a class="menu-item active" href="arecibo_intro.html?v=global-terminal-filter-amber" onclick="goTo(event,'intro')"><span class="arr">></span>SOLO</a>
-    <a class="menu-item" href="#" onclick="goTo(event,'lobby')"><span class="arr">></span>MULTI</a>
-    <a class="menu-item" href="#" onclick="openSettings(event)"><span class="arr">></span>SETTINGS</a>
-    <a class="menu-item" href="#"><span class="arr">></span>CREDITS</a>
+    <a class="menu-item active" href="arecibo_intro.html?v=global-terminal-filter-amber" onclick="goTo(event,'intro')"><span class="arr">></span><span class="menu-label">SOLO</span></a>
+    <a class="menu-item" href="#" onclick="goTo(event,'lobby')"><span class="arr">></span><span class="menu-label">MULTI</span></a>
+    <a class="menu-item" href="#" onclick="openSettings(event)"><span class="arr">></span><span class="menu-label">SETTINGS</span></a>
+    <a class="menu-item" href="#"><span class="arr">></span><span class="menu-label">CREDITS</span></a>
   </nav>
 
   <a class="discord" href="https://discord.gg/fMsBru8Rah" target="_blank" rel="noopener noreferrer" aria-label="Rejoindre le Discord ARECIBO">
