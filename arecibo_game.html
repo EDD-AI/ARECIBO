@@ -3,161 +3,452 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ARECIBO — Mission</title>
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ARECIBO - Pont principal</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap');
-@font-face { font-family:'Degular'; src:url('fonts/Degular-Black.woff2') format('woff2'); font-weight:900; }
 
-:root { --cream:#F7FFC3; --orange:#FA5A1F; --bg:#000; --border:rgba(247,255,195,.1); }
+:root {
+  --cream:#F7FFC3;
+  --orange:#FA5A1F;
+  --green:#A8F02A;
+  --red:#E03B31;
+  --black:#020301;
+  --line:rgba(247,255,195,.62);
+  --line-soft:rgba(247,255,195,.28);
+}
+
 * { box-sizing:border-box; margin:0; padding:0; }
 
+html,
 body {
-  background: var(--bg);
-  width:100vw; height:100vh;
+  width:100vw;
+  height:100vh;
   overflow:hidden;
-  font-family:'Pixelify Sans', monospace;
+  background:#000;
   color:var(--cream);
+  font-family:'Pixelify Sans', monospace;
   cursor:none;
 }
 
-.cursor { position:fixed; width:14px; height:14px; border:1.5px solid var(--cream); pointer-events:none; z-index:9999; transform:translate(-50%,-50%); }
-.cursor::after { content:''; position:absolute; top:50%; left:50%; width:3px; height:3px; background:var(--orange); transform:translate(-50%,-50%); }
-
-body::after { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px); pointer-events:none; z-index:900; }
-
-/* Layout */
-.hud {
-  display: grid;
-  grid-template-columns: 220px 1fr 220px;
-  grid-template-rows: 48px 1fr 48px;
-  width:100vw; height:100vh;
-  border: 1px solid var(--border);
+body {
+  background:
+    linear-gradient(rgba(5,7,3,.1), rgba(5,7,3,.1)),
+    url('assets/bridge-main.png') center / cover no-repeat;
 }
 
-/* Header */
-.hud-header {
-  grid-column:1/-1;
-  border-bottom:1px solid var(--border);
-  display:flex; align-items:center; justify-content:space-between;
-  padding: 0 20px;
-}
-.hud-title { font-family:'Degular', sans-serif; font-weight:900; font-size:16px; letter-spacing:.06em; }
-.hud-code  { font-size:9px; letter-spacing:.14em; color:rgba(247,255,195,.3); }
-
-/* Timer */
-.timer-wrap { display:flex; align-items:center; gap:10px; }
-.timer-label { font-size:9px; letter-spacing:.1em; color:rgba(247,255,195,.35); }
-.timer-val {
-  font-family:'Degular', sans-serif; font-weight:900;
-  font-size:22px; color:var(--cream);
-  letter-spacing:.04em;
-  transition: color .3s;
-}
-.timer-val.warn { color:var(--orange); }
-.timer-val.crit { color:#ff3333; animation: pulse .5s ease infinite alternate; }
-@keyframes pulse { from{opacity:1} to{opacity:.4} }
-
-/* Panel gauche — status vaisseau */
-.panel-left {
-  border-right:1px solid var(--border);
-  padding:16px 14px;
-  display:flex; flex-direction:column; gap:12px;
-}
-.panel-section-label {
-  font-size:8px; letter-spacing:.14em; color:rgba(247,255,195,.3);
-  border-bottom:1px solid var(--border);
-  padding-bottom:6px; margin-bottom:4px;
-}
-.stat-row { display:flex; justify-content:space-between; align-items:center; }
-.stat-label { font-size:9px; letter-spacing:.06em; color:rgba(247,255,195,.5); }
-.stat-bar { width:80px; height:3px; background:rgba(247,255,195,.1); position:relative; }
-.stat-fill { position:absolute; top:0; left:0; height:100%; background:var(--cream); transition:width .5s; }
-.stat-fill.low { background:var(--orange); }
-.stat-fill.crit { background:#ff3333; }
-
-/* Zone centrale — vaisseau */
-.panel-center {
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  position:relative; gap:20px;
-  padding: 20px;
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse at center, transparent 54%, rgba(0,0,0,.26) 78%, rgba(0,0,0,.82) 100%),
+    linear-gradient(90deg, rgba(0,0,0,.62), transparent 18%, transparent 82%, rgba(0,0,0,.62));
+  pointer-events:none;
+  z-index:30;
 }
 
-.ship-label {
-  position:absolute; top:16px; left:50%; transform:translateX(-50%);
-  font-size:9px; letter-spacing:.14em; color:rgba(247,255,195,.2);
+body::after {
+  content:'';
+  position:fixed;
+  inset:0;
+  background:rgba(13,18,6,.22);
+  mix-blend-mode:multiply;
+  pointer-events:none;
+  z-index:31;
 }
 
-/* SVG vaisseau placeholder */
-.ship-svg { width:min(320px,50%); opacity:.85; }
+.cursor {
+  position:fixed;
+  width:14px;
+  height:14px;
+  border:1.5px solid var(--cream);
+  pointer-events:none;
+  z-index:9999;
+  transform:translate(-50%,-50%);
+}
+.cursor::after {
+  content:'';
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:3px;
+  height:3px;
+  background:var(--orange);
+  transform:translate(-50%,-50%);
+}
 
-/* Bouton extraction */
-.extract-btn {
-  background: var(--orange);
-  border:none;
-  font-family:'Degular', sans-serif; font-weight:900;
-  font-size:15px; letter-spacing:.1em;
-  color:#000;
-  padding:13px 40px;
-  cursor:none;
-  transition:background .15s, transform .1s;
+.bridge {
+  position:relative;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+  z-index:2;
+}
+
+.bridge-glass {
+  position:absolute;
+  inset:clamp(24px, 4vh, 56px) clamp(44px, 5vw, 94px);
+  border-radius:clamp(32px, 5vw, 92px);
+  border:1px solid rgba(247,255,195,.06);
+  box-shadow:
+    inset 0 0 46px rgba(247,255,195,.035),
+    inset 0 0 90px rgba(0,0,0,.78),
+    0 0 38px rgba(0,0,0,.82);
+  pointer-events:none;
+  z-index:4;
+}
+
+.ship-window {
+  position:absolute;
+  left:13.2vw;
+  top:29vh;
+  width:min(42vw, 520px);
+  min-width:440px;
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.08);
+  color:var(--cream);
+  text-shadow:0 0 8px rgba(247,255,195,.16);
   z-index:10;
 }
-.extract-btn:hover { background:#ff6b35; transform:scale(1.02); }
-.extract-btn:active { transform:scale(.98); }
 
-.distance-info {
-  font-size:9px; letter-spacing:.1em; color:rgba(247,255,195,.25);
+.ship-title {
+  height:55px;
+  display:flex;
+  align-items:center;
+  padding:0 28px;
+  border-bottom:1px solid var(--line);
+  font-size:clamp(22px, 1.8vw, 34px);
+  line-height:1;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+
+.ship-section {
+  padding:24px 28px 23px;
+  border-bottom:1px solid var(--line);
+}
+.ship-section:last-child { border-bottom:0; }
+
+.stat-line {
+  display:grid;
+  grid-template-columns:128px 1fr;
+  gap:12px;
+  align-items:center;
+  min-height:34px;
+  margin-bottom:9px;
+}
+.stat-line:last-child { margin-bottom:0; }
+
+.tag {
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  min-height:27px;
+  border:1px solid var(--line);
+  padding:3px 8px 4px;
+  background:rgba(0,0,0,.13);
+  font-size:16px;
+  line-height:1;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+
+.critical {
+  border:1px solid rgba(224,59,49,.86);
+  color:var(--red);
   text-align:center;
+  font-size:16px;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  padding:3px 8px 4px;
+  background:rgba(224,59,49,.035);
 }
 
-/* Panel droit — terminal */
-.panel-right {
-  border-left:1px solid var(--border);
-  padding:14px;
-  display:flex; flex-direction:column;
+.fuel {
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.fuel-track {
+  flex:1;
+  height:21px;
+  border:1px solid rgba(168,240,42,.82);
+  border-radius:999px;
   overflow:hidden;
+  background:rgba(0,0,0,.2);
 }
-.terminal-lines {
-  flex:1; overflow-y:auto;
-  scrollbar-width:none;
-  display:flex; flex-direction:column; justify-content:flex-end;
-  gap:3px;
+.fuel-fill {
+  width:78%;
+  height:100%;
+  background:var(--green);
+  border-radius:999px;
 }
-.t { font-size:9px; letter-spacing:.05em; line-height:1.6; color:rgba(247,255,195,.4); }
-.t.err { color:rgba(250,90,31,.7); }
-.t.sys { color:rgba(247,255,195,.2); }
-.t.hi  { color:var(--cream); }
-.terminal-input { display:flex; align-items:center; gap:6px; margin-top:8px; border-top:1px solid var(--border); padding-top:8px; }
-.terminal-prompt { font-size:9px; color:var(--orange); }
-.t-cursor-inline { display:inline-block; width:6px; height:10px; background:var(--orange); animation:blink .8s step-end infinite; vertical-align:middle; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+.fuel-value {
+  min-width:51px;
+  min-height:22px;
+  border:1px solid rgba(168,240,42,.82);
+  border-radius:999px;
+  color:var(--green);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+}
 
-/* Footer */
-.hud-footer {
-  grid-column:1/-1;
-  border-top:1px solid var(--border);
-  display:flex; align-items:center; justify-content:space-between;
-  padding: 0 20px;
-  font-size:8px; color:rgba(247,255,195,.15); letter-spacing:.1em;
+.oxygen {
+  display:flex;
+  gap:11px;
+}
+.oxygen-pack {
+  display:flex;
+  align-items:center;
+  gap:11px;
+  min-width:84px;
+  height:27px;
+  border:1px solid var(--line-soft);
+  border-radius:999px;
+  padding:0 10px;
+  background:rgba(0,0,0,.16);
+}
+.oxygen-dot {
+  width:15px;
+  height:15px;
+  border-radius:50%;
+  background:var(--cream);
+  box-shadow:0 0 10px rgba(247,255,195,.22);
+}
+
+.antenna-grid {
+  display:grid;
+  grid-template-columns:98px 1fr;
+  gap:12px;
+  align-items:center;
+  margin-bottom:11px;
+}
+.signal {
+  color:var(--cream);
+  font-size:16px;
+  letter-spacing:.055em;
+  text-transform:uppercase;
+}
+.bars {
+  height:31px;
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+  margin-top:12px;
+}
+.bar {
+  width:8px;
+  background:var(--cream);
+  opacity:.9;
+}
+.bar:nth-child(1) { height:8px; }
+.bar:nth-child(2) { height:11px; }
+.bar:nth-child(3) { height:15px; }
+.bar:nth-child(4) { height:8px; }
+.bar:nth-child(5) { height:22px; }
+.bits {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:17px;
+  letter-spacing:.055em;
+}
+.bits-tag {
+  border:1px solid var(--line);
+  padding:3px 8px 4px;
+  background:rgba(0,0,0,.15);
+}
+
+.distance-label {
+  font-size:16px;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  margin-bottom:7px;
+}
+.distance-value {
+  font-size:34px;
+  line-height:1;
+  font-weight:700;
+  letter-spacing:.025em;
+}
+
+.extraction-console {
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:232px;
+  transform:translate(-50%, -50%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:13px;
+  padding:0;
+  background:transparent;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  z-index:11;
+}
+.console-copy {
+  width:100%;
+  color:rgba(247,255,195,.94);
+  text-align:center;
+  font-size:13px;
+  line-height:1.32;
+  letter-spacing:.03em;
+}
+.console-copy .dim {
+  color:rgba(247,255,195,.72);
+}
+
+.launch-btn {
+  width:205px;
+  height:34px;
+  display:grid;
+  grid-template-columns:30px 1fr;
+  gap:5px;
+  border:0;
+  background:transparent;
+  color:var(--orange);
+  font-family:'Pixelify Sans', monospace;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:.05em;
+  cursor:none;
+  transition:filter .16s, transform .1s;
+}
+.launch-btn:hover {
+  transform:translateY(-1px);
+  filter:drop-shadow(0 0 10px rgba(250,90,31,.26));
+}
+.launch-icon,
+.launch-label {
+  min-width:0;
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--orange);
+  line-height:1;
+}
+.launch-icon {
+  color:var(--orange);
+  background:rgba(0,0,0,.3);
+  font-size:18px;
+}
+.launch-label {
+  color:#050505;
+  background:var(--orange);
+  padding:0 9px;
+  white-space:nowrap;
+}
+.launch-btn.ready {
+  color:var(--green);
+  filter:drop-shadow(0 0 10px rgba(168,240,42,.22));
+}
+.launch-btn.ready .launch-icon,
+.launch-btn.ready .launch-label {
+  border-color:var(--green);
+}
+.launch-btn.ready .launch-icon {
+  color:var(--green);
+}
+.launch-btn.ready .launch-label {
+  background:var(--green);
+}
+
+.crew-ready {
+  display:grid;
+  grid-template-columns:repeat(6, 1fr);
+  gap:5px;
+  width:205px;
+}
+.crew-slot {
+  min-width:0;
+  height:32px;
+  border:1px solid var(--cream);
+  background:rgba(0,0,0,.18);
+  color:var(--cream);
+  font-family:'Pixelify Sans', monospace;
+  font-size:16px;
+  cursor:none;
+  opacity:.82;
+}
+.crew-slot.ready {
+  color:var(--orange);
+  border-color:var(--orange);
+  background:rgba(250,90,31,.06);
+}
+.crew-slot.disabled {
+  opacity:.16;
+  pointer-events:none;
+}
+
+.bridge-meta {
+  position:absolute;
+  left:13.2vw;
+  bottom:5.4vh;
+  color:rgba(247,255,195,.24);
+  font-size:10px;
+  letter-spacing:.12em;
+  z-index:10;
 }
 
 .back-btn {
-  background:none; border:none;
-  font-family:'Pixelify Sans', monospace; font-size:9px;
-  letter-spacing:.1em; color:rgba(247,255,195,.25);
-  cursor:none; transition:color .12s;
+  position:absolute;
+  left:13.2vw;
+  top:8.5vh;
+  border:1px solid rgba(247,255,195,.22);
+  background:rgba(0,0,0,.16);
+  color:rgba(247,255,195,.55);
+  min-height:36px;
+  padding:0 14px;
+  font-family:'Pixelify Sans', monospace;
+  font-size:11px;
+  letter-spacing:.1em;
+  cursor:none;
+  z-index:12;
 }
-.back-btn:hover { color:var(--cream); }
+.back-btn:hover {
+  color:var(--cream);
+  border-color:rgba(247,255,195,.5);
+}
 
-/* Radiation bar */
-.rad-bar-wrap { display:flex; align-items:center; gap:8px; }
-.rad-label { font-size:8px; color:rgba(247,255,195,.25); letter-spacing:.1em; }
-.rad-bar { width:120px; height:3px; background:rgba(247,255,195,.08); }
-.rad-fill { height:100%; width:12%; background:var(--orange); transition:width 1s; }
+.page-transition {
+  position:fixed;
+  inset:0;
+  background:#000;
+  z-index:1000;
+  opacity:1;
+  pointer-events:all;
+  transition:opacity .7s ease;
+}
+.page-transition.out {
+  opacity:0;
+  pointer-events:none;
+}
 
-/* Transition */
-.page-transition { position:fixed; inset:0; background:#000; z-index:1000; opacity:1; transition:opacity .5s ease; pointer-events:all; }
-.page-transition.out { opacity:0; pointer-events:none; }
+@media (max-width: 980px) {
+  .ship-window {
+    left:5vw;
+    width:90vw;
+    min-width:0;
+    top:21vh;
+  }
+  .extraction-console {
+    top:auto;
+    bottom:7vh;
+    width:min(86vw, 330px);
+  }
+  .back-btn { left:5vw; top:5vh; }
+  .bridge-meta { display:none; }
+}
 </style>
 <link rel="stylesheet" href="assets/terminal-filter.css?v=global-terminal-filter-amber">
 </head>
@@ -165,185 +456,144 @@ body::after { content:''; position:fixed; inset:0; background:repeating-linear-g
 <div class="cursor" id="cursor"></div>
 <div class="page-transition" id="transition"></div>
 
-<div class="hud">
+<main class="bridge" aria-label="Pont principal du MOTOMOTO">
+  <div class="bridge-glass" aria-hidden="true"></div>
 
-  <!-- HEADER -->
-  <div class="hud-header">
-    <button class="back-btn" onclick="goMenu()">← MENU</button>
-    <span class="hud-title">>MOTOMOTO // EN ORBITE</span>
-    <div class="timer-wrap">
-      <span class="timer-label">EXPOSITION</span>
-      <span class="timer-val" id="timer">00:00</span>
-    </div>
-    <span class="hud-code">SESSION : <span id="session-code"></span></span>
-  </div>
+  <button class="back-btn" type="button" onclick="goMenu()">&#60; MENU</button>
 
-  <!-- PANEL GAUCHE — SYSTÈMES -->
-  <div class="panel-left">
-    <div>
-      <div class="panel-section-label">SYSTÈMES VAISSEAU</div>
-      <div class="stat-row" style="margin-bottom:10px">
-        <span class="stat-label">COQUE</span>
-        <div class="stat-bar"><div class="stat-fill" style="width:61%"></div></div>
+  <section class="ship-window" aria-label="Informations du vaisseau">
+    <header class="ship-title">&#62;EQUIPEMENT PERSONNELLE\</header>
+
+    <div class="ship-section">
+      <div class="stat-line">
+        <span class="tag">COQUE</span>
+        <span class="critical">ENDOMMAGE - ETAT CRITIQUE</span>
       </div>
-      <div class="stat-row" style="margin-bottom:10px">
-        <span class="stat-label">CARBURANT</span>
-        <div class="stat-bar"><div class="stat-fill low" style="width:34%"></div></div>
+      <div class="stat-line">
+        <span class="tag">CARBURANT</span>
+        <div class="fuel">
+          <div class="fuel-track"><div class="fuel-fill"></div></div>
+          <span class="fuel-value">78%</span>
+        </div>
       </div>
-      <div class="stat-row" style="margin-bottom:10px">
-        <span class="stat-label">OXYGÈNE</span>
-        <div class="stat-bar"><div class="stat-fill" style="width:88%"></div></div>
-      </div>
-      <div class="stat-row">
-        <span class="stat-label">ANTENNE</span>
-        <div class="stat-bar"><div class="stat-fill crit" style="width:12%"></div></div>
+      <div class="stat-line">
+        <span class="tag">OXYGENE</span>
+        <div class="oxygen" aria-label="Reserve oxygene">
+          <span class="oxygen-pack"><span class="oxygen-dot"></span><span class="oxygen-dot"></span><span class="oxygen-dot"></span></span>
+          <span class="oxygen-pack"><span class="oxygen-dot"></span><span class="oxygen-dot"></span><span class="oxygen-dot"></span></span>
+          <span class="oxygen-pack"><span class="oxygen-dot"></span><span class="oxygen-dot"></span><span class="oxygen-dot"></span></span>
+        </div>
       </div>
     </div>
 
-    <div style="margin-top:8px">
-      <div class="panel-section-label">DISTANCE — TROU NOIR</div>
-      <div style="font-family:'Degular',sans-serif;font-weight:900;font-size:28px;letter-spacing:.02em;color:var(--cream);margin:4px 0">4.7 AU</div>
-      <div style="font-size:8px;color:rgba(247,255,195,.2);letter-spacing:.1em">PROGRESSION SESSION 1/∞</div>
-    </div>
-
-    <div style="margin-top:8px">
-      <div class="panel-section-label">FRAGMENTS CAPTÉS</div>
-      <div style="font-size:8px;color:rgba(247,255,195,.2);letter-spacing:.06em;line-height:2">
-        <div style="color:rgba(247,255,195,.15)">▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪</div>
-        <div style="font-size:7px;color:rgba(247,255,195,.15);margin-top:2px">0 / 1679 bits récupérés</div>
+    <div class="ship-section">
+      <div class="antenna-grid">
+        <span class="tag">ANTENNE</span>
+        <span class="signal">ETAT DU SIGNAL - BON</span>
+      </div>
+      <div class="antenna-grid">
+        <div class="bars" aria-hidden="true">
+          <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+        </div>
+        <div class="bits">
+          <span class="bits-tag">BITS RECUPERES</span>
+          <span>0/1679</span>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- CENTRE — VAISSEAU + EXTRACTION -->
-  <div class="panel-center">
-    <span class="ship-label">MOTOMOTO // VAISSEAU AMIRAL</span>
-
-    <!-- SVG vaisseau placeholder -->
-    <svg class="ship-svg" viewBox="0 0 300 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Corps principal -->
-      <rect x="80" y="70" width="140" height="60" rx="2" stroke="rgba(247,255,195,.25)" stroke-width="1" fill="rgba(247,255,195,.02)"/>
-      <!-- Cockpit -->
-      <rect x="190" y="80" width="50" height="40" rx="1" stroke="rgba(247,255,195,.2)" stroke-width="1" fill="rgba(247,255,195,.03)"/>
-      <!-- Moteurs -->
-      <rect x="60" y="78" width="22" height="14" rx="1" stroke="rgba(250,90,31,.4)" stroke-width="1" fill="rgba(250,90,31,.05)"/>
-      <rect x="60" y="108" width="22" height="14" rx="1" stroke="rgba(250,90,31,.4)" stroke-width="1" fill="rgba(250,90,31,.05)"/>
-      <!-- Flamme moteurs -->
-      <line x1="60" y1="85" x2="40" y2="85" stroke="rgba(250,90,31,.3)" stroke-width="1.5"/>
-      <line x1="60" y1="115" x2="40" y2="115" stroke="rgba(250,90,31,.3)" stroke-width="1.5"/>
-      <!-- Antenne (endommagée) -->
-      <line x1="150" y1="70" x2="148" y2="45" stroke="rgba(247,255,195,.2)" stroke-width="1"/>
-      <line x1="148" y1="45" x2="160" y2="32" stroke="rgba(247,255,195,.12)" stroke-width="1" stroke-dasharray="3 3"/>
-      <!-- Hublots -->
-      <circle cx="200" cy="100" r="5" stroke="rgba(247,255,195,.3)" stroke-width="1" fill="rgba(247,255,195,.05)"/>
-      <circle cx="215" cy="100" r="5" stroke="rgba(247,255,195,.2)" stroke-width="1" fill="rgba(247,255,195,.03)"/>
-      <!-- Dégâts coque -->
-      <line x1="110" y1="70" x2="118" y2="80" stroke="rgba(250,90,31,.25)" stroke-width="1"/>
-      <line x1="145" y1="130" x2="155" y2="125" stroke="rgba(250,90,31,.2)" stroke-width="1"/>
-      <!-- Indicateurs bas -->
-      <circle cx="100" cy="155" r="2" fill="rgba(250,90,31,.7)"/>
-      <circle cx="110" cy="155" r="2" fill="rgba(247,255,195,.15)"/>
-      <circle cx="120" cy="155" r="2" fill="rgba(247,255,195,.15)"/>
-      <!-- Étoile fond -->
-      <circle cx="30"  cy="30"  r="1" fill="rgba(247,255,195,.4)"/>
-      <circle cx="270" cy="50"  r="1" fill="rgba(247,255,195,.3)"/>
-      <circle cx="260" cy="160" r="1" fill="rgba(247,255,195,.5)"/>
-      <circle cx="20"  cy="170" r="1" fill="rgba(247,255,195,.25)"/>
-    </svg>
-
-    <div class="distance-info">
-      Zone d'extraction disponible — débris détectés à proximité
+    <div class="ship-section">
+      <div class="distance-label">DISTANCE - TROU NOIR</div>
+      <div class="distance-value">473.65M KM</div>
     </div>
+  </section>
 
-    <button class="extract-btn" onclick="startExtraction()">
-      ▶ LANCER L'EXTRACTION
+  <section class="extraction-console" aria-label="Lancement extraction">
+    <p class="console-copy">Zone d'extraction disponible<br><span class="dim">debris detectes a proximite...</span></p>
+    <button class="launch-btn" id="launch-btn" type="button">
+      <span class="launch-icon">+</span>
+      <span class="launch-label">LANCER L'EXTRACTION</span>
     </button>
-  </div>
+    <div class="crew-ready" id="crew-ready" aria-label="Etat de preparation equipage"></div>
+  </section>
 
-  <!-- PANEL DROIT — TERMINAL -->
-  <div class="panel-right">
-    <div class="panel-section-label">TERMINAL MOTOMOTO</div>
-    <div class="terminal-lines" id="terminal-lines">
-      <div class="t sys">&gt; BOOT SEQUENCE COMPLETE</div>
-      <div class="t err">&gt; ANTENNE : SIGNAL FAIBLE</div>
-      <div class="t sys">&gt; DISTANCE TROU NOIR : 4.7 AU</div>
-      <div class="t sys">&gt; RADIATIONS : NIVEAU 1 — NOMINAL</div>
-      <div class="t err">&gt; CARBURANT CRITIQUE — 34%</div>
-      <div class="t">&nbsp;</div>
-      <div class="t hi" id="last-line">&gt; EN ATTENTE DE VOS ORDRES.</div>
-    </div>
-    <div class="terminal-input">
-      <span class="terminal-prompt">&gt;</span>
-      <div class="t-cursor-inline"></div>
-    </div>
-  </div>
-
-  <!-- FOOTER -->
-  <div class="hud-footer">
-    <span>MOTOMOTO SYSTEMS // SALVAGE PROTOCOL v0.1</span>
-    <div class="rad-bar-wrap">
-      <span class="rad-label">RADIATION</span>
-      <div class="rad-bar"><div class="rad-fill" id="rad-fill"></div></div>
-    </div>
-    <span id="footer-time">SESSION EN COURS</span>
-  </div>
-
-</div>
+  <div class="bridge-meta">MOTOMOTO // PONT PRINCIPAL // SALVAGE PROTOCOL</div>
+</main>
 
 <script>
-// Cursor
 const cursor = document.getElementById('cursor');
-document.addEventListener('mousemove', e => {
-  cursor.style.left = e.clientX + 'px';
-  cursor.style.top  = e.clientY + 'px';
+document.addEventListener('mousemove', event => {
+  cursor.style.left = event.clientX + 'px';
+  cursor.style.top = event.clientY + 'px';
 });
 
-// Session code
-document.getElementById('session-code').textContent =
-  Math.random().toString(36).substring(2,6).toUpperCase();
-
-// Fade in
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => document.getElementById('transition').classList.add('out'), 80);
 });
 
-// Timer d'exposition (ne tourne que pendant extraction — ici juste pour la démo)
-let seconds = 0;
-const timerEl = document.getElementById('timer');
+const params = new URLSearchParams(window.location.search);
+const storedPlayers = Number(localStorage.getItem('areciboPlayerCount'));
+const requestedPlayers = Number(params.get('players'));
+const playerCount = Math.max(1, Math.min(6, requestedPlayers || storedPlayers || 6));
+const readyState = Array.from({ length: 6 }, (_, index) => index >= playerCount);
+const crewEl = document.getElementById('crew-ready');
+const launchBtn = document.getElementById('launch-btn');
+const launchLabel = launchBtn.querySelector('.launch-label');
+const launchIcon = launchBtn.querySelector('.launch-icon');
 
-// Terminal messages
-const messages = [
-  { txt: '&gt; SYSTÈME STABILISÉ.', cls: 'sys', delay: 3000 },
-  { txt: '&gt; ZONE D\'EXTRACTION SCANNÉE.', cls: 'hi',  delay: 5500 },
-  { txt: '&gt; 3 OBJETS DÉTECTÉS À PORTÉE.', cls: 'hi',  delay: 7000 },
-  { txt: '&gt; SIGNAL CHIFFRÉ REÇU — SOURCE INCONNUE.', cls: 'err', delay: 11000 },
-];
+function renderCrew() {
+  crewEl.innerHTML = '';
+  readyState.forEach((ready, index) => {
+    const slot = document.createElement('button');
+    slot.type = 'button';
+    slot.className = 'crew-slot';
+    slot.textContent = `P${index + 1}`;
 
-function addLine(txt, cls = '') {
-  const lines = document.getElementById('terminal-lines');
-  const div = document.createElement('div');
-  div.className = 't ' + cls;
-  div.innerHTML = txt;
-  lines.appendChild(div);
-  lines.scrollTop = lines.scrollHeight;
+    if (index >= playerCount) {
+      slot.classList.add('disabled');
+      slot.setAttribute('aria-disabled', 'true');
+    } else {
+      slot.classList.toggle('ready', ready);
+      slot.setAttribute('aria-pressed', String(ready));
+      slot.addEventListener('click', () => {
+        readyState[index] = !readyState[index];
+        updateReadyState();
+      });
+    }
+
+    crewEl.appendChild(slot);
+  });
 }
 
-messages.forEach(m => {
-  setTimeout(() => addLine(m.txt, m.cls), m.delay);
+function updateReadyState() {
+  const activeReady = readyState.slice(0, playerCount);
+  const allReady = activeReady.every(Boolean);
+  launchBtn.classList.toggle('ready', allReady);
+  launchIcon.textContent = allReady ? 'OK' : '+';
+  launchLabel.textContent = allReady ? 'EQUIPE PRETE' : 'LANCER L\'EXTRACTION';
+  renderCrew();
+}
+
+launchBtn.addEventListener('click', () => {
+  const allReady = readyState.slice(0, playerCount).every(Boolean);
+  if (!allReady) {
+    readyState[0] = true;
+    updateReadyState();
+    return;
+  }
+
+  launchIcon.textContent = 'OK';
+  launchLabel.textContent = 'OUVERTURE DU SAS...';
+  document.getElementById('transition').classList.remove('out');
 });
 
-// Navigation
 function goMenu() {
-  const t = document.getElementById('transition');
-  t.classList.remove('out');
-  setTimeout(() => window.location.href = 'arecibo_menu.html', 500);
+  const transition = document.getElementById('transition');
+  transition.classList.remove('out');
+  setTimeout(() => window.location.href = 'arecibo_menu.html?v=bridge-main', 520);
 }
 
-function startExtraction() {
-  addLine('&gt; SAS D\'EXTRACTION OUVERT — BONNE CHANCE.', 'hi');
-  addLine('&gt; TIMER D\'EXPOSITION ACTIF.', 'err');
-  // TODO: lancer la session d'extraction
-}
+updateReadyState();
 </script>
 </body>
 </html>
