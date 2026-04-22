@@ -312,7 +312,7 @@ body::after {
   pointer-events:none;
   z-index:8;
   mix-blend-mode:screen;
-  opacity:.58;
+  opacity:.72;
   filter:blur(.18px);
 }
 
@@ -1213,9 +1213,9 @@ function startAmbientDust() {
     mote.y = randomBetween(height * .08, height * .92);
     mote.baseX = mote.x;
     mote.baseY = mote.y;
-    mote.size = Math.random() > .82 ? randomBetween(1.2, 2.3) : randomBetween(.55, 1.25);
+    mote.size = Math.random() > .78 ? randomBetween(1.4, 2.6) : randomBetween(.7, 1.45);
     mote.life = randomLife ? randomBetween(0, 1) : 0;
-    mote.lifeSpeed = randomBetween(.045, .105);
+    mote.lifeSpeed = randomBetween(.04, .095);
     mote.driftX = randomBetween(-1.1, 1.1);
     mote.driftY = randomBetween(-.2, .9);
     mote.flicker = randomBetween(.65, 1.25);
@@ -1232,7 +1232,7 @@ function startAmbientDust() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     motes.length = 0;
-    const count = Math.max(42, Math.round((width * height) / 18500));
+    const count = Math.max(70, Math.round((width * height) / 12500));
     for (let i = 0; i < count; i++) {
       const mote = {};
       resetMote(mote, true);
@@ -1252,14 +1252,14 @@ function startAmbientDust() {
       const fade = Math.sin(mote.life * Math.PI);
       const ceilingGlow = 1 - Math.min(1, Math.abs(mote.x - width * .5) / (width * .28));
       const heightGlow = 1 - Math.min(1, Math.abs(mote.y - height * .2) / (height * .34));
-      const lightBoost = 1 + Math.max(0, ceilingGlow * heightGlow) * 1.25;
+      const lightBoost = 1 + Math.max(0, ceilingGlow * heightGlow) * 1.75;
       const shimmer = .72 + Math.sin((now * .0012 + mote.baseX * .01) * mote.flicker) * .28;
-      const alpha = fade * shimmer * .18 * lightBoost;
+      const alpha = fade * shimmer * .24 * lightBoost;
 
       mote.x = mote.baseX + Math.sin(now * .00018 + mote.baseY) * 5 + mote.driftX * mote.life * 10;
       mote.y = mote.baseY + mote.driftY * mote.life * 14;
 
-      ctx.globalAlpha = Math.min(.48, Math.max(0, alpha));
+      ctx.globalAlpha = Math.min(.62, Math.max(0, alpha));
       ctx.fillStyle = mote.warm ? '#FA5A1F' : '#F7FFC3';
       ctx.fillRect(Math.round(mote.x), Math.round(mote.y), mote.size, mote.size);
     });
