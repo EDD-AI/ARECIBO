@@ -403,9 +403,9 @@ canvas#starfield-bg {
 .sound-toggle {
   position: absolute;
   top: 5.5vh;
-  left: 5.6vw;
-  width: 48px;
-  height: 48px;
+  left: 8.1vw;
+  width: 58px;
+  height: 58px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -425,8 +425,8 @@ canvas#starfield-bg {
   box-shadow: 0 0 18px rgba(250,90,31,.14);
 }
 .sound-toggle svg {
-  width: 25px;
-  height: 25px;
+  width: 28px;
+  height: 28px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
@@ -1289,17 +1289,28 @@ function toggleSwitch(el) {
   border-bottom: 1px solid rgba(247,255,195,.15);
 }
 .sp-close {
-  background: none;
-  border: none;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(247,255,195,.035);
+  border: 1px solid rgba(247,255,195,.22);
   color: rgba(247,255,195,.5);
   font-family: 'Pixelify Sans', monospace;
   font-size: 20px;
   cursor: none;
   padding: 0;
   line-height: 1;
-  transition: color .12s;
+  flex-shrink: 0;
+  transition: color .12s, border-color .12s, background .12s, box-shadow .12s;
 }
-.sp-close:hover { color: var(--orange); }
+.sp-close:hover {
+  color: var(--orange);
+  border-color: rgba(250,90,31,.7);
+  background: rgba(250,90,31,.12);
+  box-shadow: 0 0 18px rgba(250,90,31,.12);
+}
 .sp-title {
   font-size: 17px;
   letter-spacing: .12em;
