@@ -74,12 +74,18 @@ body {
   overflow: hidden;
 }
 
-/* Background starfield */
+/* Fond étoilé généré en JS — remplace le PNG Figma qui avait des cercles */
 .starfield {
   position: absolute;
   inset: 0;
-  background: url('starfield.png') center/cover no-repeat;
-  opacity: .9;
+  z-index: 0;
+}
+canvas#starfield-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
 }
 
 /* Scanlines */
@@ -243,12 +249,12 @@ body {
 }
 #logo-arecibo:hover::after { opacity: 1; }
 
-/* Canvas particules */
+/* Canvas particules — au dessus du starfield, sous les menus */
 #particles-canvas {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 1;
+  z-index: 3;
 }
 .logo-sub {
   font-family: var(--f-pixel);
@@ -289,7 +295,7 @@ body {
 <div class="page-transition" id="transition"></div>
 
 <div class="screen">
-  <div class="starfield"></div>
+  <div class="starfield"><canvas id="starfield-bg"></canvas></div>
 
   <!-- LIGNES ORANGE — PATHS EXACTS EXPORTÉS DEPUIS FIGMA -->
   <!-- viewBox="0 0 1712 1080" sur un frame 1920x1080 -->
@@ -345,6 +351,33 @@ body {
 </div>
 
 <script>
+/* ===== FOND ÉTOILÉ CANVAS — sans cercles baked ===== */
+(function() {
+  const c  = document.getElementById('starfield-bg');
+  const ctx = c.getContext('2d');
+  c.width  = window.innerWidth;
+  c.height = window.innerHeight;
+
+  const STARS = 320;
+  const stars = Array.from({ length: STARS }, (_, i) => ({
+    x: Math.random() * c.width,
+    y: Math.random() * c.height,
+    r: i < 20 ? 1.2 : i < 80 ? 0.8 : 0.5,
+    a: 0.1 + Math.random() * 0.7,
+  }));
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, c.width, c.height);
+  stars.forEach(s => {
+    ctx.globalAlpha = s.a;
+    ctx.fillStyle   = '#F7FFC3';
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+})();
+
 const cursor = document.getElementById('cursor');
 document.addEventListener('mousemove', e => {
   cursor.style.left = e.clientX + 'px';
@@ -403,44 +436,36 @@ function toggleSwitch(el) {
   resize();
   window.addEventListener('resize', resize);
 
-  /* Peu de particules — 18 pixels blancs */
-  const COUNT = 18;
-  const particles = Array.from({ length: COUNT }, () => ({
+  /* 22 particules — pixels blancs/crème de tailles variées */
+  const COUNT = 22;
+  const particles = Array.from({ length: COUNT }, (_, i) => ({
     x: Math.random() * window.innerWidth,
     y: Math.random() * window.innerHeight,
-    size: Math.random() < 0.3 ? 2 : 1,          // pixel 1×1 ou 2×2
-    vx: (Math.random() - 0.5) * 0.18,            // dérive très lente
+    size: i < 4 ? 3 : i < 12 ? 2 : 1,         // quelques grandes, majorité petites
+    vx: (Math.random() - 0.5) * 0.22,
     vy: (Math.random() - 0.5) * 0.18,
-    opacity: 0.15 + Math.random() * 0.55,
-    twinkle: Math.random() * Math.PI * 2,         // phase de scintillement
-    twinkleSpeed: 0.004 + Math.random() * 0.008,
+    opacity: 0.35 + Math.random() * 0.55,        // plus brillantes
+    twinkle: Math.random() * Math.PI * 2,
+    twinkleSpeed: 0.003 + Math.random() * 0.007,
   }));
 
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     particles.forEach(p => {
-      /* Scintillement lent */
       p.twinkle += p.twinkleSpeed;
-      const alpha = p.opacity * (0.6 + 0.4 * Math.sin(p.twinkle));
+      const alpha = p.opacity * (0.5 + 0.5 * Math.sin(p.twinkle));
 
-      ctx.fillStyle = `rgba(247,255,195,${alpha})`;
-      ctx.fillRect(
-        Math.round(p.x),
-        Math.round(p.y),
-        p.size,
-        p.size
-      );
+      ctx.fillStyle = `rgba(247,255,195,${alpha.toFixed(3)})`;
+      ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
 
-      /* Dérive lente */
       p.x += p.vx;
       p.y += p.vy;
 
-      /* Rebond doux sur les bords */
-      if (p.x < 0)                   { p.x = 0;               p.vx *= -1; }
-      if (p.x > canvas.width)        { p.x = canvas.width;    p.vx *= -1; }
-      if (p.y < 0)                   { p.y = 0;               p.vy *= -1; }
-      if (p.y > canvas.height)       { p.y = canvas.height;   p.vy *= -1; }
+      if (p.x < -5)               { p.x = canvas.width + 5; }
+      if (p.x > canvas.width + 5) { p.x = -5; }
+      if (p.y < -5)               { p.y = canvas.height + 5; }
+      if (p.y > canvas.height + 5){ p.y = -5; }
     });
 
     requestAnimationFrame(draw);
