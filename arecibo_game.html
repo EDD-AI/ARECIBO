@@ -688,7 +688,8 @@ const launchLabel = launchBtn.querySelector('.launch-label');
 const launchIcon = launchBtn.querySelector('.launch-icon');
 const distanceValue = document.getElementById('distance-value');
 const initialDistanceMillionKm = 473.65;
-const millionKmPerSecond = 0.00035;
+const distanceCountdownSeconds = 10 * 60 * 60;
+const millionKmPerSecond = initialDistanceMillionKm / distanceCountdownSeconds;
 const distanceStart = performance.now();
 
 function updateDistance() {
