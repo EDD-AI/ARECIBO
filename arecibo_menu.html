@@ -898,7 +898,7 @@ function toggleSwitch(el) {
 .settings-panel {
   background: #050505;
   border: 1px solid rgba(247,255,195,.3);
-  width: 360px;
+  width: min(540px, calc(100vw - 48px));
   font-family: 'Pixelify Sans', monospace;
   opacity: 0;
   transform: scale(.92) translateY(10px);
@@ -915,8 +915,8 @@ function toggleSwitch(el) {
 .sp-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
+  gap: 15px;
+  padding: 15px 21px;
   border-bottom: 1px solid rgba(247,255,195,.15);
 }
 .sp-close {
@@ -924,7 +924,7 @@ function toggleSwitch(el) {
   border: none;
   color: rgba(247,255,195,.5);
   font-family: 'Pixelify Sans', monospace;
-  font-size: 13px;
+  font-size: 20px;
   cursor: none;
   padding: 0;
   line-height: 1;
@@ -932,51 +932,51 @@ function toggleSwitch(el) {
 }
 .sp-close:hover { color: var(--orange); }
 .sp-title {
-  font-size: 11px;
+  font-size: 17px;
   letter-spacing: .12em;
   color: var(--cream);
 }
-.sp-body { padding: 16px 14px; display: flex; flex-direction: column; gap: 14px; }
+.sp-body { padding: 24px 21px; display: flex; flex-direction: column; gap: 21px; }
 .sp-section-label {
   display: inline-block;
   background: transparent;
   color: var(--orange);
   border: 1.5px solid var(--orange);
   font-family: 'Pixelify Sans', monospace;
-  font-size: 11px;
+  font-size: 17px;
   letter-spacing: .08em;
-  padding: 5px 16px;
-  margin-bottom: 10px;
+  padding: 8px 24px;
+  margin-bottom: 15px;
   border-radius: 20px;
 }
 .sp-slider-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 7px;
+  gap: 12px;
+  margin-bottom: 11px;
 }
 .sp-slider-label {
-  font-size: 9px;
+  font-size: 14px;
   letter-spacing: .06em;
   color: rgba(247,255,195,.8);
-  padding: 3px 8px;
+  padding: 5px 12px;
   border: 1px solid rgba(247,255,195,.3);
   border-radius: 4px;
-  width: 110px;
+  width: 165px;
   flex-shrink: 0;
   white-space: nowrap;
 }
 .sp-slider-row input[type="range"] {
   -webkit-appearance: none;
   flex: 1;
-  height: 1.5px;
+  height: 2px;
   background: rgba(247,255,195,.2);
   outline: none;
   cursor: none;
 }
 .sp-slider-row input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 11px; height: 11px;
+  width: 17px; height: 17px;
   background: var(--orange);
   border-radius: 50%;
   cursor: none;
@@ -984,32 +984,32 @@ function toggleSwitch(el) {
   box-shadow: 0 0 0 1.5px var(--orange);
 }
 .sp-slider-row input[type="range"]::-moz-range-thumb {
-  width: 11px; height: 11px;
+  width: 17px; height: 17px;
   background: var(--orange);
   border-radius: 50%;
   border: 2px solid #000;
   cursor: none;
 }
 .sp-val {
-  font-size: 9px;
+  font-size: 14px;
   color: var(--orange);
   letter-spacing: .06em;
-  padding: 2px 7px;
+  padding: 4px 11px;
   border: 1px solid var(--orange);
   border-radius: 10px;
-  width: 38px;
+  width: 57px;
   text-align: center;
   flex-shrink: 0;
 }
-.sp-lang-row { display: flex; gap: 6px; }
+.sp-lang-row { display: flex; gap: 9px; }
 .lang-btn {
   background: none;
   border: 1px solid rgba(247,255,195,.3);
   color: rgba(247,255,195,.6);
   font-family: 'Pixelify Sans', monospace;
-  font-size: 9px;
+  font-size: 14px;
   letter-spacing: .08em;
-  padding: 5px 14px;
+  padding: 8px 21px;
   cursor: none;
   transition: all .12s;
   border-radius: 4px;
@@ -1020,22 +1020,22 @@ function toggleSwitch(el) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 7px;
+  gap: 15px;
+  margin-bottom: 11px;
 }
 .sp-toggle-row:last-child { margin-bottom: 0; }
 .sp-toggle-label {
-  font-size: 9px;
+  font-size: 14px;
   letter-spacing: .06em;
   color: rgba(247,255,195,.8);
-  padding: 3px 8px;
+  padding: 5px 12px;
   border: 1px solid rgba(247,255,195,.3);
   border-radius: 4px;
   flex: 1;
 }
 .sp-toggle {
   position: relative;
-  width: 34px; height: 18px;
+  width: 51px; height: 27px;
   background: rgba(247,255,195,.08);
   border: 1px solid rgba(247,255,195,.15);
   border-radius: 3px;
@@ -1047,13 +1047,20 @@ function toggleSwitch(el) {
 .sp-toggle::after {
   content: '';
   position: absolute;
-  top: 3px; left: 3px;
-  width: 10px; height: 10px;
+  top: 5px; left: 5px;
+  width: 15px; height: 15px;
   background: var(--cream);
   border-radius: 1px;
   transition: left .2s;
 }
-.sp-toggle.on::after { left: 19px; }
+.sp-toggle.on::after { left: 29px; }
+
+@media (max-width: 620px) {
+  .settings-panel { width: calc(100vw - 28px); }
+  .sp-slider-row { align-items: stretch; flex-wrap: wrap; }
+  .sp-slider-label { width: 100%; }
+  .sp-slider-row input[type="range"] { min-width: 0; }
+}
 </style>
 
 <div id="settings-overlay" onclick="if(event.target===this)closeSettings()">
