@@ -358,6 +358,50 @@ canvas#starfield-bg {
 .discord:hover { background: #ff6b35; }
 .discord svg { width: 26px; height: 20px; fill: #000; }
 
+/* ===== AUDIO QUICK TOGGLE ===== */
+.sound-toggle {
+  position: absolute;
+  top: 5.5vh;
+  right: 5.6vw;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(247,255,195,.32);
+  color: var(--cream);
+  cursor: none;
+  z-index: 10;
+  opacity: 0;
+  animation: fadeIn .4s ease forwards 1.55s;
+  transition: border-color .12s, color .12s, background .12s, box-shadow .12s;
+}
+.sound-toggle:hover {
+  background: rgba(250,90,31,.12);
+  border-color: var(--orange);
+  color: var(--orange);
+  box-shadow: 0 0 18px rgba(250,90,31,.14);
+}
+.sound-toggle svg {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+.sound-toggle .sound-wave,
+.sound-toggle .sound-slash { transition: opacity .12s; }
+.sound-toggle .sound-slash { opacity: 0; }
+.sound-toggle.is-muted {
+  color: rgba(250,90,31,.88);
+  border-color: rgba(250,90,31,.55);
+}
+.sound-toggle.is-muted .sound-wave { opacity: 0; }
+.sound-toggle.is-muted .sound-slash { opacity: 1; }
+
 /* ===== LOGO ===== */
 .logo {
   position: absolute;
@@ -579,6 +623,15 @@ canvas#starfield-bg {
     <svg viewBox="0 0 24 18"><path d="M20.317 1.492a19.825 19.825 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.301 18.301 0 0 0-5.487 0 12.764 12.764 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 1.492a.07.07 0 0 0-.032.027C.533 6.093-.32 10.555.099 14.961a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 12.278c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
   </a>
 
+  <button class="sound-toggle" id="sound-toggle" type="button" aria-label="Couper le son" title="Couper le son">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 10h4l6-5v14l-6-5H4z"/>
+      <path class="sound-wave" d="M17 8c1.2 1.1 1.8 2.4 1.8 4s-.6 2.9-1.8 4"/>
+      <path class="sound-wave" d="M19.4 5.6c2 1.9 3 4 3 6.4s-1 4.5-3 6.4"/>
+      <path class="sound-slash" d="M5 5l14 14"/>
+    </svg>
+  </button>
+
   <div class="logo">
     <div class="logo-text" id="logo-arecibo" data-text="ARECIBO">
       <span class="logo-letter" style="--i:0">A</span><span class="logo-letter" style="--i:1">R</span><span class="logo-letter" style="--i:2">E</span><span class="logo-letter" style="--i:3">C</span><span class="logo-letter" style="--i:4">I</span><span class="logo-letter" style="--i:5">B</span><span class="logo-letter" style="--i:6">O</span>
@@ -766,6 +819,38 @@ document.querySelectorAll('.menu-item').forEach(item => {
     item.classList.add('active');
   });
 });
+
+(function() {
+  const soundToggle = document.getElementById('sound-toggle');
+  if (!soundToggle) return;
+  const key = 'areciboAudioMuted';
+
+  function readMuted() {
+    try { return localStorage.getItem(key) === 'true'; }
+    catch (err) { return false; }
+  }
+
+  function writeMuted(isMuted) {
+    try { localStorage.setItem(key, String(isMuted)); }
+    catch (err) {}
+  }
+
+  function applyMuted(isMuted) {
+    soundToggle.classList.toggle('is-muted', isMuted);
+    soundToggle.setAttribute('aria-pressed', String(isMuted));
+    soundToggle.setAttribute('aria-label', isMuted ? 'Activer le son' : 'Couper le son');
+    soundToggle.title = isMuted ? 'Activer le son' : 'Couper le son';
+    document.documentElement.dataset.audioMuted = String(isMuted);
+    window.dispatchEvent(new CustomEvent('arecibo-audio-muted-change', { detail: { muted: isMuted } }));
+  }
+
+  applyMuted(readMuted());
+  soundToggle.addEventListener('click', () => {
+    const muted = !soundToggle.classList.contains('is-muted');
+    writeMuted(muted);
+    applyMuted(muted);
+  });
+})();
 
 function goTo(e, page) {
   e.preventDefault();
