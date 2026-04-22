@@ -101,6 +101,40 @@ body::after {
   z-index:4;
 }
 
+.neon-glow {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:5;
+  opacity:.55;
+  mix-blend-mode:screen;
+  filter:blur(12px) saturate(1.18);
+  background:
+    radial-gradient(ellipse 24% 8% at 50% 10%, rgba(247,255,195,.58), transparent 62%),
+    radial-gradient(ellipse 19% 6% at 49% 15.6%, rgba(247,255,195,.34), transparent 65%),
+    radial-gradient(ellipse 16% 5% at 50% 20.6%, rgba(247,255,195,.25), transparent 67%),
+    radial-gradient(ellipse 4% 12% at 8% 47%, rgba(247,255,195,.22), transparent 72%),
+    radial-gradient(ellipse 8% 12% at 84% 47%, rgba(247,255,195,.2), transparent 72%),
+    radial-gradient(ellipse 18% 10% at 73% 75%, rgba(247,255,195,.16), transparent 74%),
+    radial-gradient(ellipse 20% 12% at 28% 76%, rgba(247,255,195,.13), transparent 76%);
+  animation:neonBreath 4.8s ease-in-out infinite;
+}
+
+@keyframes neonBreath {
+  0%, 100% {
+    opacity:.45;
+    filter:blur(11px) saturate(1.08);
+  }
+  42% {
+    opacity:.68;
+    filter:blur(15px) saturate(1.28);
+  }
+  68% {
+    opacity:.52;
+    filter:blur(13px) saturate(1.16);
+  }
+}
+
 .ship-window {
   position:absolute;
   left:13.2vw;
@@ -525,6 +559,7 @@ body::after {
 
 <main class="bridge" aria-label="Pont principal du MOTOMOTO">
   <div class="bridge-glass" aria-hidden="true"></div>
+  <div class="neon-glow" aria-hidden="true"></div>
 
   <button class="back-btn" type="button" onclick="goMenu()">&#60; MENU</button>
 
@@ -575,11 +610,11 @@ body::after {
     </div>
   </section>
 
-  <section class="extraction-console" aria-label="Lancement extraction">
-    <p class="console-copy">Zone d'extraction disponible<br><span class="dim">debris detectes a proximite...</span></p>
+  <section class="extraction-console" aria-label="Lancement expedition">
+    <p class="console-copy">Zone d'expedition disponible<br><span class="dim">debris detectes a proximite...</span></p>
     <button class="launch-btn" id="launch-btn" type="button">
       <span class="launch-icon">+</span>
-      <span class="launch-label">LANCER L'EXTRACTION</span>
+      <span class="launch-label">LANCER L'EXPEDITION</span>
     </button>
     <div class="crew-ready" id="crew-ready" aria-label="Etat de preparation equipage"></div>
   </section>
@@ -648,7 +683,7 @@ function updateReadyState() {
   const allReady = activeReady.every(Boolean);
   launchBtn.classList.toggle('ready', allReady);
   launchIcon.textContent = allReady ? 'OK' : '+';
-  launchLabel.textContent = allReady ? 'EQUIPE PRETE' : 'LANCER L\'EXTRACTION';
+  launchLabel.textContent = allReady ? 'EQUIPE PRETE' : 'LANCER L\'EXPEDITION';
   renderCrew();
 }
 
