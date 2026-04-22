@@ -359,14 +359,16 @@ function toggleSwitch(el) {
 #settings-overlay.open { display: flex; }
 
 .settings-panel {
-  background: #000;
-  border: 1px solid rgba(247,255,195,.35);
-  width: 340px;
+  background: #050505;
+  border: 1px solid rgba(247,255,195,.3);
+  width: 360px;
   font-family: 'Pixelify Sans', monospace;
   opacity: 0;
   transform: scale(.92) translateY(10px);
   transition: opacity .3s ease, transform .3s ease;
   cursor: none;
+  border-radius: 4px;
+  overflow: hidden;
 }
 .settings-panel.visible {
   opacity: 1;
@@ -400,17 +402,20 @@ function toggleSwitch(el) {
 }
 
 /* Sections */
-.sp-body { padding: 16px 14px; display: flex; flex-direction: column; gap: 16px; }
+.sp-body { padding: 16px 14px; display: flex; flex-direction: column; gap: 14px; }
 
+/* Section pill label — orange border, transparent bg, rounded */
 .sp-section-label {
   display: inline-block;
-  background: var(--orange);
-  color: #000;
+  background: transparent;
+  color: var(--orange);
+  border: 1.5px solid var(--orange);
   font-family: 'Pixelify Sans', monospace;
-  font-size: 10px;
-  letter-spacing: .1em;
-  padding: 4px 12px;
+  font-size: 11px;
+  letter-spacing: .08em;
+  padding: 5px 16px;
   margin-bottom: 10px;
+  border-radius: 20px;
 }
 
 /* Sliders */
@@ -418,44 +423,54 @@ function toggleSwitch(el) {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 7px;
 }
+/* Slider label in a bordered box */
 .sp-slider-label {
   font-size: 9px;
-  letter-spacing: .08em;
-  color: rgba(247,255,195,.5);
-  width: 90px;
+  letter-spacing: .06em;
+  color: rgba(247,255,195,.8);
+  padding: 3px 8px;
+  border: 1px solid rgba(247,255,195,.3);
+  border-radius: 4px;
+  width: 110px;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 .sp-slider-row input[type="range"] {
   -webkit-appearance: none;
   flex: 1;
-  height: 2px;
-  background: rgba(247,255,195,.15);
+  height: 1.5px;
+  background: rgba(247,255,195,.2);
   outline: none;
   cursor: none;
-  position: relative;
 }
 .sp-slider-row input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 10px; height: 10px;
+  width: 11px; height: 11px;
   background: var(--orange);
   border-radius: 50%;
   cursor: none;
+  border: 2px solid #000;
+  box-shadow: 0 0 0 1.5px var(--orange);
 }
 .sp-slider-row input[type="range"]::-moz-range-thumb {
-  width: 10px; height: 10px;
+  width: 11px; height: 11px;
   background: var(--orange);
   border-radius: 50%;
-  border: none;
+  border: 2px solid #000;
   cursor: none;
 }
+/* Percentage in an orange-bordered pill */
 .sp-val {
   font-size: 9px;
   color: var(--orange);
   letter-spacing: .06em;
-  width: 28px;
-  text-align: right;
+  padding: 2px 7px;
+  border: 1px solid var(--orange);
+  border-radius: 10px;
+  width: 38px;
+  text-align: center;
   flex-shrink: 0;
 }
 
@@ -466,53 +481,59 @@ function toggleSwitch(el) {
 }
 .lang-btn {
   background: none;
-  border: 1px solid rgba(247,255,195,.2);
-  color: rgba(247,255,195,.4);
+  border: 1px solid rgba(247,255,195,.3);
+  color: rgba(247,255,195,.6);
   font-family: 'Pixelify Sans', monospace;
   font-size: 9px;
-  letter-spacing: .1em;
-  padding: 5px 12px;
+  letter-spacing: .08em;
+  padding: 5px 14px;
   cursor: none;
   transition: all .12s;
+  border-radius: 4px;
 }
-.lang-btn.sel, .lang-btn:hover {
-  border-color: var(--orange);
-  color: var(--cream);
-}
-.lang-btn.sel { color: var(--orange); }
+.lang-btn:hover { border-color: rgba(247,255,195,.6); color: var(--cream); }
+.lang-btn.sel { border-color: var(--orange); color: var(--orange); }
 
 /* Toggles */
 .sp-toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  gap: 10px;
+  margin-bottom: 7px;
 }
 .sp-toggle-row:last-child { margin-bottom: 0; }
+/* Toggle label in a bordered box */
 .sp-toggle-label {
   font-size: 9px;
-  letter-spacing: .08em;
-  color: rgba(247,255,195,.5);
+  letter-spacing: .06em;
+  color: rgba(247,255,195,.8);
+  padding: 3px 8px;
+  border: 1px solid rgba(247,255,195,.3);
+  border-radius: 4px;
+  flex: 1;
 }
 .sp-toggle {
   position: relative;
-  width: 32px; height: 16px;
-  background: rgba(247,255,195,.1);
+  width: 34px; height: 18px;
+  background: rgba(247,255,195,.08);
   border: 1px solid rgba(247,255,195,.15);
+  border-radius: 3px;
   cursor: none;
   flex-shrink: 0;
-  transition: background .2s;
+  transition: background .2s, border-color .2s;
 }
 .sp-toggle.on { background: var(--orange); border-color: var(--orange); }
 .sp-toggle::after {
   content: '';
   position: absolute;
-  top: 2px; left: 2px;
+  top: 3px; left: 3px;
   width: 10px; height: 10px;
   background: var(--cream);
+  border-radius: 1px;
   transition: left .2s;
 }
-.sp-toggle.on::after { left: 18px; }
+.sp-toggle.on::after { left: 19px; }
 </style>
 
 <div id="settings-overlay" onclick="if(event.target===this)closeSettings()">
