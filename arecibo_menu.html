@@ -527,6 +527,7 @@ canvas#starfield-bg {
 }
 .page-transition.active { opacity: 1; pointer-events: all; }
 </style>
+<link rel="stylesheet" href="assets/terminal-filter.css?v=global-terminal-filter-amber">
 </head>
 <body>
 <svg class="crt-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -567,7 +568,7 @@ canvas#starfield-bg {
   </div>
 
   <nav class="menu">
-    <a class="menu-item active" href="arecibo_intro.html?v=intro-story-tighter" onclick="goTo(event,'intro')"><span class="arr">></span>SOLO</a>
+    <a class="menu-item active" href="arecibo_intro.html?v=global-terminal-filter-amber" onclick="goTo(event,'intro')"><span class="arr">></span>SOLO</a>
     <a class="menu-item" href="#" onclick="goTo(event,'lobby')"><span class="arr">></span>MULTI</a>
     <a class="menu-item" href="#" onclick="openSettings(event)"><span class="arr">></span>SETTINGS</a>
     <a class="menu-item" href="#"><span class="arr">></span>CREDITS</a>
@@ -770,7 +771,7 @@ function goTo(e, page) {
   const t = document.getElementById('transition');
   t.classList.add('active');
   const routes = {
-    intro: 'arecibo_intro.html?v=intro-story-tighter',
+    intro: 'arecibo_intro.html?v=global-terminal-filter-amber',
     lobby: 'arecibo_lobby.html',
     game: 'arecibo_game.html?v=solo-prototype'
   };
