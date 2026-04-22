@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ARECIBO - Pont principal</title>
+<title>ARECIBO - Sas expedition</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap');
 
@@ -466,10 +466,10 @@ body::after {
   background:rgba(224,59,49,.05);
   box-shadow:0 0 12px rgba(224,59,49,.14);
 }
-.room-bridge { left:37%; top:6%; width:26%; height:14%; clip-path:polygon(18% 0, 82% 0, 100% 28%, 100% 100%, 0 100%, 0 28%); }
+.room-bridge { left:39%; top:39%; width:22%; height:15%; }
 .room-antenna { left:10%; top:28%; width:28%; height:16%; }
 .room-med { right:10%; top:28%; width:28%; height:16%; }
-.room-sas { left:39%; top:39%; width:22%; height:15%; }
+.room-sas { left:37%; top:6%; width:26%; height:14%; clip-path:polygon(18% 0, 82% 0, 100% 28%, 100% 100%, 0 100%, 0 28%); }
 .room-engine { left:11%; bottom:25%; width:28%; height:18%; }
 .room-cargo { right:11%; bottom:25%; width:28%; height:18%; }
 .room-crew { left:27%; bottom:5%; width:20%; height:16%; clip-path:polygon(0 0, 100% 0, 100% 78%, 78% 100%, 0 100%); }
@@ -901,7 +901,7 @@ body::after {
 <div class="cursor" id="cursor"></div>
 <div class="page-transition" id="transition"></div>
 
-<main class="bridge" aria-label="Pont principal du MOTOMOTO">
+<main class="bridge" aria-label="Sas expedition du MOTOMOTO">
   <div class="bridge-glass" aria-hidden="true"></div>
   <div class="neon-glow" aria-hidden="true"></div>
   <div class="ship-light-bloom" aria-hidden="true"></div>
@@ -988,17 +988,17 @@ body::after {
       <div class="map-status">
         <div>
           <span>POSITION ACTUELLE</span><br>
-          <strong id="room-current">PONT PRINCIPAL</strong>
+          <strong id="room-current">SAS EXPEDITION</strong>
         </div>
         <div class="map-lock active" id="room-state">ACTIF</div>
       </div>
 
       <div class="deck-map" aria-label="Zones visitables du MOTOMOTO">
         <div class="deck-spine" aria-hidden="true"></div>
-        <button class="room-node room-bridge active" type="button" data-room="PONT PRINCIPAL" data-state="open" data-short="A-01">PONT</button>
+        <button class="room-node room-sas active" type="button" data-room="SAS EXPEDITION" data-state="open" data-short="A-01">SAS</button>
         <button class="room-node room-antenna locked" type="button" data-room="ANTENNE" data-state="locked" data-short="B-02">ANTENNE</button>
         <button class="room-node room-med locked" type="button" data-room="INFIRMERIE" data-state="locked" data-short="C-03">INFIRMERIE</button>
-        <button class="room-node room-sas" type="button" data-room="SAS EXPEDITION" data-state="open" data-short="A-02">SAS</button>
+        <button class="room-node room-bridge" type="button" data-room="PONT PRINCIPAL" data-state="open" data-short="A-02">PONT</button>
         <button class="room-node room-engine locked" type="button" data-room="MOTEURS" data-state="locked" data-short="D-04">MOTEURS</button>
         <button class="room-node room-cargo locked" type="button" data-room="CARGO" data-state="locked" data-short="D-05">CARGO</button>
         <button class="room-node room-crew locked" type="button" data-room="QUARTIERS" data-state="locked" data-short="E-06">QUARTIERS</button>
@@ -1023,7 +1023,7 @@ body::after {
     <div class="crew-ready" id="crew-ready" aria-label="Etat de preparation equipage"></div>
   </section>
 
-  <div class="bridge-meta">MOTOMOTO // PONT PRINCIPAL // SALVAGE PROTOCOL</div>
+  <div class="bridge-meta">MOTOMOTO // SAS EXPEDITION // SALVAGE PROTOCOL</div>
 </main>
 
 <script>
@@ -1197,7 +1197,7 @@ function initShipMap() {
       roomCurrent.textContent = room;
       mapMessage.classList.remove('warn');
       mapMessage.textContent = room === 'SAS EXPEDITION'
-        ? 'Sas selectionne : depart possible depuis le bouton central.'
+        ? 'Sas expedition actif : depart possible depuis le bouton central.'
         : 'Pont principal selectionne : systemes du vaisseau visibles.';
       window.location.hash = room.toLowerCase().replace(/\s+/g, '-');
     });
