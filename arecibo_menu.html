@@ -278,7 +278,7 @@ body {
   <nav class="menu">
     <a class="menu-item active" href="#" onclick="goTo(event,'creation')"><span class="arr">></span>SOLO</a>
     <a class="menu-item" href="#" onclick="goTo(event,'lobby')"><span class="arr">></span>MULTI</a>
-    <a class="menu-item" href="#" onclick="goTo(event,'settings')"><span class="arr">></span>SETTINGS</a>
+    <a class="menu-item" href="#" onclick="openSettings(event)"><span class="arr">></span>SETTINGS</a>
     <a class="menu-item" href="#"><span class="arr">></span>CREDITS</a>
   </nav>
 
@@ -316,6 +316,261 @@ function goTo(e, page) {
   t.classList.add('active');
   setTimeout(() => { window.location.href = 'arecibo_' + page + '.html'; }, 420);
 }
+
+function openSettings(e) {
+  e.preventDefault();
+  const overlay = document.getElementById('settings-overlay');
+  overlay.classList.add('open');
+  setTimeout(() => overlay.querySelector('.settings-panel').classList.add('visible'), 10);
+}
+
+function closeSettings() {
+  const overlay = document.getElementById('settings-overlay');
+  overlay.querySelector('.settings-panel').classList.remove('visible');
+  setTimeout(() => overlay.classList.remove('open'), 320);
+}
+
+function updateSlider(el, valId) {
+  document.getElementById(valId).textContent = el.value + '%';
+}
+
+function selectLang(btn) {
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+function toggleSwitch(el) {
+  el.classList.toggle('on');
+}
 </script>
+
+<!-- ===== SETTINGS OVERLAY ===== -->
+<style>
+#settings-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.7);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+#settings-overlay.open { display: flex; }
+
+.settings-panel {
+  background: #000;
+  border: 1px solid rgba(247,255,195,.35);
+  width: 340px;
+  font-family: 'Pixelify Sans', monospace;
+  opacity: 0;
+  transform: scale(.92) translateY(10px);
+  transition: opacity .3s ease, transform .3s ease;
+  cursor: none;
+}
+.settings-panel.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* Header */
+.sp-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(247,255,195,.15);
+}
+.sp-close {
+  background: none;
+  border: none;
+  color: rgba(247,255,195,.5);
+  font-family: 'Pixelify Sans', monospace;
+  font-size: 13px;
+  cursor: none;
+  padding: 0;
+  line-height: 1;
+  transition: color .12s;
+}
+.sp-close:hover { color: var(--orange); }
+.sp-title {
+  font-size: 11px;
+  letter-spacing: .12em;
+  color: var(--cream);
+}
+
+/* Sections */
+.sp-body { padding: 16px 14px; display: flex; flex-direction: column; gap: 16px; }
+
+.sp-section-label {
+  display: inline-block;
+  background: var(--orange);
+  color: #000;
+  font-family: 'Pixelify Sans', monospace;
+  font-size: 10px;
+  letter-spacing: .1em;
+  padding: 4px 12px;
+  margin-bottom: 10px;
+}
+
+/* Sliders */
+.sp-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.sp-slider-label {
+  font-size: 9px;
+  letter-spacing: .08em;
+  color: rgba(247,255,195,.5);
+  width: 90px;
+  flex-shrink: 0;
+}
+.sp-slider-row input[type="range"] {
+  -webkit-appearance: none;
+  flex: 1;
+  height: 2px;
+  background: rgba(247,255,195,.15);
+  outline: none;
+  cursor: none;
+  position: relative;
+}
+.sp-slider-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px; height: 10px;
+  background: var(--orange);
+  border-radius: 50%;
+  cursor: none;
+}
+.sp-slider-row input[type="range"]::-moz-range-thumb {
+  width: 10px; height: 10px;
+  background: var(--orange);
+  border-radius: 50%;
+  border: none;
+  cursor: none;
+}
+.sp-val {
+  font-size: 9px;
+  color: var(--orange);
+  letter-spacing: .06em;
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Languages */
+.sp-lang-row {
+  display: flex;
+  gap: 6px;
+}
+.lang-btn {
+  background: none;
+  border: 1px solid rgba(247,255,195,.2);
+  color: rgba(247,255,195,.4);
+  font-family: 'Pixelify Sans', monospace;
+  font-size: 9px;
+  letter-spacing: .1em;
+  padding: 5px 12px;
+  cursor: none;
+  transition: all .12s;
+}
+.lang-btn.sel, .lang-btn:hover {
+  border-color: var(--orange);
+  color: var(--cream);
+}
+.lang-btn.sel { color: var(--orange); }
+
+/* Toggles */
+.sp-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.sp-toggle-row:last-child { margin-bottom: 0; }
+.sp-toggle-label {
+  font-size: 9px;
+  letter-spacing: .08em;
+  color: rgba(247,255,195,.5);
+}
+.sp-toggle {
+  position: relative;
+  width: 32px; height: 16px;
+  background: rgba(247,255,195,.1);
+  border: 1px solid rgba(247,255,195,.15);
+  cursor: none;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+.sp-toggle.on { background: var(--orange); border-color: var(--orange); }
+.sp-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 10px; height: 10px;
+  background: var(--cream);
+  transition: left .2s;
+}
+.sp-toggle.on::after { left: 18px; }
+</style>
+
+<div id="settings-overlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-panel">
+
+    <div class="sp-header">
+      <button class="sp-close" onclick="closeSettings()">×</button>
+      <span class="sp-title">MENU // SETTINGS //</span>
+    </div>
+
+    <div class="sp-body">
+
+      <!-- SON -->
+      <div>
+        <div class="sp-section-label">Son</div>
+        <div class="sp-slider-row">
+          <span class="sp-slider-label">Volume général</span>
+          <input type="range" min="0" max="100" value="80" oninput="updateSlider(this,'sv1')">
+          <span class="sp-val" id="sv1">80%</span>
+        </div>
+        <div class="sp-slider-row">
+          <span class="sp-slider-label">Musique</span>
+          <input type="range" min="0" max="100" value="60" oninput="updateSlider(this,'sv2')">
+          <span class="sp-val" id="sv2">60%</span>
+        </div>
+        <div class="sp-slider-row">
+          <span class="sp-slider-label">Effets sonores</span>
+          <input type="range" min="0" max="100" value="60" oninput="updateSlider(this,'sv3')">
+          <span class="sp-val" id="sv3">60%</span>
+        </div>
+      </div>
+
+      <!-- LANGUES -->
+      <div>
+        <div class="sp-section-label">Langues</div>
+        <div class="sp-lang-row">
+          <button class="lang-btn sel" onclick="selectLang(this)">Fr</button>
+          <button class="lang-btn" onclick="selectLang(this)">Us</button>
+          <button class="lang-btn" onclick="selectLang(this)">Es</button>
+        </div>
+      </div>
+
+      <!-- DONNÉES -->
+      <div>
+        <div class="sp-section-label">Données</div>
+        <div class="sp-toggle-row">
+          <span class="sp-toggle-label">sauvegarde automatique</span>
+          <div class="sp-toggle on" onclick="toggleSwitch(this)"></div>
+        </div>
+        <div class="sp-toggle-row">
+          <span class="sp-toggle-label">Données de session</span>
+          <div class="sp-toggle on" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
