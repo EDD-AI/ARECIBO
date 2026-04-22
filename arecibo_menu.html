@@ -97,7 +97,14 @@ body::after {
   border: 1.5px solid var(--cream);
   pointer-events: none;
   z-index: 9999;
-  transform: translate(-50%,-50%);
+  transform: translate(-50%,-50%) scaleX(var(--cursor-stretch, 1)) scaleY(var(--cursor-squash, 1)) rotate(var(--cursor-rotate, 0deg));
+  transform-origin: 50% 50%;
+  border-color: rgba(247,255,195,var(--cursor-alpha, 1));
+  box-shadow: 0 0 var(--cursor-glow, 0px) rgba(250,90,31,.22);
+  transition:
+    border-color .12s,
+    box-shadow .12s,
+    transform .16s ease-out;
 }
 .cursor::after {
   content: '';
@@ -106,6 +113,7 @@ body::after {
   width: 3px; height: 3px;
   background: var(--orange);
   transform: translate(-50%,-50%);
+  opacity: var(--cursor-dot-alpha, 1);
 }
 
 .screen {
@@ -901,6 +909,25 @@ const cursor = document.getElementById('cursor');
 document.addEventListener('mousemove', e => {
   cursor.style.left = e.clientX + 'px';
   cursor.style.top = e.clientY + 'px';
+
+  const singularity = document.querySelector('.singularity-wrap');
+  if (!singularity || !cursor) return;
+
+  const rect = singularity.getBoundingClientRect();
+  const cx = rect.left + rect.width * .5;
+  const cy = rect.top + rect.height * .5;
+  const dx = cx - e.clientX;
+  const dy = cy - e.clientY;
+  const dist = Math.hypot(dx, dy);
+  const influence = Math.max(0, Math.min(1, 1 - dist / (rect.width * .68)));
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+  cursor.style.setProperty('--cursor-stretch', (1 + influence * .38).toFixed(3));
+  cursor.style.setProperty('--cursor-squash', (1 - influence * .16).toFixed(3));
+  cursor.style.setProperty('--cursor-rotate', `${(angle * influence).toFixed(2)}deg`);
+  cursor.style.setProperty('--cursor-alpha', (1 - influence * .18).toFixed(3));
+  cursor.style.setProperty('--cursor-dot-alpha', (1 - influence * .45).toFixed(3));
+  cursor.style.setProperty('--cursor-glow', `${(influence * 14).toFixed(1)}px`);
 });
 
 document.querySelectorAll('.menu-item').forEach(item => {
@@ -995,6 +1022,8 @@ function toggleSwitch(el) {
 
   const COUNT = 54;
   const particles = Array.from({ length: COUNT }, (_, i) => createParticle(i / COUNT));
+  const debris = [];
+  let nextDebrisAt = performance.now() + 2800 + Math.random() * 6200;
 
   function getGravityWell() {
     if (!singularity) {
@@ -1039,7 +1068,100 @@ function toggleSwitch(el) {
     Object.assign(p, createParticle());
   }
 
-  function draw() {
+  function createDebris(well) {
+    const fromTop = Math.random() > .62;
+    const startX = fromTop
+      ? Math.random() * canvas.width * .72
+      : -60 - Math.random() * canvas.width * .18;
+    const startY = fromTop
+      ? -50 - Math.random() * canvas.height * .12
+      : Math.random() * canvas.height;
+    const dx = well.x - startX;
+    const dy = well.y - startY;
+    const dist = Math.max(1, Math.hypot(dx, dy));
+
+    return {
+      x: startX,
+      y: startY,
+      prevX: startX,
+      prevY: startY,
+      vx: dx / dist * (1.15 + Math.random() * .72),
+      vy: dy / dist * (1.15 + Math.random() * .72),
+      size: 5 + Math.random() * 8,
+      spin: (Math.random() - .5) * .055,
+      angle: Math.random() * Math.PI * 2,
+      heat: .45 + Math.random() * .55,
+      opacity: .45 + Math.random() * .35,
+      life: 0,
+      maxLife: 520 + Math.random() * 360,
+      trail: []
+    };
+  }
+
+  function scheduleNextDebris(now) {
+    nextDebrisAt = now + 5200 + Math.random() * 11800;
+  }
+
+  function drawDebris(now, well) {
+    if (!reduceMotion.matches && now > nextDebrisAt && debris.length < 2) {
+      debris.push(createDebris(well));
+      scheduleNextDebris(now);
+    }
+
+    for (let i = debris.length - 1; i >= 0; i--) {
+      const d = debris[i];
+      d.prevX = d.x;
+      d.prevY = d.y;
+      d.life++;
+
+      const dx = well.x - d.x;
+      const dy = well.y - d.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      const nx = dx / dist;
+      const ny = dy / dist;
+      const tangent = d.spin * Math.min(18, well.radius / dist * 12);
+      const accel = .055 + Math.min(.2, well.radius / dist * .14);
+
+      d.vx += nx * accel - ny * tangent;
+      d.vy += ny * accel + nx * tangent;
+      d.vx *= .997;
+      d.vy *= .997;
+      d.x += d.vx;
+      d.y += d.vy;
+      d.angle += d.spin * 5.4;
+      d.trail.unshift({ x: d.x, y: d.y, size: d.size });
+      if (d.trail.length > 13) d.trail.pop();
+
+      const swallowed = dist < well.radius * .5;
+      const fade = Math.max(0, Math.min(1, 1 - d.life / d.maxLife));
+      const heat = Math.min(1, d.heat + (1 - Math.min(1, dist / (well.radius * 2.4))) * .7);
+      const color = heat > .85 ? '247,255,195' : heat > .58 ? '250,168,70' : '250,90,31';
+      const alpha = d.opacity * (.38 + heat * .46) * Math.max(.2, fade);
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      d.trail.forEach((point, trailIndex) => {
+        const trailAlpha = alpha * (1 - trailIndex / d.trail.length) * .22;
+        ctx.fillStyle = `rgba(${color},${trailAlpha.toFixed(3)})`;
+        const trailSize = Math.max(1, point.size * (1 - trailIndex / d.trail.length) * .72);
+        ctx.fillRect(Math.round(point.x - trailSize / 2), Math.round(point.y - trailSize / 2), trailSize, trailSize);
+      });
+
+      ctx.translate(d.x, d.y);
+      ctx.rotate(d.angle);
+      ctx.fillStyle = `rgba(${color},${alpha.toFixed(3)})`;
+      ctx.fillRect(-d.size / 2, -d.size / 2, d.size, d.size);
+      ctx.fillStyle = `rgba(0,0,0,${(.32 * alpha).toFixed(3)})`;
+      ctx.fillRect(-d.size * .12, -d.size * .12, d.size * .5, d.size * .5);
+      ctx.restore();
+
+      if (swallowed || d.life > d.maxLife || d.x > canvas.width + 160 || d.y < -160 || d.y > canvas.height + 160) {
+        debris.splice(i, 1);
+      }
+    }
+  }
+
+  function draw(now = 0) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const well = getGravityWell();
 
@@ -1087,6 +1209,7 @@ function toggleSwitch(el) {
         resetParticle(p);
       }
     });
+    drawDebris(now, well);
     requestAnimationFrame(draw);
   }
   draw();
