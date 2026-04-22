@@ -386,7 +386,7 @@ function startSequence() {
 
   // Redirection
   t(() => {
-    window.location.href = 'arecibo_game.html';
+    window.location.href = NEXT_PAGE;
   }, T_REDIRECT);
 }
 
@@ -397,7 +397,7 @@ function skipIntro() {
   timers.forEach(clearTimeout);
   document.getElementById('final-fade').style.transition = 'opacity .3s ease';
   document.getElementById('final-fade').classList.add('active');
-  setTimeout(() => { window.location.href = 'arecibo_game.html'; }, 350);
+  setTimeout(() => { window.location.href = NEXT_PAGE; }, 350);
 }
 
 // Démarrage

@@ -28,7 +28,9 @@ Avant que le trou noir n'aspire tout. Y compris eux.
 /
 ├── index.html              → Séquence de boot (terminal)
 ├── arecibo_menu.html       → Menu principal
-├── arecibo_creation.html   → Création de personnage
+├── arecibo_intro.html      → Générique lore + terminal MOTOMOTO
+├── arecibo_game.html       → Prototype session SOLO
+├── arecibo_creation.html   → Création de personnage (mise de côté)
 ├── arecibo_lobby.html      → Lobby multijoueur (WIP)
 ├── starfield.png           → Background étoilé
 └── fonts/
@@ -39,6 +41,6 @@ Avant que le trou noir n'aspire tout. Y compris eux.
 
 ## Flow
 
-`Boot terminal` → `Menu` → `Solo (création perso)` ou `Multi (lobby)` → `Session extraction`
+`Boot terminal` → `Menu` → `Solo (session directe)` ou `Multi (lobby)` → `Session extraction`
 
 ## Studio EDDA — 2026
