@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARECIBO — Settings</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&display=swap');
+
+@font-face {
+  font-family: 'Power Grotesk';
+  src: url('fonts/PowerGrotesk-Regular.woff2') format('woff2');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Degular';
+  src: url('fonts/Degular-Black.woff2') format('woff2');
+  font-weight: 900;
+}
+@font-face {
+  font-family: 'Degular';
+  src: url('fonts/Degular-Bold.woff2') format('woff2');
+  font-weight: 700;
+}
+
+:root {
+  --cream: #F7FFC3;
+  --orange: #FA5A1F;
+  --bg: #000;
+  --border: rgba(247,255,195,.1);
+  --f-logo:  'Power Grotesk', sans-serif;
+  --f-title: 'Degular', sans-serif;
+  --f-pixel: 'Pixelify Sans', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+  font-family: var(--f-pixel);
+  cursor: none;
+  color: var(--cream);
+}
+
+.cursor {
+  position: fixed;
+  width: 14px; height: 14px;
+  border: 1.5px solid var(--cream);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%,-50%);
+}
+.cursor::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 3px; height: 3px;
+  background: var(--orange);
+  transform: translate(-50%,-50%);
+}
+
+.starfield {
+  position: fixed;
+  inset: 0;
+  background: url('starfield.png') center/cover no-repeat;
+  opacity: .4;
+  z-index: 0;
+}
+
+/* Scanlines */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.05) 3px,rgba(0,0,0,.05) 4px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* LAYOUT */
+.layout {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  grid-template-rows: 52px 1fr 48px;
+  width: 100vw;
+  height: 100vh;
+  border: 1px solid var(--border);
+}
+
+/* HEADER */
+.header {
+  grid-column: 1/-1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+}
+.header-back {
+  background: none;
+  border: none;
+  font-family: var(--f-pixel);
+  font-size: 10px;
+  letter-spacing: .1em;
+  color: rgba(247,255,195,.35);
+  cursor: none;
+  transition: color .12s;
+}
+.header-back:hover { color: var(--cream); }
+.header-title {
+  font-family: var(--f-title);
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: .06em;
+  color: var(--cream);
+}
+.header-version {
+  font-size: 9px;
+  color: rgba(247,255,195,.2);
+  letter-spacing: .12em;
+}
+
+/* SIDEBAR NAV */
+.sidebar {
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  font-family: var(--f-pixel);
+  font-size: 11px;
+  letter-spacing: .08em;
+  color: rgba(247,255,195,.4);
+  cursor: none;
+  transition: all .12s;
+  border-left: 2px solid transparent;
+  background: none;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  width: 100%;
+  text-align: left;
+}
+.nav-item:hover { color: var(--cream); background: rgba(247,255,195,.03); }
+.nav-item.active {
+  color: var(--cream);
+  border-left-color: var(--orange);
+  background: rgba(247,255,195,.04);
+}
+.nav-item .icon { font-size: 14px; width: 18px; text-align: center; }
+
+/* CONTENT */
+.content {
+  padding: 28px 40px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.content::-webkit-scrollbar { width: 4px; }
+.content::-webkit-scrollbar-thumb { background: var(--border); }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* SECTION */
+.section-title {
+  font-family: var(--f-title);
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: .04em;
+  color: var(--cream);
+  margin-bottom: 6px;
+}
+.section-desc {
+  font-size: 9px;
+  color: rgba(247,255,195,.25);
+  letter-spacing: .1em;
+  margin-bottom: 28px;
+}
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 24px 0;
+}
+
+/* SETTING ROW */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(247,255,195,.05);
+  gap: 20px;
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-info { flex: 1; }
+.setting-label {
+  font-family: var(--f-pixel);
+  font-size: 12px;
+  letter-spacing: .06em;
+  color: var(--cream);
+  margin-bottom: 3px;
+}
+.setting-hint {
+  font-size: 9px;
+  color: rgba(247,255,195,.25);
+  letter-spacing: .08em;
+}
+.setting-control { flex-shrink: 0; }
+
+/* SLIDER */
+.slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.slider-val {
+  font-family: var(--f-pixel);
+  font-size: 11px;
+  color: var(--orange);
+  width: 32px;
+  text-align: right;
+}
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 160px;
+  height: 2px;
+  background: rgba(247,255,195,.15);
+  outline: none;
+  cursor: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  background: var(--orange);
+  border-radius: 0;
+  cursor: none;
+  transition: background .12s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { background: #ff6b35; }
+input[type="range"]::-moz-range-thumb {
+  width: 14px; height: 14px;
+  background: var(--orange);
+  border-radius: 0;
+  border: none;
+  cursor: none;
+}
+
+/* TOGGLE */
+.toggle {
+  position: relative;
+  width: 44px; height: 22px;
+  background: rgba(247,255,195,.1);
+  border-radius: 0;
+  cursor: none;
+  transition: background .2s;
+  border: 1px solid rgba(247,255,195,.15);
+  flex-shrink: 0;
+}
+.toggle.on { background: var(--orange); border-color: var(--orange); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 14px; height: 14px;
+  background: var(--cream);
+  transition: left .2s;
+}
+.toggle.on::after { left: 25px; }
+
+/* SELECT */
+.select-custom {
+  position: relative;
+  display: inline-block;
+}
+.select-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--cream);
+  font-family: var(--f-pixel);
+  font-size: 10px;
+  letter-spacing: .08em;
+  padding: 7px 32px 7px 12px;
+  cursor: none;
+  transition: border-color .12s;
+  min-width: 120px;
+  text-align: left;
+}
+.select-btn::after {
+  content: '▾';
+  position: absolute;
+  right: 10px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--orange);
+  font-size: 10px;
+}
+.select-btn:hover { border-color: rgba(247,255,195,.3); }
+.select-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%; left: 0; right: 0;
+  background: #0a0a0a;
+  border: 1px solid var(--border);
+  border-top: none;
+  z-index: 50;
+}
+.select-dropdown.open { display: block; }
+.select-option {
+  padding: 8px 12px;
+  font-family: var(--f-pixel);
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: rgba(247,255,195,.5);
+  cursor: none;
+  transition: all .1s;
+}
+.select-option:hover, .select-option.sel {
+  background: rgba(247,255,195,.05);
+  color: var(--cream);
+}
+.select-option.sel { color: var(--orange); }
+
+/* DANGER ZONE */
+.danger-btn {
+  background: none;
+  border: 1px solid rgba(250,90,31,.4);
+  color: var(--orange);
+  font-family: var(--f-pixel);
+  font-size: 10px;
+  letter-spacing: .1em;
+  padding: 8px 16px;
+  cursor: none;
+  transition: all .12s;
+}
+.danger-btn:hover { background: rgba(250,90,31,.1); border-color: var(--orange); }
+
+/* FOOTER */
+.footer {
+  grid-column: 1/-1;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  font-size: 8px;
+  color: rgba(247,255,195,.12);
+  letter-spacing: .1em;
+}
+.save-notice {
+  font-size: 9px;
+  color: rgba(247,255,195,.25);
+  letter-spacing: .08em;
+}
+.save-notice.saved { color: var(--orange); }
+
+/* TRANSITION */
+.page-transition {
+  position: fixed; inset: 0;
+  background: #000;
+  z-index: 100;
+  opacity: 0; pointer-events: none;
+  transition: opacity .4s ease;
+}
+.page-transition.active { opacity: 1; pointer-events: all; }
+</style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div class="page-transition" id="transition"></div>
+<div class="starfield"></div>
+
+<div class="layout">
+
+  <!-- HEADER -->
+  <div class="header">
+    <button class="header-back" onclick="goBack()">← MENU</button>
+    <span class="header-title">>Settings.</span>
+    <span class="header-version">MOTOMOTO SYSTEMS // v0.1</span>
+  </div>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <button class="nav-item active" onclick="showTab('son', this)">
+      <span class="icon">◎</span> SON
+    </button>
+    <button class="nav-item" onclick="showTab('affichage', this)">
+      <span class="icon">▣</span> AFFICHAGE
+    </button>
+    <button class="nav-item" onclick="showTab('interface', this)">
+      <span class="icon">≡</span> INTERFACE
+    </button>
+    <button class="nav-item" onclick="showTab('gameplay', this)">
+      <span class="icon">◈</span> GAMEPLAY
+    </button>
+    <button class="nav-item" onclick="showTab('donnees', this)">
+      <span class="icon">⊘</span> DONNÉES
+    </button>
+  </nav>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- SON -->
+    <div class="tab-panel active" id="tab-son">
+      <div class="section-title">Son</div>
+      <div class="section-desc">GESTION DU VOLUME // MOTOMOTO AUDIO SYSTEM</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Volume général</div>
+          <div class="setting-hint">Contrôle tous les sons du jeu</div>
+        </div>
+        <div class="setting-control">
+          <div class="slider-wrap">
+            <input type="range" min="0" max="100" value="80" id="vol-general"
+              oninput="updateSlider(this, 'val-general')">
+            <span class="slider-val" id="val-general">80%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Musique d'ambiance</div>
+          <div class="setting-hint">Bande sonore atmosphérique du vaisseau</div>
+        </div>
+        <div class="setting-control">
+          <div class="slider-wrap">
+            <input type="range" min="0" max="100" value="60" id="vol-musique"
+              oninput="updateSlider(this, 'val-musique')">
+            <span class="slider-val" id="val-musique">60%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Effets sonores</div>
+          <div class="setting-hint">Sons d'interface, alertes, extractions</div>
+        </div>
+        <div class="setting-control">
+          <div class="slider-wrap">
+            <input type="range" min="0" max="100" value="90" id="vol-sfx"
+              oninput="updateSlider(this, 'val-sfx')">
+            <span class="slider-val" id="val-sfx">90%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Voix synthétique (HAL)</div>
+          <div class="setting-hint">Annonces du système MOTOMOTO</div>
+        </div>
+        <div class="setting-control">
+          <div class="slider-wrap">
+            <input type="range" min="0" max="100" value="75" id="vol-hal"
+              oninput="updateSlider(this, 'val-hal')">
+            <span class="slider-val" id="val-hal">75%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Couper le son</div>
+          <div class="setting-hint">Mute général — tous les sons</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle" id="toggle-mute" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Son en arrière-plan</div>
+          <div class="setting-hint">Continuer la musique si l'onglet est inactif</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-bg-sound" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AFFICHAGE -->
+    <div class="tab-panel" id="tab-affichage">
+      <div class="section-title">Affichage</div>
+      <div class="section-desc">PARAMÈTRES VISUELS // MOTOMOTO DISPLAY</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Plein écran</div>
+          <div class="setting-hint">Mode plein écran navigateur</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-fullscreen" onclick="toggleFullscreen(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Luminosité</div>
+          <div class="setting-hint">Ajuste la luminosité générale de l'interface</div>
+        </div>
+        <div class="setting-control">
+          <div class="slider-wrap">
+            <input type="range" min="50" max="150" value="100" id="brightness"
+              oninput="updateBrightness(this)">
+            <span class="slider-val" id="val-brightness">100%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Effet scanlines</div>
+          <div class="setting-hint">Lignes CRT vintage sur l'écran</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-scanlines" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Fond étoilé</div>
+          <div class="setting-hint">Afficher le champ d'étoiles en arrière-plan</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-stars" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Lignes orbitales</div>
+          <div class="setting-hint">Afficher les lignes de signal orange</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-lines" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Animations d'interface</div>
+          <div class="setting-hint">Transitions et animations d'entrée</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-anim" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Curseur personnalisé</div>
+          <div class="setting-hint">Curseur ARECIBO au lieu du curseur système</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-cursor" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTERFACE -->
+    <div class="tab-panel" id="tab-interface">
+      <div class="section-title">Interface</div>
+      <div class="section-desc">PARAMÈTRES D'AFFICHAGE UI // MOTOMOTO HUD</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Langue</div>
+          <div class="setting-hint">Langue de l'interface et des messages système</div>
+        </div>
+        <div class="setting-control">
+          <div class="select-custom">
+            <button class="select-btn" onclick="toggleDropdown('lang-dd')">Français ▾</button>
+            <div class="select-dropdown" id="lang-dd">
+              <div class="select-option sel" onclick="selectOpt(this, 'lang-dd', 'Français')">Français</div>
+              <div class="select-option" onclick="selectOpt(this, 'lang-dd', 'English')">English</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Taille du texte</div>
+          <div class="setting-hint">Taille des éléments texte de l'interface</div>
+        </div>
+        <div class="setting-control">
+          <div class="select-custom">
+            <button class="select-btn" onclick="toggleDropdown('size-dd')">Normal ▾</button>
+            <div class="select-dropdown" id="size-dd">
+              <div class="select-option" onclick="selectOpt(this, 'size-dd', 'Petit')">Petit</div>
+              <div class="select-option sel" onclick="selectOpt(this, 'size-dd', 'Normal')">Normal</div>
+              <div class="select-option" onclick="selectOpt(this, 'size-dd', 'Grand')">Grand</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Afficher les tutoriels</div>
+          <div class="setting-hint">Messages d'aide pour les nouveaux joueurs</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-tuto" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Afficher le HUD en jeu</div>
+          <div class="setting-hint">Barre d'oxygène, timer, indicateurs</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-hud" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Notifications Discord</div>
+          <div class="setting-hint">Recevoir des alertes dans le serveur Discord</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-discord" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAMEPLAY -->
+    <div class="tab-panel" id="tab-gameplay">
+      <div class="section-title">Gameplay</div>
+      <div class="section-desc">PARAMÈTRES DE JEU // MOTOMOTO PROTOCOL</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Difficulté</div>
+          <div class="setting-hint">Affecte les événements et la fréquence des transmissions</div>
+        </div>
+        <div class="setting-control">
+          <div class="select-custom">
+            <button class="select-btn" onclick="toggleDropdown('diff-dd')">Normal ▾</button>
+            <div class="select-dropdown" id="diff-dd">
+              <div class="select-option" onclick="selectOpt(this, 'diff-dd', 'Facile')">Facile</div>
+              <div class="select-option sel" onclick="selectOpt(this, 'diff-dd', 'Normal')">Normal</div>
+              <div class="select-option" onclick="selectOpt(this, 'diff-dd', 'Hardcore')">Hardcore</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Afficher le timer</div>
+          <div class="setting-hint">Compte à rebours visible pendant l'extraction</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-timer" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Transmissions chiffrées</div>
+          <div class="setting-hint">Active les messages secrets entre joueurs (mécanique sociale)</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-transmissions" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Langue alien</div>
+          <div class="setting-hint">Afficher les glyphes alien non traduits</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-alien" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Confirmer avant de rentrer</div>
+          <div class="setting-hint">Demander confirmation pour retourner au vaisseau</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-confirm" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DONNÉES -->
+    <div class="tab-panel" id="tab-donnees">
+      <div class="section-title">Données</div>
+      <div class="section-desc">GESTION DES DONNÉES LOCALES // MOTOMOTO STORAGE</div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Sauvegarde automatique</div>
+          <div class="setting-hint">Sauvegarder les préférences dans le navigateur</div>
+        </div>
+        <div class="setting-control">
+          <div class="toggle on" id="toggle-save" onclick="toggleSwitch(this)"></div>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Données de session</div>
+          <div class="setting-hint">Personnage, couleurs, nom d'opérateur</div>
+        </div>
+        <div class="setting-control">
+          <button class="danger-btn" onclick="clearSession()">EFFACER</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Tout réinitialiser</div>
+          <div class="setting-hint">Remet tous les paramètres par défaut</div>
+        </div>
+        <div class="setting-control">
+          <button class="danger-btn" onclick="resetAll()">RÉINITIALISER</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Crédits</div>
+          <div class="setting-hint">Studio EDDA — Corentin Flatrès — 2026</div>
+        </div>
+        <div class="setting-control" style="font-size:9px;color:rgba(247,255,195,.2);letter-spacing:.1em;">
+          v0.1-alpha
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span>MOTOMOTO SYSTEMS // SETTINGS v0.1</span>
+    <span class="save-notice" id="save-notice">Les paramètres sont sauvegardés automatiquement</span>
+    <span>SESSION ACTIVE</span>
+  </div>
+
+</div><!-- /layout -->
+
+<script>
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top  = e.clientY + 'px';
+});
+
+// Tab navigation
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Slider update
+function updateSlider(el, valId) {
+  document.getElementById(valId).textContent = el.value + '%';
+  saveSettings();
+}
+
+// Brightness
+function updateBrightness(el) {
+  document.getElementById('val-brightness').textContent = el.value + '%';
+  document.body.style.filter = `brightness(${el.value / 100})`;
+  saveSettings();
+}
+
+// Toggle
+function toggleSwitch(el) {
+  el.classList.toggle('on');
+  saveSettings();
+}
+
+// Fullscreen
+function toggleFullscreen(el) {
+  el.classList.toggle('on');
+  if (el.classList.contains('on')) {
+    document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen && document.exitFullscreen();
+  }
+  saveSettings();
+}
+
+// Select dropdown
+function toggleDropdown(id) {
+  document.querySelectorAll('.select-dropdown').forEach(d => {
+    if (d.id !== id) d.classList.remove('open');
+  });
+  document.getElementById(id).classList.toggle('open');
+}
+function selectOpt(opt, ddId, val) {
+  const dd = document.getElementById(ddId);
+  dd.querySelectorAll('.select-option').forEach(o => o.classList.remove('sel'));
+  opt.classList.add('sel');
+  dd.previousElementSibling.textContent = val + ' ▾';
+  dd.classList.remove('open');
+  saveSettings();
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.select-custom')) {
+    document.querySelectorAll('.select-dropdown').forEach(d => d.classList.remove('open'));
+  }
+});
+
+// Save / load settings
+function saveSettings() {
+  const notice = document.getElementById('save-notice');
+  notice.textContent = 'Sauvegardé ✓';
+  notice.classList.add('saved');
+  setTimeout(() => {
+    notice.textContent = 'Les paramètres sont sauvegardés automatiquement';
+    notice.classList.remove('saved');
+  }, 1500);
+}
+
+function clearSession() {
+  if (confirm('Effacer les données de session ?')) {
+    localStorage.removeItem('arecibo_session');
+    saveSettings();
+  }
+}
+
+function resetAll() {
+  if (confirm('Réinitialiser tous les paramètres ?')) {
+    location.reload();
+  }
+}
+
+// Navigation
+function goBack() {
+  const t = document.getElementById('transition');
+  t.classList.add('active');
+  setTimeout(() => { window.location.href = 'arecibo_menu.html'; }, 420);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    document.getElementById('transition').style.opacity = '0';
+  }, 50);
+});
+</script>
+</body>
+</html>
