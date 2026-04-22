@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARECIBO — Lobby</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&display=swap');
+
+@font-face {
+  font-family: 'Power Grotesk';
+  src: url('fonts/PowerGrotesk-Regular.woff2') format('woff2'),
+       url('fonts/PowerGrotesk-Regular.woff') format('woff');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Power Grotesk';
+  src: url('fonts/PowerGrotesk-Bold.woff2') format('woff2'),
+       url('fonts/PowerGrotesk-Bold.woff') format('woff');
+  font-weight: 700 900;
+}
+@font-face {
+  font-family: 'Degular';
+  src: url('fonts/Degular-Black.woff2') format('woff2'),
+       url('fonts/Degular-Black.woff') format('woff');
+  font-weight: 900;
+}
+@font-face {
+  font-family: 'Degular';
+  src: url('fonts/Degular-Bold.woff2') format('woff2'),
+       url('fonts/Degular-Bold.woff') format('woff');
+  font-weight: 700;
+}
+
+:root {
+  --cream: #F7FFC3;
+  --orange: #FA5A1F;
+  --bg: #000;
+  --f-logo:  'Power Grotesk',  sans-serif;
+  --f-title: 'Degular',        sans-serif;
+  --f-pixel: 'Pixelify Sans',  monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+  font-family: var(--f-pixel);
+  cursor: none;
+  color: var(--cream);
+}
+
+.cursor {
+  position: fixed;
+  width: 14px; height: 14px;
+  border: 1.5px solid var(--cream);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%,-50%);
+}
+.cursor::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 3px; height: 3px;
+  background: var(--orange);
+  transform: translate(-50%,-50%);
+}
+
+.screen {
+  position: relative;
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+}
+
+.starfield {
+  position: absolute;
+  inset: 0;
+  background: url('starfield.png') center/cover no-repeat;
+  opacity: .9;
+}
+
+.screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);
+  pointer-events: none;
+  z-index: 20;
+}
+
+.lines-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.lines-wrap svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.circles-svg {
+  position: absolute;
+  top: 0; right: 0;
+  width: 40%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.back-btn {
+  position: absolute;
+  top: 5.5vh;
+  left: 4.8vw;
+  z-index: 10;
+  color: var(--cream);
+  text-decoration: none;
+  font-family: var(--f-pixel);
+  font-size: 17px;
+  letter-spacing: .1em;
+  cursor: none;
+  opacity: 0;
+  animation: fadeIn .4s ease forwards .2s;
+}
+.back-btn:hover { color: var(--orange); }
+
+.session-meta {
+  position: absolute;
+  top: 5.2vh;
+  right: 5.1vw;
+  z-index: 10;
+  text-align: right;
+  opacity: 0;
+  animation: fadeIn .4s ease forwards .25s;
+}
+.session-code {
+  font-family: var(--f-pixel);
+  font-size: clamp(36px, 4vw, 60px);
+  color: var(--cream);
+  letter-spacing: .16em;
+  margin-bottom: 10px;
+}
+.player-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.grid-slot {
+  width: 48px;
+  border: 1px solid rgba(247,255,195,.35);
+  padding: 6px 0;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-align: center;
+  color: rgba(247,255,195,.6);
+}
+.grid-slot.active {
+  border-color: var(--orange);
+  color: #000;
+  background: var(--orange);
+}
+
+.players {
+  position: absolute;
+  top: 35vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(88vw, 1360px);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(18px, 2vw, 34px);
+  z-index: 10;
+}
+.player-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  opacity: 0;
+  animation: fadeIn .45s ease forwards;
+}
+.player-card:nth-child(1) { animation-delay: .45s; }
+.player-card:nth-child(2) { animation-delay: .58s; }
+.player-card:nth-child(3) { animation-delay: .71s; }
+.player-card:nth-child(4) { animation-delay: .84s; }
+
+.player-name {
+  font-family: var(--f-title);
+  font-weight: 900;
+  font-size: clamp(22px, 2vw, 34px);
+  letter-spacing: .03em;
+  color: var(--cream);
+  text-transform: uppercase;
+}
+.status-btn {
+  font-family: var(--f-pixel);
+  font-size: 16px;
+  letter-spacing: .08em;
+  padding: 8px 18px;
+  min-width: 130px;
+  text-align: center;
+  border: 1px solid var(--orange);
+}
+.status-ready {
+  background: var(--orange);
+  color: #000;
+}
+.status-wait {
+  background: transparent;
+  color: var(--orange);
+}
+.floor-ellipse {
+  width: clamp(130px, 11vw, 180px);
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(247,255,195,.2);
+  background: radial-gradient(circle at center, rgba(247,255,195,.22) 0%, rgba(247,255,195,.08) 45%, rgba(247,255,195,.01) 75%, rgba(247,255,195,0) 100%);
+  filter: blur(.2px);
+}
+
+.terminal {
+  position: absolute;
+  left: 5vw;
+  bottom: 8vh;
+  width: min(32vw, 420px);
+  border: 1px solid rgba(247,255,195,.25);
+  background: rgba(0,0,0,.45);
+  padding: 10px 12px;
+  z-index: 10;
+  font-family: var(--f-pixel);
+  font-size: 11px;
+  line-height: 1.45;
+  letter-spacing: .04em;
+  color: rgba(247,255,195,.8);
+  opacity: 0;
+  animation: fadeIn .45s ease forwards 1s;
+}
+.terminal .head {
+  color: var(--orange);
+  margin-bottom: 4px;
+}
+
+.launch-btn {
+  position: absolute;
+  left: 50%;
+  bottom: 7.8vh;
+  transform: translateX(-50%);
+  z-index: 12;
+  border: 0;
+  background: var(--orange);
+  color: #000;
+  font-family: var(--f-title);
+  font-weight: 900;
+  letter-spacing: .04em;
+  font-size: clamp(19px, 1.7vw, 28px);
+  padding: 16px 36px;
+  cursor: none;
+  opacity: 0;
+  animation: fadeIn .5s ease forwards 1.1s;
+}
+.launch-btn:hover { filter: brightness(1.08); }
+
+.page-transition {
+  position: fixed; inset: 0;
+  background: #000;
+  z-index: 100;
+  opacity: 0; pointer-events: none;
+  transition: opacity .4s ease;
+}
+.page-transition.active { opacity: 1; pointer-events: all; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div class="page-transition" id="transition"></div>
+
+<div class="screen">
+  <div class="starfield"></div>
+
+  <div class="lines-wrap">
+    <svg viewBox="-139 0 1851 1080" preserveAspectRatio="xMidYMid meet" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M1712 671.529L1015.76 671.528C762.582 704.691 215.717 887.916 53.6834 1355.51M1712 621.784L914.489 621.784C657.091 642.511 109.383 746.145 -22.27 994.867" stroke="#FA5A1F" stroke-width="1"/>
+      <path d="M1712 471.985L1009.07 471.985C753.453 438.822 201.33 255.597 37.7381 -212M1712 521.73L906.821 521.73C646.948 501.003 93.9728 397.369 -38.9457 148.647" stroke="#FA5A1F" stroke-width="1"/>
+      <path d="M1611.95 571.757L-139 571.757" stroke="#FA5A1F" stroke-width="1"/>
+      <path d="M1611.95 688.487L1611.95 455.027" stroke="#FA5A1F" stroke-width="1"/>
+      <path d="M1428.51 688.487L1428.51 455.027" stroke="#FA5A1F" stroke-width="1"/>
+      <path d="M1245.08 688.487L1245.08 455.027" stroke="#FA5A1F" stroke-width="1"/>
+      <path d="M994.945 688.487L994.945 455.027" stroke="#FA5A1F" stroke-width="1"/>
+      <path d="M544.703 821.892L544.703 321.622" stroke="#FA5A1F" stroke-width="1"/>
+    </svg>
+  </div>
+
+  <svg class="circles-svg" viewBox="0 0 600 1080" preserveAspectRatio="xMaxYMid meet" fill="none">
+    <circle cx="520" cy="540" r="280" stroke="rgba(247,255,195,.12)" stroke-width="1"/>
+    <circle cx="520" cy="540" r="185" stroke="rgba(247,255,195,.1)"  stroke-width="1"/>
+    <circle cx="520" cy="540" r="90"  stroke="rgba(247,255,195,.13)" stroke-width="1"/>
+    <circle cx="520" cy="260" r="5"   fill="rgba(247,255,195,.9)"/>
+    <circle cx="240" cy="540" r="5"   fill="rgba(247,255,195,.7)"/>
+    <circle cx="575" cy="650" r="4"   fill="rgba(247,255,195,.6)"/>
+  </svg>
+
+  <a class="back-btn" href="#" onclick="goTo(event, 'menu')">&lt; RETOUR</a>
+
+  <div class="session-meta">
+    <div class="session-code" id="sessionCode">JX3T</div>
+    <div class="player-grid">
+      <div class="grid-slot active">P1</div>
+      <div class="grid-slot">P2</div>
+      <div class="grid-slot">P3</div>
+      <div class="grid-slot">P4</div>
+    </div>
+  </div>
+
+  <section class="players">
+    <div class="player-card">
+      <div class="player-name">PLAYER 1</div>
+      <div class="status-btn status-ready">Prêt</div>
+      <div class="floor-ellipse"></div>
+    </div>
+    <div class="player-card">
+      <div class="player-name">PLAYER 2</div>
+      <div class="status-btn status-wait">wait...</div>
+      <div class="floor-ellipse"></div>
+    </div>
+    <div class="player-card">
+      <div class="player-name">PLAYER 3</div>
+      <div class="status-btn status-ready">Prêt</div>
+      <div class="floor-ellipse"></div>
+    </div>
+    <div class="player-card">
+      <div class="player-name">PLAYER 4</div>
+      <div class="status-btn status-wait">wait...</div>
+      <div class="floor-ellipse"></div>
+    </div>
+  </section>
+
+  <div class="terminal">
+    <div class="head">[ MOTOMOTO :: BOOT SEQUENCE ]</div>
+    <div>&gt; kernel handshake .......... OK</div>
+    <div>&gt; cryo-bay uplink .......... OK</div>
+    <div>&gt; salvage drone vector ..... READY</div>
+    <div>&gt; transmitting lobby seed .. <span id="bootSeed">JX3T</span></div>
+  </div>
+
+  <button class="launch-btn">LANCER LA SESSION</button>
+</div>
+
+<script>
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top  = e.clientY + 'px';
+});
+
+function generateSessionCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+const code = generateSessionCode();
+document.getElementById('sessionCode').textContent = code;
+document.getElementById('bootSeed').textContent = code;
+
+function goTo(e, page) {
+  e.preventDefault();
+  const t = document.getElementById('transition');
+  t.classList.add('active');
+  setTimeout(() => { window.location.href = 'arecibo_' + page + '.html'; }, 420);
+}
+</script>
+</body>
+</html>
