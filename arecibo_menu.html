@@ -201,6 +201,54 @@ body {
   color: var(--cream);
   line-height: .92;
   letter-spacing: -.01em;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0;
+}
+
+/* Distorsion trou noir — chaque lettre */
+.logo-letter {
+  display: inline-block;
+  transition:
+    transform .6s cubic-bezier(.4,0,.2,1),
+    opacity .6s ease,
+    filter .6s ease,
+    color .4s ease;
+  transform-origin: center center;
+}
+
+/* Au hover du logo — les lettres s'aspirent vers le centre */
+#logo-arecibo:hover .logo-letter {
+  --dist: calc((var(--i) - 3) * 1px);
+  transform: scaleX(0.3) scaleY(0.6) translateX(calc((3 - var(--i)) * 18px));
+  opacity: 0.2;
+  filter: blur(3px);
+  color: var(--orange);
+}
+
+/* Anneau de lumière autour du logo au hover */
+#logo-arecibo {
+  position: relative;
+  cursor: none;
+}
+#logo-arecibo::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(250,90,31,.12) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity .5s ease;
+  pointer-events: none;
+}
+#logo-arecibo:hover::after { opacity: 1; }
+
+/* Canvas particules */
+#particles-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
 }
 .logo-sub {
   font-family: var(--f-pixel);
@@ -282,13 +330,18 @@ body {
     <svg viewBox="0 0 24 18"><path d="M20.317 1.492a19.825 19.825 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.301 18.301 0 0 0-5.487 0 12.764 12.764 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 1.492a.07.07 0 0 0-.032.027C.533 6.093-.32 10.555.099 14.961a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 12.278c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
   </div>
 
-  <!-- Logo ARECIBO -->
+  <!-- Logo ARECIBO avec distorsion trou noir -->
   <div class="logo">
-    <div class="logo-text">ARECIBO</div>
+    <div class="logo-text" id="logo-arecibo">
+      <span class="logo-letter" style="--i:0">A</span><span class="logo-letter" style="--i:1">R</span><span class="logo-letter" style="--i:2">E</span><span class="logo-letter" style="--i:3">C</span><span class="logo-letter" style="--i:4">I</span><span class="logo-letter" style="--i:5">B</span><span class="logo-letter" style="--i:6">O</span>
+    </div>
     <div class="logo-sub">version P-A 0-01</div>
   </div>
 
   <div class="coord">18h29m14s / −05°09′03″ // SECTOR UNKNOWN</div>
+
+  <!-- Canvas particules — pixels blancs en apesanteur -->
+  <canvas id="particles-canvas"></canvas>
 </div>
 
 <script>
@@ -337,6 +390,92 @@ function selectLang(btn) {
 function toggleSwitch(el) {
   el.classList.toggle('on');
 }
+
+/* ===== PARTICULES EN APESANTEUR ===== */
+(function() {
+  const canvas = document.getElementById('particles-canvas');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  /* Peu de particules — 18 pixels blancs */
+  const COUNT = 18;
+  const particles = Array.from({ length: COUNT }, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    size: Math.random() < 0.3 ? 2 : 1,          // pixel 1×1 ou 2×2
+    vx: (Math.random() - 0.5) * 0.18,            // dérive très lente
+    vy: (Math.random() - 0.5) * 0.18,
+    opacity: 0.15 + Math.random() * 0.55,
+    twinkle: Math.random() * Math.PI * 2,         // phase de scintillement
+    twinkleSpeed: 0.004 + Math.random() * 0.008,
+  }));
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    particles.forEach(p => {
+      /* Scintillement lent */
+      p.twinkle += p.twinkleSpeed;
+      const alpha = p.opacity * (0.6 + 0.4 * Math.sin(p.twinkle));
+
+      ctx.fillStyle = `rgba(247,255,195,${alpha})`;
+      ctx.fillRect(
+        Math.round(p.x),
+        Math.round(p.y),
+        p.size,
+        p.size
+      );
+
+      /* Dérive lente */
+      p.x += p.vx;
+      p.y += p.vy;
+
+      /* Rebond doux sur les bords */
+      if (p.x < 0)                   { p.x = 0;               p.vx *= -1; }
+      if (p.x > canvas.width)        { p.x = canvas.width;    p.vx *= -1; }
+      if (p.y < 0)                   { p.y = 0;               p.vy *= -1; }
+      if (p.y > canvas.height)       { p.y = canvas.height;   p.vy *= -1; }
+    });
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ===== DISTORSION TROU NOIR — LOGO ===== */
+(function() {
+  const logo = document.getElementById('logo-arecibo');
+  const letters = logo.querySelectorAll('.logo-letter');
+  const CENTER = 3; // index de la lettre centrale (C)
+
+  logo.addEventListener('mouseenter', () => {
+    letters.forEach((l, i) => {
+      const dist    = i - CENTER;
+      const pull    = dist * 22;          // attraction vers le centre
+      const squish  = 1 - Math.abs(dist) * 0.12;
+      const blurAmt = Math.abs(dist) * 1.2;
+      l.style.transform = `translateX(${-pull}px) scaleX(${squish}) scaleY(${0.5 + squish * 0.3})`;
+      l.style.opacity   = String(0.08 + squish * 0.3);
+      l.style.filter    = `blur(${blurAmt}px)`;
+      l.style.color     = i === CENTER ? '#FA5A1F' : 'rgba(247,255,195,.3)';
+    });
+  });
+
+  logo.addEventListener('mouseleave', () => {
+    letters.forEach(l => {
+      l.style.transform = '';
+      l.style.opacity   = '';
+      l.style.filter    = '';
+      l.style.color     = '';
+    });
+  });
+})();
 </script>
 
 <!-- ===== SETTINGS OVERLAY ===== -->
