@@ -803,6 +803,18 @@ body::after {
   position:fixed;
   z-index:980;
 }
+.personal-window.is-expedition-mode .personal-hud-dock,
+.personal-window.is-expedition-mode .message-indicator {
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+.personal-window.is-expedition-mode .personal-hud-dock {
+  transform:translate3d(-8px, 8px, 0);
+}
+.personal-window.is-expedition-mode .message-indicator {
+  transform:translate3d(0, -6px, 0);
+}
 .personal-title {
   height:42px;
   display:flex;
@@ -4297,16 +4309,28 @@ function setPersonalPackageDetached(detached) {
 function setExpeditionActive(active) {
   if (shipScene) shipScene.classList.toggle('is-expedition-active', active);
   setPersonalPackageDetached(active);
-  if (!personalHudDock) return;
+  if (personalWindow) personalWindow.classList.toggle('is-expedition-mode', active);
 
-  personalHudDock.setAttribute('aria-hidden', String(active));
-  personalHudDock.querySelectorAll('button').forEach(button => {
+  if (personalHudDock) {
+    personalHudDock.setAttribute('aria-hidden', String(active));
+    personalHudDock.querySelectorAll('button').forEach(button => {
+      if (active) {
+        button.setAttribute('tabindex', '-1');
+      } else {
+        button.removeAttribute('tabindex');
+      }
+    });
+  }
+
+  if (messageIndicator) {
+    messageIndicator.setAttribute('aria-hidden', String(active));
     if (active) {
-      button.setAttribute('tabindex', '-1');
+      messageIndicator.setAttribute('tabindex', '-1');
+      if (typeof closeMessages === 'function') closeMessages();
     } else {
-      button.removeAttribute('tabindex');
+      messageIndicator.removeAttribute('tabindex');
     }
-  });
+  }
 }
 
 function renderLandingDecision() {
