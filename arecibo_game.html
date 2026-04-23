@@ -2339,10 +2339,10 @@ body::after {
 }
 .landing-console-screen {
   position:absolute;
-  left:19.7%;
-  top:21.8%;
-  width:46.1%;
-  height:45.3%;
+  left:19.3%;
+  top:21.5%;
+  width:45.4%;
+  height:44.2%;
   border-radius:clamp(18px, 1.8vw, 28px);
   overflow:hidden;
   z-index:1;
@@ -2379,7 +2379,7 @@ body::after {
   z-index:1;
   width:100%;
   height:100%;
-  padding:clamp(10px, 1.2vw, 18px) clamp(12px, 1.4vw, 20px) clamp(10px, 1.2vw, 18px);
+  padding:clamp(8px, 1vw, 14px) clamp(10px, 1.1vw, 16px) clamp(8px, 1vw, 12px);
   overflow:hidden;
 }
 .landing-console-scroll {
@@ -2391,42 +2391,42 @@ body::after {
   overflow-x:hidden;
   scrollbar-width:none;
   scroll-behavior:smooth;
-  padding-right:4px;
+  padding-right:0;
 }
 .landing-console-scroll::-webkit-scrollbar {
   width:0;
 }
 .landing-decision-alert {
-  min-height:clamp(42px, 4.8vw, 72px);
+  min-height:clamp(34px, 4vw, 58px);
   color:var(--orange);
-  font-size:clamp(14px, 1.38vw, 24px);
-  line-height:1.08;
+  font-size:clamp(11px, .96vw, 17px);
+  line-height:1.02;
   font-weight:700;
   text-transform:uppercase;
   text-shadow:0 0 12px rgba(250,90,31,.18);
 }
 .landing-decision-panel {
-  margin-top:clamp(8px, 1vh, 14px);
+  margin-top:clamp(6px, .7vh, 10px);
   padding-top:2px;
 }
 .landing-decision-head {
-  min-height:clamp(38px, 3.6vw, 54px);
+  min-height:clamp(30px, 3vw, 42px);
   display:flex;
   align-items:center;
   justify-content:flex-start;
-  padding:10px 0 10px;
+  padding:7px 0;
   border-top:1px solid rgba(247,255,195,.34);
   border-bottom:1px solid rgba(247,255,195,.34);
   text-align:left;
   color:var(--cream);
-  font-size:clamp(14px, 1.18vw, 21px);
+  font-size:clamp(11px, .94vw, 16px);
   text-transform:uppercase;
   letter-spacing:.03em;
 }
 .landing-type-line {
   display:flex;
   align-items:flex-start;
-  gap:10px;
+  gap:6px;
   width:100%;
 }
 .landing-prompt {
@@ -2442,10 +2442,10 @@ body::after {
   display:none;
 }
 .landing-decision-body {
-  padding:12px 0 0;
+  padding:8px 0 0;
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:6px;
   opacity:0;
   transform:translateY(8px);
   transition:opacity .28s ease, transform .28s ease;
@@ -2457,24 +2457,26 @@ body::after {
   pointer-events:auto;
 }
 .landing-decision-module {
-  margin-top:10px;
+  margin-top:8px;
   border-top:1px solid rgba(247,255,195,.18);
-  padding-top:10px;
+  padding-top:8px;
   display:none;
   flex-direction:column;
-  gap:8px;
+  gap:6px;
 }
 .landing-decision.is-module-open .landing-decision-module {
   display:flex;
 }
 .landing-module-title {
   color:rgba(247,255,195,.72);
-  font-size:clamp(13px, 1vw, 17px);
+  font-size:clamp(10px, .84vw, 14px);
   text-transform:uppercase;
+  line-height:1.08;
 }
 .landing-module-status {
   color:var(--orange);
-  font-size:clamp(14px, 1.1vw, 18px);
+  font-size:clamp(10px, .92vw, 15px);
+  line-height:1.12;
   text-transform:uppercase;
 }
 .landing-module-status.is-success {
@@ -2482,18 +2484,22 @@ body::after {
 }
 .landing-module-links {
   display:flex;
-  gap:10px;
-  flex-wrap:wrap;
+  gap:6px;
+  flex-direction:column;
+  align-items:stretch;
 }
 .landing-module-btn {
-  min-height:44px;
-  padding:8px 14px;
+  width:100%;
+  min-height:34px;
+  padding:6px 10px;
   border:1px solid rgba(247,255,195,.4);
   background:rgba(3,4,2,.48);
   color:var(--cream);
   font:inherit;
-  font-size:clamp(14px, 1vw, 18px);
+  font-size:clamp(10px, .88vw, 14px);
+  line-height:1.08;
   text-transform:uppercase;
+  text-align:left;
   cursor:none;
 }
 .landing-module-btn:hover,
@@ -2508,14 +2514,15 @@ body::after {
 }
 .landing-module-meta {
   color:rgba(247,255,195,.5);
-  font-size:13px;
-  line-height:1.4;
+  font-size:11px;
+  line-height:1.25;
+  overflow-wrap:anywhere;
 }
 .landing-console-nav {
   position:absolute;
-  right:11.9%;
-  width:8.2%;
-  height:16.8%;
+  right:10.7%;
+  width:10.2%;
+  height:18.4%;
   border:0;
   border-radius:50%;
   background:transparent;
@@ -2528,10 +2535,10 @@ body::after {
   box-shadow:0 0 0 1px rgba(247,255,195,.32);
 }
 .landing-console-nav-up {
-  top:29%;
+  top:24.5%;
 }
 .landing-console-nav-down {
-  top:51.2%;
+  top:47.3%;
 }
 .landing-console-nav.is-disabled {
   pointer-events:none;
@@ -2540,19 +2547,19 @@ body::after {
   display:grid;
   grid-template-columns:minmax(0, 1fr) auto;
   align-items:center;
-  gap:10px;
-  min-height:42px;
+  gap:6px;
+  min-height:36px;
 }
 .decision-btn {
   width:100%;
-  min-height:42px;
-  padding:8px 12px;
+  min-height:34px;
+  padding:6px 9px;
   border:1px solid rgba(247,255,195,.38);
   background:rgba(3,4,2,.44);
   color:var(--cream);
   font:inherit;
-  font-size:clamp(12px, 1vw, 18px);
-  line-height:1.05;
+  font-size:clamp(10px, .88vw, 14px);
+  line-height:1.02;
   letter-spacing:.015em;
   text-transform:uppercase;
   text-align:left;
@@ -2581,15 +2588,15 @@ body::after {
   justify-content:flex-end;
   flex-wrap:wrap;
   gap:6px;
-  min-width:58px;
-  max-width:132px;
+  min-width:48px;
+  max-width:102px;
 }
 .decision-votes.is-empty {
   opacity:.14;
 }
 .decision-vote {
-  min-width:32px;
-  height:32px;
+  min-width:26px;
+  height:26px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -2597,7 +2604,7 @@ body::after {
   border:1px solid rgba(250,90,31,.92);
   background:rgba(15,7,3,.84);
   color:var(--orange);
-  font-size:clamp(11px, .82vw, 16px);
+  font-size:clamp(9px, .72vw, 12px);
   line-height:1;
 }
 .landing-sequence.is-question-open .landing-console-shell {
@@ -2637,21 +2644,29 @@ body::after {
     width:min(96vw, 920px);
   }
   .landing-console-screen {
-    left:18.1%;
-    top:21.1%;
-    width:47.6%;
-    height:46.3%;
+    left:18.5%;
+    top:21.2%;
+    width:46.6%;
+    height:44.8%;
   }
   .landing-console-copy {
-    padding:10px 12px 12px;
+    padding:8px 10px 10px;
   }
   .decision-row {
     grid-template-columns:1fr;
-    gap:8px;
+    gap:6px;
   }
   .decision-votes {
     justify-content:flex-start;
     max-width:none;
+  }
+  .landing-module-links {
+    gap:5px;
+  }
+  .landing-console-nav {
+    right:10%;
+    width:11.4%;
+    height:19%;
   }
 }
 @keyframes landingShipDescent {
@@ -4482,9 +4497,24 @@ function updateLandingConsoleNav() {
 function scrollLandingConsole(direction) {
   if (!landingConsoleScroll) return;
   landingConsoleScroll.scrollBy({
-    top: direction * Math.max(70, landingConsoleScroll.clientHeight * .36),
+    top: direction * Math.max(52, landingConsoleScroll.clientHeight * .24),
     behavior:'smooth'
   });
+}
+
+let landingConsoleHoldTimer = 0;
+function stopLandingConsoleHold() {
+  if (!landingConsoleHoldTimer) return;
+  window.clearInterval(landingConsoleHoldTimer);
+  landingConsoleHoldTimer = 0;
+}
+
+function startLandingConsoleHold(direction) {
+  stopLandingConsoleHold();
+  scrollLandingConsole(direction);
+  landingConsoleHoldTimer = window.setInterval(() => {
+    scrollLandingConsole(direction);
+  }, 170);
 }
 
 function clearLandingTypingTimers() {
@@ -4796,6 +4826,8 @@ document.addEventListener('keydown', event => {
   if (settingsOverlay && settingsOverlay.classList.contains('open')) closeSettings();
 });
 
+window.addEventListener('blur', stopLandingConsoleHold);
+
 window.addEventListener('storage', event => {
   const session = ensureLandingSignalSession();
   if (event.key !== `arecibo:minigame-signal-state:${session}`) return;
@@ -4810,9 +4842,23 @@ if (landingConsoleScroll) {
 }
 if (landingConsoleUp) {
   landingConsoleUp.addEventListener('click', () => scrollLandingConsole(-1));
+  landingConsoleUp.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    startLandingConsoleHold(-1);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(type => {
+    landingConsoleUp.addEventListener(type, stopLandingConsoleHold);
+  });
 }
 if (landingConsoleDown) {
   landingConsoleDown.addEventListener('click', () => scrollLandingConsole(1));
+  landingConsoleDown.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    startLandingConsoleHold(1);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(type => {
+    landingConsoleDown.addEventListener(type, stopLandingConsoleHold);
+  });
 }
 
 updateReadyState();
