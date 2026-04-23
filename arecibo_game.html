@@ -1960,6 +1960,10 @@ body::after {
   color:var(--cream);
   font-family:'Pixelify Sans', monospace;
   font-size:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
   cursor:none;
   opacity:.82;
   transition:
@@ -1968,6 +1972,19 @@ body::after {
     background .14s ease,
     box-shadow .14s ease,
     transform .14s ease;
+}
+.crew-slot.has-avatar {
+  font-size:0;
+}
+.crew-slot-avatar,
+.decision-vote-avatar {
+  width:28px;
+  height:28px;
+  display:block;
+}
+.decision-vote-avatar {
+  width:18px;
+  height:18px;
 }
 .crew-slot:hover {
   color:var(--orange);
@@ -2609,6 +2626,9 @@ body::after {
   font-size:clamp(9px, .72vw, 12px);
   line-height:1;
 }
+.decision-vote.has-avatar {
+  padding:0;
+}
 .landing-sequence.is-question-open .landing-console-shell {
   animation:landingConsoleSettle .36s ease-out both;
 }
@@ -3116,6 +3136,7 @@ body::after {
   </div>
 </div>
 
+<script src="assets/player-profile.js?v=animal-profile-1"></script>
 <script>
 const cursor = document.getElementById('cursor');
 document.addEventListener('mousemove', event => {
@@ -3197,6 +3218,31 @@ const landingVotePreset = (params.get('vote') || '')
   .map(value => value.trim())
   .filter(Boolean)
   .slice(0, 6);
+
+function getPlayerProfile() {
+  if (window.AreciboPlayerProfile && typeof window.AreciboPlayerProfile.loadPlayerProfile === 'function') {
+    return window.AreciboPlayerProfile.loadPlayerProfile();
+  }
+  return {
+    name: window.areciboPlayerName || 'COCO',
+    headId: 1,
+    primaryColor: '#fcfcfc',
+    secondaryColor: '#2f2925'
+  };
+}
+
+async function injectPlayerAvatar(target, options = {}) {
+  if (!target || !window.AreciboPlayerProfile || typeof window.AreciboPlayerProfile.renderHeadSvg !== 'function') return;
+  const token = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  target.dataset.avatarToken = token;
+  const markup = await window.AreciboPlayerProfile.renderHeadSvg(getPlayerProfile(), {
+    className: options.className || 'crew-slot-avatar',
+    label: options.label || (window.areciboPlayerName || 'JOUEUR')
+  });
+  if (target.dataset.avatarToken !== token) return;
+  target.innerHTML = markup;
+  target.classList.add('has-avatar');
+}
 
 landingVotePreset.forEach((vote, index) => {
   if (landingDecisionStages.impact.choices.some(choice => choice.id === vote)) {
@@ -4290,6 +4336,12 @@ function renderCrew() {
     }
 
     crewEl.appendChild(slot);
+    if (index === 0 && index < playerCount) {
+      injectPlayerAvatar(slot, {
+        className: 'crew-slot-avatar',
+        label: `profil ${window.areciboPlayerName || 'joueur'}`
+      });
+    }
   });
 }
 
@@ -4389,7 +4441,16 @@ function renderLandingDecision() {
     votes.forEach(vote => {
       const chip = document.createElement('span');
       chip.className = 'decision-vote';
-      chip.textContent = vote;
+      if (vote === 'P1') {
+        chip.classList.add('has-avatar');
+        chip.textContent = '';
+        injectPlayerAvatar(chip, {
+          className: 'decision-vote-avatar',
+          label: `vote ${window.areciboPlayerName || 'joueur'}`
+        });
+      } else {
+        chip.textContent = vote;
+      }
       voteWrap.appendChild(chip);
     });
 

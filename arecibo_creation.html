@@ -3,536 +3,516 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ARECIBO — Création</title>
+<title>ARECIBO // Profil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&display=swap');
-
-@font-face {
-  font-family: 'Power Grotesk';
-  src: url('fonts/PowerGrotesk-Regular.woff2') format('woff2'),
-       url('fonts/PowerGrotesk-Regular.woff') format('woff');
-  font-weight: 400;
-}
-@font-face {
-  font-family: 'Power Grotesk';
-  src: url('fonts/PowerGrotesk-Bold.woff2') format('woff2'),
-       url('fonts/PowerGrotesk-Bold.woff') format('woff');
-  font-weight: 700 900;
-}
-@font-face {
-  font-family: 'Degular';
-  src: url('fonts/Degular-Black.woff2') format('woff2'),
-       url('fonts/Degular-Black.woff') format('woff');
-  font-weight: 900;
-}
-@font-face {
-  font-family: 'Degular';
-  src: url('fonts/Degular-Bold.woff2') format('woff2'),
-       url('fonts/Degular-Bold.woff') format('woff');
-  font-weight: 700;
-}
-@font-face {
-  font-family: 'Degular';
-  src: url('fonts/Degular-Regular.woff2') format('woff2'),
-       url('fonts/Degular-Regular.woff') format('woff');
-  font-weight: 400;
-}
-
 :root {
-  --cream: #F7FFC3;
-  --orange: #FA591F;
-  --bg: #000;
-  --border: rgba(247,255,195,.12);
-  --f-logo:  'Power Grotesk',  'Barlow Condensed', sans-serif;
-  --f-title: 'Degular',        'Barlow Condensed', sans-serif;
-  --f-pixel: 'Pixelify Sans',  monospace;
+  --cream:#f7ffc3;
+  --orange:#fa591f;
+  --border:rgba(247,255,195,.14);
+  --panel:rgba(0,0,0,.56);
+  --bg:#000;
 }
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
+* { box-sizing:border-box; }
+html, body {
+  margin:0;
+  min-height:100%;
+  background:#000;
+  color:var(--cream);
+  font-family:'Pixelify Sans', monospace;
+}
 body {
-  background: var(--bg);
-  width: 100vw; height: 100vh;
-  overflow: hidden;
-  font-family: var(--f-pixel);
-  cursor: none;
-  color: var(--cream);
+  min-height:100vh;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(88,61,21,.18), transparent 38%),
+    #000;
+  cursor:none;
 }
-
 .cursor {
-  position: fixed;
-  width: 14px; height: 14px;
-  border: 1.5px solid var(--cream);
-  pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%,-50%);
+  position:fixed;
+  width:14px;
+  height:14px;
+  border:1.5px solid var(--cream);
+  transform:translate(-50%, -50%);
+  pointer-events:none;
+  z-index:9999;
 }
 .cursor::after {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 3px; height: 3px;
-  background: var(--orange);
-  transform: translate(-50%,-50%);
+  content:'';
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:3px;
+  height:3px;
+  background:var(--orange);
+  transform:translate(-50%, -50%);
 }
-
+.transition {
+  position:fixed;
+  inset:0;
+  background:#000;
+  z-index:100;
+  opacity:1;
+  transition:opacity .4s ease;
+}
+.transition.out { opacity:0; pointer-events:none; }
 .screen {
-  width: 100vw; height: 100vh;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 44px 1fr 36px;
-  border: 1px solid var(--border);
+  width:100vw;
+  height:100vh;
+  display:grid;
+  grid-template-columns:minmax(300px, 28vw) minmax(380px, 1fr) minmax(300px, 30vw);
+  grid-template-rows:46px 1fr 34px;
+  border:1px solid var(--border);
 }
-
-/* HEADER */
-.header {
-  grid-column: 1/-1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  border-bottom: 1px solid var(--border);
+.header,
+.footer {
+  grid-column:1 / -1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 18px;
+  border-bottom:1px solid var(--border);
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:rgba(247,255,195,.34);
 }
-.header-label {
-  font-family: var(--f-pixel);
-  font-size: 10px;
-  letter-spacing: .12em;
-  color: rgba(247,255,195,.35);
+.footer {
+  border-bottom:0;
+  border-top:1px solid var(--border);
+  font-size:8px;
 }
-/* Titre header — Degular */
-.header-phase {
-  font-family: var(--f-title);
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--cream);
-  letter-spacing: .04em;
+.back-btn,
+.save-btn {
+  border:1px solid rgba(247,255,195,.22);
+  background:rgba(0,0,0,.28);
+  color:var(--cream);
+  min-height:30px;
+  padding:0 12px;
+  font:inherit;
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  cursor:none;
 }
-.back-btn {
-  background: none;
-  border: none;
-  font-family: var(--f-pixel);
-  font-size: 10px;
-  letter-spacing: .1em;
-  color: rgba(247,255,195,.3);
-  cursor: none;
-  transition: color .12s;
+.back-btn:hover,
+.save-btn:hover {
+  border-color:var(--orange);
+  color:var(--orange);
+  background:rgba(250,89,31,.08);
 }
-.back-btn:hover { color: var(--cream); }
-
-/* PANELS */
-.panel-left  { border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-.panel-center{ border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-.panel-right { display: flex; flex-direction: column; padding: 20px; overflow: hidden; }
-
-/* Panel left */
-.panel-header {
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-family: var(--f-pixel);
-  font-size: 9px;
-  letter-spacing: .12em;
-  color: rgba(247,255,195,.3);
+.col {
+  min-height:0;
+  padding:18px;
 }
-.panel-header .val {
-  font-family: var(--f-pixel);
-  font-size: 11px;
-  color: var(--cream);
+.col + .col {
+  border-left:1px solid var(--border);
 }
-.char-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
+.panel {
+  height:100%;
+  border:1px solid var(--border);
+  background:var(--panel);
+  box-shadow:inset 0 0 32px rgba(247,255,195,.03);
+  display:flex;
+  flex-direction:column;
+  min-height:0;
 }
-.char-nav button {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--orange);
-  font-family: var(--f-pixel);
-  font-size: 12px;
-  width: 26px; height: 26px;
-  cursor: none;
-  transition: border-color .12s, background .12s;
+.panel-head {
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:rgba(247,255,195,.34);
 }
-.char-nav button:hover { border-color: var(--orange); background: rgba(250,89,31,.08); }
-/* Nom personnage — Degular */
-.char-name {
-  font-family: var(--f-title);
-  font-weight: 900;
-  font-size: 18px;
-  color: var(--cream);
-  letter-spacing: .08em;
+.panel-body {
+  flex:1 1 auto;
+  min-height:0;
+  padding:14px;
 }
-.char-display {
-  flex: 1;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding: 16px;
-  position: relative;
+.preview-shell {
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
 }
-.cryo-label {
-  position: absolute;
-  top: 10px; left: 14px;
-  font-family: var(--f-pixel);
-  font-size: 8px;
-  color: rgba(247,255,195,.18);
-  letter-spacing: .12em;
+.identity-card {
+  border:1px solid rgba(247,255,195,.1);
+  background:rgba(247,255,195,.015);
+  padding:12px;
 }
-.char-svg { width: 130px; }
-.char-dots {
-  padding: 10px 16px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  gap: 6px;
-  justify-content: flex-end;
+.identity-label {
+  font-size:9px;
+  color:rgba(247,255,195,.38);
+  text-transform:uppercase;
+  letter-spacing:.12em;
 }
-.dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: rgba(247,255,195,.12);
-  cursor: none;
-  transition: background .12s;
+.identity-name {
+  margin-top:10px;
+  font-size:clamp(20px, 2vw, 34px);
+  line-height:1;
+  color:var(--cream);
+  text-transform:uppercase;
 }
-.dot.active { background: var(--orange); }
-
-/* Panel center */
-.color-section { padding: 14px 16px; }
-/* Labels section — Pixelify */
-.section-label {
-  font-family: var(--f-pixel);
-  font-size: 9px;
-  letter-spacing: .12em;
-  color: rgba(247,255,195,.3);
-  margin-bottom: 10px;
-  text-transform: uppercase;
+.preview-stage {
+  flex:1 1 auto;
+  min-height:260px;
+  border:1px solid rgba(247,255,195,.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(circle at center, rgba(247,255,195,.05), transparent 54%),
+    rgba(247,255,195,.015);
+  position:relative;
 }
-.color-grid {
-  display: grid;
-  grid-template-columns: repeat(7,1fr);
-  gap: 4px;
-  margin-bottom: 18px;
+.preview-stage::after {
+  content:'profil actif';
+  position:absolute;
+  top:10px;
+  left:12px;
+  font-size:8px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:rgba(247,255,195,.18);
+}
+.preview-avatar {
+  width:min(240px, 74%);
+  aspect-ratio:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.preview-avatar svg {
+  width:100%;
+  height:100%;
+  display:block;
+}
+.color-summary {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.tone-chip {
+  border:1px solid rgba(247,255,195,.1);
+  padding:10px;
+  background:rgba(0,0,0,.16);
+}
+.tone-label {
+  font-size:8px;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:rgba(247,255,195,.34);
+}
+.tone-swatch {
+  width:100%;
+  height:28px;
+  margin-top:8px;
+  border:1px solid rgba(247,255,195,.16);
+}
+.heads-grid {
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:10px;
+  overflow:auto;
+  padding-right:4px;
+}
+.head-option {
+  aspect-ratio:1;
+  border:1px solid rgba(247,255,195,.14);
+  background:rgba(247,255,195,.02);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:none;
+  transition:border-color .14s ease, background .14s ease, transform .14s ease, box-shadow .14s ease;
+}
+.head-option:hover {
+  border-color:rgba(250,89,31,.58);
+  transform:translateY(-1px);
+}
+.head-option.is-selected {
+  border-color:var(--orange);
+  background:rgba(250,89,31,.06);
+  box-shadow:0 0 12px rgba(250,89,31,.14);
+}
+.head-option svg {
+  width:74%;
+  height:74%;
+  display:block;
+}
+.controls-stack {
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+.field-label {
+  margin-bottom:8px;
+  font-size:9px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:rgba(247,255,195,.34);
+}
+.name-input {
+  width:100%;
+  min-height:42px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,.2);
+  color:var(--cream);
+  padding:0 12px;
+  font:inherit;
+  font-size:18px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  outline:none;
+}
+.name-input:focus {
+  border-color:rgba(247,255,195,.34);
+}
+.swatch-grid {
+  display:grid;
+  grid-template-columns:repeat(5, 1fr);
+  gap:8px;
 }
 .swatch {
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: 2px;
-  cursor: none;
-  border: 1.5px solid transparent;
-  transition: border-color .12s, transform .12s;
+  aspect-ratio:1;
+  border:1px solid rgba(247,255,195,.14);
+  cursor:none;
+  transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease;
 }
-.swatch:hover { transform: scale(1.1); }
-.swatch.sel { border-color: var(--cream); }
-.preview {
-  flex: 1;
-  margin: 0 16px 16px;
-  border: 1px solid var(--border);
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.swatch:hover {
+  transform:translateY(-1px);
 }
-.preview-label {
-  font-family: var(--f-pixel);
-  font-size: 8px;
-  color: rgba(247,255,195,.15);
-  letter-spacing: .1em;
-  position: absolute;
-  top: 8px; left: 10px;
+.swatch.is-selected {
+  border-color:var(--cream);
+  box-shadow:0 0 0 1px rgba(247,255,195,.24) inset;
 }
-.preview-bar {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 3px;
-  transition: background .2s;
+.hint {
+  margin-top:auto;
+  border:1px solid rgba(247,255,195,.08);
+  background:rgba(247,255,195,.015);
+  padding:12px;
+  font-size:11px;
+  line-height:1.4;
+  color:rgba(247,255,195,.62);
 }
-
-/* Panel right */
-/* Titre section — Degular */
-.identity-title {
-  font-family: var(--f-title);
-  font-weight: 700;
-  font-size: 15px;
-  color: rgba(247,255,195,.5);
-  letter-spacing: .06em;
-  margin-bottom: 20px;
+@media (max-width: 1100px) {
+  .screen {
+    grid-template-columns:1fr;
+    grid-template-rows:46px auto auto auto 34px;
+    overflow:auto;
+  }
+  .col + .col {
+    border-left:0;
+    border-top:1px solid var(--border);
+  }
+  .heads-grid {
+    grid-template-columns:repeat(6, 1fr);
+  }
 }
-.save-icon {
-  font-size: 24px;
-  margin-bottom: 14px;
-  opacity: .25;
-}
-.input-group { margin-bottom: 18px; }
-.input-label {
-  font-family: var(--f-pixel);
-  font-size: 8px;
-  letter-spacing: .12em;
-  color: rgba(247,255,195,.25);
-  margin-bottom: 6px;
-  display: block;
-}
-.id-input {
-  width: 100%;
-  background: none;
-  border: none;
-  border-bottom: 1px solid var(--border);
-  color: var(--cream);
-  font-family: var(--f-pixel);
-  font-size: 15px;
-  padding: 6px 0;
-  outline: none;
-  letter-spacing: .06em;
-  transition: border-color .12s;
-}
-.id-input:focus { border-color: rgba(247,255,195,.35); }
-.id-input::placeholder { color: rgba(247,255,195,.12); }
-
-.gender-row { display: flex; gap: 8px; margin-bottom: 20px; }
-.gender-btn {
-  flex: 1;
-  padding: 8px;
-  border: 1px solid var(--border);
-  background: none;
-  font-family: var(--f-pixel);
-  font-size: 10px;
-  letter-spacing: .08em;
-  color: rgba(247,255,195,.35);
-  cursor: none;
-  transition: all .12s;
-}
-.gender-btn.sel { border-color: rgba(247,255,195,.4); color: var(--cream); background: rgba(247,255,195,.04); }
-.gender-btn:hover { border-color: rgba(247,255,195,.25); color: var(--cream); }
-
-.robot-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--f-pixel);
-  font-size: 9px;
-  letter-spacing: .08em;
-  color: rgba(247,255,195,.25);
-  margin-bottom: 28px;
-}
-.robot-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--orange); }
-
-.spacer { flex: 1; }
-
-/* Bouton validate — Degular */
-.validate-btn {
-  width: 100%;
-  padding: 13px;
-  background: var(--orange);
-  border: none;
-  font-family: var(--f-title);
-  font-weight: 900;
-  font-size: 14px;
-  letter-spacing: .1em;
-  color: #000;
-  cursor: none;
-  transition: background .12s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.validate-btn:hover { background: #ff6b35; }
-
-/* FOOTER */
-.footer {
-  grid-column: 1/-1;
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  font-family: var(--f-pixel);
-  font-size: 8px;
-  color: rgba(247,255,195,.12);
-  letter-spacing: .1em;
-}
-
-.page-transition {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  z-index: 100;
-  opacity: 1;
-  transition: opacity .4s ease;
-}
-.page-transition.out { opacity: 0; }
 </style>
 <link rel="stylesheet" href="assets/terminal-filter.css?v=global-terminal-filter-amber">
-<link rel="stylesheet" href="assets/ingame-settings.css?v=ingame-settings-tabs">
 </head>
 <body>
 <div class="cursor" id="cursor"></div>
-<div class="page-transition" id="transition"></div>
+<div class="transition" id="transition"></div>
 
-<div class="screen">
+<main class="screen">
+  <header class="header">
+    <button class="back-btn" type="button" onclick="goBack()">< menu</button>
+    <span>> profil icone //</span>
+    <button class="save-btn" type="button" id="save-top">sauvegarder</button>
+  </header>
 
-  <!-- HEADER -->
-  <div class="header">
-    <button class="back-btn" onclick="goBack()">← MENU</button>
-    <span class="header-phase">>Phase de création.</span>
-    <span class="header-label">CRYOSTAGE // NIVEAU 1 //</span>
-  </div>
-
-  <!-- PANEL GAUCHE -->
-  <div class="panel-left">
-    <div class="panel-header">
-      <span>MODÈLE</span>
-      <span class="val" id="char-type">CHAT</span>
-    </div>
-    <div class="char-nav">
-      <button onclick="prevChar()">◄</button>
-      <span class="char-name" id="char-label">CHAT</span>
-      <button onclick="nextChar()">►</button>
-    </div>
-    <div class="char-display">
-      <span class="cryo-label">CRYOSTAGE // SCAN ACTIF</span>
-      <svg class="char-svg" viewBox="0 0 120 220" fill="none" id="char-svg">
-        <rect x="10" y="0"  width="100" height="220" rx="4" stroke="rgba(247,255,195,.1)"  stroke-width="1"/>
-        <rect x="18" y="8"  width="84"  height="204" rx="2" stroke="rgba(247,255,195,.06)" stroke-width=".5" fill="rgba(247,255,195,.015)"/>
-        <ellipse cx="60" cy="42" rx="18" ry="18" stroke="var(--cream)" stroke-width="1.2" fill="none" id="svg-head"/>
-        <line x1="60" y1="60"  x2="60" y2="130" stroke="var(--cream)" stroke-width="1.2"/>
-        <line x1="60" y1="75"  x2="30" y2="100" stroke="var(--cream)" stroke-width="1.2"/>
-        <line x1="60" y1="75"  x2="90" y2="100" stroke="var(--cream)" stroke-width="1.2"/>
-        <line x1="60" y1="130" x2="40" y2="175" stroke="var(--cream)" stroke-width="1.2"/>
-        <line x1="60" y1="130" x2="80" y2="175" stroke="var(--cream)" stroke-width="1.2"/>
-        <circle cx="30" cy="205" r="3" fill="#FA591F" opacity=".8"/>
-        <circle cx="40" cy="205" r="3" fill="rgba(247,255,195,.12)"/>
-        <circle cx="50" cy="205" r="3" fill="rgba(247,255,195,.12)"/>
-      </svg>
-    </div>
-    <div class="char-dots">
-      <div class="dot active"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-    </div>
-  </div>
-
-  <!-- PANEL CENTRE -->
-  <div class="panel-center">
-    <div class="color-section">
-      <div class="section-label">Couleur de votre peau</div>
-      <div class="color-grid" id="skin-grid"></div>
-      <div class="section-label">Couleur des yeux</div>
-      <div class="color-grid" id="eye-grid"></div>
-    </div>
-    <div class="preview">
-      <span class="preview-label">APERÇU // ID VISUEL</span>
-      <div class="preview-bar" id="preview-bar"></div>
-    </div>
-  </div>
-
-  <!-- PANEL DROIT -->
-  <div class="panel-right">
-    <div class="identity-title">Confirmé votre identité :</div>
-    <div class="save-icon">💾</div>
-
-    <div class="input-group">
-      <label class="input-label">NOM D'OPÉRATEUR</label>
-      <input class="id-input" id="name-input" type="text" placeholder=">_" maxlength="10"/>
-    </div>
-
-    <div class="input-group">
-      <label class="input-label">GENRE</label>
-      <div class="gender-row">
-        <button class="gender-btn sel" onclick="selectGender(this)">♀ FÉMININ</button>
-        <button class="gender-btn"     onclick="selectGender(this)">♂ MASCULIN</button>
+  <section class="col">
+    <div class="panel">
+      <div class="panel-head">aperçu //</div>
+      <div class="panel-body">
+        <div class="preview-shell">
+          <div class="identity-card">
+            <div class="identity-label">profil actif</div>
+            <div class="identity-name" id="preview-name">COCO</div>
+          </div>
+          <div class="preview-stage">
+            <div class="preview-avatar" id="preview-avatar"></div>
+          </div>
+          <div class="color-summary">
+            <div class="tone-chip">
+              <div class="tone-label">couche claire</div>
+              <div class="tone-swatch" id="primary-swatch"></div>
+            </div>
+            <div class="tone-chip">
+              <div class="tone-label">couche sombre</div>
+              <div class="tone-swatch" id="secondary-swatch"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+  </section>
 
-    <div class="robot-row">
-      <div class="robot-dot"></div>
-      Je ne suis pas un robot
+  <section class="col">
+    <div class="panel">
+      <div class="panel-head">selection tete animale //</div>
+      <div class="panel-body">
+        <div class="heads-grid" id="heads-grid"></div>
+      </div>
     </div>
+  </section>
 
-    <div class="spacer"></div>
+  <section class="col">
+    <div class="panel">
+      <div class="panel-head">configuration //</div>
+      <div class="panel-body">
+        <div class="controls-stack">
+          <div>
+            <label class="field-label" for="name-input">nom operateur</label>
+            <input class="name-input" id="name-input" type="text" maxlength="10" placeholder="COCO">
+          </div>
 
-    <button class="validate-btn" onclick="validate()">▣ ID VALIDATION</button>
-  </div>
+          <div>
+            <div class="field-label">couche claire // remplace le blanc</div>
+            <div class="swatch-grid" id="primary-grid"></div>
+          </div>
 
-  <!-- FOOTER -->
-  <div class="footer">
-    <span>MOTOMOTO SYSTEMS // CRYOSTAGE MODULE v1.0</span>
-    <span>SESSION : <span id="sid"></span></span>
-    <span>OPÉRATEURS : 1 / 4</span>
-  </div>
+          <div>
+            <div class="field-label">couche sombre // remplace le noir</div>
+            <div class="swatch-grid" id="secondary-grid"></div>
+          </div>
 
-</div>
+          <button class="save-btn" type="button" id="save-bottom">valider le profil</button>
 
-<script src="assets/ingame-settings.js?v=ingame-settings-tabs"></script>
+          <div class="hint">
+            Cette icone remplacera ton <strong>P1</strong> dans le sas et dans les votes.<br>
+            Ensuite on pourra l'étendre au lobby et aux autres joueurs.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span>motomoto systems // profil icone //</span>
+    <span id="footer-head">head-01</span>
+    <span id="footer-colors">2 couches actives</span>
+  </footer>
+</main>
+
+<script src="assets/player-profile.js?v=animal-profile-1"></script>
 <script>
 const cursor = document.getElementById('cursor');
-document.addEventListener('mousemove', e => {
-  cursor.style.left = e.clientX + 'px';
-  cursor.style.top  = e.clientY + 'px';
+document.addEventListener('mousemove', event => {
+  cursor.style.left = `${event.clientX}px`;
+  cursor.style.top = `${event.clientY}px`;
 });
 
-const skinColors = ['#E8927C','#D4635A','#8B5E52','#5E4038','#C49A6C','#A0784A','#D4B896','#E8D5B0','#C8A882','#9C7A58','#7B9EA8','#5A7A8C','#8B7BA8','#6B5E8C','#A88BA8'];
-const eyeColors  = ['#4A90D9','#2E6DB4','#8B6914','#5E4A0A','#2E8B57','#1A5E35','#8B4513','#5E2E08','#D4AF37','#A08020','#7B68EE','#5A48CC','#DC143C','#A00A28','#20B2AA'];
+const transition = document.getElementById('transition');
+const headsGrid = document.getElementById('heads-grid');
+const previewAvatar = document.getElementById('preview-avatar');
+const previewName = document.getElementById('preview-name');
+const primarySwatch = document.getElementById('primary-swatch');
+const secondarySwatch = document.getElementById('secondary-swatch');
+const primaryGrid = document.getElementById('primary-grid');
+const secondaryGrid = document.getElementById('secondary-grid');
+const nameInput = document.getElementById('name-input');
+const footerHead = document.getElementById('footer-head');
+const footerColors = document.getElementById('footer-colors');
+const saveButtons = [document.getElementById('save-top'), document.getElementById('save-bottom')];
 
-let skinCol = skinColors[0], eyeCol = eyeColors[0];
+const profileApi = window.AreciboPlayerProfile;
+let currentProfile = profileApi.loadPlayerProfile();
 
-function buildGrid(id, colors, cb) {
-  const g = document.getElementById(id);
-  colors.forEach((c, i) => {
-    const s = document.createElement('div');
-    s.className = 'swatch' + (i===0?' sel':'');
-    s.style.background = c;
-    s.onclick = () => {
-      g.querySelectorAll('.swatch').forEach(x=>x.classList.remove('sel'));
-      s.classList.add('sel');
-      cb(c);
-    };
-    g.appendChild(s);
+function updateFooter() {
+  footerHead.textContent = `head-${String(currentProfile.headId).padStart(2, '0')}`;
+  footerColors.textContent = `${currentProfile.primaryColor} // ${currentProfile.secondaryColor}`;
+}
+
+async function renderPreview() {
+  previewName.textContent = currentProfile.name;
+  primarySwatch.style.background = currentProfile.primaryColor;
+  secondarySwatch.style.background = currentProfile.secondaryColor;
+  updateFooter();
+  previewAvatar.innerHTML = await profileApi.renderHeadSvg(currentProfile, {
+    className: 'profile-head-svg',
+    label: currentProfile.name
   });
 }
 
-function updatePreview() {
-  document.getElementById('preview-bar').style.background =
-    `linear-gradient(90deg, ${skinCol} 0%, ${eyeCol} 100%)`;
-  document.getElementById('svg-head').setAttribute('stroke', skinCol);
+function buildSwatchGrid(target, palette, key) {
+  target.innerHTML = '';
+  palette.forEach(color => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'swatch';
+    button.style.background = color;
+    button.classList.toggle('is-selected', currentProfile[key] === color);
+    button.addEventListener('click', () => {
+      currentProfile[key] = color;
+      buildSwatchGrid(target, palette, key);
+      renderHeadsGrid();
+      renderPreview();
+    });
+    target.appendChild(button);
+  });
 }
 
-buildGrid('skin-grid', skinColors, c => { skinCol = c; updatePreview(); });
-buildGrid('eye-grid',  eyeColors,  c => { eyeCol  = c; updatePreview(); });
-updatePreview();
-
-const chars = ['CHAT','MOTO','BIOS','VEXA'];
-let ci = 0;
-function prevChar() { ci=(ci-1+chars.length)%chars.length; document.getElementById('char-label').textContent=chars[ci]; document.getElementById('char-type').textContent=chars[ci]; }
-function nextChar() { ci=(ci+1)%chars.length; document.getElementById('char-label').textContent=chars[ci]; document.getElementById('char-type').textContent=chars[ci]; }
-
-function selectGender(btn) {
-  document.querySelectorAll('.gender-btn').forEach(b=>b.classList.remove('sel'));
-  btn.classList.add('sel');
+async function renderHeadsGrid() {
+  headsGrid.innerHTML = '';
+  for (let index = 1; index <= profileApi.HEAD_COUNT; index += 1) {
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'head-option';
+    option.classList.toggle('is-selected', currentProfile.headId === index);
+    option.innerHTML = await profileApi.renderHeadSvg({
+      ...currentProfile,
+      headId: index
+    }, {
+      className: 'head-thumb-svg',
+      label: `head ${index}`
+    });
+    option.addEventListener('click', () => {
+      currentProfile.headId = index;
+      renderHeadsGrid();
+      renderPreview();
+    });
+    headsGrid.appendChild(option);
+  }
 }
 
-document.getElementById('sid').textContent =
-  Math.random().toString(36).substring(2,6).toUpperCase() + Math.floor(Math.random()*9000+1000);
-
-function validate() {
-  const name = document.getElementById('name-input').value.trim();
-  if(!name) { document.getElementById('name-input').focus(); return; }
-  const t = document.getElementById('transition');
-  t.style.opacity = 1;
-  setTimeout(() => { window.location.href = 'arecibo_menu.html'; }, 420);
+function saveProfile() {
+  currentProfile.name = nameInput.value.trim() || currentProfile.name;
+  currentProfile = profileApi.savePlayerProfile(currentProfile);
+  renderPreview();
+  transition.style.opacity = '1';
+  window.setTimeout(() => {
+    window.location.href = 'arecibo_menu.html';
+  }, 320);
 }
 
 function goBack() {
-  const t = document.getElementById('transition');
-  t.style.opacity = 1;
-  setTimeout(() => { window.location.href = 'arecibo_menu.html'; }, 420);
+  transition.style.opacity = '1';
+  window.setTimeout(() => {
+    window.location.href = 'arecibo_menu.html';
+  }, 320);
 }
 
+nameInput.value = currentProfile.name;
+nameInput.addEventListener('input', () => {
+  currentProfile.name = nameInput.value.trim().slice(0, 10).toUpperCase() || 'COCO';
+  previewName.textContent = currentProfile.name;
+});
+
+saveButtons.forEach(button => button.addEventListener('click', saveProfile));
+buildSwatchGrid(primaryGrid, profileApi.PRIMARY_PALETTE, 'primaryColor');
+buildSwatchGrid(secondaryGrid, profileApi.SECONDARY_PALETTE, 'secondaryColor');
+renderHeadsGrid();
+renderPreview();
+
 window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => document.getElementById('transition').classList.add('out'), 50);
+  window.setTimeout(() => transition.classList.add('out'), 60);
 });
 </script>
 </body>
