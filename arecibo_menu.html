@@ -467,12 +467,79 @@ canvas#starfield-bg {
 
 .logo-letter {
   display: inline-block;
+  --gravity-x: 0px;
+  --gravity-y: 0px;
+  --gravity-skew: 0deg;
+  --gravity-stretch: 1;
+  --gravity-blur: 0px;
+  --gravity-shadow: .03;
   transition:
     transform .08s steps(2,end),
     opacity .08s steps(2,end),
     filter .08s steps(2,end),
     text-shadow .08s steps(2,end);
   transform-origin: center center;
+  transform:
+    translate(var(--gravity-x), var(--gravity-y))
+    skewX(var(--gravity-skew))
+    scaleY(var(--gravity-stretch));
+  filter: blur(var(--gravity-blur));
+  text-shadow:
+    calc(var(--gravity-x) * 1.25) calc(var(--gravity-y) * 1.3) rgba(247,255,195,var(--gravity-shadow)),
+    calc(var(--gravity-x) * 2.1) calc(var(--gravity-y) * 2.2) rgba(250,90,31,calc(var(--gravity-shadow) * .72));
+}
+.logo-letter:nth-child(2) {
+  --gravity-x: .18px;
+  --gravity-y: -.18px;
+  --gravity-skew: .04deg;
+  --gravity-stretch: 1.002;
+  --gravity-blur: .015px;
+  --gravity-shadow: .035;
+}
+.logo-letter:nth-child(3) {
+  --gravity-x: .28px;
+  --gravity-y: -.28px;
+  --gravity-skew: .07deg;
+  --gravity-stretch: 1.004;
+  --gravity-blur: .025px;
+  --gravity-shadow: .04;
+}
+.logo-letter:nth-child(4) {
+  --gravity-x: .42px;
+  --gravity-y: -.42px;
+  --gravity-skew: .1deg;
+  --gravity-stretch: 1.006;
+  --gravity-blur: .035px;
+  --gravity-shadow: .045;
+}
+.logo-letter:nth-child(5) {
+  --gravity-x: .62px;
+  --gravity-y: -.72px;
+  --gravity-skew: .14deg;
+  --gravity-stretch: 1.008;
+  --gravity-blur: .055px;
+  --gravity-shadow: .055;
+}
+.logo-letter:nth-child(6) {
+  --gravity-x: .9px;
+  --gravity-y: -1.15px;
+  --gravity-skew: .18deg;
+  --gravity-stretch: 1.012;
+  --gravity-blur: .075px;
+  --gravity-shadow: .065;
+}
+.logo-letter:nth-child(7) {
+  --gravity-x: 2.35px;
+  --gravity-y: -4.8px;
+  --gravity-skew: .42deg;
+  --gravity-stretch: 1.068;
+  --gravity-blur: .36px;
+  --gravity-shadow: .15;
+  animation: logoGravityPull 6.8s ease-in-out infinite;
+  text-shadow:
+    2px -6px rgba(247,255,195,.18),
+    4px -12px rgba(247,255,195,.08),
+    3px -9px rgba(250,90,31,.12);
 }
 
 #logo-arecibo:hover .logo-letter {
@@ -639,10 +706,22 @@ canvas#starfield-bg {
   100% { transform: translate(2px,1px); opacity: .2; }
 }
 
+@keyframes logoGravityPull {
+  0%, 100% {
+    transform: translate(2.35px, -4.8px) skewX(.42deg) scaleY(1.068) scaleX(.992);
+    filter: blur(.34px);
+  }
+  46% {
+    transform: translate(2.8px, -5.7px) skewX(.58deg) scaleY(1.088) scaleX(.986);
+    filter: blur(.45px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .screen,
   .singularity-lens::before,
   .singularity-lens::after { animation: none; }
+  .logo-letter:nth-child(7),
   #logo-arecibo:hover .logo-letter,
   #logo-arecibo:hover::before,
   #logo-arecibo:hover::after,
