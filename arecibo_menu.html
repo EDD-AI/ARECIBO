@@ -329,6 +329,25 @@ canvas#starfield-bg {
   image-rendering: pixelated;
   will-change: left, top, transform, opacity;
 }
+.menu-vessel[data-vessel-index="1"] { z-index: 6; }
+.menu-vessel[data-vessel-index="2"] {
+  z-index: 5;
+  filter:
+    drop-shadow(0 0 6px rgba(247,255,195,.08))
+    drop-shadow(-10px 0 14px rgba(250,90,31,.05));
+}
+.menu-vessel[data-vessel-index="3"] {
+  z-index: 4;
+  filter:
+    drop-shadow(0 0 5px rgba(247,255,195,.06))
+    drop-shadow(-8px 0 12px rgba(250,90,31,.04));
+}
+.menu-vessel[data-vessel-index="4"] {
+  z-index: 4;
+  filter:
+    drop-shadow(0 0 4px rgba(247,255,195,.05))
+    drop-shadow(-8px 0 10px rgba(250,90,31,.035));
+}
 .menu-vessel.is-teleporting {
   filter:
     drop-shadow(0 0 10px rgba(190, 227, 255, .38))
@@ -1237,7 +1256,34 @@ canvas#starfield-bg {
     <canvas id="singularity-waves"></canvas>
   </div>
 
-  <div class="menu-vessel" id="menu-vessel" aria-hidden="true">
+  <div class="menu-vessel" id="menu-vessel" data-vessel-index="1" aria-hidden="true">
+    <div class="vessel-trail">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="vessel-teleport" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <img src="assets/vaisseau.png" alt="">
+  </div>
+  <div class="menu-vessel" data-vessel-index="2" aria-hidden="true">
+    <div class="vessel-trail">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="vessel-teleport" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <img src="assets/vaisseau.png" alt="">
+  </div>
+  <div class="menu-vessel" data-vessel-index="3" aria-hidden="true">
+    <div class="vessel-trail">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="vessel-teleport" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <img src="assets/vaisseau.png" alt="">
+  </div>
+  <div class="menu-vessel" data-vessel-index="4" aria-hidden="true">
     <div class="vessel-trail">
       <span></span><span></span><span></span><span></span><span></span><span></span>
     </div>
@@ -1248,10 +1294,10 @@ canvas#starfield-bg {
   </div>
 
   <nav class="menu">
-    <a class="menu-item active" href="arecibo_intro.html?v=global-terminal-filter-amber" onclick="goTo(event,'intro')"><span class="arr">></span><span class="menu-label">SOLO</span></a>
-    <a class="menu-item" href="#" onclick="openMultiChoice(event)"><span class="arr">></span><span class="menu-label">MULTI</span></a>
-    <a class="menu-item" href="#" onclick="openSettings(event)"><span class="arr">></span><span class="menu-label">SETTINGS</span></a>
-    <a class="menu-item" href="#" onclick="openCredits(event)"><span class="arr">></span><span class="menu-label">CREDITS</span></a>
+    <a class="menu-item active" data-fleet="1" href="arecibo_intro.html?v=global-terminal-filter-amber" onclick="goTo(event,'intro')"><span class="arr">></span><span class="menu-label">SOLO</span></a>
+    <a class="menu-item" data-fleet="2" href="#" onclick="openMultiChoice(event)"><span class="arr">></span><span class="menu-label">MULTI</span></a>
+    <a class="menu-item" data-fleet="3" href="#" onclick="openSettings(event)"><span class="arr">></span><span class="menu-label">SETTINGS</span></a>
+    <a class="menu-item" data-fleet="4" href="#" onclick="openCredits(event)"><span class="arr">></span><span class="menu-label">CREDITS</span></a>
   </nav>
 
   <a class="discord" href="https://discord.gg/fMsBru8Rah" target="_blank" rel="noopener noreferrer" aria-label="Rejoindre le Discord ARECIBO">
@@ -1549,17 +1595,24 @@ document.addEventListener('mousemove', e => {
   cursor.style.setProperty('--cursor-glow', `${(influence * 14).toFixed(1)}px`);
 });
 
-document.querySelectorAll('.menu-item').forEach(item => {
-  item.addEventListener('mouseenter', () => {
-    document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-    item.classList.add('active');
-  });
+const menuItems = Array.from(document.querySelectorAll('.menu-item'));
+let menuFleetCount = 1;
+
+function syncActiveMenuItem(item) {
+  menuItems.forEach(i => i.classList.toggle('active', i === item));
+  const requestedFleet = Number(item?.dataset.fleet || 1);
+  menuFleetCount = Math.max(1, Math.min(4, requestedFleet));
+}
+
+menuItems.forEach(item => {
+  item.addEventListener('mouseenter', () => syncActiveMenuItem(item));
+  item.addEventListener('focus', () => syncActiveMenuItem(item));
 });
 
 (function() {
-  const vessel = document.getElementById('menu-vessel');
+  const vessels = Array.from(document.querySelectorAll('.menu-vessel'));
   const singularity = document.querySelector('.singularity-wrap');
-  if (!vessel || !singularity) return;
+  if (!vessels.length || !singularity) return;
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const params = new URLSearchParams(window.location.search);
@@ -1577,6 +1630,17 @@ document.querySelectorAll('.menu-item').forEach(item => {
   const teleportDuration = 1180;
   const cycleDuration = travelDuration + teleportDuration;
   const startTime = performance.now();
+  const fleetCountOverride = readNumberParam('fleetCount');
+  const vesselConfigs = vessels.map((vessel, index) => ({
+    node: vessel,
+    index,
+    phaseOffset: index * 0.037,
+    orbitOffsetX: index === 0 ? 0 : (-22 - index * 16),
+    orbitOffsetY: index === 0 ? 0 : ((index % 2 === 0 ? -1 : 1) * (10 + index * 7)),
+    arcBoost: index * 0.012,
+    scaleBias: 1 - index * 0.085,
+    opacityBias: Math.max(.26, .86 - index * 0.17)
+  }));
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -1605,66 +1669,83 @@ document.querySelectorAll('.menu-item').forEach(item => {
       ? clamp(debugCycle, 0, 1) * cycleDuration
       : (elapsed % cycleDuration);
     const timedProgress = clamp(cycleElapsed / travelDuration, 0, 1);
-    const progress = debugProgress !== null
+    const leaderProgress = debugProgress !== null
       ? clamp(debugProgress, 0, 1)
       : timedProgress;
-    const arc = Math.sin(progress * Math.PI);
-    const baseX = start.x + (target.x - start.x) * progress;
-    const baseY = start.y + (target.y - start.y) * progress - arc * window.innerHeight * .09;
     const inTeleport = debugProgress === null && cycleElapsed >= travelDuration;
-    const teleportProgress = inTeleport
+    const leaderTeleportProgress = inTeleport
       ? clamp((cycleElapsed - travelDuration) / teleportDuration, 0, 1)
       : 0;
-    let x = baseX;
-    let y = baseY;
-    let dx = target.x - x;
-    let dy = target.y - y;
-    let angle = Math.atan2(dy, dx) * 180 / Math.PI;
-    let scale = Math.max(.38, 1 - progress * .52);
-    let opacity = progress > .94 ? Math.max(0, 1 - (progress - .94) / .06) : .86;
+    const activeFleetCount = Math.max(1, Math.min(
+      vessels.length,
+      fleetCountOverride !== null ? fleetCountOverride : menuFleetCount
+    ));
 
-    if (inTeleport) {
-      const reformPhase = teleportProgress >= .48;
-      const local = reformPhase
-        ? clamp((teleportProgress - .48) / .52, 0, 1)
-        : clamp(teleportProgress / .48, 0, 1);
-      const eased = 1 - Math.pow(1 - local, 2);
+    vesselConfigs.forEach(config => {
+      const vessel = config.node;
+      const vesselVisible = config.index < activeFleetCount;
+      const progress = debugProgress !== null
+        ? leaderProgress
+        : clamp(leaderProgress - config.phaseOffset, 0, 1);
+      const arc = Math.sin(progress * Math.PI);
+      const baseX = start.x + (target.x - start.x) * progress + config.orbitOffsetX * (1 - progress * .58);
+      const baseY = start.y + (target.y - start.y) * progress - arc * window.innerHeight * (.09 + config.arcBoost) + config.orbitOffsetY * (1 - progress * .42);
+      let x = baseX;
+      let y = baseY;
+      let dx = target.x - x;
+      let dy = target.y - y;
+      let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+      let scale = Math.max(.26, (1 - progress * .52) * config.scaleBias);
+      let opacity = progress > .94
+        ? Math.max(0, config.opacityBias * (1 - (progress - .94) / .06))
+        : config.opacityBias;
 
-      x = reformPhase ? start.x : target.x;
-      y = reformPhase ? start.y : target.y;
-      dx = reformPhase ? (target.x - start.x) : 1;
-      dy = reformPhase ? (target.y - start.y) : 0;
-      angle = reformPhase ? Math.atan2(dy, dx) * 180 / Math.PI : angle + 28 * local;
-      scale = reformPhase
-        ? (.18 + eased * .82)
-        : Math.max(.06, scale * (1 - eased) * .55);
-      opacity = reformPhase ? (.12 + eased * .74) : Math.max(0, .7 - eased * .7);
+      if (inTeleport) {
+        const teleportProgress = clamp(Math.max(0, leaderTeleportProgress - config.index * 0.03), 0, 1);
+        const reformPhase = teleportProgress >= .48;
+        const local = reformPhase
+          ? clamp((teleportProgress - .48) / .52, 0, 1)
+          : clamp(teleportProgress / .48, 0, 1);
+        const eased = 1 - Math.pow(1 - local, 2);
 
-      const halo = reformPhase ? (1 - local) : (1 - Math.abs(local - .5) * 2);
-      const burstX = reformPhase ? (1 - local) * -18 : local * 14;
-      const burstY = reformPhase ? (1 - local) * 9 : local * -8;
-      vessel.classList.add('is-teleporting');
-      vessel.style.setProperty('--teleport-alpha', halo.toFixed(3));
-      vessel.style.setProperty('--teleport-ring-scale', String((reformPhase ? 1.45 - local * .5 : .62 + local * 1.18).toFixed(3)));
-      vessel.style.setProperty('--teleport-scan', `${(reformPhase ? (1 - local) * 10 : -local * 10).toFixed(2)}px`);
-      vessel.style.setProperty('--teleport-px', `${burstX.toFixed(2)}px`);
-      vessel.style.setProperty('--teleport-py', `${burstY.toFixed(2)}px`);
-      vessel.style.setProperty('--teleport-p-scale', String((reformPhase ? 1.26 - local * .38 : .72 + local * .64).toFixed(3)));
-    } else {
-      vessel.classList.remove('is-teleporting');
-      vessel.style.setProperty('--teleport-alpha', '0');
-      vessel.style.setProperty('--teleport-ring-scale', '.55');
-      vessel.style.setProperty('--teleport-scan', '0px');
-      vessel.style.setProperty('--teleport-px', '0px');
-      vessel.style.setProperty('--teleport-py', '0px');
-      vessel.style.setProperty('--teleport-p-scale', '1');
-    }
+        x = reformPhase ? start.x + config.orbitOffsetX : target.x;
+        y = reformPhase ? start.y + config.orbitOffsetY : target.y;
+        dx = reformPhase ? (target.x - start.x) : 1;
+        dy = reformPhase ? (target.y - start.y) : 0;
+        angle = reformPhase ? Math.atan2(dy, dx) * 180 / Math.PI : angle + 28 * local;
+        scale = reformPhase
+          ? ((.18 + eased * .82) * config.scaleBias)
+          : Math.max(.04, scale * (1 - eased) * .55);
+        opacity = reformPhase
+          ? (.12 + eased * config.opacityBias)
+          : Math.max(0, config.opacityBias * (.7 - eased * .7));
 
-    vessel.style.setProperty('--vessel-x', `${x}px`);
-    vessel.style.setProperty('--vessel-y', `${y}px`);
-    vessel.style.setProperty('--vessel-angle', `${angle}deg`);
-    vessel.style.setProperty('--vessel-scale', scale.toFixed(3));
-    vessel.style.setProperty('--vessel-opacity', opacity.toFixed(3));
+        const halo = reformPhase ? (1 - local) : (1 - Math.abs(local - .5) * 2);
+        const burstX = (reformPhase ? (1 - local) * -18 : local * 14) - config.index * 2;
+        const burstY = (reformPhase ? (1 - local) * 9 : local * -8) + config.index * 1.8;
+        vessel.classList.add('is-teleporting');
+        vessel.style.setProperty('--teleport-alpha', vesselVisible ? halo.toFixed(3) : '0');
+        vessel.style.setProperty('--teleport-ring-scale', String((reformPhase ? 1.45 - local * .5 : .62 + local * 1.18).toFixed(3)));
+        vessel.style.setProperty('--teleport-scan', `${(reformPhase ? (1 - local) * 10 : -local * 10).toFixed(2)}px`);
+        vessel.style.setProperty('--teleport-px', `${burstX.toFixed(2)}px`);
+        vessel.style.setProperty('--teleport-py', `${burstY.toFixed(2)}px`);
+        vessel.style.setProperty('--teleport-p-scale', String((reformPhase ? 1.26 - local * .38 : .72 + local * .64).toFixed(3)));
+      } else {
+        vessel.classList.remove('is-teleporting');
+        vessel.style.setProperty('--teleport-alpha', '0');
+        vessel.style.setProperty('--teleport-ring-scale', '.55');
+        vessel.style.setProperty('--teleport-scan', '0px');
+        vessel.style.setProperty('--teleport-px', '0px');
+        vessel.style.setProperty('--teleport-py', '0px');
+        vessel.style.setProperty('--teleport-p-scale', '1');
+      }
+
+      vessel.style.setProperty('--vessel-x', `${x}px`);
+      vessel.style.setProperty('--vessel-y', `${y}px`);
+      vessel.style.setProperty('--vessel-angle', `${angle}deg`);
+      vessel.style.setProperty('--vessel-scale', scale.toFixed(3));
+      vessel.style.setProperty('--vessel-opacity', vesselVisible ? opacity.toFixed(3) : '0');
+    });
 
     if (!reduceMotion.matches && debugProgress === null && debugCycle === null) {
       requestAnimationFrame(updateVessel);
