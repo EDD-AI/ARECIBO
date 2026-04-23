@@ -2315,6 +2315,7 @@ body::after {
   width:min(82vw, 1140px);
   aspect-ratio:1678 / 944;
   max-height:82vh;
+  isolation:isolate;
   filter:drop-shadow(0 24px 46px rgba(0,0,0,.46));
 }
 .landing-console-frame {
@@ -2322,15 +2323,17 @@ body::after {
   inset:0;
   background:url('assets/console-aventure.png') center / contain no-repeat;
   pointer-events:none;
+  z-index:3;
 }
 .landing-console-screen {
   position:absolute;
-  left:20.7%;
-  top:24.3%;
-  width:46.2%;
-  height:42.6%;
-  border-radius:clamp(16px, 1.5vw, 24px);
+  left:19.7%;
+  top:21.8%;
+  width:46.1%;
+  height:45.3%;
+  border-radius:clamp(18px, 1.8vw, 28px);
   overflow:hidden;
+  z-index:1;
   background:
     radial-gradient(circle at 50% 42%, rgba(59,54,18,.16), transparent 54%),
     linear-gradient(180deg, rgba(4,5,2,.98), rgba(2,3,1,.96));
@@ -2585,10 +2588,10 @@ body::after {
     width:min(96vw, 920px);
   }
   .landing-console-screen {
-    left:18.8%;
-    top:23%;
-    width:48.6%;
-    height:44.4%;
+    left:18.1%;
+    top:21.1%;
+    width:47.6%;
+    height:46.3%;
   }
   .landing-console-copy {
     padding:10px 12px 12px;
