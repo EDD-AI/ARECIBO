@@ -56,11 +56,7 @@ body {
   cursor:none;
 }
 
-body {
-  background:
-    linear-gradient(rgba(5,7,3,.1), rgba(5,7,3,.1)),
-    url('assets/sas-2-modif.png') center / cover no-repeat;
-}
+body { background:#000; }
 
 body::before {
   content:'';
@@ -109,6 +105,42 @@ body::after {
   height:100vh;
   overflow:hidden;
   z-index:2;
+}
+
+.scene-backdrop {
+  --scene-image:url('assets/sas-2-modif.png');
+  position:absolute;
+  inset:0;
+  z-index:0;
+  background:
+    linear-gradient(rgba(5,7,3,.1), rgba(5,7,3,.1)),
+    var(--scene-image) center / cover no-repeat;
+  transform:scale(1.012) translate3d(0,0,0);
+  transform-origin:center center;
+  filter:contrast(1.02) saturate(.96);
+  will-change:transform, filter;
+}
+.bridge.is-room-sas .scene-backdrop {
+  --scene-image:url('assets/sas-2-modif.png');
+}
+.bridge.is-room-pont .scene-backdrop {
+  --scene-image:url('assets/pont-principal.png');
+}
+.bridge.is-stepping-back .scene-backdrop {
+  animation:sceneStepBack .86s cubic-bezier(.2,.78,.22,1) both;
+}
+@keyframes sceneStepBack {
+  0% {
+    transform:scale(1.13) translate3d(0, 1.4vh, 0);
+    filter:blur(1.5px) contrast(1.05) saturate(.9);
+  }
+  42% {
+    filter:blur(.45px) contrast(1.04) saturate(.94);
+  }
+  100% {
+    transform:scale(1.012) translate3d(0,0,0);
+    filter:contrast(1.02) saturate(.96);
+  }
 }
 
 .bridge-glass {
@@ -238,6 +270,7 @@ body::after {
   opacity:.9;
   pointer-events:none;
   z-index:6;
+  transition:opacity .3s ease;
 }
 .space-porthole::after {
   content:'';
@@ -272,6 +305,7 @@ body::after {
   text-shadow:0 0 8px rgba(250,90,31,.42);
   pointer-events:none;
   z-index:10;
+  transition:opacity .3s ease;
 }
 
 .airlock-shield {
@@ -295,6 +329,7 @@ body::after {
     inset 0 0 24px rgba(117,216,255,.24),
     0 0 18px rgba(117,216,255,.16);
   animation:shieldPulse 3.8s steps(7, end) infinite;
+  transition:opacity .3s ease;
 }
 .airlock-shield::before,
 .airlock-shield::after {
@@ -1205,6 +1240,18 @@ body::after {
   border-radius:0;
   box-shadow:none;
   z-index:11;
+  transition:opacity .3s ease;
+}
+.bridge.is-room-pont .space-porthole,
+.bridge.is-room-pont .airlock-shield,
+.bridge.is-room-pont .airlock-timer,
+.bridge.is-room-pont .extraction-console {
+  opacity:0;
+  pointer-events:none;
+  visibility:hidden;
+}
+.bridge.is-room-pont .airlock-shield {
+  animation:none;
 }
 .console-copy {
   width:100%;
@@ -1563,7 +1610,8 @@ body::after {
 <div class="cursor" id="cursor"></div>
 <div class="page-transition" id="transition"></div>
 
-<main class="bridge" aria-label="Sas expedition du MOTOMOTO">
+<main class="bridge is-room-sas" id="ship-scene" data-room-scene="sas" aria-label="Sas expedition du MOTOMOTO">
+  <div class="scene-backdrop" aria-hidden="true"></div>
   <div class="bridge-glass" aria-hidden="true"></div>
   <div class="neon-glow" aria-hidden="true"></div>
   <div class="ship-light-bloom" aria-hidden="true"></div>
@@ -1799,6 +1847,8 @@ const roomState = document.getElementById('room-state');
 const mapMessage = document.getElementById('map-message');
 const personalWindow = document.getElementById('personal-window');
 const personalTitle = personalWindow ? personalWindow.querySelector('.personal-title') : null;
+const shipScene = document.getElementById('ship-scene');
+const bridgeMeta = document.querySelector('.bridge-meta');
 const initialDistanceMillionKm = 473.65;
 const distanceCountdownSeconds = 10 * 60 * 60;
 const millionKmPerSecond = initialDistanceMillionKm / distanceCountdownSeconds;
@@ -2389,8 +2439,36 @@ function startRoomFly() {
   window.addEventListener('resize', resize);
 }
 
+function setShipScene(room) {
+  if (!shipScene) return;
+
+  const isPont = room === 'PONT PRINCIPAL';
+  const scene = isPont ? 'pont' : 'sas';
+  const previousScene = shipScene.dataset.roomScene || 'sas';
+  const changed = previousScene !== scene;
+
+  shipScene.dataset.roomScene = scene;
+  shipScene.classList.toggle('is-room-pont', isPont);
+  shipScene.classList.toggle('is-room-sas', !isPont);
+  shipScene.setAttribute('aria-label', isPont ? 'Pont principal du MOTOMOTO' : 'Sas expedition du MOTOMOTO');
+
+  if (bridgeMeta) {
+    bridgeMeta.textContent = isPont
+      ? 'MOTOMOTO // PONT PRINCIPAL // SYSTEMES VAISSEAU'
+      : 'MOTOMOTO // SAS EXPEDITION // SALVAGE PROTOCOL';
+  }
+
+  if (changed) {
+    shipScene.classList.remove('is-stepping-back');
+    void shipScene.offsetWidth;
+    shipScene.classList.add('is-stepping-back');
+    window.setTimeout(() => shipScene.classList.remove('is-stepping-back'), 900);
+  }
+}
+
 function initShipMap() {
   const roomNodes = Array.from(document.querySelectorAll('.room-node'));
+  const roomToHash = room => room.toLowerCase().replace(/\s+/g, '-');
 
   roomNodes.forEach(node => {
     node.addEventListener('click', () => {
@@ -2419,10 +2497,20 @@ function initShipMap() {
       mapMessage.classList.remove('warn');
       mapMessage.textContent = room === 'SAS EXPEDITION'
         ? 'Sas expedition actif : depart possible depuis le bouton central.'
-        : 'Pont principal selectionne : systemes du vaisseau visibles.';
-      window.location.hash = room.toLowerCase().replace(/\s+/g, '-');
+        : 'Pont principal selectionne : transition vers le coeur du vaisseau.';
+      setShipScene(room);
+      window.location.hash = roomToHash(room);
     });
   });
+
+  const initialHash = window.location.hash.replace(/^#/, '');
+  if (initialHash) {
+    const initialNode = roomNodes.find(node => {
+      const room = node.dataset.room || '';
+      return node.dataset.state !== 'locked' && roomToHash(room) === initialHash;
+    });
+    if (initialNode) initialNode.click();
+  }
 }
 
 function initDraggablePersonalWindow() {
