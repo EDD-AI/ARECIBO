@@ -503,6 +503,29 @@ body::after {
   opacity:.62;
   animation:shieldFlicker 1.8s steps(5, end) infinite;
 }
+.bridge.is-ship-critical .airlock-shield {
+  opacity:.82;
+  background:
+    linear-gradient(90deg, transparent 0 8%, rgba(255,68,48,.24) 16%, transparent 24%, rgba(224,59,49,.16) 50%, transparent 76%, rgba(255,68,48,.22) 84%, transparent 92%),
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(255,68,48,.28) 22px 24px, transparent 24px 44px),
+    radial-gradient(ellipse at center, rgba(224,59,49,.22), transparent 66%);
+  box-shadow:
+    inset 0 0 28px rgba(255,68,48,.28),
+    0 0 22px rgba(224,59,49,.22);
+  animation:criticalShieldPulse 2.2s steps(6, end) infinite;
+}
+.bridge.is-ship-critical .airlock-shield::before {
+  background:
+    linear-gradient(0deg, transparent 0 18%, rgba(255,68,48,.15) 19%, transparent 20% 48%, rgba(224,59,49,.13) 49%, transparent 50% 76%, rgba(255,68,48,.15) 77%, transparent 78%);
+  opacity:.58;
+}
+.bridge.is-ship-critical .airlock-shield::after {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 7px, rgba(255,68,48,.13) 7px 8px),
+    radial-gradient(ellipse at center, transparent 45%, rgba(224,59,49,.22) 66%, transparent 79%);
+  opacity:.74;
+  animation:criticalShieldFlicker 1.05s steps(5, end) infinite;
+}
 @keyframes shieldPulse {
   0%, 100% {
     opacity:.62;
@@ -525,6 +548,34 @@ body::after {
   21% { opacity:.38; }
   28% { opacity:.68; }
   74% { opacity:.58; }
+}
+@keyframes criticalShieldPulse {
+  0%, 100% {
+    opacity:.66;
+    filter:blur(.25px) saturate(1.12);
+  }
+  32% {
+    opacity:.92;
+    filter:blur(.55px) saturate(1.42);
+  }
+  39% {
+    opacity:.42;
+  }
+  45% {
+    opacity:.86;
+  }
+  72% {
+    opacity:.74;
+  }
+}
+@keyframes criticalShieldFlicker {
+  0%, 100% { opacity:.58; }
+  16% { opacity:.86; }
+  20% { opacity:.24; }
+  27% { opacity:.76; }
+  58% { opacity:.46; }
+  61% { opacity:.82; }
+  78% { opacity:.54; }
 }
 
 .ambient-dust {
