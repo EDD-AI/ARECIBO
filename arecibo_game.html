@@ -2367,9 +2367,22 @@ body::after {
   z-index:1;
   width:100%;
   height:100%;
-  padding:clamp(12px, 1.35vw, 20px) clamp(14px, 1.55vw, 24px) clamp(12px, 1.45vw, 20px);
+  padding:clamp(10px, 1.2vw, 18px) clamp(12px, 1.4vw, 20px) clamp(10px, 1.2vw, 18px);
+  overflow:hidden;
+}
+.landing-console-scroll {
+  width:100%;
+  height:100%;
   display:flex;
   flex-direction:column;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+  scroll-behavior:smooth;
+  padding-right:4px;
+}
+.landing-console-scroll::-webkit-scrollbar {
+  width:0;
 }
 .landing-decision-alert {
   min-height:clamp(42px, 4.8vw, 72px);
@@ -2411,11 +2424,10 @@ body::after {
 }
 .landing-type-text {
   flex:1 1 auto;
+  min-width:0;
 }
 .landing-cursor {
-  flex:0 0 auto;
-  color:var(--cream);
-  animation:landingCursorBlink .9s steps(1, end) infinite;
+  display:none;
 }
 .landing-decision-body {
   padding:12px 0 0;
@@ -2486,6 +2498,31 @@ body::after {
   color:rgba(247,255,195,.5);
   font-size:13px;
   line-height:1.4;
+}
+.landing-console-nav {
+  position:absolute;
+  right:11.9%;
+  width:8.2%;
+  height:16.8%;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:transparent;
+  cursor:none;
+  z-index:4;
+}
+.landing-console-nav:focus-visible {
+  outline:none;
+  box-shadow:0 0 0 1px rgba(247,255,195,.32);
+}
+.landing-console-nav-up {
+  top:29%;
+}
+.landing-console-nav-down {
+  top:51.2%;
+}
+.landing-console-nav.is-disabled {
+  pointer-events:none;
 }
 .decision-row {
   display:grid;
@@ -2946,26 +2983,30 @@ body::after {
       <div class="landing-console-frame" aria-hidden="true"></div>
       <div class="landing-console-screen">
         <div class="landing-console-copy">
-          <div class="landing-decision-alert">
-            <div class="landing-type-line">
-              <span class="landing-prompt">&gt;_</span>
-              <span class="landing-type-text" id="landing-alert-text"></span>
-              <span class="landing-cursor" id="landing-alert-cursor">|</span>
-            </div>
-          </div>
-          <div class="landing-decision-panel">
-            <header class="landing-decision-head">
+          <div class="landing-console-scroll" id="landing-console-scroll">
+            <div class="landing-decision-alert">
               <div class="landing-type-line">
-                <span class="landing-prompt">&gt;</span>
-                <span class="landing-type-text" id="landing-head-text"></span>
-                <span class="landing-cursor" id="landing-head-cursor">|</span>
+                <span class="landing-prompt">&gt;_</span>
+                <span class="landing-type-text" id="landing-alert-text"></span>
+                <span class="landing-cursor" id="landing-alert-cursor">|</span>
               </div>
-            </header>
-            <div class="landing-decision-body" id="landing-decision-options"></div>
-            <div class="landing-decision-module" id="landing-decision-module"></div>
+            </div>
+            <div class="landing-decision-panel">
+              <header class="landing-decision-head">
+                <div class="landing-type-line">
+                  <span class="landing-prompt">&gt;</span>
+                  <span class="landing-type-text" id="landing-head-text"></span>
+                  <span class="landing-cursor" id="landing-head-cursor">|</span>
+                </div>
+              </header>
+              <div class="landing-decision-body" id="landing-decision-options"></div>
+              <div class="landing-decision-module" id="landing-decision-module"></div>
+            </div>
           </div>
         </div>
       </div>
+      <button class="landing-console-nav landing-console-nav-up" id="landing-console-up" type="button" aria-label="Defiler vers le haut"></button>
+      <button class="landing-console-nav landing-console-nav-down" id="landing-console-down" type="button" aria-label="Defiler vers le bas"></button>
     </div>
   </section>
 </div>
@@ -3088,6 +3129,9 @@ const landingCanvas = document.getElementById('landing-canvas');
 const landingDecision = document.getElementById('landing-decision');
 const landingDecisionOptions = document.getElementById('landing-decision-options');
 const landingDecisionModule = document.getElementById('landing-decision-module');
+const landingConsoleScroll = document.getElementById('landing-console-scroll');
+const landingConsoleUp = document.getElementById('landing-console-up');
+const landingConsoleDown = document.getElementById('landing-console-down');
 const landingAlertText = document.getElementById('landing-alert-text');
 const landingAlertCursor = document.getElementById('landing-alert-cursor');
 const landingHeadText = document.getElementById('landing-head-text');
@@ -4401,6 +4445,24 @@ function renderLandingDecisionModule(isVisible) {
   }
 }
 
+function updateLandingConsoleNav() {
+  if (!landingConsoleScroll) return;
+  const maxScroll = Math.max(0, landingConsoleScroll.scrollHeight - landingConsoleScroll.clientHeight);
+  const top = landingConsoleScroll.scrollTop <= 2;
+  const bottom = landingConsoleScroll.scrollTop >= maxScroll - 2;
+
+  if (landingConsoleUp) landingConsoleUp.classList.toggle('is-disabled', top);
+  if (landingConsoleDown) landingConsoleDown.classList.toggle('is-disabled', bottom);
+}
+
+function scrollLandingConsole(direction) {
+  if (!landingConsoleScroll) return;
+  landingConsoleScroll.scrollBy({
+    top: direction * Math.max(70, landingConsoleScroll.clientHeight * .36),
+    behavior:'smooth'
+  });
+}
+
 function clearLandingTypingTimers() {
   landingTypingTimers.forEach(timerId => window.clearTimeout(timerId));
   landingTypingTimers = [];
@@ -4443,6 +4505,10 @@ function startLandingDecisionTyping() {
 
   clearLandingTypingTimers();
   landingDecision.classList.remove('is-copy-ready');
+  if (landingConsoleScroll) {
+    landingConsoleScroll.scrollTop = 0;
+    updateLandingConsoleNav();
+  }
 
   if (landingAlertText) landingAlertText.textContent = '';
   if (landingHeadText) landingHeadText.textContent = '';
@@ -4456,6 +4522,7 @@ function startLandingDecisionTyping() {
   typeLandingLine(landingAlertText, landingAlertCursor, alertCopy, 0, 24);
   typeLandingLine(landingHeadText, landingHeadCursor, questionCopy, questionStartDelay, 18, () => {
     landingDecision.classList.add('is-copy-ready');
+    updateLandingConsoleNav();
   });
 }
 
@@ -4710,6 +4777,19 @@ window.addEventListener('storage', event => {
   if (event.key !== `arecibo:minigame-signal-state:${session}`) return;
   if (landingDecisionStage === 'impact') renderLandingDecisionModule(true);
 });
+
+if (landingConsoleScroll) {
+  landingConsoleScroll.addEventListener('scroll', updateLandingConsoleNav);
+  landingConsoleScroll.addEventListener('wheel', () => {
+    window.requestAnimationFrame(updateLandingConsoleNav);
+  }, { passive:true });
+}
+if (landingConsoleUp) {
+  landingConsoleUp.addEventListener('click', () => scrollLandingConsole(-1));
+}
+if (landingConsoleDown) {
+  landingConsoleDown.addEventListener('click', () => scrollLandingConsole(1));
+}
 
 updateReadyState();
 updateDistance();
