@@ -27,6 +27,7 @@
   --airlock-timer-top:32.1vh;
   --airlock-timer-width:10vh;
   --airlock-timer-height:2.8vh;
+  --quarters-scene-image:url('assets/quartier-fenetre.png');
 }
 
 @media (min-aspect-ratio: 339/190) {
@@ -154,6 +155,9 @@ body::after {
 }
 .bridge.is-room-pont .scene-backdrop {
   --scene-image:var(--pont-scene-image);
+}
+.bridge.is-room-quarters .scene-backdrop {
+  --scene-image:var(--quarters-scene-image);
 }
 .bridge.is-stepping-back .scene-backdrop {
   animation:sceneStepBack .86s cubic-bezier(.2,.78,.22,1) both;
@@ -1826,6 +1830,30 @@ body::after {
   pointer-events:none;
   visibility:hidden;
 }
+.bridge.is-room-quarters .airlock-shield,
+.bridge.is-room-quarters .airlock-timer,
+.bridge.is-room-quarters .extraction-console {
+  opacity:0;
+  pointer-events:none;
+  visibility:hidden;
+}
+.bridge.is-room-quarters .space-porthole {
+  left:49.9%;
+  top:44.2%;
+  width:44.8%;
+  height:29.8%;
+  border-radius:5.6% / 10.6%;
+  box-shadow:
+    inset 0 0 44px rgba(0,0,0,.82),
+    inset 0 0 118px rgba(0,0,0,.3),
+    0 0 12px rgba(0,0,0,.24);
+  opacity:.96;
+}
+.bridge.is-room-quarters .space-porthole::after {
+  background:
+    radial-gradient(ellipse at center, transparent 62%, rgba(0,0,0,.32) 100%),
+    repeating-linear-gradient(0deg, transparent 0 6px, rgba(247,255,195,.014) 6px 7px);
+}
 .bridge.is-room-pont .airlock-shield {
   animation:none;
 }
@@ -2371,7 +2399,7 @@ body::after {
         <button class="room-node room-bridge" type="button" data-room="PONT PRINCIPAL" data-state="open" data-short="A-02">PONT</button>
         <button class="room-node room-engine locked" type="button" data-room="MOTEURS" data-state="locked" data-short="D-04">MOTEURS</button>
         <button class="room-node room-cargo locked" type="button" data-room="CARGO" data-state="locked" data-short="D-05">CARGO</button>
-        <button class="room-node room-crew locked" type="button" data-room="QUARTIERS" data-state="locked" data-short="E-06">QUARTIERS</button>
+        <button class="room-node room-crew" type="button" data-room="QUARTIERS" data-state="open" data-short="E-06">QUARTIERS</button>
         <button class="room-node room-lab locked" type="button" data-room="LABO SIGNAL" data-state="locked" data-short="E-07">LABO</button>
       </div>
 
@@ -3204,19 +3232,30 @@ function setShipScene(room) {
   if (!shipScene) return;
 
   const isPont = room === 'PONT PRINCIPAL';
-  const scene = isPont ? 'pont' : 'sas';
+  const isQuarters = room === 'QUARTIERS';
+  const scene = isPont ? 'pont' : isQuarters ? 'quarters' : 'sas';
   const previousScene = shipScene.dataset.roomScene || 'sas';
   const changed = previousScene !== scene;
 
   shipScene.dataset.roomScene = scene;
   shipScene.classList.toggle('is-room-pont', isPont);
-  shipScene.classList.toggle('is-room-sas', !isPont);
-  shipScene.setAttribute('aria-label', isPont ? 'Pont principal du MOTOMOTO' : 'Sas expedition du MOTOMOTO');
+  shipScene.classList.toggle('is-room-quarters', isQuarters);
+  shipScene.classList.toggle('is-room-sas', !isPont && !isQuarters);
+  shipScene.setAttribute(
+    'aria-label',
+    isPont
+      ? 'Pont principal du MOTOMOTO'
+      : isQuarters
+        ? 'Quartiers du MOTOMOTO'
+        : 'Sas expedition du MOTOMOTO'
+  );
 
   if (bridgeMeta) {
     bridgeMeta.textContent = isPont
       ? `MOTOMOTO // PONT PRINCIPAL // ${activePontRepairState.label.toUpperCase()} // ${activePontRepairState.detail.toUpperCase()}`
-      : 'MOTOMOTO // SAS EXPEDITION // SALVAGE PROTOCOL';
+      : isQuarters
+        ? 'MOTOMOTO // QUARTIERS // BAIE OBSERVATION'
+        : 'MOTOMOTO // SAS EXPEDITION // SALVAGE PROTOCOL';
   }
 
   if (changed) {
@@ -3418,7 +3457,9 @@ function initShipMap() {
       mapMessage.classList.remove('warn');
       mapMessage.textContent = room === 'SAS EXPEDITION'
         ? 'Sas expedition actif : depart possible depuis le bouton central.'
-        : `Pont principal selectionne : ${activePontRepairState.label.toLowerCase()}, ${activePontRepairState.detail}.`;
+        : room === 'QUARTIERS'
+          ? 'Quartiers actifs : baie d observation ouverte sur le ciel etoile.'
+          : `Pont principal selectionne : ${activePontRepairState.label.toLowerCase()}, ${activePontRepairState.detail}.`;
       setShipScene(room);
       window.location.hash = roomToHash(room);
     });
