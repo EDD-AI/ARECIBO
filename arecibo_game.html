@@ -2227,10 +2227,10 @@ body::after {
 .landing-ship {
   position:absolute;
   left:50%;
-  top:-28%;
-  width:min(28vw, 400px);
-  aspect-ratio:1 / 1;
-  background:url('assets/ship-launch-detourer.png') center / contain no-repeat;
+  top:-36%;
+  width:min(48vw, 900px);
+  aspect-ratio:1.72 / 1;
+  background:url('assets/ship-launch-detourer-crop.png') center / contain no-repeat;
   transform:translate(-50%, 0) scale(.8);
   filter:
     drop-shadow(0 18px 18px rgba(0,0,0,.52))
@@ -2240,14 +2240,14 @@ body::after {
 }
 .landing-sequence.is-active .landing-ship {
   opacity:1;
-  animation:landingShipDescent 5.2s cubic-bezier(.14,.8,.16,1) forwards;
+  animation:landingShipDescent 7.6s cubic-bezier(.12,.82,.16,1) forwards;
 }
 .landing-thrusters {
   position:absolute;
   left:50%;
-  bottom:28.8%;
-  width:min(22vw, 300px);
-  height:min(12vw, 150px);
+  bottom:23.6%;
+  width:min(32vw, 520px);
+  height:min(18vw, 280px);
   transform:translateX(-50%);
   background:
     radial-gradient(ellipse at center top, rgba(164,224,255,.78), rgba(114,173,255,.24) 28%, rgba(76,127,255,0) 72%);
@@ -2256,14 +2256,14 @@ body::after {
   z-index:4;
 }
 .landing-sequence.is-active .landing-thrusters {
-  animation:landingThrusters 5.2s ease-out forwards;
+  animation:landingThrusters 7.6s ease-out forwards;
 }
 .landing-dust-glow {
   position:absolute;
   left:50%;
   bottom:8%;
-  width:min(44vw, 680px);
-  height:min(16vw, 220px);
+  width:min(58vw, 960px);
+  height:min(20vw, 320px);
   transform:translateX(-50%);
   background:
     radial-gradient(ellipse at center, rgba(214,180,138,.26), rgba(124,102,82,.12) 34%, rgba(44,31,20,0) 72%);
@@ -2272,49 +2272,53 @@ body::after {
   z-index:3;
 }
 .landing-sequence.is-active .landing-dust-glow {
-  animation:landingDustGlow 5.2s ease-out forwards;
+  animation:landingDustGlow 7.6s ease-out forwards;
 }
 @keyframes landingShipDescent {
   0% {
-    top:-28%;
-    transform:translate(-50%, 0) scale(.68) rotate(-4deg);
+    top:-36%;
+    transform:translate(-50%, 0) scale(.5) rotate(-3.2deg);
     filter:
-      drop-shadow(0 32px 28px rgba(0,0,0,.62))
+      drop-shadow(0 40px 34px rgba(0,0,0,.62))
       drop-shadow(0 0 12px rgba(255,228,176,.06));
   }
-  58% {
-    top:19%;
-    transform:translate(-50%, 0) scale(.88) rotate(1.4deg);
+  42% {
+    top:10%;
+    transform:translate(-50%, 0) scale(.72) rotate(1.6deg);
   }
-  78% {
-    top:39%;
-    transform:translate(-50%, 0) scale(.95) rotate(-.9deg);
+  68% {
+    top:26%;
+    transform:translate(-50%, 0) scale(.88) rotate(-1.1deg);
   }
-  92% {
-    top:47.2%;
-    transform:translate(-50%, 0) scale(.985) rotate(.35deg);
+  84% {
+    top:42%;
+    transform:translate(-50%, 0) scale(.98) rotate(.55deg);
+  }
+  95% {
+    top:54%;
+    transform:translate(-50%, 0) scale(1.07) rotate(-.22deg);
   }
   100% {
-    top:48.8%;
-    transform:translate(-50%, 0) scale(1) rotate(0deg);
+    top:60.5%;
+    transform:translate(-50%, 0) scale(1.12) rotate(0deg);
     filter:
-      drop-shadow(0 10px 10px rgba(0,0,0,.42))
+      drop-shadow(0 14px 16px rgba(0,0,0,.42))
       drop-shadow(0 0 18px rgba(255,228,176,.1));
   }
 }
 @keyframes landingThrusters {
-  0%, 10% { opacity:0; }
-  20% { opacity:.94; transform:translateX(-50%) scaleY(1.22); }
-  58% { opacity:.82; transform:translateX(-50%) scaleY(1.48); }
-  76% { opacity:.65; transform:translateX(-50%) scaleY(1.18); }
-  92% { opacity:.32; transform:translateX(-50%) scaleY(.76); }
-  100% { opacity:0; transform:translateX(-50%) scaleY(.4); }
+  0%, 8% { opacity:0; }
+  16% { opacity:.88; transform:translateX(-50%) scale(1.04, 1.2); }
+  46% { opacity:.96; transform:translateX(-50%) scale(1.08, 1.7); }
+  74% { opacity:.82; transform:translateX(-50%) scale(1.02, 1.46); }
+  92% { opacity:.48; transform:translateX(-50%) scale(.94, 1.02); }
+  100% { opacity:.08; transform:translateX(-50%) scale(.82, .46); }
 }
 @keyframes landingDustGlow {
-  0%, 28% { opacity:0; transform:translateX(-50%) scale(.7); }
-  52% { opacity:.34; transform:translateX(-50%) scale(.94); }
-  78% { opacity:.72; transform:translateX(-50%) scale(1.08); }
-  100% { opacity:.4; transform:translateX(-50%) scale(1.14); }
+  0%, 30% { opacity:0; transform:translateX(-50%) scale(.62); }
+  56% { opacity:.26; transform:translateX(-50%) scale(.88); }
+  82% { opacity:.72; transform:translateX(-50%) scale(1.08); }
+  100% { opacity:.48; transform:translateX(-50%) scale(1.2); }
 }
 
 @media (max-width: 980px) {
@@ -3777,7 +3781,7 @@ function startLandingSequence() {
   let centerX = 0;
   let groundY = 0;
   const startTime = performance.now();
-  const duration = 5200;
+  const duration = 7600;
 
   function resize() {
     width = canvas.width = window.innerWidth;
@@ -3793,39 +3797,39 @@ function startLandingSequence() {
   function spawnSmoke(power = 1) {
     const side = Math.random() < 0.5 ? -1 : 1;
     smokeParticles.push({
-      x:centerX + rand(-80, 80),
+      x:centerX + rand(-150, 150),
       y:groundY - rand(8, 24),
-      vx:rand(.35, 1.8) * side * power,
-      vy:rand(-1.4, -.25) * power,
-      size:rand(24, 56) * power,
-      life:rand(34, 62),
-      maxLife:rand(34, 62),
+      vx:rand(.3, 2.1) * side * power,
+      vy:rand(-1.6, -.22) * power,
+      size:rand(28, 74) * power,
+      life:rand(40, 78),
+      maxLife:rand(40, 78),
       color:Math.random() < 0.6 ? '156,140,126' : '116,98,78'
     });
   }
 
   function spawnDust(power = 1) {
     dustParticles.push({
-      x:centerX + rand(-150, 150),
+      x:centerX + rand(-220, 220),
       y:groundY + rand(-8, 10),
-      vx:rand(-3.6, 3.6) * power,
-      vy:rand(-2.8, -.8) * power,
-      size:rand(2, 6),
-      life:rand(18, 40),
-      maxLife:rand(18, 40),
+      vx:rand(-4.8, 4.8) * power,
+      vy:rand(-3.4, -.8) * power,
+      size:rand(2, 7),
+      life:rand(24, 48),
+      maxLife:rand(24, 48),
       color:Math.random() < 0.5 ? '#716457' : '#9b8a78'
     });
   }
 
   function spawnPixelDebris(power = 1) {
     pixelDebris.push({
-      x:centerX + rand(-120, 120),
+      x:centerX + rand(-180, 180),
       y:groundY + rand(-14, 6),
-      vx:rand(-2.4, 2.4) * power,
-      vy:rand(-3.4, -.5) * power,
-      size:rand(2, 5),
-      life:rand(24, 44),
-      maxLife:rand(24, 44),
+      vx:rand(-3.2, 3.2) * power,
+      vy:rand(-4.2, -.5) * power,
+      size:rand(2, 6),
+      life:rand(28, 54),
+      maxLife:rand(28, 54),
       color:Math.random() < 0.55 ? '#c5b59b' : '#6a6258'
     });
   }
@@ -3836,12 +3840,12 @@ function startLandingSequence() {
     const impact = Math.max(0, 1 - Math.abs(t - 0.78) / 0.2);
 
     if (!prefersReducedMotion) {
-      if (t < 0.9) {
-        const smokeRate = t < 0.58 ? 3 : t < 0.82 ? 9 : 5;
+      if (t < 0.96) {
+        const smokeRate = t < 0.5 ? 3 : t < 0.84 ? 11 : 7;
         for (let i = 0; i < smokeRate; i += 1) spawnSmoke(.72 + impact * 1.1);
-        const dustRate = t > 0.48 ? Math.round(5 + impact * 10) : 2;
+        const dustRate = t > 0.42 ? Math.round(5 + impact * 12) : 2;
         for (let i = 0; i < dustRate; i += 1) spawnDust(.7 + impact * 1.2);
-        const debrisRate = t > 0.56 ? Math.round(2 + impact * 7) : 0;
+        const debrisRate = t > 0.5 ? Math.round(2 + impact * 8) : 0;
         for (let i = 0; i < debrisRate; i += 1) spawnPixelDebris(.75 + impact * 1.3);
       }
     } else if (!smokeParticles.length && !dustParticles.length && !pixelDebris.length) {
