@@ -51,7 +51,7 @@
       ? 'ENDOMMAGÃ‰ - ETAT CRITIQUE'
       : isRepairing
         ? 'EN REPARATION - ETAT INSTABLE'
-        : 'STABLE - ETAT NOMINAL';
+        : 'STABLE - ETAT NORMAL';
   }
 }
 
@@ -2832,11 +2832,11 @@ body::after {
     <div class="ship-section">
       <div class="stat-line">
         <span class="tag">COQUE</span>
-        <span class="critical is-stable" id="hull-status">STABLE - ETAT NOMINAL</span>
+        <span class="critical is-stable" id="hull-status">STABLE - ETAT NORMAL</span>
       </div>
       <div class="stat-line">
         <span class="tag">MOTEUR</span>
-        <span class="critical is-stable" id="engine-status">STABLE - ETAT NOMINAL</span>
+        <span class="critical is-stable" id="engine-status">STABLE - ETAT NORMAL</span>
       </div>
       <div class="stat-line">
         <span class="tag">CARBURANT</span>
@@ -3894,7 +3894,7 @@ function setShipCondition(condition, hullIntegrity) {
       ? 'ENDOMMAGÉ - ETAT CRITIQUE'
       : isRepairing
         ? 'EN REPARATION - ETAT INSTABLE'
-        : 'STABLE - ETAT NOMINAL';
+        : 'STABLE - ETAT NORMAL';
   }
 }
 
