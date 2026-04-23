@@ -536,7 +536,8 @@ body::after {
   opacity:.62;
   animation:shieldFlicker 1.8s steps(5, end) infinite;
 }
-.bridge.is-ship-critical .airlock-shield {
+.bridge.is-ship-critical .airlock-shield,
+.bridge[data-hull-state="critical"] .airlock-shield {
   opacity:.82;
   background:
     linear-gradient(90deg, transparent 0 8%, rgba(255,68,48,.24) 16%, transparent 24%, rgba(224,59,49,.16) 50%, transparent 76%, rgba(255,68,48,.22) 84%, transparent 92%),
@@ -547,17 +548,65 @@ body::after {
     0 0 22px rgba(224,59,49,.22);
   animation:criticalShieldPulse 2.2s steps(6, end) infinite;
 }
-.bridge.is-ship-critical .airlock-shield::before {
+.bridge.is-ship-critical .airlock-shield::before,
+.bridge[data-hull-state="critical"] .airlock-shield::before {
   background:
     linear-gradient(0deg, transparent 0 18%, rgba(255,68,48,.15) 19%, transparent 20% 48%, rgba(224,59,49,.13) 49%, transparent 50% 76%, rgba(255,68,48,.15) 77%, transparent 78%);
   opacity:.58;
 }
-.bridge.is-ship-critical .airlock-shield::after {
+.bridge.is-ship-critical .airlock-shield::after,
+.bridge[data-hull-state="critical"] .airlock-shield::after {
   background:
     repeating-linear-gradient(0deg, transparent 0 7px, rgba(255,68,48,.13) 7px 8px),
     radial-gradient(ellipse at center, transparent 45%, rgba(224,59,49,.22) 66%, transparent 79%);
   opacity:.74;
   animation:criticalShieldFlicker 1.05s steps(5, end) infinite;
+}
+.bridge[data-hull-state="repairing"] .airlock-shield {
+  opacity:.78;
+  background:
+    linear-gradient(90deg, transparent 0 8%, rgba(250,90,31,.22) 16%, transparent 24%, rgba(250,90,31,.14) 50%, transparent 76%, rgba(250,90,31,.2) 84%, transparent 92%),
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(250,90,31,.25) 22px 24px, transparent 24px 44px),
+    radial-gradient(ellipse at center, rgba(250,90,31,.2), transparent 66%);
+  box-shadow:
+    inset 0 0 26px rgba(250,90,31,.26),
+    0 0 20px rgba(250,90,31,.2);
+  animation:repairingShieldPulse 3s steps(6, end) infinite;
+}
+.bridge[data-hull-state="repairing"] .airlock-shield::before {
+  background:
+    linear-gradient(0deg, transparent 0 18%, rgba(250,90,31,.14) 19%, transparent 20% 48%, rgba(250,90,31,.12) 49%, transparent 50% 76%, rgba(250,90,31,.14) 77%, transparent 78%);
+  opacity:.52;
+}
+.bridge[data-hull-state="repairing"] .airlock-shield::after {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 7px, rgba(250,90,31,.12) 7px 8px),
+    radial-gradient(ellipse at center, transparent 46%, rgba(250,90,31,.2) 67%, transparent 79%);
+  opacity:.68;
+  animation:repairingShieldFlicker 1.45s steps(5, end) infinite;
+}
+.bridge[data-hull-state="stable"] .airlock-shield {
+  opacity:.72;
+  background:
+    linear-gradient(90deg, transparent 0 8%, rgba(117,216,255,.18) 16%, transparent 24%, rgba(117,216,255,.12) 50%, transparent 76%, rgba(117,216,255,.16) 84%, transparent 92%),
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(117,216,255,.22) 22px 24px, transparent 24px 44px),
+    radial-gradient(ellipse at center, rgba(117,216,255,.16), transparent 66%);
+  box-shadow:
+    inset 0 0 24px rgba(117,216,255,.24),
+    0 0 18px rgba(117,216,255,.16);
+  animation:shieldPulse 3.8s steps(7, end) infinite;
+}
+.bridge[data-hull-state="stable"] .airlock-shield::before {
+  background:
+    linear-gradient(0deg, transparent 0 18%, rgba(117,216,255,.12) 19%, transparent 20% 48%, rgba(117,216,255,.1) 49%, transparent 50% 76%, rgba(117,216,255,.12) 77%, transparent 78%);
+  opacity:.42;
+}
+.bridge[data-hull-state="stable"] .airlock-shield::after {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 7px, rgba(117,216,255,.1) 7px 8px),
+    radial-gradient(ellipse at center, transparent 48%, rgba(117,216,255,.16) 68%, transparent 78%);
+  opacity:.62;
+  animation:shieldFlicker 1.8s steps(5, end) infinite;
 }
 @keyframes shieldPulse {
   0%, 100% {
@@ -609,6 +658,29 @@ body::after {
   58% { opacity:.46; }
   61% { opacity:.82; }
   78% { opacity:.54; }
+}
+@keyframes repairingShieldPulse {
+  0%, 100% {
+    opacity:.62;
+    filter:blur(.25px) saturate(1.12);
+  }
+  36% {
+    opacity:.88;
+    filter:blur(.5px) saturate(1.34);
+  }
+  48% {
+    opacity:.5;
+  }
+  54% {
+    opacity:.8;
+  }
+}
+@keyframes repairingShieldFlicker {
+  0%, 100% { opacity:.54; }
+  22% { opacity:.78; }
+  26% { opacity:.36; }
+  34% { opacity:.72; }
+  70% { opacity:.58; }
 }
 
 .ambient-dust {
@@ -1520,10 +1592,42 @@ body::after {
     inset 0 0 10px rgba(224,59,49,.1);
   text-shadow:0 0 10px rgba(255,104,92,.5);
 }
-.engine-alert {
-  animation:engineWarningPulse 1.35s steps(4, end) infinite;
+.critical.is-repairing {
+  color:var(--orange);
+  border-color:rgba(250,90,31,.9);
+  background:rgba(250,90,31,.04);
 }
-@keyframes engineWarningPulse {
+.critical.is-repairing:hover,
+.stat-line:hover .critical.is-repairing {
+  color:#ff8a42;
+  border-color:rgba(255,138,66,1);
+  background:rgba(250,90,31,.09);
+  box-shadow:
+    0 0 14px rgba(250,90,31,.22),
+    inset 0 0 10px rgba(250,90,31,.1);
+  text-shadow:0 0 10px rgba(255,138,66,.48);
+}
+.critical.is-stable {
+  color:#75d8ff;
+  border-color:rgba(117,216,255,.88);
+  background:rgba(117,216,255,.035);
+  animation:none;
+}
+.critical.is-stable:hover,
+.stat-line:hover .critical.is-stable {
+  color:#aee9ff;
+  border-color:rgba(174,233,255,1);
+  background:rgba(117,216,255,.075);
+  box-shadow:
+    0 0 14px rgba(117,216,255,.2),
+    inset 0 0 10px rgba(117,216,255,.08);
+  text-shadow:0 0 10px rgba(174,233,255,.42);
+}
+.hull-alert,
+.engine-alert {
+  animation:systemWarningPulse 1.35s steps(4, end) infinite;
+}
+@keyframes systemWarningPulse {
   0%, 100% {
     color:var(--red);
     border-color:rgba(224,59,49,.74);
@@ -2078,7 +2182,7 @@ body::after {
 <div class="cursor" id="cursor"></div>
 <div class="page-transition" id="transition"></div>
 
-<main class="bridge is-room-sas is-ship-critical" id="ship-scene" data-room-scene="sas" data-ship-condition="critical" aria-label="Sas expedition du MOTOMOTO">
+<main class="bridge is-room-sas is-ship-critical" id="ship-scene" data-room-scene="sas" data-ship-condition="critical" data-hull-state="critical" aria-label="Sas expedition du MOTOMOTO">
   <div class="scene-backdrop" aria-hidden="true"></div>
   <div class="bridge-glass" aria-hidden="true"></div>
   <div class="neon-glow" aria-hidden="true"></div>
@@ -2179,11 +2283,11 @@ body::after {
     <div class="ship-section">
       <div class="stat-line">
         <span class="tag">COQUE</span>
-        <span class="critical">ENDOMMAGE - ETAT CRITIQUE</span>
+        <span class="critical hull-alert" id="hull-status">ENDOMMAGÉ - ETAT CRITIQUE</span>
       </div>
       <div class="stat-line">
         <span class="tag">MOTEUR</span>
-        <span class="critical engine-alert">ETAT MOTEUR - CRITIQUE</span>
+        <span class="critical engine-alert">ENDOMMAGÉ - ETAT CRITIQUE</span>
       </div>
       <div class="stat-line">
         <span class="tag">CARBURANT</span>
@@ -2380,6 +2484,7 @@ const personalTitle = personalWindow ? personalWindow.querySelector('.personal-t
 const messageIndicator = personalWindow ? personalWindow.querySelector('.message-indicator') : null;
 const messagesTitle = document.getElementById('messages-title');
 const shipScene = document.getElementById('ship-scene');
+const hullStatus = document.getElementById('hull-status');
 const bridgeMeta = document.querySelector('.bridge-meta');
 const pontRepairStates = [
   {
@@ -2388,6 +2493,7 @@ const pontRepairStates = [
     label:'Pont critique',
     detail:'4 portes fermees',
     condition:'critical',
+    hullIntegrity:18,
     image:'assets/pont-principal-state-05-broken-4-doors-closed.png'
   },
   {
@@ -2396,6 +2502,7 @@ const pontRepairStates = [
     label:'Pont repare',
     detail:'4 portes ouvertes',
     condition:'repaired',
+    hullIntegrity:100,
     image:'assets/pont-principal-state-01-repaired-4-doors-open.png'
   }
 ];
@@ -3052,13 +3159,37 @@ function setShipScene(room) {
   }
 }
 
-function setShipCondition(condition) {
+function getHullState(condition, hullIntegrity) {
+  const integrity = Number(hullIntegrity);
+  if (condition === 'repaired' || integrity >= 85) return 'stable';
+  if (condition === 'repairing' || integrity >= 35) return 'repairing';
+  return 'critical';
+}
+
+function setShipCondition(condition, hullIntegrity) {
   if (!shipScene) return;
-  const isCritical = condition !== 'repaired';
-  shipScene.dataset.shipCondition = isCritical ? 'critical' : 'repaired';
+  const hullState = getHullState(condition, hullIntegrity);
+  const isCritical = hullState === 'critical';
+  const isRepairing = hullState === 'repairing';
+  const isStable = hullState === 'stable';
+
+  shipScene.dataset.shipCondition = hullState;
+  shipScene.dataset.hullState = hullState;
   shipScene.classList.toggle('is-ship-critical', isCritical);
-  shipScene.classList.toggle('is-ship-repaired', !isCritical);
+  shipScene.classList.toggle('is-ship-repairing', isRepairing);
+  shipScene.classList.toggle('is-ship-repaired', isStable);
   if (!isCritical) shipScene.classList.remove('is-ship-shaking');
+
+  if (hullStatus) {
+    hullStatus.classList.toggle('is-repairing', isRepairing);
+    hullStatus.classList.toggle('is-stable', isStable);
+    hullStatus.classList.toggle('hull-alert', !isStable);
+    hullStatus.textContent = isCritical
+      ? 'ENDOMMAGÉ - ETAT CRITIQUE'
+      : isRepairing
+        ? 'EN REPARATION - ETAT INSTABLE'
+        : 'STABLE - ETAT NOMINAL';
+  }
 }
 
 function startCriticalShipShakes() {
@@ -3090,7 +3221,7 @@ function setPontRepairState(stateId) {
   activePontRepairState = nextState;
   shipScene.dataset.pontRepairState = nextState.id;
   shipScene.style.setProperty('--pont-scene-image', `url('${nextState.image}')`);
-  setShipCondition(nextState.condition);
+  setShipCondition(nextState.condition, nextState.hullIntegrity);
 
   if (shipScene.dataset.roomScene === 'pont' && bridgeMeta) {
     bridgeMeta.textContent = `MOTOMOTO // PONT PRINCIPAL // ${nextState.label.toUpperCase()} // ${nextState.detail.toUpperCase()}`;
