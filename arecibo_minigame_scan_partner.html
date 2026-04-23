@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ARECIBO // Signal Hunt // Collegue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/terminal-filter.css?v=global-terminal-filter-amber">
+<style>
+:root {
+  --cream:#F7FFC3;
+  --orange:#FA5A1F;
+  --bg:#020301;
+  --line:rgba(247,255,195,.7);
+}
+* { box-sizing:border-box; }
+html, body {
+  margin:0;
+  min-height:100%;
+  background:#000;
+  color:var(--cream);
+  font-family:'Pixelify Sans', monospace;
+}
+body {
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:5vh 4vw;
+  background:
+    radial-gradient(circle at center, rgba(56,42,18,.18), transparent 42%),
+    #000;
+}
+.panel {
+  width:min(780px, 100%);
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.82);
+  box-shadow:0 0 0 1px rgba(247,255,195,.05) inset;
+}
+.head {
+  border-bottom:1px solid rgba(247,255,195,.45);
+  padding:20px 24px;
+  text-align:center;
+}
+.eyebrow {
+  margin:0 0 8px;
+  color:var(--orange);
+  font-size:clamp(18px, 1.5vw, 26px);
+  text-transform:uppercase;
+}
+.title {
+  margin:0;
+  font-size:clamp(22px, 2vw, 34px);
+  text-transform:uppercase;
+}
+.body {
+  padding:34px 24px 38px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:22px;
+}
+.target-box {
+  min-width:min(360px, 88vw);
+  min-height:120px;
+  border:1px solid rgba(247,255,195,.5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(4,4,2,.76);
+}
+.target {
+  font-size:clamp(70px, 10vw, 130px);
+  line-height:1;
+  color:var(--cream);
+  text-shadow:0 0 12px rgba(247,255,195,.14);
+}
+.helper {
+  font-size:clamp(18px, 1.7vw, 26px);
+  color:rgba(247,255,195,.76);
+  text-align:center;
+}
+.actions {
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.btn {
+  min-width:180px;
+  min-height:50px;
+  padding:10px 16px;
+  border:1px solid rgba(247,255,195,.54);
+  background:rgba(0,0,0,.72);
+  color:var(--cream);
+  font:inherit;
+  font-size:18px;
+}
+.btn:hover,
+.btn:focus-visible {
+  border-color:rgba(250,90,31,.9);
+  color:#fff6dd;
+  outline:none;
+}
+.links {
+  width:100%;
+  margin-top:6px;
+  display:grid;
+  gap:10px;
+}
+.linkbox {
+  border:1px solid rgba(247,255,195,.22);
+  padding:10px 12px;
+  background:rgba(0,0,0,.48);
+  color:rgba(247,255,195,.72);
+  font-size:14px;
+  line-height:1.35;
+  word-break:break-all;
+}
+</style>
+</head>
+<body>
+  <section class="panel" aria-label="Code a transmettre">
+    <header class="head">
+      <p class="eyebrow">MODULE // RELAIS COEQUIPIER //</p>
+      <h1 class="title">Transmets ce code a ton collegue</h1>
+    </header>
+    <div class="body">
+      <div class="target-box"><div class="target" id="target-code">07</div></div>
+      <div class="helper">Indique seulement cette suite. L'autre joueur doit la retrouver dans la masse de chiffres.</div>
+      <div class="actions">
+        <button class="btn" type="button" id="reroll-code">Nouveau code</button>
+        <button class="btn" type="button" id="copy-operator-link">Copier lien operateur</button>
+      </div>
+      <div class="links">
+        <div class="linkbox" id="partner-link-box"></div>
+        <div class="linkbox" id="operator-link-box"></div>
+      </div>
+    </div>
+  </section>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const sessionId = (params.get('session') || 'demo-signal').replace(/[^a-z0-9_-]/gi, '').slice(0, 24) || 'demo-signal';
+const storageKey = `arecibo:minigame-signal:${sessionId}`;
+const targetCodeEl = document.getElementById('target-code');
+const partnerLinkBox = document.getElementById('partner-link-box');
+const operatorLinkBox = document.getElementById('operator-link-box');
+
+function randomDigit() {
+  return String(Math.floor(Math.random() * 10));
+}
+
+function randomCode() {
+  const length = Math.random() > 0.55 ? 2 : 3;
+  let code = '';
+  while (code.length < length) code += randomDigit();
+  return code;
+}
+
+function sanitizeCode(value) {
+  return String(value || '').replace(/[^0-9]/g, '').slice(0, 3);
+}
+
+function resolveCode() {
+  const queryCode = sanitizeCode(params.get('code'));
+  if (queryCode.length >= 2) {
+    localStorage.setItem(storageKey, queryCode);
+    return queryCode;
+  }
+
+  const stored = sanitizeCode(localStorage.getItem(storageKey));
+  if (stored.length >= 2) return stored;
+
+  const generated = randomCode();
+  localStorage.setItem(storageKey, generated);
+  return generated;
+}
+
+function updateLinks(code) {
+  const base = `${window.location.origin}${window.location.pathname}`;
+  const partnerUrl = `${base}?session=${encodeURIComponent(sessionId)}&code=${encodeURIComponent(code)}`;
+  const operatorUrl = `${window.location.origin}${window.location.pathname.replace('partner', 'operator')}?session=${encodeURIComponent(sessionId)}&code=${encodeURIComponent(code)}`;
+
+  partnerLinkBox.textContent = `Fenetre collegue: ${partnerUrl}`;
+  operatorLinkBox.textContent = `Fenetre operateur: ${operatorUrl}`;
+  targetCodeEl.textContent = code;
+}
+
+let code = resolveCode();
+updateLinks(code);
+
+document.getElementById('reroll-code').addEventListener('click', () => {
+  code = randomCode();
+  localStorage.setItem(storageKey, code);
+  updateLinks(code);
+});
+
+document.getElementById('copy-operator-link').addEventListener('click', async () => {
+  const operatorUrl = `${window.location.origin}${window.location.pathname.replace('partner', 'operator')}?session=${encodeURIComponent(sessionId)}&code=${encodeURIComponent(code)}`;
+  try {
+    await navigator.clipboard.writeText(operatorUrl);
+  } catch (err) {}
+});
+
+window.addEventListener('storage', (event) => {
+  if (event.key !== storageKey) return;
+  const nextCode = sanitizeCode(event.newValue);
+  if (nextCode.length < 2 || nextCode === code) return;
+  code = nextCode;
+  updateLinks(code);
+});
+</script>
+</body>
+</html>
