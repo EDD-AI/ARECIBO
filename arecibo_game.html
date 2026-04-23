@@ -2241,7 +2241,7 @@ body::after {
 }
 .landing-sequence.is-active .landing-ship {
   opacity:1;
-  animation:landingShipDescent 7.6s cubic-bezier(.12,.82,.16,1) forwards;
+  animation:landingShipDescent 6.2s cubic-bezier(.18,.74,.2,1) forwards;
 }
 .landing-sequence.is-hovering .landing-ship {
   animation:landingShipHover 3.4s ease-in-out infinite;
@@ -2546,30 +2546,22 @@ body::after {
 @keyframes landingShipDescent {
   0% {
     top:-36%;
-    transform:translate(-50%, 0) scale(.5) rotate(-3.2deg);
+    transform:translate(-50%, 0) scale(.5) rotate(-2.4deg);
     filter:
       drop-shadow(0 40px 34px rgba(0,0,0,.62))
       drop-shadow(0 0 12px rgba(255,228,176,.06));
   }
-  42% {
-    top:10%;
-    transform:translate(-50%, 0) scale(.72) rotate(1.6deg);
+  38% {
+    top:5%;
+    transform:translate(-50%, 0) scale(.7) rotate(1.2deg);
   }
   68% {
-    top:26%;
-    transform:translate(-50%, 0) scale(.88) rotate(-1.1deg);
-  }
-  84% {
-    top:42%;
-    transform:translate(-50%, 0) scale(.98) rotate(.55deg);
-  }
-  95% {
-    top:44.2%;
-    transform:translate(-50%, 0) scale(1.05) rotate(-.22deg);
+    top:18%;
+    transform:translate(-50%, 0) scale(.84) rotate(-.55deg);
   }
   100% {
-    top:47.2%;
-    transform:translate(-50%, 0) scale(1.08) rotate(0deg);
+    top:39.8%;
+    transform:translate(-50%, 0) scale(1.02) rotate(0deg);
     filter:
       drop-shadow(0 14px 16px rgba(0,0,0,.42))
       drop-shadow(0 0 18px rgba(255,228,176,.1));
@@ -2577,15 +2569,15 @@ body::after {
 }
 @keyframes landingShipHover {
   0%, 100% {
-    top:47.2%;
-    transform:translate(-50%, 0) scale(1.08) rotate(-.18deg);
+    top:39.8%;
+    transform:translate(-50%, 0) scale(1.02) rotate(-.1deg);
     filter:
       drop-shadow(0 14px 16px rgba(0,0,0,.42))
       drop-shadow(0 0 18px rgba(255,228,176,.1));
   }
   50% {
-    top:46.1%;
-    transform:translate(-50%, 0) scale(1.085) rotate(.2deg);
+    top:39.05%;
+    transform:translate(-50%, 0) scale(1.024) rotate(.12deg);
     filter:
       drop-shadow(0 18px 18px rgba(0,0,0,.46))
       drop-shadow(0 0 20px rgba(255,228,176,.12));
@@ -4253,6 +4245,7 @@ function startLandingSequence() {
   let groundY = 0;
   const startTime = performance.now();
   const duration = 7600;
+  const shipSettleDelay = 6200;
   const questionOpenDelay = 3350;
   window.setTimeout(() => {
     if (landingSequence) landingSequence.classList.add('is-question-open');
@@ -4263,7 +4256,7 @@ function startLandingSequence() {
     if (landingSequence) {
       landingSequence.classList.add('is-hovering');
     }
-  }, duration - 120);
+  }, shipSettleDelay);
 
   function resize() {
     width = canvas.width = window.innerWidth;
