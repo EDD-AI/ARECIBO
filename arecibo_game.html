@@ -2425,6 +2425,61 @@ body::after {
   transform:translateY(0);
   pointer-events:auto;
 }
+.landing-decision-module {
+  margin-top:14px;
+  border-top:1px solid rgba(247,255,195,.18);
+  padding-top:14px;
+  display:none;
+  flex-direction:column;
+  gap:10px;
+}
+.landing-decision.is-module-open .landing-decision-module {
+  display:flex;
+}
+.landing-module-title {
+  color:rgba(247,255,195,.72);
+  font-size:clamp(13px, 1vw, 17px);
+  text-transform:uppercase;
+}
+.landing-module-status {
+  color:var(--orange);
+  font-size:clamp(14px, 1.1vw, 18px);
+  text-transform:uppercase;
+}
+.landing-module-status.is-success {
+  color:var(--green);
+}
+.landing-module-links {
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.landing-module-btn {
+  min-height:44px;
+  padding:8px 14px;
+  border:1px solid rgba(247,255,195,.4);
+  background:rgba(3,4,2,.48);
+  color:var(--cream);
+  font:inherit;
+  font-size:clamp(14px, 1vw, 18px);
+  text-transform:uppercase;
+  cursor:none;
+}
+.landing-module-btn:hover,
+.landing-module-btn:focus-visible {
+  outline:none;
+  border-color:rgba(250,90,31,.9);
+  color:#fff7da;
+}
+.landing-module-btn.is-primary {
+  border-color:rgba(250,90,31,.68);
+  color:var(--orange);
+}
+.landing-module-meta {
+  color:rgba(247,255,195,.5);
+  font-size:13px;
+  line-height:1.4;
+}
 .decision-row {
   display:grid;
   grid-template-columns:minmax(0, 1fr) auto;
@@ -2900,6 +2955,7 @@ body::after {
               </div>
             </header>
             <div class="landing-decision-body" id="landing-decision-options"></div>
+            <div class="landing-decision-module" id="landing-decision-module"></div>
           </div>
         </div>
       </div>
@@ -3022,19 +3078,38 @@ const landingSequence = document.getElementById('landing-sequence');
 const landingCanvas = document.getElementById('landing-canvas');
 const landingDecision = document.getElementById('landing-decision');
 const landingDecisionOptions = document.getElementById('landing-decision-options');
+const landingDecisionModule = document.getElementById('landing-decision-module');
 const landingAlertText = document.getElementById('landing-alert-text');
 const landingAlertCursor = document.getElementById('landing-alert-cursor');
 const landingHeadText = document.getElementById('landing-head-text');
 const landingHeadCursor = document.getElementById('landing-head-cursor');
 let landingStarted = false;
 let landingTypingTimers = [];
-const landingDecisionChoices = [
-  { id:'search-life-traces', label:'chercher des traces de vies' },
-  { id:'inspect-asteroid', label:'inspecter l asteroide' },
-  { id:'return-ship', label:'revenir sur le vaisseau' }
-];
+const landingDecisionStages = {
+  impact: {
+    alert:'Votre vaisseau a percute un asteroide !',
+    question:"Qu'est ce que vous souhaitez faire ?",
+    choices:[
+      { id:'search-life-traces', label:'chercher des traces de vies' },
+      { id:'inspect-asteroid', label:'inspecter l asteroide' },
+      { id:'return-ship', label:'revenir sur le vaisseau' }
+    ]
+  },
+  followup: {
+    alert:'Signal decode // capsule derelict detectee a proximite.',
+    question:"Ou souhaitez-vous envoyer l'equipe ?",
+    choices:[
+      { id:'enter-capsule', label:'entrer dans la capsule' },
+      { id:'scan-exterior', label:'inspecter l exterieur de la coque' },
+      { id:'fallback-ship', label:'revenir sur le vaisseau' }
+    ]
+  }
+};
+let landingDecisionStage = 'impact';
+let landingDecisionChoices = landingDecisionStages.impact.choices;
 const landingVotes = Array.from({ length: 6 }, () => null);
 let landingVoteCursor = 0;
+let landingSignalSessionId = '';
 const landingVotePreset = (params.get('vote') || '')
   .split(',')
   .map(value => value.trim())
@@ -3042,7 +3117,7 @@ const landingVotePreset = (params.get('vote') || '')
   .slice(0, 6);
 
 landingVotePreset.forEach((vote, index) => {
-  if (landingDecisionChoices.some(choice => choice.id === vote)) {
+  if (landingDecisionStages.impact.choices.some(choice => choice.id === vote)) {
     landingVotes[index] = vote;
   }
 });
@@ -4076,6 +4151,42 @@ function initDraggablePersonalWindow() {
   restorePosition();
 }
 
+function sanitizeSignalSession(value) {
+  return String(value || '').replace(/[^a-z0-9_-]/gi, '').slice(0, 24);
+}
+
+function ensureLandingSignalSession() {
+  if (landingSignalSessionId) return landingSignalSessionId;
+  landingSignalSessionId = sanitizeSignalSession(params.get('signalSession'))
+    || `impact-${Math.random().toString(36).slice(2, 8)}`;
+  return landingSignalSessionId;
+}
+
+function getLandingSignalState() {
+  const session = ensureLandingSignalSession();
+  return localStorage.getItem(`arecibo:minigame-signal-state:${session}`) || 'idle';
+}
+
+function setLandingSignalState(state) {
+  const session = ensureLandingSignalSession();
+  localStorage.setItem(`arecibo:minigame-signal-state:${session}`, state);
+}
+
+function resetLandingVotes() {
+  for (let i = 0; i < landingVotes.length; i += 1) landingVotes[i] = null;
+  landingVoteCursor = 0;
+}
+
+function goToLandingDecisionStage(stageId) {
+  const stage = landingDecisionStages[stageId];
+  if (!stage) return;
+  landingDecisionStage = stageId;
+  landingDecisionChoices = stage.choices;
+  resetLandingVotes();
+  renderLandingDecision();
+  startLandingDecisionTyping();
+}
+
 function renderCrew() {
   crewEl.innerHTML = '';
   readyState.forEach((ready, index) => {
@@ -4124,8 +4235,11 @@ function setExpeditionActive(active) {
 }
 
 function renderLandingDecision() {
-  if (!landingDecisionOptions) return;
+  if (!landingDecisionOptions || !landingDecision) return;
   landingDecisionOptions.innerHTML = '';
+
+  const inspectSelected = landingDecisionStage === 'impact'
+    && landingVotes.slice(0, playerCount).some(vote => vote === 'inspect-asteroid');
 
   landingDecisionChoices.forEach(choice => {
     const row = document.createElement('div');
@@ -4167,6 +4281,93 @@ function renderLandingDecision() {
     row.appendChild(voteWrap);
     landingDecisionOptions.appendChild(row);
   });
+
+  landingDecision.classList.toggle('is-module-open', inspectSelected);
+  renderLandingDecisionModule(inspectSelected);
+}
+
+function renderLandingDecisionModule(isVisible) {
+  if (!landingDecisionModule || !landingDecision) return;
+  landingDecisionModule.innerHTML = '';
+
+  if (!isVisible) return;
+
+  const session = ensureLandingSignalSession();
+  const signalState = getLandingSignalState();
+  const baseRoot = `${window.location.origin}${window.location.pathname.replace(/[^/]+$/, '')}`;
+  const operatorUrl = `${baseRoot}arecibo_minigame_scan_operator.html?session=${encodeURIComponent(session)}`;
+  const partnerUrl = `${baseRoot}arecibo_minigame_scan_partner.html?session=${encodeURIComponent(session)}`;
+
+  const title = document.createElement('div');
+  title.className = 'landing-module-title';
+  title.textContent = 'Module signal cooperatif // asteroid relay';
+
+  const status = document.createElement('div');
+  status.className = 'landing-module-status';
+  status.textContent = signalState === 'solved'
+    ? 'Signal decode // etape suivante disponible'
+    : signalState === 'armed'
+      ? 'Signal arme // ouvre les consoles pour synchroniser les chiffres'
+      : 'Module en attente // choisis une console';
+  if (signalState === 'solved') status.classList.add('is-success');
+
+  const links = document.createElement('div');
+  links.className = 'landing-module-links';
+
+  const operatorBtn = document.createElement('button');
+  operatorBtn.type = 'button';
+  operatorBtn.className = 'landing-module-btn is-primary';
+  operatorBtn.textContent = playerCount <= 1 ? 'ouvrir le module' : 'ouvrir module operateur';
+  operatorBtn.addEventListener('click', () => {
+    setLandingSignalState('armed');
+    window.open(operatorUrl, '_blank', 'noopener');
+    renderLandingDecisionModule(true);
+  });
+
+  const partnerBtn = document.createElement('button');
+  partnerBtn.type = 'button';
+  partnerBtn.className = 'landing-module-btn';
+  partnerBtn.textContent = 'ouvrir relais collegue';
+  partnerBtn.addEventListener('click', () => {
+    window.open(partnerUrl, '_blank', 'noopener');
+  });
+
+  const rerollBtn = document.createElement('button');
+  rerollBtn.type = 'button';
+  rerollBtn.className = 'landing-module-btn';
+  rerollBtn.textContent = 'nouvelle session';
+  rerollBtn.addEventListener('click', () => {
+    const previousSession = ensureLandingSignalSession();
+    localStorage.removeItem(`arecibo:minigame-signal-state:${previousSession}`);
+    localStorage.removeItem(`arecibo:minigame-signal:${previousSession}`);
+    landingSignalSessionId = `impact-${Math.random().toString(36).slice(2, 8)}`;
+    setLandingSignalState('idle');
+    renderLandingDecisionModule(true);
+  });
+
+  links.appendChild(operatorBtn);
+  if (playerCount > 1) links.appendChild(partnerBtn);
+  links.appendChild(rerollBtn);
+
+  const meta = document.createElement('div');
+  meta.className = 'landing-module-meta';
+  meta.textContent = `Session ${session.toUpperCase()} // ouvre le relais collegue si tu veux tester la version a deux ecrans.`;
+
+  landingDecisionModule.appendChild(title);
+  landingDecisionModule.appendChild(status);
+  landingDecisionModule.appendChild(links);
+  landingDecisionModule.appendChild(meta);
+
+  if (signalState === 'solved') {
+    const continueBtn = document.createElement('button');
+    continueBtn.type = 'button';
+    continueBtn.className = 'landing-module-btn is-primary';
+    continueBtn.textContent = 'passer a l etape suivante';
+    continueBtn.addEventListener('click', () => {
+      goToLandingDecisionStage('followup');
+    });
+    landingDecisionModule.appendChild(continueBtn);
+  }
 }
 
 function clearLandingTypingTimers() {
@@ -4215,8 +4416,9 @@ function startLandingDecisionTyping() {
   if (landingAlertText) landingAlertText.textContent = '';
   if (landingHeadText) landingHeadText.textContent = '';
 
-  const alertCopy = 'Votre vaisseau a percute un asteroide !';
-  const questionCopy = "Qu'est ce que vous souhaitez faire ?";
+  const stage = landingDecisionStages[landingDecisionStage] || landingDecisionStages.impact;
+  const alertCopy = stage.alert;
+  const questionCopy = stage.question;
   const alertDuration = alertCopy.length * 24;
   const questionStartDelay = 180 + alertDuration;
 
@@ -4229,6 +4431,8 @@ function startLandingDecisionTyping() {
 function startLandingSequence() {
   if (!landingSequence || !landingCanvas || landingStarted) return;
   landingStarted = true;
+  ensureLandingSignalSession();
+  setLandingSignalState('idle');
 
   landingSequence.classList.add('is-active');
   landingSequence.setAttribute('aria-hidden', 'false');
@@ -4468,6 +4672,12 @@ document.addEventListener('keydown', event => {
   }
   const settingsOverlay = document.getElementById('settings-overlay');
   if (settingsOverlay && settingsOverlay.classList.contains('open')) closeSettings();
+});
+
+window.addEventListener('storage', event => {
+  const session = ensureLandingSignalSession();
+  if (event.key !== `arecibo:minigame-signal-state:${session}`) return;
+  if (landingDecisionStage === 'impact') renderLandingDecisionModule(true);
 });
 
 updateReadyState();
