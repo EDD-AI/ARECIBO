@@ -41,6 +41,17 @@
     --airlock-timer-width:5.6vw;
     --airlock-timer-height:1.55vw;
   }
+
+  if (engineStatus) {
+    engineStatus.classList.toggle('engine-alert', isCritical);
+    engineStatus.classList.toggle('is-repairing', isRepairing);
+    engineStatus.classList.toggle('is-stable', isStable);
+    engineStatus.textContent = isCritical
+      ? 'ENDOMMAGÃ‰ - ETAT CRITIQUE'
+      : isRepairing
+        ? 'EN REPARATION - ETAT INSTABLE'
+        : 'STABLE - ETAT NOMINAL';
+  }
 }
 
 * { box-sizing:border-box; margin:0; padding:0; }
@@ -2188,7 +2199,7 @@ body::after {
 <div class="cursor" id="cursor"></div>
 <div class="page-transition" id="transition"></div>
 
-<main class="bridge is-room-sas is-ship-critical" id="ship-scene" data-room-scene="sas" data-ship-condition="critical" data-hull-state="critical" aria-label="Sas expedition du MOTOMOTO">
+<main class="bridge is-room-sas is-ship-repaired" id="ship-scene" data-room-scene="sas" data-ship-condition="stable" data-hull-state="stable" aria-label="Sas expedition du MOTOMOTO">
   <div class="scene-backdrop" aria-hidden="true"></div>
   <div class="bridge-glass" aria-hidden="true"></div>
   <div class="neon-glow" aria-hidden="true"></div>
@@ -2289,11 +2300,11 @@ body::after {
     <div class="ship-section">
       <div class="stat-line">
         <span class="tag">COQUE</span>
-        <span class="critical hull-alert" id="hull-status">ENDOMMAGÉ - ETAT CRITIQUE</span>
+        <span class="critical is-stable" id="hull-status">STABLE - ETAT NOMINAL</span>
       </div>
       <div class="stat-line">
         <span class="tag">MOTEUR</span>
-        <span class="critical engine-alert">ENDOMMAGÉ - ETAT CRITIQUE</span>
+        <span class="critical is-stable" id="engine-status">STABLE - ETAT NOMINAL</span>
       </div>
       <div class="stat-line">
         <span class="tag">CARBURANT</span>
@@ -2491,6 +2502,7 @@ const messageIndicator = personalWindow ? personalWindow.querySelector('.message
 const messagesTitle = document.getElementById('messages-title');
 const shipScene = document.getElementById('ship-scene');
 const hullStatus = document.getElementById('hull-status');
+const engineStatus = document.getElementById('engine-status');
 const personalHudDock = document.querySelector('.personal-hud-dock');
 const bridgeMeta = document.querySelector('.bridge-meta');
 const pontRepairStates = [
@@ -2513,7 +2525,7 @@ const pontRepairStates = [
     image:'assets/pont-principal-state-01-repaired-4-doors-open.png'
   }
 ];
-let activePontRepairState = pontRepairStates[0];
+let activePontRepairState = pontRepairStates[1];
 const initialDistanceMillionKm = 473.65;
 const distanceCountdownSeconds = 10 * 60 * 60;
 const millionKmPerSecond = initialDistanceMillionKm / distanceCountdownSeconds;
