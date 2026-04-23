@@ -150,6 +150,12 @@ body::after {
 .bridge.is-stepping-forward .scene-backdrop {
   animation:sceneStepForward .82s cubic-bezier(.18,.72,.18,1) both;
 }
+.bridge.is-ship-critical.is-stepping-back .scene-backdrop {
+  animation:criticalSceneStepBack .86s cubic-bezier(.2,.78,.22,1) both;
+}
+.bridge.is-ship-critical.is-stepping-forward .scene-backdrop {
+  animation:criticalSceneStepForward .82s cubic-bezier(.18,.72,.18,1) both;
+}
 @keyframes sceneStepBack {
   0% {
     transform:scale(1.13) translate3d(0, 1.4vh, 0);
@@ -161,6 +167,19 @@ body::after {
   100% {
     transform:scale(1.012) translate3d(0,0,0);
     filter:contrast(1.02) saturate(.96);
+  }
+}
+@keyframes criticalSceneStepBack {
+  0% {
+    transform:scale(1.13) translate3d(0, 1.4vh, 0);
+    filter:blur(1.5px) brightness(.48) contrast(1.12) saturate(.68) sepia(.34) hue-rotate(-18deg);
+  }
+  42% {
+    filter:blur(.45px) brightness(.48) contrast(1.12) saturate(.68) sepia(.34) hue-rotate(-18deg);
+  }
+  100% {
+    transform:scale(1.012) translate3d(0,0,0);
+    filter:brightness(.48) contrast(1.12) saturate(.68) sepia(.34) hue-rotate(-18deg);
   }
 }
 @keyframes sceneStepForward {
@@ -175,6 +194,20 @@ body::after {
   100% {
     transform:scale(1.012) translate3d(0,0,0);
     filter:contrast(1.02) saturate(.96);
+  }
+}
+@keyframes criticalSceneStepForward {
+  0% {
+    transform:scale(.92) translate3d(0, -1.2vh, 0);
+    filter:blur(1.25px) brightness(.48) contrast(1.12) saturate(.68) sepia(.34) hue-rotate(-18deg);
+  }
+  54% {
+    transform:scale(1.045) translate3d(0, .35vh, 0);
+    filter:blur(.35px) brightness(.48) contrast(1.12) saturate(.68) sepia(.34) hue-rotate(-18deg);
+  }
+  100% {
+    transform:scale(1.012) translate3d(0,0,0);
+    filter:brightness(.48) contrast(1.12) saturate(.68) sepia(.34) hue-rotate(-18deg);
   }
 }
 
