@@ -2264,10 +2264,10 @@ body::after {
   position:absolute;
   left:50%;
   top:-36%;
-  width:min(48vw, 900px);
+  width:min(54vw, 1020px);
   aspect-ratio:1.72 / 1;
   background:url('assets/ship-launch-detourer-crop.png') center / contain no-repeat;
-  transform:translate(-50%, 0) scale(.8);
+  transform:translate(-50%, 0) scale(.88);
   filter:
     drop-shadow(0 18px 18px rgba(0,0,0,.52))
     drop-shadow(0 0 22px rgba(255,228,176,.08));
@@ -2706,22 +2706,22 @@ body::after {
 @keyframes landingShipDescent {
   0% {
     top:-36%;
-    transform:translate(-50%, 0) scale(.5) rotate(-2.4deg);
+    transform:translate(-50%, 0) scale(.56) rotate(-2.4deg);
     filter:
       drop-shadow(0 40px 34px rgba(0,0,0,.62))
       drop-shadow(0 0 12px rgba(255,228,176,.06));
   }
   38% {
     top:5%;
-    transform:translate(-50%, 0) scale(.7) rotate(1.2deg);
+    transform:translate(-50%, 0) scale(.78) rotate(1.2deg);
   }
   68% {
     top:18%;
-    transform:translate(-50%, 0) scale(.84) rotate(-.55deg);
+    transform:translate(-50%, 0) scale(.94) rotate(-.55deg);
   }
   100% {
     top:39.8%;
-    transform:translate(-50%, 0) scale(1.02) rotate(0deg);
+    transform:translate(-50%, 0) scale(1.14) rotate(0deg);
     filter:
       drop-shadow(0 14px 16px rgba(0,0,0,.42))
       drop-shadow(0 0 18px rgba(255,228,176,.1));
@@ -2730,14 +2730,14 @@ body::after {
 @keyframes landingShipHover {
   0%, 100% {
     top:39.8%;
-    transform:translate(-50%, 0) scale(1.02) rotate(-.1deg);
+    transform:translate(-50%, 0) scale(1.14) rotate(-.1deg);
     filter:
       drop-shadow(0 14px 16px rgba(0,0,0,.42))
       drop-shadow(0 0 18px rgba(255,228,176,.1));
   }
   50% {
     top:39.05%;
-    transform:translate(-50%, 0) scale(1.024) rotate(.12deg);
+    transform:translate(-50%, 0) scale(1.145) rotate(.12deg);
     filter:
       drop-shadow(0 18px 18px rgba(0,0,0,.46))
       drop-shadow(0 0 20px rgba(255,228,176,.12));
