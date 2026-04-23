@@ -2526,7 +2526,7 @@ function formatPlayerPackageName(value) {
     .replace(/[^a-zA-Z0-9 _-]/g, '')
     .trim()
     .replace(/\s+/g, ' ')
-    .slice(0, 16)
+    .slice(0, 10)
     .toUpperCase();
 
   return cleaned || 'COCO';
