@@ -610,29 +610,46 @@ body::after {
 }
 .message-indicator {
   position:absolute;
-  right:12px;
-  top:10px;
-  min-width:48px;
-  height:22px;
+  right:10px;
+  top:-34px;
+  min-width:66px;
+  height:34px;
   display:flex;
   align-items:center;
-  justify-content:flex-end;
-  gap:6px;
+  justify-content:center;
+  gap:7px;
   color:#bdf2ff;
-  border:0;
-  background:transparent;
-  padding:0;
+  border:1px solid rgba(117,216,255,.55);
+  background:
+    linear-gradient(rgba(0,18,26,.54), rgba(0,18,26,.54)),
+    rgba(0,0,0,.56);
+  padding:0 9px;
   cursor:none;
+  border-radius:3px 3px 0 0;
+  z-index:3;
+  box-shadow:
+    0 0 14px rgba(117,216,255,.12),
+    inset 0 0 14px rgba(117,216,255,.045);
   text-shadow:0 0 8px rgba(117,216,255,.22);
   transition:
     transform .14s ease,
     filter .14s ease,
-    opacity .14s ease;
+    opacity .14s ease,
+    border-color .14s ease,
+    background .14s ease,
+    box-shadow .14s ease;
 }
 .message-indicator:hover,
 .message-indicator:focus-visible {
-  transform:translateY(-1px);
+  transform:translateY(-2px);
   filter:drop-shadow(0 0 9px rgba(117,216,255,.32));
+  border-color:rgba(250,90,31,.72);
+  background:
+    linear-gradient(rgba(0,18,26,.64), rgba(0,18,26,.64)),
+    rgba(0,0,0,.72);
+  box-shadow:
+    0 0 18px rgba(250,90,31,.14),
+    inset 0 0 15px rgba(117,216,255,.055);
   outline:none;
 }
 .message-indicator:hover .mail-icon .mail-border,
@@ -651,8 +668,8 @@ body::after {
   text-shadow:0 0 10px rgba(117,216,255,.45);
 }
 .mail-icon {
-  width:25px;
-  height:19px;
+  width:29px;
+  height:22px;
   display:block;
   filter:drop-shadow(0 0 7px rgba(117,216,255,.2));
   shape-rendering:crispEdges;
@@ -675,7 +692,7 @@ body::after {
 }
 .message-count {
   color:var(--orange);
-  font-size:15px;
+  font-size:16px;
   line-height:1;
   letter-spacing:.04em;
   text-align:center;
