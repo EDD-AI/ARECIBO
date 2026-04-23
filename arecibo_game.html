@@ -4043,12 +4043,15 @@ function startLandingSequence() {
   let groundY = 0;
   const startTime = performance.now();
   const duration = 7600;
+  const questionOpenDelay = 3350;
+  window.setTimeout(() => {
+    if (landingSequence) landingSequence.classList.add('is-question-open');
+    renderLandingDecision();
+  }, questionOpenDelay);
   window.setTimeout(() => {
     if (landingSequence) {
       landingSequence.classList.add('is-hovering');
-      landingSequence.classList.add('is-question-open');
     }
-    renderLandingDecision();
   }, duration - 120);
 
   function resize() {
