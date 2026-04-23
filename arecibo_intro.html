@@ -24,12 +24,17 @@ body::after {
   content:'';
   position:fixed; inset:0;
   background:
+    radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.18) 76%, rgba(0,0,0,.58) 100%),
     repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.12) 3px,rgba(0,0,0,.12) 4px),
     repeating-linear-gradient(90deg,rgba(247,255,195,.018) 0 1px,transparent 1px 7px);
   pointer-events:none;
-  z-index:100;
+  z-index:120;
   mix-blend-mode:soft-light;
-  opacity:.72;
+  opacity:.82;
+  border-radius:clamp(26px, 4.8vw, 92px);
+  box-shadow:
+    inset 0 0 46px rgba(0,0,0,.86),
+    inset 0 0 124px rgba(0,0,0,.58);
 }
 
 /* Vignette */
@@ -37,10 +42,17 @@ body::before {
   content:'';
   position:fixed; inset:0;
   background:
-    radial-gradient(ellipse at center, transparent 48%, rgba(0,0,0,.32) 76%, rgba(0,0,0,.72) 100%),
-    linear-gradient(180deg,rgba(247,255,195,.035),transparent 26%,transparent 74%,rgba(0,0,0,.26));
+    radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,.28) 74%, rgba(0,0,0,.88) 100%),
+    linear-gradient(90deg, rgba(0,0,0,.64), transparent 18%, transparent 82%, rgba(0,0,0,.66)),
+    linear-gradient(180deg, rgba(0,0,0,.52), transparent 19%, transparent 77%, rgba(0,0,0,.58)),
+    linear-gradient(180deg,rgba(247,255,195,.025),transparent 26%,transparent 74%,rgba(0,0,0,.28));
   pointer-events:none;
-  z-index:99;
+  z-index:119;
+  border-radius:clamp(28px, 5vw, 96px);
+  box-shadow:
+    inset 0 0 70px rgba(0,0,0,.9),
+    inset 0 0 180px rgba(0,0,0,.58),
+    inset 0 0 0 2px rgba(247,255,195,.035);
 }
 
 .intro-shell {
