@@ -25,8 +25,8 @@
   --airlock-radius:clamp(18px, 2.2vh, 28px);
   --airlock-timer-left:calc(50vw - .16vh);
   --airlock-timer-top:32.1vh;
-  --airlock-timer-width:10vh;
-  --airlock-timer-height:2.8vh;
+  --airlock-timer-width:13.2vh;
+  --airlock-timer-height:3.8vh;
   --quarters-scene-image:url('assets/quartier-fenetre.png');
 }
 
@@ -39,8 +39,8 @@
     --airlock-radius:clamp(18px, 1.25vw, 28px);
     --airlock-timer-left:49.91vw;
     --airlock-timer-top:calc(50vh - 10vw);
-    --airlock-timer-width:5.6vw;
-    --airlock-timer-height:1.55vw;
+    --airlock-timer-width:7.1vw;
+    --airlock-timer-height:2.15vw;
   }
 
   if (engineStatus) {
@@ -499,11 +499,13 @@ body::after {
   align-items:center;
   justify-content:center;
   color:var(--orange);
-  font-size:clamp(12px, 1.42vh, 18px);
+  font-size:clamp(18px, 2.08vh, 28px);
   font-weight:700;
   line-height:1;
-  letter-spacing:.06em;
-  text-shadow:0 0 8px rgba(250,90,31,.42);
+  letter-spacing:.07em;
+  text-shadow:
+    0 0 8px rgba(250,90,31,.34),
+    0 0 18px rgba(250,90,31,.24);
   pointer-events:none;
   z-index:10;
   transition:opacity .3s ease;
