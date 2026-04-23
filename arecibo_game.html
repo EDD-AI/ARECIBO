@@ -2308,7 +2308,7 @@ body::after {
 }
 .landing-console-shell {
   position:relative;
-  width:min(88vw, 1260px);
+  width:min(82vw, 1140px);
   aspect-ratio:1678 / 944;
   max-height:82vh;
   filter:drop-shadow(0 24px 46px rgba(0,0,0,.46));
@@ -2321,11 +2321,11 @@ body::after {
 }
 .landing-console-screen {
   position:absolute;
-  left:10.9%;
-  top:17.1%;
-  width:54.6%;
-  height:56.4%;
-  border-radius:clamp(18px, 2vw, 28px);
+  left:20.7%;
+  top:24.3%;
+  width:46.2%;
+  height:42.6%;
+  border-radius:clamp(16px, 1.5vw, 24px);
   overflow:hidden;
   background:
     radial-gradient(circle at 50% 42%, rgba(59,54,18,.16), transparent 54%),
@@ -2360,34 +2360,34 @@ body::after {
   z-index:1;
   width:100%;
   height:100%;
-  padding:clamp(18px, 2vw, 26px) clamp(18px, 2vw, 28px) clamp(18px, 2vw, 30px);
+  padding:clamp(12px, 1.35vw, 20px) clamp(14px, 1.55vw, 24px) clamp(12px, 1.45vw, 20px);
   display:flex;
   flex-direction:column;
 }
 .landing-decision-alert {
-  min-height:clamp(54px, 6.4vw, 94px);
+  min-height:clamp(42px, 4.8vw, 72px);
   color:var(--orange);
-  font-size:clamp(18px, 2.05vw, 34px);
+  font-size:clamp(14px, 1.38vw, 24px);
   line-height:1.08;
   font-weight:700;
   text-transform:uppercase;
   text-shadow:0 0 12px rgba(250,90,31,.18);
 }
 .landing-decision-panel {
-  margin-top:clamp(14px, 1.8vh, 24px);
-  padding-top:6px;
+  margin-top:clamp(8px, 1vh, 14px);
+  padding-top:2px;
 }
 .landing-decision-head {
-  min-height:clamp(56px, 5.2vw, 78px);
+  min-height:clamp(38px, 3.6vw, 54px);
   display:flex;
   align-items:center;
   justify-content:flex-start;
-  padding:14px 0 14px;
+  padding:10px 0 10px;
   border-top:1px solid rgba(247,255,195,.34);
   border-bottom:1px solid rgba(247,255,195,.34);
   text-align:left;
   color:var(--cream);
-  font-size:clamp(18px, 1.75vw, 30px);
+  font-size:clamp(14px, 1.18vw, 21px);
   text-transform:uppercase;
   letter-spacing:.03em;
 }
@@ -2411,10 +2411,10 @@ body::after {
   animation:landingCursorBlink .9s steps(1, end) infinite;
 }
 .landing-decision-body {
-  padding:20px 0 0;
+  padding:12px 0 0;
   display:flex;
   flex-direction:column;
-  gap:12px;
+  gap:8px;
   opacity:0;
   transform:translateY(8px);
   transition:opacity .28s ease, transform .28s ease;
@@ -2426,12 +2426,12 @@ body::after {
   pointer-events:auto;
 }
 .landing-decision-module {
-  margin-top:14px;
+  margin-top:10px;
   border-top:1px solid rgba(247,255,195,.18);
-  padding-top:14px;
+  padding-top:10px;
   display:none;
   flex-direction:column;
-  gap:10px;
+  gap:8px;
 }
 .landing-decision.is-module-open .landing-decision-module {
   display:flex;
@@ -2484,18 +2484,18 @@ body::after {
   display:grid;
   grid-template-columns:minmax(0, 1fr) auto;
   align-items:center;
-  gap:14px;
-  min-height:54px;
+  gap:10px;
+  min-height:42px;
 }
 .decision-btn {
   width:100%;
-  min-height:54px;
-  padding:10px 14px;
+  min-height:42px;
+  padding:8px 12px;
   border:1px solid rgba(247,255,195,.38);
   background:rgba(3,4,2,.44);
   color:var(--cream);
   font:inherit;
-  font-size:clamp(16px, 1.45vw, 24px);
+  font-size:clamp(12px, 1vw, 18px);
   line-height:1.05;
   letter-spacing:.015em;
   text-transform:uppercase;
@@ -2524,24 +2524,24 @@ body::after {
   align-items:center;
   justify-content:flex-end;
   flex-wrap:wrap;
-  gap:8px;
-  min-width:70px;
-  max-width:188px;
+  gap:6px;
+  min-width:58px;
+  max-width:132px;
 }
 .decision-votes.is-empty {
   opacity:.14;
 }
 .decision-vote {
-  min-width:42px;
-  height:42px;
+  min-width:32px;
+  height:32px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  padding:0 8px;
+  padding:0 6px;
   border:1px solid rgba(250,90,31,.92);
   background:rgba(15,7,3,.84);
   color:var(--orange);
-  font-size:clamp(15px, 1.2vw, 22px);
+  font-size:clamp(11px, .82vw, 16px);
   line-height:1;
 }
 .landing-sequence.is-question-open .landing-console-shell {
@@ -2578,16 +2578,16 @@ body::after {
 }
 @media (max-width: 900px) {
   .landing-console-shell {
-    width:min(96vw, 960px);
+    width:min(96vw, 920px);
   }
   .landing-console-screen {
-    left:8.7%;
-    top:16.1%;
-    width:58.8%;
-    height:58.8%;
+    left:18.8%;
+    top:23%;
+    width:48.6%;
+    height:44.4%;
   }
   .landing-console-copy {
-    padding:16px 16px 18px;
+    padding:10px 12px 12px;
   }
   .decision-row {
     grid-template-columns:1fr;
