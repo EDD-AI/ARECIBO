@@ -46,17 +46,18 @@ body {
 
 .stage {
   position:relative;
-  width:min(88vw, calc(92vh * 0.563));
+  width:min(94vw, calc(98vh * 0.563));
   aspect-ratio:941 / 1672;
+  overflow:hidden;
 }
 
 .console-screen {
   position:absolute;
-  left:27.7%;
-  top:8.2%;
-  width:45.9%;
-  height:58.7%;
-  border-radius:26px;
+  left:29.4%;
+  top:9.15%;
+  width:41.7%;
+  height:54.9%;
+  border-radius:22px;
   overflow:hidden;
   background:
     linear-gradient(180deg, rgba(255,255,255,.035), transparent 14%, rgba(0,0,0,.24) 100%),
@@ -80,7 +81,7 @@ body {
   position:absolute;
   inset:0;
   pointer-events:none;
-  padding:12px 11px 14px;
+  padding:10px 9px 11px;
   display:flex;
   flex-direction:column;
   justify-content:space-between;
@@ -94,7 +95,7 @@ body {
 }
 
 .hud-label {
-  font-size:12px;
+  font-size:10px;
   line-height:1.1;
   letter-spacing:.06em;
   text-transform:uppercase;
@@ -105,7 +106,7 @@ body {
 .hud-label strong {
   display:block;
   color:var(--orange);
-  font-size:14px;
+  font-size:12px;
 }
 
 .hud-status {
@@ -121,7 +122,7 @@ body {
 
 .controls-copy {
   max-width:62%;
-  font-size:11px;
+  font-size:9px;
   line-height:1.2;
   text-transform:uppercase;
   color:rgba(244,239,198,.5);
@@ -130,18 +131,18 @@ body {
 .wave-tag {
   min-width:70px;
   text-align:right;
-  font-size:12px;
+  font-size:10px;
   color:var(--cream-soft);
 }
 
 .wave-tag strong {
   color:var(--orange);
-  font-size:15px;
+  font-size:13px;
 }
 
 .message {
   position:absolute;
-  inset:15% 9% 17%;
+  inset:15% 8% 15%;
   border:1px solid rgba(244,239,198,.38);
   background:rgba(0,0,0,.84);
   display:flex;
@@ -162,15 +163,15 @@ body {
 }
 
 .message-title {
-  font-size:clamp(20px, 1.35vw, 28px);
+  font-size:clamp(16px, 1.1vw, 22px);
   line-height:1;
   text-transform:uppercase;
   color:var(--orange);
 }
 
 .message-copy {
-  font-size:14px;
-  line-height:1.45;
+  font-size:12px;
+  line-height:1.35;
   color:var(--cream);
 }
 
@@ -190,13 +191,13 @@ body {
 }
 
 .message-btn {
-  min-width:128px;
-  min-height:42px;
+  min-width:102px;
+  min-height:36px;
   border:1px solid rgba(244,239,198,.42);
   background:rgba(0,0,0,.84);
   color:var(--cream);
   font:inherit;
-  font-size:16px;
+  font-size:13px;
   text-transform:uppercase;
   cursor:pointer;
 }
@@ -250,16 +251,20 @@ body {
   }
 
   .console-screen {
-    border-radius:20px;
+    left:29%;
+    top:9.2%;
+    width:42.2%;
+    height:55%;
+    border-radius:18px;
   }
 
   .message {
     inset:13% 7% 16%;
   }
 
-  .hud-label { font-size:11px; }
-  .hud-label strong { font-size:13px; }
-  .controls-copy { font-size:10px; }
+  .hud-label { font-size:9px; }
+  .hud-label strong { font-size:11px; }
+  .controls-copy { font-size:8px; }
 }
 </style>
 </head>
@@ -339,6 +344,10 @@ body {
     brightness:0.2 + Math.random() * 0.8
   }));
   const sparks = [];
+  const pointerControl = {
+    dragging:false,
+    pointerId:null
+  };
 
   let gameState = 'idle';
   let spawned = 0;
@@ -352,6 +361,21 @@ body {
   function writeState(state) {
     localStorage.setItem(stateKey, state);
     localStorage.setItem(scoreKey, JSON.stringify({ destroyed, total:totalAsteroids, updatedAt:Date.now() }));
+  }
+
+  function clampShipX(value) {
+    return Math.max(16, Math.min(logicalWidth - 16, value));
+  }
+
+  function getCanvasPoint(event) {
+    const rect = canvas.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * logicalWidth;
+    const y = ((event.clientY - rect.top) / rect.height) * logicalHeight;
+    return { x, y };
+  }
+
+  function isPointerOnShip(point) {
+    return Math.abs(point.x - ship.x) <= 16 && Math.abs(point.y - ship.y) <= 18;
   }
 
   function showMessage({ title, copy, primaryLabel, secondaryLabel = 'retour', onPrimary, onSecondary, loss = false }) {
@@ -495,7 +519,7 @@ body {
 
     if (keys.left && !keys.right) ship.x -= ship.speed * dt;
     if (keys.right && !keys.left) ship.x += ship.speed * dt;
-    ship.x = Math.max(16, Math.min(logicalWidth - 16, ship.x));
+    ship.x = clampShipX(ship.x);
 
     fireTimer -= dt;
     if (fireTimer <= 0) {
@@ -664,6 +688,42 @@ body {
     button.addEventListener('pointercancel', release);
   }
 
+  canvas.addEventListener('pointerdown', event => {
+    if (gameState !== 'playing') return;
+    const point = getCanvasPoint(event);
+    if (!isPointerOnShip(point)) return;
+    pointerControl.dragging = true;
+    pointerControl.pointerId = event.pointerId;
+    keys.left = false;
+    keys.right = false;
+    ship.x = clampShipX(point.x);
+    canvas.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+
+  canvas.addEventListener('pointermove', event => {
+    if (!pointerControl.dragging || event.pointerId !== pointerControl.pointerId) return;
+    const point = getCanvasPoint(event);
+    ship.x = clampShipX(point.x);
+    event.preventDefault();
+  });
+
+  function stopPointerDrag(event) {
+    if (!pointerControl.dragging) return;
+    if (event && pointerControl.pointerId !== null && event.pointerId !== pointerControl.pointerId) return;
+    if (event && canvas.hasPointerCapture(event.pointerId)) {
+      canvas.releasePointerCapture(event.pointerId);
+    }
+    pointerControl.dragging = false;
+    pointerControl.pointerId = null;
+  }
+
+  canvas.addEventListener('pointerup', stopPointerDrag);
+  canvas.addEventListener('pointercancel', stopPointerDrag);
+  canvas.addEventListener('pointerleave', event => {
+    if (pointerControl.dragging && event.pointerId === pointerControl.pointerId) return;
+  });
+
   window.addEventListener('keydown', event => {
     if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') {
       keys.left = true;
@@ -682,6 +742,12 @@ body {
   window.addEventListener('keyup', event => {
     if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') keys.left = false;
     if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') keys.right = false;
+  });
+
+  window.addEventListener('blur', () => {
+    stopPointerDrag();
+    keys.left = false;
+    keys.right = false;
   });
 
   setMoveButton(moveLeftBtn, 'left');
