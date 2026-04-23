@@ -2398,11 +2398,14 @@ body::after {
   z-index:1;
   width:100%;
   height:100%;
+  display:flex;
+  justify-content:center;
   padding:clamp(6px, .72vw, 10px) clamp(9px, .86vw, 13px) clamp(7px, .78vw, 10px);
   overflow:hidden;
+  box-sizing:border-box;
 }
 .landing-console-scroll {
-  width:100%;
+  width:min(100%, calc(100% - clamp(14px, 1.4vw, 22px)));
   height:100%;
   display:flex;
   flex-direction:column;
@@ -2411,6 +2414,8 @@ body::after {
   scrollbar-width:none;
   scroll-behavior:smooth;
   padding-right:0;
+  margin:0 auto;
+  box-sizing:border-box;
 }
 .landing-console-scroll::-webkit-scrollbar {
   width:0;
