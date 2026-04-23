@@ -1671,6 +1671,13 @@ document.querySelectorAll('.menu-item').forEach(item => {
   const soundToggle = document.getElementById('sound-toggle');
   if (!soundToggle) return;
   const key = 'areciboAudioMuted';
+  const menuTracks = [
+    'assets/audio/music/arecibo-menu-main.ogg',
+    'assets/audio/music/arecibo-menu-main.mp3'
+  ];
+  const menuMusic = new Audio();
+  let unlocked = false;
+  let trackIndex = 0;
 
   function readMuted() {
     try { return localStorage.getItem(key) === 'true'; }
@@ -1682,6 +1689,41 @@ document.querySelectorAll('.menu-item').forEach(item => {
     catch (err) {}
   }
 
+  function readVolume(setting, fallback) {
+    try {
+      const value = Number(localStorage.getItem(`areciboAudioVolume:${setting}`));
+      return Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : fallback;
+    } catch (err) {
+      return fallback;
+    }
+  }
+
+  function syncMenuMusicVolume() {
+    const master = readVolume('master', 80) / 100;
+    const music = readVolume('music', 60) / 100;
+    menuMusic.volume = Math.max(0, Math.min(1, master * music));
+  }
+
+  function loadTrack(index) {
+    if (!menuTracks[index]) return false;
+    trackIndex = index;
+    menuMusic.src = menuTracks[index];
+    menuMusic.load();
+    return true;
+  }
+
+  function tryStartMenuMusic() {
+    if (readMuted()) {
+      menuMusic.pause();
+      return;
+    }
+
+    syncMenuMusicVolume();
+    if (!menuMusic.src && !loadTrack(0)) return;
+    const playPromise = menuMusic.play();
+    if (playPromise && typeof playPromise.catch === 'function') playPromise.catch(() => {});
+  }
+
   function applyMuted(isMuted) {
     soundToggle.classList.toggle('is-muted', isMuted);
     soundToggle.setAttribute('aria-pressed', String(isMuted));
@@ -1691,11 +1733,51 @@ document.querySelectorAll('.menu-item').forEach(item => {
     window.dispatchEvent(new CustomEvent('arecibo-audio-muted-change', { detail: { muted: isMuted } }));
   }
 
+  menuMusic.preload = 'none';
+  menuMusic.loop = true;
+  menuMusic.addEventListener('error', () => {
+    if (trackIndex + 1 < menuTracks.length) {
+      loadTrack(trackIndex + 1);
+      if (unlocked && !readMuted()) tryStartMenuMusic();
+    }
+  });
+
+  function unlockAudio() {
+    if (unlocked) return;
+    unlocked = true;
+    tryStartMenuMusic();
+  }
+
+  document.addEventListener('pointerdown', unlockAudio, { once:true });
+  document.addEventListener('keydown', unlockAudio, { once:true });
+  window.addEventListener('arecibo-audio-settings-change', syncMenuMusicVolume);
+  window.addEventListener('arecibo-audio-muted-change', event => {
+    if (event.detail && event.detail.muted) menuMusic.pause();
+    else if (unlocked) tryStartMenuMusic();
+  });
+
   applyMuted(readMuted());
+  syncMenuMusicVolume();
   soundToggle.addEventListener('click', () => {
     const muted = !soundToggle.classList.contains('is-muted');
     writeMuted(muted);
     applyMuted(muted);
+    if (!muted && unlocked) tryStartMenuMusic();
+  });
+})();
+
+(function() {
+  document.querySelectorAll('input[type="range"][data-audio-setting]').forEach(input => {
+    const fallback = Number(input.dataset.default || input.value || 0);
+    let value = fallback;
+
+    try {
+      const stored = Number(localStorage.getItem(`areciboAudioVolume:${input.dataset.audioSetting}`));
+      if (Number.isFinite(stored)) value = Math.max(0, Math.min(100, stored));
+    } catch (err) {}
+
+    input.value = value;
+    updateSlider(input, input.dataset.valueId);
   });
 })();
 
@@ -1788,7 +1870,20 @@ function closeSettings() {
 }
 
 function updateSlider(el, valId) {
-  document.getElementById(valId).textContent = el.value + '%';
+  const value = Math.max(0, Math.min(100, Number(el.value) || 0));
+  const targetId = valId || el.dataset.valueId;
+  el.value = value;
+  if (targetId) document.getElementById(targetId).textContent = value + '%';
+
+  const setting = el.dataset.audioSetting;
+  if (!setting) return;
+
+  try { localStorage.setItem(`areciboAudioVolume:${setting}`, String(value)); }
+  catch (err) {}
+
+  window.dispatchEvent(new CustomEvent('arecibo-audio-settings-change', {
+    detail: { setting, value }
+  }));
 }
 
 function selectLang(btn) {
@@ -2493,17 +2588,17 @@ function toggleSwitch(el) {
         <div class="sp-section-label">Son</div>
         <div class="sp-slider-row">
           <span class="sp-slider-label">Volume général</span>
-          <input type="range" min="0" max="100" value="80" oninput="updateSlider(this,'sv1')">
+          <input type="range" min="0" max="100" value="80" data-audio-setting="master" data-default="80" data-value-id="sv1" oninput="updateSlider(this,'sv1')">
           <span class="sp-val" id="sv1">80%</span>
         </div>
         <div class="sp-slider-row">
           <span class="sp-slider-label">Musique</span>
-          <input type="range" min="0" max="100" value="60" oninput="updateSlider(this,'sv2')">
+          <input type="range" min="0" max="100" value="60" data-audio-setting="music" data-default="60" data-value-id="sv2" oninput="updateSlider(this,'sv2')">
           <span class="sp-val" id="sv2">60%</span>
         </div>
         <div class="sp-slider-row">
           <span class="sp-slider-label">Effets sonores</span>
-          <input type="range" min="0" max="100" value="60" oninput="updateSlider(this,'sv3')">
+          <input type="range" min="0" max="100" value="60" data-audio-setting="effects" data-default="60" data-value-id="sv3" oninput="updateSlider(this,'sv3')">
           <span class="sp-val" id="sv3">60%</span>
         </div>
       </div>

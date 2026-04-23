@@ -1,0 +1,94 @@
+{
+  "music": [
+    {
+      "id": "menu-main",
+      "label": "Main menu theme",
+      "files": [
+        "assets/audio/music/arecibo-menu-main.ogg",
+        "assets/audio/music/arecibo-menu-main.mp3"
+      ],
+      "loop": true,
+      "defaultVolume": 0.6
+    },
+    {
+      "id": "intro-boot",
+      "label": "Intro boot sequence",
+      "files": [
+        "assets/audio/music/arecibo-intro-boot.ogg"
+      ],
+      "loop": false,
+      "defaultVolume": 0.54
+    }
+  ],
+  "ambience": [
+    {
+      "id": "sas-hum",
+      "label": "Sas room tone",
+      "files": [
+        "assets/audio/ambience/sas-hum-loop.ogg"
+      ],
+      "loop": true,
+      "defaultVolume": 0.42
+    },
+    {
+      "id": "quarters-roomtone",
+      "label": "Quartiers room tone",
+      "files": [
+        "assets/audio/ambience/quartiers-roomtone-loop.ogg"
+      ],
+      "loop": true,
+      "defaultVolume": 0.34
+    },
+    {
+      "id": "planet-hover",
+      "label": "Landing hover dust ambience",
+      "files": [
+        "assets/audio/ambience/planet-hover-dust-loop.ogg"
+      ],
+      "loop": true,
+      "defaultVolume": 0.46
+    }
+  ],
+  "effects": [
+    {
+      "id": "ui-hover",
+      "label": "UI hover",
+      "files": [
+        "assets/audio/effects/ui-hover.ogg"
+      ],
+      "defaultVolume": 0.52
+    },
+    {
+      "id": "ui-confirm",
+      "label": "UI confirm",
+      "files": [
+        "assets/audio/effects/ui-confirm.ogg"
+      ],
+      "defaultVolume": 0.6
+    },
+    {
+      "id": "ui-warning",
+      "label": "UI warning",
+      "files": [
+        "assets/audio/effects/ui-warning.ogg"
+      ],
+      "defaultVolume": 0.68
+    },
+    {
+      "id": "airlock-shield",
+      "label": "Airlock shield loop",
+      "files": [
+        "assets/audio/effects/airlock-shield.ogg"
+      ],
+      "defaultVolume": 0.45
+    },
+    {
+      "id": "landing-thrusters",
+      "label": "Landing thrusters",
+      "files": [
+        "assets/audio/effects/landing-thrusters.ogg"
+      ],
+      "defaultVolume": 0.66
+    }
+  ]
+}
