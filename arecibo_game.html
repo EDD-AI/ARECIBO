@@ -799,6 +799,10 @@ body::after {
     0 0 22px rgba(117,216,255,.18),
     inset 0 0 26px rgba(117,216,255,.055);
 }
+.personal-window.is-detached {
+  position:fixed;
+  z-index:980;
+}
 .personal-title {
   height:42px;
   display:flex;
@@ -3066,6 +3070,8 @@ const roomState = document.getElementById('room-state');
 const mapMessage = document.getElementById('map-message');
 const personalWindow = document.getElementById('personal-window');
 const personalTitle = personalWindow ? personalWindow.querySelector('.personal-title') : null;
+const personalWindowHomeParent = personalWindow ? personalWindow.parentNode : null;
+const personalWindowHomeNextSibling = personalWindow ? personalWindow.nextSibling : null;
 const messageIndicator = personalWindow ? personalWindow.querySelector('.message-indicator') : null;
 const messagesTitle = document.getElementById('messages-title');
 const shipScene = document.getElementById('ship-scene');
@@ -4220,8 +4226,30 @@ function updateReadyState() {
   renderCrew();
 }
 
+function setPersonalPackageDetached(detached) {
+  if (!personalWindow || !personalWindowHomeParent) return;
+
+  if (detached) {
+    if (personalWindow.parentNode !== document.body) {
+      document.body.appendChild(personalWindow);
+    }
+    personalWindow.classList.add('is-detached');
+    return;
+  }
+
+  if (personalWindow.parentNode !== personalWindowHomeParent) {
+    if (personalWindowHomeNextSibling && personalWindowHomeNextSibling.parentNode === personalWindowHomeParent) {
+      personalWindowHomeParent.insertBefore(personalWindow, personalWindowHomeNextSibling);
+    } else {
+      personalWindowHomeParent.appendChild(personalWindow);
+    }
+  }
+  personalWindow.classList.remove('is-detached');
+}
+
 function setExpeditionActive(active) {
   if (shipScene) shipScene.classList.toggle('is-expedition-active', active);
+  setPersonalPackageDetached(active);
   if (!personalHudDock) return;
 
   personalHudDock.setAttribute('aria-hidden', String(active));
