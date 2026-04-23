@@ -445,6 +445,34 @@ body::after {
     inset 0 0 24px rgba(247,255,195,.025);
 }
 
+.hud-window {
+  overflow:visible;
+}
+.hud-window.is-collapsed {
+  width:72px;
+  min-width:72px;
+  height:62px;
+  overflow:hidden;
+  cursor:none;
+  background:
+    linear-gradient(rgba(0,0,0,.34), rgba(0,0,0,.34)),
+    rgba(0,0,0,.26);
+  box-shadow:
+    0 0 18px rgba(247,255,195,.1),
+    inset 0 0 18px rgba(247,255,195,.035);
+}
+.hud-window.is-collapsed:hover {
+  transform:translate3d(0, -1px, 0);
+  border-color:rgba(250,90,31,.72);
+  box-shadow:
+    0 0 20px rgba(250,90,31,.14),
+    inset 0 0 18px rgba(247,255,195,.05);
+}
+.hud-window.is-collapsed .ship-section,
+.hud-window.is-collapsed .map-body {
+  display:none;
+}
+
 .personal-window {
   position:absolute;
   left:4.8vw;
@@ -886,12 +914,25 @@ body::after {
     0 0 16px rgba(247,255,195,.09),
     inset 0 0 24px rgba(247,255,195,.025);
 }
+.ship-window.hud-window.is-collapsed:hover,
+.ship-map-window.hud-window.is-collapsed:hover {
+  transform:translate3d(0, -1px, 0);
+  border-color:rgba(250,90,31,.72);
+  background:
+    linear-gradient(rgba(0,0,0,.34), rgba(0,0,0,.34)),
+    rgba(0,0,0,.26);
+  box-shadow:
+    0 0 20px rgba(250,90,31,.14),
+    inset 0 0 18px rgba(247,255,195,.05);
+}
 
 .ship-title {
   height:50px;
   display:flex;
   align-items:center;
-  padding:0 24px;
+  justify-content:space-between;
+  gap:12px;
+  padding:0 14px 0 24px;
   border-bottom:1px solid var(--line);
   font-size:clamp(18px, 1.38vw, 27px);
   line-height:1;
@@ -899,6 +940,113 @@ body::after {
   text-transform:uppercase;
   white-space:nowrap;
   overflow:hidden;
+}
+.ship-title-label {
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.hud-toggle {
+  width:36px;
+  height:34px;
+  flex:0 0 auto;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(247,255,195,.32);
+  background:rgba(0,0,0,.18);
+  color:rgba(247,255,195,.72);
+  font-family:'Pixelify Sans', monospace;
+  cursor:none;
+  border-radius:3px;
+  transition:
+    color .14s ease,
+    border-color .14s ease,
+    background .14s ease,
+    box-shadow .14s ease,
+    transform .14s ease;
+}
+.hud-toggle:hover,
+.hud-toggle:focus-visible {
+  color:var(--orange);
+  border-color:var(--orange);
+  background:rgba(250,90,31,.08);
+  box-shadow:0 0 12px rgba(250,90,31,.16);
+  outline:none;
+}
+.hud-icon {
+  width:19px;
+  height:19px;
+  position:relative;
+  display:block;
+}
+.hud-icon::before,
+.hud-icon::after {
+  content:'';
+  position:absolute;
+  inset:0;
+}
+.hud-icon.sys::before {
+  border:2px solid currentColor;
+  box-shadow:inset 0 0 0 3px rgba(247,255,195,.08);
+}
+.hud-icon.sys::after {
+  left:4px;
+  top:4px;
+  width:3px;
+  height:3px;
+  background:currentColor;
+  box-shadow:
+    8px 0 0 currentColor,
+    0 8px 0 currentColor,
+    8px 8px 0 currentColor;
+}
+.hud-icon.map::before {
+  border:2px solid currentColor;
+  clip-path:polygon(48% 0, 64% 15%, 64% 34%, 85% 34%, 100% 50%, 85% 66%, 64% 66%, 64% 100%, 36% 100%, 36% 66%, 15% 66%, 0 50%, 15% 34%, 36% 34%, 36% 15%);
+}
+.hud-icon.map::after {
+  left:8px;
+  top:8px;
+  width:3px;
+  height:3px;
+  background:currentColor;
+  box-shadow:0 0 8px currentColor;
+}
+.hud-mini {
+  display:none;
+  margin-top:4px;
+  font-size:13px;
+  line-height:1;
+  letter-spacing:.08em;
+}
+.hud-window.is-collapsed .ship-title {
+  height:100%;
+  justify-content:center;
+  padding:0;
+  border-bottom:0;
+}
+.hud-window.is-collapsed .ship-title-label {
+  display:none;
+}
+.hud-window.is-collapsed .hud-toggle {
+  width:100%;
+  height:100%;
+  border:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  background:transparent;
+  color:rgba(247,255,195,.82);
+}
+.hud-window.is-collapsed .hud-toggle:hover {
+  background:rgba(250,90,31,.06);
+}
+.hud-window.is-collapsed .hud-icon {
+  width:23px;
+  height:23px;
+}
+.hud-window.is-collapsed .hud-mini {
+  display:block;
 }
 
 .map-body {
@@ -1622,6 +1770,11 @@ body::after {
     width:90vw;
     min-width:0;
   }
+  .hud-window.is-collapsed {
+    width:68px;
+    min-width:68px;
+    height:58px;
+  }
   .deck-map { height:260px; }
   .extraction-console {
     top:auto;
@@ -1696,8 +1849,14 @@ body::after {
     </div>
   </section>
 
-  <section class="ship-window" aria-label="Informations du vaisseau">
-    <header class="ship-title">&#62;SYSTEME VAISSEAU\</header>
+  <section class="hud-window ship-window" data-hud-window="system" aria-label="Informations du vaisseau">
+    <header class="ship-title">
+      <span class="ship-title-label">&#62;SYSTEME VAISSEAU\</span>
+      <button class="hud-toggle" type="button" data-hud-toggle="system" aria-label="Reduire systeme vaisseau" title="Reduire systeme vaisseau">
+        <span class="hud-icon sys" aria-hidden="true"></span>
+        <span class="hud-mini">SYS</span>
+      </button>
+    </header>
 
     <div class="ship-section">
       <div class="stat-line">
@@ -1735,8 +1894,14 @@ body::after {
     </div>
   </section>
 
-  <section class="ship-map-window" aria-label="Plan du vaisseau">
-    <header class="ship-title">&#62;PLAN VAISSEAU\</header>
+  <section class="hud-window ship-map-window" data-hud-window="map" aria-label="Plan du vaisseau">
+    <header class="ship-title">
+      <span class="ship-title-label">&#62;PLAN VAISSEAU\</span>
+      <button class="hud-toggle" type="button" data-hud-toggle="map" aria-label="Reduire plan du vaisseau" title="Reduire plan du vaisseau">
+        <span class="hud-icon map" aria-hidden="true"></span>
+        <span class="hud-mini">MAP</span>
+      </button>
+    </header>
     <div class="map-body">
       <div class="map-status">
         <div>
@@ -2504,6 +2669,62 @@ function setShipScene(room) {
   }
 }
 
+function initHudCollapse() {
+  const windows = Array.from(document.querySelectorAll('[data-hud-window]'));
+  const storageKey = 'areciboCollapsedHud';
+  let saved = {};
+
+  try {
+    saved = JSON.parse(localStorage.getItem(storageKey) || '{}') || {};
+  } catch (err) {
+    saved = {};
+  }
+
+  function persist() {
+    try { localStorage.setItem(storageKey, JSON.stringify(saved)); }
+    catch (err) {}
+  }
+
+  function setCollapsed(panel, collapsed) {
+    const id = panel.dataset.hudWindow;
+    const toggle = panel.querySelector('[data-hud-toggle]');
+    const isMap = id === 'map';
+    panel.classList.toggle('is-collapsed', collapsed);
+    panel.setAttribute('aria-expanded', String(!collapsed));
+
+    if (toggle) {
+      const label = collapsed
+        ? `Ouvrir ${isMap ? 'la carte du vaisseau' : 'le systeme vaisseau'}`
+        : `Reduire ${isMap ? 'le plan du vaisseau' : 'systeme vaisseau'}`;
+      toggle.setAttribute('aria-label', label);
+      toggle.title = label;
+    }
+
+    saved[id] = collapsed;
+    persist();
+  }
+
+  windows.forEach(panel => {
+    const id = panel.dataset.hudWindow;
+    const toggle = panel.querySelector('[data-hud-toggle]');
+    setCollapsed(panel, Boolean(saved[id]));
+
+    if (toggle) {
+      toggle.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        setCollapsed(panel, !panel.classList.contains('is-collapsed'));
+      });
+    }
+
+    panel.addEventListener('click', event => {
+      if (!panel.classList.contains('is-collapsed')) return;
+      event.preventDefault();
+      setCollapsed(panel, false);
+    });
+  });
+}
+
 function initShipMap() {
   const roomNodes = Array.from(document.querySelectorAll('.room-node'));
   const roomToHash = room => room.toLowerCase().replace(/\s+/g, '-');
@@ -2748,6 +2969,7 @@ updateDistance();
 startPortholeSpace();
 startAmbientDust();
 startRoomFly();
+initHudCollapse();
 initShipMap();
 initDraggablePersonalWindow();
 </script>
