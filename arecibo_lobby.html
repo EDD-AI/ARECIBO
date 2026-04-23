@@ -184,6 +184,41 @@ body::after {
   display:block;
   image-rendering:pixelated;
 }
+.session-code-input {
+  position:absolute;
+  left:8.5%;
+  top:43.4%;
+  width:74.6%;
+  height:56.1%;
+  z-index:2;
+  border:1px solid rgba(247,255,195,.92);
+  background:#000;
+  color:var(--cream);
+  font-family:var(--f-title);
+  font-weight:900;
+  font-size:clamp(35px, 4.2vw, 62px);
+  line-height:1;
+  letter-spacing:.04em;
+  text-align:center;
+  text-transform:uppercase;
+  outline:none;
+  cursor:none;
+  box-shadow:inset 0 0 18px rgba(247,255,195,.035);
+}
+.session-code-input::placeholder {
+  color:rgba(247,255,195,.28);
+}
+.session-code-input:focus {
+  border-color:var(--cream);
+  box-shadow:
+    inset 0 0 22px rgba(247,255,195,.05),
+    0 0 14px rgba(247,255,195,.1);
+}
+.session-block.is-invalid .session-code-input {
+  border-color:var(--orange);
+  color:var(--orange);
+  animation:codeReject .24s steps(2, end) 2;
+}
 
 .validation-button {
   position:absolute;
@@ -243,6 +278,12 @@ body::after {
   pointer-events:all;
 }
 
+@keyframes codeReject {
+  0%, 100% { transform:translateX(0); }
+  25% { transform:translateX(-3px); }
+  75% { transform:translateX(3px); }
+}
+
 #arecibo-settings-tab {
   left:6.5vw !important;
   bottom:4.8vh !important;
@@ -268,6 +309,9 @@ body::after {
     top:38%;
     width:36%;
     min-width:0;
+  }
+  .session-code-input {
+    font-size:clamp(30px, 9vw, 54px);
   }
   .validation-button {
     left:14%;
@@ -296,11 +340,12 @@ body::after {
     <button class="back-btn" type="button" onclick="goMenu()" aria-label="Retour au menu">x</button>
     <img class="multi-logo" src="assets/multiplayer/logo-arecibo.svg" alt="ARECIBO">
 
-    <div class="session-block" aria-label="Code de session de jeu a rejoindre JX3T">
+    <div class="session-block" id="session-block" aria-label="Code de session de jeu a rejoindre">
       <img class="session-code-art" src="assets/multiplayer/session-code.svg" alt="Code de session JX3T">
+      <input class="session-code-input" id="session-code-input" type="text" maxlength="4" inputmode="latin" autocomplete="off" spellcheck="false" placeholder="JX3T" aria-label="Entrer le code de session">
     </div>
 
-    <button class="validation-button" type="button" aria-label="Valider le code de session">
+    <button class="validation-button" type="button" onclick="joinSession()" aria-label="Valider le code de session">
       <img src="assets/multiplayer/validation.svg" alt="validation">
     </button>
 
@@ -316,6 +361,53 @@ document.addEventListener('mousemove', event => {
   cursor.style.left = event.clientX + 'px';
   cursor.style.top = event.clientY + 'px';
 });
+
+const sessionInput = document.getElementById('session-code-input');
+const sessionBlock = document.getElementById('session-block');
+
+function sanitizeSessionCode(value) {
+  return value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+}
+
+function rememberMultiplayerSession(mode, code) {
+  try {
+    localStorage.setItem('areciboMultiplayerSession', JSON.stringify({
+      mode,
+      code,
+      joinedAt: Date.now()
+    }));
+  } catch (err) {}
+}
+
+if (sessionInput) {
+  sessionInput.addEventListener('input', () => {
+    sessionInput.value = sanitizeSessionCode(sessionInput.value);
+    sessionBlock.classList.remove('is-invalid');
+  });
+  sessionInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter') joinSession();
+  });
+  setTimeout(() => sessionInput.focus(), 360);
+}
+
+function joinSession() {
+  const code = sanitizeSessionCode(sessionInput ? sessionInput.value : '');
+  if (code.length < 4) {
+    if (sessionBlock) {
+      sessionBlock.classList.remove('is-invalid');
+      void sessionBlock.offsetWidth;
+      sessionBlock.classList.add('is-invalid');
+    }
+    return;
+  }
+
+  rememberMultiplayerSession('join', code);
+  const transition = document.getElementById('transition');
+  transition.classList.add('active');
+  setTimeout(() => {
+    window.location.href = `arecibo_game.html?v=multi-join-${code}`;
+  }, 420);
+}
 
 function goMenu() {
   const transition = document.getElementById('transition');

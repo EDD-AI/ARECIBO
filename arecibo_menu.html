@@ -659,6 +659,119 @@ canvas#starfield-bg {
 }
 .page-transition.active { opacity: 1; pointer-events: all; }
 
+#multi-choice-overlay {
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:225;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.68);
+  backdrop-filter:blur(2px);
+}
+#multi-choice-overlay.open { display:flex; }
+
+.multi-choice-panel {
+  position:relative;
+  width:min(560px, calc(100vw - 48px));
+  background:#050505;
+  border:1px solid rgba(247,255,195,.34);
+  border-radius:4px;
+  overflow:hidden;
+  font-family:var(--f-pixel);
+  opacity:0;
+  transform:scale(.92) translateY(10px);
+  transition:opacity .3s ease, transform .3s ease;
+  box-shadow:
+    0 0 64px rgba(0,0,0,.82),
+    inset 0 0 36px rgba(247,255,195,.035);
+}
+.multi-choice-panel.visible {
+  opacity:1;
+  transform:scale(1) translateY(0);
+}
+.multi-choice-header {
+  display:flex;
+  align-items:center;
+  gap:15px;
+  padding:15px 21px;
+  border-bottom:1px solid rgba(247,255,195,.16);
+}
+.multi-choice-close {
+  width:42px;
+  height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(247,255,195,.34);
+  background:rgba(247,255,195,.045);
+  color:rgba(247,255,195,.75);
+  font-family:var(--f-pixel);
+  font-size:20px;
+  cursor:none;
+  border-radius:4px;
+}
+.multi-choice-close:hover {
+  color:var(--orange);
+  border-color:var(--orange);
+  background:rgba(250,90,31,.08);
+}
+.multi-choice-title {
+  color:var(--cream);
+  font-size:17px;
+  letter-spacing:.1em;
+}
+.multi-choice-body {
+  padding:28px 26px 26px;
+}
+.multi-choice-question {
+  color:rgba(247,255,195,.86);
+  font-size:clamp(17px, 2vw, 22px);
+  line-height:1.18;
+  letter-spacing:.08em;
+  margin-bottom:22px;
+}
+.multi-choice-actions {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.multi-choice-action {
+  min-height:58px;
+  border:1px solid rgba(247,255,195,.34);
+  background:rgba(0,0,0,.32);
+  color:rgba(247,255,195,.78);
+  font-family:var(--f-pixel);
+  font-size:15px;
+  letter-spacing:.1em;
+  cursor:none;
+  border-radius:4px;
+  transition:filter .12s ease, border-color .12s ease, color .12s ease, background .12s ease;
+}
+.multi-choice-action:hover {
+  color:var(--cream);
+  border-color:rgba(247,255,195,.76);
+  filter:brightness(1.12);
+}
+.multi-choice-action.create {
+  border-color:var(--orange);
+  color:#000;
+  background:var(--orange);
+}
+.multi-choice-code {
+  margin-top:18px;
+  min-height:1.2em;
+  color:rgba(250,90,31,.92);
+  font-size:13px;
+  letter-spacing:.14em;
+}
+
+@media (max-width: 640px) {
+  .multi-choice-actions {
+    grid-template-columns:1fr;
+  }
+}
+
 #credits-overlay {
   display: none;
   position: fixed;
@@ -891,7 +1004,7 @@ canvas#starfield-bg {
 
   <nav class="menu">
     <a class="menu-item active" href="arecibo_intro.html?v=global-terminal-filter-amber" onclick="goTo(event,'intro')"><span class="arr">></span><span class="menu-label">SOLO</span></a>
-    <a class="menu-item" href="#" onclick="goTo(event,'lobby')"><span class="arr">></span><span class="menu-label">MULTI</span></a>
+    <a class="menu-item" href="#" onclick="openMultiChoice(event)"><span class="arr">></span><span class="menu-label">MULTI</span></a>
     <a class="menu-item" href="#" onclick="openSettings(event)"><span class="arr">></span><span class="menu-label">SETTINGS</span></a>
     <a class="menu-item" href="#" onclick="openCredits(event)"><span class="arr">></span><span class="menu-label">CREDITS</span></a>
   </nav>
@@ -918,6 +1031,23 @@ canvas#starfield-bg {
 
   <div class="coord">18h29m14s / -05deg09'03" // SECTOR UNKNOWN</div>
   <canvas id="particles-canvas"></canvas>
+</div>
+
+<div id="multi-choice-overlay" onclick="if(event.target===this)closeMultiChoice()">
+  <section class="multi-choice-panel" aria-label="Choix multijoueurs">
+    <div class="multi-choice-header">
+      <button class="multi-choice-close" type="button" onclick="closeMultiChoice()">x</button>
+      <span class="multi-choice-title">CONNEXION // MULTIJOUEURS //</span>
+    </div>
+    <div class="multi-choice-body">
+      <div class="multi-choice-question">REJOINDRE OU CREER UNE SESSION ?</div>
+      <div class="multi-choice-actions">
+        <button class="multi-choice-action join" type="button" onclick="joinSessionChoice()">REJOINDRE</button>
+        <button class="multi-choice-action create" type="button" onclick="createSessionChoice()">CREER</button>
+      </div>
+      <div class="multi-choice-code" id="multi-choice-code" aria-live="polite"></div>
+    </div>
+  </section>
 </div>
 
 <div id="credits-overlay" onclick="if(event.target===this)closeCredits()">
@@ -1211,6 +1341,69 @@ function goTo(e, page) {
     game: 'arecibo_game.html?v=solo-prototype'
   };
   setTimeout(() => { window.location.href = routes[page] || ('arecibo_' + page + '.html'); }, 420);
+}
+
+function generateSessionCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function rememberMultiplayerSession(mode, code) {
+  try {
+    localStorage.setItem('areciboMultiplayerSession', JSON.stringify({
+      mode,
+      code,
+      createdAt: Date.now()
+    }));
+  } catch (err) {}
+}
+
+function openMultiChoice(e) {
+  if (e) e.preventDefault();
+  const overlay = document.getElementById('multi-choice-overlay');
+  const codeLine = document.getElementById('multi-choice-code');
+  if (!overlay) return;
+  if (codeLine) codeLine.textContent = '';
+  overlay.classList.add('open');
+  setTimeout(() => overlay.querySelector('.multi-choice-panel').classList.add('visible'), 10);
+}
+
+function closeMultiChoice() {
+  const overlay = document.getElementById('multi-choice-overlay');
+  if (!overlay) return;
+  overlay.querySelector('.multi-choice-panel').classList.remove('visible');
+  setTimeout(() => overlay.classList.remove('open'), 320);
+}
+
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Escape') return;
+  const overlay = document.getElementById('multi-choice-overlay');
+  if (overlay && overlay.classList.contains('open')) closeMultiChoice();
+});
+
+function joinSessionChoice() {
+  rememberMultiplayerSession('join', '');
+  const transition = document.getElementById('transition');
+  transition.classList.add('active');
+  setTimeout(() => {
+    window.location.href = 'arecibo_lobby.html?v=multi-join';
+  }, 420);
+}
+
+function createSessionChoice() {
+  const code = generateSessionCode();
+  const codeLine = document.getElementById('multi-choice-code');
+  rememberMultiplayerSession('host', code);
+  if (codeLine) codeLine.textContent = `SESSION CREEE // ${code}`;
+  setTimeout(() => {
+    const transition = document.getElementById('transition');
+    transition.classList.add('active');
+    setTimeout(() => {
+      window.location.href = `arecibo_game.html?v=multi-host-${code}`;
+    }, 420);
+  }, 520);
 }
 
 function openSettings(e) {
