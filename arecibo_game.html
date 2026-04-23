@@ -107,6 +107,20 @@ body::after {
   z-index:2;
   --pont-scene-image:url('assets/pont-principal-state-05-broken-4-doors-closed.png');
 }
+.bridge.is-ship-critical.is-ship-shaking {
+  animation:shipCriticalShake .64s steps(2, end) both;
+  transform-origin:center center;
+}
+@keyframes shipCriticalShake {
+  0%, 100% { transform:translate3d(0,0,0) scale(1.001); }
+  8% { transform:translate3d(-2px, 1px, 0) scale(1.004) rotate(-.045deg); }
+  16% { transform:translate3d(3px, -1px, 0) scale(1.004) rotate(.05deg); }
+  24% { transform:translate3d(-1px, -2px, 0) scale(1.003) rotate(-.035deg); }
+  34% { transform:translate3d(2px, 1px, 0) scale(1.004) rotate(.04deg); }
+  46% { transform:translate3d(-3px, 0, 0) scale(1.004) rotate(-.03deg); }
+  58% { transform:translate3d(1px, 2px, 0) scale(1.003) rotate(.025deg); }
+  72% { transform:translate3d(-1px, 0, 0) scale(1.002); }
+}
 
 .scene-backdrop {
   --scene-image:url('assets/sas-2-modif.png');
@@ -2927,6 +2941,28 @@ function setShipCondition(condition) {
   shipScene.dataset.shipCondition = isCritical ? 'critical' : 'repaired';
   shipScene.classList.toggle('is-ship-critical', isCritical);
   shipScene.classList.toggle('is-ship-repaired', !isCritical);
+  if (!isCritical) shipScene.classList.remove('is-ship-shaking');
+}
+
+function startCriticalShipShakes() {
+  if (!shipScene) return;
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReducedMotion) return;
+
+  function scheduleNextShake() {
+    const delay = 4600 + Math.random() * 7600;
+    window.setTimeout(() => {
+      if (shipScene.classList.contains('is-ship-critical')) {
+        shipScene.classList.remove('is-ship-shaking');
+        void shipScene.offsetWidth;
+        shipScene.classList.add('is-ship-shaking');
+        window.setTimeout(() => shipScene.classList.remove('is-ship-shaking'), 720);
+      }
+      scheduleNextShake();
+    }, delay);
+  }
+
+  scheduleNextShake();
 }
 
 function setPontRepairState(stateId) {
@@ -3276,6 +3312,7 @@ startPortholeSpace();
 startAmbientDust();
 startRoomFly();
 initPontRepairState();
+startCriticalShipShakes();
 initHudCollapse();
 initShipMap();
 initDraggablePersonalWindow();
