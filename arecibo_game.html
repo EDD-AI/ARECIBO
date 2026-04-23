@@ -105,6 +105,7 @@ body::after {
   height:100vh;
   overflow:hidden;
   z-index:2;
+  --pont-scene-image:url('assets/pont-principal-state-05-broken-4-doors-closed.png');
 }
 
 .scene-backdrop {
@@ -124,7 +125,7 @@ body::after {
   --scene-image:url('assets/sas-2-modif.png');
 }
 .bridge.is-room-pont .scene-backdrop {
-  --scene-image:url('assets/pont-principal.png');
+  --scene-image:var(--pont-scene-image);
 }
 .bridge.is-stepping-back .scene-backdrop {
   animation:sceneStepBack .86s cubic-bezier(.2,.78,.22,1) both;
@@ -2048,6 +2049,23 @@ const personalWindow = document.getElementById('personal-window');
 const personalTitle = personalWindow ? personalWindow.querySelector('.personal-title') : null;
 const shipScene = document.getElementById('ship-scene');
 const bridgeMeta = document.querySelector('.bridge-meta');
+const pontRepairStates = [
+  {
+    id:'state-05-broken-4-doors-closed',
+    stage:5,
+    label:'Pont critique',
+    detail:'4 portes fermees',
+    image:'assets/pont-principal-state-05-broken-4-doors-closed.png'
+  },
+  {
+    id:'state-01-repaired-4-doors-open',
+    stage:1,
+    label:'Pont repare',
+    detail:'4 portes ouvertes',
+    image:'assets/pont-principal-state-01-repaired-4-doors-open.png'
+  }
+];
+let activePontRepairState = pontRepairStates[0];
 const initialDistanceMillionKm = 473.65;
 const distanceCountdownSeconds = 10 * 60 * 60;
 const millionKmPerSecond = initialDistanceMillionKm / distanceCountdownSeconds;
@@ -2653,7 +2671,7 @@ function setShipScene(room) {
 
   if (bridgeMeta) {
     bridgeMeta.textContent = isPont
-      ? 'MOTOMOTO // PONT PRINCIPAL // SYSTEMES VAISSEAU'
+      ? `MOTOMOTO // PONT PRINCIPAL // ${activePontRepairState.label.toUpperCase()} // ${activePontRepairState.detail.toUpperCase()}`
       : 'MOTOMOTO // SAS EXPEDITION // SALVAGE PROTOCOL';
   }
 
@@ -2667,6 +2685,27 @@ function setShipScene(room) {
     shipScene.classList.add(transitionClass);
     window.setTimeout(() => shipScene.classList.remove(transitionClass), 900);
   }
+}
+
+function setPontRepairState(stateId) {
+  if (!shipScene) return;
+  const nextState = pontRepairStates.find(state => state.id === stateId || String(state.stage) === String(stateId));
+  if (!nextState) return;
+
+  activePontRepairState = nextState;
+  shipScene.dataset.pontRepairState = nextState.id;
+  shipScene.style.setProperty('--pont-scene-image', `url('${nextState.image}')`);
+
+  if (shipScene.dataset.roomScene === 'pont' && bridgeMeta) {
+    bridgeMeta.textContent = `MOTOMOTO // PONT PRINCIPAL // ${nextState.label.toUpperCase()} // ${nextState.detail.toUpperCase()}`;
+  }
+}
+
+function initPontRepairState() {
+  const params = new URLSearchParams(window.location.search);
+  const requestedState = params.get('pontState') || params.get('pont');
+  setPontRepairState(requestedState || activePontRepairState.id);
+  window.setPontRepairState = setPontRepairState;
 }
 
 function initHudCollapse() {
@@ -2756,7 +2795,7 @@ function initShipMap() {
       mapMessage.classList.remove('warn');
       mapMessage.textContent = room === 'SAS EXPEDITION'
         ? 'Sas expedition actif : depart possible depuis le bouton central.'
-        : 'Pont principal selectionne : transition vers le coeur du vaisseau.';
+        : `Pont principal selectionne : ${activePontRepairState.label.toLowerCase()}, ${activePontRepairState.detail}.`;
       setShipScene(room);
       window.location.hash = roomToHash(room);
     });
@@ -2969,6 +3008,7 @@ updateDistance();
 startPortholeSpace();
 startAmbientDust();
 startRoomFly();
+initPontRepairState();
 initHudCollapse();
 initShipMap();
 initDraggablePersonalWindow();
