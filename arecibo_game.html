@@ -889,6 +889,12 @@ body::after {
 .personal-hud-tab:hover {
   transform:translate3d(0, 1px, 0);
 }
+.bridge.is-expedition-active .personal-hud-dock {
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translate3d(-8px, 8px, 0);
+}
 .pixel-icon {
   width:28px;
   height:24px;
@@ -2485,6 +2491,7 @@ const messageIndicator = personalWindow ? personalWindow.querySelector('.message
 const messagesTitle = document.getElementById('messages-title');
 const shipScene = document.getElementById('ship-scene');
 const hullStatus = document.getElementById('hull-status');
+const personalHudDock = document.querySelector('.personal-hud-dock');
 const bridgeMeta = document.querySelector('.bridge-meta');
 const pontRepairStates = [
   {
@@ -3476,6 +3483,20 @@ function updateReadyState() {
   renderCrew();
 }
 
+function setExpeditionActive(active) {
+  if (shipScene) shipScene.classList.toggle('is-expedition-active', active);
+  if (!personalHudDock) return;
+
+  personalHudDock.setAttribute('aria-hidden', String(active));
+  personalHudDock.querySelectorAll('button').forEach(button => {
+    if (active) {
+      button.setAttribute('tabindex', '-1');
+    } else {
+      button.removeAttribute('tabindex');
+    }
+  });
+}
+
 launchBtn.addEventListener('click', () => {
   const allReady = readyState.slice(0, playerCount).every(Boolean);
   if (!allReady) {
@@ -3486,6 +3507,7 @@ launchBtn.addEventListener('click', () => {
 
   launchIcon.textContent = 'OK';
   launchLabel.textContent = 'OUVERTURE DU SAS...';
+  setExpeditionActive(true);
   document.getElementById('transition').classList.remove('out');
 });
 
