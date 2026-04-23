@@ -2094,7 +2094,7 @@ body::after {
   <button class="corner-tab back-btn" type="button" onclick="goMenu()">&#60; MENU</button>
   <button class="corner-tab settings-tab" type="button" onclick="openSettings(event)">&#60; SETTINGS</button>
 
-  <section class="personal-window" id="personal-window" aria-label="Package personnel du joueur">
+  <section class="personal-window" id="personal-window" aria-label="Package Coco">
     <button class="message-indicator" type="button" onclick="openMessages(event)" aria-label="Ouvrir 2 messages personnels">
       <svg class="mail-icon" viewBox="0 0 25 19" aria-hidden="true" focusable="false">
         <rect class="mail-border" x="2" y="4" width="21" height="13"></rect>
@@ -2106,7 +2106,7 @@ body::after {
       </svg>
       <span class="message-count">02</span>
     </button>
-    <header class="personal-title">&#62;PACKAGE PERSONNEL\</header>
+    <header class="personal-title">&#62;PACKAGE COCO\</header>
 
     <div class="personal-body">
       <div class="personal-line">
@@ -2279,7 +2279,7 @@ body::after {
   <section class="messages-panel" aria-label="Messages personnels">
     <div class="msg-header">
       <button class="msg-close" type="button" onclick="closeMessages()">x</button>
-      <span class="msg-title">PACKAGE PERSONNEL // MESSAGES //</span>
+      <span class="msg-title" id="messages-title">PACKAGE COCO // MESSAGES //</span>
     </div>
     <div class="msg-body">
       <article class="message-card">
@@ -2377,6 +2377,8 @@ const roomState = document.getElementById('room-state');
 const mapMessage = document.getElementById('map-message');
 const personalWindow = document.getElementById('personal-window');
 const personalTitle = personalWindow ? personalWindow.querySelector('.personal-title') : null;
+const messageIndicator = personalWindow ? personalWindow.querySelector('.message-indicator') : null;
+const messagesTitle = document.getElementById('messages-title');
 const shipScene = document.getElementById('ship-scene');
 const bridgeMeta = document.querySelector('.bridge-meta');
 const pontRepairStates = [
@@ -2402,6 +2404,37 @@ const initialDistanceMillionKm = 473.65;
 const distanceCountdownSeconds = 10 * 60 * 60;
 const millionKmPerSecond = initialDistanceMillionKm / distanceCountdownSeconds;
 const distanceStart = performance.now();
+
+function formatPlayerPackageName(value) {
+  const cleaned = String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9 _-]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .slice(0, 16)
+    .toUpperCase();
+
+  return cleaned || 'COCO';
+}
+
+function initPlayerPackageName() {
+  const storageKey = 'areciboPlayerName';
+  const requestedName = params.get('player') || params.get('name') || params.get('pilot');
+  const storedName = localStorage.getItem(storageKey);
+  const playerName = formatPlayerPackageName(requestedName || storedName || 'COCO');
+  const packageTitle = `>PACKAGE ${playerName}\\`;
+
+  try { localStorage.setItem(storageKey, playerName); }
+  catch (err) {}
+
+  if (personalTitle) personalTitle.textContent = packageTitle;
+  if (personalWindow) personalWindow.setAttribute('aria-label', `Package ${playerName}`);
+  if (messageIndicator) messageIndicator.setAttribute('aria-label', `Ouvrir 2 messages personnels de ${playerName}`);
+  if (messagesTitle) messagesTitle.textContent = `PACKAGE ${playerName} // MESSAGES //`;
+
+  window.areciboPlayerName = playerName;
+}
 
 function updateDistance() {
   const elapsedSeconds = (performance.now() - distanceStart) / 1000;
@@ -3392,6 +3425,7 @@ document.addEventListener('keydown', event => {
 
 updateReadyState();
 updateDistance();
+initPlayerPackageName();
 startPortholeSpace();
 startAmbientDust();
 startRoomFly();
