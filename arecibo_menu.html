@@ -2041,11 +2041,13 @@ function toggleSwitch(el) {
   resize();
   window.addEventListener('resize', resize);
 
-  const COUNT = 54;
+  const COUNT = 110;
   const particles = Array.from({ length: COUNT }, (_, i) => createParticle(i / COUNT));
   const debris = [];
+  const macroDebris = [];
   const astronauts = [];
-  let nextDebrisAt = performance.now() + 2800 + Math.random() * 6200;
+  let nextDebrisAt = performance.now() + 1700 + Math.random() * 3800;
+  let nextMacroDebrisAt = performance.now() + 4200 + Math.random() * 7600;
   let nextAstronautAt = performance.now() + 35000 + Math.random() * 60000;
 
   function getGravityWell() {
@@ -2077,10 +2079,14 @@ function toggleSwitch(el) {
       y,
       prevX: x,
       prevY: y,
-      size: Math.random() > .86 ? 2.4 : Math.random() > .48 ? 1.7 : 1.1,
-      speed: .012 + Math.random() * .018,
+      size:
+        Math.random() > .965 ? 4.8 + Math.random() * 2.8 :
+        Math.random() > .88 ? 3 + Math.random() * 1.8 :
+        Math.random() > .42 ? 1.7 + Math.random() * .8 :
+        .9 + Math.random() * .45,
+      speed: .01 + Math.random() * .022,
       swirl: (Math.random() - .5) * .028,
-      opacity: .34 + Math.random() * .42,
+      opacity: .26 + Math.random() * .5,
       heat: Math.random(),
       life: offset,
       seed: Math.random() * Math.PI * 2
@@ -2110,7 +2116,7 @@ function toggleSwitch(el) {
       prevY: startY,
       vx: dx / dist * (1.15 + Math.random() * .72),
       vy: dy / dist * (1.15 + Math.random() * .72),
-      size: 5 + Math.random() * 8,
+      size: 3 + Math.random() * 10,
       spin: (Math.random() - .5) * .055,
       angle: Math.random() * Math.PI * 2,
       heat: .45 + Math.random() * .55,
@@ -2122,7 +2128,45 @@ function toggleSwitch(el) {
   }
 
   function scheduleNextDebris(now) {
-    nextDebrisAt = now + 5200 + Math.random() * 11800;
+    nextDebrisAt = now + 2100 + Math.random() * 4800;
+  }
+
+  function createMacroDebris(well) {
+    const spawnMode = Math.random();
+    const startX = spawnMode < .4
+      ? -120 - Math.random() * canvas.width * .22
+      : spawnMode < .78
+        ? canvas.width + 120 + Math.random() * canvas.width * .14
+        : Math.random() * canvas.width * .78;
+    const startY = spawnMode > .78
+      ? -90 - Math.random() * canvas.height * .14
+      : Math.random() * canvas.height;
+    const dx = well.x - startX;
+    const dy = well.y - startY;
+    const dist = Math.max(1, Math.hypot(dx, dy));
+
+    return {
+      x: startX,
+      y: startY,
+      prevX: startX,
+      prevY: startY,
+      vx: dx / dist * (.72 + Math.random() * .68),
+      vy: dy / dist * (.72 + Math.random() * .68),
+      size: 10 + Math.random() * 20,
+      innerSize: .26 + Math.random() * .2,
+      stretch: .9 + Math.random() * .55,
+      spin: (Math.random() - .5) * .028,
+      angle: Math.random() * Math.PI * 2,
+      heat: .18 + Math.random() * .72,
+      opacity: .24 + Math.random() * .28,
+      life: 0,
+      maxLife: 620 + Math.random() * 520,
+      trail: []
+    };
+  }
+
+  function scheduleNextMacroDebris(now) {
+    nextMacroDebrisAt = now + 4200 + Math.random() * 8600;
   }
 
   function scheduleNextAstronaut(now) {
@@ -2240,9 +2284,14 @@ function toggleSwitch(el) {
   }
 
   function drawDebris(now, well) {
-    if (!reduceMotion.matches && now > nextDebrisAt && debris.length < 2) {
+    if (!reduceMotion.matches && now > nextDebrisAt && debris.length < 4) {
       debris.push(createDebris(well));
       scheduleNextDebris(now);
+    }
+
+    if (!reduceMotion.matches && now > nextMacroDebrisAt && macroDebris.length < 3) {
+      macroDebris.push(createMacroDebris(well));
+      scheduleNextMacroDebris(now);
     }
 
     for (let i = debris.length - 1; i >= 0; i--) {
@@ -2294,6 +2343,67 @@ function toggleSwitch(el) {
 
       if (swallowed || d.life > d.maxLife || d.x > canvas.width + 160 || d.y < -160 || d.y > canvas.height + 160) {
         debris.splice(i, 1);
+      }
+    }
+
+    for (let i = macroDebris.length - 1; i >= 0; i--) {
+      const d = macroDebris[i];
+      d.prevX = d.x;
+      d.prevY = d.y;
+      d.life++;
+
+      const dx = well.x - d.x;
+      const dy = well.y - d.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      const nx = dx / dist;
+      const ny = dy / dist;
+      const tangent = d.spin * Math.min(22, well.radius / dist * 16);
+      const accel = .035 + Math.min(.14, well.radius / dist * .11);
+
+      d.vx += nx * accel - ny * tangent;
+      d.vy += ny * accel + nx * tangent;
+      d.vx *= .996;
+      d.vy *= .996;
+      d.x += d.vx;
+      d.y += d.vy;
+      d.angle += d.spin * 4.4;
+      d.trail.unshift({ x: d.x, y: d.y, size: d.size, angle: d.angle });
+      if (d.trail.length > 10) d.trail.pop();
+
+      const swallowed = dist < well.radius * .52;
+      const fade = Math.max(0, Math.min(1, 1 - d.life / d.maxLife));
+      const heat = Math.min(1, d.heat + (1 - Math.min(1, dist / (well.radius * 2.6))) * .55);
+      const color = heat > .88 ? '247,255,195' : heat > .56 ? '250,168,70' : '250,90,31';
+      const alpha = d.opacity * (.24 + heat * .42) * Math.max(.16, fade);
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      d.trail.forEach((point, trailIndex) => {
+        const trailAlpha = alpha * (1 - trailIndex / d.trail.length) * .17;
+        ctx.save();
+        ctx.translate(point.x, point.y);
+        ctx.rotate(point.angle);
+        ctx.fillStyle = `rgba(${color},${trailAlpha.toFixed(3)})`;
+        ctx.fillRect(
+          -point.size * .32,
+          -point.size * .18,
+          point.size * .64,
+          point.size * .34
+        );
+        ctx.restore();
+      });
+
+      ctx.translate(d.x, d.y);
+      ctx.rotate(d.angle);
+      ctx.fillStyle = `rgba(${color},${alpha.toFixed(3)})`;
+      ctx.fillRect(-d.size * .5, -d.size * .22, d.size, d.size * d.innerSize);
+      ctx.fillRect(-d.size * .18, -d.size * .42, d.size * .36, d.size * d.stretch * .18);
+      ctx.fillStyle = `rgba(0,0,0,${(.26 * alpha).toFixed(3)})`;
+      ctx.fillRect(-d.size * .12, -d.size * .12, d.size * .28, d.size * .18);
+      ctx.restore();
+
+      if (swallowed || d.life > d.maxLife || d.x < -220 || d.x > canvas.width + 220 || d.y < -220 || d.y > canvas.height + 220) {
+        macroDebris.splice(i, 1);
       }
     }
   }
