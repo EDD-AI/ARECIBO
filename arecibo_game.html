@@ -129,6 +129,9 @@ body::after {
 .bridge.is-stepping-back .scene-backdrop {
   animation:sceneStepBack .86s cubic-bezier(.2,.78,.22,1) both;
 }
+.bridge.is-stepping-forward .scene-backdrop {
+  animation:sceneStepForward .82s cubic-bezier(.18,.72,.18,1) both;
+}
 @keyframes sceneStepBack {
   0% {
     transform:scale(1.13) translate3d(0, 1.4vh, 0);
@@ -136,6 +139,20 @@ body::after {
   }
   42% {
     filter:blur(.45px) contrast(1.04) saturate(.94);
+  }
+  100% {
+    transform:scale(1.012) translate3d(0,0,0);
+    filter:contrast(1.02) saturate(.96);
+  }
+}
+@keyframes sceneStepForward {
+  0% {
+    transform:scale(.92) translate3d(0, -1.2vh, 0);
+    filter:blur(1.25px) contrast(.98) saturate(.9);
+  }
+  54% {
+    transform:scale(1.045) translate3d(0, .35vh, 0);
+    filter:blur(.35px) contrast(1.04) saturate(.95);
   }
   100% {
     transform:scale(1.012) translate3d(0,0,0);
@@ -2459,10 +2476,14 @@ function setShipScene(room) {
   }
 
   if (changed) {
+    const transitionClass = previousScene === 'pont' && scene === 'sas'
+      ? 'is-stepping-forward'
+      : 'is-stepping-back';
     shipScene.classList.remove('is-stepping-back');
+    shipScene.classList.remove('is-stepping-forward');
     void shipScene.offsetWidth;
-    shipScene.classList.add('is-stepping-back');
-    window.setTimeout(() => shipScene.classList.remove('is-stepping-back'), 900);
+    shipScene.classList.add(transitionClass);
+    window.setTimeout(() => shipScene.classList.remove(transitionClass), 900);
   }
 }
 
