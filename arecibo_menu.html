@@ -329,12 +329,78 @@ canvas#starfield-bg {
   image-rendering: pixelated;
   will-change: left, top, transform, opacity;
 }
+.menu-vessel.is-teleporting {
+  filter:
+    drop-shadow(0 0 10px rgba(190, 227, 255, .38))
+    drop-shadow(0 0 18px rgba(76, 156, 255, .22))
+    drop-shadow(-10px 0 16px rgba(250,90,31,.03));
+}
 .menu-vessel img {
   width: 100%;
   height: 100%;
   display: block;
   image-rendering: pixelated;
 }
+.vessel-teleport {
+  position: absolute;
+  inset: -36%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .12s linear;
+  mix-blend-mode: screen;
+}
+.menu-vessel.is-teleporting .vessel-teleport {
+  opacity: var(--teleport-alpha, 0);
+}
+.vessel-teleport::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 76%;
+  height: 76%;
+  transform: translate(-50%, -50%) scale(var(--teleport-ring-scale, .55));
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(180, 224, 255, .48) 0 22%, rgba(74, 160, 255, .2) 42%, transparent 72%);
+  box-shadow:
+    0 0 24px rgba(120, 199, 255, .42),
+    0 0 48px rgba(74, 160, 255, .18);
+  filter: blur(.45px);
+}
+.vessel-teleport::after {
+  content: "";
+  position: absolute;
+  inset: 36% 10%;
+  transform: translateY(var(--teleport-scan, 0));
+  background:
+    linear-gradient(90deg, transparent 0 12%, rgba(133, 210, 255, .62) 18%, rgba(213, 240, 255, .95) 52%, rgba(133, 210, 255, .62) 82%, transparent 88%);
+  box-shadow: 0 0 18px rgba(120, 199, 255, .32);
+  filter: blur(.35px);
+  opacity: calc(var(--teleport-alpha, 0) * .9);
+}
+.vessel-teleport span {
+  position: absolute;
+  width: var(--tp, 3px);
+  height: var(--tp, 3px);
+  left: var(--tx, 50%);
+  top: var(--ty, 50%);
+  background: rgba(187, 229, 255, var(--ta, .8));
+  box-shadow:
+    0 0 8px rgba(118, 201, 255, .56),
+    0 0 2px rgba(233, 247, 255, .78);
+  transform:
+    translate(-50%, -50%)
+    translate3d(var(--teleport-px, 0px), var(--teleport-py, 0px), 0)
+    scale(var(--teleport-p-scale, 1));
+  opacity: var(--teleport-alpha, 0);
+}
+.vessel-teleport span:nth-child(1) { --tx: 22%; --ty: 34%; --tp: 4px; --ta: .88; }
+.vessel-teleport span:nth-child(2) { --tx: 50%; --ty: 20%; --tp: 3px; --ta: .76; }
+.vessel-teleport span:nth-child(3) { --tx: 78%; --ty: 34%; --tp: 3px; --ta: .8; }
+.vessel-teleport span:nth-child(4) { --tx: 30%; --ty: 64%; --tp: 2px; --ta: .68; }
+.vessel-teleport span:nth-child(5) { --tx: 68%; --ty: 68%; --tp: 2px; --ta: .64; }
+.vessel-teleport span:nth-child(6) { --tx: 48%; --ty: 78%; --tp: 3px; --ta: .72; }
 .vessel-trail {
   position: absolute;
   left: -42%;
@@ -1175,6 +1241,9 @@ canvas#starfield-bg {
     <div class="vessel-trail">
       <span></span><span></span><span></span><span></span><span></span><span></span>
     </div>
+    <div class="vessel-teleport" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
     <img src="assets/vaisseau.png" alt="">
   </div>
 
@@ -1482,8 +1551,19 @@ document.querySelectorAll('.menu-item').forEach(item => {
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const params = new URLSearchParams(window.location.search);
-  const debugProgress = Number(params.get('shipProgress'));
-  const travelDuration = 18 * 60 * 1000;
+
+  function readNumberParam(key) {
+    const raw = params.get(key);
+    if (raw === null || raw === '') return null;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : null;
+  }
+
+  const debugProgress = readNumberParam('shipProgress');
+  const debugCycle = readNumberParam('shipCycle');
+  const travelDuration = 13 * 60 * 1000;
+  const teleportDuration = 1180;
+  const cycleDuration = travelDuration + teleportDuration;
   const startTime = performance.now();
 
   function clamp(value, min, max) {
@@ -1508,18 +1588,65 @@ document.querySelectorAll('.menu-item').forEach(item => {
   function updateVessel(now = performance.now()) {
     const target = getSingularityTarget();
     const start = getStartPoint();
-    const timedProgress = clamp((now - startTime) / travelDuration, 0, 1);
-    const progress = Number.isFinite(debugProgress)
+    const elapsed = Math.max(0, now - startTime);
+    const cycleElapsed = debugCycle !== null
+      ? clamp(debugCycle, 0, 1) * cycleDuration
+      : (elapsed % cycleDuration);
+    const timedProgress = clamp(cycleElapsed / travelDuration, 0, 1);
+    const progress = debugProgress !== null
       ? clamp(debugProgress, 0, 1)
       : timedProgress;
     const arc = Math.sin(progress * Math.PI);
-    const x = start.x + (target.x - start.x) * progress;
-    const y = start.y + (target.y - start.y) * progress - arc * window.innerHeight * .09;
-    const dx = target.x - x;
-    const dy = target.y - y;
-    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-    const scale = Math.max(.38, 1 - progress * .52);
-    const opacity = progress > .94 ? Math.max(0, 1 - (progress - .94) / .06) : .86;
+    const baseX = start.x + (target.x - start.x) * progress;
+    const baseY = start.y + (target.y - start.y) * progress - arc * window.innerHeight * .09;
+    const inTeleport = debugProgress === null && cycleElapsed >= travelDuration;
+    const teleportProgress = inTeleport
+      ? clamp((cycleElapsed - travelDuration) / teleportDuration, 0, 1)
+      : 0;
+    let x = baseX;
+    let y = baseY;
+    let dx = target.x - x;
+    let dy = target.y - y;
+    let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    let scale = Math.max(.38, 1 - progress * .52);
+    let opacity = progress > .94 ? Math.max(0, 1 - (progress - .94) / .06) : .86;
+
+    if (inTeleport) {
+      const reformPhase = teleportProgress >= .48;
+      const local = reformPhase
+        ? clamp((teleportProgress - .48) / .52, 0, 1)
+        : clamp(teleportProgress / .48, 0, 1);
+      const eased = 1 - Math.pow(1 - local, 2);
+
+      x = reformPhase ? start.x : target.x;
+      y = reformPhase ? start.y : target.y;
+      dx = reformPhase ? (target.x - start.x) : 1;
+      dy = reformPhase ? (target.y - start.y) : 0;
+      angle = reformPhase ? Math.atan2(dy, dx) * 180 / Math.PI : angle + 28 * local;
+      scale = reformPhase
+        ? (.18 + eased * .82)
+        : Math.max(.06, scale * (1 - eased) * .55);
+      opacity = reformPhase ? (.12 + eased * .74) : Math.max(0, .7 - eased * .7);
+
+      const halo = reformPhase ? (1 - local) : (1 - Math.abs(local - .5) * 2);
+      const burstX = reformPhase ? (1 - local) * -18 : local * 14;
+      const burstY = reformPhase ? (1 - local) * 9 : local * -8;
+      vessel.classList.add('is-teleporting');
+      vessel.style.setProperty('--teleport-alpha', halo.toFixed(3));
+      vessel.style.setProperty('--teleport-ring-scale', String((reformPhase ? 1.45 - local * .5 : .62 + local * 1.18).toFixed(3)));
+      vessel.style.setProperty('--teleport-scan', `${(reformPhase ? (1 - local) * 10 : -local * 10).toFixed(2)}px`);
+      vessel.style.setProperty('--teleport-px', `${burstX.toFixed(2)}px`);
+      vessel.style.setProperty('--teleport-py', `${burstY.toFixed(2)}px`);
+      vessel.style.setProperty('--teleport-p-scale', String((reformPhase ? 1.26 - local * .38 : .72 + local * .64).toFixed(3)));
+    } else {
+      vessel.classList.remove('is-teleporting');
+      vessel.style.setProperty('--teleport-alpha', '0');
+      vessel.style.setProperty('--teleport-ring-scale', '.55');
+      vessel.style.setProperty('--teleport-scan', '0px');
+      vessel.style.setProperty('--teleport-px', '0px');
+      vessel.style.setProperty('--teleport-py', '0px');
+      vessel.style.setProperty('--teleport-p-scale', '1');
+    }
 
     vessel.style.setProperty('--vessel-x', `${x}px`);
     vessel.style.setProperty('--vessel-y', `${y}px`);
@@ -1527,7 +1654,7 @@ document.querySelectorAll('.menu-item').forEach(item => {
     vessel.style.setProperty('--vessel-scale', scale.toFixed(3));
     vessel.style.setProperty('--vessel-opacity', opacity.toFixed(3));
 
-    if (!reduceMotion.matches && progress < 1 && !Number.isFinite(debugProgress)) {
+    if (!reduceMotion.matches && debugProgress === null && debugCycle === null) {
       requestAnimationFrame(updateVessel);
     }
   }
