@@ -2291,104 +2291,194 @@ body::after {
   inset:0;
   z-index:9;
   display:flex;
-  flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:22px;
-  padding:5vh 4vw;
+  padding:3vh 2vw;
   opacity:0;
   pointer-events:none;
   transform:translateY(16px);
   transition:opacity .35s ease, transform .35s ease;
-  background:rgba(0,0,0,.14);
-  backdrop-filter:blur(6px) brightness(.78);
+  background:rgba(0,0,0,.18);
+  backdrop-filter:blur(7px) brightness(.72);
 }
 .landing-sequence.is-question-open .landing-decision {
   opacity:1;
   pointer-events:auto;
   transform:translateY(0);
 }
-.landing-decision-alert {
-  max-width:min(86vw, 1120px);
-  text-align:center;
-  color:var(--orange);
-  font-size:clamp(24px, 2.9vw, 54px);
-  line-height:1.05;
-  font-weight:700;
-  text-transform:uppercase;
-  text-shadow:0 0 14px rgba(250,90,31,.2);
+.landing-console-shell {
+  position:relative;
+  width:min(88vw, 1260px);
+  aspect-ratio:1678 / 944;
+  max-height:82vh;
+  filter:drop-shadow(0 24px 46px rgba(0,0,0,.46));
 }
-.landing-decision-panel {
-  width:min(86vw, 1060px);
-  background:rgba(0,0,0,.74);
-  border:1px solid rgba(247,255,195,.74);
+.landing-console-frame {
+  position:absolute;
+  inset:0;
+  background:url('assets/console-aventure.png') center / contain no-repeat;
+  pointer-events:none;
+}
+.landing-console-screen {
+  position:absolute;
+  left:10.9%;
+  top:17.1%;
+  width:54.6%;
+  height:56.4%;
+  border-radius:clamp(18px, 2vw, 28px);
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(59,54,18,.16), transparent 54%),
+    linear-gradient(180deg, rgba(4,5,2,.98), rgba(2,3,1,.96));
   box-shadow:
-    0 0 0 1px rgba(247,255,195,.08) inset,
-    0 0 36px rgba(0,0,0,.42);
+    inset 0 0 0 1px rgba(247,255,195,.08),
+    inset 0 0 32px rgba(0,0,0,.88),
+    inset 0 0 96px rgba(0,0,0,.72);
 }
-.landing-decision-head {
-  min-height:88px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:18px 26px;
-  border-bottom:1px solid rgba(247,255,195,.52);
-  text-align:center;
-  color:var(--cream);
-  font-size:clamp(22px, 2.25vw, 42px);
-  text-transform:uppercase;
-  letter-spacing:.04em;
+.landing-console-screen::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(180deg, rgba(247,255,195,.04), rgba(247,255,195,0) 12%),
+    repeating-linear-gradient(180deg, rgba(247,255,195,.05) 0 1px, rgba(0,0,0,0) 1px 4px);
+  opacity:.36;
+  mix-blend-mode:screen;
+  pointer-events:none;
 }
-.landing-decision-body {
-  padding:42px clamp(22px, 4vw, 64px) 46px;
+.landing-console-screen::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at center, transparent 44%, rgba(0,0,0,.24) 78%, rgba(0,0,0,.7) 100%),
+    linear-gradient(90deg, rgba(0,0,0,.28), transparent 14%, transparent 86%, rgba(0,0,0,.28));
+  pointer-events:none;
+}
+.landing-console-copy {
+  position:relative;
+  z-index:1;
+  width:100%;
+  height:100%;
+  padding:clamp(18px, 2vw, 26px) clamp(18px, 2vw, 28px) clamp(18px, 2vw, 30px);
   display:flex;
   flex-direction:column;
-  gap:22px;
 }
-.decision-row {
+.landing-decision-alert {
+  min-height:clamp(54px, 6.4vw, 94px);
+  color:var(--orange);
+  font-size:clamp(18px, 2.05vw, 34px);
+  line-height:1.08;
+  font-weight:700;
+  text-transform:uppercase;
+  text-shadow:0 0 12px rgba(250,90,31,.18);
+}
+.landing-decision-panel {
+  margin-top:clamp(14px, 1.8vh, 24px);
+  padding-top:6px;
+}
+.landing-decision-head {
+  min-height:clamp(56px, 5.2vw, 78px);
   display:flex;
   align-items:center;
-  justify-content:center;
-  gap:18px;
-  min-height:58px;
+  justify-content:flex-start;
+  padding:14px 0 14px;
+  border-top:1px solid rgba(247,255,195,.34);
+  border-bottom:1px solid rgba(247,255,195,.34);
+  text-align:left;
+  color:var(--cream);
+  font-size:clamp(18px, 1.75vw, 30px);
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.landing-type-line {
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  width:100%;
+}
+.landing-prompt {
+  flex:0 0 auto;
+  color:var(--orange);
+  opacity:.94;
+}
+.landing-type-text {
+  flex:1 1 auto;
+}
+.landing-cursor {
+  flex:0 0 auto;
+  color:var(--cream);
+  animation:landingCursorBlink .9s steps(1, end) infinite;
+}
+.landing-decision-body {
+  padding:20px 0 0;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  opacity:0;
+  transform:translateY(8px);
+  transition:opacity .28s ease, transform .28s ease;
+  pointer-events:none;
+}
+.landing-decision.is-copy-ready .landing-decision-body {
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
+}
+.decision-row {
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto;
+  align-items:center;
+  gap:14px;
+  min-height:54px;
 }
 .decision-btn {
-  min-height:58px;
-  padding:10px 18px;
-  border:1px solid rgba(247,255,195,.72);
-  background:rgba(2,3,1,.78);
+  width:100%;
+  min-height:54px;
+  padding:10px 14px;
+  border:1px solid rgba(247,255,195,.38);
+  background:rgba(3,4,2,.44);
   color:var(--cream);
   font:inherit;
-  font-size:clamp(18px, 2vw, 28px);
+  font-size:clamp(16px, 1.45vw, 24px);
   line-height:1.05;
-  letter-spacing:.02em;
+  letter-spacing:.015em;
+  text-transform:uppercase;
+  text-align:left;
   cursor:none;
   transition:border-color .14s ease, box-shadow .14s ease, transform .14s ease, color .14s ease;
+}
+.decision-btn::before {
+  content:'>_ ';
+  color:var(--orange);
 }
 .decision-btn:hover,
 .decision-btn:focus-visible {
   border-color:rgba(250,90,31,.92);
   color:#fff7da;
-  box-shadow:0 0 18px rgba(250,90,31,.14);
+  box-shadow:0 0 14px rgba(250,90,31,.14);
   transform:translateY(-1px);
   outline:none;
 }
 .decision-row.has-votes .decision-btn {
   border-color:rgba(250,90,31,.72);
+  background:rgba(18,8,3,.34);
 }
 .decision-votes {
   display:flex;
   align-items:center;
+  justify-content:flex-end;
   flex-wrap:wrap;
   gap:8px;
-  min-width:68px;
+  min-width:70px;
+  max-width:188px;
 }
 .decision-votes.is-empty {
-  opacity:.18;
+  opacity:.14;
 }
 .decision-vote {
-  min-width:52px;
-  height:52px;
+  min-width:42px;
+  height:42px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -2396,8 +2486,11 @@ body::after {
   border:1px solid rgba(250,90,31,.92);
   background:rgba(15,7,3,.84);
   color:var(--orange);
-  font-size:clamp(18px, 1.85vw, 30px);
+  font-size:clamp(15px, 1.2vw, 22px);
   line-height:1;
+}
+.landing-sequence.is-question-open .landing-console-shell {
+  animation:landingConsoleSettle .36s ease-out both;
 }
 .landing-sequence.is-question-open .landing-backdrop {
   filter:blur(5px) contrast(1.02) saturate(.92) brightness(.72);
@@ -2413,6 +2506,42 @@ body::after {
 .landing-sequence.is-question-open .landing-canvas {
   filter:blur(4px);
   opacity:.78;
+}
+@keyframes landingCursorBlink {
+  0%, 49% { opacity:1; }
+  50%, 100% { opacity:0; }
+}
+@keyframes landingConsoleSettle {
+  0% {
+    transform:translateY(10px) scale(.985);
+    opacity:.9;
+  }
+  100% {
+    transform:translateY(0) scale(1);
+    opacity:1;
+  }
+}
+@media (max-width: 900px) {
+  .landing-console-shell {
+    width:min(96vw, 960px);
+  }
+  .landing-console-screen {
+    left:8.7%;
+    top:16.1%;
+    width:58.8%;
+    height:58.8%;
+  }
+  .landing-console-copy {
+    padding:16px 16px 18px;
+  }
+  .decision-row {
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+  .decision-votes {
+    justify-content:flex-start;
+    max-width:none;
+  }
 }
 @keyframes landingShipDescent {
   0% {
@@ -2759,10 +2888,29 @@ body::after {
   <canvas class="landing-canvas" id="landing-canvas" aria-hidden="true"></canvas>
   <div class="landing-ship" aria-hidden="true"></div>
   <section class="landing-decision" id="landing-decision" aria-label="Decision expedition">
-    <div class="landing-decision-alert">Votre vaisseau a percute un asteroide !</div>
-    <div class="landing-decision-panel">
-      <header class="landing-decision-head">Qu'est ce que vous voulez faire ?</header>
-      <div class="landing-decision-body" id="landing-decision-options"></div>
+    <div class="landing-console-shell">
+      <div class="landing-console-frame" aria-hidden="true"></div>
+      <div class="landing-console-screen">
+        <div class="landing-console-copy">
+          <div class="landing-decision-alert">
+            <div class="landing-type-line">
+              <span class="landing-prompt">&gt;_</span>
+              <span class="landing-type-text" id="landing-alert-text"></span>
+              <span class="landing-cursor" id="landing-alert-cursor">|</span>
+            </div>
+          </div>
+          <div class="landing-decision-panel">
+            <header class="landing-decision-head">
+              <div class="landing-type-line">
+                <span class="landing-prompt">&gt;</span>
+                <span class="landing-type-text" id="landing-head-text"></span>
+                <span class="landing-cursor" id="landing-head-cursor">|</span>
+              </div>
+            </header>
+            <div class="landing-decision-body" id="landing-decision-options"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 </div>
@@ -2882,7 +3030,12 @@ const landingSequence = document.getElementById('landing-sequence');
 const landingCanvas = document.getElementById('landing-canvas');
 const landingDecision = document.getElementById('landing-decision');
 const landingDecisionOptions = document.getElementById('landing-decision-options');
+const landingAlertText = document.getElementById('landing-alert-text');
+const landingAlertCursor = document.getElementById('landing-alert-cursor');
+const landingHeadText = document.getElementById('landing-head-text');
+const landingHeadCursor = document.getElementById('landing-head-cursor');
 let landingStarted = false;
+let landingTypingTimers = [];
 const landingDecisionChoices = [
   { id:'search-life-traces', label:'chercher des traces de vies' },
   { id:'inspect-asteroid', label:'inspecter l asteroide' },
@@ -4024,6 +4177,63 @@ function renderLandingDecision() {
   });
 }
 
+function clearLandingTypingTimers() {
+  landingTypingTimers.forEach(timerId => window.clearTimeout(timerId));
+  landingTypingTimers = [];
+}
+
+function scheduleLandingTyping(callback, delay) {
+  const timerId = window.setTimeout(callback, delay);
+  landingTypingTimers.push(timerId);
+  return timerId;
+}
+
+function typeLandingLine(targetEl, cursorEl, text, startDelay, stepDelay, onComplete) {
+  if (!targetEl) {
+    if (typeof onComplete === 'function') onComplete();
+    return;
+  }
+
+  targetEl.textContent = '';
+  if (cursorEl) cursorEl.style.opacity = '1';
+
+  scheduleLandingTyping(() => {
+    let index = 0;
+
+    const tick = () => {
+      targetEl.textContent = text.slice(0, index);
+      if (index < text.length) {
+        index += 1;
+        scheduleLandingTyping(tick, stepDelay);
+        return;
+      }
+      if (typeof onComplete === 'function') onComplete();
+    };
+
+    tick();
+  }, startDelay);
+}
+
+function startLandingDecisionTyping() {
+  if (!landingDecision) return;
+
+  clearLandingTypingTimers();
+  landingDecision.classList.remove('is-copy-ready');
+
+  if (landingAlertText) landingAlertText.textContent = '';
+  if (landingHeadText) landingHeadText.textContent = '';
+
+  const alertCopy = 'Votre vaisseau a percute un asteroide !';
+  const questionCopy = "Qu'est ce que vous souhaitez faire ?";
+  const alertDuration = alertCopy.length * 24;
+  const questionStartDelay = 180 + alertDuration;
+
+  typeLandingLine(landingAlertText, landingAlertCursor, alertCopy, 0, 24);
+  typeLandingLine(landingHeadText, landingHeadCursor, questionCopy, questionStartDelay, 18, () => {
+    landingDecision.classList.add('is-copy-ready');
+  });
+}
+
 function startLandingSequence() {
   if (!landingSequence || !landingCanvas || landingStarted) return;
   landingStarted = true;
@@ -4047,6 +4257,7 @@ function startLandingSequence() {
   window.setTimeout(() => {
     if (landingSequence) landingSequence.classList.add('is-question-open');
     renderLandingDecision();
+    startLandingDecisionTyping();
   }, questionOpenDelay);
   window.setTimeout(() => {
     if (landingSequence) {
