@@ -2671,8 +2671,9 @@ window.addEventListener('DOMContentLoaded', () => {
 const params = new URLSearchParams(window.location.search);
 const storedPlayers = Number(localStorage.getItem('areciboPlayerCount'));
 const requestedPlayers = Number(params.get('players'));
-const playerCount = Math.max(1, Math.min(6, requestedPlayers || storedPlayers || 6));
+const playerCount = Math.max(1, Math.min(6, requestedPlayers || storedPlayers || 1));
 const readyState = Array.from({ length: 6 }, (_, index) => index >= playerCount);
+if (playerCount === 1) readyState[0] = true;
 const crewEl = document.getElementById('crew-ready');
 const launchBtn = document.getElementById('launch-btn');
 const launchLabel = launchBtn.querySelector('.launch-label');
