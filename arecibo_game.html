@@ -2173,6 +2173,150 @@ body::after {
   pointer-events:none;
 }
 
+.landing-sequence {
+  position:fixed;
+  inset:0;
+  z-index:940;
+  opacity:0;
+  pointer-events:none;
+  overflow:hidden;
+  background:#000;
+  transition:opacity .6s ease;
+}
+.landing-sequence.is-active {
+  opacity:1;
+  pointer-events:auto;
+}
+.landing-sequence::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 50% 68%, rgba(255,202,145,.16), transparent 24%),
+    linear-gradient(180deg, rgba(5,5,4,.12), rgba(10,8,4,.38));
+  mix-blend-mode:screen;
+  pointer-events:none;
+  z-index:3;
+}
+.landing-backdrop {
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(rgba(10,8,4,.05), rgba(10,8,4,.12)),
+    url('assets/ship-launch-fond.png') center / cover no-repeat;
+  filter:contrast(1.04) saturate(.95) brightness(.92);
+  transform:scale(1.02);
+}
+.landing-backdrop::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(ellipse at center, transparent 36%, rgba(0,0,0,.3) 72%, rgba(0,0,0,.72) 100%),
+    repeating-linear-gradient(0deg, transparent 0 4px, rgba(247,255,195,.018) 4px 5px);
+  pointer-events:none;
+}
+.landing-canvas {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:4;
+  pointer-events:none;
+}
+.landing-ship {
+  position:absolute;
+  left:50%;
+  top:-28%;
+  width:min(28vw, 400px);
+  aspect-ratio:1 / 1;
+  background:url('assets/ship-launch-detourer.png') center / contain no-repeat;
+  transform:translate(-50%, 0) scale(.8);
+  filter:
+    drop-shadow(0 18px 18px rgba(0,0,0,.52))
+    drop-shadow(0 0 22px rgba(255,228,176,.08));
+  z-index:5;
+  opacity:0;
+}
+.landing-sequence.is-active .landing-ship {
+  opacity:1;
+  animation:landingShipDescent 5.2s cubic-bezier(.14,.8,.16,1) forwards;
+}
+.landing-thrusters {
+  position:absolute;
+  left:50%;
+  bottom:28.8%;
+  width:min(22vw, 300px);
+  height:min(12vw, 150px);
+  transform:translateX(-50%);
+  background:
+    radial-gradient(ellipse at center top, rgba(164,224,255,.78), rgba(114,173,255,.24) 28%, rgba(76,127,255,0) 72%);
+  filter:blur(14px);
+  opacity:0;
+  z-index:4;
+}
+.landing-sequence.is-active .landing-thrusters {
+  animation:landingThrusters 5.2s ease-out forwards;
+}
+.landing-dust-glow {
+  position:absolute;
+  left:50%;
+  bottom:8%;
+  width:min(44vw, 680px);
+  height:min(16vw, 220px);
+  transform:translateX(-50%);
+  background:
+    radial-gradient(ellipse at center, rgba(214,180,138,.26), rgba(124,102,82,.12) 34%, rgba(44,31,20,0) 72%);
+  filter:blur(26px);
+  opacity:0;
+  z-index:3;
+}
+.landing-sequence.is-active .landing-dust-glow {
+  animation:landingDustGlow 5.2s ease-out forwards;
+}
+@keyframes landingShipDescent {
+  0% {
+    top:-28%;
+    transform:translate(-50%, 0) scale(.68) rotate(-4deg);
+    filter:
+      drop-shadow(0 32px 28px rgba(0,0,0,.62))
+      drop-shadow(0 0 12px rgba(255,228,176,.06));
+  }
+  58% {
+    top:19%;
+    transform:translate(-50%, 0) scale(.88) rotate(1.4deg);
+  }
+  78% {
+    top:39%;
+    transform:translate(-50%, 0) scale(.95) rotate(-.9deg);
+  }
+  92% {
+    top:47.2%;
+    transform:translate(-50%, 0) scale(.985) rotate(.35deg);
+  }
+  100% {
+    top:48.8%;
+    transform:translate(-50%, 0) scale(1) rotate(0deg);
+    filter:
+      drop-shadow(0 10px 10px rgba(0,0,0,.42))
+      drop-shadow(0 0 18px rgba(255,228,176,.1));
+  }
+}
+@keyframes landingThrusters {
+  0%, 10% { opacity:0; }
+  20% { opacity:.94; transform:translateX(-50%) scaleY(1.22); }
+  58% { opacity:.82; transform:translateX(-50%) scaleY(1.48); }
+  76% { opacity:.65; transform:translateX(-50%) scaleY(1.18); }
+  92% { opacity:.32; transform:translateX(-50%) scaleY(.76); }
+  100% { opacity:0; transform:translateX(-50%) scaleY(.4); }
+}
+@keyframes landingDustGlow {
+  0%, 28% { opacity:0; transform:translateX(-50%) scale(.7); }
+  52% { opacity:.34; transform:translateX(-50%) scale(.94); }
+  78% { opacity:.72; transform:translateX(-50%) scale(1.08); }
+  100% { opacity:.4; transform:translateX(-50%) scale(1.14); }
+}
+
 @media (max-width: 980px) {
   .personal-window {
     left:5vw;
@@ -2424,6 +2568,14 @@ body::after {
   <div class="bridge-meta">MOTOMOTO // SAS EXPEDITION // SALVAGE PROTOCOL</div>
 </main>
 
+<div class="landing-sequence" id="landing-sequence" aria-hidden="true">
+  <div class="landing-backdrop" aria-hidden="true"></div>
+  <div class="landing-dust-glow" aria-hidden="true"></div>
+  <div class="landing-thrusters" aria-hidden="true"></div>
+  <canvas class="landing-canvas" id="landing-canvas" aria-hidden="true"></canvas>
+  <div class="landing-ship" aria-hidden="true"></div>
+</div>
+
 <div id="messages-overlay" onclick="if(event.target===this)closeMessages()">
   <section class="messages-panel" aria-label="Messages personnels">
     <div class="msg-header">
@@ -2533,6 +2685,10 @@ const hullStatus = document.getElementById('hull-status');
 const engineStatus = document.getElementById('engine-status');
 const personalHudDock = document.querySelector('.personal-hud-dock');
 const bridgeMeta = document.querySelector('.bridge-meta');
+const pageTransition = document.getElementById('transition');
+const landingSequence = document.getElementById('landing-sequence');
+const landingCanvas = document.getElementById('landing-canvas');
+let landingStarted = false;
 const pontRepairStates = [
   {
     id:'state-05-broken-4-doors-closed',
@@ -3603,6 +3759,150 @@ function setExpeditionActive(active) {
   });
 }
 
+function startLandingSequence() {
+  if (!landingSequence || !landingCanvas || landingStarted) return;
+  landingStarted = true;
+
+  landingSequence.classList.add('is-active');
+  landingSequence.setAttribute('aria-hidden', 'false');
+
+  const canvas = landingCanvas;
+  const ctx = canvas.getContext('2d');
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const dustParticles = [];
+  const smokeParticles = [];
+  const pixelDebris = [];
+  let width = 0;
+  let height = 0;
+  let centerX = 0;
+  let groundY = 0;
+  const startTime = performance.now();
+  const duration = 5200;
+
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    centerX = width * 0.5;
+    groundY = height * 0.78;
+  }
+
+  function rand(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function spawnSmoke(power = 1) {
+    const side = Math.random() < 0.5 ? -1 : 1;
+    smokeParticles.push({
+      x:centerX + rand(-80, 80),
+      y:groundY - rand(8, 24),
+      vx:rand(.35, 1.8) * side * power,
+      vy:rand(-1.4, -.25) * power,
+      size:rand(24, 56) * power,
+      life:rand(34, 62),
+      maxLife:rand(34, 62),
+      color:Math.random() < 0.6 ? '156,140,126' : '116,98,78'
+    });
+  }
+
+  function spawnDust(power = 1) {
+    dustParticles.push({
+      x:centerX + rand(-150, 150),
+      y:groundY + rand(-8, 10),
+      vx:rand(-3.6, 3.6) * power,
+      vy:rand(-2.8, -.8) * power,
+      size:rand(2, 6),
+      life:rand(18, 40),
+      maxLife:rand(18, 40),
+      color:Math.random() < 0.5 ? '#716457' : '#9b8a78'
+    });
+  }
+
+  function spawnPixelDebris(power = 1) {
+    pixelDebris.push({
+      x:centerX + rand(-120, 120),
+      y:groundY + rand(-14, 6),
+      vx:rand(-2.4, 2.4) * power,
+      vy:rand(-3.4, -.5) * power,
+      size:rand(2, 5),
+      life:rand(24, 44),
+      maxLife:rand(24, 44),
+      color:Math.random() < 0.55 ? '#c5b59b' : '#6a6258'
+    });
+  }
+
+  function render(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(1, elapsed / duration);
+    const impact = Math.max(0, 1 - Math.abs(t - 0.78) / 0.2);
+
+    if (!prefersReducedMotion) {
+      if (t < 0.9) {
+        const smokeRate = t < 0.58 ? 3 : t < 0.82 ? 9 : 5;
+        for (let i = 0; i < smokeRate; i += 1) spawnSmoke(.72 + impact * 1.1);
+        const dustRate = t > 0.48 ? Math.round(5 + impact * 10) : 2;
+        for (let i = 0; i < dustRate; i += 1) spawnDust(.7 + impact * 1.2);
+        const debrisRate = t > 0.56 ? Math.round(2 + impact * 7) : 0;
+        for (let i = 0; i < debrisRate; i += 1) spawnPixelDebris(.75 + impact * 1.3);
+      }
+    } else if (!smokeParticles.length && !dustParticles.length && !pixelDebris.length) {
+      for (let i = 0; i < 32; i += 1) spawnSmoke(.9);
+      for (let i = 0; i < 22; i += 1) spawnDust(1);
+      for (let i = 0; i < 16; i += 1) spawnPixelDebris(1);
+    }
+
+    ctx.clearRect(0, 0, width, height);
+
+    smokeParticles.forEach((particle, index) => {
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.vx *= .986;
+      particle.vy -= .006;
+      particle.life -= 1;
+      const alpha = Math.max(0, particle.life / particle.maxLife) * .34;
+      ctx.fillStyle = `rgba(${particle.color}, ${alpha})`;
+      ctx.beginPath();
+      ctx.arc(particle.x, particle.y, particle.size * (1 + (1 - particle.life / particle.maxLife) * .45), 0, Math.PI * 2);
+      ctx.fill();
+      if (particle.life <= 0) smokeParticles.splice(index, 1);
+    });
+
+    dustParticles.forEach((particle, index) => {
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.vx *= .982;
+      particle.vy += .04;
+      particle.life -= 1;
+      ctx.globalAlpha = Math.max(0, particle.life / particle.maxLife) * .72;
+      ctx.fillStyle = particle.color;
+      ctx.fillRect(Math.round(particle.x), Math.round(particle.y), particle.size, particle.size);
+      if (particle.life <= 0) dustParticles.splice(index, 1);
+    });
+
+    pixelDebris.forEach((particle, index) => {
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.vx *= .99;
+      particle.vy += .026;
+      particle.life -= 1;
+      ctx.globalAlpha = Math.max(0, particle.life / particle.maxLife) * .64;
+      ctx.fillStyle = particle.color;
+      ctx.fillRect(Math.round(particle.x), Math.round(particle.y), particle.size, particle.size);
+      ctx.fillRect(Math.round(particle.x - particle.vx * 1.8), Math.round(particle.y - particle.vy * 1.8), Math.max(1, particle.size - 1), Math.max(1, particle.size - 1));
+      if (particle.life <= 0) pixelDebris.splice(index, 1);
+    });
+
+    ctx.globalAlpha = 1;
+
+    if (t < 1 || smokeParticles.length || dustParticles.length || pixelDebris.length) {
+      requestAnimationFrame(render);
+    }
+  }
+
+  resize();
+  window.addEventListener('resize', resize, { passive:true });
+  requestAnimationFrame(render);
+}
+
 launchBtn.addEventListener('click', () => {
   const allReady = readyState.slice(0, playerCount).every(Boolean);
   if (!allReady) {
@@ -3614,7 +3914,11 @@ launchBtn.addEventListener('click', () => {
   launchIcon.textContent = 'OK';
   launchLabel.textContent = 'OUVERTURE DU SAS...';
   setExpeditionActive(true);
-  document.getElementById('transition').classList.remove('out');
+  if (pageTransition) pageTransition.classList.remove('out');
+  window.setTimeout(() => {
+    startLandingSequence();
+    if (pageTransition) pageTransition.classList.add('out');
+  }, 560);
 });
 
 function goMenu() {
@@ -3693,6 +3997,12 @@ startCriticalShipShakes();
 initHudCollapse();
 initShipMap();
 initDraggablePersonalWindow();
+
+if (params.get('landing') === '1') {
+  setExpeditionActive(true);
+  startLandingSequence();
+  if (pageTransition) pageTransition.classList.add('out');
+}
 </script>
 </body>
 </html>
