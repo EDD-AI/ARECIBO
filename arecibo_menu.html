@@ -1162,6 +1162,95 @@ canvas#starfield-bg {
   font-size: 14px;
   letter-spacing: .04em;
 }
+.georges-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 235;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.38);
+  backdrop-filter: blur(4px);
+}
+.georges-overlay.open { display: flex; }
+.georges-panel {
+  position: relative;
+  width: min(520px, calc(100vw - 44px));
+  padding: 26px 28px 24px;
+  border: 1px solid rgba(247,255,195,.58);
+  background: linear-gradient(180deg, rgba(8,8,8,.94) 0%, rgba(0,0,0,.96) 100%);
+  box-shadow:
+    0 0 0 1px rgba(247,255,195,.08) inset,
+    0 0 28px rgba(0,0,0,.52),
+    0 0 18px rgba(250,90,31,.08);
+  transform: translateY(10px) scale(.98);
+  opacity: 0;
+  transition: transform .2s ease, opacity .2s ease;
+  overflow: hidden;
+}
+.georges-overlay.open .georges-panel {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+.georges-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(247,255,195,.045) 0 1px,
+    transparent 1px 4px
+  );
+  opacity: .56;
+}
+.georges-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(247,255,195,.4);
+  background: rgba(0,0,0,.34);
+  color: var(--cream);
+  font-family: var(--f-pixel);
+  font-size: 18px;
+  cursor: none;
+}
+.georges-close:hover {
+  color: var(--orange);
+  border-color: rgba(250,90,31,.72);
+}
+.georges-kicker {
+  position: relative;
+  margin: 0 0 14px;
+  font-family: var(--f-pixel);
+  font-size: 12px;
+  letter-spacing: .18em;
+  color: rgba(247,255,195,.64);
+}
+.georges-title {
+  position: relative;
+  margin: 0 0 10px;
+  font-family: var(--f-title);
+  font-size: clamp(32px, 4vw, 54px);
+  line-height: .95;
+  color: var(--orange);
+  text-shadow: 0 0 18px rgba(250,90,31,.16);
+}
+.georges-copy {
+  position: relative;
+  margin: 0;
+  font-family: var(--f-pixel);
+  font-size: clamp(14px, 1.2vw, 18px);
+  line-height: 1.8;
+  color: var(--cream);
+  letter-spacing: .08em;
+}
+.georges-copy strong {
+  color: var(--orange);
+  font-weight: 400;
+}
 .credits-close {
   position: absolute;
   top: 18px;
@@ -1392,6 +1481,15 @@ canvas#starfield-bg {
       </div>
       <p class="credits-note">Cette fenêtre recevra les crédits complets, les contributeurs et les archives du projet au fil du développement.</p>
     </div>
+  </section>
+</div>
+
+<div class="georges-overlay" id="georges-overlay" onclick="if(event.target===this)closeGeorgesEasterEgg()">
+  <section class="georges-panel" aria-label="Easter egg Georges">
+    <button class="georges-close" type="button" onclick="closeGeorgesEasterEgg()">x</button>
+    <p class="georges-kicker">MOTOMOTO // ARCHIVE SIGNAL</p>
+    <h2 class="georges-title">What else</h2>
+    <p class="georges-copy">Tu as trouve ce bon vieux <strong>Georges</strong>.</p>
   </section>
 </div>
 
@@ -2114,6 +2212,25 @@ function toggleSwitch(el) {
 })();
 
 (function() {
+  const overlay = document.getElementById('georges-overlay');
+  if (!overlay) return;
+
+  window.openGeorgesEasterEgg = function() {
+    overlay.classList.add('open');
+  };
+
+  window.closeGeorgesEasterEgg = function() {
+    overlay.classList.remove('open');
+  };
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && overlay.classList.contains('open')) {
+      window.closeGeorgesEasterEgg();
+    }
+  });
+})();
+
+(function() {
   const canvas = document.getElementById('particles-canvas');
   const ctx = canvas.getContext('2d');
   const singularity = document.querySelector('.singularity-wrap');
@@ -2288,6 +2405,7 @@ function toggleSwitch(el) {
     const pullGlow = 1 - Math.min(1, dist / (well.radius * 2.6));
     const alpha = Math.max(0, Math.min(1, a.opacity));
     const scale = a.size * Math.max(.28, Math.min(1, dist / (well.radius * 1.15)));
+    a.hitRadius = Math.max(10, scale * 9.5);
     const pixels = [
       [-1,-7,1,3,'245,250,242'], [0,-7,1,3,'214,226,223'], [1,-6,1,3,'245,250,242'],
       [2,-5,2,2,'184,203,199'], [4,-4,1,3,'245,250,242'],
@@ -2367,6 +2485,25 @@ function toggleSwitch(el) {
       }
     }
   }
+
+  document.addEventListener('click', event => {
+    if (!astronauts.length) return;
+
+    const hitIndex = astronauts.findIndex(a => {
+      const radius = a.hitRadius || 12;
+      return Math.hypot(event.clientX - a.x, event.clientY - a.y) <= radius;
+    });
+
+    if (hitIndex === -1) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    astronauts.splice(hitIndex, 1);
+
+    if (typeof window.openGeorgesEasterEgg === 'function') {
+      window.openGeorgesEasterEgg();
+    }
+  }, true);
 
   function drawDebris(now, well) {
     if (!reduceMotion.matches && now > nextDebrisAt && debris.length < 4) {
