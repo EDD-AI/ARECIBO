@@ -159,6 +159,39 @@ body::after {
   box-shadow:0 0 16px rgba(250,90,31,.32);
 }
 
+.menu-tab {
+  position:fixed;
+  left:6.5vw;
+  bottom:4.8vh;
+  z-index:90;
+  min-height:40px;
+  padding:0 16px;
+  border:1px solid rgba(247,255,195,.42);
+  background:rgba(0,0,0,.42);
+  color:rgba(247,255,195,.82);
+  font-family:var(--f-pixel);
+  font-size:12px;
+  letter-spacing:.1em;
+  cursor:none;
+  border-radius:3px;
+  box-shadow:0 0 16px rgba(247,255,195,.08), inset 0 0 12px rgba(247,255,195,.035);
+  transition:
+    color .16s ease,
+    border-color .16s ease,
+    background .16s ease,
+    transform .16s ease,
+    box-shadow .16s ease;
+}
+.menu-tab:hover,
+.menu-tab:focus-visible {
+  color:var(--cream);
+  border-color:rgba(247,255,195,.76);
+  background:rgba(0,0,0,.58);
+  transform:translateY(-1px);
+  box-shadow:0 0 20px rgba(247,255,195,.14), inset 0 0 16px rgba(247,255,195,.06);
+  outline:none;
+}
+
 .multi-logo {
   position:absolute;
   top:3.1%;
@@ -285,7 +318,7 @@ body::after {
 }
 
 #arecibo-settings-tab {
-  left:6.5vw !important;
+  left:calc(6.5vw + 96px) !important;
   bottom:4.8vh !important;
   top:auto !important;
 }
@@ -325,6 +358,14 @@ body::after {
     width:34%;
     min-width:0;
   }
+  .menu-tab {
+    left:4vw;
+    bottom:4.2vh;
+  }
+  #arecibo-settings-tab {
+    left:calc(4vw + 96px) !important;
+    bottom:4.2vh !important;
+  }
 }
 </style>
 <link rel="stylesheet" href="assets/terminal-filter.css?v=global-terminal-filter-amber">
@@ -333,6 +374,7 @@ body::after {
 <body>
 <div class="cursor" id="cursor"></div>
 <div class="page-transition" id="transition"></div>
+<button class="menu-tab" type="button" onclick="goMenu()" aria-label="Retour au menu">&#60; MENU</button>
 
 <main class="screen" aria-label="Connexion multijoueurs ARECIBO">
   <section class="multi-shell">
