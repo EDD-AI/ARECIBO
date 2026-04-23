@@ -2575,6 +2575,56 @@ function startPortholeSpace() {
     return min + Math.random() * (max - min);
   }
 
+  function getDebrisPalette() {
+    const hullState = shipScene?.dataset.hullState || 'critical';
+    if (hullState === 'stable') {
+      return {
+        coreA: 'rgba(225,242,255,.94)',
+        coreB: 'rgba(171,214,236,.76)',
+        coreC: 'rgba(26,40,54,.8)',
+        stroke: 'rgba(117,216,255,.52)',
+        pixelLight: 'rgba(225,244,255,.82)',
+        pixelDark: 'rgba(106,145,168,.62)',
+        fragmentFill: 'rgba(198,235,255,.7)',
+        fragmentStroke: 'rgba(117,216,255,.35)',
+        fragmentTrail: 'rgba(189,236,255,.82)',
+        trailA: 'rgba(206,240,255,.22)',
+        trailB: 'rgba(151,214,247,.1)',
+        trailC: 'rgba(151,214,247,0)'
+      };
+    }
+    if (hullState === 'repairing') {
+      return {
+        coreA: 'rgba(255,222,176,.95)',
+        coreB: 'rgba(244,154,102,.78)',
+        coreC: 'rgba(48,28,22,.82)',
+        stroke: 'rgba(250,90,31,.52)',
+        pixelLight: 'rgba(255,232,192,.84)',
+        pixelDark: 'rgba(176,116,76,.62)',
+        fragmentFill: 'rgba(255,205,148,.72)',
+        fragmentStroke: 'rgba(250,90,31,.35)',
+        fragmentTrail: 'rgba(255,220,170,.82)',
+        trailA: 'rgba(255,212,162,.22)',
+        trailB: 'rgba(250,140,86,.1)',
+        trailC: 'rgba(250,140,86,0)'
+      };
+    }
+    return {
+      coreA: 'rgba(255,216,206,.95)',
+      coreB: 'rgba(228,116,104,.76)',
+      coreC: 'rgba(42,24,24,.82)',
+      stroke: 'rgba(224,59,49,.52)',
+      pixelLight: 'rgba(255,224,218,.82)',
+      pixelDark: 'rgba(166,94,89,.62)',
+      fragmentFill: 'rgba(255,198,188,.7)',
+      fragmentStroke: 'rgba(224,59,49,.35)',
+      fragmentTrail: 'rgba(255,214,206,.78)',
+      trailA: 'rgba(255,206,198,.22)',
+      trailB: 'rgba(224,98,90,.1)',
+      trailC: 'rgba(224,98,90,0)'
+    };
+  }
+
   function resetStar(star, fromEdge = false) {
     star.x = fromEdge ? width + randomBetween(0, width * .18) : Math.random() * width;
     star.y = Math.random() * height;
@@ -2686,18 +2736,19 @@ function startPortholeSpace() {
   }
 
   function drawDebrisShape(item, alpha = 1) {
+    const palette = getDebrisPalette();
     ctx.save();
     ctx.translate(item.x, item.y);
     ctx.rotate(item.rotation);
     ctx.globalAlpha = alpha;
 
     const gradient = ctx.createRadialGradient(-item.size * .25, -item.size * .3, 0, 0, 0, item.size);
-    gradient.addColorStop(0, 'rgba(247,255,230,.95)');
-    gradient.addColorStop(.42, 'rgba(210,214,188,.76)');
-    gradient.addColorStop(1, 'rgba(38,42,34,.78)');
+    gradient.addColorStop(0, palette.coreA);
+    gradient.addColorStop(.42, palette.coreB);
+    gradient.addColorStop(1, palette.coreC);
 
     ctx.fillStyle = gradient;
-    ctx.strokeStyle = 'rgba(247,255,195,.52)';
+    ctx.strokeStyle = palette.stroke;
     ctx.lineWidth = Math.max(1, item.size * .035);
     ctx.beginPath();
     item.shape.forEach((point, index) => {
@@ -2712,7 +2763,7 @@ function startPortholeSpace() {
 
     ctx.globalAlpha = alpha * .78;
     item.pixels.forEach(pixel => {
-      ctx.fillStyle = pixel.light ? 'rgba(247,255,224,.78)' : 'rgba(146,151,128,.62)';
+      ctx.fillStyle = pixel.light ? palette.pixelLight : palette.pixelDark;
       ctx.fillRect(pixel.x, pixel.y, pixel.size, pixel.size);
     });
 
@@ -2720,11 +2771,12 @@ function startPortholeSpace() {
   }
 
   function drawFragment(fragment) {
+    const palette = getDebrisPalette();
     ctx.save();
     ctx.translate(fragment.x, fragment.y);
     ctx.rotate(fragment.rotation);
     ctx.globalAlpha = fragment.alpha * .32;
-    ctx.strokeStyle = '#F7FFC3';
+    ctx.strokeStyle = palette.fragmentTrail;
     ctx.lineWidth = Math.max(1, fragment.size * .25);
     ctx.beginPath();
     ctx.moveTo(fragment.prevX - fragment.x, fragment.prevY - fragment.y);
@@ -2732,8 +2784,8 @@ function startPortholeSpace() {
     ctx.stroke();
 
     ctx.globalAlpha = fragment.alpha;
-    ctx.fillStyle = 'rgba(247,255,220,.68)';
-    ctx.strokeStyle = 'rgba(247,255,195,.35)';
+    ctx.fillStyle = palette.fragmentFill;
+    ctx.strokeStyle = palette.fragmentStroke;
     ctx.lineWidth = 1;
     ctx.beginPath();
     fragment.shape.forEach((point, index) => {
@@ -2750,6 +2802,7 @@ function startPortholeSpace() {
 
   function updateDebris(now) {
     if (now >= nextDebrisAt && debrisEvents.length < 1) spawnDebrisEvent(now);
+    const palette = getDebrisPalette();
 
     for (let i = debrisEvents.length - 1; i >= 0; i--) {
       const event = debrisEvents[i];
@@ -2768,9 +2821,9 @@ function startPortholeSpace() {
       const trailStartX = event.x - event.direction * event.size * .16;
       const trailEndX = event.x - event.direction * event.size * (Math.abs(event.vx) > 2 ? 3.4 : 2.35);
       const trail = ctx.createLinearGradient(trailStartX, event.y, trailEndX, event.y);
-      trail.addColorStop(0, 'rgba(247,255,220,.18)');
-      trail.addColorStop(.28, 'rgba(247,255,220,.08)');
-      trail.addColorStop(1, 'rgba(247,255,220,0)');
+      trail.addColorStop(0, palette.trailA);
+      trail.addColorStop(.28, palette.trailB);
+      trail.addColorStop(1, palette.trailC);
       ctx.globalAlpha = .7;
       ctx.strokeStyle = trail;
       ctx.lineWidth = Math.max(2, event.size * (Math.abs(event.vx) > 2 ? .34 : .28));
