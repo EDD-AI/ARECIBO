@@ -2427,6 +2427,7 @@ body::after {
   font-weight:700;
   text-transform:uppercase;
   text-shadow:0 0 12px rgba(250,90,31,.18);
+  text-align:center;
 }
 .landing-decision-panel {
   width:min(100%, calc(100% - clamp(40px, 3.6vw, 66px)));
@@ -2437,11 +2438,11 @@ body::after {
   min-height:clamp(30px, 3vw, 42px);
   display:flex;
   align-items:center;
-  justify-content:flex-start;
+  justify-content:center;
   padding:6px 0;
   border-top:1px solid rgba(247,255,195,.34);
   border-bottom:1px solid rgba(247,255,195,.34);
-  text-align:left;
+  text-align:center;
   color:var(--cream);
   font-size:clamp(10px, .82vw, 14px);
   text-transform:uppercase;
@@ -2452,6 +2453,7 @@ body::after {
   align-items:flex-start;
   gap:5px;
   width:100%;
+  justify-content:center;
 }
 .landing-prompt {
   flex:0 0 auto;
@@ -2497,12 +2499,14 @@ body::after {
   font-size:clamp(9px, .72vw, 12px);
   text-transform:uppercase;
   line-height:1.08;
+  text-align:center;
 }
 .landing-module-status {
   color:var(--orange);
   font-size:clamp(9px, .76vw, 13px);
   line-height:1.12;
   text-transform:uppercase;
+  text-align:center;
 }
 .landing-module-status.is-success {
   color:var(--green);
@@ -2524,7 +2528,7 @@ body::after {
   font-size:clamp(9px, .74vw, 12px);
   line-height:1.08;
   text-transform:uppercase;
-  text-align:left;
+  text-align:center;
   cursor:none;
 }
 .landing-module-btn:hover,
@@ -2542,6 +2546,7 @@ body::after {
   font-size:11px;
   line-height:1.25;
   overflow-wrap:anywhere;
+  text-align:center;
 }
 .landing-console-nav {
   position:absolute;
@@ -2570,7 +2575,7 @@ body::after {
 }
 .decision-row {
   display:grid;
-  grid-template-columns:minmax(0, 1fr) auto;
+  grid-template-columns:minmax(0, 1fr);
   align-items:center;
   gap:5px;
   min-height:31px;
@@ -2587,7 +2592,7 @@ body::after {
   line-height:1.02;
   letter-spacing:.01em;
   text-transform:uppercase;
-  text-align:left;
+  text-align:center;
   cursor:none;
   transition:border-color .14s ease, box-shadow .14s ease, transform .14s ease, color .14s ease;
 }
@@ -2610,11 +2615,11 @@ body::after {
 .decision-votes {
   display:flex;
   align-items:center;
-  justify-content:flex-end;
+  justify-content:center;
   flex-wrap:wrap;
   gap:4px;
-  min-width:48px;
-  max-width:92px;
+  min-width:0;
+  max-width:none;
 }
 .decision-votes.is-empty {
   opacity:.14;
