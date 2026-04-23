@@ -567,8 +567,36 @@ body::after {
   justify-content:flex-end;
   gap:6px;
   color:#bdf2ff;
-  pointer-events:none;
+  border:0;
+  background:transparent;
+  padding:0;
+  cursor:none;
   text-shadow:0 0 8px rgba(117,216,255,.22);
+  transition:
+    transform .14s ease,
+    filter .14s ease,
+    opacity .14s ease;
+}
+.message-indicator:hover,
+.message-indicator:focus-visible {
+  transform:translateY(-1px);
+  filter:drop-shadow(0 0 9px rgba(117,216,255,.32));
+  outline:none;
+}
+.message-indicator:hover .mail-icon .mail-border,
+.message-indicator:focus-visible .mail-icon .mail-border,
+.message-indicator:hover .mail-icon .mail-flap,
+.message-indicator:focus-visible .mail-icon .mail-flap {
+  stroke:var(--orange);
+}
+.message-indicator:hover .mail-icon .mail-pixel,
+.message-indicator:focus-visible .mail-icon .mail-pixel {
+  fill:var(--orange);
+}
+.message-indicator:hover .message-count,
+.message-indicator:focus-visible .message-count {
+  color:#bdf2ff;
+  text-shadow:0 0 10px rgba(117,216,255,.45);
 }
 .mail-icon {
   width:25px;
@@ -600,6 +628,164 @@ body::after {
   letter-spacing:.04em;
   text-align:center;
   text-shadow:0 0 9px rgba(250,90,31,.34);
+}
+
+#messages-overlay {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.72);
+  z-index:930;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  backdrop-filter:blur(2px);
+}
+#messages-overlay.open { display:flex; }
+
+.messages-panel {
+  width:min(650px, calc(100vw - 42px));
+  background:
+    linear-gradient(rgba(247,255,195,.02), rgba(0,0,0,.02)),
+    #050505;
+  border:1px solid rgba(117,216,255,.46);
+  border-radius:4px;
+  color:var(--cream);
+  font-family:'Pixelify Sans', monospace;
+  opacity:0;
+  overflow:hidden;
+  transform:scale(.92) translateY(12px);
+  transition:opacity .28s ease, transform .28s ease;
+  box-shadow:
+    0 0 70px rgba(0,0,0,.82),
+    0 0 30px rgba(117,216,255,.08),
+    inset 0 0 42px rgba(117,216,255,.035);
+}
+.messages-panel.visible {
+  opacity:1;
+  transform:scale(1) translateY(0);
+}
+.msg-header {
+  display:flex;
+  align-items:center;
+  gap:15px;
+  padding:15px 20px;
+  border-bottom:1px solid rgba(117,216,255,.18);
+  background:rgba(0,18,24,.28);
+}
+.msg-close {
+  width:42px;
+  height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(117,216,255,.055);
+  border:1px solid rgba(117,216,255,.38);
+  color:#bdf2ff;
+  font-family:'Pixelify Sans', monospace;
+  font-size:20px;
+  cursor:none;
+  border-radius:4px;
+  transition:all .12s ease;
+}
+.msg-close:hover {
+  color:var(--orange);
+  border-color:var(--orange);
+  background:rgba(255,76,28,.09);
+}
+.msg-title {
+  color:#bdf2ff;
+  font-size:17px;
+  letter-spacing:.12em;
+  text-shadow:0 0 12px rgba(117,216,255,.2);
+}
+.msg-body {
+  display:grid;
+  gap:14px;
+  padding:21px;
+}
+.message-card {
+  position:relative;
+  border:1px solid rgba(117,216,255,.26);
+  background:
+    linear-gradient(90deg, rgba(117,216,255,.055), rgba(0,0,0,.02)),
+    rgba(0,14,20,.34);
+  padding:15px 16px 16px;
+  overflow:hidden;
+  box-shadow:inset 0 0 22px rgba(117,216,255,.025);
+}
+.message-card::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:repeating-linear-gradient(
+    180deg,
+    rgba(247,255,195,.045) 0,
+    rgba(247,255,195,.045) 1px,
+    transparent 1px,
+    transparent 7px
+  );
+  opacity:.17;
+}
+.message-card.warning {
+  border-color:rgba(224,59,49,.64);
+  background:
+    linear-gradient(90deg, rgba(224,59,49,.11), rgba(0,0,0,.015)),
+    rgba(23,0,0,.42);
+  box-shadow:
+    0 0 18px rgba(224,59,49,.08),
+    inset 0 0 24px rgba(224,59,49,.035);
+}
+.message-meta {
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  color:rgba(247,255,195,.58);
+  font-size:11px;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+.message-sender {
+  color:#bdf2ff;
+  text-shadow:0 0 8px rgba(117,216,255,.2);
+}
+.message-time { white-space:nowrap; }
+.message-subject {
+  position:relative;
+  margin:13px 0 7px;
+  color:var(--cream);
+  font-size:18px;
+  font-weight:500;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.message-text {
+  position:relative;
+  margin:0;
+  color:rgba(247,255,195,.78);
+  font-size:15px;
+  line-height:1.45;
+  letter-spacing:.03em;
+}
+.warning-badge {
+  color:#e03b31;
+  text-shadow:0 0 12px rgba(224,59,49,.35);
+  animation:messageWarningBlink .72s step-end infinite;
+}
+.message-card.warning .message-subject {
+  color:#e03b31;
+  text-shadow:0 0 14px rgba(224,59,49,.32);
+}
+.message-card.warning .message-text {
+  color:rgba(255,190,170,.82);
+}
+@keyframes messageWarningBlink {
+  0%, 44% { opacity:1; }
+  45%, 68% { opacity:.28; }
+  69%, 100% { opacity:1; }
 }
 
 .ship-map-window {
@@ -1392,7 +1578,7 @@ body::after {
   <button class="corner-tab settings-tab" type="button" onclick="openSettings(event)">&#60; SETTINGS</button>
 
   <section class="personal-window" id="personal-window" aria-label="Package personnel du joueur">
-    <div class="message-indicator" aria-label="2 messages personnels">
+    <button class="message-indicator" type="button" onclick="openMessages(event)" aria-label="Ouvrir 2 messages personnels">
       <svg class="mail-icon" viewBox="0 0 25 19" aria-hidden="true" focusable="false">
         <rect class="mail-border" x="2" y="4" width="21" height="13"></rect>
         <polyline class="mail-flap" points="3,5 12.5,12 22,5"></polyline>
@@ -1402,7 +1588,7 @@ body::after {
         <rect class="mail-pixel" x="19" y="6" width="2" height="2"></rect>
       </svg>
       <span class="message-count">02</span>
-    </div>
+    </button>
     <header class="personal-title">&#62;PACKAGE PERSONNEL\</header>
 
     <div class="personal-body">
@@ -1510,6 +1696,34 @@ body::after {
 
   <div class="bridge-meta">MOTOMOTO // SAS EXPEDITION // SALVAGE PROTOCOL</div>
 </main>
+
+<div id="messages-overlay" onclick="if(event.target===this)closeMessages()">
+  <section class="messages-panel" aria-label="Messages personnels">
+    <div class="msg-header">
+      <button class="msg-close" type="button" onclick="closeMessages()">x</button>
+      <span class="msg-title">PACKAGE PERSONNEL // MESSAGES //</span>
+    </div>
+    <div class="msg-body">
+      <article class="message-card">
+        <div class="message-meta">
+          <span class="message-sender">MOTOMOTO // CRIS</span>
+          <span class="message-time">TEST 001</span>
+        </div>
+        <h3 class="message-subject">MESSAGE DU MOTOMOTO</h3>
+        <p class="message-text">test numero 1 vous allez y arriver continuer sur ce chemin, ca va etre un grand jeu.</p>
+      </article>
+
+      <article class="message-card warning">
+        <div class="message-meta">
+          <span class="warning-badge">!! WARNING !!</span>
+          <span class="message-time">PRIORITE ROUGE</span>
+        </div>
+        <h3 class="message-subject">EVENEMENT MAJEUR EN COURS</h3>
+        <p class="message-text">Radiations instables detectees autour du sas. Maintenir les systemes actifs et surveiller les prochaines transmissions.</p>
+      </article>
+    </div>
+  </section>
+</div>
 
 <div id="settings-overlay" onclick="if(event.target===this)closeSettings()">
   <div class="settings-panel">
@@ -2360,6 +2574,22 @@ function closeSettings() {
   setTimeout(() => overlay.classList.remove('open'), 320);
 }
 
+function openMessages(event) {
+  if (event) event.preventDefault();
+  const overlay = document.getElementById('messages-overlay');
+  if (!overlay) return;
+  overlay.classList.add('open');
+  setTimeout(() => overlay.querySelector('.messages-panel').classList.add('visible'), 10);
+}
+
+function closeMessages() {
+  const overlay = document.getElementById('messages-overlay');
+  if (!overlay) return;
+  const panel = overlay.querySelector('.messages-panel');
+  if (panel) panel.classList.remove('visible');
+  setTimeout(() => overlay.classList.remove('open'), 300);
+}
+
 function updateSlider(el, valId) {
   const valueNode = document.getElementById(valId);
   if (valueNode) valueNode.textContent = el.value + '%';
@@ -2378,8 +2608,13 @@ function toggleSwitch(el) {
 
 document.addEventListener('keydown', event => {
   if (event.key !== 'Escape') return;
-  const overlay = document.getElementById('settings-overlay');
-  if (overlay && overlay.classList.contains('open')) closeSettings();
+  const messagesOverlay = document.getElementById('messages-overlay');
+  if (messagesOverlay && messagesOverlay.classList.contains('open')) {
+    closeMessages();
+    return;
+  }
+  const settingsOverlay = document.getElementById('settings-overlay');
+  if (settingsOverlay && settingsOverlay.classList.contains('open')) closeSettings();
 });
 
 updateReadyState();
