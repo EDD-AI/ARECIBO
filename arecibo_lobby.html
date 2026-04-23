@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ARECIBO — Lobby</title>
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ARECIBO - Connexion multijoueurs</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&display=swap');
 
@@ -33,254 +36,251 @@
 }
 
 :root {
-  --cream: #F7FFC3;
-  --orange: #FA5A1F;
-  --bg: #000;
-  --f-logo:  'Power Grotesk',  sans-serif;
-  --f-title: 'Degular',        sans-serif;
-  --f-pixel: 'Pixelify Sans',  monospace;
+  --cream:#F7FFC3;
+  --orange:#FA5A1F;
+  --bg:#000;
+  --f-logo:'Power Grotesk', sans-serif;
+  --f-title:'Degular', sans-serif;
+  --f-pixel:'Pixelify Sans', monospace;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing:border-box; margin:0; padding:0; }
+
+html,
+body {
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
 
 body {
-  background: var(--bg);
-  width: 100vw; height: 100vh;
-  overflow: hidden;
-  font-family: var(--f-pixel);
-  cursor: none;
-  color: var(--cream);
+  background:#000;
+  color:var(--cream);
+  font-family:var(--f-pixel);
+  cursor:none;
+}
+
+body::before,
+body::after {
+  content:'';
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+}
+body::before {
+  z-index:9500;
+  border-radius:clamp(28px, 4.8vw, 84px);
+  background:
+    radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.32) 80%, rgba(0,0,0,.82) 100%),
+    repeating-linear-gradient(0deg, rgba(247,255,195,.045) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(90deg, rgba(247,255,195,.035) 0 1px, transparent 1px 9px);
+  box-shadow:
+    inset 0 0 52px rgba(0,0,0,.92),
+    inset 0 0 150px rgba(0,0,0,.66),
+    inset 0 0 0 2px rgba(247,255,195,.04);
+  opacity:.62;
+  filter:blur(.16px);
+}
+body::after {
+  inset:clamp(10px, 1.4vw, 22px);
+  z-index:9600;
+  border:1px solid rgba(247,255,195,.05);
+  border-radius:clamp(24px, 4.2vw, 78px);
+  background:
+    linear-gradient(115deg, rgba(247,255,195,.04) 0%, transparent 18%, transparent 76%, rgba(250,90,31,.03) 100%),
+    radial-gradient(ellipse at 50% 0%, rgba(247,255,195,.045), transparent 36%);
+  box-shadow:inset 0 0 92px rgba(0,0,0,.62);
+  opacity:.58;
 }
 
 .cursor {
-  position: fixed;
-  width: 14px; height: 14px;
-  border: 1.5px solid var(--cream);
-  pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%,-50%);
+  position:fixed;
+  width:14px;
+  height:14px;
+  border:1.5px solid var(--cream);
+  pointer-events:none;
+  z-index:9999;
+  transform:translate(-50%, -50%);
 }
 .cursor::after {
-  content: '';
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 3px; height: 3px;
-  background: var(--orange);
-  transform: translate(-50%,-50%);
+  content:'';
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:3px;
+  height:3px;
+  background:var(--orange);
+  transform:translate(-50%, -50%);
 }
 
 .screen {
-  position: relative;
-  width: 100vw; height: 100vh;
-  overflow: hidden;
+  position:relative;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+  background:#000;
+  filter:contrast(1.04) saturate(.94);
 }
 
-.starfield {
-  position: absolute;
-  inset: 0;
-  background: url('assets/backgrounds/starfield.png') center/cover no-repeat;
-  opacity: .9;
+.multi-shell {
+  position:absolute;
+  left:6.5vw;
+  right:6vw;
+  top:13.2vh;
+  bottom:.25vh;
+  min-width:720px;
+  min-height:420px;
 }
 
-.screen::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);
-  pointer-events: none;
-  z-index: 20;
-}
-
-.lines-wrap {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 2;
-}
-.lines-wrap svg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.circles-svg {
-  position: absolute;
-  top: 0; right: 0;
-  width: 40%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 2;
+.frame-art {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  pointer-events:none;
+  image-rendering:pixelated;
+  opacity:.9;
 }
 
 .back-btn {
-  position: absolute;
-  top: 5.5vh;
-  left: 4.8vw;
-  z-index: 10;
-  color: var(--cream);
-  text-decoration: none;
-  font-family: var(--f-pixel);
-  font-size: 17px;
-  letter-spacing: .1em;
-  cursor: none;
-  opacity: 0;
-  animation: fadeIn .4s ease forwards .2s;
+  position:absolute;
+  left:.35%;
+  top:.85%;
+  width:28px;
+  height:28px;
+  z-index:12;
+  border:0;
+  background:transparent;
+  color:transparent;
+  cursor:none;
 }
-.back-btn:hover { color: var(--orange); }
-
-.session-meta {
-  position: absolute;
-  top: 5.2vh;
-  right: 5.1vw;
-  z-index: 10;
-  text-align: right;
-  opacity: 0;
-  animation: fadeIn .4s ease forwards .25s;
-}
-.session-code {
-  font-family: var(--f-pixel);
-  font-size: clamp(36px, 4vw, 60px);
-  color: var(--cream);
-  letter-spacing: .16em;
-  margin-bottom: 10px;
-}
-.player-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-.grid-slot {
-  width: 48px;
-  border: 1px solid rgba(247,255,195,.35);
-  padding: 6px 0;
-  font-size: 11px;
-  letter-spacing: .1em;
-  text-align: center;
-  color: rgba(247,255,195,.6);
-}
-.grid-slot.active {
-  border-color: var(--orange);
-  color: #000;
-  background: var(--orange);
+.back-btn:hover {
+  box-shadow:0 0 16px rgba(250,90,31,.32);
 }
 
-.players {
-  position: absolute;
-  top: 35vh;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(88vw, 1360px);
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: clamp(18px, 2vw, 34px);
-  z-index: 10;
-}
-.player-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  opacity: 0;
-  animation: fadeIn .45s ease forwards;
-}
-.player-card:nth-child(1) { animation-delay: .45s; }
-.player-card:nth-child(2) { animation-delay: .58s; }
-.player-card:nth-child(3) { animation-delay: .71s; }
-.player-card:nth-child(4) { animation-delay: .84s; }
-
-.player-name {
-  font-family: var(--f-title);
-  font-weight: 900;
-  font-size: clamp(22px, 2vw, 34px);
-  letter-spacing: .03em;
-  color: var(--cream);
-  text-transform: uppercase;
-}
-.status-btn {
-  font-family: var(--f-pixel);
-  font-size: 16px;
-  letter-spacing: .08em;
-  padding: 8px 18px;
-  min-width: 130px;
-  text-align: center;
-  border: 1px solid var(--orange);
-}
-.status-ready {
-  background: var(--orange);
-  color: #000;
-}
-.status-wait {
-  background: transparent;
-  color: var(--orange);
-}
-.floor-ellipse {
-  width: clamp(130px, 11vw, 180px);
-  height: 18px;
-  border-radius: 999px;
-  border: 1px solid rgba(247,255,195,.2);
-  background: radial-gradient(circle at center, rgba(247,255,195,.22) 0%, rgba(247,255,195,.08) 45%, rgba(247,255,195,.01) 75%, rgba(247,255,195,0) 100%);
-  filter: blur(.2px);
+.multi-logo {
+  position:absolute;
+  top:3.1%;
+  right:2.6%;
+  width:min(37vw, 510px);
+  max-width:36.2%;
+  height:auto;
+  z-index:5;
+  image-rendering:auto;
+  filter:drop-shadow(0 0 18px rgba(247,255,195,.09));
 }
 
-.terminal {
-  position: absolute;
-  left: 5vw;
-  bottom: 8vh;
-  width: min(32vw, 420px);
-  border: 1px solid rgba(247,255,195,.25);
-  background: rgba(0,0,0,.45);
-  padding: 10px 12px;
-  z-index: 10;
-  font-family: var(--f-pixel);
-  font-size: 11px;
-  line-height: 1.45;
-  letter-spacing: .04em;
-  color: rgba(247,255,195,.8);
-  opacity: 0;
-  animation: fadeIn .45s ease forwards 1s;
+.session-block {
+  position:absolute;
+  left:33.15%;
+  top:37.25%;
+  width:13.9%;
+  min-width:190px;
+  z-index:5;
 }
-.terminal .head {
-  color: var(--orange);
-  margin-bottom: 4px;
+.session-code-art {
+  width:100%;
+  display:block;
+  image-rendering:pixelated;
 }
 
-.launch-btn {
-  position: absolute;
-  left: 50%;
-  bottom: 7.8vh;
-  transform: translateX(-50%);
-  z-index: 12;
-  border: 0;
-  background: var(--orange);
-  color: #000;
-  font-family: var(--f-title);
-  font-weight: 900;
-  letter-spacing: .04em;
-  font-size: clamp(19px, 1.7vw, 28px);
-  padding: 16px 36px;
-  cursor: none;
-  opacity: 0;
-  animation: fadeIn .5s ease forwards 1.1s;
+.validation-button {
+  position:absolute;
+  left:32.05%;
+  top:58.75%;
+  width:15.55%;
+  min-width:210px;
+  z-index:7;
+  border:0;
+  background:transparent;
+  padding:0;
+  cursor:none;
 }
-.launch-btn:hover { filter: brightness(1.08); }
+.validation-button img {
+  width:100%;
+  display:block;
+  image-rendering:pixelated;
+}
+.validation-button:hover {
+  filter:brightness(1.18) drop-shadow(0 0 13px rgba(250,90,31,.36));
+}
+
+.connection-card {
+  position:absolute;
+  left:51.55%;
+  top:39.35%;
+  width:18.25%;
+  min-width:250px;
+  z-index:5;
+  image-rendering:pixelated;
+  filter:drop-shadow(0 0 20px rgba(247,255,195,.05));
+}
+
+.multi-noise {
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+  opacity:.18;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 7px, rgba(247,255,195,.07) 7px 8px),
+    radial-gradient(circle at 68% 47%, rgba(247,255,195,.03), transparent 20%);
+  mix-blend-mode:screen;
+}
 
 .page-transition {
-  position: fixed; inset: 0;
-  background: #000;
-  z-index: 100;
-  opacity: 0; pointer-events: none;
-  transition: opacity .4s ease;
+  position:fixed;
+  inset:0;
+  background:#000;
+  z-index:1000;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .42s ease;
 }
-.page-transition.active { opacity: 1; pointer-events: all; }
+.page-transition.active {
+  opacity:1;
+  pointer-events:all;
+}
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+#arecibo-settings-tab {
+  left:6.5vw !important;
+  bottom:4.8vh !important;
+  top:auto !important;
+}
+
+@media (max-width: 900px) {
+  .multi-shell {
+    left:4vw;
+    right:4vw;
+    top:9vh;
+    bottom:9vh;
+    min-width:0;
+  }
+  .multi-logo {
+    top:8%;
+    right:6%;
+    width:44vw;
+    max-width:none;
+  }
+  .session-block {
+    left:14%;
+    top:38%;
+    width:36%;
+    min-width:0;
+  }
+  .validation-button {
+    left:14%;
+    top:59%;
+    width:39%;
+    min-width:0;
+  }
+  .connection-card {
+    left:55%;
+    top:42%;
+    width:34%;
+    min-width:0;
+  }
 }
 </style>
 <link rel="stylesheet" href="assets/terminal-filter.css?v=global-terminal-filter-amber">
@@ -290,103 +290,39 @@ body {
 <div class="cursor" id="cursor"></div>
 <div class="page-transition" id="transition"></div>
 
-<div class="screen">
-  <div class="starfield"></div>
+<main class="screen" aria-label="Connexion multijoueurs ARECIBO">
+  <section class="multi-shell">
+    <img class="frame-art" src="assets/multiplayer/frame.svg" alt="">
+    <button class="back-btn" type="button" onclick="goMenu()" aria-label="Retour au menu">x</button>
+    <img class="multi-logo" src="assets/multiplayer/logo-arecibo.svg" alt="ARECIBO">
 
-  <div class="lines-wrap">
-    <svg viewBox="-139 0 1851 1080" preserveAspectRatio="xMidYMid meet" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M1712 671.529L1015.76 671.528C762.582 704.691 215.717 887.916 53.6834 1355.51M1712 621.784L914.489 621.784C657.091 642.511 109.383 746.145 -22.27 994.867" stroke="#FA5A1F" stroke-width="1"/>
-      <path d="M1712 471.985L1009.07 471.985C753.453 438.822 201.33 255.597 37.7381 -212M1712 521.73L906.821 521.73C646.948 501.003 93.9728 397.369 -38.9457 148.647" stroke="#FA5A1F" stroke-width="1"/>
-      <path d="M1611.95 571.757L-139 571.757" stroke="#FA5A1F" stroke-width="1"/>
-      <path d="M1611.95 688.487L1611.95 455.027" stroke="#FA5A1F" stroke-width="1"/>
-      <path d="M1428.51 688.487L1428.51 455.027" stroke="#FA5A1F" stroke-width="1"/>
-      <path d="M1245.08 688.487L1245.08 455.027" stroke="#FA5A1F" stroke-width="1"/>
-      <path d="M994.945 688.487L994.945 455.027" stroke="#FA5A1F" stroke-width="1"/>
-      <path d="M544.703 821.892L544.703 321.622" stroke="#FA5A1F" stroke-width="1"/>
-    </svg>
-  </div>
+    <div class="session-block" aria-label="Code de session de jeu a rejoindre JX3T">
+      <img class="session-code-art" src="assets/multiplayer/session-code.svg" alt="Code de session JX3T">
+    </div>
 
-  <svg class="circles-svg" viewBox="0 0 600 1080" preserveAspectRatio="xMaxYMid meet" fill="none">
-    <circle cx="520" cy="540" r="280" stroke="rgba(247,255,195,.12)" stroke-width="1"/>
-    <circle cx="520" cy="540" r="185" stroke="rgba(247,255,195,.1)"  stroke-width="1"/>
-    <circle cx="520" cy="540" r="90"  stroke="rgba(247,255,195,.13)" stroke-width="1"/>
-    <circle cx="520" cy="260" r="5"   fill="rgba(247,255,195,.9)"/>
-    <circle cx="240" cy="540" r="5"   fill="rgba(247,255,195,.7)"/>
-    <circle cx="575" cy="650" r="4"   fill="rgba(247,255,195,.6)"/>
-  </svg>
+    <button class="validation-button" type="button" aria-label="Valider le code de session">
+      <img src="assets/multiplayer/validation.svg" alt="validation">
+    </button>
 
-  <a class="back-btn" href="#" onclick="goTo(event, 'menu')">&lt; RETOUR</a>
-
-  <div class="session-meta">
-    <div class="session-code" id="sessionCode">JX3T</div>
-    <div class="player-grid">
-      <div class="grid-slot active">P1</div>
-      <div class="grid-slot">P2</div>
-      <div class="grid-slot">P3</div>
-      <div class="grid-slot">P4</div>
-    </div>
-  </div>
-
-  <section class="players">
-    <div class="player-card">
-      <div class="player-name">PLAYER 1</div>
-      <div class="status-btn status-ready">Prêt</div>
-      <div class="floor-ellipse"></div>
-    </div>
-    <div class="player-card">
-      <div class="player-name">PLAYER 2</div>
-      <div class="status-btn status-wait">wait...</div>
-      <div class="floor-ellipse"></div>
-    </div>
-    <div class="player-card">
-      <div class="player-name">PLAYER 3</div>
-      <div class="status-btn status-ready">Prêt</div>
-      <div class="floor-ellipse"></div>
-    </div>
-    <div class="player-card">
-      <div class="player-name">PLAYER 4</div>
-      <div class="status-btn status-wait">wait...</div>
-      <div class="floor-ellipse"></div>
-    </div>
+    <img class="connection-card" src="assets/multiplayer/connection-card.svg" alt="Connexion entre la station et l'ordinateur">
+    <div class="multi-noise" aria-hidden="true"></div>
   </section>
-
-  <div class="terminal">
-    <div class="head">[ MOTOMOTO :: BOOT SEQUENCE ]</div>
-    <div>&gt; kernel handshake .......... OK</div>
-    <div>&gt; cryo-bay uplink .......... OK</div>
-    <div>&gt; salvage drone vector ..... READY</div>
-    <div>&gt; transmitting lobby seed .. <span id="bootSeed">JX3T</span></div>
-  </div>
-
-  <button class="launch-btn">LANCER LA SESSION</button>
-</div>
+</main>
 
 <script src="assets/ingame-settings.js?v=ingame-settings-tabs"></script>
 <script>
 const cursor = document.getElementById('cursor');
-document.addEventListener('mousemove', e => {
-  cursor.style.left = e.clientX + 'px';
-  cursor.style.top  = e.clientY + 'px';
+document.addEventListener('mousemove', event => {
+  cursor.style.left = event.clientX + 'px';
+  cursor.style.top = event.clientY + 'px';
 });
 
-function generateSessionCode() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < 4; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
-}
-
-const code = generateSessionCode();
-document.getElementById('sessionCode').textContent = code;
-document.getElementById('bootSeed').textContent = code;
-
-function goTo(e, page) {
-  e.preventDefault();
-  const t = document.getElementById('transition');
-  t.classList.add('active');
-  setTimeout(() => { window.location.href = 'arecibo_' + page + '.html'; }, 420);
+function goMenu() {
+  const transition = document.getElementById('transition');
+  transition.classList.add('active');
+  setTimeout(() => {
+    window.location.href = 'arecibo_menu.html?v=multiplayer-connection';
+  }, 420);
 }
 </script>
 </body>
