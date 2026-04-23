@@ -2023,6 +2023,7 @@ function startRoomFly() {
     life: 0,
     maxLife: 0,
     nextAt: performance.now() + 2200,
+    buzzTick: 0,
     trail: []
   };
   let width = 0;
@@ -2051,6 +2052,7 @@ function startRoomFly() {
     fly.size = randomBetween(3, 4.5);
     fly.life = 0;
     fly.maxLife = randomBetween(8, 14);
+    fly.buzzTick = 0;
     fly.trail.length = 0;
     pickTarget();
     fly.nextAt = now + randomBetween(16000, 26000);
@@ -2090,8 +2092,20 @@ function startRoomFly() {
 
     fly.x += fly.vx * delta;
     fly.y += fly.vy * delta;
-    fly.trail.push({ x: fly.prevX, y: fly.prevY, alpha: .28, size: fly.size });
-    if (fly.trail.length > 16) fly.trail.shift();
+    fly.buzzTick += 1;
+    const buzzLabel = fly.buzzTick % 5 === 0
+      ? ['bbzzzzzzzzz', 'bzzz', 'bzz'][Math.floor((fly.buzzTick / 5) % 3)]
+      : '';
+    fly.trail.push({
+      x: fly.prevX,
+      y: fly.prevY,
+      alpha: .28,
+      size: fly.size,
+      label: buzzLabel,
+      angle: Math.atan2(fly.prevY - fly.y, fly.prevX - fly.x),
+      jitter: randomBetween(-3, 3)
+    });
+    if (fly.trail.length > 22) fly.trail.shift();
 
     const leftRoom = fly.x < -34 || fly.x > width + 34 || fly.y < height * .06 || fly.y > height * .82;
     if (fly.life > fly.maxLife || leftRoom) {
@@ -2103,9 +2117,22 @@ function startRoomFly() {
   function drawFly() {
     fly.trail.forEach((point, index) => {
       point.alpha *= .86;
-      ctx.globalAlpha = point.alpha * (index / Math.max(1, fly.trail.length));
+      const trailLife = index / Math.max(1, fly.trail.length);
+      ctx.globalAlpha = point.alpha * trailLife;
       ctx.fillStyle = '#020201';
       ctx.fillRect(Math.round(point.x), Math.round(point.y), Math.max(1, point.size - 1), Math.max(1, point.size - 1));
+
+      if (point.label) {
+        ctx.save();
+        ctx.translate(point.x - Math.cos(point.angle) * 8, point.y + point.jitter);
+        ctx.rotate(point.angle + Math.sin(index * .7) * .08);
+        ctx.globalAlpha = point.alpha * trailLife * .82;
+        ctx.fillStyle = '#030301';
+        ctx.font = '9px "Pixelify Sans", monospace';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(point.label, 0, 0);
+        ctx.restore();
+      }
     });
 
     if (!fly.active) return;
