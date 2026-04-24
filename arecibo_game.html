@@ -1922,16 +1922,19 @@ body::after {
   width:44.8%;
   height:29.8%;
   border-radius:5.6% / 10.6%;
-  background:transparent;
+  background:
+    radial-gradient(ellipse at center, rgba(247,255,195,.02), transparent 62%),
+    #010101;
   box-shadow:none;
   opacity:1;
-  z-index:-1;
+  z-index:1;
 }
 .bridge.is-room-quarters .space-porthole::after {
   background:none;
 }
 .bridge.is-room-quarters .space-porthole canvas {
   filter:none;
+  opacity:.98;
 }
 .bridge.is-room-pont .airlock-shield {
   animation:none;
