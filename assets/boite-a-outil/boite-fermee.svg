@@ -1,0 +1,19 @@
+<svg width="120" height="90" viewBox="0 0 120 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Corps principal -->
+  <rect x="8" y="28" width="104" height="58" rx="4" fill="#2a1f0e" stroke="#c87d2a" stroke-width="1.5"/>
+  <!-- Couvercle -->
+  <rect x="8" y="8" width="104" height="24" rx="4" fill="#3d2c12" stroke="#c87d2a" stroke-width="1.5"/>
+  <!-- Poignée -->
+  <rect x="42" y="2" width="36" height="10" rx="5" fill="none" stroke="#c87d2a" stroke-width="1.5"/>
+  <!-- Fermeture centrale -->
+  <rect x="50" y="27" width="20" height="8" rx="2" fill="#c87d2a" stroke="#e8a040" stroke-width="1"/>
+  <rect x="57" y="30" width="6" height="4" rx="1" fill="#e8a040"/>
+  <!-- Rivets coins -->
+  <circle cx="18" cy="18" r="2.5" fill="#c87d2a"/>
+  <circle cx="102" cy="18" r="2.5" fill="#c87d2a"/>
+  <circle cx="18" cy="72" r="2.5" fill="#c87d2a"/>
+  <circle cx="102" cy="72" r="2.5" fill="#c87d2a"/>
+  <!-- Rayures métal -->
+  <line x1="8" y1="46" x2="112" y2="46" stroke="#c87d2a" stroke-width="0.5" stroke-dasharray="4 8" opacity="0.4"/>
+  <line x1="8" y1="60" x2="112" y2="60" stroke="#c87d2a" stroke-width="0.5" stroke-dasharray="4 8" opacity="0.4"/>
+</svg>

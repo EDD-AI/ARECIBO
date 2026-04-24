@@ -3274,11 +3274,17 @@ body::after {
   0% {
     transform:translate3d(0, 0, 0) rotate(var(--rot, 0deg));
   }
+  25% {
+    transform:translate3d(calc(var(--dx, 16px) * 0.6), calc(var(--dy, -14px) * 0.7), 0) rotate(calc(var(--rot, 0deg) + var(--swing, 2.4deg) * 0.5));
+  }
   50% {
-    transform:translate3d(var(--dx, 16px), var(--dy, -14px), 0) rotate(calc(var(--rot, 0deg) + var(--swing, 2.4deg)));
+    transform:translate3d(var(--dx, 16px), var(--dy, -14px), 0) rotate(calc(var(--rot, 0deg) + var(--swing, 4.5deg)));
+  }
+  75% {
+    transform:translate3d(calc(var(--dx2, -12px) * 0.5), calc(var(--dy2, 10px) * 0.6), 0) rotate(calc(var(--rot, 0deg) - var(--swing, 4.5deg) * 0.4));
   }
   100% {
-    transform:translate3d(var(--dx2, -12px), var(--dy2, 10px), 0) rotate(calc(var(--rot, 0deg) - var(--swing, 2.4deg)));
+    transform:translate3d(var(--dx2, -12px), var(--dy2, 10px), 0) rotate(calc(var(--rot, 0deg) - var(--swing, 4.5deg)));
   }
 }
 @keyframes expeditionTimerPulse {
@@ -3714,28 +3720,29 @@ body::after {
       <canvas class="debris-particle-canvas" id="debris-particle-canvas"></canvas>
     </div>
     <div class="debris-parallax">
-      <img class="debris-layer layer-4" src="assets/debris-scene/Calque 4.png" alt="" style="--x:18%; --y:23%; --w:min(5vw, 74px); --rot:-18deg; --dx:16px; --dy:-14px; --dx2:-12px; --dy2:11px; --duration:30s; --swing:2deg;">
-      <img class="debris-layer layer-5" src="assets/debris-scene/Calque 5.png" alt="" style="--x:9%; --y:31%; --w:min(6vw, 92px); --rot:-12deg; --dx:-18px; --dy:14px; --dx2:10px; --dy2:-10px; --duration:36s; --swing:2.4deg;">
-      <img class="debris-layer layer-2" src="assets/debris-scene/Calque 2.png" alt="" style="--x:44%; --y:22%; --w:min(14vw, 224px); --rot:8deg; --dx:22px; --dy:-16px; --dx2:-16px; --dy2:12px; --duration:30s; --swing:2.8deg;">
-      <img class="debris-layer layer-11" src="assets/debris-scene/Calque 11.png" alt="" style="--x:57%; --y:16%; --w:min(4vw, 58px); --rot:16deg; --dx:-12px; --dy:14px; --dx2:11px; --dy2:-8px; --duration:24s; --swing:3deg;">
-      <img class="debris-layer layer-10" src="assets/debris-scene/Calque 10.png" alt="" style="--x:63%; --y:49%; --w:min(4vw, 56px); --rot:14deg; --dx:10px; --dy:-10px; --dx2:-12px; --dy2:12px; --duration:28s; --swing:1.8deg;">
-      <img class="debris-layer layer-3" src="assets/debris-scene/Calque 3.png" alt="" style="--x:71%; --y:34%; --w:min(10vw, 150px); --rot:-7deg; --dx:-18px; --dy:-14px; --dx2:18px; --dy2:12px; --duration:34s; --swing:2.5deg;">
-      <img class="debris-layer layer-7" src="assets/debris-scene/Calque 7.png" alt="" style="--x:78%; --y:24%; --w:min(18vw, 280px); --rot:-10deg; --dx:24px; --dy:18px; --dx2:-16px; --dy2:-16px; --duration:42s; --swing:3.2deg;">
-      <img class="debris-layer layer-9" src="assets/debris-scene/Calque 9.png" alt="" style="--x:88%; --y:36%; --w:min(5vw, 84px); --rot:18deg; --dx:13px; --dy:-14px; --dx2:-10px; --dy2:9px; --duration:32s; --swing:2.5deg;">
-      <img class="debris-layer layer-6" src="assets/debris-scene/Calque 6.png" alt="" style="--x:2.5%; --y:49%; --w:min(20vw, 320px); --rot:-11deg; --dx:-20px; --dy:18px; --dx2:12px; --dy2:-12px; --duration:46s; --swing:3.4deg;">
-      <img class="debris-layer layer-8" src="assets/debris-scene/Calque 8.png" alt="" style="--x:82%; --y:67%; --w:min(10vw, 148px); --rot:-14deg; --dx:14px; --dy:12px; --dx2:-14px; --dy2:-10px; --duration:37s; --swing:2.8deg;">
-      <img class="debris-layer layer-12" src="assets/debris-scene/Calque 12.png" alt="" style="--x:40%; --y:65%; --w:min(17vw, 252px); --rot:12deg; --dx:-20px; --dy:-14px; --dx2:14px; --dy2:13px; --duration:38s; --swing:3deg;">
-      <img class="debris-layer layer-13" src="assets/debris-scene/Calque 13.png" alt="" style="--x:52%; --y:79%; --w:min(15vw, 224px); --rot:-12deg; --dx:18px; --dy:10px; --dx2:-12px; --dy2:-12px; --duration:40s; --swing:2.6deg;">
-      <button class="debris-note" type="button" data-note-id="jaune" data-note-label="Carnet jaune" aria-label="Carnet jaune flottant" style="--x:24%; --y:62%; --w:min(6.2vw, 88px); --rot:-10deg; --dx:14px; --dy:-10px; --dx2:-8px; --dy2:12px; --duration:35s; --swing:3deg;">
+      <img class="debris-layer layer-4" src="assets/debris-scene/Calque 4.png" alt="" style="--x:18%; --y:23%; --w:min(5vw, 74px); --rot:-18deg; --dx:16px; --dy:-14px; --dx2:-12px; --dy2:11px; --duration:16s; --swing:4.4deg;">
+      <img class="debris-layer layer-5" src="assets/debris-scene/Calque 5.png" alt="" style="--x:9%; --y:31%; --w:min(6vw, 92px); --rot:-12deg; --dx:-18px; --dy:14px; --dx2:10px; --dy2:-10px; --duration:20s; --swing:5.3deg;">
+      <img class="debris-layer layer-2" src="assets/debris-scene/Calque 2.png" alt="" style="--x:44%; --y:22%; --w:min(14vw, 224px); --rot:8deg; --dx:22px; --dy:-16px; --dx2:-16px; --dy2:12px; --duration:16s; --swing:6.2deg;">
+      <img class="debris-layer layer-11" src="assets/debris-scene/Calque 11.png" alt="" style="--x:57%; --y:16%; --w:min(4vw, 58px); --rot:16deg; --dx:-12px; --dy:14px; --dx2:11px; --dy2:-8px; --duration:13s; --swing:6.6deg;">
+      <img class="debris-layer layer-10" src="assets/debris-scene/Calque 10.png" alt="" style="--x:63%; --y:49%; --w:min(4vw, 56px); --rot:14deg; --dx:10px; --dy:-10px; --dx2:-12px; --dy2:12px; --duration:15s; --swing:4.0deg;">
+      <img class="debris-layer layer-3" src="assets/debris-scene/Calque 3.png" alt="" style="--x:71%; --y:34%; --w:min(10vw, 150px); --rot:-7deg; --dx:-18px; --dy:-14px; --dx2:18px; --dy2:12px; --duration:19s; --swing:5.5deg;">
+      <img class="debris-layer layer-7" src="assets/debris-scene/Calque 7.png" alt="" style="--x:78%; --y:24%; --w:min(18vw, 280px); --rot:-10deg; --dx:24px; --dy:18px; --dx2:-16px; --dy2:-16px; --duration:23s; --swing:7.0deg;">
+      <img class="debris-layer layer-9" src="assets/debris-scene/Calque 9.png" alt="" style="--x:88%; --y:36%; --w:min(5vw, 84px); --rot:18deg; --dx:13px; --dy:-14px; --dx2:-10px; --dy2:9px; --duration:18s; --swing:5.5deg;">
+      <img class="debris-layer layer-6" src="assets/debris-scene/Calque 6.png" alt="" style="--x:2.5%; --y:49%; --w:min(20vw, 320px); --rot:-11deg; --dx:-20px; --dy:18px; --dx2:12px; --dy2:-12px; --duration:25s; --swing:7.5deg;">
+      <img class="debris-layer layer-8" src="assets/debris-scene/Calque 8.png" alt="" style="--x:82%; --y:67%; --w:min(10vw, 148px); --rot:-14deg; --dx:14px; --dy:12px; --dx2:-14px; --dy2:-10px; --duration:20s; --swing:6.2deg;">
+      <img class="debris-layer layer-12" src="assets/debris-scene/Calque 12.png" alt="" style="--x:40%; --y:65%; --w:min(17vw, 252px); --rot:12deg; --dx:-20px; --dy:-14px; --dx2:14px; --dy2:13px; --duration:21s; --swing:6.6deg;">
+      <img class="debris-layer layer-13" src="assets/debris-scene/Calque 13.png" alt="" style="--x:52%; --y:79%; --w:min(15vw, 224px); --rot:-12deg; --dx:18px; --dy:10px; --dx2:-12px; --dy2:-12px; --duration:22s; --swing:5.7deg;">
+      <img class="debris-layer debris-toolbox" src="assets/boite-a-outil/boite-fermee.svg" alt="" style="--x:32%; --y:55%; --w:min(9vw, 130px); --rot:8deg; --dx:-26px; --dy:-20px; --dx2:20px; --dy2:16px; --duration:15s; --swing:9deg;">
+      <button class="debris-note" type="button" data-note-id="jaune" data-note-label="Carnet jaune" aria-label="Carnet jaune flottant" style="--x:24%; --y:62%; --w:min(6.2vw, 88px); --rot:-10deg; --dx:14px; --dy:-10px; --dx2:-8px; --dy2:12px; --duration:19s; --swing:6.6deg;">
         <img src="assets/carnets/carnet-jaune-ferme.png" alt="" aria-hidden="true">
       </button>
-      <button class="debris-note" type="button" data-note-id="rouge" data-note-label="Carnet rouge" aria-label="Carnet rouge flottant" style="--x:67%; --y:58%; --w:min(6.4vw, 92px); --rot:8deg; --dx:-16px; --dy:12px; --dx2:10px; --dy2:-8px; --duration:42s; --swing:2.7deg;">
+      <button class="debris-note" type="button" data-note-id="rouge" data-note-label="Carnet rouge" aria-label="Carnet rouge flottant" style="--x:67%; --y:58%; --w:min(6.4vw, 92px); --rot:8deg; --dx:-16px; --dy:12px; --dx2:10px; --dy2:-8px; --duration:23s; --swing:5.9deg;">
         <img src="assets/carnets/carnet-rouge-ferme.png" alt="" aria-hidden="true">
       </button>
-      <button class="debris-note" type="button" data-note-id="vert" data-note-label="Carnet vert" aria-label="Carnet vert flottant" style="--x:78%; --y:49%; --w:min(5.6vw, 82px); --rot:-14deg; --dx:12px; --dy:-14px; --dx2:-10px; --dy2:10px; --duration:31s; --swing:2.3deg;">
+      <button class="debris-note" type="button" data-note-id="vert" data-note-label="Carnet vert" aria-label="Carnet vert flottant" style="--x:78%; --y:49%; --w:min(5.6vw, 82px); --rot:-14deg; --dx:12px; --dy:-14px; --dx2:-10px; --dy2:10px; --duration:17s; --swing:5.1deg;">
         <img src="assets/carnets/carnet-vert-ferme.png" alt="" aria-hidden="true">
       </button>
-      <button class="debris-note" type="button" data-note-id="noir" data-note-label="Carnet noir" aria-label="Carnet noir flottant" style="--x:56%; --y:73%; --w:min(6vw, 86px); --rot:12deg; --dx:-14px; --dy:10px; --dx2:12px; --dy2:-10px; --duration:47s; --swing:3.1deg;">
+      <button class="debris-note" type="button" data-note-id="noir" data-note-label="Carnet noir" aria-label="Carnet noir flottant" style="--x:56%; --y:73%; --w:min(6vw, 86px); --rot:12deg; --dx:-14px; --dy:10px; --dx2:12px; --dy2:-10px; --duration:26s; --swing:6.8deg;">
         <img src="assets/carnets/carnet-noir-ferme.png" alt="" aria-hidden="true">
       </button>
     </div>
@@ -4319,19 +4326,65 @@ function handleDebrisNotebookClick(button) {
   if (!button) return;
   const noteId = button.dataset.noteId || 'note';
   const noteLabel = button.dataset.noteLabel || 'Carnet';
+  const noteColor = noteId; // jaune, rouge, vert, noir
 
+  // Premier clic — on collecte le carnet
   if (!collectedDebrisNotes.has(noteId)) {
     collectedDebrisNotes.add(noteId);
     button.classList.add('is-found');
-    showDebrisLootToast(`${noteLabel} recupere`);
+    showDebrisLootToast(`${noteLabel} récupéré`);
     if (mapMessage) {
       mapMessage.classList.remove('warn');
-      mapMessage.textContent = `${noteLabel} recupere dans les debris.`;
+      mapMessage.textContent = `${noteLabel} récupéré dans les débris.`;
     }
     return;
   }
 
-  showDebrisLootToast(`${noteLabel} deja recupere`);
+  // Deuxième clic (ou carnet déjà collecté) — on ouvre l'overlay
+  openNotebookOverlay(noteColor);
+}
+
+function openNotebookOverlay(clickedColor) {
+  const overlay = document.getElementById('notebook-overlay');
+  const stack   = document.getElementById('notebook-stack');
+  if (!overlay || !stack) return;
+
+  // Vide le stack
+  stack.querySelectorAll('.notebook-open-img').forEach(el => el.remove());
+
+  // Ordre d'affichage : carnet cliqué en premier (dessus), puis les autres collectés derrière
+  const allColors = ['jaune', 'rouge', 'vert', 'noir'];
+  const order = [clickedColor, ...allColors.filter(c => c !== clickedColor && collectedDebrisNotes.has(c))];
+
+  order.forEach((color, i) => {
+    const img = document.createElement('img');
+    img.className = 'notebook-open-img';
+    // On essaie d'abord la version ouverte, sinon on utilise la fermée
+    const openSrc   = `assets/carnets/carnet-${color}-ouvert.png`;
+    const closedSrc = `assets/carnets/carnet-${color}-ferme.png`;
+    img.src = openSrc;
+    img.onerror = () => { img.src = closedSrc; };
+    img.alt = `Carnet ${color} ouvert`;
+    // Décalage pour l'empilement
+    if (i > 0) {
+      img.style.transform = `translateX(${-i * 18}px) translateY(${i * 8}px) rotate(${-i * 3}deg)`;
+      img.style.opacity   = String(Math.max(0.25, 1 - i * 0.22));
+    }
+    // Insérer avant le bouton fermer
+    const closeBtn = stack.querySelector('.notebook-overlay-close');
+    stack.insertBefore(img, closeBtn);
+  });
+
+  overlay.classList.add('is-open');
+}
+
+function closeNotebookOverlay(event) {
+  const overlay = document.getElementById('notebook-overlay');
+  if (!overlay) return;
+  // Fermer uniquement si on clique sur le fond, pas sur le carnet
+  if (event.target === overlay) {
+    overlay.classList.remove('is-open');
+  }
 }
 
 function broadcastPresenceState(force = false) {
@@ -6809,5 +6862,12 @@ if (params.get('expeditionResult')) {
   }
 }
 </script>
+
+<!-- OVERLAY CARNETS OUVERTS -->
+<div class="notebook-overlay" id="notebook-overlay" onclick="closeNotebookOverlay(event)">
+  <div class="notebook-overlay-stack" id="notebook-stack">
+    <button class="notebook-overlay-close" onclick="document.getElementById('notebook-overlay').classList.remove('is-open')">× FERMER</button>
+  </div>
+</div>
 </body>
 </html>
