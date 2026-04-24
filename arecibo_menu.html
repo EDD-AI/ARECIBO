@@ -1383,7 +1383,7 @@ canvas#starfield-bg {
   </div>
 
   <nav class="menu">
-    <a class="menu-item active" data-fleet="1" href="arecibo_intro.html?v=global-terminal-filter-amber" onclick="goTo(event,'intro')"><span class="arr">></span><span class="menu-label">SOLO</span></a>
+    <a class="menu-item active" data-fleet="1" href="arecibo_creation.html?next=intro" onclick="goTo(event,'creation')"><span class="arr">></span><span class="menu-label">SOLO</span></a>
     <a class="menu-item" data-fleet="2" href="#" onclick="openMultiChoice(event)"><span class="arr">></span><span class="menu-label">MULTI</span></a>
     <a class="menu-item" data-fleet="3" href="#" onclick="openSettings(event)"><span class="arr">></span><span class="menu-label">SETTINGS</span></a>
     <a class="menu-item" data-fleet="4" href="#" onclick="openCredits(event)"><span class="arr">></span><span class="menu-label">CREDITS</span></a>
@@ -1973,6 +1973,7 @@ function goTo(e, page) {
   const t = document.getElementById('transition');
   t.classList.add('active');
   const routes = {
+    creation: 'arecibo_creation.html?next=intro',
     intro: 'arecibo_intro.html?v=global-terminal-filter-amber',
     lobby: 'arecibo_lobby.html',
     game: 'arecibo_game.html?v=solo-prototype'

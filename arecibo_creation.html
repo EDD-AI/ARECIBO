@@ -485,10 +485,17 @@ async function renderHeadsGrid() {
 function saveProfile() {
   currentProfile.name = nameInput.value.trim() || currentProfile.name;
   currentProfile = profileApi.savePlayerProfile(currentProfile);
+  try {
+    localStorage.setItem('areciboStoryPhase', 'opening-briefing');
+    localStorage.removeItem('areciboOpeningMailAutoOpened');
+  } catch (err) {}
   renderPreview();
   transition.style.opacity = '1';
   window.setTimeout(() => {
-    window.location.href = 'arecibo_menu.html';
+    const next = new URLSearchParams(window.location.search).get('next');
+    window.location.href = next === 'intro'
+      ? 'arecibo_intro.html?v=global-terminal-filter-amber'
+      : 'arecibo_menu.html';
   }, 320);
 }
 

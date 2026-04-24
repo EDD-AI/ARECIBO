@@ -3526,25 +3526,7 @@ body::after {
       <button class="msg-close" type="button" onclick="closeMessages()">x</button>
       <span class="msg-title" id="messages-title">PACKAGE COCO // MESSAGES //</span>
     </div>
-    <div class="msg-body">
-      <article class="message-card">
-        <div class="message-meta">
-          <span class="message-sender">MOTOMOTO // CRIS</span>
-          <span class="message-time">TEST 001</span>
-        </div>
-        <h3 class="message-subject">MESSAGE DU MOTOMOTO</h3>
-        <p class="message-text">test numero 1 vous allez y arriver continuer sur ce chemin, ca va etre un grand jeu.</p>
-      </article>
-
-      <article class="message-card warning">
-        <div class="message-meta">
-          <span class="warning-badge">!! WARNING !!</span>
-          <span class="message-time">PRIORITE ROUGE</span>
-        </div>
-        <h3 class="message-subject">EVENEMENT MAJEUR EN COURS</h3>
-        <p class="message-text">Radiations instables detectees autour du sas. Maintenir les systemes actifs et surveiller les prochaines transmissions.</p>
-      </article>
-    </div>
+    <div class="msg-body" id="messages-body"></div>
   </section>
 </div>
 
@@ -3609,10 +3591,15 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 const params = new URLSearchParams(window.location.search);
+const STORY_PHASE_KEY = 'areciboStoryPhase';
+const OPENING_MAIL_OPENED_KEY = 'areciboOpeningMailAutoOpened';
+const requestedStoryPhase = params.get('storyPhase') || params.get('questStage');
+let storyPhase = requestedStoryPhase || localStorage.getItem(STORY_PHASE_KEY) || 'opening-briefing';
 const storedPlayers = Number(localStorage.getItem('areciboPlayerCount'));
 const requestedPlayers = Number(params.get('players'));
 const playerCount = Math.max(1, Math.min(6, requestedPlayers || storedPlayers || 1));
-const expeditionDurationMinutes = Math.max(5, Math.min(15, Number(params.get('expeditionMinutes')) || 5));
+const defaultExpeditionMinutes = storyPhase.startsWith('opening-') ? 8 : 5;
+const expeditionDurationMinutes = Math.max(5, Math.min(15, Number(params.get('expeditionMinutes')) || defaultExpeditionMinutes));
 const expeditionDurationMs = expeditionDurationMinutes * 60 * 1000;
 const readyState = Array.from({ length: 6 }, (_, index) => index >= playerCount);
 if (playerCount === 1) readyState[0] = true;
@@ -3630,7 +3617,9 @@ const personalTitle = personalWindow ? personalWindow.querySelector('.personal-t
 const personalWindowHomeParent = personalWindow ? personalWindow.parentNode : null;
 const personalWindowHomeNextSibling = personalWindow ? personalWindow.nextSibling : null;
 const messageIndicator = personalWindow ? personalWindow.querySelector('.message-indicator') : null;
+const messageCount = messageIndicator ? messageIndicator.querySelector('.message-count') : null;
 const messagesTitle = document.getElementById('messages-title');
+const messagesBody = document.getElementById('messages-body');
 const shipScene = document.getElementById('ship-scene');
 const hullStatus = document.getElementById('hull-status');
 const engineStatus = document.getElementById('engine-status');
@@ -3660,6 +3649,7 @@ const expeditionResultReason = document.getElementById('expedition-result-reason
 const expeditionResultSeparator = document.getElementById('expedition-result-separator');
 const expeditionResultAction = document.getElementById('expedition-result-action');
 const expeditionResultActionBg = document.getElementById('expedition-result-action-bg');
+const roomNodes = Array.from(document.querySelectorAll('.room-node'));
 let landingStarted = false;
 let landingTypingTimers = [];
 let landingSequenceTimers = [];
@@ -3785,6 +3775,170 @@ function initPlayerPackageName() {
 
   window.areciboPlayerName = playerName;
 }
+
+function persistStoryPhase() {
+  try { localStorage.setItem(STORY_PHASE_KEY, storyPhase); }
+  catch (err) {}
+}
+
+function getStoryMessages(phase = storyPhase) {
+  if (phase === 'opening-return') {
+    return [
+      {
+        sender:'MOTOMOTO // CRIS',
+        time:'MESSAGE PRIORITAIRE',
+        subject:'REPARATION DU SAS',
+        text:'La sortie a permis de recuperer une pince et du ruban adhesif. Reparez le systeme de la porte du sas avant toute nouvelle expedition.'
+      },
+      {
+        warning:true,
+        badge:'!! WARNING !!',
+        time:'ALERTE ROUGE',
+        subject:'STRUCTURE TOUJOURS INSTABLE',
+        text:'Le vaisseau reste en etat critique. Toutes les sections demeurent verrouillees tant que la porte du sas et les circuits externes ne sont pas stabilises.'
+      }
+    ];
+  }
+
+  return [
+    {
+      sender:'MOTOMOTO // CRIS',
+      time:'OUVERTURE // QUETE 001',
+      subject:'SORTIE D URGENCE',
+      text:'Le MOTOMOTO a heurte un champ de debris spatiaux. La coque et le systeme du sas sont severement endommages. Une sortie immediate est requise pour recuperer de quoi reparer.'
+    },
+    {
+      warning:true,
+      badge:'!! WARNING !!',
+      time:'ALERTE MAXIMALE',
+      subject:'SECTIONS VERROUILLEES',
+      text:'Toutes les pieces restent fermees. Seul le sas expedition est accessible. Temps de sortie recommande : 08:00 avant reprise des radiations.'
+    }
+  ];
+}
+
+function renderMessages(messages = getStoryMessages()) {
+  if (!messagesBody) return;
+  messagesBody.innerHTML = '';
+
+  messages.forEach(message => {
+    const card = document.createElement('article');
+    card.className = `message-card${message.warning ? ' warning' : ''}`;
+
+    const meta = document.createElement('div');
+    meta.className = 'message-meta';
+
+    const left = document.createElement('span');
+    left.className = message.warning ? 'warning-badge' : 'message-sender';
+    left.textContent = message.warning ? (message.badge || '!! WARNING !!') : message.sender;
+
+    const right = document.createElement('span');
+    right.className = 'message-time';
+    right.textContent = message.time;
+
+    const subject = document.createElement('h3');
+    subject.className = 'message-subject';
+    subject.textContent = message.subject;
+
+    const text = document.createElement('p');
+    text.className = 'message-text';
+    text.textContent = message.text;
+
+    meta.append(left, right);
+    card.append(meta, subject, text);
+    messagesBody.appendChild(card);
+  });
+
+  if (messageCount) {
+    messageCount.textContent = String(messages.length).padStart(2, '0');
+  }
+  if (messageIndicator) {
+    const playerName = window.areciboPlayerName || 'joueur';
+    messageIndicator.setAttribute('aria-label', `Ouvrir ${messages.length} messages personnels de ${playerName}`);
+  }
+}
+
+function setRoomNodeState(roomName, state) {
+  roomNodes.forEach(node => {
+    if ((node.dataset.room || '') !== roomName) return;
+    node.dataset.state = state;
+    node.classList.toggle('locked', state === 'locked');
+  });
+}
+
+function applyOpeningStoryState() {
+  const isReturn = storyPhase === 'opening-return';
+  const isOpening = storyPhase === 'opening-briefing' || storyPhase === 'opening-expedition' || isReturn;
+  if (!isOpening) return;
+
+  setPontRepairState('state-05-broken-4-doors-closed');
+  setShipCondition('critical', 18);
+
+  roomNodes.forEach(node => {
+    const isSas = (node.dataset.room || '') === 'SAS EXPEDITION';
+    node.dataset.state = isSas ? 'open' : 'locked';
+    node.classList.toggle('locked', !isSas);
+    node.classList.toggle('active', isSas);
+  });
+
+  setShipScene('SAS EXPEDITION');
+  renderMessages(getStoryMessages());
+
+  if (launchLabel) {
+    launchLabel.textContent = isReturn ? 'PORTE DU SAS A REPARER' : 'SORTIR DANS LES DEBRIS';
+  }
+  if (launchIcon) {
+    launchIcon.textContent = isReturn ? '!' : '+';
+  }
+  if (launchBtn) {
+    launchBtn.classList.remove('ready');
+    launchBtn.disabled = isReturn;
+    launchBtn.style.opacity = isReturn ? '.66' : '';
+    launchBtn.style.filter = isReturn ? 'saturate(.78)' : '';
+  }
+
+  if (bridgeMeta) {
+    bridgeMeta.textContent = isReturn
+      ? 'MOTOMOTO // SAS EXPEDITION // RETOUR MISSION // SYSTEME DU SAS ENDOMMAGE'
+      : 'MOTOMOTO // SAS EXPEDITION // ALERTE MAXIMALE // RECUPERATION DE DEBRIS';
+  }
+
+  if (airlockTimer) airlockTimer.textContent = '08:00';
+  if (roomCurrent) roomCurrent.textContent = 'SAS EXPEDITION';
+  if (roomState) {
+    roomState.classList.add('warn');
+    roomState.classList.remove('active');
+    roomState.textContent = 'ALERTE';
+  }
+  if (mapMessage) {
+    mapMessage.classList.add('warn');
+    mapMessage.textContent = isReturn
+      ? 'Le MOTOMOTO demande une reparation du sas avec la pince et le ruban adhesif recuperes.'
+      : 'Le sas reste la seule sortie active. Lancez la premiere sortie de recuperation dans les debris.';
+  }
+
+  if (landingDecisionStages.impact) {
+    landingDecisionStages.impact.alert = 'Le MOTOMOTO a heurte des debris spatiaux // dommages critiques detectes.';
+    landingDecisionStages.impact.question = 'Tout l equipage doit partir recuperer de quoi reparer le vaisseau.';
+    landingDecisionStages.impact.choices = [
+      { id:'inspect-debris', label:'inspecter les debris pour trouver du materiel' }
+    ];
+  }
+  landingDecisionChoices = landingDecisionStages.impact.choices;
+}
+
+function setStoryPhase(nextPhase, options = {}) {
+  storyPhase = nextPhase;
+  persistStoryPhase();
+  applyOpeningStoryState();
+
+  if (options.autoOpenMessages && nextPhase === 'opening-return') {
+    try { localStorage.setItem(OPENING_MAIL_OPENED_KEY, 'true'); } catch (err) {}
+    window.setTimeout(() => openMessages(), 420);
+  }
+}
+
+window.setStoryPhase = setStoryPhase;
 
 function updateDistance() {
   const elapsedSeconds = (performance.now() - distanceStart) / 1000;
@@ -4991,6 +5145,7 @@ function failExpeditionFromTimeout() {
       isFailure:true
     },
     afterReturn:() => {
+      if (storyPhase === 'opening-expedition') setStoryPhase('opening-briefing');
       expeditionFailing = false;
     }
   });
@@ -5065,7 +5220,23 @@ function renderCrew() {
 function updateReadyState() {
   const activeReady = readyState.slice(0, playerCount);
   const allReady = activeReady.every(Boolean);
-  launchBtn.classList.toggle('ready', allReady);
+  const isOpeningMission = storyPhase === 'opening-briefing' || storyPhase === 'opening-expedition';
+  launchBtn.classList.toggle('ready', allReady && !isOpeningMission);
+
+  if (storyPhase === 'opening-return') {
+    launchIcon.textContent = '!';
+    launchLabel.textContent = 'REPARER LE SAS';
+    renderCrew();
+    return;
+  }
+
+  if (isOpeningMission) {
+    launchIcon.textContent = allReady ? 'OK' : '+';
+    launchLabel.textContent = allReady ? 'SORTIR DANS LES DEBRIS' : 'SORTIE D URGENCE';
+    renderCrew();
+    return;
+  }
+
   launchIcon.textContent = allReady ? 'OK' : '+';
   launchLabel.textContent = allReady ? 'EQUIPE PRETE' : 'LANCER L\'EXPEDITION';
   renderCrew();
@@ -5125,7 +5296,7 @@ function renderLandingDecision() {
   landingDecisionOptions.innerHTML = '';
 
   const inspectSelected = landingDecisionStage === 'impact'
-    && landingVotes.slice(0, playerCount).some(vote => vote === 'inspect-asteroid');
+    && landingVotes.slice(0, playerCount).some(vote => vote === 'inspect-asteroid' || vote === 'inspect-debris');
 
   landingDecisionChoices.forEach(choice => {
     const row = document.createElement('div');
@@ -5190,6 +5361,48 @@ function renderLandingDecisionModule(isVisible) {
   landingDecisionModule.innerHTML = '';
 
   if (!isVisible) return;
+
+  const isOpeningDebrisMission = storyPhase === 'opening-expedition'
+    && landingDecisionStage === 'impact'
+    && landingVotes.slice(0, playerCount).every(vote => vote === 'inspect-debris');
+
+  if (isOpeningDebrisMission) {
+    const title = document.createElement('div');
+    title.className = 'landing-module-title';
+    title.textContent = 'Module extraction coop // quete 001';
+
+    const status = document.createElement('div');
+    status.className = 'landing-module-status';
+    status.textContent = 'Equipe synchronisee // mini jeu de recuperation a brancher ici';
+
+    const meta = document.createElement('div');
+    meta.className = 'landing-module-meta';
+    meta.textContent = 'La premiere mission doit permettre a toute l equipe de recuperer une pince et du ruban adhesif dans les debris. Le mini jeu coop 1 a 6 joueurs sera branche a cet endroit.';
+
+    const continueBtn = document.createElement('button');
+    continueBtn.type = 'button';
+    continueBtn.className = 'landing-module-btn is-primary';
+    continueBtn.textContent = 'simuler le retour mission';
+    continueBtn.addEventListener('click', () => {
+      showExpeditionResult('success', {
+        kicker:'Expedition validee',
+        reason:'Materiel recupere // pince et ruban adhesif en soute',
+        returnOptions:{
+          message:'Retour mission valide : outils recuperes dans les debris. Consultez les messages du MOTOMOTO.',
+          isFailure:false
+        },
+        afterReturn:() => {
+          setStoryPhase('opening-return', { autoOpenMessages:true });
+        }
+      });
+    });
+
+    landingDecisionModule.appendChild(title);
+    landingDecisionModule.appendChild(status);
+    landingDecisionModule.appendChild(meta);
+    landingDecisionModule.appendChild(continueBtn);
+    return;
+  }
 
   const session = ensureLandingSignalSession();
   const signalState = getLandingSignalState();
@@ -5538,7 +5751,25 @@ function startLandingSequence() {
   requestAnimationFrame(render);
 }
 
+function startOpeningDebrisMission() {
+  setStoryPhase('opening-expedition');
+  setExpeditionActive(true);
+  if (pageTransition) pageTransition.classList.remove('out');
+  window.setTimeout(() => {
+    openDebrisInspectionScene();
+    if (landingSequence) landingSequence.classList.add('is-question-open');
+    renderLandingDecision();
+    startLandingDecisionTyping();
+    if (pageTransition) pageTransition.classList.add('out');
+  }, 420);
+}
+
 launchBtn.addEventListener('click', () => {
+  if (storyPhase === 'opening-return') {
+    openMessages();
+    return;
+  }
+
   const allReady = readyState.slice(0, playerCount).every(Boolean);
   if (!allReady) {
     readyState[0] = true;
@@ -5549,6 +5780,12 @@ launchBtn.addEventListener('click', () => {
   launchIcon.textContent = 'OK';
   launchLabel.textContent = 'OUVERTURE DU SAS...';
   setExpeditionActive(true);
+
+  if (storyPhase === 'opening-briefing') {
+    startOpeningDebrisMission();
+    return;
+  }
+
   if (pageTransition) pageTransition.classList.remove('out');
   window.setTimeout(() => {
     startLandingSequence();
@@ -5682,17 +5919,18 @@ if (expeditionResultAction) {
   });
 }
 
+initPlayerPackageName();
+initPontRepairState();
+initShipMap();
+applyOpeningStoryState();
 updateReadyState();
 setExpeditionTimerDisplay(expeditionDurationMs);
 updateDistance();
-initPlayerPackageName();
 startPortholeSpace();
 startAmbientDust();
 startRoomFly();
-initPontRepairState();
 startCriticalShipShakes();
 initHudCollapse();
-initShipMap();
 initDraggablePersonalWindow();
 window.openDebrisInspectionScene = openDebrisInspectionScene;
 window.closeDebrisInspectionScene = closeDebrisInspectionScene;
@@ -5713,6 +5951,7 @@ window.showExpeditionFailureResult = (reason = 'Stress critique // extraction pe
       isFailure:true
     },
     afterReturn:() => {
+      if (storyPhase === 'opening-expedition') setStoryPhase('opening-briefing');
       expeditionFailing = false;
     }
   });
@@ -5727,6 +5966,13 @@ if (params.get('debris') === '1') {
   setExpeditionActive(true);
   if (pageTransition) pageTransition.classList.add('out');
   openDebrisInspectionScene();
+}
+if (storyPhase === 'opening-return' && !params.get('landing') && !params.get('debris') && !params.get('expeditionResult')) {
+  const alreadyOpened = localStorage.getItem(OPENING_MAIL_OPENED_KEY) === 'true';
+  if (!alreadyOpened) {
+    try { localStorage.setItem(OPENING_MAIL_OPENED_KEY, 'true'); } catch (err) {}
+    window.setTimeout(() => openMessages(), 520);
+  }
 }
 if (params.get('expeditionResult')) {
   setExpeditionActive(true);
@@ -5749,6 +5995,7 @@ if (params.get('expeditionResult')) {
         isFailure:true
       },
       afterReturn:() => {
+        if (storyPhase === 'opening-expedition') setStoryPhase('opening-briefing');
         expeditionFailing = false;
       }
     });
@@ -5760,6 +6007,7 @@ if (params.get('expeditionResult')) {
         isFailure:true
       },
       afterReturn:() => {
+        if (storyPhase === 'opening-expedition') setStoryPhase('opening-briefing');
         expeditionFailing = false;
       }
     });
