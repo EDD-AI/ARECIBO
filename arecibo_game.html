@@ -153,11 +153,16 @@ body::after {
 .remote-cursor.is-visible {
   opacity:1;
 }
+.remote-cursor.is-near-object .remote-cursor-name,
+.remote-cursor.is-interacting .remote-cursor-name {
+  opacity:1;
+  transform:translate(-50%, -100%);
+}
 .remote-cursor-name {
   position:absolute;
   left:50%;
   top:-8px;
-  transform:translate(-50%, -100%);
+  transform:translate(-50%, -92%);
   min-width:max-content;
   padding:2px 6px;
   border:1px solid rgba(247,255,195,.24);
@@ -169,6 +174,35 @@ body::after {
   text-transform:uppercase;
   white-space:nowrap;
   box-shadow:0 0 10px rgba(0,0,0,.28);
+  opacity:0;
+  transition:opacity .14s ease, transform .14s ease;
+}
+.remote-cursor-halo {
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:10px;
+  height:10px;
+  transform:translate(-50%, -50%) scale(.35);
+  border:1px solid color-mix(in srgb, var(--presence-color) 76%, #fff2c1);
+  border-radius:999px;
+  opacity:0;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.12),
+    0 0 12px color-mix(in srgb, var(--presence-color) 45%, transparent);
+}
+.remote-cursor.is-interacting .remote-cursor-halo {
+  animation:remoteCursorHalo .52s ease-out;
+}
+@keyframes remoteCursorHalo {
+  0% {
+    opacity:.9;
+    transform:translate(-50%, -50%) scale(.45);
+  }
+  100% {
+    opacity:0;
+    transform:translate(-50%, -50%) scale(4.2);
+  }
 }
 
 .bridge {
@@ -3903,12 +3937,20 @@ let expeditionFailing = false;
 let expeditionResultPending = null;
 let debrisNoteToastTimer = 0;
 let presenceBroadcastChannel = null;
+let presenceTransport = null;
 let presenceHeartbeatTimer = 0;
 let presenceCleanupTimer = 0;
 let presenceRaf = 0;
 let presenceQueued = false;
 const remotePresenceMap = new Map();
 const collectedDebrisNotes = new Set();
+const expeditionInteractiveSelector = [
+  '.debris-note',
+  '.decision-btn',
+  '.landing-module-btn',
+  '.landing-console-nav',
+  '.expedition-result-action'
+].join(', ');
 const landingDecisionStages = {
   impact: {
     alert:'Votre vaisseau a percute un asteroide !',
@@ -4073,8 +4115,66 @@ function shouldBroadcastPresence() {
   );
 }
 
+function getExpeditionInteractiveElements() {
+  const elements = [];
+  if (debrisScene && debrisScene.classList.contains('is-active')) {
+    elements.push(...debrisScene.querySelectorAll('.debris-note'));
+  }
+  if (landingSequence && landingSequence.classList.contains('is-active')) {
+    elements.push(...landingSequence.querySelectorAll('.decision-btn, .landing-module-btn, .landing-console-nav, .expedition-result-action'));
+  }
+  return elements.filter(element => {
+    if (!(element instanceof HTMLElement)) return false;
+    const rect = element.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  });
+}
+
+function getInteractiveElementLabel(element) {
+  if (!element) return '';
+  return formatPlayerPackageName(
+    element.dataset.noteLabel
+    || element.getAttribute('aria-label')
+    || element.textContent
+    || ''
+  );
+}
+
+function getNearestExpeditionInteractive(xNorm, yNorm) {
+  const elements = getExpeditionInteractiveElements();
+  if (!elements.length) return null;
+  const px = Math.max(0, Math.min(1, Number(xNorm) || 0)) * window.innerWidth;
+  const py = Math.max(0, Math.min(1, Number(yNorm) || 0)) * window.innerHeight;
+  let nearest = null;
+  let nearestDistance = Infinity;
+
+  elements.forEach(element => {
+    const rect = element.getBoundingClientRect();
+    const cx = rect.left + rect.width * 0.5;
+    const cy = rect.top + rect.height * 0.5;
+    const dx = cx - px;
+    const dy = cy - py;
+    const distance = Math.hypot(dx, dy);
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearest = element;
+    }
+  });
+
+  const threshold = Math.max(56, Math.min(window.innerWidth, window.innerHeight) * 0.08);
+  if (!nearest || nearestDistance > threshold) return null;
+  return {
+    element: nearest,
+    label: getInteractiveElementLabel(nearest)
+  };
+}
+
 function getPresencePayload() {
   const profile = getPlayerProfile();
+  const nearestObject = getNearestExpeditionInteractive(
+    Math.max(0, Math.min(1, pointerX / Math.max(1, window.innerWidth))),
+    Math.max(0, Math.min(1, pointerY / Math.max(1, window.innerHeight)))
+  );
   return {
     type:'presence-state',
     session:sessionCode,
@@ -4084,6 +4184,8 @@ function getPresencePayload() {
     x:Math.max(0, Math.min(1, pointerX / Math.max(1, window.innerWidth))),
     y:Math.max(0, Math.min(1, pointerY / Math.max(1, window.innerHeight))),
     scene:getPresenceSceneId(),
+    nearObject:Boolean(nearestObject),
+    nearObjectLabel:nearestObject ? nearestObject.label : '',
     active:shouldBroadcastPresence() && !document.hidden,
     ts:Date.now()
   };
@@ -4098,12 +4200,16 @@ function ensureRemotePresenceNode(clientId) {
   node.className = 'remote-cursor';
   node.setAttribute('aria-hidden', 'true');
 
+  const halo = document.createElement('div');
+  halo.className = 'remote-cursor-halo';
+  node.appendChild(halo);
+
   const label = document.createElement('div');
   label.className = 'remote-cursor-name';
   node.appendChild(label);
   remotePresenceLayer.appendChild(node);
 
-  entry = { node, label, scene:'', lastSeen:0 };
+  entry = { node, halo, label, scene:'', lastSeen:0, interactionTimer:0 };
   remotePresenceMap.set(clientId, entry);
   return entry;
 }
@@ -4111,12 +4217,24 @@ function ensureRemotePresenceNode(clientId) {
 function removeRemotePresence(clientId) {
   const entry = remotePresenceMap.get(clientId);
   if (!entry) return;
+  if (entry.interactionTimer) window.clearTimeout(entry.interactionTimer);
   entry.node.remove();
   remotePresenceMap.delete(clientId);
 }
 
+function triggerRemotePresenceInteraction(entry) {
+  if (!entry) return;
+  entry.node.classList.remove('is-interacting');
+  void entry.node.offsetWidth;
+  entry.node.classList.add('is-interacting');
+  if (entry.interactionTimer) window.clearTimeout(entry.interactionTimer);
+  entry.interactionTimer = window.setTimeout(() => {
+    entry.node.classList.remove('is-interacting');
+  }, 540);
+}
+
 function updateRemotePresence(data) {
-  if (!data || !data.clientId || data.clientId === presenceClientId) return;
+  if (!data || !data.clientId || data.clientId === presenceClientId || data.session !== sessionCode) return;
   const entry = ensureRemotePresenceNode(data.clientId);
   if (!entry) return;
 
@@ -4129,14 +4247,62 @@ function updateRemotePresence(data) {
 
   const shouldShow = Boolean(data.active) && data.scene === getPresenceSceneId();
   entry.node.classList.toggle('is-visible', shouldShow);
+  entry.node.classList.toggle('is-near-object', shouldShow && Boolean(data.nearObject));
+}
+
+function applyRemotePresenceInteraction(data) {
+  if (!data || !data.clientId || data.clientId === presenceClientId || data.session !== sessionCode) return;
+  const entry = ensureRemotePresenceNode(data.clientId);
+  if (!entry) return;
+  entry.lastSeen = data.ts || Date.now();
+  entry.scene = data.scene || '';
+  entry.label.textContent = formatPlayerPackageName(data.name || 'JOUEUR');
+  entry.node.style.setProperty('--presence-color', data.primaryColor || '#FA5A1F');
+  entry.node.style.left = `${Math.max(0, Math.min(1, Number(data.x) || 0)) * window.innerWidth}px`;
+  entry.node.style.top = `${Math.max(0, Math.min(1, Number(data.y) || 0)) * window.innerHeight}px`;
+  const shouldShow = data.scene === getPresenceSceneId();
+  entry.node.classList.toggle('is-visible', shouldShow);
+  entry.node.classList.toggle('is-near-object', shouldShow && Boolean(data.nearObject));
+  if (shouldShow) triggerRemotePresenceInteraction(entry);
+}
+
+function handlePresenceMessage(data) {
+  if (!data || data.session !== sessionCode) return;
+  if (data.type === 'presence-interact') {
+    applyRemotePresenceInteraction(data);
+    return;
+  }
+  if (data.type === 'presence-state') {
+    updateRemotePresence(data);
+  }
 }
 
 function cleanupRemotePresence() {
   const now = Date.now();
   for (const [clientId, entry] of remotePresenceMap.entries()) {
     if (now - entry.lastSeen > 2600) removeRemotePresence(clientId);
-    else entry.node.classList.toggle('is-visible', entry.scene === getPresenceSceneId());
+    else {
+      const visible = entry.scene === getPresenceSceneId();
+      entry.node.classList.toggle('is-visible', visible);
+      if (!visible) entry.node.classList.remove('is-near-object');
+    }
   }
+}
+
+function sendPresenceMessage(payload) {
+  if (!payload || !sessionCode) return;
+  if (presenceBroadcastChannel) {
+    presenceBroadcastChannel.postMessage(payload);
+  }
+  if (presenceTransport && typeof presenceTransport.send === 'function') {
+    try { presenceTransport.send(payload); } catch (err) {}
+  }
+  try {
+    localStorage.setItem(`arecibo:presence:${sessionCode}`, JSON.stringify({
+      ...payload,
+      nonce:Math.random().toString(36).slice(2, 8)
+    }));
+  } catch (err) {}
 }
 
 function showDebrisLootToast(message) {
@@ -4172,16 +4338,7 @@ function broadcastPresenceState(force = false) {
   if (!sessionCode) return;
   const payload = getPresencePayload();
   if (!force && !payload.active && remotePresenceMap.size === 0) return;
-
-  if (presenceBroadcastChannel) {
-    presenceBroadcastChannel.postMessage(payload);
-  }
-  try {
-    localStorage.setItem(`arecibo:presence:${sessionCode}`, JSON.stringify({
-      ...payload,
-      nonce:Math.random().toString(36).slice(2, 8)
-    }));
-  } catch (err) {}
+  sendPresenceMessage(payload);
 }
 
 function queuePresenceBroadcast() {
@@ -4193,18 +4350,59 @@ function queuePresenceBroadcast() {
   });
 }
 
+function emitPresenceInteraction(sourceElement, event) {
+  if (!sessionCode || !shouldBroadcastPresence()) return;
+  const profile = getPlayerProfile();
+  const element = sourceElement instanceof HTMLElement ? sourceElement : null;
+  const rect = element ? element.getBoundingClientRect() : null;
+  const x = typeof event?.clientX === 'number'
+    ? event.clientX
+    : rect
+      ? rect.left + rect.width * 0.5
+      : pointerX;
+  const y = typeof event?.clientY === 'number'
+    ? event.clientY
+    : rect
+      ? rect.top + rect.height * 0.5
+      : pointerY;
+  const payload = {
+    type:'presence-interact',
+    session:sessionCode,
+    clientId:presenceClientId,
+    name:formatPlayerPackageName(profile.name || window.areciboPlayerName || 'COCO'),
+    primaryColor:profile.primaryColor || '#FA5A1F',
+    x:Math.max(0, Math.min(1, x / Math.max(1, window.innerWidth))),
+    y:Math.max(0, Math.min(1, y / Math.max(1, window.innerHeight))),
+    scene:getPresenceSceneId(),
+    nearObject:true,
+    nearObjectLabel:getInteractiveElementLabel(element),
+    ts:Date.now()
+  };
+  sendPresenceMessage(payload);
+}
+
+function setPresenceTransport(transport) {
+  presenceTransport = transport || null;
+  if (presenceTransport && typeof presenceTransport.subscribe === 'function') {
+    try {
+      presenceTransport.subscribe(handlePresenceMessage);
+    } catch (err) {}
+  }
+}
+
 function initMultiplayerPresence() {
   if (!sessionCode || !remotePresenceLayer) return;
+  if (window.AreciboPresenceTransport) setPresenceTransport(window.AreciboPresenceTransport);
 
   if ('BroadcastChannel' in window) {
     presenceBroadcastChannel = new BroadcastChannel(`arecibo-presence-${sessionCode}`);
-    presenceBroadcastChannel.onmessage = event => updateRemotePresence(event.data);
+    presenceBroadcastChannel.onmessage = event => handlePresenceMessage(event.data);
   }
 
   window.addEventListener('storage', event => {
     if (event.key !== `arecibo:presence:${sessionCode}` || !event.newValue) return;
     try {
-      updateRemotePresence(JSON.parse(event.newValue));
+      handlePresenceMessage(JSON.parse(event.newValue));
     } catch (err) {}
   });
 
@@ -4231,6 +4429,9 @@ function initMultiplayerPresence() {
     if (presenceBroadcastChannel) {
       presenceBroadcastChannel.postMessage(payload);
       presenceBroadcastChannel.close();
+    }
+    if (presenceTransport && typeof presenceTransport.send === 'function') {
+      try { presenceTransport.send(payload); } catch (err) {}
     }
     try {
       localStorage.setItem(`arecibo:presence:${sessionCode}`, JSON.stringify({
@@ -6490,6 +6691,13 @@ if (debrisNoteButtons.length) {
     button.addEventListener('click', () => handleDebrisNotebookClick(button));
   });
 }
+document.addEventListener('click', event => {
+  const target = event.target instanceof Element
+    ? event.target.closest(expeditionInteractiveSelector)
+    : null;
+  if (!target) return;
+  emitPresenceInteraction(target, event);
+}, true);
 if (expeditionResultAction) {
   expeditionResultAction.addEventListener('click', () => {
     if (!expeditionResultPending) return;
@@ -6513,6 +6721,7 @@ updateDistance();
 startPortholeSpace();
 startAmbientDust();
 initMultiplayerPresence();
+window.setAreciboPresenceTransport = setPresenceTransport;
 startRoomFly();
 startCriticalShipShakes();
 initHudCollapse();
