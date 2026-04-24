@@ -110,6 +110,66 @@ body::after {
   background:var(--orange);
   transform:translate(-50%,-50%);
 }
+.remote-presence-layer {
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:9998;
+}
+.remote-cursor {
+  --presence-color: var(--orange);
+  position:fixed;
+  width:16px;
+  height:16px;
+  left:0;
+  top:0;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .16s ease, transform .06s linear;
+}
+.remote-cursor::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  border:1.5px solid rgba(247,255,195,.88);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.26),
+    0 0 6px rgba(247,255,195,.1);
+}
+.remote-cursor::after {
+  content:'';
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:5px;
+  height:5px;
+  transform:translate(-50%,-50%);
+  background:var(--presence-color);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.18),
+    0 0 8px color-mix(in srgb, var(--presence-color) 68%, transparent);
+}
+.remote-cursor.is-visible {
+  opacity:1;
+}
+.remote-cursor-name {
+  position:absolute;
+  left:50%;
+  top:-8px;
+  transform:translate(-50%, -100%);
+  min-width:max-content;
+  padding:2px 6px;
+  border:1px solid rgba(247,255,195,.24);
+  background:rgba(0,0,0,.72);
+  color:rgba(247,255,195,.9);
+  font-family:var(--f-pixel);
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  box-shadow:0 0 10px rgba(0,0,0,.28);
+}
 
 .bridge {
   position:relative;
@@ -3292,6 +3352,7 @@ body::after {
 </head>
 <body>
 <div class="cursor" id="cursor"></div>
+<div class="remote-presence-layer" id="remote-presence-layer" aria-hidden="true"></div>
 <div class="page-transition" id="transition"></div>
 
 <main class="bridge is-room-sas is-ship-repaired" id="ship-scene" data-room-scene="sas" data-ship-condition="stable" data-hull-state="stable" aria-label="Sas expedition du MOTOMOTO">
@@ -3640,9 +3701,15 @@ body::after {
 <script src="assets/player-profile.js?v=animal-profile-1"></script>
 <script>
 const cursor = document.getElementById('cursor');
+const remotePresenceLayer = document.getElementById('remote-presence-layer');
+let pointerX = window.innerWidth * 0.5;
+let pointerY = window.innerHeight * 0.5;
 document.addEventListener('mousemove', event => {
+  pointerX = event.clientX;
+  pointerY = event.clientY;
   cursor.style.left = event.clientX + 'px';
   cursor.style.top = event.clientY + 'px';
+  queuePresenceBroadcast();
 });
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -3654,6 +3721,18 @@ const STORY_PHASE_KEY = 'areciboStoryPhase';
 const OPENING_MAIL_OPENED_KEY = 'areciboOpeningMailAutoOpened';
 const requestedStoryPhase = params.get('storyPhase') || params.get('questStage');
 let storyPhase = requestedStoryPhase || localStorage.getItem(STORY_PHASE_KEY) || 'opening-briefing';
+function sanitizeSessionCode(value) {
+  return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+}
+function getRememberedSession() {
+  try {
+    return JSON.parse(localStorage.getItem('areciboMultiplayerSession') || 'null');
+  } catch (err) {
+    return null;
+  }
+}
+const rememberedSession = getRememberedSession();
+const sessionCode = sanitizeSessionCode(params.get('session') || (rememberedSession && rememberedSession.code) || '');
 const storedPlayers = Number(localStorage.getItem('areciboPlayerCount'));
 const requestedPlayers = Number(params.get('players'));
 const playerCount = Math.max(1, Math.min(6, requestedPlayers || storedPlayers || 1));
@@ -3719,6 +3798,12 @@ let expeditionTimerInterval = 0;
 let expeditionTimerDeadline = 0;
 let expeditionFailing = false;
 let expeditionResultPending = null;
+let presenceBroadcastChannel = null;
+let presenceHeartbeatTimer = 0;
+let presenceCleanupTimer = 0;
+let presenceRaf = 0;
+let presenceQueued = false;
+const remotePresenceMap = new Map();
 const landingDecisionStages = {
   impact: {
     alert:'Votre vaisseau a percute un asteroide !',
@@ -3750,15 +3835,28 @@ const landingVotePreset = (params.get('vote') || '')
   .filter(Boolean)
   .slice(0, 6);
 
+function sanitizeProfileColor(value, fallback) {
+  const color = String(value || '').trim();
+  return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color) ? color : fallback;
+}
+
 function getPlayerProfile() {
+  const requestedPrimaryColor = params.get('primaryColor') || params.get('primary');
+  const requestedSecondaryColor = params.get('secondaryColor') || params.get('secondary');
   if (window.AreciboPlayerProfile && typeof window.AreciboPlayerProfile.loadPlayerProfile === 'function') {
-    return window.AreciboPlayerProfile.loadPlayerProfile();
+    const storedProfile = window.AreciboPlayerProfile.loadPlayerProfile();
+    return {
+      ...storedProfile,
+      name: window.areciboPlayerName || storedProfile.name || 'COCO',
+      primaryColor: sanitizeProfileColor(requestedPrimaryColor, storedProfile.primaryColor || '#fcfcfc'),
+      secondaryColor: sanitizeProfileColor(requestedSecondaryColor, storedProfile.secondaryColor || '#2f2925')
+    };
   }
   return {
     name: window.areciboPlayerName || 'COCO',
     headId: 1,
-    primaryColor: '#fcfcfc',
-    secondaryColor: '#2f2925'
+    primaryColor: sanitizeProfileColor(requestedPrimaryColor, '#fcfcfc'),
+    secondaryColor: sanitizeProfileColor(requestedSecondaryColor, '#2f2925')
   };
 }
 
@@ -3835,6 +3933,180 @@ function initPlayerPackageName() {
   if (messagesTitle) messagesTitle.textContent = `PACKAGE ${playerName} // MESSAGES //`;
 
   window.areciboPlayerName = playerName;
+}
+
+function getPresenceClientId() {
+  const key = `areciboPresenceClientId:${sessionCode || 'solo'}`;
+  try {
+    const existing = sessionStorage.getItem(key);
+    if (existing) return existing;
+    const created = `p-${Math.random().toString(36).slice(2, 10)}`;
+    sessionStorage.setItem(key, created);
+    return created;
+  } catch (err) {
+    return `p-${Math.random().toString(36).slice(2, 10)}`;
+  }
+}
+
+const presenceClientId = getPresenceClientId();
+
+function getPresenceSceneId() {
+  if (debrisScene && debrisScene.classList.contains('is-active')) return 'expedition-debris';
+  if (landingSequence && landingSequence.classList.contains('is-active')) return `expedition-landing:${landingDecisionStage || 'impact'}`;
+  if (shipScene && shipScene.classList.contains('is-expedition-active')) {
+    return `expedition-room:${shipScene.dataset.roomScene || 'sas'}`;
+  }
+  return `ship-room:${shipScene ? (shipScene.dataset.roomScene || 'sas') : 'sas'}`;
+}
+
+function shouldBroadcastPresence() {
+  if (!sessionCode) return false;
+  return !!(
+    (debrisScene && debrisScene.classList.contains('is-active')) ||
+    (landingSequence && landingSequence.classList.contains('is-active')) ||
+    (shipScene && shipScene.classList.contains('is-expedition-active'))
+  );
+}
+
+function getPresencePayload() {
+  const profile = getPlayerProfile();
+  return {
+    type:'presence-state',
+    session:sessionCode,
+    clientId:presenceClientId,
+    name:formatPlayerPackageName(profile.name || window.areciboPlayerName || 'COCO'),
+    primaryColor:profile.primaryColor || '#FA5A1F',
+    x:Math.max(0, Math.min(1, pointerX / Math.max(1, window.innerWidth))),
+    y:Math.max(0, Math.min(1, pointerY / Math.max(1, window.innerHeight))),
+    scene:getPresenceSceneId(),
+    active:shouldBroadcastPresence() && !document.hidden,
+    ts:Date.now()
+  };
+}
+
+function ensureRemotePresenceNode(clientId) {
+  let entry = remotePresenceMap.get(clientId);
+  if (entry) return entry;
+  if (!remotePresenceLayer) return null;
+
+  const node = document.createElement('div');
+  node.className = 'remote-cursor';
+  node.setAttribute('aria-hidden', 'true');
+
+  const label = document.createElement('div');
+  label.className = 'remote-cursor-name';
+  node.appendChild(label);
+  remotePresenceLayer.appendChild(node);
+
+  entry = { node, label, scene:'', lastSeen:0 };
+  remotePresenceMap.set(clientId, entry);
+  return entry;
+}
+
+function removeRemotePresence(clientId) {
+  const entry = remotePresenceMap.get(clientId);
+  if (!entry) return;
+  entry.node.remove();
+  remotePresenceMap.delete(clientId);
+}
+
+function updateRemotePresence(data) {
+  if (!data || !data.clientId || data.clientId === presenceClientId) return;
+  const entry = ensureRemotePresenceNode(data.clientId);
+  if (!entry) return;
+
+  entry.lastSeen = data.ts || Date.now();
+  entry.scene = data.scene || '';
+  entry.label.textContent = formatPlayerPackageName(data.name || 'JOUEUR');
+  entry.node.style.setProperty('--presence-color', data.primaryColor || '#FA5A1F');
+  entry.node.style.left = `${Math.max(0, Math.min(1, Number(data.x) || 0)) * window.innerWidth}px`;
+  entry.node.style.top = `${Math.max(0, Math.min(1, Number(data.y) || 0)) * window.innerHeight}px`;
+
+  const shouldShow = Boolean(data.active) && data.scene === getPresenceSceneId();
+  entry.node.classList.toggle('is-visible', shouldShow);
+}
+
+function cleanupRemotePresence() {
+  const now = Date.now();
+  for (const [clientId, entry] of remotePresenceMap.entries()) {
+    if (now - entry.lastSeen > 2600) removeRemotePresence(clientId);
+    else entry.node.classList.toggle('is-visible', entry.scene === getPresenceSceneId());
+  }
+}
+
+function broadcastPresenceState(force = false) {
+  if (!sessionCode) return;
+  const payload = getPresencePayload();
+  if (!force && !payload.active && remotePresenceMap.size === 0) return;
+
+  if (presenceBroadcastChannel) {
+    presenceBroadcastChannel.postMessage(payload);
+  }
+  try {
+    localStorage.setItem(`arecibo:presence:${sessionCode}`, JSON.stringify({
+      ...payload,
+      nonce:Math.random().toString(36).slice(2, 8)
+    }));
+  } catch (err) {}
+}
+
+function queuePresenceBroadcast() {
+  if (!sessionCode || presenceQueued) return;
+  presenceQueued = true;
+  presenceRaf = window.requestAnimationFrame(() => {
+    presenceQueued = false;
+    broadcastPresenceState();
+  });
+}
+
+function initMultiplayerPresence() {
+  if (!sessionCode || !remotePresenceLayer) return;
+
+  if ('BroadcastChannel' in window) {
+    presenceBroadcastChannel = new BroadcastChannel(`arecibo-presence-${sessionCode}`);
+    presenceBroadcastChannel.onmessage = event => updateRemotePresence(event.data);
+  }
+
+  window.addEventListener('storage', event => {
+    if (event.key !== `arecibo:presence:${sessionCode}` || !event.newValue) return;
+    try {
+      updateRemotePresence(JSON.parse(event.newValue));
+    } catch (err) {}
+  });
+
+  presenceHeartbeatTimer = window.setInterval(() => {
+    broadcastPresenceState(true);
+    cleanupRemotePresence();
+  }, 900);
+
+  presenceCleanupTimer = window.setInterval(cleanupRemotePresence, 500);
+
+  document.addEventListener('visibilitychange', () => {
+    broadcastPresenceState(true);
+  });
+
+  window.addEventListener('beforeunload', () => {
+    const payload = {
+      type:'presence-state',
+      session:sessionCode,
+      clientId:presenceClientId,
+      active:false,
+      scene:getPresenceSceneId(),
+      ts:Date.now()
+    };
+    if (presenceBroadcastChannel) {
+      presenceBroadcastChannel.postMessage(payload);
+      presenceBroadcastChannel.close();
+    }
+    try {
+      localStorage.setItem(`arecibo:presence:${sessionCode}`, JSON.stringify({
+        ...payload,
+        nonce:Math.random().toString(36).slice(2, 8)
+      }));
+    } catch (err) {}
+  });
+
+  queuePresenceBroadcast();
 }
 
 function persistStoryPhase() {
@@ -4686,6 +4958,7 @@ function setShipScene(room) {
     shipScene.classList.add(transitionClass);
     window.setTimeout(() => shipScene.classList.remove(transitionClass), 900);
   }
+  queuePresenceBroadcast();
 }
 
 function getHullState(condition, hullIntegrity) {
@@ -5158,6 +5431,7 @@ function openDebrisInspectionScene() {
     mapMessage.classList.remove('warn');
     mapMessage.textContent = 'Inspection des debris active : progression lente au milieu des epaves.';
   }
+  queuePresenceBroadcast();
 }
 
 function closeDebrisInspectionScene() {
@@ -5165,6 +5439,7 @@ function closeDebrisInspectionScene() {
   landingSequence.classList.remove('is-debris-view');
   debrisScene.classList.remove('is-active');
   debrisScene.setAttribute('aria-hidden', 'true');
+  queuePresenceBroadcast();
 }
 
 function hideExpeditionResult() {
@@ -5262,6 +5537,7 @@ function resetLandingSequenceState() {
   landingDecisionChoices = landingDecisionStages.impact.choices;
   resetLandingVotes();
   landingSignalSessionId = '';
+  queuePresenceBroadcast();
 }
 
 function syncShipRoomState(room, message, isWarning = false) {
@@ -5352,6 +5628,7 @@ function goToLandingDecisionStage(stageId) {
   resetLandingVotes();
   renderLandingDecision();
   startLandingDecisionTyping();
+  queuePresenceBroadcast();
 }
 
 function renderCrew() {
@@ -5456,6 +5733,7 @@ function setExpeditionActive(active) {
       messageIndicator.removeAttribute('tabindex');
     }
   }
+  queuePresenceBroadcast();
 }
 
 function renderLandingDecision() {
@@ -6095,6 +6373,7 @@ setExpeditionTimerDisplay(expeditionDurationMs);
 updateDistance();
 startPortholeSpace();
 startAmbientDust();
+initMultiplayerPresence();
 startRoomFly();
 startCriticalShipShakes();
 initHudCollapse();
