@@ -2608,10 +2608,53 @@ body::after {
   color:transparent;
   cursor:none;
   z-index:4;
+  transform:translate3d(0, 0, 0);
+  transition:transform .12s ease, filter .12s ease, opacity .12s ease;
+}
+.landing-console-nav::before,
+.landing-console-nav::after {
+  content:'';
+  position:absolute;
+  inset:8%;
+  border-radius:50%;
+  pointer-events:none;
+  transition:opacity .12s ease, transform .12s ease, box-shadow .12s ease;
+}
+.landing-console-nav::before {
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255,255,255,.12), rgba(255,255,255,0) 28%),
+    radial-gradient(circle at 52% 58%, rgba(0,0,0,.26), rgba(0,0,0,0) 52%),
+    radial-gradient(circle at 50% 50%, rgba(16,15,12,.14), rgba(16,15,12,0) 70%);
+  opacity:.18;
+}
+.landing-console-nav::after {
+  inset:15%;
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,.12),
+    inset 0 -2px 6px rgba(0,0,0,.18);
+  opacity:.14;
 }
 .landing-console-nav:focus-visible {
   outline:none;
   box-shadow:0 0 0 1px rgba(247,255,195,.32);
+}
+.landing-console-nav:hover::before,
+.landing-console-nav:focus-visible::before {
+  opacity:.26;
+}
+.landing-console-nav.is-pressed {
+  transform:translate3d(1.5px, 1.8px, 0) scale(.985);
+  filter:brightness(.94);
+}
+.landing-console-nav.is-pressed::before {
+  opacity:.34;
+  transform:scale(.97);
+}
+.landing-console-nav.is-pressed::after {
+  opacity:.3;
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,.28),
+    inset 0 -1px 2px rgba(255,255,255,.05);
 }
 .landing-console-nav-up {
   top:19.7%;
@@ -4963,9 +5006,16 @@ function scrollLandingConsole(direction) {
 
 let landingConsoleHoldTimer = 0;
 function stopLandingConsoleHold() {
+  setLandingConsolePressed(landingConsoleUp, false);
+  setLandingConsolePressed(landingConsoleDown, false);
   if (!landingConsoleHoldTimer) return;
   window.clearInterval(landingConsoleHoldTimer);
   landingConsoleHoldTimer = 0;
+}
+
+function setLandingConsolePressed(button, pressed) {
+  if (!button) return;
+  button.classList.toggle('is-pressed', pressed);
 }
 
 function startLandingConsoleHold(direction) {
@@ -5312,20 +5362,28 @@ if (landingConsoleUp) {
   landingConsoleUp.addEventListener('click', () => scrollLandingConsole(-1));
   landingConsoleUp.addEventListener('pointerdown', event => {
     event.preventDefault();
+    setLandingConsolePressed(landingConsoleUp, true);
     startLandingConsoleHold(-1);
   });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(type => {
-    landingConsoleUp.addEventListener(type, stopLandingConsoleHold);
+    landingConsoleUp.addEventListener(type, () => {
+      setLandingConsolePressed(landingConsoleUp, false);
+      stopLandingConsoleHold();
+    });
   });
 }
 if (landingConsoleDown) {
   landingConsoleDown.addEventListener('click', () => scrollLandingConsole(1));
   landingConsoleDown.addEventListener('pointerdown', event => {
     event.preventDefault();
+    setLandingConsolePressed(landingConsoleDown, true);
     startLandingConsoleHold(1);
   });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach(type => {
-    landingConsoleDown.addEventListener(type, stopLandingConsoleHold);
+    landingConsoleDown.addEventListener(type, () => {
+      setLandingConsolePressed(landingConsoleDown, false);
+      stopLandingConsoleHold();
+    });
   });
 }
 
