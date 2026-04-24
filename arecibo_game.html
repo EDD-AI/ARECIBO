@@ -2707,9 +2707,101 @@ body::after {
   filter:blur(4px);
   opacity:.78;
 }
+.debris-scene {
+  position:absolute;
+  inset:0;
+  z-index:8;
+  opacity:0;
+  pointer-events:none;
+  overflow:hidden;
+  transition:opacity .45s ease;
+}
+.debris-scene.is-active {
+  opacity:1;
+  pointer-events:auto;
+}
+.debris-scene::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg, rgba(6,6,5,.14), rgba(0,0,0,.18));
+  pointer-events:none;
+  z-index:2;
+}
+.debris-starfield {
+  position:absolute;
+  inset:-4%;
+  background:
+    linear-gradient(180deg, rgba(4,5,3,.16), rgba(0,0,0,.34)),
+    url('assets/backgrounds/starfield.png') center / cover no-repeat;
+  filter:brightness(.84) contrast(1.06);
+  animation:debrisStarfieldShift 90s linear infinite;
+}
+.debris-parallax {
+  position:absolute;
+  inset:0;
+  z-index:1;
+}
+.debris-layer {
+  position:absolute;
+  display:block;
+  width:var(--w);
+  left:var(--x);
+  top:var(--y);
+  opacity:var(--alpha, 1);
+  transform-origin:center center;
+  animation:debrisLayerFloat var(--duration, 36s) ease-in-out infinite alternate;
+  filter:drop-shadow(0 16px 28px rgba(0,0,0,.22));
+}
+.debris-layer.frame {
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  animation:none;
+  z-index:4;
+  filter:none;
+}
+.debris-layer.layer-2  { z-index:3; }
+.debris-layer.layer-3  { z-index:3; }
+.debris-layer.layer-4  { z-index:2; }
+.debris-layer.layer-5  { z-index:2; }
+.debris-layer.layer-6  { z-index:3; }
+.debris-layer.layer-7  { z-index:3; }
+.debris-layer.layer-8  { z-index:2; }
+.debris-layer.layer-9  { z-index:2; }
+.debris-layer.layer-10 { z-index:2; }
+.debris-layer.layer-11 { z-index:2; }
+.debris-layer.layer-12 { z-index:3; }
+.debris-layer.layer-13 { z-index:3; }
+.landing-sequence.is-debris-view .landing-decision,
+.landing-sequence.is-debris-view .landing-ship,
+.landing-sequence.is-debris-view .landing-thrusters,
+.landing-sequence.is-debris-view .landing-dust-glow,
+.landing-sequence.is-debris-view .landing-canvas,
+.landing-sequence.is-debris-view .landing-backdrop {
+  opacity:0;
+  pointer-events:none;
+}
 @keyframes landingCursorBlink {
   0%, 49% { opacity:1; }
   50%, 100% { opacity:0; }
+}
+@keyframes debrisStarfieldShift {
+  0% { transform:scale(1.02) translate3d(0, 0, 0); }
+  50% { transform:scale(1.04) translate3d(-1.2%, -0.8%, 0); }
+  100% { transform:scale(1.02) translate3d(1.1%, 0.6%, 0); }
+}
+@keyframes debrisLayerFloat {
+  0% {
+    transform:translate3d(0, 0, 0) rotate(var(--rot, 0deg));
+  }
+  50% {
+    transform:translate3d(var(--dx, 12px), var(--dy, -10px), 0) rotate(calc(var(--rot, 0deg) + var(--swing, 1.8deg)));
+  }
+  100% {
+    transform:translate3d(var(--dx2, -8px), var(--dy2, 8px), 0) rotate(calc(var(--rot, 0deg) - var(--swing, 1.8deg)));
+  }
 }
 @keyframes expeditionTimerPulse {
   0%, 49% {
@@ -3114,6 +3206,24 @@ body::after {
     <span class="expedition-timer-label">Temps expedition</span>
     <span class="expedition-timer-value" id="expedition-timer-value">05:00</span>
   </div>
+  <section class="debris-scene" id="debris-scene" aria-hidden="true" aria-label="Inspection des debris">
+    <div class="debris-starfield" aria-hidden="true"></div>
+    <div class="debris-parallax" aria-hidden="true">
+      <img class="debris-layer layer-4" src="assets/debris-scene/Calque 4.png" alt="" style="--x:18%; --y:23%; --w:min(5vw, 74px); --rot:-18deg; --dx:10px; --dy:-8px; --dx2:-6px; --dy2:7px; --duration:34s; --swing:1.6deg;">
+      <img class="debris-layer layer-5" src="assets/debris-scene/Calque 5.png" alt="" style="--x:9%; --y:31%; --w:min(6vw, 92px); --rot:-12deg; --dx:-12px; --dy:8px; --dx2:6px; --dy2:-6px; --duration:41s; --swing:2deg;">
+      <img class="debris-layer layer-2" src="assets/debris-scene/Calque 2.png" alt="" style="--x:45%; --y:23%; --w:min(13vw, 206px); --rot:8deg; --dx:14px; --dy:-10px; --dx2:-10px; --dy2:8px; --duration:38s; --swing:2.2deg;">
+      <img class="debris-layer layer-11" src="assets/debris-scene/Calque 11.png" alt="" style="--x:57%; --y:16%; --w:min(4vw, 58px); --rot:16deg; --dx:-8px; --dy:10px; --dx2:8px; --dy2:-5px; --duration:28s; --swing:2.6deg;">
+      <img class="debris-layer layer-10" src="assets/debris-scene/Calque 10.png" alt="" style="--x:63%; --y:49%; --w:min(4vw, 56px); --rot:14deg; --dx:6px; --dy:-6px; --dx2:-8px; --dy2:9px; --duration:32s; --swing:1.4deg;">
+      <img class="debris-layer layer-3" src="assets/debris-scene/Calque 3.png" alt="" style="--x:71%; --y:34%; --w:min(9vw, 138px); --rot:-7deg; --dx:-10px; --dy:-10px; --dx2:12px; --dy2:8px; --duration:44s; --swing:2deg;">
+      <img class="debris-layer layer-7" src="assets/debris-scene/Calque 7.png" alt="" style="--x:79%; --y:25%; --w:min(16vw, 252px); --rot:-10deg; --dx:16px; --dy:12px; --dx2:-10px; --dy2:-10px; --duration:52s; --swing:2.8deg;">
+      <img class="debris-layer layer-9" src="assets/debris-scene/Calque 9.png" alt="" style="--x:88%; --y:36%; --w:min(5vw, 84px); --rot:18deg; --dx:9px; --dy:-10px; --dx2:-7px; --dy2:7px; --duration:39s; --swing:2.2deg;">
+      <img class="debris-layer layer-6" src="assets/debris-scene/Calque 6.png" alt="" style="--x:2.8%; --y:50%; --w:min(18vw, 280px); --rot:-11deg; --dx:-14px; --dy:12px; --dx2:8px; --dy2:-8px; --duration:58s; --swing:3deg;">
+      <img class="debris-layer layer-8" src="assets/debris-scene/Calque 8.png" alt="" style="--x:82%; --y:67%; --w:min(9vw, 130px); --rot:-14deg; --dx:10px; --dy:8px; --dx2:-10px; --dy2:-6px; --duration:47s; --swing:2.4deg;">
+      <img class="debris-layer layer-12" src="assets/debris-scene/Calque 12.png" alt="" style="--x:40%; --y:65%; --w:min(15vw, 228px); --rot:12deg; --dx:-14px; --dy:-9px; --dx2:10px; --dy2:9px; --duration:49s; --swing:2.6deg;">
+      <img class="debris-layer layer-13" src="assets/debris-scene/Calque 13.png" alt="" style="--x:52%; --y:80%; --w:min(13vw, 204px); --rot:-12deg; --dx:14px; --dy:7px; --dx2:-8px; --dy2:-8px; --duration:55s; --swing:2deg;">
+    </div>
+    <img class="debris-layer frame" src="assets/debris-scene/exterieur.png" alt="" aria-hidden="true">
+  </section>
   <section class="landing-decision" id="landing-decision" aria-label="Decision expedition">
     <div class="landing-console-shell">
       <div class="landing-console-frame" aria-hidden="true"></div>
@@ -3276,6 +3386,7 @@ const landingAlertText = document.getElementById('landing-alert-text');
 const landingAlertCursor = document.getElementById('landing-alert-cursor');
 const landingHeadText = document.getElementById('landing-head-text');
 const landingHeadCursor = document.getElementById('landing-head-cursor');
+const debrisScene = document.getElementById('debris-scene');
 const expeditionTimerHud = document.getElementById('expedition-timer-hud');
 const expeditionTimerValue = document.getElementById('expedition-timer-value');
 let landingStarted = false;
@@ -4437,10 +4548,37 @@ function clearLandingSequenceTimers() {
   landingSequenceTimers = [];
 }
 
+function openDebrisInspectionScene() {
+  if (!landingSequence || !debrisScene) return;
+
+  if (!landingStarted) {
+    landingStarted = true;
+    landingSequence.classList.add('is-active');
+    landingSequence.setAttribute('aria-hidden', 'false');
+    startExpeditionTimer();
+  }
+
+  landingSequence.classList.add('is-debris-view');
+  debrisScene.classList.add('is-active');
+  debrisScene.setAttribute('aria-hidden', 'false');
+  if (mapMessage) {
+    mapMessage.classList.remove('warn');
+    mapMessage.textContent = 'Inspection des debris active : progression lente au milieu des epaves.';
+  }
+}
+
+function closeDebrisInspectionScene() {
+  if (!landingSequence || !debrisScene) return;
+  landingSequence.classList.remove('is-debris-view');
+  debrisScene.classList.remove('is-active');
+  debrisScene.setAttribute('aria-hidden', 'true');
+}
+
 function resetLandingSequenceState() {
   clearLandingTypingTimers();
   clearLandingSequenceTimers();
   stopLandingConsoleHold();
+  closeDebrisInspectionScene();
 
   if (landingSequence) {
     landingSequence.classList.remove('is-question-open', 'is-hovering', 'is-active');
@@ -4560,6 +4698,7 @@ function resetLandingVotes() {
 function goToLandingDecisionStage(stageId) {
   const stage = landingDecisionStages[stageId];
   if (!stage) return;
+  closeDebrisInspectionScene();
   landingDecisionStage = stageId;
   landingDecisionChoices = stage.choices;
   resetLandingVotes();
@@ -4671,6 +4810,10 @@ function renderLandingDecision() {
     button.className = 'decision-btn';
     button.textContent = choice.label;
     button.addEventListener('click', () => {
+      if (choice.id === 'inspect-debris') {
+        openDebrisInspectionScene();
+        return;
+      }
       if (playerCount <= 1) {
         landingVotes[0] = choice.id;
       } else {
@@ -5138,6 +5281,10 @@ function toggleSwitch(el) {
 
 document.addEventListener('keydown', event => {
   if (event.key !== 'Escape') return;
+  if (debrisScene && debrisScene.classList.contains('is-active')) {
+    closeDebrisInspectionScene();
+    return;
+  }
   const messagesOverlay = document.getElementById('messages-overlay');
   if (messagesOverlay && messagesOverlay.classList.contains('open')) {
     closeMessages();
@@ -5194,11 +5341,18 @@ startCriticalShipShakes();
 initHudCollapse();
 initShipMap();
 initDraggablePersonalWindow();
+window.openDebrisInspectionScene = openDebrisInspectionScene;
+window.closeDebrisInspectionScene = closeDebrisInspectionScene;
 
 if (params.get('landing') === '1') {
   setExpeditionActive(true);
   startLandingSequence();
   if (pageTransition) pageTransition.classList.add('out');
+}
+if (params.get('debris') === '1') {
+  setExpeditionActive(true);
+  if (pageTransition) pageTransition.classList.add('out');
+  openDebrisInspectionScene();
 }
 </script>
 </body>
