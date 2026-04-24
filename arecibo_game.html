@@ -2400,7 +2400,7 @@ body::after {
 .landing-console-frame {
   position:absolute;
   inset:0;
-  background:url('assets/console-aventure.png?v=20260424-console-refresh') center / contain no-repeat;
+  background:url('assets/console-aventure.png?v=20260424-console-calque0') center / contain no-repeat;
   pointer-events:none;
   z-index:3;
 }
@@ -2599,20 +2599,20 @@ body::after {
 }
 .landing-console-nav {
   position:absolute;
-  right:7.75%;
-  width:11.4%;
-  height:19.6%;
+  right:7.65%;
+  width:11.55%;
+  aspect-ratio:1 / 1;
   border:0;
   border-radius:50%;
-  background:transparent;
+  background:center / contain no-repeat;
   color:transparent;
   cursor:none;
   z-index:4;
-  transform:translate3d(0, 0, 0);
+  transform:translateY(-50%);
   transition:transform .12s ease, filter .12s ease, opacity .12s ease;
   overflow:visible;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.26));
 }
-.landing-console-nav::before,
 .landing-console-nav::after {
   content:'';
   position:absolute;
@@ -2621,59 +2621,46 @@ body::after {
   pointer-events:none;
   transition:opacity .12s ease, transform .12s ease, box-shadow .12s ease;
 }
-.landing-console-nav::before {
-  width:26%;
-  aspect-ratio:26 / 57;
-  min-width:26px;
-  background:url('assets/console-aventure-button.png?v=20260424-button-refresh') center / contain no-repeat;
-  transform:translate(-50%, -50%) scale(6.15);
-  opacity:.96;
-  filter:drop-shadow(0 1px 1px rgba(0,0,0,.26));
-}
 .landing-console-nav::after {
-  width:56%;
-  height:56%;
+  width:84%;
+  height:84%;
   border-radius:50%;
   transform:translate(-50%, -50%);
   box-shadow:
-    0 0 0 1px rgba(247,255,195,.08),
-    0 0 14px rgba(247,255,195,.04);
-  opacity:.08;
+    0 0 0 1px rgba(247,255,195,.06),
+    0 0 14px rgba(247,255,195,.025);
+  opacity:.03;
 }
 .landing-console-nav:focus-visible {
   outline:none;
-  box-shadow:0 0 0 1px rgba(247,255,195,.32);
+  box-shadow:0 0 0 1px rgba(247,255,195,.24);
 }
-.landing-console-nav:hover::before,
-.landing-console-nav:focus-visible::before {
-  opacity:1;
+.landing-console-nav:hover,
+.landing-console-nav:focus-visible {
   filter:
-    brightness(1.06)
+    brightness(1.03)
     drop-shadow(0 0 8px rgba(247,255,195,.08));
 }
 .landing-console-nav.is-pressed {
-  transform:translate3d(0, 0, 0);
-  filter:brightness(.96);
-}
-.landing-console-nav.is-pressed::before {
-  opacity:1;
-  transform:translate(-50%, -50%) scale(5.9) translateY(1px);
+  transform:translateY(calc(-50% + 2px)) scale(.972);
   filter:
-    brightness(.88)
+    brightness(.92)
     drop-shadow(0 0 4px rgba(0,0,0,.24));
 }
 .landing-console-nav.is-pressed::after {
-  opacity:.18;
-  transform:translate(-50%, -50%) scale(.98);
+  opacity:.14;
+  transform:translate(-50%, -50%) scale(.96);
   box-shadow:
     0 0 0 1px rgba(0,0,0,.18),
     inset 0 2px 5px rgba(0,0,0,.22);
 }
 .landing-console-nav-up {
-  top:19.1%;
+  top:19.15%;
+  background-image:url('assets/console-aventure-button-up.png?v=20260424-round-buttons');
 }
 .landing-console-nav-down {
-  top:43.2%;
+  top:43.25%;
+  background-image:url('assets/console-aventure-button-down.png?v=20260424-round-buttons');
 }
 .landing-console-nav.is-disabled {
   pointer-events:none;
@@ -2812,7 +2799,7 @@ body::after {
 .expedition-result-frame {
   position:absolute;
   inset:0;
-  background:url('assets/console-aventure.png?v=20260424-console-refresh') center / contain no-repeat;
+  background:url('assets/console-aventure.png?v=20260424-console-calque0') center / contain no-repeat;
   pointer-events:none;
   z-index:3;
 }
@@ -3157,9 +3144,8 @@ body::after {
     gap:5px;
   }
   .landing-console-nav {
-    right:7.5%;
-    width:12.4%;
-    height:20.2%;
+    right:7.45%;
+    width:12.7%;
   }
 }
 @keyframes landingShipDescent {
