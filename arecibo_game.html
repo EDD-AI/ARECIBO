@@ -3122,6 +3122,89 @@ body::after {
   animation:none;
   z-index:5;
   filter:none;
+  pointer-events:none;
+}
+.debris-note {
+  position:absolute;
+  display:block;
+  width:var(--w);
+  left:var(--x);
+  top:var(--y);
+  padding:0;
+  border:0;
+  background:none;
+  opacity:var(--alpha, 1);
+  transform-origin:center center;
+  animation:debrisLayerFloat var(--duration, 30s) ease-in-out infinite alternate;
+  cursor:none;
+  pointer-events:auto;
+  z-index:4;
+}
+.debris-note img {
+  display:block;
+  width:100%;
+  height:auto;
+  filter:
+    drop-shadow(0 18px 26px rgba(0,0,0,.32))
+    drop-shadow(0 0 8px rgba(247,255,195,.06));
+  transition:transform .18s ease, filter .18s ease, opacity .18s ease;
+}
+.debris-note:hover img,
+.debris-note:focus-visible img {
+  transform:scale(1.06);
+  filter:
+    drop-shadow(0 20px 28px rgba(0,0,0,.34))
+    drop-shadow(0 0 12px rgba(250,90,31,.16));
+}
+.debris-note:focus-visible {
+  outline:none;
+}
+.debris-note.is-found img {
+  opacity:.82;
+  filter:
+    saturate(.88)
+    brightness(.92)
+    drop-shadow(0 18px 24px rgba(0,0,0,.28))
+    drop-shadow(0 0 14px rgba(250,90,31,.22));
+}
+.debris-note.is-found::after {
+  content:'RECUPERE';
+  position:absolute;
+  left:50%;
+  top:100%;
+  transform:translate(-50%, 6px);
+  padding:2px 6px 3px;
+  border:1px solid rgba(250,90,31,.58);
+  background:rgba(0,0,0,.74);
+  color:var(--orange);
+  font-size:11px;
+  letter-spacing:.08em;
+  white-space:nowrap;
+}
+.debris-loot-toast {
+  position:absolute;
+  left:50%;
+  top:9%;
+  transform:translate(-50%, -8px);
+  min-width:min(54vw, 420px);
+  padding:10px 16px 12px;
+  border:1px solid rgba(250,90,31,.52);
+  background:rgba(0,0,0,.72);
+  color:var(--orange);
+  font-size:clamp(16px, 1vw, 20px);
+  letter-spacing:.06em;
+  text-align:center;
+  text-transform:uppercase;
+  text-shadow:0 0 10px rgba(250,90,31,.18);
+  box-shadow:0 0 26px rgba(0,0,0,.3);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s ease, transform .2s ease;
+  z-index:6;
+}
+.debris-loot-toast.is-visible {
+  opacity:1;
+  transform:translate(-50%, 0);
 }
 .debris-layer.layer-2  { z-index:4; }
 .debris-layer.layer-3  { z-index:4; }
@@ -3593,7 +3676,7 @@ body::after {
       <canvas class="debris-star-canvas" id="debris-star-canvas"></canvas>
       <canvas class="debris-particle-canvas" id="debris-particle-canvas"></canvas>
     </div>
-    <div class="debris-parallax" aria-hidden="true">
+    <div class="debris-parallax">
       <img class="debris-layer layer-4" src="assets/debris-scene/Calque 4.png" alt="" style="--x:18%; --y:23%; --w:min(5vw, 74px); --rot:-18deg; --dx:16px; --dy:-14px; --dx2:-12px; --dy2:11px; --duration:30s; --swing:2deg;">
       <img class="debris-layer layer-5" src="assets/debris-scene/Calque 5.png" alt="" style="--x:9%; --y:31%; --w:min(6vw, 92px); --rot:-12deg; --dx:-18px; --dy:14px; --dx2:10px; --dy2:-10px; --duration:36s; --swing:2.4deg;">
       <img class="debris-layer layer-2" src="assets/debris-scene/Calque 2.png" alt="" style="--x:44%; --y:22%; --w:min(14vw, 224px); --rot:8deg; --dx:22px; --dy:-16px; --dx2:-16px; --dy2:12px; --duration:30s; --swing:2.8deg;">
@@ -3606,8 +3689,21 @@ body::after {
       <img class="debris-layer layer-8" src="assets/debris-scene/Calque 8.png" alt="" style="--x:82%; --y:67%; --w:min(10vw, 148px); --rot:-14deg; --dx:14px; --dy:12px; --dx2:-14px; --dy2:-10px; --duration:37s; --swing:2.8deg;">
       <img class="debris-layer layer-12" src="assets/debris-scene/Calque 12.png" alt="" style="--x:40%; --y:65%; --w:min(17vw, 252px); --rot:12deg; --dx:-20px; --dy:-14px; --dx2:14px; --dy2:13px; --duration:38s; --swing:3deg;">
       <img class="debris-layer layer-13" src="assets/debris-scene/Calque 13.png" alt="" style="--x:52%; --y:79%; --w:min(15vw, 224px); --rot:-12deg; --dx:18px; --dy:10px; --dx2:-12px; --dy2:-12px; --duration:40s; --swing:2.6deg;">
+      <button class="debris-note" type="button" data-note-id="jaune" data-note-label="Carnet jaune" aria-label="Carnet jaune flottant" style="--x:24%; --y:62%; --w:min(6.2vw, 88px); --rot:-10deg; --dx:14px; --dy:-10px; --dx2:-8px; --dy2:12px; --duration:35s; --swing:3deg;">
+        <img src="assets/carnets/carnet-jaune-ferme.png" alt="" aria-hidden="true">
+      </button>
+      <button class="debris-note" type="button" data-note-id="rouge" data-note-label="Carnet rouge" aria-label="Carnet rouge flottant" style="--x:67%; --y:58%; --w:min(6.4vw, 92px); --rot:8deg; --dx:-16px; --dy:12px; --dx2:10px; --dy2:-8px; --duration:42s; --swing:2.7deg;">
+        <img src="assets/carnets/carnet-rouge-ferme.png" alt="" aria-hidden="true">
+      </button>
+      <button class="debris-note" type="button" data-note-id="vert" data-note-label="Carnet vert" aria-label="Carnet vert flottant" style="--x:78%; --y:49%; --w:min(5.6vw, 82px); --rot:-14deg; --dx:12px; --dy:-14px; --dx2:-10px; --dy2:10px; --duration:31s; --swing:2.3deg;">
+        <img src="assets/carnets/carnet-vert-ferme.png" alt="" aria-hidden="true">
+      </button>
+      <button class="debris-note" type="button" data-note-id="noir" data-note-label="Carnet noir" aria-label="Carnet noir flottant" style="--x:56%; --y:73%; --w:min(6vw, 86px); --rot:12deg; --dx:-14px; --dy:10px; --dx2:12px; --dy2:-10px; --duration:47s; --swing:3.1deg;">
+        <img src="assets/carnets/carnet-noir-ferme.png" alt="" aria-hidden="true">
+      </button>
     </div>
     <img class="debris-layer frame" src="assets/debris-scene/exterieur.png" alt="" aria-hidden="true">
+    <div class="debris-loot-toast" id="debris-loot-toast" aria-live="polite"></div>
   </section>
   <section class="landing-decision" id="landing-decision" aria-label="Decision expedition">
     <div class="landing-console-shell">
@@ -3781,6 +3877,8 @@ const landingHeadCursor = document.getElementById('landing-head-cursor');
 const debrisStarCanvas = document.getElementById('debris-star-canvas');
 const debrisParticleCanvas = document.getElementById('debris-particle-canvas');
 const debrisScene = document.getElementById('debris-scene');
+const debrisNoteToast = document.getElementById('debris-loot-toast');
+const debrisNoteButtons = Array.from(document.querySelectorAll('.debris-note'));
 const expeditionTimerHud = document.getElementById('expedition-timer-hud');
 const expeditionTimerValue = document.getElementById('expedition-timer-value');
 const expeditionResultOverlay = document.getElementById('expedition-result-overlay');
@@ -3800,12 +3898,14 @@ let expeditionTimerInterval = 0;
 let expeditionTimerDeadline = 0;
 let expeditionFailing = false;
 let expeditionResultPending = null;
+let debrisNoteToastTimer = 0;
 let presenceBroadcastChannel = null;
 let presenceHeartbeatTimer = 0;
 let presenceCleanupTimer = 0;
 let presenceRaf = 0;
 let presenceQueued = false;
 const remotePresenceMap = new Map();
+const collectedDebrisNotes = new Set();
 const landingDecisionStages = {
   impact: {
     alert:'Votre vaisseau a percute un asteroide !',
@@ -4034,6 +4134,35 @@ function cleanupRemotePresence() {
     if (now - entry.lastSeen > 2600) removeRemotePresence(clientId);
     else entry.node.classList.toggle('is-visible', entry.scene === getPresenceSceneId());
   }
+}
+
+function showDebrisLootToast(message) {
+  if (!debrisNoteToast) return;
+  debrisNoteToast.textContent = message;
+  debrisNoteToast.classList.add('is-visible');
+  window.clearTimeout(debrisNoteToastTimer);
+  debrisNoteToastTimer = window.setTimeout(() => {
+    debrisNoteToast.classList.remove('is-visible');
+  }, 1800);
+}
+
+function handleDebrisNotebookClick(button) {
+  if (!button) return;
+  const noteId = button.dataset.noteId || 'note';
+  const noteLabel = button.dataset.noteLabel || 'Carnet';
+
+  if (!collectedDebrisNotes.has(noteId)) {
+    collectedDebrisNotes.add(noteId);
+    button.classList.add('is-found');
+    showDebrisLootToast(`${noteLabel} recupere`);
+    if (mapMessage) {
+      mapMessage.classList.remove('warn');
+      mapMessage.textContent = `${noteLabel} recupere dans les debris.`;
+    }
+    return;
+  }
+
+  showDebrisLootToast(`${noteLabel} deja recupere`);
 }
 
 function broadcastPresenceState(force = false) {
@@ -6351,6 +6480,11 @@ if (landingConsoleDown) {
       setLandingConsolePressed(landingConsoleDown, false);
       stopLandingConsoleHold();
     });
+  });
+}
+if (debrisNoteButtons.length) {
+  debrisNoteButtons.forEach(button => {
+    button.addEventListener('click', () => handleDebrisNotebookClick(button));
   });
 }
 if (expeditionResultAction) {
