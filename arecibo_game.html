@@ -3014,16 +3014,33 @@ body::after {
 .debris-starfield {
   position:absolute;
   inset:-4%;
+  overflow:hidden;
   background:
-    linear-gradient(180deg, rgba(4,5,3,.16), rgba(0,0,0,.34)),
-    url('assets/backgrounds/starfield.png') center / cover no-repeat;
-  filter:brightness(.84) contrast(1.06);
-  animation:debrisStarfieldShift 90s linear infinite;
+    radial-gradient(circle at 50% 110%, rgba(122, 163, 188, .24), transparent 22%),
+    radial-gradient(circle at 14% 18%, rgba(247,255,195,.045), transparent 20%),
+    linear-gradient(180deg, rgba(5,5,4,.18), rgba(0,0,0,.48) 45%, rgba(0,0,0,.82));
+  filter:brightness(.92) contrast(1.08);
+}
+.debris-star-canvas,
+.debris-particle-canvas {
+  position:absolute;
+  inset:-2%;
+  width:104%;
+  height:104%;
+  display:block;
+  pointer-events:none;
+}
+.debris-star-canvas {
+  z-index:0;
+}
+.debris-particle-canvas {
+  z-index:1;
+  mix-blend-mode:screen;
 }
 .debris-parallax {
   position:absolute;
   inset:0;
-  z-index:1;
+  z-index:3;
 }
 .debris-layer {
   position:absolute;
@@ -3033,8 +3050,10 @@ body::after {
   top:var(--y);
   opacity:var(--alpha, 1);
   transform-origin:center center;
-  animation:debrisLayerFloat var(--duration, 36s) ease-in-out infinite alternate;
-  filter:drop-shadow(0 16px 28px rgba(0,0,0,.22));
+  animation:debrisLayerFloat var(--duration, 30s) ease-in-out infinite alternate;
+  filter:
+    drop-shadow(0 20px 32px rgba(0,0,0,.28))
+    drop-shadow(0 0 8px rgba(247,255,195,.06));
 }
 .debris-layer.frame {
   inset:0;
@@ -3042,21 +3061,21 @@ body::after {
   height:100%;
   object-fit:cover;
   animation:none;
-  z-index:4;
+  z-index:5;
   filter:none;
 }
-.debris-layer.layer-2  { z-index:3; }
-.debris-layer.layer-3  { z-index:3; }
-.debris-layer.layer-4  { z-index:2; }
-.debris-layer.layer-5  { z-index:2; }
-.debris-layer.layer-6  { z-index:3; }
-.debris-layer.layer-7  { z-index:3; }
-.debris-layer.layer-8  { z-index:2; }
-.debris-layer.layer-9  { z-index:2; }
-.debris-layer.layer-10 { z-index:2; }
-.debris-layer.layer-11 { z-index:2; }
-.debris-layer.layer-12 { z-index:3; }
-.debris-layer.layer-13 { z-index:3; }
+.debris-layer.layer-2  { z-index:4; }
+.debris-layer.layer-3  { z-index:4; }
+.debris-layer.layer-4  { z-index:3; }
+.debris-layer.layer-5  { z-index:3; }
+.debris-layer.layer-6  { z-index:4; }
+.debris-layer.layer-7  { z-index:4; }
+.debris-layer.layer-8  { z-index:3; }
+.debris-layer.layer-9  { z-index:3; }
+.debris-layer.layer-10 { z-index:3; }
+.debris-layer.layer-11 { z-index:3; }
+.debris-layer.layer-12 { z-index:4; }
+.debris-layer.layer-13 { z-index:4; }
 .landing-sequence.is-debris-view .landing-decision,
 .landing-sequence.is-debris-view .landing-ship,
 .landing-sequence.is-debris-view .landing-thrusters,
@@ -3070,20 +3089,15 @@ body::after {
   0%, 49% { opacity:1; }
   50%, 100% { opacity:0; }
 }
-@keyframes debrisStarfieldShift {
-  0% { transform:scale(1.02) translate3d(0, 0, 0); }
-  50% { transform:scale(1.04) translate3d(-1.2%, -0.8%, 0); }
-  100% { transform:scale(1.02) translate3d(1.1%, 0.6%, 0); }
-}
 @keyframes debrisLayerFloat {
   0% {
     transform:translate3d(0, 0, 0) rotate(var(--rot, 0deg));
   }
   50% {
-    transform:translate3d(var(--dx, 12px), var(--dy, -10px), 0) rotate(calc(var(--rot, 0deg) + var(--swing, 1.8deg)));
+    transform:translate3d(var(--dx, 16px), var(--dy, -14px), 0) rotate(calc(var(--rot, 0deg) + var(--swing, 2.4deg)));
   }
   100% {
-    transform:translate3d(var(--dx2, -8px), var(--dy2, 8px), 0) rotate(calc(var(--rot, 0deg) - var(--swing, 1.8deg)));
+    transform:translate3d(var(--dx2, -12px), var(--dy2, 10px), 0) rotate(calc(var(--rot, 0deg) - var(--swing, 2.4deg)));
   }
 }
 @keyframes expeditionTimerPulse {
@@ -3513,20 +3527,23 @@ body::after {
     </div>
   </section>
   <section class="debris-scene" id="debris-scene" aria-hidden="true" aria-label="Inspection des debris">
-    <div class="debris-starfield" aria-hidden="true"></div>
+    <div class="debris-starfield" aria-hidden="true">
+      <canvas class="debris-star-canvas" id="debris-star-canvas"></canvas>
+      <canvas class="debris-particle-canvas" id="debris-particle-canvas"></canvas>
+    </div>
     <div class="debris-parallax" aria-hidden="true">
-      <img class="debris-layer layer-4" src="assets/debris-scene/Calque 4.png" alt="" style="--x:18%; --y:23%; --w:min(5vw, 74px); --rot:-18deg; --dx:10px; --dy:-8px; --dx2:-6px; --dy2:7px; --duration:34s; --swing:1.6deg;">
-      <img class="debris-layer layer-5" src="assets/debris-scene/Calque 5.png" alt="" style="--x:9%; --y:31%; --w:min(6vw, 92px); --rot:-12deg; --dx:-12px; --dy:8px; --dx2:6px; --dy2:-6px; --duration:41s; --swing:2deg;">
-      <img class="debris-layer layer-2" src="assets/debris-scene/Calque 2.png" alt="" style="--x:45%; --y:23%; --w:min(13vw, 206px); --rot:8deg; --dx:14px; --dy:-10px; --dx2:-10px; --dy2:8px; --duration:38s; --swing:2.2deg;">
-      <img class="debris-layer layer-11" src="assets/debris-scene/Calque 11.png" alt="" style="--x:57%; --y:16%; --w:min(4vw, 58px); --rot:16deg; --dx:-8px; --dy:10px; --dx2:8px; --dy2:-5px; --duration:28s; --swing:2.6deg;">
-      <img class="debris-layer layer-10" src="assets/debris-scene/Calque 10.png" alt="" style="--x:63%; --y:49%; --w:min(4vw, 56px); --rot:14deg; --dx:6px; --dy:-6px; --dx2:-8px; --dy2:9px; --duration:32s; --swing:1.4deg;">
-      <img class="debris-layer layer-3" src="assets/debris-scene/Calque 3.png" alt="" style="--x:71%; --y:34%; --w:min(9vw, 138px); --rot:-7deg; --dx:-10px; --dy:-10px; --dx2:12px; --dy2:8px; --duration:44s; --swing:2deg;">
-      <img class="debris-layer layer-7" src="assets/debris-scene/Calque 7.png" alt="" style="--x:79%; --y:25%; --w:min(16vw, 252px); --rot:-10deg; --dx:16px; --dy:12px; --dx2:-10px; --dy2:-10px; --duration:52s; --swing:2.8deg;">
-      <img class="debris-layer layer-9" src="assets/debris-scene/Calque 9.png" alt="" style="--x:88%; --y:36%; --w:min(5vw, 84px); --rot:18deg; --dx:9px; --dy:-10px; --dx2:-7px; --dy2:7px; --duration:39s; --swing:2.2deg;">
-      <img class="debris-layer layer-6" src="assets/debris-scene/Calque 6.png" alt="" style="--x:2.8%; --y:50%; --w:min(18vw, 280px); --rot:-11deg; --dx:-14px; --dy:12px; --dx2:8px; --dy2:-8px; --duration:58s; --swing:3deg;">
-      <img class="debris-layer layer-8" src="assets/debris-scene/Calque 8.png" alt="" style="--x:82%; --y:67%; --w:min(9vw, 130px); --rot:-14deg; --dx:10px; --dy:8px; --dx2:-10px; --dy2:-6px; --duration:47s; --swing:2.4deg;">
-      <img class="debris-layer layer-12" src="assets/debris-scene/Calque 12.png" alt="" style="--x:40%; --y:65%; --w:min(15vw, 228px); --rot:12deg; --dx:-14px; --dy:-9px; --dx2:10px; --dy2:9px; --duration:49s; --swing:2.6deg;">
-      <img class="debris-layer layer-13" src="assets/debris-scene/Calque 13.png" alt="" style="--x:52%; --y:80%; --w:min(13vw, 204px); --rot:-12deg; --dx:14px; --dy:7px; --dx2:-8px; --dy2:-8px; --duration:55s; --swing:2deg;">
+      <img class="debris-layer layer-4" src="assets/debris-scene/Calque 4.png" alt="" style="--x:18%; --y:23%; --w:min(5vw, 74px); --rot:-18deg; --dx:16px; --dy:-14px; --dx2:-12px; --dy2:11px; --duration:30s; --swing:2deg;">
+      <img class="debris-layer layer-5" src="assets/debris-scene/Calque 5.png" alt="" style="--x:9%; --y:31%; --w:min(6vw, 92px); --rot:-12deg; --dx:-18px; --dy:14px; --dx2:10px; --dy2:-10px; --duration:36s; --swing:2.4deg;">
+      <img class="debris-layer layer-2" src="assets/debris-scene/Calque 2.png" alt="" style="--x:44%; --y:22%; --w:min(14vw, 224px); --rot:8deg; --dx:22px; --dy:-16px; --dx2:-16px; --dy2:12px; --duration:30s; --swing:2.8deg;">
+      <img class="debris-layer layer-11" src="assets/debris-scene/Calque 11.png" alt="" style="--x:57%; --y:16%; --w:min(4vw, 58px); --rot:16deg; --dx:-12px; --dy:14px; --dx2:11px; --dy2:-8px; --duration:24s; --swing:3deg;">
+      <img class="debris-layer layer-10" src="assets/debris-scene/Calque 10.png" alt="" style="--x:63%; --y:49%; --w:min(4vw, 56px); --rot:14deg; --dx:10px; --dy:-10px; --dx2:-12px; --dy2:12px; --duration:28s; --swing:1.8deg;">
+      <img class="debris-layer layer-3" src="assets/debris-scene/Calque 3.png" alt="" style="--x:71%; --y:34%; --w:min(10vw, 150px); --rot:-7deg; --dx:-18px; --dy:-14px; --dx2:18px; --dy2:12px; --duration:34s; --swing:2.5deg;">
+      <img class="debris-layer layer-7" src="assets/debris-scene/Calque 7.png" alt="" style="--x:78%; --y:24%; --w:min(18vw, 280px); --rot:-10deg; --dx:24px; --dy:18px; --dx2:-16px; --dy2:-16px; --duration:42s; --swing:3.2deg;">
+      <img class="debris-layer layer-9" src="assets/debris-scene/Calque 9.png" alt="" style="--x:88%; --y:36%; --w:min(5vw, 84px); --rot:18deg; --dx:13px; --dy:-14px; --dx2:-10px; --dy2:9px; --duration:32s; --swing:2.5deg;">
+      <img class="debris-layer layer-6" src="assets/debris-scene/Calque 6.png" alt="" style="--x:2.5%; --y:49%; --w:min(20vw, 320px); --rot:-11deg; --dx:-20px; --dy:18px; --dx2:12px; --dy2:-12px; --duration:46s; --swing:3.4deg;">
+      <img class="debris-layer layer-8" src="assets/debris-scene/Calque 8.png" alt="" style="--x:82%; --y:67%; --w:min(10vw, 148px); --rot:-14deg; --dx:14px; --dy:12px; --dx2:-14px; --dy2:-10px; --duration:37s; --swing:2.8deg;">
+      <img class="debris-layer layer-12" src="assets/debris-scene/Calque 12.png" alt="" style="--x:40%; --y:65%; --w:min(17vw, 252px); --rot:12deg; --dx:-20px; --dy:-14px; --dx2:14px; --dy2:13px; --duration:38s; --swing:3deg;">
+      <img class="debris-layer layer-13" src="assets/debris-scene/Calque 13.png" alt="" style="--x:52%; --y:79%; --w:min(15vw, 224px); --rot:-12deg; --dx:18px; --dy:10px; --dx2:-12px; --dy2:-12px; --duration:40s; --swing:2.6deg;">
     </div>
     <img class="debris-layer frame" src="assets/debris-scene/exterieur.png" alt="" aria-hidden="true">
   </section>
@@ -3681,6 +3698,8 @@ const landingAlertText = document.getElementById('landing-alert-text');
 const landingAlertCursor = document.getElementById('landing-alert-cursor');
 const landingHeadText = document.getElementById('landing-head-text');
 const landingHeadCursor = document.getElementById('landing-head-cursor');
+const debrisStarCanvas = document.getElementById('debris-star-canvas');
+const debrisParticleCanvas = document.getElementById('debris-particle-canvas');
 const debrisScene = document.getElementById('debris-scene');
 const expeditionTimerHud = document.getElementById('expedition-timer-hud');
 const expeditionTimerValue = document.getElementById('expedition-timer-value');
@@ -5017,6 +5036,112 @@ function clearLandingSequenceTimers() {
   landingSequenceTimers = [];
 }
 
+function initDebrisBackdropScene() {
+  if (!debrisStarCanvas || !debrisParticleCanvas || !debrisScene) return;
+  const starCtx = debrisStarCanvas.getContext('2d');
+  const particleCtx = debrisParticleCanvas.getContext('2d');
+  if (!starCtx || !particleCtx) return;
+
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
+  let stars = [];
+  let particles = [];
+
+  function resizeCanvas(canvas, ctx) {
+    canvas.width = Math.max(1, Math.round(width * dpr));
+    canvas.height = Math.max(1, Math.round(height * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function seedStars() {
+    const count = Math.max(90, Math.round((width * height) / 8500));
+    stars = Array.from({ length: count }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: Math.random() < 0.82 ? 1 : 1.6 + Math.random() * 1.8,
+      alpha: .22 + Math.random() * .64,
+      twinkle: .4 + Math.random() * 1.4,
+      phase: Math.random() * Math.PI * 2,
+      drift: (Math.random() - .5) * .02
+    }));
+  }
+
+  function seedParticles() {
+    const count = Math.max(16, Math.round((width * height) / 42000));
+    particles = Array.from({ length: count }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: 1 + Math.random() * 2.4,
+      vx: -.04 + Math.random() * .08,
+      vy: -.025 + Math.random() * .05,
+      alpha: .08 + Math.random() * .16,
+      tone: Math.random() < .6 ? '247,255,195' : '186,162,126'
+    }));
+  }
+
+  function resize() {
+    const rect = debrisScene.getBoundingClientRect();
+    width = Math.max(1, Math.round(rect.width || window.innerWidth));
+    height = Math.max(1, Math.round(rect.height || window.innerHeight));
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    resizeCanvas(debrisStarCanvas, starCtx);
+    resizeCanvas(debrisParticleCanvas, particleCtx);
+    seedStars();
+    seedParticles();
+  }
+
+  function render(now) {
+    const time = now * 0.001;
+    starCtx.clearRect(0, 0, width, height);
+    particleCtx.clearRect(0, 0, width, height);
+
+    for (const star of stars) {
+      star.x += star.drift;
+      if (star.x < -4) star.x = width + 4;
+      if (star.x > width + 4) star.x = -4;
+
+      const pulse = .76 + Math.sin(time * star.twinkle + star.phase) * .24;
+      const alpha = Math.max(.08, Math.min(1, star.alpha * pulse));
+      starCtx.globalAlpha = alpha;
+      starCtx.fillStyle = star.size > 1.5 ? '#fff4cf' : '#f7ffc3';
+      starCtx.fillRect(Math.round(star.x), Math.round(star.y), star.size, star.size);
+      if (star.size > 1.5) {
+        starCtx.fillRect(Math.round(star.x - 1), Math.round(star.y), 1, 1);
+        starCtx.fillRect(Math.round(star.x + star.size), Math.round(star.y), 1, 1);
+      }
+    }
+
+    for (const particle of particles) {
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+
+      if (particle.x < -10) particle.x = width + 10;
+      if (particle.x > width + 10) particle.x = -10;
+      if (particle.y < -10) particle.y = height + 10;
+      if (particle.y > height + 10) particle.y = -10;
+
+      particleCtx.globalAlpha = particle.alpha;
+      particleCtx.fillStyle = `rgba(${particle.tone},1)`;
+      particleCtx.fillRect(Math.round(particle.x), Math.round(particle.y), particle.size, particle.size);
+      particleCtx.fillRect(
+        Math.round(particle.x - particle.vx * 22),
+        Math.round(particle.y - particle.vy * 22),
+        Math.max(1, particle.size - .7),
+        Math.max(1, particle.size - .7)
+      );
+    }
+
+    starCtx.globalAlpha = 1;
+    particleCtx.globalAlpha = 1;
+    requestAnimationFrame(render);
+  }
+
+  resize();
+  window.addEventListener('resize', resize, { passive:true });
+  requestAnimationFrame(render);
+}
+
 function openDebrisInspectionScene() {
   if (!landingSequence || !debrisScene) return;
 
@@ -5975,6 +6100,7 @@ startRoomFly();
 startCriticalShipShakes();
 initHudCollapse();
 initDraggablePersonalWindow();
+initDebrisBackdropScene();
 window.openDebrisInspectionScene = openDebrisInspectionScene;
 window.closeDebrisInspectionScene = closeDebrisInspectionScene;
 window.showExpeditionSuccessResult = (reason = 'Retour securise // transfert des ressources en cours') => {
