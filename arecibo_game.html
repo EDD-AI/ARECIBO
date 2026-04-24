@@ -2771,7 +2771,7 @@ body::after {
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:clamp(26px, 4vw, 58px);
+  padding:clamp(20px, 3vw, 40px);
   opacity:0;
   pointer-events:none;
   transition:opacity .28s ease;
@@ -2801,25 +2801,76 @@ body::after {
   opacity:0;
   transform:translateY(-10px);
 }
+.expedition-result-shell {
+  position:relative;
+  width:min(100vw, 1680px);
+  aspect-ratio:1678 / 944;
+  max-height:95vh;
+  isolation:isolate;
+  filter:drop-shadow(0 24px 46px rgba(0,0,0,.46));
+}
+.expedition-result-frame {
+  position:absolute;
+  inset:0;
+  background:url('assets/console-aventure.png?v=20260424-console-refresh') center / contain no-repeat;
+  pointer-events:none;
+  z-index:3;
+}
+.expedition-result-screen {
+  position:absolute;
+  left:13.6%;
+  top:18.4%;
+  width:58.9%;
+  height:52.2%;
+  border-radius:clamp(18px, 1.7vw, 26px);
+  overflow:hidden;
+  z-index:1;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(59,54,18,.16), transparent 54%),
+    linear-gradient(180deg, rgba(4,5,2,.98), rgba(2,3,1,.96));
+  box-shadow:
+    inset 0 0 0 1px rgba(247,255,195,.08),
+    inset 0 0 32px rgba(0,0,0,.88),
+    inset 0 0 96px rgba(0,0,0,.72);
+}
+.expedition-result-screen::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(180deg, rgba(247,255,195,.04), rgba(247,255,195,0) 12%),
+    repeating-linear-gradient(180deg, rgba(247,255,195,.05) 0 1px, rgba(0,0,0,0) 1px 4px);
+  opacity:.36;
+  mix-blend-mode:screen;
+  pointer-events:none;
+}
+.expedition-result-screen::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at center, transparent 44%, rgba(0,0,0,.24) 78%, rgba(0,0,0,.7) 100%),
+    linear-gradient(90deg, rgba(0,0,0,.28), transparent 14%, transparent 86%, rgba(0,0,0,.28));
+  pointer-events:none;
+}
 .expedition-result-card {
   --result-accent: #b1dd21;
   --result-cream: #f7ffc3;
   --result-glow: rgba(177,221,33,.24);
   position:relative;
-  width:min(92vw, 980px);
-  min-height:min(54vh, 520px);
-  padding:clamp(42px, 5vw, 62px) clamp(40px, 4vw, 56px) clamp(34px, 4vw, 44px);
+  width:100%;
+  min-height:100%;
+  padding:clamp(24px, 2.4vw, 34px) clamp(28px, 2.8vw, 42px) clamp(24px, 2.5vw, 32px);
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:clamp(14px, 2vh, 22px);
+  gap:clamp(14px, 1.6vh, 20px);
   background:
     radial-gradient(circle at center, rgba(35,44,14,.08), transparent 58%),
-    rgba(0,0,0,.92);
+    rgba(0,0,0,.82);
   box-shadow:
-    inset 0 0 0 1px rgba(247,255,195,.08),
-    0 0 42px rgba(0,0,0,.42);
+    inset 0 0 0 1px rgba(247,255,195,.05);
   color:var(--result-cream);
   text-align:center;
 }
@@ -2847,7 +2898,7 @@ body::after {
 }
 .expedition-result-kicker {
   color:var(--result-accent);
-  font-size:clamp(18px, 1.6vw, 28px);
+  font-size:clamp(17px, 1.34vw, 24px);
   line-height:1.08;
   letter-spacing:.08em;
   text-transform:uppercase;
@@ -2856,20 +2907,20 @@ body::after {
 .expedition-result-reason {
   min-height:1.4em;
   color:rgba(247,255,195,.72);
-  font-size:clamp(12px, .95vw, 16px);
-  line-height:1.2;
+  font-size:clamp(11px, .88vw, 14px);
+  line-height:1.35;
   text-transform:uppercase;
   letter-spacing:.16em;
 }
 .expedition-result-message-wrap {
-  width:min(100%, 820px);
+  width:min(100%, 94%);
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:clamp(10px, 1.3vw, 18px);
+  gap:clamp(10px, 1vw, 16px);
 }
 .expedition-result-icon {
-  width:clamp(24px, 3vw, 44px);
+  width:clamp(18px, 1.7vw, 28px);
   height:auto;
   flex:0 0 auto;
   display:none;
@@ -2879,7 +2930,7 @@ body::after {
 }
 .expedition-result-message {
   max-width:100%;
-  width:min(100%, 720px);
+  width:min(100%, 88%);
   height:auto;
   display:none;
   filter:drop-shadow(0 0 10px var(--result-glow));
@@ -2889,19 +2940,19 @@ body::after {
   display:block;
 }
 .expedition-result-separator {
-  width:min(100%, 820px);
+  width:min(100%, 94%);
   height:1px;
   object-fit:fill;
   opacity:.95;
 }
 .expedition-result-action {
   position:relative;
-  width:min(100%, 560px);
-  min-height:58px;
+  width:min(100%, 58%);
+  min-height:50px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  padding:10px 20px;
+  padding:8px 18px;
   border:0;
   background:transparent;
   cursor:none;
@@ -2926,7 +2977,7 @@ body::after {
 .expedition-result-action-label {
   position:relative;
   z-index:1;
-  width:min(78%, 430px);
+  width:min(80%, 340px);
   height:auto;
   display:none;
 }
@@ -2935,20 +2986,21 @@ body::after {
   display:block;
 }
 @media (max-width: 900px) {
+  .expedition-result-shell {
+    width:min(100vw, 1140px);
+  }
+  .expedition-result-screen {
+    left:13.4%;
+    top:18.2%;
+    width:59%;
+    height:52.4%;
+  }
   .expedition-result-card {
-    width:min(94vw, 760px);
-    min-height:min(50vh, 420px);
-    padding:28px 22px 24px;
-  }
-  .expedition-result-message-wrap {
-    width:min(100%, 620px);
-  }
-  .expedition-result-icon {
-    width:22px;
+    padding:16px 18px 18px;
   }
   .expedition-result-action {
-    width:min(100%, 430px);
-    min-height:48px;
+    width:min(100%, 70%);
+    min-height:42px;
   }
 }
 .debris-scene {
@@ -3451,22 +3503,27 @@ body::after {
     <span class="expedition-timer-value" id="expedition-timer-value">05:00</span>
   </div>
   <section class="expedition-result-overlay" id="expedition-result-overlay" aria-hidden="true" aria-label="Resultat expedition">
-    <div class="expedition-result-card" id="expedition-result-card" data-state="success">
-      <img class="expedition-result-border expedition-result-border-success" id="expedition-result-border" src="assets/expedition-result/success/panel-border.svg" alt="" aria-hidden="true">
-      <div class="expedition-result-kicker" id="expedition-result-kicker">Expedition validee</div>
-      <div class="expedition-result-reason" id="expedition-result-reason">retour securise // transfert des ressources en cours</div>
-      <div class="expedition-result-message-wrap">
-        <img class="expedition-result-icon expedition-result-icon-left" src="assets/expedition-result/failure/Group.svg" alt="" aria-hidden="true">
-        <img class="expedition-result-message expedition-result-message-success" src="assets/expedition-result/success/message.svg" alt="Felicitations ! je n aurais jamais cru que des creatures tel que vous puisse reussir cette expedition...">
-        <img class="expedition-result-message expedition-result-message-failure" src="assets/expedition-result/failure/message.svg" alt="Vous avez echoue, votre corps a ete ramene sur le motomoto mais le reste de vos affaires est perdu a jamais...">
-        <img class="expedition-result-icon expedition-result-icon-right" src="assets/expedition-result/failure/Group-1.svg" alt="" aria-hidden="true">
+    <div class="expedition-result-shell">
+      <div class="expedition-result-screen">
+        <div class="expedition-result-card" id="expedition-result-card" data-state="success">
+          <img class="expedition-result-border expedition-result-border-success" id="expedition-result-border" src="assets/expedition-result/success/panel-border.svg" alt="" aria-hidden="true">
+          <div class="expedition-result-kicker" id="expedition-result-kicker">Expedition validee</div>
+          <div class="expedition-result-reason" id="expedition-result-reason">retour securise // transfert des ressources en cours</div>
+          <div class="expedition-result-message-wrap">
+            <img class="expedition-result-icon expedition-result-icon-left" src="assets/expedition-result/failure/Group.svg" alt="" aria-hidden="true">
+            <img class="expedition-result-message expedition-result-message-success" src="assets/expedition-result/success/message.svg" alt="Felicitations ! je n aurais jamais cru que des creatures tel que vous puisse reussir cette expedition...">
+            <img class="expedition-result-message expedition-result-message-failure" src="assets/expedition-result/failure/message.svg" alt="Vous avez echoue, votre corps a ete ramene sur le motomoto mais le reste de vos affaires est perdu a jamais...">
+            <img class="expedition-result-icon expedition-result-icon-right" src="assets/expedition-result/failure/Group-1.svg" alt="" aria-hidden="true">
+          </div>
+          <img class="expedition-result-separator" id="expedition-result-separator" src="assets/expedition-result/success/separator.svg" alt="" aria-hidden="true">
+          <button class="expedition-result-action" id="expedition-result-action" type="button">
+            <img class="expedition-result-action-bg" id="expedition-result-action-bg" src="assets/expedition-result/success/button-bg.svg" alt="" aria-hidden="true">
+            <img class="expedition-result-action-label expedition-result-action-label-success" src="assets/expedition-result/success/button-label.svg" alt="Retourner sur le Motomoto">
+            <img class="expedition-result-action-label expedition-result-action-label-failure" src="assets/expedition-result/failure/button-label.svg" alt="Reveiller-vous !">
+          </button>
+        </div>
       </div>
-      <img class="expedition-result-separator" id="expedition-result-separator" src="assets/expedition-result/success/separator.svg" alt="" aria-hidden="true">
-      <button class="expedition-result-action" id="expedition-result-action" type="button">
-        <img class="expedition-result-action-bg" id="expedition-result-action-bg" src="assets/expedition-result/success/button-bg.svg" alt="" aria-hidden="true">
-        <img class="expedition-result-action-label expedition-result-action-label-success" src="assets/expedition-result/success/button-label.svg" alt="Retourner sur le Motomoto">
-        <img class="expedition-result-action-label expedition-result-action-label-failure" src="assets/expedition-result/failure/button-label.svg" alt="Reveiller-vous !">
-      </button>
+      <div class="expedition-result-frame" aria-hidden="true"></div>
     </div>
   </section>
   <section class="debris-scene" id="debris-scene" aria-hidden="true" aria-label="Inspection des debris">
