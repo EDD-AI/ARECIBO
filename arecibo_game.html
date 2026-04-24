@@ -2400,7 +2400,7 @@ body::after {
 .landing-console-frame {
   position:absolute;
   inset:0;
-  background:url('assets/console-aventure.png') center / contain no-repeat;
+  background:url('assets/console-aventure.png?v=20260424-console-refresh') center / contain no-repeat;
   pointer-events:none;
   z-index:3;
 }
@@ -2600,8 +2600,8 @@ body::after {
 .landing-console-nav {
   position:absolute;
   right:7.75%;
-  width:10.2%;
-  height:18.2%;
+  width:11.4%;
+  height:19.6%;
   border:0;
   border-radius:50%;
   background:transparent;
@@ -2610,29 +2610,35 @@ body::after {
   z-index:4;
   transform:translate3d(0, 0, 0);
   transition:transform .12s ease, filter .12s ease, opacity .12s ease;
+  overflow:visible;
 }
 .landing-console-nav::before,
 .landing-console-nav::after {
   content:'';
   position:absolute;
-  inset:8%;
-  border-radius:50%;
+  left:50%;
+  top:50%;
   pointer-events:none;
   transition:opacity .12s ease, transform .12s ease, box-shadow .12s ease;
 }
 .landing-console-nav::before {
-  background:
-    radial-gradient(circle at 34% 30%, rgba(255,255,255,.12), rgba(255,255,255,0) 28%),
-    radial-gradient(circle at 52% 58%, rgba(0,0,0,.26), rgba(0,0,0,0) 52%),
-    radial-gradient(circle at 50% 50%, rgba(16,15,12,.14), rgba(16,15,12,0) 70%);
-  opacity:.18;
+  width:26%;
+  aspect-ratio:26 / 57;
+  min-width:26px;
+  background:url('assets/console-aventure-button.png?v=20260424-button-refresh') center / contain no-repeat;
+  transform:translate(-50%, -50%) scale(6.15);
+  opacity:.96;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.26));
 }
 .landing-console-nav::after {
-  inset:15%;
+  width:56%;
+  height:56%;
+  border-radius:50%;
+  transform:translate(-50%, -50%);
   box-shadow:
-    inset 0 1px 2px rgba(255,255,255,.12),
-    inset 0 -2px 6px rgba(0,0,0,.18);
-  opacity:.14;
+    0 0 0 1px rgba(247,255,195,.08),
+    0 0 14px rgba(247,255,195,.04);
+  opacity:.08;
 }
 .landing-console-nav:focus-visible {
   outline:none;
@@ -2640,30 +2646,38 @@ body::after {
 }
 .landing-console-nav:hover::before,
 .landing-console-nav:focus-visible::before {
-  opacity:.26;
+  opacity:1;
+  filter:
+    brightness(1.06)
+    drop-shadow(0 0 8px rgba(247,255,195,.08));
 }
 .landing-console-nav.is-pressed {
-  transform:translate3d(1.5px, 1.8px, 0) scale(.985);
-  filter:brightness(.94);
+  transform:translate3d(0, 0, 0);
+  filter:brightness(.96);
 }
 .landing-console-nav.is-pressed::before {
-  opacity:.34;
-  transform:scale(.97);
+  opacity:1;
+  transform:translate(-50%, -50%) scale(5.9) translateY(1px);
+  filter:
+    brightness(.88)
+    drop-shadow(0 0 4px rgba(0,0,0,.24));
 }
 .landing-console-nav.is-pressed::after {
-  opacity:.3;
+  opacity:.18;
+  transform:translate(-50%, -50%) scale(.98);
   box-shadow:
-    inset 0 2px 6px rgba(0,0,0,.28),
-    inset 0 -1px 2px rgba(255,255,255,.05);
+    0 0 0 1px rgba(0,0,0,.18),
+    inset 0 2px 5px rgba(0,0,0,.22);
 }
 .landing-console-nav-up {
-  top:19.7%;
+  top:19.1%;
 }
 .landing-console-nav-down {
-  top:43.6%;
+  top:43.2%;
 }
 .landing-console-nav.is-disabled {
   pointer-events:none;
+  opacity:.72;
 }
 .decision-row {
   display:grid;
@@ -3091,9 +3105,9 @@ body::after {
     gap:5px;
   }
   .landing-console-nav {
-    right:7.6%;
-    width:10.9%;
-    height:18.7%;
+    right:7.5%;
+    width:12.4%;
+    height:20.2%;
   }
 }
 @keyframes landingShipDescent {
