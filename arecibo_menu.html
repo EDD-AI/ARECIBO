@@ -2075,6 +2075,7 @@ function updateSlider(el, valId) {
 }
 
 function selectLang(btn) {
+  if (!btn || btn.disabled || btn.classList.contains('disabled')) return;
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('sel'));
   btn.classList.add('sel');
 }
@@ -2867,6 +2868,20 @@ function toggleSwitch(el) {
 }
 .lang-btn:hover { border-color: rgba(247,255,195,.6); color: var(--cream); }
 .lang-btn.sel { border-color: var(--orange); color: var(--orange); }
+.lang-btn.disabled,
+.lang-btn:disabled {
+  border-color: rgba(247,255,195,.14);
+  color: rgba(247,255,195,.28);
+  background: rgba(247,255,195,.02);
+  cursor: default;
+  opacity: .72;
+  pointer-events: none;
+}
+.lang-btn.disabled:hover,
+.lang-btn:disabled:hover {
+  border-color: rgba(247,255,195,.14);
+  color: rgba(247,255,195,.28);
+}
 .sp-toggle-row {
   display: flex;
   align-items: center;
@@ -2943,8 +2958,8 @@ function toggleSwitch(el) {
         <div class="sp-section-label">Langues</div>
         <div class="sp-lang-row">
           <button class="lang-btn sel" onclick="selectLang(this)">FR</button>
-          <button class="lang-btn" onclick="selectLang(this)">EN</button>
-          <button class="lang-btn" onclick="selectLang(this)">SP</button>
+          <button class="lang-btn disabled" type="button" disabled aria-disabled="true" title="Bientot disponible">EN</button>
+          <button class="lang-btn disabled" type="button" disabled aria-disabled="true" title="Bientot disponible">SP</button>
         </div>
       </div>
       <div>
