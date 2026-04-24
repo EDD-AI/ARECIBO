@@ -3765,7 +3765,7 @@ function startPortholeSpace() {
   }
 
   function updateDebris(now) {
-    const allowDebris = !shipScene || shipScene.dataset.roomScene !== 'quarters';
+    const allowDebris = false;
     if (!allowDebris) {
       debrisEvents.length = 0;
       nextDebrisAt = now + randomBetween(10000, 20000);
