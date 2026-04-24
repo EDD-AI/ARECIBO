@@ -148,6 +148,24 @@ body {
   color:rgba(244,239,198,.5);
 }
 
+.role-badge {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-top:8px;
+  padding:5px 8px;
+  border:1px solid rgba(244,239,198,.16);
+  background:rgba(0,0,0,.28);
+  color:rgba(244,239,198,.7);
+  font-size:12px;
+  line-height:1;
+}
+
+.role-badge strong {
+  color:var(--orange);
+  font-size:13px;
+}
+
 .wave-tag {
   min-width:70px;
   text-align:right;
@@ -259,6 +277,64 @@ body {
   height:12%;
 }
 
+.control-fire {
+  left:50%;
+  bottom:4.2%;
+  width:24%;
+  height:13%;
+  transform:translateX(-50%);
+  border-radius:14px;
+}
+
+.control-fire::before,
+.control-fire::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:14px;
+  pointer-events:none;
+  transition:opacity .14s ease, transform .14s ease;
+}
+
+.control-fire::before {
+  border:1px solid rgba(250,107,46,.54);
+  background:
+    linear-gradient(180deg, rgba(250,107,46,.12), rgba(0,0,0,.1)),
+    rgba(0,0,0,.24);
+  box-shadow:
+    inset 0 0 12px rgba(250,107,46,.16),
+    0 0 10px rgba(250,107,46,.08);
+  opacity:.88;
+}
+
+.control-fire::after {
+  content:'TIR';
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--orange);
+  font-family:'Pixelify Sans', monospace;
+  font-size:18px;
+  letter-spacing:.08em;
+}
+
+.control-fire.is-hidden {
+  opacity:0;
+  pointer-events:none;
+}
+
+.control-fire.is-active::before {
+  opacity:1;
+  transform:translateY(1px);
+  background:
+    linear-gradient(180deg, rgba(250,107,46,.22), rgba(0,0,0,.14)),
+    rgba(0,0,0,.3);
+}
+
+.coop-status {
+  color:var(--orange);
+}
+
 @media (max-width: 900px) {
   .mission-stage {
     width:min(72vw, calc(80vh * 0.557));
@@ -290,6 +366,14 @@ body {
     height:12.5%;
     bottom:3%;
   }
+  .control-fire {
+    width:28%;
+    height:13.5%;
+    bottom:3.1%;
+  }
+  .control-fire::after {
+    font-size:16px;
+  }
 }
 </style>
 </head>
@@ -311,7 +395,7 @@ body {
         </div>
 
         <div class="hud-bottom">
-          <div class="controls-copy">bouge avec les fleches ou les boutons.<br>tir automatique actif.</div>
+          <div class="controls-copy" id="controls-copy">bouge avec les fleches ou les boutons.<br>tir automatique actif.</div>
           <div class="wave-tag" id="wave-tag">
             <strong>V01</strong>
             ligne
@@ -331,6 +415,7 @@ body {
 
     <button class="control-hit control-left" id="move-left" aria-label="Deplacer a gauche"></button>
     <button class="control-hit control-right" id="move-right" aria-label="Deplacer a droite"></button>
+    <button class="control-hit control-fire is-hidden" id="fire-button" aria-label="Declencher le tir"></button>
   </main>
 
 <script>
@@ -350,15 +435,22 @@ body {
   const secondaryAction = document.getElementById('secondary-action');
   const moveLeftBtn = document.getElementById('move-left');
   const moveRightBtn = document.getElementById('move-right');
+  const fireButton = document.getElementById('fire-button');
+  const controlsCopy = document.getElementById('controls-copy');
 
   const sessionId = String(params.get('session') || 'solo-defense').replace(/[^a-z0-9_-]/gi, '').slice(0, 24) || 'solo-defense';
   const returnUrl = params.get('return') || '';
   const stateKey = `arecibo:minigame-defense-state:${sessionId}`;
   const scoreKey = `arecibo:minigame-defense-score:${sessionId}`;
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const storedPlayers = Number(localStorage.getItem('areciboPlayerCount'));
+  const requestedPlayers = Number(params.get('players'));
+  const playerCount = Math.max(1, Math.min(6, requestedPlayers || storedPlayers || 1));
+  const coopMode = playerCount >= 2;
 
   const ship = { x:logicalWidth / 2, y:logicalHeight - 28, speed:150, width:13, height:10 };
   const keys = { left:false, right:false };
+  const shootState = { active:false, cooldown:0 };
   const bullets = [];
   const asteroids = [];
   const stars = Array.from({ length: 34 }, () => ({
@@ -435,12 +527,23 @@ body {
     waveEl.innerHTML = `<strong>V${String(waveIndex).padStart(2, '0')}</strong>ligne`;
   }
 
+  function updateControlCopy() {
+    if (!controlsCopy) return;
+    if (!coopMode) {
+      controlsCopy.innerHTML = 'bouge avec les fleches ou les boutons.<br>tir automatique actif.';
+      return;
+    }
+    controlsCopy.innerHTML = 'pilote : fleches, boutons ou glisser.<br><span class="coop-status">tireur : espace, entree ou bouton tir.</span><div class="role-badge"><strong>COOP</strong><span>2 roles actifs</span></div>';
+  }
+
   function resetRun() {
     spawned = 0;
     destroyed = 0;
     waveIndex = 1;
     spawnTimer = 0.2;
     fireTimer = 0.06;
+    shootState.active = false;
+    shootState.cooldown = 0;
     bullets.length = 0;
     asteroids.length = 0;
     sparks.length = 0;
@@ -510,6 +613,13 @@ body {
     });
   }
 
+  function triggerManualShot() {
+    if (!coopMode || gameState !== 'playing') return;
+    if (shootState.cooldown > 0) return;
+    shoot();
+    shootState.cooldown = prefersReducedMotion ? 0.28 : 0.18;
+  }
+
   function spawnImpact(x, y, tone = 'success') {
     const count = tone === 'success' ? 7 : 10;
     for (let i = 0; i < count; i += 1) {
@@ -545,10 +655,17 @@ body {
     if (keys.right && !keys.left) ship.x += ship.speed * dt;
     ship.x = clampShipX(ship.x);
 
-    fireTimer -= dt;
-    if (fireTimer <= 0) {
-      shoot();
-      fireTimer = prefersReducedMotion ? 0.22 : 0.16;
+    if (coopMode) {
+      shootState.cooldown = Math.max(0, shootState.cooldown - dt);
+      if (shootState.active && shootState.cooldown <= 0) {
+        triggerManualShot();
+      }
+    } else {
+      fireTimer -= dt;
+      if (fireTimer <= 0) {
+        shoot();
+        fireTimer = prefersReducedMotion ? 0.22 : 0.16;
+      }
     }
 
     spawnTimer -= dt;
@@ -712,6 +829,32 @@ body {
     button.addEventListener('pointercancel', release);
   }
 
+  function setFireButtonState(active) {
+    if (!fireButton) return;
+    fireButton.classList.toggle('is-active', active);
+  }
+
+  function setFireButton(button) {
+    if (!button) return;
+    const activate = event => {
+      event.preventDefault();
+      if (gameState !== 'playing') return;
+      shootState.active = true;
+      setFireButtonState(true);
+      triggerManualShot();
+    };
+    const release = event => {
+      event.preventDefault();
+      shootState.active = false;
+      setFireButtonState(false);
+    };
+
+    button.addEventListener('pointerdown', activate);
+    button.addEventListener('pointerup', release);
+    button.addEventListener('pointerleave', release);
+    button.addEventListener('pointercancel', release);
+  }
+
   canvas.addEventListener('pointerdown', event => {
     if (gameState !== 'playing') return;
     const point = getCanvasPoint(event);
@@ -761,25 +904,42 @@ body {
       primaryAction.click();
       event.preventDefault();
     }
+    if (coopMode && gameState === 'playing' && (event.key === ' ' || event.key === 'Enter' || event.key.toLowerCase() === 'z')) {
+      shootState.active = true;
+      setFireButtonState(true);
+      triggerManualShot();
+      event.preventDefault();
+    }
   });
 
   window.addEventListener('keyup', event => {
     if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') keys.left = false;
     if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') keys.right = false;
+    if (coopMode && (event.key === ' ' || event.key === 'Enter' || event.key.toLowerCase() === 'z')) {
+      shootState.active = false;
+      setFireButtonState(false);
+    }
   });
 
   window.addEventListener('blur', () => {
     stopPointerDrag();
     keys.left = false;
     keys.right = false;
+    shootState.active = false;
+    setFireButtonState(false);
   });
 
   setMoveButton(moveLeftBtn, 'left');
   setMoveButton(moveRightBtn, 'right');
+  setFireButton(fireButton);
+  if (fireButton) fireButton.classList.toggle('is-hidden', !coopMode);
+  updateControlCopy();
 
   showMessage({
     title:'module defense',
-    copy:`Detruis les <strong>${totalAsteroids}</strong> asteroides de la vague.<br>Si un seul passe, la defense echoue.`,
+    copy: coopMode
+      ? `Mode coop actif.<br><strong>Pilotez et declenchez le tir a deux</strong> pour detruire les <strong>${totalAsteroids}</strong> asteroides.<br>Si un seul passe, la defense echoue.`
+      : `Detruis les <strong>${totalAsteroids}</strong> asteroides de la vague.<br>Si un seul passe, la defense echoue.`,
     primaryLabel:'jouer',
     secondaryLabel:'retour',
     onPrimary:startGame,
