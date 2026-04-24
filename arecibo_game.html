@@ -2223,6 +2223,54 @@ body::after {
   opacity:1;
   pointer-events:auto;
 }
+.expedition-timer-hud {
+  position:fixed;
+  top:clamp(18px, 2.2vw, 36px);
+  right:clamp(18px, 2.4vw, 42px);
+  z-index:950;
+  min-width:clamp(138px, 12vw, 198px);
+  padding:clamp(8px, .95vw, 14px) clamp(10px, 1vw, 16px);
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:4px;
+  border:1px solid rgba(247,255,195,.28);
+  background:rgba(5,5,3,.54);
+  box-shadow:
+    inset 0 0 22px rgba(0,0,0,.52),
+    0 0 28px rgba(0,0,0,.22);
+  backdrop-filter:blur(10px) brightness(.78);
+  opacity:0;
+  transform:translateY(-8px);
+  transition:opacity .28s ease, transform .28s ease, border-color .28s ease;
+  pointer-events:none;
+}
+.expedition-timer-hud.is-visible {
+  opacity:1;
+  transform:translateY(0);
+}
+.expedition-timer-label {
+  color:rgba(247,255,195,.66);
+  font-size:clamp(10px, .72vw, 13px);
+  line-height:1;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+}
+.expedition-timer-value {
+  color:var(--orange);
+  font-size:clamp(28px, 2vw, 42px);
+  line-height:.92;
+  letter-spacing:.08em;
+  text-shadow:
+    0 0 10px rgba(250,90,31,.32),
+    0 0 24px rgba(250,90,31,.18);
+}
+.expedition-timer-hud.is-warning {
+  border-color:rgba(250,90,31,.58);
+}
+.expedition-timer-hud.is-warning .expedition-timer-value {
+  animation:expeditionTimerPulse .9s steps(2, end) infinite;
+}
 .landing-sequence::before {
   content:'';
   position:absolute;
@@ -2663,6 +2711,20 @@ body::after {
   0%, 49% { opacity:1; }
   50%, 100% { opacity:0; }
 }
+@keyframes expeditionTimerPulse {
+  0%, 49% {
+    color:var(--orange);
+    text-shadow:
+      0 0 10px rgba(250,90,31,.36),
+      0 0 24px rgba(250,90,31,.24);
+  }
+  50%, 100% {
+    color:#fff2c1;
+    text-shadow:
+      0 0 12px rgba(255,242,193,.24),
+      0 0 28px rgba(250,90,31,.2);
+  }
+}
 @keyframes landingConsoleSettle {
   0% {
     transform:translateY(10px) scale(.985);
@@ -2674,6 +2736,15 @@ body::after {
   }
 }
 @media (max-width: 900px) {
+  .expedition-timer-hud {
+    top:16px;
+    right:16px;
+    min-width:126px;
+    padding:8px 10px;
+  }
+  .expedition-timer-value {
+    font-size:clamp(24px, 6vw, 34px);
+  }
   .landing-console-shell {
     width:min(100vw, 1140px);
   }
@@ -3039,6 +3110,10 @@ body::after {
   <div class="landing-thrusters" aria-hidden="true"></div>
   <canvas class="landing-canvas" id="landing-canvas" aria-hidden="true"></canvas>
   <div class="landing-ship" aria-hidden="true"></div>
+  <div class="expedition-timer-hud" id="expedition-timer-hud" aria-live="polite" aria-atomic="true">
+    <span class="expedition-timer-label">Temps expedition</span>
+    <span class="expedition-timer-value" id="expedition-timer-value">05:00</span>
+  </div>
   <section class="landing-decision" id="landing-decision" aria-label="Decision expedition">
     <div class="landing-console-shell">
       <div class="landing-console-frame" aria-hidden="true"></div>
@@ -3164,12 +3239,15 @@ const params = new URLSearchParams(window.location.search);
 const storedPlayers = Number(localStorage.getItem('areciboPlayerCount'));
 const requestedPlayers = Number(params.get('players'));
 const playerCount = Math.max(1, Math.min(6, requestedPlayers || storedPlayers || 1));
+const expeditionDurationMinutes = Math.max(5, Math.min(15, Number(params.get('expeditionMinutes')) || 5));
+const expeditionDurationMs = expeditionDurationMinutes * 60 * 1000;
 const readyState = Array.from({ length: 6 }, (_, index) => index >= playerCount);
 if (playerCount === 1) readyState[0] = true;
 const crewEl = document.getElementById('crew-ready');
 const launchBtn = document.getElementById('launch-btn');
 const launchLabel = launchBtn.querySelector('.launch-label');
 const launchIcon = launchBtn.querySelector('.launch-icon');
+const airlockTimer = document.querySelector('.airlock-timer');
 const distanceValue = document.getElementById('distance-value');
 const roomCurrent = document.getElementById('room-current');
 const roomState = document.getElementById('room-state');
@@ -3198,8 +3276,15 @@ const landingAlertText = document.getElementById('landing-alert-text');
 const landingAlertCursor = document.getElementById('landing-alert-cursor');
 const landingHeadText = document.getElementById('landing-head-text');
 const landingHeadCursor = document.getElementById('landing-head-cursor');
+const expeditionTimerHud = document.getElementById('expedition-timer-hud');
+const expeditionTimerValue = document.getElementById('expedition-timer-value');
 let landingStarted = false;
 let landingTypingTimers = [];
+let landingSequenceTimers = [];
+let landingResizeHandler = null;
+let expeditionTimerInterval = 0;
+let expeditionTimerDeadline = 0;
+let expeditionFailing = false;
 const landingDecisionStages = {
   impact: {
     alert:'Votre vaisseau a percute un asteroide !',
@@ -4312,6 +4397,161 @@ function setLandingSignalState(state) {
   localStorage.setItem(`arecibo:minigame-signal-state:${session}`, state);
 }
 
+function formatExpeditionTime(ms) {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function setExpeditionTimerDisplay(ms) {
+  const display = formatExpeditionTime(ms);
+  if (expeditionTimerValue) expeditionTimerValue.textContent = display;
+  if (airlockTimer) airlockTimer.textContent = display;
+
+  if (expeditionTimerHud) {
+    expeditionTimerHud.classList.toggle('is-warning', ms <= 60000 && ms > 0);
+  }
+}
+
+function stopExpeditionTimer(options = {}) {
+  const { resetDisplay = true, keepVisible = false } = options;
+  if (expeditionTimerInterval) {
+    window.clearInterval(expeditionTimerInterval);
+    expeditionTimerInterval = 0;
+  }
+  expeditionTimerDeadline = 0;
+
+  if (expeditionTimerHud) {
+    expeditionTimerHud.classList.remove('is-warning');
+    expeditionTimerHud.classList.toggle('is-visible', keepVisible);
+  }
+
+  if (resetDisplay) {
+    setExpeditionTimerDisplay(expeditionDurationMs);
+  }
+}
+
+function clearLandingSequenceTimers() {
+  landingSequenceTimers.forEach(timerId => window.clearTimeout(timerId));
+  landingSequenceTimers = [];
+}
+
+function resetLandingSequenceState() {
+  clearLandingTypingTimers();
+  clearLandingSequenceTimers();
+  stopLandingConsoleHold();
+
+  if (landingSequence) {
+    landingSequence.classList.remove('is-question-open', 'is-hovering', 'is-active');
+    landingSequence.setAttribute('aria-hidden', 'true');
+  }
+
+  if (landingDecision) {
+    landingDecision.classList.remove('is-copy-ready', 'is-module-open');
+  }
+
+  if (landingDecisionOptions) landingDecisionOptions.innerHTML = '';
+  if (landingDecisionModule) landingDecisionModule.innerHTML = '';
+  if (landingAlertText) landingAlertText.textContent = '';
+  if (landingHeadText) landingHeadText.textContent = '';
+  if (landingConsoleScroll) {
+    landingConsoleScroll.scrollTop = 0;
+    updateLandingConsoleNav();
+  }
+
+  if (landingResizeHandler) {
+    window.removeEventListener('resize', landingResizeHandler);
+    landingResizeHandler = null;
+  }
+
+  landingStarted = false;
+  landingDecisionStage = 'impact';
+  landingDecisionChoices = landingDecisionStages.impact.choices;
+  resetLandingVotes();
+  landingSignalSessionId = '';
+}
+
+function syncShipRoomState(room, message, isWarning = false) {
+  const roomNodes = Array.from(document.querySelectorAll('.room-node'));
+  roomNodes.forEach(node => {
+    node.classList.toggle('active', (node.dataset.room || '') === room);
+    node.classList.remove('warn');
+  });
+
+  if (roomCurrent) roomCurrent.textContent = room;
+  if (roomState) {
+    roomState.classList.toggle('warn', isWarning);
+    roomState.classList.toggle('active', !isWarning);
+    roomState.textContent = isWarning ? 'ALERTE' : 'ACTIF';
+  }
+  if (mapMessage) {
+    mapMessage.classList.toggle('warn', isWarning);
+    mapMessage.textContent = message;
+  }
+  window.location.hash = room.toLowerCase().replace(/\s+/g, '-');
+}
+
+function returnToShipFromExpedition(options = {}) {
+  const {
+    message = 'Sas expedition actif : depart possible depuis le bouton central.',
+    isFailure = false
+  } = options;
+
+  stopExpeditionTimer();
+  resetLandingSequenceState();
+  setExpeditionActive(false);
+  setShipScene('SAS EXPEDITION');
+  syncShipRoomState('SAS EXPEDITION', message, isFailure);
+  updateReadyState();
+}
+
+function failExpeditionFromTimeout() {
+  if (expeditionFailing) return;
+  expeditionFailing = true;
+
+  stopExpeditionTimer({ resetDisplay:false, keepVisible:true });
+  setExpeditionTimerDisplay(0);
+
+  const completeFailure = () => {
+    returnToShipFromExpedition({
+      message:'Echec extraction : temps ecoule. Retour force au vaisseau, trouvailles perdues.',
+      isFailure:true
+    });
+    expeditionFailing = false;
+  };
+
+  if (pageTransition) {
+    pageTransition.classList.remove('out');
+    window.setTimeout(() => {
+      completeFailure();
+      pageTransition.classList.add('out');
+    }, 320);
+  } else {
+    completeFailure();
+  }
+}
+
+function startExpeditionTimer(durationMs = expeditionDurationMs) {
+  stopExpeditionTimer({ resetDisplay:false });
+  expeditionTimerDeadline = Date.now() + durationMs;
+  expeditionFailing = false;
+  if (expeditionTimerHud) expeditionTimerHud.classList.add('is-visible');
+
+  const tick = () => {
+    const remaining = expeditionTimerDeadline - Date.now();
+    if (remaining <= 0) {
+      setExpeditionTimerDisplay(0);
+      failExpeditionFromTimeout();
+      return;
+    }
+    setExpeditionTimerDisplay(remaining);
+  };
+
+  tick();
+  expeditionTimerInterval = window.setInterval(tick, 250);
+}
+
 function resetLandingVotes() {
   for (let i = 0; i < landingVotes.length; i += 1) landingVotes[i] = null;
   landingVoteCursor = 0;
@@ -4391,6 +4631,7 @@ function setExpeditionActive(active) {
   if (shipScene) shipScene.classList.toggle('is-expedition-active', active);
   setPersonalPackageDetached(active);
   if (personalWindow) personalWindow.classList.toggle('is-expedition-mode', active);
+  if (expeditionTimerHud && !active) expeditionTimerHud.classList.remove('is-visible', 'is-warning');
 
   if (personalHudDock) {
     personalHudDock.setAttribute('aria-hidden', String(active));
@@ -4658,8 +4899,10 @@ function startLandingDecisionTyping() {
 function startLandingSequence() {
   if (!landingSequence || !landingCanvas || landingStarted) return;
   landingStarted = true;
+  clearLandingSequenceTimers();
   ensureLandingSignalSession();
   setLandingSignalState('idle');
+  startExpeditionTimer();
 
   landingSequence.classList.add('is-active');
   landingSequence.setAttribute('aria-hidden', 'false');
@@ -4678,16 +4921,16 @@ function startLandingSequence() {
   const duration = 7600;
   const shipSettleDelay = 6200;
   const questionOpenDelay = 3350;
-  window.setTimeout(() => {
+  landingSequenceTimers.push(window.setTimeout(() => {
     if (landingSequence) landingSequence.classList.add('is-question-open');
     renderLandingDecision();
     startLandingDecisionTyping();
-  }, questionOpenDelay);
-  window.setTimeout(() => {
+  }, questionOpenDelay));
+  landingSequenceTimers.push(window.setTimeout(() => {
     if (landingSequence) {
       landingSequence.classList.add('is-hovering');
     }
-  }, shipSettleDelay);
+  }, shipSettleDelay));
 
   function resize() {
     width = canvas.width = window.innerWidth;
@@ -4695,6 +4938,7 @@ function startLandingSequence() {
     centerX = width * 0.5;
     groundY = height * 0.78;
   }
+  landingResizeHandler = resize;
 
   function rand(min, max) {
     return min + Math.random() * (max - min);
@@ -4837,6 +5081,8 @@ launchBtn.addEventListener('click', () => {
 });
 
 function goMenu() {
+  stopExpeditionTimer();
+  resetLandingSequenceState();
   const transition = document.getElementById('transition');
   transition.classList.remove('out');
   setTimeout(() => window.location.href = 'arecibo_menu.html?v=bridge-main', 520);
@@ -4937,6 +5183,7 @@ if (landingConsoleDown) {
 }
 
 updateReadyState();
+setExpeditionTimerDisplay(expeditionDurationMs);
 updateDistance();
 initPlayerPackageName();
 startPortholeSpace();
