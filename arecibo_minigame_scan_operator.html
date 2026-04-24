@@ -35,21 +35,48 @@ body {
   justify-content:center;
   overflow:hidden;
   background:
+    linear-gradient(180deg, rgba(5,5,4,.28), rgba(0,0,0,.7)),
     radial-gradient(circle at center, rgba(77,55,20,.18), transparent 38%),
+    url('assets/backgrounds/starfield.png') center / cover no-repeat,
     #000;
 }
-.stage {
+.mission-stage {
   position:relative;
-  width:min(88vw, calc(92vh * 0.563));
-  aspect-ratio:941 / 1672;
+  width:min(100vw, 1600px);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:clamp(28px, 4vw, 56px);
+}
+.mission-shell {
+  position:relative;
+  width:min(760px, 92vw);
+  min-height:min(84vh, 960px);
+  padding:clamp(18px, 2vw, 28px);
+  border:1px solid rgba(245,241,213,.16);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.03), transparent 12%),
+    rgba(7,7,6,.78);
+  box-shadow:
+    inset 0 0 0 1px rgba(245,241,213,.05),
+    inset 0 0 36px rgba(0,0,0,.8),
+    0 20px 60px rgba(0,0,0,.46);
+  overflow:hidden;
+}
+.mission-shell::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at center, transparent 40%, rgba(0,0,0,.22) 72%, rgba(0,0,0,.62) 100%),
+    repeating-linear-gradient(180deg, rgba(245,241,213,.045) 0 1px, transparent 1px 4px);
+  pointer-events:none;
 }
 .console-screen {
-  position:absolute;
-  left:27.8%;
-  top:8.15%;
-  width:45.8%;
-  height:58.9%;
-  border-radius:26px;
+  position:relative;
+  min-height:min(74vh, 860px);
+  border-radius:20px;
   overflow:hidden;
   background:
     radial-gradient(circle at center, rgba(244,241,213,.04), transparent 36%),
@@ -83,7 +110,8 @@ body {
   z-index:1;
   width:100%;
   height:100%;
-  padding:12px 12px 14px;
+  min-height:min(74vh, 860px);
+  padding:18px 18px 20px;
   display:flex;
   flex-direction:column;
 }
@@ -96,12 +124,12 @@ body {
 }
 .timer {
   margin-left:auto;
-  min-width:52px;
+  min-width:86px;
   text-align:right;
   color:var(--orange);
-  font-size:16px;
+  font-size:30px;
   line-height:1;
-  text-shadow:0 0 10px rgba(250,107,46,.14);
+  text-shadow:0 0 12px rgba(250,107,46,.18);
 }
 .timer.is-danger {
   color:var(--red);
@@ -115,7 +143,7 @@ body {
 }
 .asteroid-board {
   display:grid;
-  gap:4px;
+  gap:6px;
   justify-content:center;
   align-content:center;
   width:fit-content;
@@ -123,12 +151,12 @@ body {
   transform-origin:center center;
 }
 .digit-tile {
-  width:34px;
-  height:34px;
+  width:46px;
+  height:46px;
   border:1px solid rgba(244,241,213,.15);
   background:#f5f4ed;
   color:#111;
-  font:700 20px/1 'Pixelify Sans', monospace;
+  font:700 28px/1 'Pixelify Sans', monospace;
   cursor:pointer;
   padding:0;
   transition:background .14s ease, border-color .14s ease, color .14s ease, transform .12s ease;
@@ -153,8 +181,8 @@ body {
   color:#560e0a;
 }
 .digit-gap {
-  width:34px;
-  height:34px;
+  width:46px;
+  height:46px;
 }
 .solved-overlay {
   position:absolute;
@@ -173,10 +201,10 @@ body {
   pointer-events:auto;
 }
 .solved-card {
-  width:100%;
+  width:min(440px, 100%);
   border:1px solid rgba(244,241,213,.34);
   background:rgba(2,3,1,.92);
-  padding:18px 14px;
+  padding:24px 18px;
   text-align:center;
 }
 .solved-card.is-loss {
@@ -184,7 +212,7 @@ body {
 }
 .solved-title {
   color:var(--orange);
-  font-size:18px;
+  font-size:28px;
   line-height:1.05;
   text-transform:uppercase;
 }
@@ -192,20 +220,20 @@ body {
   color:var(--red);
 }
 .solved-copy {
-  margin-top:10px;
+  margin-top:12px;
   color:rgba(244,241,213,.78);
-  font-size:13px;
+  font-size:18px;
   line-height:1.3;
 }
 .solved-btn {
   margin-top:14px;
   width:100%;
-  min-height:38px;
+  min-height:46px;
   border:1px solid rgba(244,241,213,.42);
   background:rgba(0,0,0,.78);
   color:var(--cream);
   font:inherit;
-  font-size:15px;
+  font-size:19px;
   text-transform:uppercase;
   cursor:pointer;
 }
@@ -215,32 +243,36 @@ body {
   border-color:rgba(250,107,46,.88);
   color:#fff7da;
 }
-.frame {
-  position:absolute;
-  inset:0;
-  background:url('assets/console-aventure-vrtcl.png') center / contain no-repeat;
-  pointer-events:none;
-}
 @media (max-width: 900px) {
-  .stage {
-    width:min(96vw, calc(96vh * 0.563));
+  .mission-stage {
+    padding:18px;
   }
-  .console-screen {
-    border-radius:21px;
+  .mission-shell {
+    width:min(100%, 96vw);
+    min-height:auto;
+    padding:14px;
+  }
+  .console-screen,
+  .console-copy {
+    min-height:min(82vh, 720px);
   }
   .digit-tile,
   .digit-gap {
-    width:30px;
-    height:30px;
+    width:36px;
+    height:36px;
   }
   .digit-tile {
-    font-size:18px;
+    font-size:22px;
+  }
+  .timer {
+    font-size:24px;
   }
 }
 </style>
 </head>
 <body>
-  <main class="stage" aria-label="Console operateur">
+  <main class="mission-stage" aria-label="Module numerique">
+    <section class="mission-shell">
     <section class="console-screen" aria-label="Module numerique">
       <div class="console-copy">
         <div class="topline">
@@ -259,7 +291,7 @@ body {
         </div>
       </div>
     </section>
-    <div class="frame" aria-hidden="true"></div>
+    </section>
   </main>
 
 <script>

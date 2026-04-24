@@ -33,18 +33,37 @@ body {
   justify-content:center;
   padding:5vh 4vw;
   background:
+    linear-gradient(180deg, rgba(6,6,5,.18), rgba(0,0,0,.72)),
     radial-gradient(circle at center, rgba(56,42,18,.18), transparent 42%),
+    url('assets/backgrounds/starfield.png') center / cover no-repeat,
     #000;
 }
 .panel {
-  width:min(780px, 100%);
+  width:min(920px, 100%);
   border:1px solid var(--line);
-  background:rgba(0,0,0,.82);
-  box-shadow:0 0 0 1px rgba(247,255,195,.05) inset;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.028), transparent 12%),
+    rgba(0,0,0,.82);
+  box-shadow:
+    0 0 0 1px rgba(247,255,195,.05) inset,
+    0 18px 52px rgba(0,0,0,.42);
+  overflow:hidden;
+}
+.panel::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at center, transparent 42%, rgba(0,0,0,.2) 74%, rgba(0,0,0,.58) 100%),
+    repeating-linear-gradient(180deg, rgba(247,255,195,.032) 0 1px, transparent 1px 4px);
+  pointer-events:none;
+}
+.panel {
+  position:relative;
 }
 .head {
   border-bottom:1px solid rgba(247,255,195,.45);
-  padding:20px 24px;
+  padding:24px 28px;
   text-align:center;
 }
 .eyebrow {
@@ -55,11 +74,13 @@ body {
 }
 .title {
   margin:0;
-  font-size:clamp(22px, 2vw, 34px);
+  font-size:clamp(28px, 2.2vw, 40px);
   text-transform:uppercase;
 }
 .body {
-  padding:34px 24px 38px;
+  position:relative;
+  z-index:1;
+  padding:42px 28px 44px;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -67,7 +88,7 @@ body {
 }
 .target-box {
   min-width:min(360px, 88vw);
-  min-height:120px;
+  min-height:154px;
   border:1px solid rgba(247,255,195,.5);
   display:flex;
   align-items:center;
@@ -75,13 +96,13 @@ body {
   background:rgba(4,4,2,.76);
 }
 .target {
-  font-size:clamp(70px, 10vw, 130px);
+  font-size:clamp(94px, 11vw, 164px);
   line-height:1;
   color:var(--cream);
   text-shadow:0 0 12px rgba(247,255,195,.14);
 }
 .helper {
-  font-size:clamp(18px, 1.7vw, 26px);
+  font-size:clamp(22px, 1.8vw, 30px);
   color:rgba(247,255,195,.76);
   text-align:center;
 }
@@ -93,13 +114,13 @@ body {
 }
 .btn {
   min-width:180px;
-  min-height:50px;
+  min-height:56px;
   padding:10px 16px;
   border:1px solid rgba(247,255,195,.54);
   background:rgba(0,0,0,.72);
   color:var(--cream);
   font:inherit;
-  font-size:18px;
+  font-size:20px;
 }
 .btn:hover,
 .btn:focus-visible {
@@ -118,7 +139,7 @@ body {
   padding:10px 12px;
   background:rgba(0,0,0,.48);
   color:rgba(247,255,195,.72);
-  font-size:14px;
+  font-size:16px;
   line-height:1.35;
   word-break:break-all;
 }
