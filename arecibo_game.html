@@ -2750,6 +2750,193 @@ body::after {
   filter:blur(4px);
   opacity:.78;
 }
+.expedition-result-overlay {
+  position:absolute;
+  inset:0;
+  z-index:15;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:clamp(26px, 4vw, 58px);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .28s ease;
+}
+.expedition-result-overlay::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at center, rgba(0,0,0,.18), rgba(0,0,0,.62) 72%),
+    linear-gradient(180deg, rgba(0,0,0,.16), rgba(0,0,0,.42));
+  backdrop-filter:blur(9px) brightness(.68);
+}
+.landing-sequence.is-result-open .expedition-result-overlay {
+  opacity:1;
+  pointer-events:auto;
+}
+.landing-sequence.is-result-open .landing-decision,
+.landing-sequence.is-result-open .debris-scene,
+.landing-sequence.is-result-open .landing-ship,
+.landing-sequence.is-result-open .landing-thrusters,
+.landing-sequence.is-result-open .landing-dust-glow,
+.landing-sequence.is-result-open .landing-canvas {
+  filter:blur(4px);
+}
+.landing-sequence.is-result-open .expedition-timer-hud {
+  opacity:0;
+  transform:translateY(-10px);
+}
+.expedition-result-card {
+  --result-accent: #b1dd21;
+  --result-cream: #f7ffc3;
+  --result-glow: rgba(177,221,33,.24);
+  position:relative;
+  width:min(92vw, 980px);
+  min-height:min(54vh, 520px);
+  padding:clamp(42px, 5vw, 62px) clamp(40px, 4vw, 56px) clamp(34px, 4vw, 44px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:clamp(14px, 2vh, 22px);
+  background:
+    radial-gradient(circle at center, rgba(35,44,14,.08), transparent 58%),
+    rgba(0,0,0,.92);
+  box-shadow:
+    inset 0 0 0 1px rgba(247,255,195,.08),
+    0 0 42px rgba(0,0,0,.42);
+  color:var(--result-cream);
+  text-align:center;
+}
+.expedition-result-card[data-state="failure"] {
+  --result-accent: #dd2121;
+  --result-cream: #ffe0d4;
+  --result-glow: rgba(221,33,33,.24);
+}
+.expedition-result-border {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  pointer-events:none;
+  z-index:0;
+}
+.expedition-result-kicker,
+.expedition-result-reason,
+.expedition-result-message-wrap,
+.expedition-result-separator,
+.expedition-result-action {
+  position:relative;
+  z-index:1;
+}
+.expedition-result-kicker {
+  color:var(--result-accent);
+  font-size:clamp(18px, 1.6vw, 28px);
+  line-height:1.08;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  text-shadow:0 0 16px var(--result-glow);
+}
+.expedition-result-reason {
+  min-height:1.4em;
+  color:rgba(247,255,195,.72);
+  font-size:clamp(12px, .95vw, 16px);
+  line-height:1.2;
+  text-transform:uppercase;
+  letter-spacing:.16em;
+}
+.expedition-result-message-wrap {
+  width:min(100%, 820px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:clamp(10px, 1.3vw, 18px);
+}
+.expedition-result-icon {
+  width:clamp(24px, 3vw, 44px);
+  height:auto;
+  flex:0 0 auto;
+  display:none;
+}
+.expedition-result-card[data-state="failure"] .expedition-result-icon {
+  display:block;
+}
+.expedition-result-message {
+  max-width:100%;
+  width:min(100%, 720px);
+  height:auto;
+  display:none;
+  filter:drop-shadow(0 0 10px var(--result-glow));
+}
+.expedition-result-card[data-state="success"] .expedition-result-message-success,
+.expedition-result-card[data-state="failure"] .expedition-result-message-failure {
+  display:block;
+}
+.expedition-result-separator {
+  width:min(100%, 820px);
+  height:1px;
+  object-fit:fill;
+  opacity:.95;
+}
+.expedition-result-action {
+  position:relative;
+  width:min(100%, 560px);
+  min-height:58px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px 20px;
+  border:0;
+  background:transparent;
+  cursor:none;
+  transition:transform .14s ease, filter .14s ease;
+}
+.expedition-result-action:hover,
+.expedition-result-action:focus-visible {
+  outline:none;
+  transform:translateY(-1px);
+  filter:brightness(1.03);
+}
+.expedition-result-action:active {
+  transform:translateY(1px) scale(.994);
+}
+.expedition-result-action-bg {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+}
+.expedition-result-action-label {
+  position:relative;
+  z-index:1;
+  width:min(78%, 430px);
+  height:auto;
+  display:none;
+}
+.expedition-result-card[data-state="success"] .expedition-result-action-label-success,
+.expedition-result-card[data-state="failure"] .expedition-result-action-label-failure {
+  display:block;
+}
+@media (max-width: 900px) {
+  .expedition-result-card {
+    width:min(94vw, 760px);
+    min-height:min(50vh, 420px);
+    padding:28px 22px 24px;
+  }
+  .expedition-result-message-wrap {
+    width:min(100%, 620px);
+  }
+  .expedition-result-icon {
+    width:22px;
+  }
+  .expedition-result-action {
+    width:min(100%, 430px);
+    min-height:48px;
+  }
+}
 .debris-scene {
   position:absolute;
   inset:0;
@@ -3249,6 +3436,25 @@ body::after {
     <span class="expedition-timer-label">Temps expedition</span>
     <span class="expedition-timer-value" id="expedition-timer-value">05:00</span>
   </div>
+  <section class="expedition-result-overlay" id="expedition-result-overlay" aria-hidden="true" aria-label="Resultat expedition">
+    <div class="expedition-result-card" id="expedition-result-card" data-state="success">
+      <img class="expedition-result-border expedition-result-border-success" id="expedition-result-border" src="assets/expedition-result/success/panel-border.svg" alt="" aria-hidden="true">
+      <div class="expedition-result-kicker" id="expedition-result-kicker">Expedition validee</div>
+      <div class="expedition-result-reason" id="expedition-result-reason">retour securise // transfert des ressources en cours</div>
+      <div class="expedition-result-message-wrap">
+        <img class="expedition-result-icon expedition-result-icon-left" src="assets/expedition-result/failure/Group.svg" alt="" aria-hidden="true">
+        <img class="expedition-result-message expedition-result-message-success" src="assets/expedition-result/success/message.svg" alt="Felicitations ! je n aurais jamais cru que des creatures tel que vous puisse reussir cette expedition...">
+        <img class="expedition-result-message expedition-result-message-failure" src="assets/expedition-result/failure/message.svg" alt="Vous avez echoue, votre corps a ete ramene sur le motomoto mais le reste de vos affaires est perdu a jamais...">
+        <img class="expedition-result-icon expedition-result-icon-right" src="assets/expedition-result/failure/Group-1.svg" alt="" aria-hidden="true">
+      </div>
+      <img class="expedition-result-separator" id="expedition-result-separator" src="assets/expedition-result/success/separator.svg" alt="" aria-hidden="true">
+      <button class="expedition-result-action" id="expedition-result-action" type="button">
+        <img class="expedition-result-action-bg" id="expedition-result-action-bg" src="assets/expedition-result/success/button-bg.svg" alt="" aria-hidden="true">
+        <img class="expedition-result-action-label expedition-result-action-label-success" src="assets/expedition-result/success/button-label.svg" alt="Retourner sur le Motomoto">
+        <img class="expedition-result-action-label expedition-result-action-label-failure" src="assets/expedition-result/failure/button-label.svg" alt="Reveiller-vous !">
+      </button>
+    </div>
+  </section>
   <section class="debris-scene" id="debris-scene" aria-hidden="true" aria-label="Inspection des debris">
     <div class="debris-starfield" aria-hidden="true"></div>
     <div class="debris-parallax" aria-hidden="true">
@@ -3432,6 +3638,14 @@ const landingHeadCursor = document.getElementById('landing-head-cursor');
 const debrisScene = document.getElementById('debris-scene');
 const expeditionTimerHud = document.getElementById('expedition-timer-hud');
 const expeditionTimerValue = document.getElementById('expedition-timer-value');
+const expeditionResultOverlay = document.getElementById('expedition-result-overlay');
+const expeditionResultCard = document.getElementById('expedition-result-card');
+const expeditionResultBorder = document.getElementById('expedition-result-border');
+const expeditionResultKicker = document.getElementById('expedition-result-kicker');
+const expeditionResultReason = document.getElementById('expedition-result-reason');
+const expeditionResultSeparator = document.getElementById('expedition-result-separator');
+const expeditionResultAction = document.getElementById('expedition-result-action');
+const expeditionResultActionBg = document.getElementById('expedition-result-action-bg');
 let landingStarted = false;
 let landingTypingTimers = [];
 let landingSequenceTimers = [];
@@ -3439,6 +3653,7 @@ let landingResizeHandler = null;
 let expeditionTimerInterval = 0;
 let expeditionTimerDeadline = 0;
 let expeditionFailing = false;
+let expeditionResultPending = null;
 const landingDecisionStages = {
   impact: {
     alert:'Votre vaisseau a percute un asteroide !',
@@ -4617,14 +4832,75 @@ function closeDebrisInspectionScene() {
   debrisScene.setAttribute('aria-hidden', 'true');
 }
 
+function hideExpeditionResult() {
+  expeditionResultPending = null;
+  if (!landingSequence || !expeditionResultOverlay) return;
+  landingSequence.classList.remove('is-result-open');
+  expeditionResultOverlay.setAttribute('aria-hidden', 'true');
+}
+
+function showExpeditionResult(state, options = {}) {
+  if (!landingSequence || !expeditionResultOverlay || !expeditionResultCard) return;
+
+  const isFailure = state === 'failure';
+  const config = isFailure
+    ? {
+        kicker: options.kicker || 'Expedition echouee',
+        reason: options.reason || 'Temps ecoule // extraction perdue',
+        border:'assets/expedition-result/failure/panel-border.svg',
+        separator:'assets/expedition-result/failure/separator.svg',
+        buttonBg:'assets/expedition-result/failure/button-bg.svg',
+        returnOptions: options.returnOptions || {
+          message:'Echec extraction : recuperation impossible. Retour force au vaisseau, trouvailles perdues.',
+          isFailure:true
+        }
+      }
+    : {
+        kicker: options.kicker || 'Expedition validee',
+        reason: options.reason || 'Retour securise // transfert des ressources en cours',
+        border:'assets/expedition-result/success/panel-border.svg',
+        separator:'assets/expedition-result/success/separator.svg',
+        buttonBg:'assets/expedition-result/success/button-bg.svg',
+        returnOptions: options.returnOptions || {
+          message:'Expedition validee : ressources chargees, retour au MOTOMOTO en cours.',
+          isFailure:false
+        }
+      };
+
+  stopExpeditionTimer({ resetDisplay:false, keepVisible:false });
+  closeDebrisInspectionScene();
+  clearLandingTypingTimers();
+  clearLandingSequenceTimers();
+
+  expeditionResultPending = {
+    returnOptions:config.returnOptions,
+    afterReturn:typeof options.afterReturn === 'function' ? options.afterReturn : null
+  };
+
+  landingSequence.classList.add('is-active', 'is-hovering', 'is-result-open');
+  landingSequence.setAttribute('aria-hidden', 'false');
+  if (landingDecision) {
+    landingDecision.classList.remove('is-copy-ready', 'is-module-open');
+  }
+
+  expeditionResultCard.dataset.state = state;
+  if (expeditionResultBorder) expeditionResultBorder.src = config.border;
+  if (expeditionResultSeparator) expeditionResultSeparator.src = config.separator;
+  if (expeditionResultActionBg) expeditionResultActionBg.src = config.buttonBg;
+  if (expeditionResultKicker) expeditionResultKicker.textContent = config.kicker;
+  if (expeditionResultReason) expeditionResultReason.textContent = config.reason;
+  expeditionResultOverlay.setAttribute('aria-hidden', 'false');
+}
+
 function resetLandingSequenceState() {
   clearLandingTypingTimers();
   clearLandingSequenceTimers();
   stopLandingConsoleHold();
+  hideExpeditionResult();
   closeDebrisInspectionScene();
 
   if (landingSequence) {
-    landingSequence.classList.remove('is-question-open', 'is-hovering', 'is-active');
+    landingSequence.classList.remove('is-question-open', 'is-hovering', 'is-active', 'is-result-open');
     landingSequence.setAttribute('aria-hidden', 'true');
   }
 
@@ -4693,24 +4969,17 @@ function failExpeditionFromTimeout() {
 
   stopExpeditionTimer({ resetDisplay:false, keepVisible:true });
   setExpeditionTimerDisplay(0);
-
-  const completeFailure = () => {
-    returnToShipFromExpedition({
+  showExpeditionResult('failure', {
+    kicker:'Expedition echouee',
+    reason:'Temps ecoule // retour d urgence vers le MOTOMOTO',
+    returnOptions:{
       message:'Echec extraction : temps ecoule. Retour force au vaisseau, trouvailles perdues.',
       isFailure:true
-    });
-    expeditionFailing = false;
-  };
-
-  if (pageTransition) {
-    pageTransition.classList.remove('out');
-    window.setTimeout(() => {
-      completeFailure();
-      pageTransition.classList.add('out');
-    }, 320);
-  } else {
-    completeFailure();
-  }
+    },
+    afterReturn:() => {
+      expeditionFailing = false;
+    }
+  });
 }
 
 function startExpeditionTimer(durationMs = expeditionDurationMs) {
@@ -5386,6 +5655,18 @@ if (landingConsoleDown) {
     });
   });
 }
+if (expeditionResultAction) {
+  expeditionResultAction.addEventListener('click', () => {
+    if (!expeditionResultPending) return;
+    const { returnOptions, afterReturn } = expeditionResultPending;
+    if (pageTransition) pageTransition.classList.remove('out');
+    window.setTimeout(() => {
+      returnToShipFromExpedition(returnOptions);
+      if (typeof afterReturn === 'function') afterReturn();
+      if (pageTransition) pageTransition.classList.add('out');
+    }, 280);
+  });
+}
 
 updateReadyState();
 setExpeditionTimerDisplay(expeditionDurationMs);
@@ -5401,6 +5682,27 @@ initShipMap();
 initDraggablePersonalWindow();
 window.openDebrisInspectionScene = openDebrisInspectionScene;
 window.closeDebrisInspectionScene = closeDebrisInspectionScene;
+window.showExpeditionSuccessResult = (reason = 'Retour securise // transfert des ressources en cours') => {
+  showExpeditionResult('success', {
+    reason,
+    returnOptions:{
+      message:'Expedition validee : ressources chargees, retour au MOTOMOTO en cours.',
+      isFailure:false
+    }
+  });
+};
+window.showExpeditionFailureResult = (reason = 'Stress critique // extraction perdue') => {
+  showExpeditionResult('failure', {
+    reason,
+    returnOptions:{
+      message:'Echec extraction : equipe evacuee en urgence, trouvailles perdues.',
+      isFailure:true
+    },
+    afterReturn:() => {
+      expeditionFailing = false;
+    }
+  });
+};
 
 if (params.get('landing') === '1') {
   setExpeditionActive(true);
@@ -5411,6 +5713,43 @@ if (params.get('debris') === '1') {
   setExpeditionActive(true);
   if (pageTransition) pageTransition.classList.add('out');
   openDebrisInspectionScene();
+}
+if (params.get('expeditionResult')) {
+  setExpeditionActive(true);
+  landingStarted = true;
+  landingSequence.classList.add('is-active', 'is-hovering');
+  landingSequence.setAttribute('aria-hidden', 'false');
+  stopExpeditionTimer({ resetDisplay:false, keepVisible:false });
+  if (pageTransition) pageTransition.classList.add('out');
+
+  const preview = params.get('expeditionResult');
+  if (preview === 'success') {
+    showExpeditionResult('success', {
+      reason:'Retour securise // transfert des ressources en cours'
+    });
+  } else if (preview === 'failure-stress') {
+    showExpeditionResult('failure', {
+      reason:'Stress critique // extraction perdue',
+      returnOptions:{
+        message:'Echec extraction : surcharge mentale critique. Retour force au MOTOMOTO, trouvailles perdues.',
+        isFailure:true
+      },
+      afterReturn:() => {
+        expeditionFailing = false;
+      }
+    });
+  } else {
+    showExpeditionResult('failure', {
+      reason:'Temps ecoule // retour d urgence vers le MOTOMOTO',
+      returnOptions:{
+        message:'Echec extraction : temps ecoule. Retour force au vaisseau, trouvailles perdues.',
+        isFailure:true
+      },
+      afterReturn:() => {
+        expeditionFailing = false;
+      }
+    });
+  }
 }
 </script>
 </body>
