@@ -2696,12 +2696,12 @@ body::after {
 }
 .landing-console-nav {
   position:absolute;
-  right:7.65%;
-  width:11.55%;
+  right:17.45%;
+  width:8.9%;
   aspect-ratio:1 / 1;
   border:0;
   border-radius:50%;
-  background:center / contain no-repeat;
+  background:center / 100% 100% no-repeat;
   color:transparent;
   cursor:none;
   z-index:4;
@@ -2752,11 +2752,11 @@ body::after {
     inset 0 2px 5px rgba(0,0,0,.22);
 }
 .landing-console-nav-up {
-  top:19.15%;
+  top:29.45%;
   background-image:url('assets/console-aventure-button-up.png?v=20260424-round-buttons');
 }
 .landing-console-nav-down {
-  top:43.25%;
+  top:53.1%;
   background-image:url('assets/console-aventure-button-down.png?v=20260424-round-buttons');
 }
 .landing-console-nav.is-disabled {
@@ -2917,6 +2917,18 @@ body::after {
     inset 0 0 32px rgba(0,0,0,.88),
     inset 0 0 96px rgba(0,0,0,.72);
 }
+.expedition-result-scroll {
+  position:relative;
+  width:100%;
+  height:100%;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+  scroll-behavior:smooth;
+}
+.expedition-result-scroll::-webkit-scrollbar {
+  width:0;
+}
 .expedition-result-screen::before {
   content:'';
   position:absolute;
@@ -3069,6 +3081,70 @@ body::after {
 .expedition-result-card[data-state="failure"] .expedition-result-action-label-failure {
   display:block;
 }
+.expedition-result-nav {
+  position:absolute;
+  right:17.45%;
+  width:8.9%;
+  aspect-ratio:1 / 1;
+  border:0;
+  border-radius:50%;
+  background:center / 100% 100% no-repeat;
+  color:transparent;
+  cursor:none;
+  z-index:4;
+  transform:translateY(-50%);
+  transition:transform .12s ease, filter .12s ease, opacity .12s ease;
+  overflow:visible;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.26));
+}
+.expedition-result-nav::after {
+  content:'';
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:84%;
+  height:84%;
+  border-radius:50%;
+  transform:translate(-50%, -50%);
+  box-shadow:
+    0 0 0 1px rgba(247,255,195,.06),
+    0 0 14px rgba(247,255,195,.025);
+  opacity:.03;
+  pointer-events:none;
+  transition:opacity .12s ease, transform .12s ease, box-shadow .12s ease;
+}
+.expedition-result-nav:hover,
+.expedition-result-nav:focus-visible {
+  filter:
+    brightness(1.03)
+    drop-shadow(0 0 8px rgba(247,255,195,.08));
+  outline:none;
+}
+.expedition-result-nav.is-pressed {
+  transform:translateY(calc(-50% + 2px)) scale(.972);
+  filter:
+    brightness(.92)
+    drop-shadow(0 0 4px rgba(0,0,0,.24));
+}
+.expedition-result-nav.is-pressed::after {
+  opacity:.14;
+  transform:translate(-50%, -50%) scale(.96);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.18),
+    inset 0 2px 5px rgba(0,0,0,.22);
+}
+.expedition-result-nav-up {
+  top:29.45%;
+  background-image:url('assets/console-aventure-button-up.png?v=20260424-round-buttons');
+}
+.expedition-result-nav-down {
+  top:53.1%;
+  background-image:url('assets/console-aventure-button-down.png?v=20260424-round-buttons');
+}
+.expedition-result-nav.is-disabled {
+  pointer-events:none;
+  opacity:.72;
+}
 @media (max-width: 900px) {
   .expedition-result-shell {
     width:min(100vw, 1140px);
@@ -3078,6 +3154,10 @@ body::after {
     top:18.2%;
     width:59%;
     height:52.4%;
+  }
+  .expedition-result-nav {
+    right:17.35%;
+    width:9.75%;
   }
   .expedition-result-card {
     padding:16px 18px 18px;
@@ -3177,6 +3257,49 @@ body::after {
   pointer-events:auto;
   z-index:4;
 }
+.debris-toolbox {
+  position:absolute;
+  display:block;
+  width:var(--w);
+  left:var(--x);
+  top:var(--y);
+  padding:0;
+  border:0;
+  background:none;
+  opacity:var(--alpha, 1);
+  transform-origin:center center;
+  animation:debrisLayerFloat var(--duration, 24s) ease-in-out infinite alternate;
+  cursor:none;
+  pointer-events:auto;
+  z-index:4;
+}
+.debris-toolbox img {
+  display:block;
+  width:100%;
+  height:auto;
+  filter:
+    drop-shadow(0 18px 26px rgba(0,0,0,.32))
+    drop-shadow(0 0 8px rgba(247,255,195,.06));
+  transition:transform .18s ease, filter .18s ease, opacity .18s ease;
+}
+.debris-toolbox:hover img,
+.debris-toolbox:focus-visible img {
+  transform:scale(1.05);
+  filter:
+    drop-shadow(0 20px 28px rgba(0,0,0,.34))
+    drop-shadow(0 0 12px rgba(250,90,31,.16));
+}
+.debris-toolbox:focus-visible {
+  outline:none;
+}
+.debris-toolbox.is-found img {
+  opacity:.86;
+  filter:
+    saturate(.9)
+    brightness(.94)
+    drop-shadow(0 18px 24px rgba(0,0,0,.28))
+    drop-shadow(0 0 14px rgba(250,90,31,.22));
+}
 .debris-note img {
   display:block;
   width:100%;
@@ -3255,6 +3378,60 @@ body::after {
 .debris-layer.layer-11 { z-index:3; }
 .debris-layer.layer-12 { z-index:4; }
 .debris-layer.layer-13 { z-index:4; }
+.notebook-overlay {
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.66);
+  backdrop-filter:blur(8px);
+  z-index:1200;
+}
+.notebook-overlay.is-open {
+  display:flex;
+}
+.notebook-overlay-stack {
+  position:relative;
+  width:min(72vw, 900px);
+  height:min(82vh, 900px);
+  pointer-events:none;
+}
+.notebook-open-img {
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:min(28vw, 420px);
+  max-width:54%;
+  transform:translate(-50%, -50%);
+  transform-origin:center center;
+  filter:
+    drop-shadow(0 24px 36px rgba(0,0,0,.44))
+    drop-shadow(0 0 14px rgba(247,255,195,.04));
+  pointer-events:none;
+}
+.notebook-overlay-close {
+  position:absolute;
+  right:2.5%;
+  top:2%;
+  min-width:140px;
+  min-height:42px;
+  border:1px solid rgba(247,255,195,.42);
+  background:rgba(0,0,0,.78);
+  color:var(--cream);
+  font:inherit;
+  font-size:16px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  pointer-events:auto;
+  cursor:none;
+}
+.notebook-overlay-close:hover,
+.notebook-overlay-close:focus-visible {
+  border-color:rgba(250,90,31,.58);
+  color:var(--orange);
+  outline:none;
+}
 .landing-sequence.is-debris-view .landing-decision,
 .landing-sequence.is-debris-view .landing-ship,
 .landing-sequence.is-debris-view .landing-thrusters,
@@ -3273,19 +3450,19 @@ body::after {
 }
 @keyframes debrisLayerFloat {
   0% {
-    transform:translate3d(0, 0, 0) rotate(var(--rot, 0deg));
+    transform:translate3d(0, 0, 0) rotate(calc(var(--rot, 0deg) - var(--swing, 2.4deg) * .35)) scale(1);
   }
   25% {
     transform:translate3d(calc(var(--dx, 16px) * 0.6), calc(var(--dy, -14px) * 0.7), 0) rotate(calc(var(--rot, 0deg) + var(--swing, 2.4deg) * 0.5));
   }
   50% {
-    transform:translate3d(var(--dx, 16px), var(--dy, -14px), 0) rotate(calc(var(--rot, 0deg) + var(--swing, 4.5deg)));
+    transform:translate3d(calc(var(--dx, 16px) * 1.12), calc(var(--dy, -14px) * 1.08), 0) rotate(calc(var(--rot, 0deg) + var(--swing, 2.4deg) * 1.2)) scale(1.018);
   }
   75% {
-    transform:translate3d(calc(var(--dx2, -12px) * 0.5), calc(var(--dy2, 10px) * 0.6), 0) rotate(calc(var(--rot, 0deg) - var(--swing, 4.5deg) * 0.4));
+    transform:translate3d(calc(var(--dx2, -12px) * 0.55), calc(var(--dy2, 10px) * 0.68), 0) rotate(calc(var(--rot, 0deg) - var(--swing, 2.4deg) * 0.62)) scale(1.005);
   }
   100% {
-    transform:translate3d(var(--dx2, -12px), var(--dy2, 10px), 0) rotate(calc(var(--rot, 0deg) - var(--swing, 4.5deg)));
+    transform:translate3d(calc(var(--dx2, -12px) * 1.1), calc(var(--dy2, 10px) * 1.06), 0) rotate(calc(var(--rot, 0deg) - var(--swing, 2.4deg) * 1.18)) scale(.988);
   }
 }
 @keyframes expeditionTimerPulse {
@@ -3346,8 +3523,8 @@ body::after {
     gap:5px;
   }
   .landing-console-nav {
-    right:7.45%;
-    width:12.7%;
+    right:17.35%;
+    width:9.75%;
   }
 }
 @keyframes landingShipDescent {
@@ -3694,25 +3871,29 @@ body::after {
   <section class="expedition-result-overlay" id="expedition-result-overlay" aria-hidden="true" aria-label="Resultat expedition">
     <div class="expedition-result-shell">
       <div class="expedition-result-screen">
-        <div class="expedition-result-card" id="expedition-result-card" data-state="success">
-          <img class="expedition-result-border expedition-result-border-success" id="expedition-result-border" src="assets/expedition-result/success/panel-border.svg" alt="" aria-hidden="true">
-          <div class="expedition-result-kicker" id="expedition-result-kicker">Expedition validee</div>
-          <div class="expedition-result-reason" id="expedition-result-reason">retour securise // transfert des ressources en cours</div>
-          <div class="expedition-result-message-wrap">
-            <img class="expedition-result-icon expedition-result-icon-left" src="assets/expedition-result/failure/Group.svg" alt="" aria-hidden="true">
-            <img class="expedition-result-message expedition-result-message-success" src="assets/expedition-result/success/message.svg" alt="Felicitations ! je n aurais jamais cru que des creatures tel que vous puisse reussir cette expedition...">
-            <img class="expedition-result-message expedition-result-message-failure" src="assets/expedition-result/failure/message.svg" alt="Vous avez echoue, votre corps a ete ramene sur le motomoto mais le reste de vos affaires est perdu a jamais...">
-            <img class="expedition-result-icon expedition-result-icon-right" src="assets/expedition-result/failure/Group-1.svg" alt="" aria-hidden="true">
+        <div class="expedition-result-scroll" id="expedition-result-scroll">
+          <div class="expedition-result-card" id="expedition-result-card" data-state="success">
+            <img class="expedition-result-border expedition-result-border-success" id="expedition-result-border" src="assets/expedition-result/success/panel-border.svg" alt="" aria-hidden="true">
+            <div class="expedition-result-kicker" id="expedition-result-kicker">Expedition validee</div>
+            <div class="expedition-result-reason" id="expedition-result-reason">retour securise // transfert des ressources en cours</div>
+            <div class="expedition-result-message-wrap">
+              <img class="expedition-result-icon expedition-result-icon-left" src="assets/expedition-result/failure/Group.svg" alt="" aria-hidden="true">
+              <img class="expedition-result-message expedition-result-message-success" src="assets/expedition-result/success/message.svg" alt="Felicitations ! je n aurais jamais cru que des creatures tel que vous puisse reussir cette expedition...">
+              <img class="expedition-result-message expedition-result-message-failure" src="assets/expedition-result/failure/message.svg" alt="Vous avez echoue, votre corps a ete ramene sur le motomoto mais le reste de vos affaires est perdu a jamais...">
+              <img class="expedition-result-icon expedition-result-icon-right" src="assets/expedition-result/failure/Group-1.svg" alt="" aria-hidden="true">
+            </div>
+            <img class="expedition-result-separator" id="expedition-result-separator" src="assets/expedition-result/success/separator.svg" alt="" aria-hidden="true">
+            <button class="expedition-result-action" id="expedition-result-action" type="button">
+              <img class="expedition-result-action-bg" id="expedition-result-action-bg" src="assets/expedition-result/success/button-bg.svg" alt="" aria-hidden="true">
+              <img class="expedition-result-action-label expedition-result-action-label-success" src="assets/expedition-result/success/button-label.svg" alt="Retourner sur le Motomoto">
+              <img class="expedition-result-action-label expedition-result-action-label-failure" src="assets/expedition-result/failure/button-label.svg" alt="Reveiller-vous !">
+            </button>
           </div>
-          <img class="expedition-result-separator" id="expedition-result-separator" src="assets/expedition-result/success/separator.svg" alt="" aria-hidden="true">
-          <button class="expedition-result-action" id="expedition-result-action" type="button">
-            <img class="expedition-result-action-bg" id="expedition-result-action-bg" src="assets/expedition-result/success/button-bg.svg" alt="" aria-hidden="true">
-            <img class="expedition-result-action-label expedition-result-action-label-success" src="assets/expedition-result/success/button-label.svg" alt="Retourner sur le Motomoto">
-            <img class="expedition-result-action-label expedition-result-action-label-failure" src="assets/expedition-result/failure/button-label.svg" alt="Reveiller-vous !">
-          </button>
         </div>
       </div>
       <div class="expedition-result-frame" aria-hidden="true"></div>
+      <button class="expedition-result-nav expedition-result-nav-up" id="expedition-result-up" type="button" aria-label="Defiler le resultat vers le haut"></button>
+      <button class="expedition-result-nav expedition-result-nav-down" id="expedition-result-down" type="button" aria-label="Defiler le resultat vers le bas"></button>
     </div>
   </section>
   <section class="debris-scene" id="debris-scene" aria-hidden="true" aria-label="Inspection des debris">
@@ -3721,30 +3902,30 @@ body::after {
       <canvas class="debris-particle-canvas" id="debris-particle-canvas"></canvas>
     </div>
     <div class="debris-parallax">
-      <img class="debris-layer layer-4" src="assets/debris-scene/Calque 4.png" alt="" style="--x:18%; --y:23%; --w:min(5vw, 74px); --rot:-18deg; --dx:16px; --dy:-14px; --dx2:-12px; --dy2:11px; --duration:16s; --swing:4.4deg;">
-      <img class="debris-layer layer-5" src="assets/debris-scene/Calque 5.png" alt="" style="--x:9%; --y:31%; --w:min(6vw, 92px); --rot:-12deg; --dx:-18px; --dy:14px; --dx2:10px; --dy2:-10px; --duration:20s; --swing:5.3deg;">
-      <img class="debris-layer layer-2" src="assets/debris-scene/Calque 2.png" alt="" style="--x:44%; --y:22%; --w:min(14vw, 224px); --rot:8deg; --dx:22px; --dy:-16px; --dx2:-16px; --dy2:12px; --duration:16s; --swing:6.2deg;">
-      <img class="debris-layer layer-11" src="assets/debris-scene/Calque 11.png" alt="" style="--x:57%; --y:16%; --w:min(4vw, 58px); --rot:16deg; --dx:-12px; --dy:14px; --dx2:11px; --dy2:-8px; --duration:13s; --swing:6.6deg;">
-      <img class="debris-layer layer-10" src="assets/debris-scene/Calque 10.png" alt="" style="--x:63%; --y:49%; --w:min(4vw, 56px); --rot:14deg; --dx:10px; --dy:-10px; --dx2:-12px; --dy2:12px; --duration:15s; --swing:4.0deg;">
-      <img class="debris-layer layer-3" src="assets/debris-scene/Calque 3.png" alt="" style="--x:71%; --y:34%; --w:min(10vw, 150px); --rot:-7deg; --dx:-18px; --dy:-14px; --dx2:18px; --dy2:12px; --duration:19s; --swing:5.5deg;">
-      <img class="debris-layer layer-7" src="assets/debris-scene/Calque 7.png" alt="" style="--x:78%; --y:24%; --w:min(18vw, 280px); --rot:-10deg; --dx:24px; --dy:18px; --dx2:-16px; --dy2:-16px; --duration:23s; --swing:7.0deg;">
-      <img class="debris-layer layer-9" src="assets/debris-scene/Calque 9.png" alt="" style="--x:88%; --y:36%; --w:min(5vw, 84px); --rot:18deg; --dx:13px; --dy:-14px; --dx2:-10px; --dy2:9px; --duration:18s; --swing:5.5deg;">
-      <img class="debris-layer layer-6" src="assets/debris-scene/Calque 6.png" alt="" style="--x:2.5%; --y:49%; --w:min(20vw, 320px); --rot:-11deg; --dx:-20px; --dy:18px; --dx2:12px; --dy2:-12px; --duration:25s; --swing:7.5deg;">
-      <img class="debris-layer layer-8" src="assets/debris-scene/Calque 8.png" alt="" style="--x:82%; --y:67%; --w:min(10vw, 148px); --rot:-14deg; --dx:14px; --dy:12px; --dx2:-14px; --dy2:-10px; --duration:20s; --swing:6.2deg;">
-      <img class="debris-layer layer-12" src="assets/debris-scene/Calque 12.png" alt="" style="--x:40%; --y:65%; --w:min(17vw, 252px); --rot:12deg; --dx:-20px; --dy:-14px; --dx2:14px; --dy2:13px; --duration:21s; --swing:6.6deg;">
-      <img class="debris-layer layer-13" src="assets/debris-scene/Calque 13.png" alt="" style="--x:52%; --y:79%; --w:min(15vw, 224px); --rot:-12deg; --dx:18px; --dy:10px; --dx2:-12px; --dy2:-12px; --duration:22s; --swing:5.7deg;">
-      <img class="debris-layer debris-toolbox" src="assets/boite-a-outil/boite-fermee.svg" alt="" style="--x:32%; --y:55%; --w:min(9vw, 130px); --rot:8deg; --dx:-26px; --dy:-20px; --dx2:20px; --dy2:16px; --duration:15s; --swing:9deg;">
-      <button class="debris-note" type="button" data-note-id="jaune" data-note-label="Carnet jaune" aria-label="Carnet jaune flottant" style="--x:24%; --y:62%; --w:min(6.2vw, 88px); --rot:-10deg; --dx:14px; --dy:-10px; --dx2:-8px; --dy2:12px; --duration:19s; --swing:6.6deg;">
+      <img class="debris-layer layer-4" src="assets/debris-scene/Calque 4.png" alt="" style="--x:18%; --y:23%; --w:min(5vw, 74px); --rot:-18deg; --dx:19px; --dy:-17px; --dx2:-15px; --dy2:13px; --duration:21s; --swing:4.6deg;">
+      <img class="debris-layer layer-5" src="assets/debris-scene/Calque 5.png" alt="" style="--x:9%; --y:31%; --w:min(6vw, 92px); --rot:-12deg; --dx:-22px; --dy:16px; --dx2:12px; --dy2:-12px; --duration:24s; --swing:5deg;">
+      <img class="debris-layer layer-2" src="assets/debris-scene/Calque 2.png" alt="" style="--x:44%; --y:22%; --w:min(14vw, 224px); --rot:8deg; --dx:28px; --dy:-20px; --dx2:-18px; --dy2:15px; --duration:20s; --swing:5.8deg;">
+      <img class="debris-layer layer-11" src="assets/debris-scene/Calque 11.png" alt="" style="--x:57%; --y:16%; --w:min(4vw, 58px); --rot:16deg; --dx:-14px; --dy:17px; --dx2:13px; --dy2:-10px; --duration:17s; --swing:6.2deg;">
+      <img class="debris-layer layer-10" src="assets/debris-scene/Calque 10.png" alt="" style="--x:63%; --y:49%; --w:min(4vw, 56px); --rot:14deg; --dx:13px; --dy:-12px; --dx2:-14px; --dy2:14px; --duration:19s; --swing:4.8deg;">
+      <img class="debris-layer layer-3" src="assets/debris-scene/Calque 3.png" alt="" style="--x:71%; --y:34%; --w:min(10vw, 150px); --rot:-7deg; --dx:-24px; --dy:-18px; --dx2:21px; --dy2:15px; --duration:22s; --swing:5.4deg;">
+      <img class="debris-layer layer-7" src="assets/debris-scene/Calque 7.png" alt="" style="--x:78%; --y:24%; --w:min(18vw, 280px); --rot:-10deg; --dx:28px; --dy:22px; --dx2:-18px; --dy2:-18px; --duration:26s; --swing:6.6deg;">
+      <img class="debris-layer layer-9" src="assets/debris-scene/Calque 9.png" alt="" style="--x:88%; --y:36%; --w:min(5vw, 84px); --rot:18deg; --dx:16px; --dy:-16px; --dx2:-12px; --dy2:11px; --duration:20s; --swing:5.2deg;">
+      <img class="debris-layer layer-6" src="assets/debris-scene/Calque 6.png" alt="" style="--x:2.5%; --y:49%; --w:min(20vw, 320px); --rot:-11deg; --dx:-24px; --dy:22px; --dx2:14px; --dy2:-14px; --duration:28s; --swing:6.9deg;">
+      <img class="debris-layer layer-12" src="assets/debris-scene/Calque 12.png" alt="" style="--x:40%; --y:65%; --w:min(17vw, 252px); --rot:12deg; --dx:-24px; --dy:-17px; --dx2:16px; --dy2:16px; --duration:23s; --swing:6.2deg;">
+      <button class="debris-note" type="button" data-note-id="jaune" data-note-label="Carnet jaune" aria-label="Carnet jaune flottant" style="--x:24%; --y:62%; --w:min(6.2vw, 88px); --rot:-10deg; --dx:17px; --dy:-13px; --dx2:-10px; --dy2:14px; --duration:21s; --swing:6deg;">
         <img src="assets/carnets/carnet-jaune-ferme.png" alt="" aria-hidden="true">
       </button>
-      <button class="debris-note" type="button" data-note-id="rouge" data-note-label="Carnet rouge" aria-label="Carnet rouge flottant" style="--x:67%; --y:58%; --w:min(6.4vw, 92px); --rot:8deg; --dx:-16px; --dy:12px; --dx2:10px; --dy2:-8px; --duration:23s; --swing:5.9deg;">
+      <button class="debris-note" type="button" data-note-id="rouge" data-note-label="Carnet rouge" aria-label="Carnet rouge flottant" style="--x:67%; --y:58%; --w:min(6.4vw, 92px); --rot:8deg; --dx:-20px; --dy:15px; --dx2:12px; --dy2:-10px; --duration:24s; --swing:5.4deg;">
         <img src="assets/carnets/carnet-rouge-ferme.png" alt="" aria-hidden="true">
       </button>
-      <button class="debris-note" type="button" data-note-id="vert" data-note-label="Carnet vert" aria-label="Carnet vert flottant" style="--x:78%; --y:49%; --w:min(5.6vw, 82px); --rot:-14deg; --dx:12px; --dy:-14px; --dx2:-10px; --dy2:10px; --duration:17s; --swing:5.1deg;">
+      <button class="debris-note" type="button" data-note-id="vert" data-note-label="Carnet vert" aria-label="Carnet vert flottant" style="--x:78%; --y:49%; --w:min(5.6vw, 82px); --rot:-14deg; --dx:14px; --dy:-16px; --dx2:-11px; --dy2:12px; --duration:20s; --swing:5.1deg;">
         <img src="assets/carnets/carnet-vert-ferme.png" alt="" aria-hidden="true">
       </button>
-      <button class="debris-note" type="button" data-note-id="noir" data-note-label="Carnet noir" aria-label="Carnet noir flottant" style="--x:56%; --y:73%; --w:min(6vw, 86px); --rot:12deg; --dx:-14px; --dy:10px; --dx2:12px; --dy2:-10px; --duration:26s; --swing:6.8deg;">
+      <button class="debris-note" type="button" data-note-id="noir" data-note-label="Carnet noir" aria-label="Carnet noir flottant" style="--x:56%; --y:73%; --w:min(6vw, 86px); --rot:12deg; --dx:-18px; --dy:12px; --dx2:14px; --dy2:-12px; --duration:26s; --swing:6.4deg;">
         <img src="assets/carnets/carnet-noir-ferme.png" alt="" aria-hidden="true">
+      </button>
+      <button class="debris-toolbox" type="button" data-toolbox-id="main" data-toolbox-label="Boite a outils" aria-label="Boite a outils flottante" style="--x:31%; --y:45%; --w:min(8.6vw, 128px); --rot:-8deg; --dx:19px; --dy:-16px; --dx2:-14px; --dy2:15px; --duration:18s; --swing:7.2deg;">
+        <img src="assets/toolbox/toolbox-closed.png" alt="" aria-hidden="true">
       </button>
     </div>
     <img class="debris-layer frame" src="assets/debris-scene/exterieur.png" alt="" aria-hidden="true">
@@ -3924,9 +4105,11 @@ const debrisParticleCanvas = document.getElementById('debris-particle-canvas');
 const debrisScene = document.getElementById('debris-scene');
 const debrisNoteToast = document.getElementById('debris-loot-toast');
 const debrisNoteButtons = Array.from(document.querySelectorAll('.debris-note'));
+const debrisToolboxButtons = Array.from(document.querySelectorAll('.debris-toolbox'));
 const expeditionTimerHud = document.getElementById('expedition-timer-hud');
 const expeditionTimerValue = document.getElementById('expedition-timer-value');
 const expeditionResultOverlay = document.getElementById('expedition-result-overlay');
+const expeditionResultScroll = document.getElementById('expedition-result-scroll');
 const expeditionResultCard = document.getElementById('expedition-result-card');
 const expeditionResultBorder = document.getElementById('expedition-result-border');
 const expeditionResultKicker = document.getElementById('expedition-result-kicker');
@@ -3934,6 +4117,8 @@ const expeditionResultReason = document.getElementById('expedition-result-reason
 const expeditionResultSeparator = document.getElementById('expedition-result-separator');
 const expeditionResultAction = document.getElementById('expedition-result-action');
 const expeditionResultActionBg = document.getElementById('expedition-result-action-bg');
+const expeditionResultUp = document.getElementById('expedition-result-up');
+const expeditionResultDown = document.getElementById('expedition-result-down');
 const roomNodes = Array.from(document.querySelectorAll('.room-node'));
 let landingStarted = false;
 let landingTypingTimers = [];
@@ -3946,14 +4131,17 @@ let expeditionResultPending = null;
 let debrisNoteToastTimer = 0;
 let presenceBroadcastChannel = null;
 let presenceTransport = null;
+let expeditionResultHoldTimer = 0;
 let presenceHeartbeatTimer = 0;
 let presenceCleanupTimer = 0;
 let presenceRaf = 0;
 let presenceQueued = false;
 const remotePresenceMap = new Map();
 const collectedDebrisNotes = new Set();
+const collectedDebrisToolboxes = new Set();
 const expeditionInteractiveSelector = [
   '.debris-note',
+  '.debris-toolbox',
   '.decision-btn',
   '.landing-module-btn',
   '.landing-console-nav',
@@ -4126,7 +4314,7 @@ function shouldBroadcastPresence() {
 function getExpeditionInteractiveElements() {
   const elements = [];
   if (debrisScene && debrisScene.classList.contains('is-active')) {
-    elements.push(...debrisScene.querySelectorAll('.debris-note'));
+    elements.push(...debrisScene.querySelectorAll('.debris-note, .debris-toolbox'));
   }
   if (landingSequence && landingSequence.classList.contains('is-active')) {
     elements.push(...landingSequence.querySelectorAll('.decision-btn, .landing-module-btn, .landing-console-nav, .expedition-result-action'));
@@ -4329,49 +4517,39 @@ function handleDebrisNotebookClick(button) {
   const noteLabel = button.dataset.noteLabel || 'Carnet';
   const noteColor = noteId; // jaune, rouge, vert, noir
 
-  // Premier clic — on collecte le carnet
   if (!collectedDebrisNotes.has(noteId)) {
     collectedDebrisNotes.add(noteId);
     button.classList.add('is-found');
-    showDebrisLootToast(`${noteLabel} récupéré`);
+    showDebrisLootToast(`${noteLabel} recupere`);
     if (mapMessage) {
       mapMessage.classList.remove('warn');
-      mapMessage.textContent = `${noteLabel} récupéré dans les débris.`;
+      mapMessage.textContent = `${noteLabel} recupere dans les debris.`;
     }
-    return;
   }
 
-  // Deuxième clic (ou carnet déjà collecté) — on ouvre l'overlay
   openNotebookOverlay(noteColor);
 }
 
 function openNotebookOverlay(clickedColor) {
   const overlay = document.getElementById('notebook-overlay');
-  const stack   = document.getElementById('notebook-stack');
+  const stack = document.getElementById('notebook-stack');
   if (!overlay || !stack) return;
 
-  // Vide le stack
   stack.querySelectorAll('.notebook-open-img').forEach(el => el.remove());
 
-  // Ordre d'affichage : carnet cliqué en premier (dessus), puis les autres collectés derrière
   const allColors = ['jaune', 'rouge', 'vert', 'noir'];
-  const order = [clickedColor, ...allColors.filter(c => c !== clickedColor && collectedDebrisNotes.has(c))];
+  const order = [clickedColor, ...allColors.filter(color => color !== clickedColor && collectedDebrisNotes.has(color))];
 
-  order.forEach((color, i) => {
+  order.forEach((color, index) => {
     const img = document.createElement('img');
     img.className = 'notebook-open-img';
-    // On essaie d'abord la version ouverte, sinon on utilise la fermée
-    const openSrc   = `assets/carnets/carnet-${color}-ouvert.png`;
-    const closedSrc = `assets/carnets/carnet-${color}-ferme.png`;
-    img.src = openSrc;
-    img.onerror = () => { img.src = closedSrc; };
+    img.src = `assets/carnets/carnet-${color}-ouvert.png`;
+    img.onerror = () => { img.src = `assets/carnets/carnet-${color}-ferme.png`; };
     img.alt = `Carnet ${color} ouvert`;
-    // Décalage pour l'empilement
-    if (i > 0) {
-      img.style.transform = `translateX(${-i * 18}px) translateY(${i * 8}px) rotate(${-i * 3}deg)`;
-      img.style.opacity   = String(Math.max(0.25, 1 - i * 0.22));
+    if (index > 0) {
+      img.style.transform = `translate(calc(-50% - ${index * 20}px), calc(-50% + ${index * 10}px)) rotate(${-index * 3.5}deg)`;
+      img.style.opacity = String(Math.max(0.28, 1 - index * 0.2));
     }
-    // Insérer avant le bouton fermer
     const closeBtn = stack.querySelector('.notebook-overlay-close');
     stack.insertBefore(img, closeBtn);
   });
@@ -4386,6 +4564,25 @@ function closeNotebookOverlay(event) {
   if (event.target === overlay) {
     overlay.classList.remove('is-open');
   }
+}
+
+function handleDebrisToolboxClick(button) {
+  if (!button) return;
+  const toolboxId = button.dataset.toolboxId || 'toolbox';
+  const toolboxLabel = button.dataset.toolboxLabel || 'Boite a outils';
+
+  if (!collectedDebrisToolboxes.has(toolboxId)) {
+    collectedDebrisToolboxes.add(toolboxId);
+    button.classList.add('is-found');
+    showDebrisLootToast(`${toolboxLabel} recuperee`);
+    if (mapMessage) {
+      mapMessage.classList.remove('warn');
+      mapMessage.textContent = `${toolboxLabel} reperee dans les debris.`;
+    }
+    return;
+  }
+
+  showDebrisLootToast(`${toolboxLabel} deja recuperee`);
 }
 
 function broadcastPresenceState(force = false) {
@@ -5888,6 +6085,10 @@ function showExpeditionResult(state, options = {}) {
   if (expeditionResultActionBg) expeditionResultActionBg.src = config.buttonBg;
   if (expeditionResultKicker) expeditionResultKicker.textContent = config.kicker;
   if (expeditionResultReason) expeditionResultReason.textContent = config.reason;
+  if (expeditionResultScroll) {
+    expeditionResultScroll.scrollTop = 0;
+    updateExpeditionResultNav();
+  }
   expeditionResultOverlay.setAttribute('aria-hidden', 'false');
 }
 
@@ -6335,6 +6536,44 @@ function scrollLandingConsole(direction) {
 }
 
 let landingConsoleHoldTimer = 0;
+function updateExpeditionResultNav() {
+  if (!expeditionResultScroll) return;
+  const maxScroll = Math.max(0, expeditionResultScroll.scrollHeight - expeditionResultScroll.clientHeight);
+  const top = expeditionResultScroll.scrollTop <= 2;
+  const bottom = expeditionResultScroll.scrollTop >= maxScroll - 2;
+  if (expeditionResultUp) expeditionResultUp.classList.toggle('is-disabled', top);
+  if (expeditionResultDown) expeditionResultDown.classList.toggle('is-disabled', bottom);
+}
+
+function scrollExpeditionResult(direction) {
+  if (!expeditionResultScroll) return;
+  expeditionResultScroll.scrollBy({
+    top: direction * Math.max(52, expeditionResultScroll.clientHeight * .24),
+    behavior:'smooth'
+  });
+}
+
+function setExpeditionResultPressed(button, pressed) {
+  if (!button) return;
+  button.classList.toggle('is-pressed', pressed);
+}
+
+function stopExpeditionResultHold() {
+  setExpeditionResultPressed(expeditionResultUp, false);
+  setExpeditionResultPressed(expeditionResultDown, false);
+  if (!expeditionResultHoldTimer) return;
+  window.clearInterval(expeditionResultHoldTimer);
+  expeditionResultHoldTimer = 0;
+}
+
+function startExpeditionResultHold(direction) {
+  stopExpeditionResultHold();
+  scrollExpeditionResult(direction);
+  expeditionResultHoldTimer = window.setInterval(() => {
+    scrollExpeditionResult(direction);
+  }, 170);
+}
+
 function stopLandingConsoleHold() {
   setLandingConsolePressed(landingConsoleUp, false);
   setLandingConsolePressed(landingConsoleDown, false);
@@ -6698,7 +6937,10 @@ document.addEventListener('keydown', event => {
   if (settingsOverlay && settingsOverlay.classList.contains('open')) closeSettings();
 });
 
-window.addEventListener('blur', stopLandingConsoleHold);
+window.addEventListener('blur', () => {
+  stopLandingConsoleHold();
+  stopExpeditionResultHold();
+});
 
 window.addEventListener('storage', event => {
   const session = ensureLandingSignalSession();
@@ -6740,9 +6982,48 @@ if (landingConsoleDown) {
     });
   });
 }
+if (expeditionResultScroll) {
+  expeditionResultScroll.addEventListener('scroll', updateExpeditionResultNav);
+  expeditionResultScroll.addEventListener('wheel', () => {
+    window.requestAnimationFrame(updateExpeditionResultNav);
+  }, { passive:true });
+}
+if (expeditionResultUp) {
+  expeditionResultUp.addEventListener('click', () => scrollExpeditionResult(-1));
+  expeditionResultUp.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    setExpeditionResultPressed(expeditionResultUp, true);
+    startExpeditionResultHold(-1);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(type => {
+    expeditionResultUp.addEventListener(type, () => {
+      setExpeditionResultPressed(expeditionResultUp, false);
+      stopExpeditionResultHold();
+    });
+  });
+}
+if (expeditionResultDown) {
+  expeditionResultDown.addEventListener('click', () => scrollExpeditionResult(1));
+  expeditionResultDown.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    setExpeditionResultPressed(expeditionResultDown, true);
+    startExpeditionResultHold(1);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(type => {
+    expeditionResultDown.addEventListener(type, () => {
+      setExpeditionResultPressed(expeditionResultDown, false);
+      stopExpeditionResultHold();
+    });
+  });
+}
 if (debrisNoteButtons.length) {
   debrisNoteButtons.forEach(button => {
     button.addEventListener('click', () => handleDebrisNotebookClick(button));
+  });
+}
+if (debrisToolboxButtons.length) {
+  debrisToolboxButtons.forEach(button => {
+    button.addEventListener('click', () => handleDebrisToolboxClick(button));
   });
 }
 document.addEventListener('click', event => {
