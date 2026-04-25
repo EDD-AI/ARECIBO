@@ -730,6 +730,7 @@ function applySasWireRepairSuccessState() {
   consumePersonalLoot(['cutting_pliers', 'motomoto_message']);
   setShipCondition('repaired', 100);
   shipScene?.classList.add('is-sas-wire-repaired');
+  setRoomNodeState('PONT PRINCIPAL', 'open');
   if (bridgeMeta) {
     bridgeMeta.textContent = 'MOTOMOTO // SAS EXPEDITION // SYSTEME DU SAS STABILISE';
   }
@@ -1072,8 +1073,10 @@ function applyOpeningStoryState() {
 
   roomNodes.forEach(node => {
     const isSas = (node.dataset.room || '') === 'SAS EXPEDITION';
-    node.dataset.state = isSas ? 'open' : 'locked';
-    node.classList.toggle('locked', !isSas);
+    const isPont = (node.dataset.room || '') === 'PONT PRINCIPAL';
+    const isUnlocked = isSas || (sasWireRepaired && isPont);
+    node.dataset.state = isUnlocked ? 'open' : 'locked';
+    node.classList.toggle('locked', !isUnlocked);
     node.classList.toggle('active', isSas);
   });
 
@@ -1118,7 +1121,7 @@ function applyOpeningStoryState() {
     applySasWireRepairSuccessState();
     if (mapMessage) {
       mapMessage.classList.remove('warn');
-      mapMessage.textContent = 'Le sas est stabilise : alarme coupee, pression maintenue.';
+      mapMessage.textContent = 'Le sas est stabilise : le pont principal est maintenant accessible sur la carte.';
     }
   }
 
