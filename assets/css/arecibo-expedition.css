@@ -1020,18 +1020,19 @@
     drop-shadow(0 0 14px rgba(250,90,31,.22));
 }
 .debris-note.is-found::after {
-  content:'RECUPERE';
+  content:'';
   position:absolute;
   left:50%;
-  top:100%;
-  transform:translate(-50%, 6px);
-  padding:2px 6px 3px;
-  border:1px solid rgba(250,90,31,.58);
-  background:rgba(0,0,0,.74);
-  color:var(--orange);
-  font-size:11px;
-  letter-spacing:.08em;
-  white-space:nowrap;
+  top:50%;
+  width:118%;
+  height:118%;
+  transform:translate(-50%, -50%);
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(250,90,31,.22), rgba(250,90,31,.08) 46%, transparent 72%);
+  filter:blur(2px);
+  opacity:.9;
+  pointer-events:none;
+  z-index:-1;
 }
 .debris-loot-toast {
   position:absolute;
