@@ -17,6 +17,7 @@ window.addEventListener('DOMContentLoaded', () => {
 const params = new URLSearchParams(window.location.search);
 const STORY_PHASE_KEY = 'areciboStoryPhase';
 const OPENING_MAIL_OPENED_KEY = 'areciboOpeningMailAutoOpened';
+const PERSONAL_INVENTORY_KEY = 'areciboPersonalInventory';
 const requestedStoryPhase = params.get('storyPhase') || params.get('questStage');
 let storyPhase = requestedStoryPhase || localStorage.getItem(STORY_PHASE_KEY) || 'opening-briefing';
 function sanitizeSessionCode(value) {
@@ -52,6 +53,7 @@ const personalWindow = document.getElementById('personal-window');
 const personalTitle = personalWindow ? personalWindow.querySelector('.personal-title') : null;
 const personalWindowHomeParent = personalWindow ? personalWindow.parentNode : null;
 const personalWindowHomeNextSibling = personalWindow ? personalWindow.nextSibling : null;
+const personalInventory = document.getElementById('personal-inventory');
 const messageIndicator = personalWindow ? personalWindow.querySelector('.message-indicator') : null;
 const messageCount = messageIndicator ? messageIndicator.querySelector('.message-count') : null;
 const messagesTitle = document.getElementById('messages-title');
@@ -115,6 +117,18 @@ const expeditionInteractiveSelector = [
   '.landing-console-nav',
   '.expedition-result-action'
 ].join(', ');
+const personalLootItems = {
+  cutting_pliers: {
+    label:'PINCE',
+    longLabel:'Pince coupante',
+    src:'assets/debris-loot/pince-coupante.png'
+  },
+  motomoto_message: {
+    label:'MSG',
+    longLabel:'Message MOTOMOTO',
+    src:'assets/debris-loot/messages.png'
+  }
+};
 const landingDecisionStages = {
   impact: {
     alert:'Votre vaisseau a percute un asteroide !',
@@ -584,6 +598,69 @@ function persistStoryPhase() {
   catch (err) {}
 }
 
+function loadPersonalInventory() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PERSONAL_INVENTORY_KEY) || '[]');
+    return Array.isArray(raw) ? raw.filter(id => personalLootItems[id]) : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+function savePersonalInventory(items) {
+  try {
+    localStorage.setItem(PERSONAL_INVENTORY_KEY, JSON.stringify(Array.from(new Set(items))));
+  } catch (err) {}
+}
+
+function renderPersonalInventory() {
+  if (!personalInventory) return;
+  const items = loadPersonalInventory();
+  personalInventory.innerHTML = '';
+  personalWindow?.classList.toggle('has-loot', items.length > 0);
+
+  if (!items.length) {
+    const empty = document.createElement('span');
+    empty.className = 'personal-inventory-empty';
+    empty.textContent = 'VIDE';
+    personalInventory.appendChild(empty);
+    return;
+  }
+
+  items.forEach(itemId => {
+    const item = personalLootItems[itemId];
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'personal-item';
+    button.dataset.itemId = itemId;
+    button.dataset.label = item.longLabel;
+    button.setAttribute('aria-label', `${item.longLabel} dans le package personnel`);
+
+    const img = document.createElement('img');
+    img.src = item.src;
+    img.alt = '';
+    img.setAttribute('aria-hidden', 'true');
+
+    button.appendChild(img);
+    button.addEventListener('click', () => {
+      if (!mapMessage) return;
+      mapMessage.classList.remove('warn');
+      mapMessage.textContent = itemId === 'cutting_pliers'
+        ? 'Pince coupante selectionnee : outil pret pour reparer le mecanisme du sas.'
+        : 'Message selectionne : instructions de reparation du sas conservees dans le package.';
+    });
+    personalInventory.appendChild(button);
+  });
+}
+
+function unlockPersonalLoot(items) {
+  const current = loadPersonalInventory();
+  const next = Array.from(new Set([...current, ...items.filter(id => personalLootItems[id])]));
+  savePersonalInventory(next);
+  renderPersonalInventory();
+  return next;
+}
+
 function getStoryMessages(phase = storyPhase) {
   if (phase === 'opening-return') {
     return [
@@ -591,7 +668,7 @@ function getStoryMessages(phase = storyPhase) {
         sender:'MOTOMOTO // CRIS',
         time:'MESSAGE PRIORITAIRE',
         subject:'REPARATION DU SAS',
-        text:'La sortie a permis de recuperer une pince et du ruban adhesif. Reparez le systeme de la porte du sas avant toute nouvelle expedition.'
+        text:'La sortie a permis de recuperer une pince coupante et un message technique dans les debris. Utilisez ces informations pour reparer le systeme de la porte du sas avant toute nouvelle expedition.'
       },
       {
         warning:true,
@@ -716,7 +793,7 @@ function applyOpeningStoryState() {
   if (mapMessage) {
     mapMessage.classList.add('warn');
     mapMessage.textContent = isReturn
-      ? 'Le MOTOMOTO demande une reparation du sas avec la pince et le ruban adhesif recuperes.'
+      ? 'Le MOTOMOTO demande une reparation du sas avec la pince coupante et le message technique recuperes.'
       : 'Le sas reste la seule sortie active. Lancez la premiere sortie de recuperation dans les debris.';
   }
 
@@ -2935,6 +3012,7 @@ startRoomFly();
 startCriticalShipShakes();
 initHudCollapse();
 initDraggablePersonalWindow();
+renderPersonalInventory();
 initDebrisBackdropScene();
 window.openDebrisInspectionScene = openDebrisInspectionScene;
 window.closeDebrisInspectionScene = closeDebrisInspectionScene;
@@ -2944,6 +3022,25 @@ window.showExpeditionSuccessResult = (reason = 'Retour securise // transfert des
     returnOptions:{
       message:'Expedition validee : ressources chargees, retour au MOTOMOTO en cours.',
       isFailure:false
+    }
+  });
+};
+window.completeOpeningToolboxMission = () => {
+  unlockPersonalLoot(['cutting_pliers', 'motomoto_message']);
+  if (mapMessage) {
+    mapMessage.classList.remove('warn');
+    mapMessage.textContent = 'Boite a outils ouverte : pince coupante et message securises dans le package personnel.';
+  }
+  showExpeditionResult('success', {
+    kicker:'Expedition validee',
+    reason:'Boite ouverte // pince coupante et message recuperes',
+    returnOptions:{
+      message:'Mission reussie : pince coupante et message ajoutes au package personnel. Retour au sas.',
+      isFailure:false
+    },
+    afterReturn:() => {
+      setStoryPhase('opening-return', { autoOpenMessages:true });
+      renderPersonalInventory();
     }
   });
 };

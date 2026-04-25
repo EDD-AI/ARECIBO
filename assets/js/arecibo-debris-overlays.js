@@ -180,12 +180,20 @@
 
     if (unlocked && !toolboxUnlockAnnounced) {
       toolboxUnlockAnnounced = true;
-      showDebrisLootToast('Boite a outils deverrouillee');
+      showDebrisLootToast('Pince coupante et message recuperes');
       const mapMessage = getMapMessage();
       if (mapMessage) {
         mapMessage.classList.remove('warn');
-        mapMessage.textContent = 'Boite a outils deverrouillee // combinaison validee.';
+        mapMessage.textContent = 'Boite a outils deverrouillee // objets de reparation securises.';
       }
+      window.setTimeout(() => {
+        closeToolboxOverlay();
+        if (typeof window.completeOpeningToolboxMission === 'function') {
+          window.completeOpeningToolboxMission();
+        } else if (typeof window.showExpeditionSuccessResult === 'function') {
+          window.showExpeditionSuccessResult('Boite ouverte // materiel recupere');
+        }
+      }, 620);
     }
   }
 

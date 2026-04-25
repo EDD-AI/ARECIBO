@@ -929,6 +929,11 @@ body::after {
   margin-bottom:9px;
 }
 .personal-line:last-child { margin-bottom:0; }
+.personal-inventory-line {
+  grid-template-columns:94px 1fr;
+  align-items:start;
+  margin-top:3px;
+}
 .personal-tag {
   display:inline-flex;
   align-items:center;
@@ -950,6 +955,80 @@ body::after {
 .personal-window .oxygen-dot {
   background:#bdf2ff;
   box-shadow:0 0 12px rgba(117,216,255,.38);
+}
+.personal-inventory {
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  border:1px solid rgba(117,216,255,.28);
+  background:
+    repeating-linear-gradient(0deg, rgba(117,216,255,.035) 0 1px, transparent 1px 5px),
+    rgba(0,12,18,.24);
+  padding:6px;
+}
+.personal-inventory-empty {
+  color:rgba(189,242,255,.38);
+  font-size:12px;
+  letter-spacing:.08em;
+}
+.personal-item {
+  position:relative;
+  width:44px;
+  height:36px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(247,255,195,.34);
+  background:rgba(0,0,0,.28);
+  padding:3px;
+  color:#f7ffc3;
+  cursor:none;
+  transition:transform .16s ease, border-color .16s ease, box-shadow .16s ease, filter .16s ease;
+}
+.personal-item img {
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  image-rendering:auto;
+  filter:
+    drop-shadow(0 0 6px rgba(247,255,195,.12))
+    saturate(.92);
+}
+.personal-item:hover,
+.personal-item:focus-visible {
+  outline:none;
+  transform:translateY(-2px);
+  border-color:rgba(250,90,31,.82);
+  box-shadow:0 0 12px rgba(250,90,31,.18);
+}
+.personal-item::after {
+  content:attr(data-label);
+  position:absolute;
+  left:50%;
+  bottom:calc(100% + 6px);
+  transform:translateX(-50%);
+  min-width:max-content;
+  border:1px solid rgba(250,90,31,.48);
+  background:rgba(0,0,0,.86);
+  color:var(--orange);
+  padding:3px 6px;
+  font-size:11px;
+  line-height:1;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .14s ease;
+}
+.personal-item:hover::after,
+.personal-item:focus-visible::after {
+  opacity:1;
+}
+.personal-window.has-loot {
+  border-color:rgba(250,90,31,.56);
+  box-shadow:
+    0 0 16px rgba(250,90,31,.08),
+    inset 0 0 24px rgba(117,216,255,.04);
 }
 .personal-hud-dock {
   position:absolute;
