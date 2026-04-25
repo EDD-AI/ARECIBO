@@ -600,32 +600,32 @@ body::after {
 
 .sas-grille-trigger {
   position:absolute;
-  left:86.4%;
-  top:49.3%;
-  width:clamp(52px, 6.55vw, 112px);
-  aspect-ratio:128 / 201;
+  left:86.25%;
+  top:49.45%;
+  width:clamp(58px, 5.9vw, 102px);
+  height:clamp(82px, 10.6vh, 152px);
   transform:translate(-50%, -50%);
-  border:0;
-  background:transparent;
+  border:1px solid rgba(250,90,31,.68);
+  background:
+    linear-gradient(90deg, rgba(250,90,31,.34), rgba(250,90,31,0) 18% 82%, rgba(250,90,31,.34)),
+    linear-gradient(0deg, rgba(250,90,31,.28), rgba(250,90,31,0) 22% 78%, rgba(250,90,31,.28));
   padding:0;
   opacity:0;
   visibility:hidden;
   pointer-events:none;
   cursor:none;
   z-index:11;
-  filter:
-    drop-shadow(0 16px 18px rgba(0,0,0,.34))
-    drop-shadow(0 0 6px rgba(247,255,195,.08));
-  transition:opacity .2s ease, transform .18s ease, filter .18s ease;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.5),
+    0 0 13px rgba(250,90,31,.18),
+    inset 0 0 16px rgba(250,90,31,.08);
+  transition:opacity .2s ease, transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .sas-grille-trigger img {
-  display:block;
-  width:100%;
-  height:100%;
-  object-fit:contain;
+  display:none;
 }
 .bridge.is-room-sas.is-sas-repair-ready .sas-grille-trigger {
-  opacity:.98;
+  opacity:.76;
   visibility:visible;
   pointer-events:auto;
 }
@@ -633,28 +633,55 @@ body::after {
 .sas-grille-trigger:focus-visible {
   outline:none;
   transform:translate(-50%, -50%) scale(1.045);
-  filter:
-    drop-shadow(0 18px 20px rgba(0,0,0,.38))
-    drop-shadow(0 0 14px rgba(250,90,31,.24));
+  border-color:rgba(250,90,31,.95);
+  background:
+    linear-gradient(90deg, rgba(250,90,31,.46), rgba(250,90,31,0) 20% 80%, rgba(250,90,31,.46)),
+    linear-gradient(0deg, rgba(250,90,31,.38), rgba(250,90,31,0) 24% 76%, rgba(250,90,31,.38));
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.5),
+    0 0 19px rgba(250,90,31,.34),
+    inset 0 0 21px rgba(250,90,31,.12);
+}
+.sas-grille-trigger::before,
+.sas-grille-trigger::after {
+  content:'';
+  position:absolute;
+  inset:5px;
+  pointer-events:none;
+}
+.sas-grille-trigger::before {
+  border:1px solid rgba(247,255,195,.3);
+  opacity:.72;
 }
 .sas-grille-trigger::after {
-  content:'OUVRIR';
-  position:absolute;
-  left:50%;
-  bottom:-22px;
-  transform:translateX(-50%);
-  border:1px solid rgba(250,90,31,.5);
-  background:rgba(0,0,0,.76);
-  color:var(--orange);
-  padding:2px 6px;
-  font-size:10px;
-  line-height:1;
-  letter-spacing:.08em;
-  opacity:0;
-  pointer-events:none;
+  inset:0;
+  background:
+    linear-gradient(90deg, rgba(247,255,195,.52) 0 10px, transparent 10px calc(100% - 10px), rgba(247,255,195,.52) calc(100% - 10px) 100%) top left / 100% 1px no-repeat,
+    linear-gradient(90deg, rgba(247,255,195,.52) 0 10px, transparent 10px calc(100% - 10px), rgba(247,255,195,.52) calc(100% - 10px) 100%) bottom left / 100% 1px no-repeat,
+    linear-gradient(0deg, rgba(247,255,195,.52) 0 10px, transparent 10px calc(100% - 10px), rgba(247,255,195,.52) calc(100% - 10px) 100%) left top / 1px 100% no-repeat,
+    linear-gradient(0deg, rgba(247,255,195,.52) 0 10px, transparent 10px calc(100% - 10px), rgba(247,255,195,.52) calc(100% - 10px) 100%) right top / 1px 100% no-repeat;
+  opacity:.75;
 }
 .sas-grille-trigger:hover::after,
 .sas-grille-trigger:focus-visible::after {
+  opacity:.96;
+}
+.sas-cable-hotspot-label {
+  position:absolute;
+  left:50%;
+  bottom:-18px;
+  transform:translateX(-50%);
+  color:rgba(250,90,31,.86);
+  font-size:9px;
+  line-height:1;
+  letter-spacing:.12em;
+  text-shadow:0 0 8px rgba(250,90,31,.32);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .16s ease;
+}
+.sas-grille-trigger:hover .sas-cable-hotspot-label,
+.sas-grille-trigger:focus-visible .sas-cable-hotspot-label {
   opacity:1;
 }
 
