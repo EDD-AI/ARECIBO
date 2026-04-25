@@ -92,6 +92,9 @@ const expeditionResultAction = document.getElementById('expedition-result-action
 const expeditionResultActionBg = document.getElementById('expedition-result-action-bg');
 const expeditionResultUp = document.getElementById('expedition-result-up');
 const expeditionResultDown = document.getElementById('expedition-result-down');
+const sasGrilleTrigger = document.getElementById('sas-grille-trigger');
+const sasRepairOverlay = document.getElementById('sas-repair-overlay');
+const sasRepairClose = document.getElementById('sas-repair-close');
 const roomNodes = Array.from(document.querySelectorAll('.room-node'));
 let landingStarted = false;
 let landingTypingTimers = [];
@@ -749,6 +752,7 @@ function setRoomNodeState(roomName, state) {
 function applyOpeningStoryState() {
   const isReturn = storyPhase === 'opening-return';
   const isOpening = storyPhase === 'opening-briefing' || storyPhase === 'opening-expedition' || isReturn;
+  if (shipScene) shipScene.classList.toggle('is-sas-repair-ready', isReturn);
   if (!isOpening) return;
 
   setPontRepairState('state-05-broken-4-doors-closed');
@@ -775,6 +779,7 @@ function applyOpeningStoryState() {
     launchBtn.disabled = isReturn;
     launchBtn.style.opacity = isReturn ? '.66' : '';
     launchBtn.style.filter = isReturn ? 'saturate(.78)' : '';
+    launchBtn.setAttribute('aria-disabled', String(isReturn));
   }
 
   if (bridgeMeta) {
@@ -2125,6 +2130,24 @@ function returnToShipFromExpedition(options = {}) {
   updateReadyState();
 }
 
+function openSasRepairOverlay(event) {
+  if (event) event.preventDefault();
+  if (!sasRepairOverlay) return;
+  sasRepairOverlay.classList.add('is-open');
+  sasRepairOverlay.setAttribute('aria-hidden', 'false');
+  if (mapMessage) {
+    mapMessage.classList.remove('warn');
+    mapMessage.textContent = 'Tableau du sas ouvert : inspectez les fils et preparez la reparation.';
+  }
+}
+
+function closeSasRepairOverlay(event) {
+  if (!sasRepairOverlay) return;
+  if (event && event.target !== sasRepairOverlay && event.target !== sasRepairClose) return;
+  sasRepairOverlay.classList.remove('is-open');
+  sasRepairOverlay.setAttribute('aria-hidden', 'true');
+}
+
 function failExpeditionFromTimeout() {
   if (expeditionFailing) return;
   expeditionFailing = true;
@@ -2885,6 +2908,10 @@ function toggleSwitch(el) {
 
 document.addEventListener('keydown', event => {
   if (event.key !== 'Escape') return;
+  if (sasRepairOverlay && sasRepairOverlay.classList.contains('is-open')) {
+    closeSasRepairOverlay();
+    return;
+  }
   if (debrisScene && debrisScene.classList.contains('is-active')) {
     closeDebrisInspectionScene();
     return;
@@ -2976,6 +3003,15 @@ if (expeditionResultDown) {
       stopExpeditionResultHold();
     });
   });
+}
+if (sasGrilleTrigger) {
+  sasGrilleTrigger.addEventListener('click', openSasRepairOverlay);
+}
+if (sasRepairOverlay) {
+  sasRepairOverlay.addEventListener('click', closeSasRepairOverlay);
+}
+if (sasRepairClose) {
+  sasRepairClose.addEventListener('click', closeSasRepairOverlay);
 }
 document.addEventListener('click', event => {
   const target = event.target instanceof Element

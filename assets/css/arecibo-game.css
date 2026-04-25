@@ -237,6 +237,9 @@ body::after {
 .bridge.is-room-sas .scene-backdrop {
   --scene-image:url('../sas-2.png');
 }
+.bridge.is-room-sas.is-sas-repair-ready .scene-backdrop {
+  --scene-image:url('../sas-repair/sas-grille-ouverte.png');
+}
 .bridge.is-room-pont .scene-backdrop {
   --scene-image:var(--pont-scene-image);
 }
@@ -593,6 +596,66 @@ body::after {
   pointer-events:none;
   z-index:10;
   transition:opacity .3s ease;
+}
+
+.sas-grille-trigger {
+  position:absolute;
+  left:86.4%;
+  top:49.3%;
+  width:clamp(52px, 6.55vw, 112px);
+  aspect-ratio:128 / 201;
+  transform:translate(-50%, -50%);
+  border:0;
+  background:transparent;
+  padding:0;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  cursor:none;
+  z-index:11;
+  filter:
+    drop-shadow(0 16px 18px rgba(0,0,0,.34))
+    drop-shadow(0 0 6px rgba(247,255,195,.08));
+  transition:opacity .2s ease, transform .18s ease, filter .18s ease;
+}
+.sas-grille-trigger img {
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+.bridge.is-room-sas.is-sas-repair-ready .sas-grille-trigger {
+  opacity:.98;
+  visibility:visible;
+  pointer-events:auto;
+}
+.sas-grille-trigger:hover,
+.sas-grille-trigger:focus-visible {
+  outline:none;
+  transform:translate(-50%, -50%) scale(1.045);
+  filter:
+    drop-shadow(0 18px 20px rgba(0,0,0,.38))
+    drop-shadow(0 0 14px rgba(250,90,31,.24));
+}
+.sas-grille-trigger::after {
+  content:'OUVRIR';
+  position:absolute;
+  left:50%;
+  bottom:-22px;
+  transform:translateX(-50%);
+  border:1px solid rgba(250,90,31,.5);
+  background:rgba(0,0,0,.76);
+  color:var(--orange);
+  padding:2px 6px;
+  font-size:10px;
+  line-height:1;
+  letter-spacing:.08em;
+  opacity:0;
+  pointer-events:none;
+}
+.sas-grille-trigger:hover::after,
+.sas-grille-trigger:focus-visible::after {
+  opacity:1;
 }
 
 .airlock-shield {
@@ -2177,6 +2240,80 @@ body::after {
   font-size:10px;
   letter-spacing:.12em;
   z-index:10;
+}
+
+.sas-repair-overlay {
+  position:absolute;
+  inset:0;
+  z-index:72;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at center, rgba(0,0,0,.28), rgba(0,0,0,.76) 74%, rgba(0,0,0,.92)),
+    rgba(0,0,0,.42);
+  backdrop-filter:blur(3px) saturate(.78);
+  transition:opacity .22s ease, visibility .22s ease;
+}
+.sas-repair-overlay.is-open {
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+}
+.sas-repair-panel {
+  width:min(72vh, 72vw);
+  max-width:980px;
+  aspect-ratio:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(247,255,195,.38);
+  background:
+    repeating-linear-gradient(0deg, rgba(247,255,195,.025) 0 1px, transparent 1px 6px),
+    rgba(0,0,0,.54);
+  box-shadow:
+    0 0 42px rgba(0,0,0,.58),
+    inset 0 0 28px rgba(247,255,195,.04);
+  transform:scale(.96);
+  transition:transform .22s ease;
+}
+.sas-repair-overlay.is-open .sas-repair-panel {
+  transform:scale(1);
+}
+.sas-repair-panel img {
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+  image-rendering:auto;
+  filter:
+    contrast(1.02)
+    saturate(.96)
+    drop-shadow(0 18px 28px rgba(0,0,0,.34));
+}
+.sas-repair-close {
+  position:absolute;
+  right:4.2vw;
+  top:5vh;
+  min-height:34px;
+  border:1px solid rgba(247,255,195,.42);
+  background:rgba(0,0,0,.62);
+  color:rgba(247,255,195,.82);
+  padding:0 12px;
+  font-family:'Pixelify Sans', monospace;
+  font-size:12px;
+  letter-spacing:.1em;
+  cursor:none;
+  z-index:2;
+}
+.sas-repair-close:hover,
+.sas-repair-close:focus-visible {
+  outline:none;
+  color:var(--orange);
+  border-color:rgba(250,90,31,.72);
 }
 
 .corner-tab {
