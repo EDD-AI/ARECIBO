@@ -1208,15 +1208,15 @@
 }
 .toolbox-lock {
   position:absolute;
-  left:40.1%;
-  top:56.4%;
-  width:18.4%;
-  height:12.8%;
+  left:42.55%;
+  top:61.25%;
+  width:15.05%;
+  height:9.45%;
   display:grid;
   grid-template-columns:repeat(4, 1fr);
   align-items:center;
-  gap:4.2%;
-  padding:0 2.4%;
+  gap:7.4%;
+  padding:0 1.2%;
   box-sizing:border-box;
   z-index:3;
   transform:translateZ(0);
@@ -1225,47 +1225,44 @@
   width:100%;
   height:100%;
   min-width:0;
-  border:1px solid rgba(7,8,6,.72);
+  border:0;
   border-radius:2px;
-  background:
-    linear-gradient(180deg, rgba(255,255,238,.98), rgba(206,203,180,.96) 48%, rgba(252,250,224,.98) 52%, rgba(174,170,150,.96));
-  color:#17170f;
-  font-family:var(--font);
-  font-size:clamp(14px, 2.35vw, 30px);
+  background:transparent;
+  color:#0f100c;
+  font-family:"Arial Black", "Impact", "Roboto Mono", monospace;
+  font-size:clamp(16px, 2vw, 26px);
+  font-weight:900;
   line-height:1;
   display:flex;
   align-items:center;
   justify-content:center;
   padding:0;
   cursor:none;
-  box-shadow:
-    inset 0 -4px 0 rgba(0,0,0,.12),
-    inset 0 4px 0 rgba(255,255,255,.42),
-    0 1px 2px rgba(0,0,0,.32);
+  box-shadow:none;
   transition:transform .08s ease, filter .12s ease, border-color .12s ease;
 }
 .toolbox-lock-wheel span {
   display:block;
-  transform:translateY(.04em);
-  text-shadow:0 1px 0 rgba(255,255,255,.42);
+  transform:translateY(.02em) scaleX(.78);
+  text-shadow:
+    0 1px 0 rgba(255,255,255,.3),
+    0 -1px 0 rgba(0,0,0,.24);
 }
 .toolbox-lock-wheel:hover,
 .toolbox-lock-wheel:focus-visible {
   outline:none;
-  border-color:rgba(250,90,31,.86);
   filter:
-    brightness(1.12)
-    drop-shadow(0 0 7px rgba(250,90,31,.34));
+    brightness(1.18)
+    drop-shadow(0 0 5px rgba(250,90,31,.34));
 }
 .toolbox-lock-wheel:active,
 .toolbox-lock-wheel.is-spinning {
-  transform:translateY(2px) scale(.96);
+  transform:translateY(2px) scale(.94);
 }
 .toolbox-lock.is-unlocked .toolbox-lock-wheel {
-  border-color:rgba(177,221,33,.8);
   filter:
-    brightness(1.08)
-    drop-shadow(0 0 8px rgba(177,221,33,.24));
+    brightness(1.12)
+    drop-shadow(0 0 5px rgba(177,221,33,.24));
 }
 .toolbox-lock-status {
   position:absolute;
