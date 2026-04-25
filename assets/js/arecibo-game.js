@@ -669,12 +669,43 @@ function resetSasRepairCutState() {
   shipScene?.classList.remove('is-sas-wire-repaired');
 }
 
+function isSasWireRepairComplete() {
+  try { return localStorage.getItem(sasRepairStateKey) === 'green'; }
+  catch (err) { return false; }
+}
+
+function applySasWireRepairSuccessState() {
+  setShipCondition('repaired', 100);
+  shipScene?.classList.add('is-sas-wire-repaired');
+  if (bridgeMeta) {
+    bridgeMeta.textContent = 'MOTOMOTO // SAS EXPEDITION // SYSTEME DU SAS STABILISE';
+  }
+  if (roomState) {
+    roomState.classList.remove('warn');
+    roomState.classList.add('active');
+    roomState.textContent = 'STABLE';
+  }
+  if (launchLabel) launchLabel.textContent = 'SAS REPARE';
+  if (launchIcon) launchIcon.textContent = 'OK';
+  if (launchBtn) {
+    launchBtn.disabled = false;
+    launchBtn.style.opacity = '';
+    launchBtn.style.filter = '';
+    launchBtn.classList.add('ready');
+    launchBtn.setAttribute('aria-disabled', 'false');
+  }
+}
+
 function restoreSasRepairCutState() {
   let savedColor = '';
   try { savedColor = localStorage.getItem(sasRepairStateKey) || ''; } catch (err) {}
   if (savedColor && sasWireCutImages[savedColor]) {
     setSasRepairCutImage(savedColor);
-    shipScene?.classList.toggle('is-sas-wire-repaired', savedColor === 'green');
+    if (savedColor === 'green') {
+      applySasWireRepairSuccessState();
+    } else {
+      shipScene?.classList.remove('is-sas-wire-repaired');
+    }
   }
 }
 
@@ -710,10 +741,10 @@ function handleSasWireCut(color) {
 
   if (isCorrect) {
     try { localStorage.setItem(sasRepairStateKey, color); } catch (err) {}
-    shipScene?.classList.add('is-sas-wire-repaired');
+    applySasWireRepairSuccessState();
     if (mapMessage) {
       mapMessage.classList.remove('warn');
-      mapMessage.textContent = 'Fil vert coupe : circuit du sas stabilise, pression maintenue.';
+      mapMessage.textContent = 'Fil vert coupe : circuit du sas stabilise, alarme coupee, pression maintenue.';
     }
     window.setTimeout(() => { sasRepairResolving = false; }, 700);
     return;
@@ -978,11 +1009,12 @@ function setRoomNodeState(roomName, state) {
 function applyOpeningStoryState() {
   const isReturn = storyPhase === 'opening-return';
   const isOpening = storyPhase === 'opening-briefing' || storyPhase === 'opening-expedition' || isReturn;
+  const sasWireRepaired = isSasWireRepairComplete();
   if (shipScene) shipScene.classList.toggle('is-sas-repair-ready', isReturn);
   if (!isOpening) return;
 
   setPontRepairState('state-05-broken-4-doors-closed');
-  setShipCondition('critical', 18);
+  setShipCondition(sasWireRepaired ? 'repaired' : 'critical', sasWireRepaired ? 100 : 18);
 
   roomNodes.forEach(node => {
     const isSas = (node.dataset.room || '') === 'SAS EXPEDITION';
@@ -1026,6 +1058,14 @@ function applyOpeningStoryState() {
     mapMessage.textContent = isReturn
       ? 'Le MOTOMOTO demande une reparation du sas avec la pince coupante et le message technique recuperes.'
       : 'Le sas reste la seule sortie active. Lancez la premiere sortie de recuperation dans les debris.';
+  }
+
+  if (sasWireRepaired) {
+    applySasWireRepairSuccessState();
+    if (mapMessage) {
+      mapMessage.classList.remove('warn');
+      mapMessage.textContent = 'Le sas est stabilise : alarme coupee, pression maintenue.';
+    }
   }
 
   if (landingDecisionStages.impact) {
