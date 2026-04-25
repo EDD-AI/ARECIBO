@@ -3393,21 +3393,21 @@ body::after {
 }
 .notebook-overlay-stack {
   position:relative;
-  width:min(90vw, 1400px);
-  height:min(90vh, 1200px);
+  width:min(96vw, 1700px);
+  height:min(94vh, 1350px);
   pointer-events:none;
 }
 .notebook-open-img {
   position:absolute;
   left:50%;
   top:50%;
-  width:min(52vw, 960px);
-  max-width:88%;
+  width:min(70vw, 1320px);
+  max-width:96%;
   transform:translate(-50%, -50%);
   transform-origin:center center;
   filter:
-    drop-shadow(0 30px 46px rgba(0,0,0,.5))
-    drop-shadow(0 0 18px rgba(247,255,195,.05));
+    drop-shadow(0 34px 52px rgba(0,0,0,.56))
+    drop-shadow(0 0 20px rgba(247,255,195,.06));
   pointer-events:none;
 }
 .notebook-overlay-close {
@@ -3447,8 +3447,8 @@ body::after {
 }
 .toolbox-overlay-panel {
   position:relative;
-  width:min(46vw, 620px);
-  max-width:72vw;
+  width:min(58vw, 860px);
+  max-width:80vw;
   padding:26px 26px 22px;
   border:1px solid rgba(247,255,195,.18);
   background:rgba(0,0,0,.48);
@@ -3977,7 +3977,7 @@ body::after {
       <button class="debris-note" type="button" data-note-id="noir" data-note-label="Carnet noir" aria-label="Carnet noir flottant" style="--x:56%; --y:73%; --w:min(6vw, 86px); --rot:12deg; --dx:-18px; --dy:12px; --dx2:14px; --dy2:-12px; --duration:26s; --swing:6.4deg;">
         <img src="assets/carnets/carnet-noir-ferme.png" alt="" aria-hidden="true">
       </button>
-      <button class="debris-toolbox" type="button" data-toolbox-id="main" data-toolbox-label="Boite a outils" aria-label="Boite a outils flottante" style="--x:31%; --y:45%; --w:min(8.6vw, 128px); --rot:-8deg; --dx:19px; --dy:-16px; --dx2:-14px; --dy2:15px; --duration:18s; --swing:7.2deg;">
+      <button class="debris-toolbox" type="button" data-toolbox-id="main" data-toolbox-label="Boite a outils" aria-label="Boite a outils flottante" style="--x:30%; --y:44%; --w:min(11.5vw, 178px); --rot:-8deg; --dx:19px; --dy:-16px; --dx2:-14px; --dy2:15px; --duration:18s; --swing:7.2deg;">
         <img src="assets/toolbox/toolbox-closed.png" alt="" aria-hidden="true">
       </button>
     </div>
@@ -4600,8 +4600,11 @@ function openNotebookOverlay(clickedColor) {
     img.onerror = () => { img.src = `assets/carnets/carnet-${color}-ferme.png`; };
     img.alt = `Carnet ${color} ouvert`;
     if (index > 0) {
-      img.style.transform = `translate(calc(-50% - ${index * 20}px), calc(-50% + ${index * 10}px)) rotate(${-index * 3.5}deg)`;
-      img.style.opacity = String(Math.max(0.28, 1 - index * 0.2));
+      img.style.transform = `translate(calc(-50% - ${index * 52}px), calc(-50% + ${index * 22}px)) rotate(${-index * 4.5}deg) scale(${Math.max(0.58, 0.82 - index * 0.1)})`;
+      img.style.opacity = String(Math.max(0.18, 0.55 - index * 0.12));
+      img.style.filter = 'drop-shadow(0 22px 34px rgba(0,0,0,.34))';
+    } else {
+      img.style.zIndex = '30';
     }
     const closeBtn = stack.querySelector('.notebook-overlay-close');
     stack.insertBefore(img, closeBtn);
