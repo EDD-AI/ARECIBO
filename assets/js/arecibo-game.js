@@ -95,6 +95,7 @@ const expeditionResultDown = document.getElementById('expedition-result-down');
 const sasGrilleTrigger = document.getElementById('sas-grille-trigger');
 const sasRepairOverlay = document.getElementById('sas-repair-overlay');
 const sasRepairClose = document.getElementById('sas-repair-close');
+const personalObjectLayer = document.getElementById('personal-object-layer');
 const roomNodes = Array.from(document.querySelectorAll('.room-node'));
 let landingStarted = false;
 let landingTypingTimers = [];
@@ -124,12 +125,14 @@ const personalLootItems = {
   cutting_pliers: {
     label:'PINCE',
     longLabel:'Pince coupante',
-    src:'assets/debris-loot/pince-coupante.png'
+    src:'assets/debris-loot/pince-coupante.png',
+    type:'tool'
   },
   motomoto_message: {
     label:'MSG',
-    longLabel:'Message MOTOMOTO',
-    src:'assets/debris-loot/messages.png'
+    longLabel:"Message d'instruction de mecano",
+    src:'assets/debris-loot/messages.png',
+    type:'note'
   }
 };
 const landingDecisionStages = {
@@ -616,6 +619,111 @@ function savePersonalInventory(items) {
   } catch (err) {}
 }
 
+function makeFloatingPanelDraggable(panel, handle = panel) {
+  if (!panel || !handle) return;
+  let drag = null;
+
+  function clampPanel(left, top) {
+    const rect = panel.getBoundingClientRect();
+    const margin = 12;
+    const maxLeft = Math.max(margin, window.innerWidth - rect.width - margin);
+    const maxTop = Math.max(margin, window.innerHeight - rect.height - margin);
+    return {
+      left:Math.min(Math.max(left, margin), maxLeft),
+      top:Math.min(Math.max(top, margin), maxTop)
+    };
+  }
+
+  handle.addEventListener('pointerdown', event => {
+    if (event.button !== 0) return;
+    if (event.target.closest('button')) return;
+    const rect = panel.getBoundingClientRect();
+    drag = {
+      pointerId:event.pointerId,
+      offsetX:event.clientX - rect.left,
+      offsetY:event.clientY - rect.top
+    };
+    panel.classList.add('is-dragging');
+    handle.setPointerCapture(event.pointerId);
+  });
+
+  handle.addEventListener('pointermove', event => {
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const next = clampPanel(event.clientX - drag.offsetX, event.clientY - drag.offsetY);
+    panel.style.left = `${next.left}px`;
+    panel.style.top = `${next.top}px`;
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
+  });
+
+  function endDrag(event) {
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    panel.classList.remove('is-dragging');
+    if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+    drag = null;
+  }
+
+  handle.addEventListener('pointerup', endDrag);
+  handle.addEventListener('pointercancel', endDrag);
+}
+
+function openPersonalObject(itemId) {
+  if (!personalObjectLayer) return;
+  const item = personalLootItems[itemId];
+  if (!item) return;
+
+  personalObjectLayer.classList.add('is-active');
+  let panel = personalObjectLayer.querySelector(`[data-personal-object="${itemId}"]`);
+  if (!panel) {
+    panel = document.createElement('section');
+    panel.className = `personal-object-panel is-${item.type || 'item'}`;
+    panel.dataset.personalObject = itemId;
+    panel.setAttribute('aria-label', item.longLabel);
+    panel.innerHTML = `
+      <header class="personal-object-header">
+        <span>${item.longLabel}</span>
+        <button class="personal-object-close" type="button" aria-label="Fermer ${item.longLabel}">x</button>
+      </header>
+      <div class="personal-object-body">
+        <img src="${item.src}" alt="${item.longLabel}">
+      </div>
+    `;
+    personalObjectLayer.appendChild(panel);
+
+    const closeButton = panel.querySelector('.personal-object-close');
+    const dragHandle = item.type === 'tool'
+      ? panel
+      : panel.querySelector('.personal-object-header');
+    makeFloatingPanelDraggable(panel, dragHandle);
+    closeButton?.addEventListener('click', event => {
+      event.stopPropagation();
+      panel.remove();
+      if (!personalObjectLayer.querySelector('.personal-object-panel')) {
+        personalObjectLayer.classList.remove('is-active');
+      }
+    });
+  }
+
+  const index = Array.from(personalObjectLayer.querySelectorAll('.personal-object-panel')).indexOf(panel);
+  panel.style.left = item.type === 'tool'
+    ? `min(62vw, ${Math.max(360, window.innerWidth * 0.62)}px)`
+    : `min(44vw, ${Math.max(280, window.innerWidth * 0.44)}px)`;
+  panel.style.top = item.type === 'tool'
+    ? `min(48vh, ${Math.max(240, window.innerHeight * 0.48)}px)`
+    : `min(14vh, ${Math.max(70, window.innerHeight * 0.14)}px)`;
+  panel.style.zIndex = String(990 + index);
+  panel.classList.remove('is-opening');
+  void panel.offsetWidth;
+  panel.classList.add('is-opening');
+
+  if (mapMessage) {
+    mapMessage.classList.remove('warn');
+    mapMessage.textContent = item.type === 'tool'
+      ? 'Pince coupante sortie du package : outil manipulable pendant la reparation.'
+      : "Message d'instruction de mecano ouvert : gardez-le visible pendant le cablage.";
+  }
+}
+
 function renderPersonalInventory() {
   if (!personalInventory) return;
   const items = loadPersonalInventory();
@@ -645,13 +753,7 @@ function renderPersonalInventory() {
     img.setAttribute('aria-hidden', 'true');
 
     button.appendChild(img);
-    button.addEventListener('click', () => {
-      if (!mapMessage) return;
-      mapMessage.classList.remove('warn');
-      mapMessage.textContent = itemId === 'cutting_pliers'
-        ? 'Pince coupante selectionnee : outil pret pour reparer le mecanisme du sas.'
-        : 'Message selectionne : instructions de reparation du sas conservees dans le package.';
-    });
+    button.addEventListener('click', () => openPersonalObject(itemId));
     personalInventory.appendChild(button);
   });
 }
