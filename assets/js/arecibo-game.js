@@ -729,6 +729,7 @@ function isSasWireRepairComplete() {
 function applySasWireRepairSuccessState() {
   consumePersonalLoot(['cutting_pliers', 'motomoto_message']);
   setShipCondition('repaired', 100);
+  setHullSystemStatus('critical');
   shipScene?.classList.add('is-sas-wire-repaired');
   setRoomNodeState('PONT PRINCIPAL', 'open');
   if (bridgeMeta) {
@@ -748,6 +749,22 @@ function applySasWireRepairSuccessState() {
     launchBtn.classList.add('ready');
     launchBtn.setAttribute('aria-disabled', 'false');
   }
+}
+
+function setHullSystemStatus(status = 'critical') {
+  if (!hullStatus) return;
+  const isCritical = status === 'critical';
+  const isRepairing = status === 'repairing';
+  const isStable = status === 'stable';
+
+  hullStatus.classList.toggle('is-repairing', isRepairing);
+  hullStatus.classList.toggle('is-stable', isStable);
+  hullStatus.classList.toggle('hull-alert', isCritical || isRepairing);
+  hullStatus.textContent = isCritical
+    ? 'ENDOMMAGE - ETAT CRITIQUE'
+    : isRepairing
+      ? 'EN REPARATION - ETAT INSTABLE'
+      : 'STABLE - ETAT NORMAL';
 }
 
 function restoreSasRepairCutState() {
