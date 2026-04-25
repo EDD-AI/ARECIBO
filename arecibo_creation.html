@@ -443,7 +443,7 @@ input {
   }
 }
 </style>
-<link rel="stylesheet" href="assets/terminal-filter.css?v=global-terminal-filter-amber">
+<link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-1">
 </head>
 <body>
 <div class="cursor" id="cursor"></div>
@@ -605,7 +605,7 @@ function saveProfile() {
   window.setTimeout(() => {
     const next = new URLSearchParams(window.location.search).get('next');
     window.location.href = next === 'intro'
-      ? 'arecibo_intro.html?v=global-terminal-filter-amber'
+      ? 'arecibo_intro.html?v=global-pixel-dither-1'
       : 'arecibo_menu.html';
   }, 320);
 }
