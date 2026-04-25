@@ -18,6 +18,7 @@ const params = new URLSearchParams(window.location.search);
 const STORY_PHASE_KEY = 'areciboStoryPhase';
 const OPENING_MAIL_OPENED_KEY = 'areciboOpeningMailAutoOpened';
 const PERSONAL_INVENTORY_KEY = 'areciboPersonalInventory';
+const SESSION_INVENTORY_SYNC_KEY = 'arecibo:session-inventory-sync';
 const requestedStoryPhase = params.get('storyPhase') || params.get('questStage');
 let storyPhase = requestedStoryPhase || localStorage.getItem(STORY_PHASE_KEY) || 'opening-briefing';
 function sanitizeSessionCode(value) {
@@ -477,6 +478,11 @@ function applyRemotePresenceInteraction(data) {
 
 function handlePresenceMessage(data) {
   if (!data || data.session !== sessionCode) return;
+  if (data.clientId === presenceClientId) return;
+  if (data.type === 'session-inventory-consume') {
+    consumePersonalLoot(data.items || [], { broadcast:false });
+    return;
+  }
   if (data.type === 'presence-interact') {
     applyRemotePresenceInteraction(data);
     return;
@@ -644,6 +650,52 @@ function savePersonalInventory(items) {
   } catch (err) {}
 }
 
+function closePersonalObjectPanels(itemIds = []) {
+  if (!personalObjectLayer || !itemIds.length) return;
+  itemIds.forEach(itemId => {
+    const panel = personalObjectLayer.querySelector(`[data-personal-object="${itemId}"]`);
+    if (panel) panel.remove();
+  });
+  if (!personalObjectLayer.querySelector('.personal-object-panel')) {
+    personalObjectLayer.classList.remove('is-active');
+  }
+}
+
+function broadcastInventoryConsume(items) {
+  const ids = Array.from(new Set((items || []).filter(id => personalLootItems[id])));
+  if (!ids.length || !sessionCode) return;
+
+  const payload = {
+    type:'session-inventory-consume',
+    session:sessionCode,
+    clientId:presenceClientId,
+    items:ids,
+    ts:Date.now()
+  };
+  sendPresenceMessage(payload);
+  try {
+    localStorage.setItem(SESSION_INVENTORY_SYNC_KEY, JSON.stringify({
+      ...payload,
+      nonce:Math.random().toString(36).slice(2, 8)
+    }));
+  } catch (err) {}
+}
+
+function consumePersonalLoot(items, options = {}) {
+  const ids = Array.from(new Set((items || []).filter(id => personalLootItems[id])));
+  if (!ids.length) return loadPersonalInventory();
+
+  const current = loadPersonalInventory();
+  const next = current.filter(itemId => !ids.includes(itemId));
+  savePersonalInventory(next);
+  if (ids.includes(activeRepairTool)) setRepairToolActive('');
+  closePersonalObjectPanels(ids);
+  renderPersonalInventory();
+
+  if (options.broadcast) broadcastInventoryConsume(ids);
+  return next;
+}
+
 function setRepairToolActive(toolId) {
   activeRepairTool = toolId || '';
   shipScene?.classList.toggle('is-cutting-pliers-active', activeRepairTool === 'cutting_pliers');
@@ -675,6 +727,7 @@ function isSasWireRepairComplete() {
 }
 
 function applySasWireRepairSuccessState() {
+  consumePersonalLoot(['cutting_pliers', 'motomoto_message']);
   setShipCondition('repaired', 100);
   shipScene?.classList.add('is-sas-wire-repaired');
   if (bridgeMeta) {
@@ -742,6 +795,7 @@ function handleSasWireCut(color) {
   if (isCorrect) {
     try { localStorage.setItem(sasRepairStateKey, color); } catch (err) {}
     applySasWireRepairSuccessState();
+    broadcastInventoryConsume(['cutting_pliers', 'motomoto_message']);
     if (mapMessage) {
       mapMessage.classList.remove('warn');
       mapMessage.textContent = 'Fil vert coupe : circuit du sas stabilise, alarme coupee, pression maintenue.';
@@ -3205,6 +3259,15 @@ window.addEventListener('blur', () => {
 });
 
 window.addEventListener('storage', event => {
+  if (event.key === SESSION_INVENTORY_SYNC_KEY && event.newValue) {
+    try {
+      const payload = JSON.parse(event.newValue);
+      if (payload.session === sessionCode && payload.clientId !== presenceClientId) {
+        consumePersonalLoot(payload.items || [], { broadcast:false });
+      }
+    } catch (err) {}
+    return;
+  }
   const session = ensureLandingSignalSession();
   if (event.key !== `arecibo:minigame-signal-state:${session}`) return;
   if (landingDecisionStage === 'impact') renderLandingDecisionModule(true);
