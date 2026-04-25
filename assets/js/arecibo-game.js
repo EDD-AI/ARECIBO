@@ -77,9 +77,6 @@ const landingHeadCursor = document.getElementById('landing-head-cursor');
 const debrisStarCanvas = document.getElementById('debris-star-canvas');
 const debrisParticleCanvas = document.getElementById('debris-particle-canvas');
 const debrisScene = document.getElementById('debris-scene');
-const debrisNoteToast = document.getElementById('debris-loot-toast');
-const debrisNoteButtons = Array.from(document.querySelectorAll('.debris-note'));
-const debrisToolboxButtons = Array.from(document.querySelectorAll('.debris-toolbox'));
 const expeditionTimerHud = document.getElementById('expedition-timer-hud');
 const expeditionTimerValue = document.getElementById('expedition-timer-value');
 const expeditionResultOverlay = document.getElementById('expedition-result-overlay');
@@ -102,7 +99,6 @@ let expeditionTimerInterval = 0;
 let expeditionTimerDeadline = 0;
 let expeditionFailing = false;
 let expeditionResultPending = null;
-let debrisNoteToastTimer = 0;
 let presenceBroadcastChannel = null;
 let presenceTransport = null;
 let expeditionResultHoldTimer = 0;
@@ -111,8 +107,6 @@ let presenceCleanupTimer = 0;
 let presenceRaf = 0;
 let presenceQueued = false;
 const remotePresenceMap = new Map();
-const collectedDebrisNotes = new Set();
-const collectedDebrisToolboxes = new Set();
 const expeditionInteractiveSelector = [
   '.debris-note',
   '.debris-toolbox',
@@ -473,106 +467,6 @@ function sendPresenceMessage(payload) {
       nonce:Math.random().toString(36).slice(2, 8)
     }));
   } catch (err) {}
-}
-
-function showDebrisLootToast(message) {
-  if (!debrisNoteToast) return;
-  debrisNoteToast.textContent = message;
-  debrisNoteToast.classList.add('is-visible');
-  window.clearTimeout(debrisNoteToastTimer);
-  debrisNoteToastTimer = window.setTimeout(() => {
-    debrisNoteToast.classList.remove('is-visible');
-  }, 1800);
-}
-
-function handleDebrisNotebookClick(button) {
-  if (!button) return;
-  const noteId = button.dataset.noteId || 'note';
-  const noteLabel = button.dataset.noteLabel || 'Carnet';
-  const noteColor = noteId; // jaune, rouge, vert, noir
-
-  if (!collectedDebrisNotes.has(noteId)) {
-    collectedDebrisNotes.add(noteId);
-    button.classList.add('is-found');
-    showDebrisLootToast(`${noteLabel} recupere`);
-    if (mapMessage) {
-      mapMessage.classList.remove('warn');
-      mapMessage.textContent = `${noteLabel} recupere dans les debris.`;
-    }
-  }
-
-  openNotebookOverlay(noteColor);
-}
-
-function openNotebookOverlay(clickedColor) {
-  const overlay = document.getElementById('notebook-overlay');
-  const stack = document.getElementById('notebook-stack');
-  if (!overlay || !stack) return;
-
-  stack.querySelectorAll('.notebook-open-img').forEach(el => el.remove());
-
-  const allColors = ['jaune', 'rouge', 'vert', 'noir'];
-  const order = [clickedColor, ...allColors.filter(color => color !== clickedColor && collectedDebrisNotes.has(color))];
-
-  order.forEach((color, index) => {
-    const img = document.createElement('img');
-    img.className = 'notebook-open-img';
-    img.src = `assets/carnets/carnet-${color}-ouvert.png`;
-    img.onerror = () => { img.src = `assets/carnets/carnet-${color}-ferme.png`; };
-    img.alt = `Carnet ${color} ouvert`;
-    if (index > 0) {
-      img.style.transform = `translate(calc(-50% - ${index * 52}px), calc(-50% + ${index * 22}px)) rotate(${-index * 4.5}deg) scale(${Math.max(0.58, 0.82 - index * 0.1)})`;
-      img.style.opacity = String(Math.max(0.18, 0.55 - index * 0.12));
-      img.style.filter = 'drop-shadow(0 22px 34px rgba(0,0,0,.34))';
-    } else {
-      img.style.zIndex = '30';
-    }
-    const closeBtn = stack.querySelector('.notebook-overlay-close');
-    stack.insertBefore(img, closeBtn);
-  });
-
-  overlay.classList.add('is-open');
-}
-
-function closeNotebookOverlay(event) {
-  const overlay = document.getElementById('notebook-overlay');
-  if (!overlay) return;
-  // Fermer uniquement si on clique sur le fond, pas sur le carnet
-  if (event.target === overlay) {
-    overlay.classList.remove('is-open');
-  }
-}
-
-function openToolboxOverlay() {
-  const overlay = document.getElementById('toolbox-overlay');
-  if (!overlay) return;
-  overlay.classList.add('is-open');
-}
-
-function closeToolboxOverlay(event) {
-  const overlay = document.getElementById('toolbox-overlay');
-  if (!overlay) return;
-  if (!event || event.target === overlay) {
-    overlay.classList.remove('is-open');
-  }
-}
-
-function handleDebrisToolboxClick(button) {
-  if (!button) return;
-  const toolboxId = button.dataset.toolboxId || 'toolbox';
-  const toolboxLabel = button.dataset.toolboxLabel || 'Boite a outils';
-
-  if (!collectedDebrisToolboxes.has(toolboxId)) {
-    collectedDebrisToolboxes.add(toolboxId);
-    button.classList.add('is-found');
-    showDebrisLootToast(`${toolboxLabel} recuperee`);
-    if (mapMessage) {
-      mapMessage.classList.remove('warn');
-      mapMessage.textContent = `${toolboxLabel} reperee dans les debris.`;
-    }
-  }
-
-  openToolboxOverlay();
 }
 
 function broadcastPresenceState(force = false) {
@@ -3004,16 +2898,6 @@ if (expeditionResultDown) {
       setExpeditionResultPressed(expeditionResultDown, false);
       stopExpeditionResultHold();
     });
-  });
-}
-if (debrisNoteButtons.length) {
-  debrisNoteButtons.forEach(button => {
-    button.addEventListener('click', () => handleDebrisNotebookClick(button));
-  });
-}
-if (debrisToolboxButtons.length) {
-  debrisToolboxButtons.forEach(button => {
-    button.addEventListener('click', () => handleDebrisToolboxClick(button));
   });
 }
 document.addEventListener('click', event => {
