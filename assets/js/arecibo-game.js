@@ -95,6 +95,8 @@ const expeditionResultDown = document.getElementById('expedition-result-down');
 const sasGrilleTrigger = document.getElementById('sas-grille-trigger');
 const sasRepairOverlay = document.getElementById('sas-repair-overlay');
 const sasRepairClose = document.getElementById('sas-repair-close');
+const sasRepairCutState = document.getElementById('sas-repair-cut-state');
+const sasWireHitboxes = Array.from(document.querySelectorAll('.sas-wire-hitbox'));
 const personalObjectLayer = document.getElementById('personal-object-layer');
 const roomNodes = Array.from(document.querySelectorAll('.room-node'));
 let landingStarted = false;
@@ -112,6 +114,8 @@ let presenceHeartbeatTimer = 0;
 let presenceCleanupTimer = 0;
 let presenceRaf = 0;
 let presenceQueued = false;
+let activeRepairTool = '';
+let sasRepairResolving = false;
 const remotePresenceMap = new Map();
 const expeditionInteractiveSelector = [
   '.debris-note',
@@ -134,6 +138,27 @@ const personalLootItems = {
     src:'assets/debris-loot/messages.png',
     type:'note'
   }
+};
+const sasRepairStateKey = 'areciboSasRepairCutWire';
+const sasWireCutImages = {
+  red:'assets/sas-repair/tableau ouvert fil rouge coupe.png',
+  orange:'assets/sas-repair/tableau ouvert fil orange coupe.png',
+  yellow:'assets/sas-repair/tableau ouvert fil jaune coupe.png',
+  green:'assets/sas-repair/tableau ouvert fil vert coupe.png',
+  blue:'assets/sas-repair/tableau ouvert fil bleu coupe.png',
+  violet:'assets/sas-repair/tableau ouvert fil violet coupe.png',
+  white:'assets/sas-repair/tableau ouvert fil blanc coupe.png',
+  black:'assets/sas-repair/tableau ouvert fil noir coupe.png'
+};
+const sasWireLabels = {
+  red:'rouge',
+  orange:'orange',
+  yellow:'jaune',
+  green:'vert',
+  blue:'bleu',
+  violet:'violet',
+  white:'blanc',
+  black:'noir'
 };
 const landingDecisionStages = {
   impact: {
@@ -619,6 +644,100 @@ function savePersonalInventory(items) {
   } catch (err) {}
 }
 
+function setRepairToolActive(toolId) {
+  activeRepairTool = toolId || '';
+  shipScene?.classList.toggle('is-cutting-pliers-active', activeRepairTool === 'cutting_pliers');
+}
+
+function setSasRepairCutImage(color, options = {}) {
+  if (!sasRepairCutState) return;
+  const src = sasWireCutImages[color];
+  sasRepairCutState.classList.toggle('is-danger', Boolean(options.danger));
+  if (!src) {
+    sasRepairCutState.removeAttribute('src');
+    sasRepairCutState.classList.remove('is-visible');
+    return;
+  }
+  sasRepairCutState.src = src;
+  sasRepairCutState.classList.add('is-visible');
+}
+
+function resetSasRepairCutState() {
+  try { localStorage.removeItem(sasRepairStateKey); } catch (err) {}
+  sasRepairResolving = false;
+  setSasRepairCutImage('');
+  shipScene?.classList.remove('is-sas-wire-repaired');
+}
+
+function restoreSasRepairCutState() {
+  let savedColor = '';
+  try { savedColor = localStorage.getItem(sasRepairStateKey) || ''; } catch (err) {}
+  if (savedColor && sasWireCutImages[savedColor]) {
+    setSasRepairCutImage(savedColor);
+    shipScene?.classList.toggle('is-sas-wire-repaired', savedColor === 'green');
+  }
+}
+
+function resetOpeningLevelAfterSasFailure() {
+  try {
+    localStorage.removeItem(PERSONAL_INVENTORY_KEY);
+    localStorage.removeItem(sasRepairStateKey);
+  } catch (err) {}
+  setRepairToolActive('');
+  if (personalObjectLayer) {
+    personalObjectLayer.innerHTML = '';
+    personalObjectLayer.classList.remove('is-active');
+  }
+  resetSasRepairCutState();
+  renderPersonalInventory();
+  setStoryPhase('opening-briefing');
+}
+
+function handleSasWireCut(color) {
+  if (!color || !sasWireCutImages[color] || sasRepairResolving) return;
+
+  if (activeRepairTool !== 'cutting_pliers') {
+    if (mapMessage) {
+      mapMessage.classList.add('warn');
+      mapMessage.textContent = 'Impossible de couper : sortez la pince coupante du package personnel.';
+    }
+    return;
+  }
+
+  sasRepairResolving = true;
+  const isCorrect = color === 'green';
+  setSasRepairCutImage(color, { danger:!isCorrect });
+
+  if (isCorrect) {
+    try { localStorage.setItem(sasRepairStateKey, color); } catch (err) {}
+    shipScene?.classList.add('is-sas-wire-repaired');
+    if (mapMessage) {
+      mapMessage.classList.remove('warn');
+      mapMessage.textContent = 'Fil vert coupe : circuit du sas stabilise, pression maintenue.';
+    }
+    window.setTimeout(() => { sasRepairResolving = false; }, 700);
+    return;
+  }
+
+  if (mapMessage) {
+    mapMessage.classList.add('warn');
+    mapMessage.textContent = `Mauvais fil ${sasWireLabels[color] || color} coupe : depressurisation immediate du sas.`;
+  }
+
+  window.setTimeout(() => {
+    closeSasRepairOverlay();
+    showExpeditionResult('failure', {
+      kicker:'Game over',
+      reason:'Depressurisation du sas // mauvais fil coupe',
+      returnOptions:{
+        message:'Le sas a ete depressurise. Tout l equipage est perdu. Redemarrage de la quete depuis le debut.',
+        isFailure:true
+      },
+      afterReturn:resetOpeningLevelAfterSasFailure
+    });
+  }, 650);
+}
+
 function makeFloatingPanelDraggable(panel, handle = panel) {
   if (!panel || !handle) return;
   let drag = null;
@@ -638,6 +757,11 @@ function makeFloatingPanelDraggable(panel, handle = panel) {
     if (event.button !== 0) return;
     if (event.target.closest('button')) return;
     const rect = panel.getBoundingClientRect();
+    panel.style.transform = 'none';
+    panel.style.left = `${rect.left}px`;
+    panel.style.top = `${rect.top}px`;
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
     drag = {
       pointerId:event.pointerId,
       offsetX:event.clientX - rect.left,
@@ -691,12 +815,11 @@ function openPersonalObject(itemId) {
     personalObjectLayer.appendChild(panel);
 
     const closeButton = panel.querySelector('.personal-object-close');
-    const dragHandle = item.type === 'tool'
-      ? panel
-      : panel.querySelector('.personal-object-header');
+    const dragHandle = panel;
     makeFloatingPanelDraggable(panel, dragHandle);
     closeButton?.addEventListener('click', event => {
       event.stopPropagation();
+      if (itemId === activeRepairTool) setRepairToolActive('');
       panel.remove();
       if (!personalObjectLayer.querySelector('.personal-object-panel')) {
         personalObjectLayer.classList.remove('is-active');
@@ -715,6 +838,7 @@ function openPersonalObject(itemId) {
   panel.classList.remove('is-opening');
   void panel.offsetWidth;
   panel.classList.add('is-opening');
+  if (itemId === 'cutting_pliers') setRepairToolActive(itemId);
 
   if (mapMessage) {
     mapMessage.classList.remove('warn');
@@ -2250,6 +2374,14 @@ function closeSasRepairOverlay(event) {
   sasRepairOverlay.setAttribute('aria-hidden', 'true');
 }
 
+sasWireHitboxes.forEach(button => {
+  button.addEventListener('click', event => {
+    event.preventDefault();
+    event.stopPropagation();
+    handleSasWireCut(button.dataset.wireColor || '');
+  });
+});
+
 function failExpeditionFromTimeout() {
   if (expeditionFailing) return;
   expeditionFailing = true;
@@ -3139,6 +3271,7 @@ initPlayerPackageName();
 initPontRepairState();
 initShipMap();
 applyOpeningStoryState();
+restoreSasRepairCutState();
 updateReadyState();
 setExpeditionTimerDisplay(expeditionDurationMs);
 updateDistance();

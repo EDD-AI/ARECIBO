@@ -2291,6 +2291,7 @@ body::after {
   pointer-events:auto;
 }
 .sas-repair-panel {
+  position:relative;
   width:min(72vh, 72vw);
   max-width:980px;
   aspect-ratio:1;
@@ -2320,6 +2321,70 @@ body::after {
     contrast(1.02)
     saturate(.96)
     drop-shadow(0 18px 28px rgba(0,0,0,.34));
+}
+.sas-repair-base {
+  position:relative;
+  z-index:1;
+}
+.sas-repair-cut-state {
+  position:absolute;
+  inset:0;
+  z-index:2;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .12s steps(2, end), filter .14s ease;
+}
+.sas-repair-cut-state.is-visible {
+  opacity:1;
+}
+.sas-repair-cut-state.is-danger {
+  filter:
+    contrast(1.06)
+    saturate(1.2)
+    drop-shadow(0 0 18px rgba(224,59,49,.35));
+}
+.sas-wire-hitboxes {
+  position:absolute;
+  inset:0;
+  z-index:3;
+  pointer-events:none;
+}
+.sas-wire-hitbox {
+  position:absolute;
+  left:var(--wire-x);
+  top:29.6%;
+  width:5.3%;
+  height:66.2%;
+  transform:translateX(-50%);
+  border:1px solid transparent;
+  background:transparent;
+  cursor:none;
+  pointer-events:auto;
+  opacity:.1;
+  transition:opacity .12s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease;
+}
+.sas-wire-hitbox:hover,
+.sas-wire-hitbox:focus-visible {
+  outline:none;
+  opacity:1;
+  border-color:rgba(250,90,31,.56);
+  background:linear-gradient(180deg, transparent 0 10%, rgba(250,90,31,.09) 34% 78%, transparent);
+  box-shadow:0 0 14px rgba(250,90,31,.18);
+}
+.bridge:not(.is-cutting-pliers-active) .sas-wire-hitbox:hover,
+.bridge:not(.is-cutting-pliers-active) .sas-wire-hitbox:focus-visible {
+  border-color:rgba(247,255,195,.34);
+  background:linear-gradient(180deg, transparent 0 10%, rgba(247,255,195,.055) 34% 78%, transparent);
+  box-shadow:0 0 10px rgba(247,255,195,.11);
+}
+.bridge.is-sas-wire-repaired .sas-wire-hitbox {
+  pointer-events:none;
+}
+.bridge.is-sas-wire-repaired .sas-wire-hitbox[data-wire-color="green"] {
+  opacity:1;
+  border-color:rgba(168,240,42,.42);
+  background:linear-gradient(180deg, transparent 0 10%, rgba(168,240,42,.08) 34% 78%, transparent);
+  box-shadow:0 0 16px rgba(168,240,42,.16);
 }
 .sas-repair-close {
   position:absolute;

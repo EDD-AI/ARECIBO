@@ -7,8 +7,8 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>ARECIBO - Sas expedition</title>
-<link rel="stylesheet" href="assets/css/arecibo-game.css?v=personal-repair-objects-1">
-<link rel="stylesheet" href="assets/css/arecibo-expedition.css?v=personal-repair-objects-1">
+<link rel="stylesheet" href="assets/css/arecibo-game.css?v=sas-wire-cutting-1">
+<link rel="stylesheet" href="assets/css/arecibo-expedition.css?v=sas-wire-cutting-1">
 <link rel="stylesheet" href="assets/terminal-filter.css?v=global-terminal-filter-amber">
 </head>
 <body>
@@ -225,7 +225,18 @@
   <section class="sas-repair-overlay" id="sas-repair-overlay" aria-hidden="true" aria-label="Tableau de reparation du sas">
     <button class="sas-repair-close" id="sas-repair-close" type="button">x FERMER</button>
     <div class="sas-repair-panel">
-      <img src="assets/sas-repair/tableau-ouvert.png" alt="Tableau ouvert du sas avec fils de couleur">
+      <img class="sas-repair-base" src="assets/sas-repair/tableau-ouvert.png" alt="Tableau ouvert du sas avec fils de couleur">
+      <img class="sas-repair-cut-state" id="sas-repair-cut-state" src="" alt="" aria-hidden="true">
+      <div class="sas-wire-hitboxes" aria-label="Fils du tableau de reparation">
+        <button class="sas-wire-hitbox" type="button" data-wire-color="red" aria-label="Couper le fil rouge" style="--wire-x:18.3%;"></button>
+        <button class="sas-wire-hitbox" type="button" data-wire-color="orange" aria-label="Couper le fil orange" style="--wire-x:27.3%;"></button>
+        <button class="sas-wire-hitbox" type="button" data-wire-color="yellow" aria-label="Couper le fil jaune" style="--wire-x:36.4%;"></button>
+        <button class="sas-wire-hitbox" type="button" data-wire-color="green" aria-label="Couper le fil vert" style="--wire-x:45.5%;"></button>
+        <button class="sas-wire-hitbox" type="button" data-wire-color="blue" aria-label="Couper le fil bleu" style="--wire-x:54.6%;"></button>
+        <button class="sas-wire-hitbox" type="button" data-wire-color="violet" aria-label="Couper le fil violet" style="--wire-x:63.7%;"></button>
+        <button class="sas-wire-hitbox" type="button" data-wire-color="white" aria-label="Couper le fil blanc" style="--wire-x:72.7%;"></button>
+        <button class="sas-wire-hitbox" type="button" data-wire-color="black" aria-label="Couper le fil noir" style="--wire-x:81.7%;"></button>
+      </div>
     </div>
   </section>
 </main>
@@ -417,7 +428,7 @@
   </div>
 </div>
 <script src="assets/player-profile.js?v=animal-profile-1"></script>
-<script src="assets/js/arecibo-game.js?v=personal-repair-objects-1"></script>
-<script src="assets/js/arecibo-debris-overlays.js?v=personal-repair-objects-1"></script>
+<script src="assets/js/arecibo-game.js?v=sas-wire-cutting-1"></script>
+<script src="assets/js/arecibo-debris-overlays.js?v=sas-wire-cutting-1"></script>
 </body>
 </html>
