@@ -3432,6 +3432,59 @@ body::after {
   color:var(--orange);
   outline:none;
 }
+.toolbox-overlay {
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.62);
+  backdrop-filter:blur(8px);
+  z-index:1201;
+}
+.toolbox-overlay.is-open {
+  display:flex;
+}
+.toolbox-overlay-panel {
+  position:relative;
+  width:min(46vw, 620px);
+  max-width:72vw;
+  padding:26px 26px 22px;
+  border:1px solid rgba(247,255,195,.18);
+  background:rgba(0,0,0,.48);
+  box-shadow:
+    0 24px 44px rgba(0,0,0,.42),
+    inset 0 0 0 1px rgba(247,255,195,.06);
+}
+.toolbox-overlay-image {
+  display:block;
+  width:100%;
+  height:auto;
+  filter:
+    drop-shadow(0 24px 34px rgba(0,0,0,.38))
+    drop-shadow(0 0 16px rgba(247,255,195,.04));
+}
+.toolbox-overlay-close {
+  position:absolute;
+  right:12px;
+  top:12px;
+  min-width:124px;
+  min-height:40px;
+  border:1px solid rgba(247,255,195,.42);
+  background:rgba(0,0,0,.78);
+  color:var(--cream);
+  font:inherit;
+  font-size:15px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  cursor:none;
+}
+.toolbox-overlay-close:hover,
+.toolbox-overlay-close:focus-visible {
+  border-color:rgba(250,90,31,.58);
+  color:var(--orange);
+  outline:none;
+}
 .landing-sequence.is-debris-view .landing-decision,
 .landing-sequence.is-debris-view .landing-ship,
 .landing-sequence.is-debris-view .landing-thrusters,
@@ -4566,6 +4619,20 @@ function closeNotebookOverlay(event) {
   }
 }
 
+function openToolboxOverlay() {
+  const overlay = document.getElementById('toolbox-overlay');
+  if (!overlay) return;
+  overlay.classList.add('is-open');
+}
+
+function closeToolboxOverlay(event) {
+  const overlay = document.getElementById('toolbox-overlay');
+  if (!overlay) return;
+  if (!event || event.target === overlay) {
+    overlay.classList.remove('is-open');
+  }
+}
+
 function handleDebrisToolboxClick(button) {
   if (!button) return;
   const toolboxId = button.dataset.toolboxId || 'toolbox';
@@ -4579,10 +4646,9 @@ function handleDebrisToolboxClick(button) {
       mapMessage.classList.remove('warn');
       mapMessage.textContent = `${toolboxLabel} reperee dans les debris.`;
     }
-    return;
   }
 
-  showDebrisLootToast(`${toolboxLabel} deja recuperee`);
+  openToolboxOverlay();
 }
 
 function broadcastPresenceState(force = false) {
@@ -7149,6 +7215,12 @@ if (params.get('expeditionResult')) {
 <div class="notebook-overlay" id="notebook-overlay" onclick="closeNotebookOverlay(event)">
   <div class="notebook-overlay-stack" id="notebook-stack">
     <button class="notebook-overlay-close" onclick="document.getElementById('notebook-overlay').classList.remove('is-open')">× FERMER</button>
+  </div>
+</div>
+<div class="toolbox-overlay" id="toolbox-overlay" onclick="closeToolboxOverlay(event)">
+  <div class="toolbox-overlay-panel">
+    <button class="toolbox-overlay-close" onclick="closeToolboxOverlay()">× FERMER</button>
+    <img class="toolbox-overlay-image" src="assets/toolbox/toolbox-closed.png" alt="Boite a outils agrandie">
   </div>
 </div>
 </body>
