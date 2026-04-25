@@ -1070,6 +1070,9 @@
 .debris-layer.layer-11 { z-index:3; }
 .debris-layer.layer-12 { z-index:4; }
 .debris-layer.layer-13 { z-index:4; }
+.debris-layer.layer-carton { z-index:4; }
+.debris-layer.layer-oxygen { z-index:3; }
+.debris-layer.layer-shelf { z-index:3; }
 .notebook-overlay {
   position:fixed;
   inset:0;
