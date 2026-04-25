@@ -104,6 +104,8 @@
 
   function handleDebrisNotebookClick(button) {
     if (!button) return;
+    const debrisScene = button.closest('.debris-scene');
+    if (!debrisScene || !debrisScene.classList.contains('is-active')) return;
     const noteId = button.dataset.noteId || 'note';
     const noteLabel = button.dataset.noteLabel || 'Carnet';
     const mapMessage = getMapMessage();
@@ -138,6 +140,8 @@
 
   function handleDebrisToolboxClick(button) {
     if (!button) return;
+    const debrisScene = button.closest('.debris-scene');
+    if (!debrisScene || !debrisScene.classList.contains('is-active')) return;
     const toolboxId = button.dataset.toolboxId || 'toolbox';
     const toolboxLabel = button.dataset.toolboxLabel || 'Boite a outils';
     const mapMessage = getMapMessage();

@@ -872,6 +872,15 @@
   opacity:1;
   pointer-events:auto;
 }
+.debris-scene:not(.is-active) .debris-note,
+.debris-scene:not(.is-active) .debris-toolbox {
+  pointer-events:none !important;
+  visibility:hidden;
+}
+.debris-scene.is-active .debris-note,
+.debris-scene.is-active .debris-toolbox {
+  visibility:visible;
+}
 .debris-scene::before {
   content:'';
   position:absolute;
