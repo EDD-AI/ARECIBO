@@ -2,9 +2,17 @@
   const debrisNoteToast = document.getElementById('debris-loot-toast');
   const debrisNoteButtons = Array.from(document.querySelectorAll('.debris-note'));
   const debrisToolboxButtons = Array.from(document.querySelectorAll('.debris-toolbox'));
+  const toolboxOverlayPanel = document.querySelector('.toolbox-overlay-panel');
+  const toolboxOverlayImage = document.getElementById('toolbox-overlay-image');
+  const toolboxLock = document.getElementById('toolbox-lock');
+  const toolboxLockStatus = document.getElementById('toolbox-lock-status');
+  const toolboxLockWheels = Array.from(document.querySelectorAll('.toolbox-lock-wheel'));
   const collectedDebrisNotes = new Set();
   const collectedDebrisToolboxes = new Set();
+  const toolboxLockTarget = '4569';
+  const toolboxLockDigits = [0, 0, 0, 0];
   let debrisNoteToastTimer = 0;
+  let toolboxUnlockAnnounced = false;
 
   function getMapMessage() {
     return document.getElementById('map-message');
@@ -84,6 +92,7 @@
     const overlay = document.getElementById('toolbox-overlay');
     if (!overlay) return;
     overlay.classList.add('is-open');
+    updateToolboxLockDisplay();
   }
 
   function closeToolboxOverlay(event) {
@@ -113,6 +122,51 @@
     openToolboxOverlay();
   }
 
+  function updateToolboxLockDisplay() {
+    const combo = toolboxLockDigits.join('');
+    const unlocked = combo === toolboxLockTarget;
+
+    toolboxLockWheels.forEach((wheel, index) => {
+      const digit = wheel.querySelector('span');
+      if (digit) digit.textContent = String(toolboxLockDigits[index]);
+      wheel.setAttribute('aria-label', `Chiffre ${index + 1} du cadenas : ${toolboxLockDigits[index]}`);
+    });
+
+    if (toolboxLockStatus) {
+      toolboxLockStatus.textContent = unlocked ? 'CADENAS // OUVERT' : `CADENAS // ${combo}`;
+      toolboxLockStatus.classList.toggle('is-unlocked', unlocked);
+      toolboxLockStatus.classList.toggle('is-error', !unlocked && combo !== '0000');
+    }
+
+    if (toolboxLock) toolboxLock.classList.toggle('is-unlocked', unlocked);
+    if (toolboxOverlayPanel) toolboxOverlayPanel.classList.toggle('is-unlocked', unlocked);
+    if (toolboxOverlayImage) {
+      toolboxOverlayImage.src = unlocked ? 'assets/toolbox/toolbox-open.png' : 'assets/toolbox/toolbox-closed.png';
+      toolboxOverlayImage.alt = unlocked ? 'Boite a outils ouverte' : 'Boite a outils agrandie';
+    }
+
+    if (unlocked && !toolboxUnlockAnnounced) {
+      toolboxUnlockAnnounced = true;
+      showDebrisLootToast('Boite a outils deverrouillee');
+      const mapMessage = getMapMessage();
+      if (mapMessage) {
+        mapMessage.classList.remove('warn');
+        mapMessage.textContent = 'Boite a outils deverrouillee // combinaison validee.';
+      }
+    }
+  }
+
+  function rotateToolboxLockWheel(wheel, direction = 1) {
+    if (!wheel || toolboxLock?.classList.contains('is-unlocked')) return;
+    const index = Number(wheel.dataset.lockIndex);
+    if (!Number.isInteger(index) || index < 0 || index >= toolboxLockDigits.length) return;
+
+    toolboxLockDigits[index] = (toolboxLockDigits[index] + direction + 10) % 10;
+    wheel.classList.add('is-spinning');
+    window.setTimeout(() => wheel.classList.remove('is-spinning'), 120);
+    updateToolboxLockDisplay();
+  }
+
   debrisNoteButtons.forEach(button => {
     button.addEventListener('click', () => handleDebrisNotebookClick(button));
   });
@@ -120,6 +174,20 @@
   debrisToolboxButtons.forEach(button => {
     button.addEventListener('click', () => handleDebrisToolboxClick(button));
   });
+
+  toolboxLockWheels.forEach(wheel => {
+    wheel.addEventListener('click', event => {
+      event.stopPropagation();
+      rotateToolboxLockWheel(wheel, event.shiftKey ? -1 : 1);
+    });
+    wheel.addEventListener('contextmenu', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      rotateToolboxLockWheel(wheel, -1);
+    });
+  });
+
+  updateToolboxLockDisplay();
 
   window.closeNotebookOverlay = closeNotebookOverlay;
   window.closeToolboxOverlay = closeToolboxOverlay;

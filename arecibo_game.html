@@ -7,8 +7,8 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>ARECIBO - Sas expedition</title>
-<link rel="stylesheet" href="assets/css/arecibo-game.css?v=phase3-extract">
-<link rel="stylesheet" href="assets/css/arecibo-expedition.css?v=phase3-extract">
+<link rel="stylesheet" href="assets/css/arecibo-game.css?v=toolbox-lock-1">
+<link rel="stylesheet" href="assets/css/arecibo-expedition.css?v=toolbox-lock-1">
 <link rel="stylesheet" href="assets/terminal-filter.css?v=global-terminal-filter-amber">
 </head>
 <body>
@@ -386,11 +386,18 @@
 <div class="toolbox-overlay" id="toolbox-overlay" onclick="closeToolboxOverlay(event)">
   <div class="toolbox-overlay-panel">
     <button class="toolbox-overlay-close" onclick="closeToolboxOverlay()">× FERMER</button>
-    <img class="toolbox-overlay-image" src="assets/toolbox/toolbox-closed.png" alt="Boite a outils agrandie">
+    <img class="toolbox-overlay-image" id="toolbox-overlay-image" src="assets/toolbox/toolbox-closed.png" alt="Boite a outils agrandie">
+    <div class="toolbox-lock" id="toolbox-lock" aria-label="Cadenas de la boite a outils">
+      <button class="toolbox-lock-wheel" type="button" data-lock-index="0" aria-label="Premier chiffre du cadenas"><span>0</span></button>
+      <button class="toolbox-lock-wheel" type="button" data-lock-index="1" aria-label="Deuxieme chiffre du cadenas"><span>0</span></button>
+      <button class="toolbox-lock-wheel" type="button" data-lock-index="2" aria-label="Troisieme chiffre du cadenas"><span>0</span></button>
+      <button class="toolbox-lock-wheel" type="button" data-lock-index="3" aria-label="Quatrieme chiffre du cadenas"><span>0</span></button>
+    </div>
+    <div class="toolbox-lock-status" id="toolbox-lock-status">CADENAS // 0000</div>
   </div>
 </div>
 <script src="assets/player-profile.js?v=animal-profile-1"></script>
-<script src="assets/js/arecibo-game.js?v=phase2-extract"></script>
-<script src="assets/js/arecibo-debris-overlays.js?v=phase2-extract"></script>
+<script src="assets/js/arecibo-game.js?v=toolbox-lock-1"></script>
+<script src="assets/js/arecibo-debris-overlays.js?v=toolbox-lock-1"></script>
 </body>
 </html>
