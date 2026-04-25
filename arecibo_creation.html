@@ -10,10 +10,11 @@
 <style>
 :root {
   --cream:#f7ffc3;
+  --cream-dim:rgba(247,255,195,.58);
+  --cream-faint:rgba(247,255,195,.18);
   --orange:#fa591f;
-  --border:rgba(247,255,195,.14);
-  --panel:rgba(0,0,0,.56);
-  --bg:#000;
+  --panel:rgba(0,0,0,.82);
+  --line:rgba(247,255,195,.72);
 }
 * { box-sizing:border-box; }
 html, body {
@@ -26,10 +27,37 @@ html, body {
 body {
   min-height:100vh;
   overflow:hidden;
-  background:
-    radial-gradient(circle at 50% 30%, rgba(88,61,21,.18), transparent 38%),
-    #000;
   cursor:none;
+  background:
+    radial-gradient(circle at 72% 32%, rgba(247,255,195,.035), transparent 34%),
+    radial-gradient(circle at 23% 18%, rgba(250,89,31,.05), transparent 28%),
+    #000;
+}
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(rgba(247,255,195,.025) 50%, rgba(0,0,0,.08) 50%),
+    repeating-linear-gradient(90deg, rgba(247,255,195,.012) 0 1px, transparent 1px 4px);
+  background-size:100% 4px, 4px 100%;
+  mix-blend-mode:screen;
+  opacity:.42;
+  z-index:40;
+}
+body::after {
+  content:'';
+  position:fixed;
+  inset:-6%;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,.42) 72%, rgba(0,0,0,.92) 100%);
+  z-index:41;
+}
+button,
+input {
+  font-family:inherit;
 }
 .cursor {
   position:fixed;
@@ -60,127 +88,199 @@ body {
 }
 .transition.out { opacity:0; pointer-events:none; }
 .screen {
+  position:relative;
+  z-index:2;
   width:100vw;
   height:100vh;
   display:grid;
-  grid-template-columns:minmax(300px, 28vw) minmax(380px, 1fr) minmax(300px, 30vw);
-  grid-template-rows:46px 1fr 34px;
-  border:1px solid var(--border);
-}
-.header,
-.footer {
-  grid-column:1 / -1;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 18px;
-  border-bottom:1px solid var(--border);
-  font-size:10px;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  color:rgba(247,255,195,.34);
-}
-.footer {
-  border-bottom:0;
-  border-top:1px solid var(--border);
-  font-size:8px;
+  grid-template-columns:minmax(430px, 38vw) minmax(330px, 29vw) minmax(260px, 1fr);
+  gap:clamp(26px, 3vw, 52px);
+  align-items:start;
+  padding:clamp(64px, 8vh, 98px) clamp(52px, 6vw, 100px);
 }
 .back-btn,
-.save-btn {
-  border:1px solid rgba(247,255,195,.22);
-  background:rgba(0,0,0,.28);
-  color:var(--cream);
-  min-height:30px;
-  padding:0 12px;
-  font:inherit;
-  font-size:10px;
-  letter-spacing:.12em;
-  text-transform:uppercase;
+.save-btn,
+.gender-btn,
+.head-option,
+.swatch {
   cursor:none;
 }
-.back-btn:hover,
-.save-btn:hover {
+.back-btn {
+  position:fixed;
+  left:clamp(22px, 3vw, 42px);
+  bottom:clamp(18px, 3vh, 34px);
+  z-index:50;
+  min-height:34px;
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.68);
+  color:var(--cream);
+  padding:0 18px;
+  font-size:18px;
+  letter-spacing:0;
+  text-transform:uppercase;
+}
+.back-btn:hover {
   border-color:var(--orange);
   color:var(--orange);
-  background:rgba(250,89,31,.08);
+  box-shadow:0 0 16px rgba(250,89,31,.18);
 }
-.col {
-  min-height:0;
-  padding:18px;
+.creation-window {
+  border:1px solid var(--line);
+  background:rgba(0,0,0,.58);
+  box-shadow:inset 0 0 0 1px rgba(247,255,195,.04);
 }
-.col + .col {
-  border-left:1px solid var(--border);
-}
-.panel {
-  height:100%;
-  border:1px solid var(--border);
-  background:var(--panel);
-  box-shadow:inset 0 0 32px rgba(247,255,195,.03);
+.window-header {
+  min-height:53px;
+  border-bottom:1px solid var(--line);
   display:flex;
-  flex-direction:column;
-  min-height:0;
-}
-.panel-head {
-  padding:10px 14px;
-  border-bottom:1px solid var(--border);
-  font-size:10px;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  color:rgba(247,255,195,.34);
-}
-.panel-body {
-  flex:1 1 auto;
-  min-height:0;
-  padding:14px;
-}
-.preview-shell {
-  height:100%;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-}
-.identity-card {
-  border:1px solid rgba(247,255,195,.1);
-  background:rgba(247,255,195,.015);
-  padding:12px;
-}
-.identity-label {
-  font-size:9px;
-  color:rgba(247,255,195,.38);
-  text-transform:uppercase;
-  letter-spacing:.12em;
-}
-.identity-name {
-  margin-top:10px;
-  font-size:clamp(20px, 2vw, 34px);
+  align-items:center;
+  padding:0 22px 0 56px;
+  position:relative;
+  font-size:clamp(22px, 1.75vw, 31px);
   line-height:1;
-  color:var(--cream);
-  text-transform:uppercase;
 }
-.preview-stage {
-  flex:1 1 auto;
-  min-height:260px;
-  border:1px solid rgba(247,255,195,.12);
+.window-header::before {
+  content:'x';
+  position:absolute;
+  left:8px;
+  top:8px;
+  width:17px;
+  height:17px;
+  border:1px solid var(--line);
+  color:var(--cream);
   display:flex;
   align-items:center;
   justify-content:center;
-  background:
-    radial-gradient(circle at center, rgba(247,255,195,.05), transparent 54%),
-    rgba(247,255,195,.015);
-  position:relative;
+  font-size:15px;
+  line-height:1;
 }
-.preview-stage::after {
-  content:'profil actif';
-  position:absolute;
-  top:10px;
-  left:12px;
-  font-size:8px;
-  letter-spacing:.12em;
+.heads-window {
+  height:calc(100vh - clamp(128px, 16vh, 196px));
+  min-height:520px;
+  display:flex;
+  flex-direction:column;
+}
+.heads-grid {
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-columns:repeat(4, minmax(72px, 1fr));
+  grid-auto-rows:minmax(84px, 1fr);
+  gap:12px;
+  overflow:auto;
+  padding:24px;
+  scrollbar-color:rgba(250,89,31,.55) rgba(247,255,195,.08);
+}
+.head-option {
+  min-height:84px;
+  border:1px solid rgba(247,255,195,.34);
+  background:rgba(0,0,0,.36);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform .14s ease, border-color .14s ease, background .14s ease, box-shadow .14s ease;
+}
+.head-option:hover {
+  border-color:var(--orange);
+  background:rgba(250,89,31,.07);
+  transform:translateY(-2px);
+}
+.head-option.is-selected {
+  border-color:var(--orange);
+  background:rgba(250,89,31,.13);
+  box-shadow:0 0 18px rgba(250,89,31,.18), inset 0 0 0 1px rgba(250,89,31,.28);
+}
+.head-option svg {
+  width:72%;
+  height:72%;
+  display:block;
+  image-rendering:pixelated;
+}
+.colors-window {
+  margin-top:52px;
+  min-height:295px;
+  padding:42px 50px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.color-stack {
+  width:min(300px, 100%);
+  display:flex;
+  flex-direction:column;
+  gap:27px;
+}
+.field-label {
+  margin-bottom:10px;
+  text-align:center;
+  color:var(--cream);
+  font-size:19px;
+  line-height:1;
+}
+.swatch-grid {
+  display:grid;
+  grid-template-columns:repeat(8, 23px);
+  gap:9px 8px;
+  justify-content:center;
+}
+.swatch {
+  width:23px;
+  height:23px;
+  border:1px solid rgba(0,0,0,.22);
+  border-radius:6px;
+  transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+.swatch:hover {
+  transform:translateY(-2px);
+}
+.swatch.is-selected {
+  border-color:var(--cream);
+  box-shadow:0 0 0 2px rgba(0,0,0,.8), 0 0 14px rgba(247,255,195,.35);
+}
+.identity-column {
+  min-height:650px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:25px;
+  padding-top:36px;
+}
+.session-code {
+  align-self:flex-end;
+  min-width:150px;
+  border:1px solid var(--line);
+  padding:10px 14px 12px;
+  text-align:center;
+  background:rgba(0,0,0,.5);
+}
+.session-label {
+  font-size:17px;
+  line-height:1;
   text-transform:uppercase;
-  color:rgba(247,255,195,.18);
+}
+.session-value {
+  margin-top:6px;
+  font-family:Arial, sans-serif;
+  font-size:44px;
+  line-height:.9;
+  font-weight:900;
+  letter-spacing:-.03em;
+}
+.profile-preview {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  margin-top:20px;
+}
+.profile-disk {
+  width:50px;
+  height:50px;
+  color:var(--cream);
+  filter:drop-shadow(0 0 8px rgba(247,255,195,.2));
 }
 .preview-avatar {
-  width:min(240px, 74%);
+  width:132px;
   aspect-ratio:1;
   display:flex;
   align-items:center;
@@ -191,126 +291,155 @@ body {
   height:100%;
   display:block;
 }
-.color-summary {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-.tone-chip {
-  border:1px solid rgba(247,255,195,.1);
-  padding:10px;
-  background:rgba(0,0,0,.16);
-}
-.tone-label {
-  font-size:8px;
+.identity-name {
+  min-height:24px;
+  color:var(--orange);
+  font-size:22px;
+  line-height:1;
   text-transform:uppercase;
-  letter-spacing:.12em;
-  color:rgba(247,255,195,.34);
 }
-.tone-swatch {
-  width:100%;
-  height:28px;
-  margin-top:8px;
-  border:1px solid rgba(247,255,195,.16);
-}
-.heads-grid {
-  display:grid;
-  grid-template-columns:repeat(4, 1fr);
-  gap:10px;
-  overflow:auto;
-  padding-right:4px;
-}
-.head-option {
-  aspect-ratio:1;
-  border:1px solid rgba(247,255,195,.14);
-  background:rgba(247,255,195,.02);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:none;
-  transition:border-color .14s ease, background .14s ease, transform .14s ease, box-shadow .14s ease;
-}
-.head-option:hover {
-  border-color:rgba(250,89,31,.58);
-  transform:translateY(-1px);
-}
-.head-option.is-selected {
-  border-color:var(--orange);
-  background:rgba(250,89,31,.06);
-  box-shadow:0 0 12px rgba(250,89,31,.14);
-}
-.head-option svg {
-  width:74%;
-  height:74%;
-  display:block;
-}
-.controls-stack {
+.identity-form {
+  width:min(300px, 100%);
   display:flex;
   flex-direction:column;
+  align-items:center;
   gap:18px;
 }
-.field-label {
-  margin-bottom:8px;
-  font-size:9px;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  color:rgba(247,255,195,.34);
+.identity-prompt {
+  color:var(--cream);
+  font-size:19px;
+}
+.input-shell {
+  position:relative;
+  width:260px;
+  height:54px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  background:rgba(0,0,0,.68);
+}
+.input-shell::before {
+  content:'>-';
+  padding-left:28px;
+  color:var(--cream);
+  font-size:30px;
+  line-height:1;
 }
 .name-input {
-  width:100%;
-  min-height:42px;
-  border:1px solid var(--border);
-  background:rgba(0,0,0,.2);
+  flex:1;
+  min-width:0;
+  height:100%;
+  border:0;
+  background:transparent;
   color:var(--cream);
-  padding:0 12px;
+  padding:0 24px 0 10px;
   font:inherit;
-  font-size:18px;
-  letter-spacing:.06em;
+  font-size:23px;
   text-transform:uppercase;
   outline:none;
 }
-.name-input:focus {
-  border-color:rgba(247,255,195,.34);
+.name-input::placeholder {
+  color:rgba(247,255,195,.22);
 }
-.swatch-grid {
-  display:grid;
-  grid-template-columns:repeat(5, 1fr);
+.gender-row {
+  display:flex;
+  gap:13px;
+  align-items:center;
+  min-height:36px;
+}
+.gender-btn {
+  width:33px;
+  height:33px;
+  border:1px solid rgba(247,255,195,.35);
+  background:#000;
+  color:var(--cream);
+  font-size:28px;
+  line-height:.8;
+}
+.gender-btn.is-selected,
+.gender-btn:hover {
+  color:var(--orange);
+  border-color:var(--orange);
+}
+.robot-check {
+  display:flex;
+  align-items:center;
   gap:8px;
+  margin-top:8px;
+  color:var(--cream);
+  font-size:18px;
 }
-.swatch {
-  aspect-ratio:1;
-  border:1px solid rgba(247,255,195,.14);
-  cursor:none;
-  transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+.robot-dot {
+  width:17px;
+  height:17px;
+  border:1px solid var(--line);
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
-.swatch:hover {
-  transform:translateY(-1px);
+.robot-dot::after {
+  content:'';
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:var(--orange);
 }
-.swatch.is-selected {
-  border-color:var(--cream);
-  box-shadow:0 0 0 1px rgba(247,255,195,.24) inset;
+.save-btn {
+  min-height:41px;
+  border:1px solid var(--orange);
+  border-radius:8px;
+  background:rgba(0,0,0,.55);
+  color:var(--orange);
+  padding:0 18px;
+  font-size:25px;
+  line-height:1;
+  letter-spacing:0;
 }
-.hint {
-  margin-top:auto;
-  border:1px solid rgba(247,255,195,.08);
-  background:rgba(247,255,195,.015);
-  padding:12px;
-  font-size:11px;
-  line-height:1.4;
-  color:rgba(247,255,195,.62);
+.save-btn:hover {
+  background:rgba(250,89,31,.1);
+  box-shadow:0 0 18px rgba(250,89,31,.24);
 }
-@media (max-width: 1100px) {
-  .screen {
-    grid-template-columns:1fr;
-    grid-template-rows:46px auto auto auto 34px;
+.hidden-wires {
+  position:absolute;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+  opacity:0;
+  pointer-events:none;
+}
+.tone-swatch {
+  width:1px;
+  height:1px;
+}
+@media (max-width: 1180px) {
+  body {
     overflow:auto;
   }
-  .col + .col {
-    border-left:0;
-    border-top:1px solid var(--border);
+  .screen {
+    min-height:100vh;
+    height:auto;
+    grid-template-columns:1fr;
+    gap:22px;
+    padding:60px 24px 90px;
+  }
+  .heads-window {
+    height:auto;
+    min-height:430px;
   }
   .heads-grid {
-    grid-template-columns:repeat(6, 1fr);
+    grid-template-columns:repeat(6, minmax(64px, 1fr));
+  }
+  .colors-window {
+    margin-top:0;
+  }
+  .identity-column {
+    min-height:0;
+    padding-top:0;
+  }
+  .session-code {
+    align-self:center;
   }
 }
 </style>
@@ -321,84 +450,66 @@ body {
 <div class="transition" id="transition"></div>
 
 <main class="screen">
-  <header class="header">
-    <button class="back-btn" type="button" onclick="goBack()">< menu</button>
-    <span>> profil icone //</span>
-    <button class="save-btn" type="button" id="save-top">sauvegarder</button>
-  </header>
+  <button class="back-btn" type="button" onclick="goBack()">< menu</button>
 
-  <section class="col">
-    <div class="panel">
-      <div class="panel-head">aperçu //</div>
-      <div class="panel-body">
-        <div class="preview-shell">
-          <div class="identity-card">
-            <div class="identity-label">profil actif</div>
-            <div class="identity-name" id="preview-name">COCO</div>
-          </div>
-          <div class="preview-stage">
-            <div class="preview-avatar" id="preview-avatar"></div>
-          </div>
-          <div class="color-summary">
-            <div class="tone-chip">
-              <div class="tone-label">couche claire</div>
-              <div class="tone-swatch" id="primary-swatch"></div>
-            </div>
-            <div class="tone-chip">
-              <div class="tone-label">couche sombre</div>
-              <div class="tone-swatch" id="secondary-swatch"></div>
-            </div>
-          </div>
-        </div>
+  <section class="creation-window heads-window" aria-label="Selection tete animale">
+    <div class="window-header">Phase de creation // NIVEAU 1 //</div>
+    <div class="heads-grid" id="heads-grid"></div>
+  </section>
+
+  <section class="creation-window colors-window" aria-label="Choix des couleurs">
+    <div class="color-stack">
+      <div>
+        <div class="field-label">Couleur principale</div>
+        <div class="swatch-grid" id="primary-grid"></div>
+      </div>
+
+      <div>
+        <div class="field-label">Couleur secondaire</div>
+        <div class="swatch-grid" id="secondary-grid"></div>
       </div>
     </div>
   </section>
 
-  <section class="col">
-    <div class="panel">
-      <div class="panel-head">selection tete animale //</div>
-      <div class="panel-body">
-        <div class="heads-grid" id="heads-grid"></div>
+  <section class="identity-column" aria-label="Validation identite">
+    <div class="session-code">
+      <div class="session-label">CODE SESSION</div>
+      <div class="session-value">JX3T</div>
+    </div>
+
+    <div class="profile-preview">
+      <svg class="profile-disk" viewBox="0 0 64 64" aria-hidden="true">
+        <path fill="none" stroke="currentColor" stroke-width="3" d="M12 8h34l6 6v42H12z"/>
+        <path fill="none" stroke="currentColor" stroke-width="3" d="M20 8v18h24V8M20 42h24v14H20z"/>
+        <path fill="currentColor" d="M28 13h9v8h-9z"/>
+      </svg>
+      <div class="preview-avatar" id="preview-avatar"></div>
+      <div class="identity-name" id="preview-name">COCO</div>
+    </div>
+
+    <div class="identity-form">
+      <label class="identity-prompt" for="name-input">Confirme votre identite :</label>
+      <div class="input-shell">
+        <input class="name-input" id="name-input" type="text" maxlength="10" placeholder="COCO">
       </div>
+
+      <div class="gender-row" aria-label="Marqueur profil">
+        <button class="gender-btn" type="button" aria-label="feminin">F</button>
+        <button class="gender-btn is-selected" type="button" aria-label="masculin">M</button>
+      </div>
+
+      <div class="robot-check">Je ne suis pas un robot : <span class="robot-dot" aria-hidden="true"></span></div>
+      <button class="save-btn" type="button" id="save-bottom">[=] id validation</button>
+    </div>
+
+    <div class="hidden-wires" aria-hidden="true">
+      <button type="button" id="save-top">sauvegarder</button>
+      <span id="footer-head">head-01</span>
+      <span id="footer-colors">2 couches actives</span>
+      <span class="tone-swatch" id="primary-swatch"></span>
+      <span class="tone-swatch" id="secondary-swatch"></span>
     </div>
   </section>
-
-  <section class="col">
-    <div class="panel">
-      <div class="panel-head">configuration //</div>
-      <div class="panel-body">
-        <div class="controls-stack">
-          <div>
-            <label class="field-label" for="name-input">nom operateur</label>
-            <input class="name-input" id="name-input" type="text" maxlength="10" placeholder="COCO">
-          </div>
-
-          <div>
-            <div class="field-label">couche claire // remplace le blanc</div>
-            <div class="swatch-grid" id="primary-grid"></div>
-          </div>
-
-          <div>
-            <div class="field-label">couche sombre // remplace le noir</div>
-            <div class="swatch-grid" id="secondary-grid"></div>
-          </div>
-
-          <button class="save-btn" type="button" id="save-bottom">valider le profil</button>
-
-          <div class="hint">
-            Cette icone remplacera ton <strong>P1</strong> dans le sas et dans les votes.<br>
-            Ensuite on pourra l'étendre au lobby et aux autres joueurs.
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="footer">
-    <span>motomoto systems // profil icone //</span>
-    <span id="footer-head">head-01</span>
-    <span id="footer-colors">2 couches actives</span>
-  </footer>
 </main>
 
 <script src="assets/player-profile.js?v=animal-profile-1"></script>
