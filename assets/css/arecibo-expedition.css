@@ -1089,6 +1089,54 @@
   height:min(94vh, 1350px);
   pointer-events:none;
 }
+.notebook-cover-button {
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:min(54vw, 960px);
+  max-height:88vh;
+  padding:0;
+  border:0;
+  background:transparent;
+  transform:translate(-50%, -50%) rotate(-1.5deg);
+  pointer-events:auto;
+  cursor:none;
+  filter:
+    drop-shadow(0 34px 54px rgba(0,0,0,.48))
+    drop-shadow(0 0 18px rgba(247,255,195,.08));
+  transition:transform .16s ease, filter .16s ease;
+}
+.notebook-cover-button:hover,
+.notebook-cover-button:focus-visible {
+  outline:none;
+  transform:translate(-50%, -50%) rotate(-.8deg) scale(1.025);
+  filter:
+    drop-shadow(0 38px 60px rgba(0,0,0,.52))
+    drop-shadow(0 0 22px rgba(250,90,31,.14));
+}
+.notebook-cover-button::after {
+  content:'CLIQUER POUR OUVRIR';
+  position:absolute;
+  left:50%;
+  bottom:-34px;
+  transform:translateX(-50%);
+  padding:7px 12px;
+  border:1px solid rgba(250,90,31,.42);
+  background:rgba(3,3,2,.72);
+  color:var(--orange);
+  font-family:var(--font);
+  font-size:clamp(11px, .82vw, 15px);
+  line-height:1;
+  text-transform:uppercase;
+  white-space:nowrap;
+  opacity:.82;
+  text-shadow:0 0 9px rgba(250,90,31,.22);
+}
+.notebook-cover-img {
+  display:block;
+  width:100%;
+  height:auto;
+}
 .notebook-open-img {
   position:absolute;
   left:50%;

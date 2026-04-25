@@ -28,12 +28,16 @@
     }, 1800);
   }
 
-  function openNotebookOverlay(clickedColor) {
+  function clearNotebookStack(stack) {
+    stack.querySelectorAll('.notebook-open-img, .notebook-cover-button').forEach(el => el.remove());
+  }
+
+  function showNotebookPages(clickedColor) {
     const overlay = document.getElementById('notebook-overlay');
     const stack = document.getElementById('notebook-stack');
     if (!overlay || !stack) return;
 
-    stack.querySelectorAll('.notebook-open-img').forEach(el => el.remove());
+    clearNotebookStack(stack);
 
     const allColors = ['jaune', 'rouge', 'vert', 'noir'];
     const order = [
@@ -58,6 +62,35 @@
       stack.insertBefore(img, closeBtn);
     });
 
+    overlay.classList.add('is-open');
+  }
+
+  function openNotebookOverlay(clickedColor) {
+    const overlay = document.getElementById('notebook-overlay');
+    const stack = document.getElementById('notebook-stack');
+    if (!overlay || !stack) return;
+
+    clearNotebookStack(stack);
+
+    const coverButton = document.createElement('button');
+    coverButton.type = 'button';
+    coverButton.className = 'notebook-cover-button';
+    coverButton.setAttribute('aria-label', `Ouvrir le carnet ${clickedColor}`);
+
+    const cover = document.createElement('img');
+    cover.className = 'notebook-cover-img';
+    cover.src = `assets/carnets/carnet-${clickedColor}-ferme.png`;
+    cover.alt = `Couverture du carnet ${clickedColor}`;
+    cover.onerror = () => { cover.src = `assets/carnets/carnet-${clickedColor}-ouvert.png`; };
+
+    coverButton.appendChild(cover);
+    coverButton.addEventListener('click', event => {
+      event.stopPropagation();
+      showNotebookPages(clickedColor);
+    });
+
+    const closeBtn = stack.querySelector('.notebook-overlay-close');
+    stack.insertBefore(coverButton, closeBtn);
     overlay.classList.add('is-open');
   }
 
