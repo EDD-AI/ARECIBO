@@ -3487,7 +3487,7 @@ if (params.get('debris') === '1') {
   if (pageTransition) pageTransition.classList.add('out');
   openDebrisInspectionScene();
 }
-if (storyPhase === 'opening-return' && !params.get('landing') && !params.get('debris') && !params.get('expeditionResult')) {
+if ((storyPhase === 'opening-briefing' || storyPhase === 'opening-return') && !params.get('landing') && !params.get('debris') && !params.get('expeditionResult')) {
   const alreadyOpened = localStorage.getItem(OPENING_MAIL_OPENED_KEY) === 'true';
   if (!alreadyOpened) {
     try { localStorage.setItem(OPENING_MAIL_OPENED_KEY, 'true'); } catch (err) {}
