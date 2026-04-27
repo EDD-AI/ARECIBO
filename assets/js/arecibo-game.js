@@ -789,6 +789,10 @@ function syncSceneBackdropImage() {
   }
 
   sceneBackdrop.style.setProperty('--scene-image', `url('${image}')`);
+  sceneBackdrop.style.backgroundImage = `linear-gradient(rgba(5,7,3,.1), rgba(5,7,3,.1)), url('${image}')`;
+  sceneBackdrop.style.backgroundPosition = 'center';
+  sceneBackdrop.style.backgroundSize = 'cover';
+  sceneBackdrop.style.backgroundRepeat = 'no-repeat';
 }
 
 function setHullSystemStatus(status = 'critical') {
