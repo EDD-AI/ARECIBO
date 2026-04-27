@@ -956,61 +956,47 @@ body::after {
 }
 .singularity-wrap {
   top: 50% !important;
-  right: clamp(-240px, -10vw, -70px) !important;
-  width: clamp(560px, 48vw, 980px) !important;
-  aspect-ratio: 1 / 1.04 !important;
+  right: clamp(-330px, -14vw, -120px) !important;
+  width: clamp(900px, 86vh, 1480px) !important;
+  height: clamp(1080px, 152vh, 1860px) !important;
+  aspect-ratio: auto !important;
   opacity: 1 !important;
   visibility: visible !important;
   filter: none !important;
   transform:
     translate3d(
-      calc(var(--menu-parallax-x, 0) * 20px),
-      calc(var(--menu-parallax-y, 0) * 14px),
+      calc(var(--menu-parallax-x, 0) * 14px),
+      calc(var(--menu-parallax-y, 0) * 10px),
       0
     )
     translateY(-50%) !important;
   transition: transform .22s ease-out;
   will-change: transform;
+  overflow: hidden;
+  clip-path: ellipse(45% 56% at 58% 50%);
 }
 .singularity-lens,
-#singularity-waves {
+#singularity-waves,
+#menu-blackhole-particles {
   display: none !important;
 }
-.singularity-wrap::before {
-  content: '';
-  position: absolute;
-  inset: 4% 3% 4% 9%;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 0 33%, rgba(0,0,0,.12) 42%, rgba(0,0,0,.18) 48%, transparent 58%),
-    radial-gradient(ellipse at 52% 28%, rgba(255,238,188,.42) 0 5%, rgba(255,176,96,.36) 8%, rgba(250,90,31,.34) 13%, rgba(250,90,31,.2) 22%, transparent 38%),
-    radial-gradient(ellipse at 52% 73%, rgba(255,202,142,.2) 0 4%, rgba(250,90,31,.18) 8%, rgba(250,90,31,.12) 14%, transparent 26%),
-    radial-gradient(ellipse at 50% 50%, transparent 0 35%, rgba(250,90,31,.24) 44%, rgba(250,90,31,.14) 53%, rgba(250,90,31,.06) 62%, transparent 76%);
-  filter: blur(9px);
-  opacity: .96;
-  animation: menuBlackHolePulse 7.6s ease-in-out infinite;
-}
+.singularity-wrap::before,
 .singularity-wrap::after {
-  content: '';
-  position: absolute;
-  inset: 18% 12% 18% 24%;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 50%, #000 0 58%, rgba(0,0,0,.99) 70%, rgba(0,0,0,.9) 77%, rgba(0,0,0,.52) 83%, transparent 90%);
-  box-shadow:
-    0 0 28px rgba(0,0,0,1),
-    0 0 110px rgba(0,0,0,.9),
-    0 0 62px rgba(250,90,31,.08);
-  z-index: 2;
+  display: none !important;
 }
-#menu-blackhole-particles {
+.menu-blackhole-embed {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  border: 0;
+  background: transparent;
   pointer-events: none;
-  z-index: 1;
-  mix-blend-mode: screen;
+  z-index: 3;
+  opacity: .98;
+  filter: saturate(1.15) contrast(1.04) brightness(.95);
+  transform: rotate(-90deg) scale(1.62);
+  transform-origin: center;
 }
 #particles-canvas {
   display: none !important;
@@ -1044,19 +1030,6 @@ body::after {
   animation: none !important;
   filter: none !important;
   text-shadow: none !important;
-}
-
-@keyframes menuBlackHolePulse {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
-    opacity: .92;
-    filter: blur(9px) brightness(.98);
-  }
-  50% {
-    transform: scale(1.028) rotate(-1.2deg);
-    opacity: 1;
-    filter: blur(10px) brightness(1.08);
-  }
 }
 
 .crt-filter-defs {
@@ -1645,6 +1618,13 @@ body::after {
   </div>
 
   <div class="singularity-wrap" aria-hidden="true">
+    <iframe
+      class="menu-blackhole-embed"
+      src="assets/black-hole-main/index.html"
+      title="Arecibo black hole"
+      loading="eager"
+      tabindex="-1"
+      aria-hidden="true"></iframe>
     <canvas id="menu-blackhole-particles"></canvas>
     <div class="singularity-lens">
       <div class="singularity-stream"></div>
