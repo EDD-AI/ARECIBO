@@ -411,7 +411,7 @@ input[type="range"]::-moz-range-thumb {
 <script src="assets/visual-settings.js?v=pixel-dither-3"></script>
 <link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-3">
 </head>
-<body>
+<body data-theme-audio="settings">
 <div class="cursor" id="cursor"></div>
 <div class="page-transition" id="transition"></div>
 <div class="starfield"></div>
@@ -841,6 +841,20 @@ function showTab(id, btn) {
 // Slider update
 function updateSlider(el, valId) {
   document.getElementById(valId).textContent = el.value + '%';
+  const audioMap = {
+    'vol-general': 'master',
+    'vol-musique': 'music',
+    'vol-sfx': 'effects',
+    'vol-hal': 'hal'
+  };
+  const setting = audioMap[el.id];
+  if (setting) {
+    try { localStorage.setItem(`areciboAudioVolume:${setting}`, String(el.value)); }
+    catch (err) {}
+    window.dispatchEvent(new CustomEvent('arecibo-audio-settings-change', {
+      detail: { setting, value: Number(el.value) || 0 }
+    }));
+  }
   saveSettings();
 }
 
@@ -854,6 +868,14 @@ function updateBrightness(el) {
 // Toggle
 function toggleSwitch(el) {
   el.classList.toggle('on');
+  if (el.id === 'toggle-mute') {
+    const isMuted = el.classList.contains('on');
+    try { localStorage.setItem('areciboAudioMuted', String(isMuted)); }
+    catch (err) {}
+    window.dispatchEvent(new CustomEvent('arecibo-audio-muted-change', {
+      detail: { muted: isMuted }
+    }));
+  }
   saveSettings();
 }
 
@@ -943,6 +965,31 @@ function goBack() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+  const audioDefaults = [
+    ['vol-general', 'master', 80, 'val-general'],
+    ['vol-musique', 'music', 60, 'val-musique'],
+    ['vol-sfx', 'effects', 90, 'val-sfx'],
+    ['vol-hal', 'hal', 75, 'val-hal']
+  ];
+  audioDefaults.forEach(([id, setting, fallback, valueId]) => {
+    const input = document.getElementById(id);
+    const valueNode = document.getElementById(valueId);
+    if (!input || !valueNode) return;
+    let value = fallback;
+    try {
+      const stored = Number(localStorage.getItem(`areciboAudioVolume:${setting}`));
+      if (Number.isFinite(stored)) value = Math.max(0, Math.min(100, stored));
+    } catch (err) {}
+    input.value = value;
+    valueNode.textContent = `${value}%`;
+  });
+  const muteToggle = document.getElementById('toggle-mute');
+  if (muteToggle) {
+    let muted = false;
+    try { muted = localStorage.getItem('areciboAudioMuted') === 'true'; }
+    catch (err) {}
+    muteToggle.classList.toggle('on', muted);
+  }
   setTimeout(() => {
     document.getElementById('transition').style.opacity = '0';
   }, 50);
@@ -950,5 +997,6 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 window.addEventListener('arecibo-pixel-dither-change', () => syncPixelDitherButtons());
 </script>
+<script src="assets/theme-audio.js?v=theme-audio-1"></script>
 </body>
 </html>

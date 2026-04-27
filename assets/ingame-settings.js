@@ -11,17 +11,17 @@
             <div class="sp-section-label">Son</div>
             <div class="sp-slider-row">
               <span class="sp-slider-label">Volume général</span>
-              <input type="range" min="0" max="100" value="80" data-settings-value="sv1">
+	              <input type="range" min="0" max="100" value="80" data-settings-value="sv1" data-audio-setting="master" data-default="80">
               <span class="sp-val" id="sv1">80%</span>
             </div>
             <div class="sp-slider-row">
               <span class="sp-slider-label">Musique</span>
-              <input type="range" min="0" max="100" value="60" data-settings-value="sv2">
+	              <input type="range" min="0" max="100" value="60" data-settings-value="sv2" data-audio-setting="music" data-default="60">
               <span class="sp-val" id="sv2">60%</span>
             </div>
             <div class="sp-slider-row">
               <span class="sp-slider-label">Effets sonores</span>
-              <input type="range" min="0" max="100" value="60" data-settings-value="sv3">
+	              <input type="range" min="0" max="100" value="60" data-settings-value="sv3" data-audio-setting="effects" data-default="60">
               <span class="sp-val" id="sv3">60%</span>
             </div>
           </div>
@@ -103,13 +103,29 @@
     placeTab(tab);
     window.addEventListener('resize', () => placeTab(tab));
 
-    document.querySelector('[data-settings-close]').addEventListener('click', closeSettings);
-    document.querySelectorAll('[data-settings-value]').forEach(input => {
-      input.addEventListener('input', () => {
-        const valueNode = document.getElementById(input.dataset.settingsValue);
-        if (valueNode) valueNode.textContent = `${input.value}%`;
-      });
-    });
+	    document.querySelector('[data-settings-close]').addEventListener('click', closeSettings);
+	    document.querySelectorAll('[data-settings-value]').forEach(input => {
+	      const fallback = Number(input.dataset.default || input.value || 0);
+	      let value = fallback;
+	      try {
+	        const stored = Number(localStorage.getItem(`areciboAudioVolume:${input.dataset.audioSetting}`));
+	        if (Number.isFinite(stored)) value = Math.max(0, Math.min(100, stored));
+	      } catch (err) {}
+	      input.value = value;
+	      const valueNode = document.getElementById(input.dataset.settingsValue);
+	      if (valueNode) valueNode.textContent = `${value}%`;
+	      input.addEventListener('input', () => {
+	        const liveValueNode = document.getElementById(input.dataset.settingsValue);
+	        if (liveValueNode) liveValueNode.textContent = `${input.value}%`;
+	        if (input.dataset.audioSetting) {
+	          try { localStorage.setItem(`areciboAudioVolume:${input.dataset.audioSetting}`, String(input.value)); }
+	          catch (err) {}
+	          window.dispatchEvent(new CustomEvent('arecibo-audio-settings-change', {
+	            detail: { setting: input.dataset.audioSetting, value: Number(input.value) || 0 }
+	          }));
+	        }
+	      });
+	    });
 	    document.querySelectorAll('.sp-lang-row .lang-btn').forEach(button => {
 	      button.addEventListener('click', () => {
 	        if (button.disabled || button.classList.contains('disabled')) return;
