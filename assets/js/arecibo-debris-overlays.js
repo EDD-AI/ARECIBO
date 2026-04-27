@@ -28,6 +28,12 @@
     }, 1800);
   }
 
+  function hideDebrisLootToast() {
+    if (!debrisNoteToast) return;
+    window.clearTimeout(debrisNoteToastTimer);
+    debrisNoteToast.classList.remove('is-visible');
+  }
+
   function clearNotebookStack(stack) {
     stack.querySelectorAll('.notebook-open-img, .notebook-cover-button').forEach(el => el.remove());
   }
@@ -138,6 +144,12 @@
     }
   }
 
+  function resetToolboxLockState() {
+    toolboxLockDigits.fill(0);
+    toolboxUnlockAnnounced = false;
+    updateToolboxLockDisplay();
+  }
+
   function handleDebrisToolboxClick(button) {
     if (!button) return;
     const debrisScene = button.closest('.debris-scene');
@@ -234,6 +246,18 @@
 
   updateToolboxLockDisplay();
 
+  window.resetDebrisMissionState = () => {
+    collectedDebrisNotes.clear();
+    collectedDebrisToolboxes.clear();
+    debrisNoteButtons.forEach(button => button.classList.remove('is-found'));
+    debrisToolboxButtons.forEach(button => button.classList.remove('is-found'));
+    hideDebrisLootToast();
+    closeNotebookOverlay();
+    closeToolboxOverlay();
+    const notebookStack = document.getElementById('notebook-stack');
+    if (notebookStack) clearNotebookStack(notebookStack);
+    resetToolboxLockState();
+  };
   window.closeNotebookOverlay = closeNotebookOverlay;
   window.closeToolboxOverlay = closeToolboxOverlay;
 })();

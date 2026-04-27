@@ -785,6 +785,9 @@ function resetOpeningLevelAfterSasFailure() {
     localStorage.removeItem(PERSONAL_INVENTORY_KEY);
     localStorage.removeItem(sasRepairStateKey);
   } catch (err) {}
+  if (typeof window.resetDebrisMissionState === 'function') {
+    window.resetDebrisMissionState();
+  }
   setRepairToolActive('');
   if (personalObjectLayer) {
     personalObjectLayer.innerHTML = '';
