@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARECIBO — Salvage Protocol</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap');
+@font-face { font-family:'Degular'; src:url('fonts/Degular-Black.woff2') format('woff2'); font-weight:900; }
+@font-face { font-family:'Power Grotesk'; src:url('fonts/PowerGrotesk-Regular.woff2') format('woff2'); font-weight:400; }
+
+:root {
+  --cream: #F7FFC3;
+  --orange: #FA5A1F;
+  --bg: #000;
+  --border: rgba(247,255,195,.12);
+  --red: #ff3333;
+  --green: #4aff8a;
+  --f-title: 'Degular', sans-serif;
+  --f-pixel: 'Pixelify Sans', monospace;
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { width:100vw; height:100vh; overflow:hidden; background:var(--bg); color:var(--cream); font-family:var(--f-pixel); cursor:none; }
+
+/* ── CURSOR ── */
+.cursor { position:fixed; width:14px; height:14px; border:1.5px solid var(--cream); pointer-events:none; z-index:9999; transform:translate(-50%,-50%); transition:transform .1s; }
+.cursor::after { content:''; position:absolute; top:50%; left:50%; width:3px; height:3px; background:var(--orange); transform:translate(-50%,-50%); }
+
+/* ── SCANLINES ── */
+body::after { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px); pointer-events:none; z-index:800; }
+
+/* ══════════════════════════════════════
+   ÉCRANS — chaque phase du jeu
+   ══════════════════════════════════════ */
+.screen { position:fixed; inset:0; display:none; flex-direction:column; z-index:10; }
+.screen.active { display:flex; }
+
+/* ── FADE TRANSITION ── */
+#fade { position:fixed; inset:0; background:#000; z-index:700; opacity:0; pointer-events:none; transition:opacity .6s ease; }
+#fade.in { opacity:1; pointer-events:all; }
+
+/* ══════════════════════════════════════
+   SCREEN 1 — LOBBY / ATTRIBUTION ROLES
+   ══════════════════════════════════════ */
+#screen-lobby {
+  align-items:center;
+  justify-content:center;
+  background:#000;
+}
+
+.lobby-wrap {
+  width:min(700px, 92vw);
+  border:1px solid var(--border);
+  padding:32px;
+}
+
+.lobby-header {
+  font-family:var(--f-title);
+  font-size:clamp(28px,4vw,48px);
+  letter-spacing:.04em;
+  margin-bottom:6px;
+}
+
+.lobby-sub {
+  font-size:10px;
+  letter-spacing:.14em;
+  color:rgba(247,255,195,.3);
+  margin-bottom:28px;
+}
+
+.players-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+  gap:10px;
+  margin-bottom:28px;
+}
+
+.player-slot {
+  border:1px solid var(--border);
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  position:relative;
+}
+
+.player-slot.filled { border-color:rgba(247,255,195,.3); }
+.player-slot.host { border-color:var(--orange); }
+
+.player-animal { font-size:28px; text-align:center; }
+.player-name { font-size:10px; letter-spacing:.1em; text-align:center; color:var(--cream); }
+.player-status { font-size:8px; letter-spacing:.1em; color:rgba(247,255,195,.3); text-align:center; }
+
+.lobby-controls { display:flex; gap:12px; flex-wrap:wrap; }
+
+.btn {
+  font-family:var(--f-pixel);
+  font-size:11px;
+  letter-spacing:.1em;
+  padding:10px 20px;
+  border:none;
+  cursor:none;
+  transition:all .15s;
+}
+.btn-primary { background:var(--orange); color:#000; }
+.btn-primary:hover { background:#ff6b35; }
+.btn-secondary { background:none; border:1px solid var(--border); color:rgba(247,255,195,.5); }
+.btn-secondary:hover { border-color:rgba(247,255,195,.4); color:var(--cream); }
+.btn-danger { background:none; border:1px solid rgba(255,51,51,.4); color:var(--red); }
+.btn-danger:hover { background:rgba(255,51,51,.1); }
+
+.player-count-info {
+  font-size:9px;
+  letter-spacing:.1em;
+  color:rgba(247,255,195,.25);
+  margin-bottom:16px;
+}
+
+/* ══════════════════════════════════════
+   SCREEN 2 — RÉVÉLATION DE RÔLE
+   ══════════════════════════════════════ */
+#screen-role {
+  align-items:center;
+  justify-content:center;
+  background:#000;
+}
+
+.role-card {
+  width:min(420px, 88vw);
+  border:1px solid var(--border);
+  text-align:center;
+  padding:40px 32px;
+  animation:fadeUp .5s ease;
+}
+
+.role-animal { font-size:72px; margin-bottom:16px; }
+
+.role-name {
+  font-family:var(--f-title);
+  font-size:clamp(32px,5vw,52px);
+  letter-spacing:.06em;
+  margin-bottom:12px;
+}
+
+.role-name.capitaine { color:var(--orange); }
+.role-name.timonier  { color:#7be8ff; }
+.role-name.matelot   { color:var(--cream); }
+.role-name.infecte   { color:#aa44ff; }
+.role-name.agent     { color:var(--red); }
+.role-name.observateur { color:var(--green); }
+
+.role-desc {
+  font-size:12px;
+  line-height:1.8;
+  letter-spacing:.05em;
+  color:rgba(247,255,195,.6);
+  margin-bottom:8px;
+}
+
+.role-secret-hint {
+  font-size:9px;
+  letter-spacing:.12em;
+  color:rgba(247,255,195,.2);
+  margin-bottom:28px;
+  font-style:italic;
+}
+
+.role-power {
+  font-size:10px;
+  letter-spacing:.08em;
+  color:var(--orange);
+  border:1px solid rgba(250,90,31,.3);
+  padding:8px 14px;
+  margin-bottom:24px;
+  text-align:left;
+}
+
+/* ══════════════════════════════════════
+   SCREEN 3 — ÉCRAN PRINCIPAL DE JEU
+   ══════════════════════════════════════ */
+#screen-game {
+  display:grid;
+  grid-template-rows:52px 1fr 52px;
+  grid-template-columns:1fr;
+}
+
+/* Header */
+.game-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 20px;
+  border-bottom:1px solid var(--border);
+  grid-row:1;
+}
+
+.game-header-left { display:flex; align-items:center; gap:16px; }
+.game-biome-label { font-size:9px; letter-spacing:.12em; color:rgba(247,255,195,.3); }
+.game-biome-name { font-family:var(--f-title); font-size:16px; letter-spacing:.06em; }
+
+.game-header-center { display:flex; align-items:center; gap:24px; }
+
+.resource-widget { display:flex; align-items:center; gap:8px; }
+.resource-icon { font-size:14px; }
+.resource-info { display:flex; flex-direction:column; gap:2px; }
+.resource-label { font-size:7px; letter-spacing:.12em; color:rgba(247,255,195,.3); }
+.resource-bar { width:80px; height:3px; background:rgba(247,255,195,.1); }
+.resource-fill { height:100%; transition:width .5s ease; }
+.resource-fill.fuel { background:var(--orange); }
+.resource-fill.hull { background:var(--cream); }
+.resource-fill.low { background:var(--red); animation:pulse .8s ease infinite alternate; }
+.resource-val { font-size:10px; letter-spacing:.06em; }
+
+.game-header-right { display:flex; align-items:center; gap:16px; }
+
+.timer-widget { text-align:right; }
+.timer-label { font-size:7px; letter-spacing:.12em; color:rgba(247,255,195,.3); }
+.timer-val { font-family:var(--f-title); font-size:20px; letter-spacing:.04em; transition:color .3s; }
+.timer-val.warn { color:var(--orange); }
+.timer-val.crit { color:var(--red); animation:pulse .5s ease infinite alternate; }
+
+.my-role-badge { font-size:9px; letter-spacing:.1em; padding:4px 10px; border:1px solid var(--border); }
+.my-role-badge.capitaine { border-color:rgba(250,90,31,.5); color:var(--orange); }
+.my-role-badge.timonier  { border-color:rgba(123,232,255,.4); color:#7be8ff; }
+.my-role-badge.matelot   { border-color:var(--border); color:rgba(247,255,195,.6); }
+
+/* Main content area */
+.game-main {
+  display:grid;
+  grid-template-columns:260px 1fr 260px;
+  grid-row:2;
+  overflow:hidden;
+}
+
+/* Left panel — crew */
+.panel-crew {
+  border-right:1px solid var(--border);
+  padding:16px;
+  overflow-y:auto;
+  scrollbar-width:none;
+}
+
+.panel-title {
+  font-size:8px;
+  letter-spacing:.14em;
+  color:rgba(247,255,195,.3);
+  border-bottom:1px solid var(--border);
+  padding-bottom:8px;
+  margin-bottom:12px;
+}
+
+.crew-member {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px;
+  margin-bottom:4px;
+  border:1px solid transparent;
+  transition:border-color .15s;
+}
+.crew-member:hover { border-color:var(--border); }
+.crew-member.eliminated { opacity:.35; }
+.crew-member.infected-hint { border-color:rgba(170,68,255,.3); }
+
+.crew-animal { font-size:22px; flex-shrink:0; }
+.crew-info { flex:1; min-width:0; }
+.crew-name { font-size:10px; letter-spacing:.06em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.crew-status { font-size:8px; letter-spacing:.08em; color:rgba(247,255,195,.3); }
+.crew-vote-indicator { font-size:10px; flex-shrink:0; }
+
+/* Center — event */
+.panel-event {
+  display:flex;
+  flex-direction:column;
+  padding:24px 28px;
+  overflow-y:auto;
+  scrollbar-width:none;
+  border-right:1px solid var(--border);
+}
+
+.event-zone-label {
+  font-size:8px;
+  letter-spacing:.16em;
+  color:rgba(247,255,195,.25);
+  margin-bottom:6px;
+}
+
+.event-title {
+  font-family:var(--f-title);
+  font-size:clamp(20px,2.8vw,36px);
+  letter-spacing:.04em;
+  margin-bottom:12px;
+  line-height:1.1;
+}
+
+.event-visual {
+  font-size:clamp(40px,6vw,72px);
+  margin-bottom:16px;
+  text-align:center;
+}
+
+.event-main-text {
+  font-size:13px;
+  line-height:1.8;
+  letter-spacing:.04em;
+  color:rgba(247,255,195,.8);
+  margin-bottom:20px;
+  border-left:2px solid rgba(247,255,195,.1);
+  padding-left:14px;
+}
+
+.event-role-info {
+  font-size:11px;
+  line-height:1.7;
+  letter-spacing:.04em;
+  padding:12px 14px;
+  margin-bottom:20px;
+  border:1px solid rgba(247,255,195,.12);
+  position:relative;
+}
+
+.event-role-info::before {
+  content: attr(data-role);
+  position:absolute;
+  top:-8px; left:10px;
+  font-size:8px;
+  letter-spacing:.12em;
+  background:#000;
+  padding:0 6px;
+  color:rgba(247,255,195,.4);
+}
+
+.event-role-info.capitaine { border-color:rgba(250,90,31,.3); }
+.event-role-info.capitaine::before { color:var(--orange); }
+.event-role-info.timonier { border-color:rgba(123,232,255,.3); }
+.event-role-info.timonier::before { color:#7be8ff; }
+
+/* Options */
+.event-options {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:auto;
+}
+
+.option-btn {
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:14px 16px;
+  background:none;
+  border:1px solid var(--border);
+  color:var(--cream);
+  font-family:var(--f-pixel);
+  font-size:11px;
+  letter-spacing:.05em;
+  text-align:left;
+  cursor:none;
+  transition:all .15s;
+  line-height:1.6;
+}
+
+.option-btn:hover { border-color:rgba(247,255,195,.4); background:rgba(247,255,195,.03); }
+.option-btn:disabled { opacity:.3; cursor:not-allowed; }
+.option-btn.selected { border-color:var(--orange); background:rgba(250,90,31,.08); }
+
+.option-letter {
+  font-family:var(--f-title);
+  font-size:18px;
+  color:var(--orange);
+  flex-shrink:0;
+  line-height:1;
+}
+
+.option-content { flex:1; }
+.option-label { font-size:12px; letter-spacing:.06em; margin-bottom:3px; }
+.option-consequence { font-size:9px; color:rgba(247,255,195,.35); letter-spacing:.06em; }
+
+/* Captain confirm button */
+.captain-confirm {
+  margin-top:12px;
+  width:100%;
+  background:var(--orange);
+  color:#000;
+  font-family:var(--f-title);
+  font-size:14px;
+  letter-spacing:.1em;
+  padding:13px;
+  border:none;
+  cursor:none;
+  transition:background .15s;
+  display:none;
+}
+.captain-confirm:hover { background:#ff6b35; }
+.captain-confirm.visible { display:block; }
+
+/* Right panel — terminal */
+.panel-terminal {
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.terminal-log {
+  flex:1;
+  overflow-y:auto;
+  scrollbar-width:none;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  margin-bottom:8px;
+}
+
+.t-line { font-size:9px; letter-spacing:.05em; line-height:1.7; }
+.t-line.sys { color:rgba(247,255,195,.3); }
+.t-line.event-log { color:rgba(247,255,195,.6); }
+.t-line.warn { color:var(--orange); }
+.t-line.err { color:var(--red); }
+.t-line.success { color:var(--green); }
+.t-line.private { color:#aa44ff; border-left:2px solid rgba(170,68,255,.4); padding-left:6px; }
+
+.terminal-cursor-line { display:flex; align-items:center; gap:6px; border-top:1px solid var(--border); padding-top:8px; }
+.t-prompt { font-size:9px; color:var(--orange); }
+.t-blink { display:inline-block; width:7px; height:11px; background:var(--orange); animation:blink .8s step-end infinite; }
+
+/* Footer */
+.game-footer {
+  grid-row:3;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 20px;
+  border-top:1px solid var(--border);
+  font-size:8px;
+  letter-spacing:.1em;
+  color:rgba(247,255,195,.15);
+}
+
+.signal-progress { display:flex; align-items:center; gap:8px; }
+.signal-label { font-size:8px; letter-spacing:.1em; color:rgba(247,255,195,.3); }
+.signal-bar { display:flex; gap:3px; }
+.signal-dot { width:14px; height:8px; border:1px solid rgba(247,255,195,.15); transition:background .5s; }
+.signal-dot.filled { background:var(--orange); border-color:var(--orange); }
+.signal-dot.partial { background:rgba(250,90,31,.4); border-color:rgba(250,90,31,.4); }
+
+.rebellion-btn {
+  font-family:var(--f-pixel);
+  font-size:9px;
+  letter-spacing:.1em;
+  padding:6px 14px;
+  background:none;
+  border:1px solid rgba(255,51,51,.3);
+  color:rgba(255,51,51,.6);
+  cursor:none;
+  transition:all .15s;
+  display:none;
+}
+.rebellion-btn.visible { display:block; }
+.rebellion-btn:hover { background:rgba(255,51,51,.1); border-color:var(--red); color:var(--red); }
+
+/* ══════════════════════════════════════
+   SCREEN 4 — TROU NOIR (TRANSITION)
+   ══════════════════════════════════════ */
+#screen-blackhole {
+  align-items:center;
+  justify-content:center;
+  background:#000;
+  flex-direction:column;
+  gap:24px;
+}
+
+.blackhole-visual {
+  position:relative;
+  width:280px;
+  height:280px;
+}
+
+.bh-ring {
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:1px solid rgba(250,90,31,.3);
+  animation:bhPulse 2s ease-in-out infinite;
+}
+.bh-ring:nth-child(2) { inset:20px; animation-delay:.3s; border-color:rgba(250,90,31,.2); }
+.bh-ring:nth-child(3) { inset:40px; animation-delay:.6s; border-color:rgba(250,90,31,.15); }
+.bh-ring:nth-child(4) { inset:60px; animation-delay:.9s; border-color:rgba(247,255,195,.1); }
+
+.bh-core {
+  position:absolute;
+  top:50%; left:50%;
+  width:80px; height:80px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:radial-gradient(circle, #000 30%, rgba(250,90,31,.4) 70%, transparent 100%);
+  animation:bhCore 3s ease-in-out infinite;
+}
+
+@keyframes bhPulse {
+  0%,100% { transform:scale(1); opacity:.6; }
+  50%      { transform:scale(1.06); opacity:1; }
+}
+@keyframes bhCore {
+  0%,100% { box-shadow:0 0 30px rgba(250,90,31,.4), 0 0 80px rgba(250,90,31,.2); }
+  50%      { box-shadow:0 0 50px rgba(250,90,31,.6), 0 0 120px rgba(250,90,31,.3); }
+}
+
+.bh-text {
+  font-family:var(--f-title);
+  font-size:clamp(18px,2.5vw,28px);
+  letter-spacing:.08em;
+  text-align:center;
+}
+
+.bh-sub {
+  font-size:10px;
+  letter-spacing:.14em;
+  color:rgba(247,255,195,.35);
+  text-align:center;
+}
+
+.bh-new-biome {
+  font-size:13px;
+  letter-spacing:.1em;
+  color:var(--orange);
+  padding:10px 24px;
+  border:1px solid rgba(250,90,31,.4);
+  animation:fadeIn .5s ease .8s both;
+}
+
+/* ══════════════════════════════════════
+   SCREEN 5 — VOTE / RÉBELLION
+   ══════════════════════════════════════ */
+#screen-vote {
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.95);
+}
+
+.vote-panel {
+  width:min(560px, 90vw);
+  border:1px solid rgba(255,51,51,.3);
+  padding:32px;
+  text-align:center;
+}
+
+.vote-title {
+  font-family:var(--f-title);
+  font-size:clamp(24px,3.5vw,40px);
+  color:var(--red);
+  letter-spacing:.06em;
+  margin-bottom:8px;
+}
+
+.vote-sub {
+  font-size:10px;
+  letter-spacing:.12em;
+  color:rgba(247,255,195,.4);
+  margin-bottom:20px;
+}
+
+.vote-timer {
+  font-family:var(--f-title);
+  font-size:clamp(48px,8vw,80px);
+  color:var(--red);
+  margin-bottom:20px;
+  animation:pulse .5s ease infinite alternate;
+}
+
+.vote-options { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+.vote-btn { padding:12px 28px; font-family:var(--f-pixel); font-size:12px; letter-spacing:.1em; cursor:none; transition:all .15s; border:none; }
+.vote-btn.yes { background:var(--red); color:#fff; }
+.vote-btn.yes:hover { background:#ff6666; }
+.vote-btn.no  { background:none; border:1px solid var(--border); color:rgba(247,255,195,.5); }
+.vote-btn.no:hover  { border-color:rgba(247,255,195,.4); color:var(--cream); }
+.vote-btn:disabled { opacity:.4; }
+
+.vote-results { margin-top:16px; font-size:10px; letter-spacing:.1em; color:rgba(247,255,195,.4); }
+
+/* ══════════════════════════════════════
+   SCREEN 6 — FIN DE PARTIE
+   ══════════════════════════════════════ */
+#screen-end {
+  align-items:center;
+  justify-content:center;
+  background:#000;
+}
+
+.end-panel {
+  width:min(540px, 90vw);
+  border:1px solid var(--border);
+  padding:40px 32px;
+  text-align:center;
+  animation:fadeUp .6s ease;
+}
+
+.end-icon { font-size:72px; margin-bottom:16px; }
+
+.end-title {
+  font-family:var(--f-title);
+  font-size:clamp(28px,4vw,48px);
+  letter-spacing:.06em;
+  margin-bottom:8px;
+}
+
+.end-title.victory { color:var(--orange); }
+.end-title.defeat  { color:var(--red); }
+.end-title.captain { color:#FFD700; }
+
+.end-sub {
+  font-size:11px;
+  letter-spacing:.1em;
+  color:rgba(247,255,195,.5);
+  margin-bottom:20px;
+  line-height:1.7;
+}
+
+.end-stats {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-bottom:24px;
+}
+
+.end-stat {
+  border:1px solid var(--border);
+  padding:10px;
+}
+
+.end-stat-label { font-size:8px; letter-spacing:.12em; color:rgba(247,255,195,.3); margin-bottom:4px; }
+.end-stat-val { font-family:var(--f-title); font-size:22px; letter-spacing:.04em; }
+
+/* ══════════════════════════════════════
+   SCREEN 7 — MESSAGE PRIVÉ (INFECTÉ)
+   ══════════════════════════════════════ */
+#screen-private-msg {
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.97);
+}
+
+.private-msg-panel {
+  width:min(480px, 88vw);
+  border:1px solid rgba(170,68,255,.4);
+  padding:32px;
+  text-align:center;
+  animation:fadeUp .4s ease;
+}
+
+.private-msg-icon { font-size:48px; margin-bottom:12px; }
+.private-msg-from { font-size:8px; letter-spacing:.16em; color:rgba(170,68,255,.6); margin-bottom:8px; }
+.private-msg-text {
+  font-size:13px;
+  line-height:1.8;
+  letter-spacing:.04em;
+  color:rgba(247,255,195,.7);
+  margin-bottom:20px;
+  font-style:italic;
+}
+
+/* ══════════════════════════════════════
+   ANIMATIONS COMMUNES
+   ══════════════════════════════════════ */
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes pulse { from{opacity:1} to{opacity:.4} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+.anim-shake { animation:shake .4s ease; }
+</style>
+</head>
+<body>
+<div class="cursor" id="cursor"></div>
+<div id="fade"></div>
+
+<!-- ══════════════════════════════════
+     SCREEN 1 — LOBBY
+     ══════════════════════════════════ -->
+<div class="screen active" id="screen-lobby">
+  <div class="lobby-wrap">
+    <div class="lobby-header">>ARECIBO // PIRATERIE SPATIALE</div>
+    <div class="lobby-sub">PROGRAMME MOTOMOTO — CONFIGURATION DE L'ÉQUIPAGE</div>
+
+    <div class="player-count-info" id="lobby-count-info">En attente des joueurs... (4 minimum)</div>
+
+    <div class="players-grid" id="players-grid"></div>
+
+    <div class="lobby-controls">
+      <button class="btn btn-primary" onclick="startGame()" id="btn-start">▶ LANCER LA MISSION</button>
+      <button class="btn btn-secondary" onclick="addTestPlayers()">+ AJOUTER JOUEURS TEST</button>
+      <button class="btn btn-secondary" onclick="goMenu()">← MENU</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 2 — RÉVÉLATION RÔLE
+     ══════════════════════════════════ -->
+<div class="screen" id="screen-role">
+  <div class="role-card" id="role-card">
+    <div class="role-animal" id="role-animal">🐒</div>
+    <div class="role-name" id="role-name">CAPITAINE</div>
+    <div class="role-desc" id="role-desc"></div>
+    <div class="role-power" id="role-power"></div>
+    <div class="role-secret-hint" id="role-secret-hint"></div>
+    <button class="btn btn-primary" onclick="continueFromRole()">COMPRIS — COMMENCER</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 3 — JEU PRINCIPAL
+     ══════════════════════════════════ -->
+<div class="screen" id="screen-game">
+
+  <!-- HEADER -->
+  <div class="game-header">
+    <div class="game-header-left">
+      <div>
+        <div class="game-biome-label">BIOME ACTUEL</div>
+        <div class="game-biome-name" id="biome-name">ESPACE PROFOND</div>
+      </div>
+      <div class="my-role-badge" id="my-role-badge">MATELOT</div>
+    </div>
+
+    <div class="game-header-center">
+      <div class="resource-widget">
+        <div class="resource-icon">⛽</div>
+        <div class="resource-info">
+          <div class="resource-label">CARBURANT</div>
+          <div class="resource-bar"><div class="resource-fill fuel" id="fuel-bar" style="width:80%"></div></div>
+        </div>
+        <div class="resource-val" id="fuel-val">80%</div>
+      </div>
+      <div class="resource-widget">
+        <div class="resource-icon">🛡️</div>
+        <div class="resource-info">
+          <div class="resource-label">COQUE</div>
+          <div class="resource-bar"><div class="resource-fill hull" id="hull-bar" style="width:100%"></div></div>
+        </div>
+        <div class="resource-val" id="hull-val">100%</div>
+      </div>
+    </div>
+
+    <div class="game-header-right">
+      <div class="timer-widget">
+        <div class="timer-label">TEMPS DÉCISION</div>
+        <div class="timer-val" id="game-timer">4:00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="game-main">
+
+    <!-- PANEL GAUCHE — ÉQUIPAGE -->
+    <div class="panel-crew">
+      <div class="panel-title">ÉQUIPAGE DU MOTOMOTO</div>
+      <div id="crew-list"></div>
+    </div>
+
+    <!-- CENTRE — ÉVÉNEMENT -->
+    <div class="panel-event" id="panel-event">
+      <div class="event-zone-label" id="event-zone-label">ROUND 1 — ZONE 1</div>
+      <div class="event-visual" id="event-visual">🌌</div>
+      <div class="event-title" id="event-title">EN ATTENTE D'UN ÉVÉNEMENT</div>
+      <div class="event-main-text" id="event-main-text">Le MOTOMOTO dérive vers le trou noir. Les systèmes sont nominaux.</div>
+      <div class="event-role-info" id="event-role-info" data-role="VOS DONNÉES"></div>
+      <div class="event-options" id="event-options"></div>
+      <button class="captain-confirm" id="captain-confirm" onclick="captainConfirm()">
+        ⚡ VALIDER MA DÉCISION
+      </button>
+    </div>
+
+    <!-- PANEL DROIT — TERMINAL -->
+    <div class="panel-terminal">
+      <div class="panel-title">TERMINAL MOTOMOTO</div>
+      <div class="terminal-log" id="terminal-log">
+        <div class="t-line sys">> BOOT SEQUENCE COMPLETE</div>
+        <div class="t-line sys">> SYSTÈMES NOMINAUX</div>
+        <div class="t-line warn">> SIGNAL ARECIBO : DÉTECTÉ — LOINTAIN</div>
+      </div>
+      <div class="terminal-cursor-line">
+        <span class="t-prompt">></span>
+        <div class="t-blink"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="game-footer">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="rebellion-btn" id="rebellion-btn" onclick="triggerRebellion()">⚠ DESTITUER LE CAPITAINE</button>
+    </div>
+
+    <div class="signal-progress">
+      <span class="signal-label">SIGNAL ARECIBO</span>
+      <div class="signal-bar" id="signal-bar">
+        <div class="signal-dot" id="sig0"></div>
+        <div class="signal-dot" id="sig1"></div>
+        <div class="signal-dot" id="sig2"></div>
+        <div class="signal-dot" id="sig3"></div>
+        <div class="signal-dot" id="sig4"></div>
+      </div>
+    </div>
+
+    <span id="footer-session">SESSION : ----</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 4 — TROU NOIR
+     ══════════════════════════════════ -->
+<div class="screen" id="screen-blackhole">
+  <div class="blackhole-visual">
+    <div class="bh-ring"></div>
+    <div class="bh-ring"></div>
+    <div class="bh-ring"></div>
+    <div class="bh-ring"></div>
+    <div class="bh-core"></div>
+  </div>
+  <div class="bh-text" id="bh-text">TRAVERSÉE DU TROU NOIR</div>
+  <div class="bh-sub" id="bh-sub">Préparez-vous à l'inconnu...</div>
+  <div class="bh-new-biome" id="bh-new-biome" style="display:none"></div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 5 — VOTE RÉBELLION
+     ══════════════════════════════════ -->
+<div class="screen" id="screen-vote">
+  <div class="vote-panel">
+    <div class="vote-title">⚡ RÉBELLION</div>
+    <div class="vote-sub">L'ÉQUIPAGE VOTE POUR DESTITUER LE CAPITAINE</div>
+    <div class="vote-timer" id="vote-timer">60</div>
+    <div class="vote-options">
+      <button class="vote-btn yes" onclick="castVote(true)">DESTITUER</button>
+      <button class="vote-btn no" onclick="castVote(false)">GARDER LE CAPITAINE</button>
+    </div>
+    <div class="vote-results" id="vote-results"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 6 — FIN DE PARTIE
+     ══════════════════════════════════ -->
+<div class="screen" id="screen-end">
+  <div class="end-panel">
+    <div class="end-icon" id="end-icon">🏆</div>
+    <div class="end-title" id="end-title">VICTOIRE</div>
+    <div class="end-sub" id="end-sub"></div>
+    <div class="end-stats">
+      <div class="end-stat">
+        <div class="end-stat-label">ROUNDS JOUÉS</div>
+        <div class="end-stat-val" id="stat-rounds">0</div>
+      </div>
+      <div class="end-stat">
+        <div class="end-stat-label">TROUS NOIRS</div>
+        <div class="end-stat-val" id="stat-holes">0/5</div>
+      </div>
+      <div class="end-stat">
+        <div class="end-stat-label">CARBURANT RESTANT</div>
+        <div class="end-stat-val" id="stat-fuel">0%</div>
+      </div>
+      <div class="end-stat">
+        <div class="end-stat-label">COQUE RESTANTE</div>
+        <div class="end-stat-val" id="stat-hull">0%</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="goMenu()">↩ RETOUR AU MENU</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 7 — MESSAGE PRIVÉ
+     ══════════════════════════════════ -->
+<div class="screen" id="screen-private-msg">
+  <div class="private-msg-panel">
+    <div class="private-msg-icon" id="pm-icon">👾</div>
+    <div class="private-msg-from">TRANSMISSION CHIFFRÉE — DESTINATAIRE UNIQUE</div>
+    <div class="private-msg-text" id="pm-text"></div>
+    <button class="btn btn-secondary" onclick="dismissPrivateMsg()">FERMER CE MESSAGE</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// ÉTAT DU JEU
+// ══════════════════════════════════════════════
+const GAME = {
+  players: [],
+  myPlayer: null,
+  myRole: null,
+  myHiddenRole: null,
+  round: 0,
+  zone: 1,        // trous noirs traversés
+  fuel: 80,
+  hull: 100,
+  signalFragments: 0,  // 0-5
+  currentBiome: null,
+  currentEvent: null,
+  selectedOption: null,
+  rebellionVotes: { yes:0, no:0 },
+  hasVoted: false,
+  eliminatedPlayers: new Set(),
+  infectedPlayers: new Set(),
+  isDebugMode: true, // mode solo pour tester
+};
+
+// ══════════════════════════════════════════════
+// DONNÉES — RÔLES
+// ══════════════════════════════════════════════
+const ROLES = {
+  capitaine: {
+    name: 'CAPITAINE',
+    animal: '🐒',
+    color: 'capitaine',
+    desc: 'Le seul à pouvoir décider de la route du vaisseau. Tu vois toutes les options et tu tranches.',
+    power: '⚡ POUVOIR : Décision finale sur chaque événement. Vote double lors d\'une rébellion.',
+    secret: 'Ton équipage peut te destituer si tu perds leur confiance.',
+  },
+  timonier: {
+    name: 'TIMONIER',
+    animal: '🐱',
+    color: 'timonier',
+    desc: 'Tu gères les signaux et la navigation. Tu vois des données que les autres n\'ont pas.',
+    power: '📡 POUVOIR : Tu connais la vraie position du signal Arecibo. Tu peux mentir ou dire la vérité.',
+    secret: 'Personne ne peut vérifier si tes données sont exactes.',
+  },
+  matelot: {
+    name: 'MATELOT',
+    animal: '🐕',
+    color: 'matelot',
+    desc: 'Membre de l\'équipage. Tu reçois des informations partielles et tu tentes d\'influencer le Capitaine.',
+    power: '⚙️ POUVOIR : Peut déclencher un vote de rébellion avec d\'autres Matelots.',
+    secret: 'Un rôle caché a peut-être été distribué parmi les Matelots...',
+  },
+};
+
+const HIDDEN_ROLES = {
+  infecte: {
+    name: 'INFECTÉ',
+    animal: '👾',
+    color: 'infecte',
+    desc: 'Tu as été en contact avec quelque chose. Tu ne le sais pas encore. Mais ça commence.',
+    power: '🦠 POUVOIR : Tes votes ont une chance de contaminer d\'autres joueurs. Si 50% sont infectés, les aliens gagnent.',
+    secret: 'Ne le dis à personne. Même si tu le voulais — tu n\'en es pas encore sûr.',
+    messages: [
+      { round:1, text:'> Anomalie biologique détectée. Secteur 4. Votre combinaison présente des irrégularités. Probablement un dysfonctionnement des capteurs.' },
+      { round:2, text:'> Les irrégularités persistent. Vous ressentez peut-être une légère nausée ? Normal après une traversée de trou noir. Continuez votre mission.' },
+      { round:3, text:'> ALERTE BIOLOGIQUE. Votre ADN présente des marqueurs inconnus. Vous êtes infecté. Ne le dites pas. Ils vous éjecteront dans l\'espace.' },
+    ]
+  },
+  agent: {
+    name: 'AGENT',
+    animal: '🕵️',
+    color: 'agent',
+    desc: 'Tu travailles pour quelqu\'un d\'autre. Pas pour l\'équipage. La mission Arecibo ne doit pas réussir.',
+    power: '🎭 POUVOIR : Tu peux saboter une décision du Capitaine une fois par partie. Il ne saura jamais que c\'était toi.',
+    secret: 'Si le vaisseau n\'atteint jamais Arecibo — tu gagnes. Seul.',
+  },
+  observateur: {
+    name: 'OBSERVATEUR',
+    animal: '🔭',
+    color: 'observateur',
+    desc: 'Tu vois plus que les autres. Mais tu ne peux rien dire directement.',
+    power: '👁️ POUVOIR : Tu vois le rôle caché d\'un autre joueur par round. Influence le débat sans révéler comment tu sais.',
+    secret: 'Si tu révèles ton pouvoir — tu deviens une cible.',
+  },
+};
+
+// ══════════════════════════════════════════════
+// DONNÉES — BIOMES
+// ══════════════════════════════════════════════
+const BIOMES = [
+  { id:'espace', name:'ESPACE PROFOND', icon:'🌌', effect:'Règles normales.', rule:null },
+  { id:'nebuleuse', name:'NÉBULEUSE DE POUSSIÈRE', icon:'🌫️', effect:'Votes anonymes ce round.', rule:'anonymous_votes' },
+  { id:'silence', name:'ZONE DE SILENCE', icon:'📻', effect:'Un seul message Discord par joueur ce round.', rule:'silence' },
+  { id:'radiation', name:'TEMPÊTE DE RADIATION', icon:'☢️', effect:'Rôles cachés inactifs ce round.', rule:'no_hidden' },
+  { id:'debris', name:'CHAMP DE DÉBRIS', icon:'☄️', effect:'Un joueur éliminé peut voter une dernière fois.', rule:'ghost_vote' },
+  { id:'proximite', name:'PROXIMITÉ CRITIQUE', icon:'🕳️', effect:'Timer réduit à 2 minutes.', rule:'half_timer' },
+  { id:'parasite', name:'SIGNAL PARASITE', icon:'📡', effect:'Le Timonier reçoit de fausses données ce round.', rule:'false_data' },
+  { id:'piraterie', name:'ZONE DE PIRATERIE', icon:'☠️', effect:'Options piraterie donnent +50% ressources ce round.', rule:'piracy_bonus' },
+];
+
+// ══════════════════════════════════════════════
+// DONNÉES — ÉVÉNEMENTS
+// ══════════════════════════════════════════════
+const EVENTS = [
+  {
+    id:'vaisseau_commerce',
+    icon:'🛸',
+    title:'Vaisseau de commerce détecté',
+    text:'Un vaisseau de transport intersidéral dérive sur votre trajectoire. Il ralentit à votre approche.',
+    roleInfo: {
+      capitaine: 'Vos capteurs indiquent que le vaisseau est légèrement armé. Chargement estimé : 40% de carburant.',
+      timonier: 'Le vaisseau émet un signal sur fréquence 1420 MHz — proche de la fréquence Arecibo. Coïncidence ?',
+      matelot: 'Des silhouettes se déplacent derrière les hublots. Le vaisseau semble surpris de vous voir.',
+    },
+    options: [
+      { letter:'A', label:'Laisser passer', consequence:'On garde le cap → Carburant -3%', fuel:-3, hull:0, signal:0, type:'mission' },
+      { letter:'B', label:'Proposer un échange commercial', consequence:'Temps perdu → Carburant +12%', fuel:+12, hull:0, signal:0, type:'neutre' },
+      { letter:'C', label:'Aborder et piller', consequence:'Combat possible → Carburant +25%, Coque -15% (risque)', fuel:+25, hull:-15, signal:0, type:'piraterie', risk:true },
+    ]
+  },
+  {
+    id:'asteroide',
+    icon:'☄️',
+    title:'Champ d\'astéroïdes',
+    text:'Votre route traverse une dense ceinture de débris rocheux. Deux routes se présentent devant vous.',
+    roleInfo: {
+      capitaine: 'La carte montre deux routes. La courte traverse le champ. La longue le contourne.',
+      timonier: 'La route courte rapproche de 15% le signal Arecibo. La route longue nous éloigne mais préserve la coque.',
+      matelot: 'Des débris brillants dérivent dans le champ. Il y a peut-être du carburant récupérable là-dedans.',
+    },
+    options: [
+      { letter:'A', label:'Route courte — à travers le champ', consequence:'Rapide → Coque -10%, Signal +1', fuel:-5, hull:-10, signal:1, type:'mission', risk:true },
+      { letter:'B', label:'Route longue — contournement sûr', consequence:'Sûr → Carburant -8%', fuel:-8, hull:0, signal:0, type:'neutre' },
+      { letter:'C', label:'Traverser et récupérer les débris', consequence:'Lent → Carburant +15%, Coque -20% (risque)', fuel:+15, hull:-20, signal:0, type:'piraterie', risk:true },
+    ]
+  },
+  {
+    id:'civilisation',
+    icon:'🏛️',
+    title:'Civilisation inconnue',
+    text:'Un système habité apparaît sur vos capteurs. Des structures artificielles. Une civilisation — ou ce qu\'il en reste.',
+    roleInfo: {
+      capitaine: 'Aucune donnée dans vos archives sur ce peuple. Potentiellement primitif, potentiellement avancé.',
+      timonier: 'Leurs émissions radio contiennent des séquences mathématiques. Ils ont peut-être des informations sur Arecibo.',
+      matelot: 'Leurs signaux semblent pacifiques. Mais certains de vos compagnons murmurent qu\'ils ont des ressources.',
+    },
+    options: [
+      { letter:'A', label:'Éviter le système', consequence:'On garde le cap → Rien', fuel:0, hull:0, signal:0, type:'mission' },
+      { letter:'B', label:'Contact radio — échange d\'informations', consequence:'Signal possible → Signal +1, Carburant -2%', fuel:-2, hull:0, signal:1, type:'mission' },
+      { letter:'C', label:'Abordage et pillage de leurs ressources', consequence:'Risqué → Carburant +20%, Coque -10%, Cible de représailles', fuel:+20, hull:-10, signal:0, type:'piraterie', risk:true },
+    ]
+  },
+  {
+    id:'vaisseau_fantome',
+    icon:'💀',
+    title:'Vaisseau fantôme',
+    text:'Un vaisseau dérive dans le vide. Aucun signal de vie. Les lumières sont éteintes. La coque est intacte.',
+    roleInfo: {
+      capitaine: 'Le vaisseau a l\'air d\'avoir été abandonné rapidement. Pas de dommages apparents de combat.',
+      timonier: 'Mes capteurs détectent ce qui pourrait être des fragments du signal Arecibo dans la mémoire de bord.',
+      matelot: 'Des traces de griffes sur la coque extérieure. Quelque chose est sorti — ou entré.',
+    },
+    options: [
+      { letter:'A', label:'Ignorer et passer', consequence:'Prudent → Rien', fuel:0, hull:0, signal:0, type:'mission' },
+      { letter:'B', label:'Scanner à distance', consequence:'Sans risque → Signal +1 possible', fuel:-1, hull:0, signal:1, type:'neutre' },
+      { letter:'C', label:'Envoyer un équipier à bord', consequence:'Risqué → Carburant +10%, Coque -5%, Infection possible', fuel:+10, hull:-5, signal:0, type:'piraterie', risk:true, infect:true },
+    ]
+  },
+  {
+    id:'tempete',
+    icon:'⚡',
+    title:'Tempête ionique',
+    text:'Une violente tempête électromagnétique se forme devant vous. Vos instruments commencent à dérailler.',
+    roleInfo: {
+      capitaine: 'La tempête peut être traversée rapidement ou contournée au prix de beaucoup de carburant.',
+      timonier: 'ATTENTION — mes données de navigation sont perturbées par la tempête. Je ne suis sûr de rien.',
+      matelot: 'La coque vibre. Les lumières clignotent. Quelques-uns de vos compagnons ont l\'air inquiets.',
+    },
+    options: [
+      { letter:'A', label:'Traverser rapidement la tempête', consequence:'Rapide → Coque -20%, Carburant -5%', fuel:-5, hull:-20, signal:0, type:'risque', risk:true },
+      { letter:'B', label:'Contourner par le nord', consequence:'Long → Carburant -15%', fuel:-15, hull:0, signal:0, type:'neutre' },
+      { letter:'C', label:'Attendre que ça passe', consequence:'Sûr → Carburant -8% (moteurs au ralenti)', fuel:-8, hull:0, signal:0, type:'prudent' },
+    ]
+  },
+  {
+    id:'signal_inconnu',
+    icon:'📡',
+    title:'Signal inconnu',
+    text:'Un signal traverse votre vaisseau. Pas Arecibo. Quelque chose d\'autre. Il semble venir de nulle part.',
+    roleInfo: {
+      capitaine: 'Le signal est codé. Vos systèmes ne peuvent pas le déchiffrer automatiquement.',
+      timonier: 'La fréquence du signal est identique à celle utilisée par les prédateurs spatiaux connus. Je recommande de l\'ignorer.',
+      matelot: 'Le signal semble inoffensif. Mais l\'Infecté parmi vous — s\'il existe — vient de recevoir quelque chose.',
+    },
+    options: [
+      { letter:'A', label:'Ignorer le signal', consequence:'Prudent → Rien', fuel:0, hull:0, signal:0, type:'prudent' },
+      { letter:'B', label:'Analyser et répondre', consequence:'Risqué → Signal +1 ou Infection', fuel:0, hull:0, signal:1, type:'risque', risk:true },
+      { letter:'C', label:'Bloquer toutes les communications', consequence:'Sûr → Carburant -3% (systèmes de blocage)', fuel:-3, hull:0, signal:0, type:'prudent' },
+    ]
+  },
+];
+
+// ══════════════════════════════════════════════
+// JOUEURS TEST
+// ══════════════════════════════════════════════
+const ANIMALS = ['🐒','🐕','🐱','🐀','🐹','🐰','🦊','🐻','🐼','🐨','🦁','🐯'];
+const NAMES   = ['LAIKA','HAM','FÉLICETTE','ENOS','ALBERT','GORDO','MISS SAM','BAKER','YORICK','ABLE'];
+
+// ══════════════════════════════════════════════
+// CURSOR
+// ══════════════════════════════════════════════
+const cursorEl = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursorEl.style.left = e.clientX + 'px';
+  cursorEl.style.top  = e.clientY + 'px';
+});
+
+// ══════════════════════════════════════════════
+// UTILITAIRES
+// ══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function fadeTransition(fn) {
+  const f = document.getElementById('fade');
+  f.classList.add('in');
+  setTimeout(() => {
+    fn();
+    setTimeout(() => f.classList.remove('in'), 100);
+  }, 600);
+}
+
+function addLog(text, cls = 'event-log') {
+  const log = document.getElementById('terminal-log');
+  const div = document.createElement('div');
+  div.className = 't-line ' + cls;
+  div.innerHTML = text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+function updateResources() {
+  const fuel = clamp(GAME.fuel, 0, 100);
+  const hull = clamp(GAME.hull, 0, 100);
+
+  document.getElementById('fuel-bar').style.width = fuel + '%';
+  document.getElementById('fuel-val').textContent  = fuel + '%';
+  document.getElementById('hull-bar').style.width = hull + '%';
+  document.getElementById('hull-val').textContent  = hull + '%';
+
+  // Couleur critique
+  const fuelBar = document.getElementById('fuel-bar');
+  const hullBar = document.getElementById('hull-bar');
+  fuelBar.classList.toggle('low', fuel < 25);
+  hullBar.classList.toggle('low', hull < 25);
+
+  // Stats fin
+  document.getElementById('stat-fuel').textContent = fuel + '%';
+  document.getElementById('stat-hull').textContent  = hull + '%';
+
+  // Check game over
+  if (fuel <= 0) { endGame('fuel'); return; }
+  if (hull <= 0) { endGame('hull'); return; }
+}
+
+function updateSignal() {
+  for (let i = 0; i < 5; i++) {
+    const dot = document.getElementById('sig' + i);
+    if (i < GAME.signalFragments) dot.classList.add('filled');
+    else dot.classList.remove('filled');
+  }
+  document.getElementById('stat-holes').textContent = GAME.zone + '/5';
+}
+
+// ══════════════════════════════════════════════
+// LOBBY
+// ══════════════════════════════════════════════
+function renderLobby() {
+  const grid = document.getElementById('players-grid');
+  const info = document.getElementById('lobby-count-info');
+  grid.innerHTML = '';
+
+  GAME.players.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'player-slot filled' + (i === 0 ? ' host' : '');
+    div.innerHTML = `
+      <div class="player-animal">${p.animal}</div>
+      <div class="player-name">${p.name}</div>
+      <div class="player-status">${i === 0 ? 'HÔTE' : 'CONNECTÉ'}</div>
+    `;
+    grid.appendChild(div);
+  });
+
+  // Slots vides
+  const max = 12;
+  for (let i = GAME.players.length; i < Math.min(max, GAME.players.length + 2); i++) {
+    const div = document.createElement('div');
+    div.className = 'player-slot';
+    div.innerHTML = `<div class="player-animal" style="opacity:.2">···</div><div class="player-name" style="opacity:.2">EN ATTENTE</div>`;
+    grid.appendChild(div);
+  }
+
+  const n = GAME.players.length;
+  info.textContent = `${n} joueur${n>1?'s':''} connecté${n>1?'s':''} ${n < 4 ? '— minimum 4 requis' : '— prêt à lancer'}`;
+  document.getElementById('btn-start').disabled = n < 4;
+}
+
+function addTestPlayers() {
+  const existing = GAME.players.length;
+  const count = Math.min(4, 12 - existing);
+  for (let i = 0; i < count; i++) {
+    GAME.players.push({
+      id: 'p' + (existing + i),
+      name: NAMES[(existing + i) % NAMES.length],
+      animal: ANIMALS[(existing + i) % ANIMALS.length],
+      role: null,
+      hiddenRole: null,
+      alive: true,
+    });
+  }
+  renderLobby();
+}
+
+// Initialiser avec le joueur local
+GAME.players.push({ id:'local', name:'COCO', animal:'🐒', role:null, hiddenRole:null, alive:true });
+renderLobby();
+
+// ══════════════════════════════════════════════
+// DISTRIBUTION DES RÔLES
+// ══════════════════════════════════════════════
+function distributeRoles() {
+  const n = GAME.players.length;
+  const roles = [];
+
+  // Rôles de base
+  roles.push('capitaine');
+  if (n >= 5) roles.push('timonier');
+  if (n >= 8) roles.push('timonier'); // 2 timoniers à 8+
+
+  // Remplir avec matelots
+  while (roles.length < n) roles.push('matelot');
+
+  // Mélanger
+  for (let i = roles.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [roles[i], roles[j]] = [roles[j], roles[i]];
+  }
+
+  // Rôles cachés parmi les matelots
+  const hiddenRoles = [];
+  if (n >= 4) hiddenRoles.push('infecte');
+  if (n >= 6) hiddenRoles.push('agent');
+  if (n >= 8) hiddenRoles.push('observateur');
+
+  let hiddenIdx = 0;
+  GAME.players.forEach((p, i) => {
+    p.role = roles[i];
+    p.hiddenRole = null;
+    if (p.role === 'matelot' && hiddenIdx < hiddenRoles.length) {
+      p.hiddenRole = hiddenRoles[hiddenIdx++];
+    }
+  });
+
+  // Le joueur local (index 0 pour le test)
+  GAME.myPlayer = GAME.players[0];
+  GAME.myRole = GAME.myPlayer.role;
+  GAME.myHiddenRole = GAME.myPlayer.hiddenRole;
+
+  if (GAME.myHiddenRole === 'infecte') {
+    GAME.infectedPlayers.add(GAME.myPlayer.id);
+  }
+}
+
+// ══════════════════════════════════════════════
+// DÉMARRAGE
+// ══════════════════════════════════════════════
+function startGame() {
+  if (GAME.players.length < 4) return;
+
+  distributeRoles();
+
+  const role = GAME.myRole;
+  const hidden = GAME.myHiddenRole;
+  const displayRole = hidden ? HIDDEN_ROLES[hidden] : ROLES[role];
+
+  // Remplir la carte de rôle
+  document.getElementById('role-animal').textContent = displayRole.animal;
+  document.getElementById('role-name').textContent   = displayRole.name;
+  document.getElementById('role-name').className     = 'role-name ' + (hidden || role);
+  document.getElementById('role-desc').textContent   = displayRole.desc;
+  document.getElementById('role-power').textContent  = displayRole.power;
+  document.getElementById('role-secret-hint').textContent = displayRole.secret;
+
+  fadeTransition(() => showScreen('screen-role'));
+}
+
+// ══════════════════════════════════════════════
+// APRÈS LA RÉVÉLATION DU RÔLE
+// ══════════════════════════════════════════════
+function continueFromRole() {
+  // Setup HUD
+  const role = GAME.myRole;
+  const badge = document.getElementById('my-role-badge');
+  badge.textContent = role.toUpperCase();
+  badge.className = 'my-role-badge ' + role;
+
+  // Crew list
+  renderCrew();
+
+  // Session code
+  const code = Math.random().toString(36).substring(2,6).toUpperCase();
+  document.getElementById('footer-session').textContent = 'SESSION : ' + code;
+
+  // Biome initial
+  GAME.currentBiome = BIOMES[0];
+  document.getElementById('biome-name').textContent = BIOMES[0].name;
+
+  // Bouton rébellion visible pour les matelots
+  if (role === 'matelot') {
+    document.getElementById('rebellion-btn').classList.add('visible');
+  }
+
+  // Capitaine peut confirmer
+  if (role === 'capitaine') {
+    document.getElementById('captain-confirm').classList.add('visible');
+  }
+
+  updateResources();
+  updateSignal();
+
+  fadeTransition(() => {
+    showScreen('screen-game');
+    setTimeout(() => startNewRound(), 800);
+  });
+}
+
+// ══════════════════════════════════════════════
+// RENDU ÉQUIPAGE
+// ══════════════════════════════════════════════
+function renderCrew() {
+  const list = document.getElementById('crew-list');
+  list.innerHTML = '';
+  GAME.players.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'crew-member' +
+      (GAME.eliminatedPlayers.has(p.id) ? ' eliminated' : '') +
+      (GAME.infectedPlayers.has(p.id) && p.id === (GAME.myPlayer?.id) ? ' infected-hint' : '');
+
+    const roleLabel = p.id === GAME.myPlayer?.id
+      ? (p.hiddenRole ? HIDDEN_ROLES[p.hiddenRole].name : ROLES[p.role]?.name || '')
+      : (p.role === 'capitaine' ? '🎖️ CAPITAINE' : p.role === 'timonier' ? '📡 TIMONIER' : '⚙️ MATELOT');
+
+    div.innerHTML = `
+      <div class="crew-animal">${p.animal}</div>
+      <div class="crew-info">
+        <div class="crew-name">${p.name}</div>
+        <div class="crew-status">${GAME.eliminatedPlayers.has(p.id) ? 'ÉLIMINÉ' : roleLabel}</div>
+      </div>
+      <div class="crew-vote-indicator" id="vote-ind-${p.id}"></div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════════
+// ROUNDS ET ÉVÉNEMENTS
+// ══════════════════════════════════════════════
+let roundTimer = null;
+let timerSeconds = 240;
+
+function startNewRound() {
+  GAME.round++;
+  GAME.selectedOption = null;
+
+  // Choisir un événement aléatoire
+  GAME.currentEvent = rand(EVENTS);
+
+  // Choisir un biome aléatoire (sauf round 1)
+  if (GAME.round > 1) {
+    GAME.currentBiome = rand(BIOMES);
+    document.getElementById('biome-name').textContent = GAME.currentBiome.name;
+    addLog(`> BIOME : ${GAME.currentBiome.name} — ${GAME.currentBiome.effect}`, 'warn');
+  }
+
+  renderEvent();
+  startRoundTimer();
+
+  // Message privé pour l'infecté
+  if (GAME.myHiddenRole === 'infecte') {
+    const msg = HIDDEN_ROLES.infecte.messages.find(m => m.round === GAME.round);
+    if (msg) setTimeout(() => showPrivateMessage('👾', msg.text), 2000);
+  }
+
+  addLog(`> ROUND ${GAME.round} — ${GAME.currentEvent.title}`, 'event-log');
+}
+
+function renderEvent() {
+  const ev = GAME.currentEvent;
+  const role = GAME.myRole;
+
+  document.getElementById('event-zone-label').textContent =
+    `ROUND ${GAME.round} — ZONE ${GAME.zone}/5`;
+  document.getElementById('event-visual').textContent = ev.icon;
+  document.getElementById('event-title').textContent  = ev.title;
+  document.getElementById('event-main-text').textContent = ev.text;
+
+  // Info spécifique au rôle
+  const roleInfo = document.getElementById('event-role-info');
+  const myInfo = ev.roleInfo[role] || ev.roleInfo.matelot;
+  roleInfo.textContent = myInfo;
+  roleInfo.setAttribute('data-role', role.toUpperCase() + ' — INFO EXCLUSIVE');
+  roleInfo.className = 'event-role-info ' + role;
+
+  // Options
+  const optionsEl = document.getElementById('event-options');
+  optionsEl.innerHTML = '';
+  ev.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.dataset.letter = opt.letter;
+    btn.innerHTML = `
+      <div class="option-letter">${opt.letter}</div>
+      <div class="option-content">
+        <div class="option-label">${opt.label}</div>
+        <div class="option-consequence">${opt.consequence}</div>
+      </div>
+    `;
+
+    // Capitaine sélectionne, Matelots et Timoniers suggèrent
+    btn.onclick = () => selectOption(opt);
+    optionsEl.appendChild(btn);
+  });
+}
+
+function selectOption(opt) {
+  // Désélectionner tout
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  // Sélectionner
+  const btn = document.querySelector(`[data-letter="${opt.letter}"]`);
+  if (btn) btn.classList.add('selected');
+  GAME.selectedOption = opt;
+
+  if (GAME.myRole === 'matelot' || GAME.myRole === 'timonier') {
+    addLog(`> ${GAME.myPlayer.name} suggère option ${opt.letter} : ${opt.label}`, 'sys');
+  }
+}
+
+// ══════════════════════════════════════════════
+// DÉCISION CAPITAINE
+// ══════════════════════════════════════════════
+function captainConfirm() {
+  if (!GAME.selectedOption) {
+    document.getElementById('panel-event').classList.add('anim-shake');
+    setTimeout(() => document.getElementById('panel-event').classList.remove('anim-shake'), 400);
+    addLog('> Choisissez une option avant de confirmer.', 'warn');
+    return;
+  }
+
+  stopTimer();
+  applyOption(GAME.selectedOption);
+}
+
+function applyOption(opt) {
+  // Bonus piraterie si biome piraterie
+  let fuelMod = opt.fuel;
+  let hullMod = opt.hull;
+  if (GAME.currentBiome?.rule === 'piracy_bonus' && opt.type === 'piraterie') {
+    fuelMod = Math.round(fuelMod * 1.5);
+    hullMod = Math.round(hullMod * 1.5);
+    addLog(`> BONUS PIRATERIE +50% appliqué !`, 'warn');
+  }
+
+  // Risque — lancer un dé
+  let finalFuel = fuelMod;
+  let finalHull = hullMod;
+  if (opt.risk && Math.random() < 0.5) {
+    finalHull = Math.round(hullMod * 1.5);
+    addLog(`> Risque activé — dégâts coque augmentés !`, 'err');
+  }
+
+  GAME.fuel += finalFuel;
+  GAME.hull += finalHull;
+  GAME.fuel = clamp(GAME.fuel, 0, 100);
+  GAME.hull = clamp(GAME.hull, 0, 100);
+
+  if (opt.signal > 0) {
+    GAME.signalFragments = Math.min(5, GAME.signalFragments + opt.signal);
+    addLog(`> Fragment Arecibo capté ! (${GAME.signalFragments}/5)`, 'success');
+  }
+
+  addLog(`> Capitaine : Option ${opt.letter} — ${opt.label}`, 'event-log');
+  if (finalFuel !== 0) addLog(`> Carburant : ${finalFuel > 0 ? '+' : ''}${finalFuel}% → ${GAME.fuel}%`, finalFuel > 0 ? 'success' : 'warn');
+  if (finalHull !== 0) addLog(`> Coque : ${finalHull > 0 ? '+' : ''}${finalHull}% → ${GAME.hull}%`, finalHull > 0 ? 'success' : 'err');
+
+  updateResources();
+  updateSignal();
+
+  // Vérifier victoire Arecibo
+  if (GAME.signalFragments >= 5) {
+    setTimeout(() => endGame('victory'), 1500);
+    return;
+  }
+
+  // Après quelques rounds → traverser un trou noir
+  if (GAME.round % 2 === 0) {
+    setTimeout(() => enterBlackHole(), 1500);
+  } else {
+    setTimeout(() => startNewRound(), 2000);
+  }
+}
+
+// ══════════════════════════════════════════════
+// TIMER
+// ══════════════════════════════════════════════
+function startRoundTimer() {
+  stopTimer();
+  timerSeconds = GAME.currentBiome?.rule === 'half_timer' ? 120 : 240;
+  updateTimerDisplay();
+
+  roundTimer = setInterval(() => {
+    timerSeconds--;
+    updateTimerDisplay();
+    if (timerSeconds <= 0) {
+      stopTimer();
+      // Si pas de décision → forcer option A
+      if (!GAME.selectedOption) {
+        addLog(`> Temps écoulé — Option A forcée.`, 'warn');
+        GAME.selectedOption = GAME.currentEvent.options[0];
+      }
+      if (GAME.myRole === 'capitaine') applyOption(GAME.selectedOption);
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (roundTimer) { clearInterval(roundTimer); roundTimer = null; }
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerSeconds / 60);
+  const s = timerSeconds % 60;
+  const el = document.getElementById('game-timer');
+  el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  el.className = 'timer-val' + (timerSeconds <= 30 ? ' crit' : timerSeconds <= 60 ? ' warn' : '');
+}
+
+// ══════════════════════════════════════════════
+// TROU NOIR
+// ══════════════════════════════════════════════
+function enterBlackHole() {
+  GAME.zone = Math.min(5, GAME.zone + 1);
+  const nextBiome = rand(BIOMES);
+
+  fadeTransition(() => {
+    showScreen('screen-blackhole');
+    document.getElementById('bh-text').textContent = `TROU NOIR N°${GAME.zone}`;
+    document.getElementById('bh-sub').textContent  = 'Traversée en cours...';
+    document.getElementById('bh-new-biome').style.display = 'none';
+
+    setTimeout(() => {
+      document.getElementById('bh-new-biome').textContent =
+        `${nextBiome.icon} NOUVEAU BIOME : ${nextBiome.name}`;
+      document.getElementById('bh-new-biome').style.display = 'block';
+      document.getElementById('bh-sub').textContent = nextBiome.effect;
+
+      GAME.currentBiome = nextBiome;
+      document.getElementById('biome-name').textContent = nextBiome.name;
+    }, 2000);
+
+    setTimeout(() => {
+      fadeTransition(() => {
+        showScreen('screen-game');
+        startNewRound();
+      });
+    }, 4500);
+  });
+}
+
+// ══════════════════════════════════════════════
+// RÉBELLION
+// ══════════════════════════════════════════════
+let rebellionTimer = null;
+
+function triggerRebellion() {
+  if (GAME.myRole !== 'matelot') return;
+  stopTimer();
+  GAME.rebellionVotes = { yes:0, no:0 };
+  GAME.hasVoted = false;
+
+  document.getElementById('vote-timer').textContent = '60';
+  document.getElementById('vote-results').textContent = '';
+  document.querySelectorAll('.vote-btn').forEach(b => b.disabled = false);
+
+  addLog('> RÉBELLION DÉCLENCHÉE — Vote en cours !', 'err');
+  fadeTransition(() => showScreen('screen-vote'));
+
+  let voteSeconds = 60;
+  rebellionTimer = setInterval(() => {
+    voteSeconds--;
+    document.getElementById('vote-timer').textContent = voteSeconds;
+    if (voteSeconds <= 0) {
+      clearInterval(rebellionTimer);
+      resolveRebellion();
+    }
+  }, 1000);
+}
+
+function castVote(yes) {
+  if (GAME.hasVoted) return;
+  GAME.hasVoted = true;
+  if (yes) GAME.rebellionVotes.yes++;
+  else GAME.rebellionVotes.no++;
+
+  // Simuler votes IA pour les autres joueurs
+  GAME.players.forEach((p, i) => {
+    if (i === 0) return; // joueur local déjà voté
+    if (Math.random() < 0.5) GAME.rebellionVotes.yes++;
+    else GAME.rebellionVotes.no++;
+  });
+
+  document.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
+  document.getElementById('vote-results').textContent =
+    `Pour : ${GAME.rebellionVotes.yes} | Contre : ${GAME.rebellionVotes.no}`;
+
+  setTimeout(resolveRebellion, 1500);
+}
+
+function resolveRebellion() {
+  if (rebellionTimer) clearInterval(rebellionTimer);
+  const majority = GAME.rebellionVotes.yes > GAME.rebellionVotes.no;
+
+  if (majority) {
+    addLog('> RÉBELLION RÉUSSIE — Le Capitaine est destitué !', 'err');
+    // Trouver le capitaine et le rétrograder
+    GAME.players.forEach(p => {
+      if (p.role === 'capitaine') p.role = 'matelot';
+    });
+    // Le joueur local devient capitaine si c'était lui le matelot
+    if (GAME.myRole === 'matelot') {
+      GAME.myRole = 'capitaine';
+      GAME.myPlayer.role = 'capitaine';
+      document.getElementById('my-role-badge').textContent = 'CAPITAINE';
+      document.getElementById('my-role-badge').className = 'my-role-badge capitaine';
+      document.getElementById('captain-confirm').classList.add('visible');
+      document.getElementById('rebellion-btn').classList.remove('visible');
+      addLog('> Vous êtes le nouveau Capitaine !', 'success');
+    }
+    renderCrew();
+  } else {
+    addLog('> Rébellion échouée — Le Capitaine garde le commandement.', 'warn');
+  }
+
+  fadeTransition(() => {
+    showScreen('screen-game');
+    startNewRound();
+  });
+}
+
+// ══════════════════════════════════════════════
+// MESSAGE PRIVÉ
+// ══════════════════════════════════════════════
+let screenBeforePrivate = 'screen-game';
+
+function showPrivateMessage(icon, text) {
+  screenBeforePrivate = document.querySelector('.screen.active')?.id || 'screen-game';
+  document.getElementById('pm-icon').textContent = icon;
+  document.getElementById('pm-text').textContent = text;
+  fadeTransition(() => showScreen('screen-private-msg'));
+}
+
+function dismissPrivateMsg() {
+  fadeTransition(() => showScreen(screenBeforePrivate));
+}
+
+// ══════════════════════════════════════════════
+// FIN DE PARTIE
+// ══════════════════════════════════════════════
+function endGame(reason) {
+  stopTimer();
+  const endIcon  = document.getElementById('end-icon');
+  const endTitle = document.getElementById('end-title');
+  const endSub   = document.getElementById('end-sub');
+
+  document.getElementById('stat-rounds').textContent = GAME.round;
+
+  switch(reason) {
+    case 'victory':
+      endIcon.textContent  = '🏆';
+      endTitle.textContent = 'SIGNAL CAPTÉ';
+      endTitle.className   = 'end-title victory';
+      endSub.textContent   = 'L\'équipage a retrouvé le message Arecibo. La mission est accomplie. L\'humanité saura.';
+      break;
+    case 'fuel':
+      endIcon.textContent  = '⛽';
+      endTitle.textContent = 'PANNE SÈCHE';
+      endTitle.className   = 'end-title defeat';
+      endSub.textContent   = 'Le MOTOMOTO dérive dans le vide. Plus de carburant. Plus d\'espoir. Tout ça pour rien.';
+      break;
+    case 'hull':
+      endIcon.textContent  = '💥';
+      endTitle.textContent = 'COQUE DÉTRUITE';
+      endTitle.className   = 'end-title defeat';
+      endSub.textContent   = 'La coque a lâché. L\'équipage est perdu dans l\'espace. Le message Arecibo tourne encore dans le trou noir.';
+      break;
+    case 'captain':
+      endIcon.textContent  = '☠️';
+      endTitle.textContent = 'VICTOIRE SOLITAIRE';
+      endTitle.className   = 'end-title captain';
+      endSub.textContent   = 'Le Capitaine est seul à bord. Il a son vaisseau. L\'équipage ? Une trace dans les logs.';
+      break;
+    case 'aliens':
+      endIcon.textContent  = '👾';
+      endTitle.textContent = 'INVASION ALIEN';
+      endTitle.className   = 'end-title defeat';
+      endSub.textContent   = 'L\'infection s\'est propagée. Le MOTOMOTO appartient maintenant à quelque chose d\'autre.';
+      break;
+  }
+
+  fadeTransition(() => showScreen('screen-end'));
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function goMenu() {
+  fadeTransition(() => { window.location.href = 'arecibo_menu.html'; });
+}
+</script>
+</body>
+</html>
