@@ -327,7 +327,7 @@ body.intro-ready .intro-shell {
   max-width:none;
 }
 
-/* Ligne de texte principale â€” grand et lisible */
+/* Ligne de texte principale — grand et lisible */
 #story-text {
   font-size:clamp(20px, 1.72vw, 32px);
   line-height:1.42;
@@ -461,7 +461,7 @@ body.intro-ready .intro-shell {
   <div class="boot-footer">MOTOMOTO // TRANSMISSION LOG // ENTRY 001</div>
 </div>
 
-<button id="skip" onclick="skipIntro()">PASSER â€º</button>
+<button id="skip" onclick="skipIntro()">PASSER ›</button>
   </div>
 </div>
 <div id="fade"></div>
@@ -691,19 +691,19 @@ function startDustFall() {
 
 startDustFall();
 
-// Le texte complet â€” paragraphes sÃ©parÃ©s par double \n
+// Le texte complet — paragraphes séparés par double \n
 const STORY = [
-  `En 1974, des humains ont pointÃ© une antenne vers les Ã©toiles et envoyÃ© un message dans l'obscuritÃ©.\n\n1679 bits. Une carte de l'humanitÃ©. Une bouteille jetÃ©e dans l'infini.`,
+  `En 1974, des humains ont pointé une antenne vers les étoiles et envoyé un message dans l'obscurité.\n\n1679 bits. Une carte de l'humanité. Une bouteille jetée dans l'infini.`,
 
-  `Ce qu'ils ne savaient pas, c'est qu'un trou noir se trouvait sur la trajectoire du signal.\n\nLe message d'Arecibo a Ã©tÃ© aspirÃ©. EnfermÃ© dans la singularitÃ©.\n\nUn trou noir ne dÃ©truit pas. Il retient.`,
+  `Ce qu'ils ne savaient pas, c'est qu'un trou noir se trouvait sur la trajectoire du signal.\n\nLe message d'Arecibo a été aspiré. Enfermé dans la singularité.\n\nUn trou noir ne détruit pas. Il retient.`,
 
-  `CompressÃ© dans son champ gravitationnel, le message tourne encore.\nIl Ã©met une frÃ©quence infime, indÃ©chiffrable depuis la Terre.\nIl attend.\n\nPour s'en approcher, il a fallu des volontaires.\nOu plutÃ´t â€” des Ãªtres que personne ne regretterait d'envoyer.`,
+  `Compressé dans son champ gravitationnel, le message tourne encore.\nIl émet une fréquence infime, indéchiffrable depuis la Terre.\nIl attend.\n\nPour s'en approcher, il a fallu des volontaires.\nOu plutôt — des êtres que personne ne regretterait d'envoyer.`,
 
-  `Avant d'envoyer des hommes dans l'espace, on avait envoyÃ© des animaux.\nDes chiens. Des singes. Des chats.\nLaÃ¯ka. Ham. FÃ©licette.\n\nLeurs noms sont gravÃ©s dans les archives.\nLeurs corps, perdus dans le vide.`,
+  `Avant d'envoyer des hommes dans l'espace, on avait envoyé des animaux.\nDes chiens. Des singes. Des chats.\nLaïka. Ham. Félicette.\n\nLeurs noms sont gravés dans les archives.\nLeurs corps, perdus dans le vide.`,
 
-  `Certains ont survÃ©cu.\n\nLe programme MOTOMOTO les a rÃ©cupÃ©rÃ©s, soignÃ©s, entraÃ®nÃ©s.\nIls ont appris Ã  piloter. Ã€ rÃ©parer. Ã€ survivre lÃ  oÃ¹ aucun humain ne voulait aller.`,
+  `Certains ont survécu.\n\nLe programme MOTOMOTO les a récupérés, soignés, entraînés.\nIls ont appris à piloter. À réparer. À survivre là où aucun humain ne voulait aller.`,
 
-  `Leur mission : approcher le trou noir.\n\nRÃ©cupÃ©rer ce qui dÃ©rive sur leur passage.\nAvancer. RÃ©parer le vaisseau. Capter le message.\n\nAvant que le trou noir n'aspire tout.\nY compris eux.`,
+  `Leur mission : approcher le trou noir.\n\nRécupérer ce qui dérive sur leur passage.\nAvancer. Réparer le vaisseau. Capter le message.\n\nAvant que le trou noir n'aspire tout.\nY compris eux.`,
 ];
 
 const BOOT_LINES = [
@@ -817,7 +817,7 @@ let fullText   = '';
 let running    = true;
 let bootStarted = false;
 
-// Vitesse de frappe (ms par caractÃ¨re)
+// Vitesse de frappe (ms par caractère)
 const SPEED     = 24;
 const PARA_PAUSE = 900; // pause entre paragraphes
 const END_HOLD   = 1800; // pause avant fadeout
@@ -836,7 +836,7 @@ function typeChar() {
     // Fin du paragraphe courant
     paraIndex++;
     if (paraIndex < STORY.length) {
-      // Pause, puis vide l'Ã©cran, puis reprend
+      // Pause, puis vide l'écran, puis reprend
       delay(() => {
         fullText = '';
         charIndex = 0;
@@ -997,7 +997,7 @@ function finishBootSequence() {
   }, HELLO_HOLD);
 }
 
-// DÃ©marrage
+// Démarrage
 function waitForIntroFrame() {
   const frameUrl = 'assets/intro-console-frame.png';
   const timeout = new Promise(resolve => setTimeout(resolve, 2600));
