@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -7,6 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>ARECIBO - Sas expedition</title>
+<link rel="icon" type="image/png" href="assets/picto-arecibo-pageweb.png">
 <link rel="stylesheet" href="assets/css/arecibo-game.css?v=sas-warning-hotspot-1">
 <link rel="stylesheet" href="assets/css/arecibo-expedition.css?v=sas-warning-hotspot-1">
 <script src="assets/visual-settings.js?v=pixel-dither-3"></script>
@@ -375,7 +376,7 @@
       <div>
         <div class="sp-section-label">Son</div>
         <div class="sp-slider-row">
-          <span class="sp-slider-label">Volume général</span>
+          <span class="sp-slider-label">Volume gÃ©nÃ©ral</span>
           <input type="range" min="0" max="100" value="80" oninput="updateSlider(this,'sv1')">
           <span class="sp-val" id="sv1">80%</span>
         </div>
@@ -407,13 +408,13 @@
         </div>
       </div>
       <div>
-        <div class="sp-section-label">Données</div>
+        <div class="sp-section-label">DonnÃ©es</div>
         <div class="sp-toggle-row">
           <span class="sp-toggle-label">sauvegarde automatique</span>
           <div class="sp-toggle on" onclick="toggleSwitch(this)"></div>
         </div>
         <div class="sp-toggle-row">
-          <span class="sp-toggle-label">Données de session</span>
+          <span class="sp-toggle-label">DonnÃ©es de session</span>
           <div class="sp-toggle on" onclick="toggleSwitch(this)"></div>
         </div>
       </div>
@@ -424,12 +425,12 @@
 <!-- OVERLAY CARNETS OUVERTS -->
 <div class="notebook-overlay" id="notebook-overlay" onclick="closeNotebookOverlay(event)">
   <div class="notebook-overlay-stack" id="notebook-stack">
-    <button class="notebook-overlay-close" onclick="document.getElementById('notebook-overlay').classList.remove('is-open')">× FERMER</button>
+    <button class="notebook-overlay-close" onclick="document.getElementById('notebook-overlay').classList.remove('is-open')">Ã— FERMER</button>
   </div>
 </div>
 <div class="toolbox-overlay" id="toolbox-overlay" onclick="closeToolboxOverlay(event)">
   <div class="toolbox-overlay-panel">
-    <button class="toolbox-overlay-close" onclick="closeToolboxOverlay()">× FERMER</button>
+    <button class="toolbox-overlay-close" onclick="closeToolboxOverlay()">Ã— FERMER</button>
     <img class="toolbox-overlay-image" id="toolbox-overlay-image" src="assets/toolbox/toolbox-closed.png" alt="Boite a outils agrandie">
     <div class="toolbox-lock" id="toolbox-lock" aria-label="Cadenas de la boite a outils">
       <button class="toolbox-lock-wheel" type="button" data-lock-index="0" aria-label="Premier chiffre du cadenas"><span>0</span></button>
@@ -445,3 +446,4 @@
 <script src="assets/js/arecibo-debris-overlays.js?v=sas-warning-hotspot-1"></script>
 </body>
 </html>
+

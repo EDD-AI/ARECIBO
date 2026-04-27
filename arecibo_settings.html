@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ARECIBO — Settings</title>
+<title>ARECIBO â€” Settings</title>
+<link rel="icon" type="image/png" href="assets/picto-arecibo-pageweb.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&display=swap');
 
@@ -297,7 +298,7 @@ input[type="range"]::-moz-range-thumb {
   text-align: left;
 }
 .select-btn::after {
-  content: '▾';
+  content: 'â–¾';
   position: absolute;
   right: 10px; top: 50%;
   transform: translateY(-50%);
@@ -420,7 +421,7 @@ input[type="range"]::-moz-range-thumb {
 
   <!-- HEADER -->
   <div class="header">
-    <button class="header-back" onclick="goBack()">← MENU</button>
+    <button class="header-back" onclick="goBack()">â† MENU</button>
     <span class="header-title">>Settings.</span>
     <span class="header-version">MOTOMOTO SYSTEMS // v0.1</span>
   </div>
@@ -428,19 +429,19 @@ input[type="range"]::-moz-range-thumb {
   <!-- SIDEBAR -->
   <nav class="sidebar">
     <button class="nav-item active" onclick="showTab('son', this)">
-      <span class="icon">◎</span> SON
+      <span class="icon">â—Ž</span> SON
     </button>
     <button class="nav-item" onclick="showTab('affichage', this)">
-      <span class="icon">▣</span> AFFICHAGE
+      <span class="icon">â–£</span> AFFICHAGE
     </button>
     <button class="nav-item" onclick="showTab('interface', this)">
-      <span class="icon">≡</span> INTERFACE
+      <span class="icon">â‰¡</span> INTERFACE
     </button>
     <button class="nav-item" onclick="showTab('gameplay', this)">
-      <span class="icon">◈</span> GAMEPLAY
+      <span class="icon">â—ˆ</span> GAMEPLAY
     </button>
     <button class="nav-item" onclick="showTab('donnees', this)">
-      <span class="icon">⊘</span> DONNÉES
+      <span class="icon">âŠ˜</span> DONNÃ‰ES
     </button>
   </nav>
 
@@ -454,8 +455,8 @@ input[type="range"]::-moz-range-thumb {
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">Volume général</div>
-          <div class="setting-hint">Contrôle tous les sons du jeu</div>
+          <div class="setting-label">Volume gÃ©nÃ©ral</div>
+          <div class="setting-hint">ContrÃ´le tous les sons du jeu</div>
         </div>
         <div class="setting-control">
           <div class="slider-wrap">
@@ -469,7 +470,7 @@ input[type="range"]::-moz-range-thumb {
       <div class="setting-row">
         <div class="setting-info">
           <div class="setting-label">Musique d'ambiance</div>
-          <div class="setting-hint">Bande sonore atmosphérique du vaisseau</div>
+          <div class="setting-hint">Bande sonore atmosphÃ©rique du vaisseau</div>
         </div>
         <div class="setting-control">
           <div class="slider-wrap">
@@ -496,8 +497,8 @@ input[type="range"]::-moz-range-thumb {
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">Voix synthétique (HAL)</div>
-          <div class="setting-hint">Annonces du système MOTOMOTO</div>
+          <div class="setting-label">Voix synthÃ©tique (HAL)</div>
+          <div class="setting-hint">Annonces du systÃ¨me MOTOMOTO</div>
         </div>
         <div class="setting-control">
           <div class="slider-wrap">
@@ -513,7 +514,7 @@ input[type="range"]::-moz-range-thumb {
       <div class="setting-row">
         <div class="setting-info">
           <div class="setting-label">Couper le son</div>
-          <div class="setting-hint">Mute général — tous les sons</div>
+          <div class="setting-hint">Mute gÃ©nÃ©ral â€” tous les sons</div>
         </div>
         <div class="setting-control">
           <div class="toggle" id="toggle-mute" onclick="toggleSwitch(this)"></div>
@@ -522,7 +523,7 @@ input[type="range"]::-moz-range-thumb {
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">Son en arrière-plan</div>
+          <div class="setting-label">Son en arriÃ¨re-plan</div>
           <div class="setting-hint">Continuer la musique si l'onglet est inactif</div>
         </div>
         <div class="setting-control">
@@ -534,12 +535,12 @@ input[type="range"]::-moz-range-thumb {
     <!-- AFFICHAGE -->
     <div class="tab-panel" id="tab-affichage">
       <div class="section-title">Affichage</div>
-      <div class="section-desc">PARAMÈTRES VISUELS // MOTOMOTO DISPLAY</div>
+      <div class="section-desc">PARAMÃˆTRES VISUELS // MOTOMOTO DISPLAY</div>
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">Plein écran</div>
-          <div class="setting-hint">Mode plein écran navigateur</div>
+          <div class="setting-label">Plein Ã©cran</div>
+          <div class="setting-hint">Mode plein Ã©cran navigateur</div>
         </div>
         <div class="setting-control">
           <div class="toggle on" id="toggle-fullscreen" onclick="toggleFullscreen(this)"></div>
@@ -548,8 +549,8 @@ input[type="range"]::-moz-range-thumb {
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">Luminosité</div>
-          <div class="setting-hint">Ajuste la luminosité générale de l'interface</div>
+          <div class="setting-label">LuminositÃ©</div>
+          <div class="setting-hint">Ajuste la luminositÃ© gÃ©nÃ©rale de l'interface</div>
         </div>
         <div class="setting-control">
           <div class="slider-wrap">
@@ -565,7 +566,7 @@ input[type="range"]::-moz-range-thumb {
       <div class="setting-row">
         <div class="setting-info">
           <div class="setting-label">Effet scanlines</div>
-          <div class="setting-hint">Lignes CRT vintage sur l'écran</div>
+          <div class="setting-hint">Lignes CRT vintage sur l'Ã©cran</div>
         </div>
         <div class="setting-control">
           <div class="toggle on" id="toggle-scanlines" onclick="toggleSwitch(this)"></div>
@@ -574,8 +575,8 @@ input[type="range"]::-moz-range-thumb {
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">Fond étoilé</div>
-          <div class="setting-hint">Afficher le champ d'étoiles en arrière-plan</div>
+          <div class="setting-label">Fond Ã©toilÃ©</div>
+          <div class="setting-hint">Afficher le champ d'Ã©toiles en arriÃ¨re-plan</div>
         </div>
         <div class="setting-control">
           <div class="toggle on" id="toggle-stars" onclick="toggleSwitch(this)"></div>
@@ -595,7 +596,7 @@ input[type="range"]::-moz-range-thumb {
       <div class="setting-row">
         <div class="setting-info">
           <div class="setting-label">Animations d'interface</div>
-          <div class="setting-hint">Transitions et animations d'entrée</div>
+          <div class="setting-hint">Transitions et animations d'entrÃ©e</div>
         </div>
         <div class="setting-control">
           <div class="toggle on" id="toggle-anim" onclick="toggleSwitch(this)"></div>
@@ -604,8 +605,8 @@ input[type="range"]::-moz-range-thumb {
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">Curseur personnalisé</div>
-          <div class="setting-hint">Curseur ARECIBO au lieu du curseur système</div>
+          <div class="setting-label">Curseur personnalisÃ©</div>
+          <div class="setting-hint">Curseur ARECIBO au lieu du curseur systÃ¨me</div>
         </div>
         <div class="setting-control">
           <div class="toggle on" id="toggle-cursor" onclick="toggleSwitch(this)"></div>
@@ -630,18 +631,18 @@ input[type="range"]::-moz-range-thumb {
     <!-- INTERFACE -->
     <div class="tab-panel" id="tab-interface">
       <div class="section-title">Interface</div>
-      <div class="section-desc">PARAMÈTRES D'AFFICHAGE UI // MOTOMOTO HUD</div>
+      <div class="section-desc">PARAMÃˆTRES D'AFFICHAGE UI // MOTOMOTO HUD</div>
 
       <div class="setting-row">
         <div class="setting-info">
           <div class="setting-label">Langue</div>
-          <div class="setting-hint">Langue de l'interface et des messages système</div>
+          <div class="setting-hint">Langue de l'interface et des messages systÃ¨me</div>
         </div>
         <div class="setting-control">
           <div class="select-custom">
-            <button class="select-btn" onclick="toggleDropdown('lang-dd')">FR Français ▾</button>
+            <button class="select-btn" onclick="toggleDropdown('lang-dd')">FR FranÃ§ais â–¾</button>
             <div class="select-dropdown" id="lang-dd">
-              <div class="select-option sel" onclick="selectOpt(this, 'lang-dd', 'FR Français')">FR Français</div>
+              <div class="select-option sel" onclick="selectOpt(this, 'lang-dd', 'FR FranÃ§ais')">FR FranÃ§ais</div>
               <div class="select-option" aria-disabled="true">EN English</div>
               <div class="select-option" aria-disabled="true">SP Spanish</div>
             </div>
@@ -652,11 +653,11 @@ input[type="range"]::-moz-range-thumb {
       <div class="setting-row">
         <div class="setting-info">
           <div class="setting-label">Taille du texte</div>
-          <div class="setting-hint">Taille des éléments texte de l'interface</div>
+          <div class="setting-hint">Taille des Ã©lÃ©ments texte de l'interface</div>
         </div>
         <div class="setting-control">
           <div class="select-custom">
-            <button class="select-btn" onclick="toggleDropdown('size-dd')">Normal ▾</button>
+            <button class="select-btn" onclick="toggleDropdown('size-dd')">Normal â–¾</button>
             <div class="select-dropdown" id="size-dd">
               <div class="select-option" onclick="selectOpt(this, 'size-dd', 'Petit')">Petit</div>
               <div class="select-option sel" onclick="selectOpt(this, 'size-dd', 'Normal')">Normal</div>
@@ -681,7 +682,7 @@ input[type="range"]::-moz-range-thumb {
       <div class="setting-row">
         <div class="setting-info">
           <div class="setting-label">Afficher le HUD en jeu</div>
-          <div class="setting-hint">Barre d'oxygène, timer, indicateurs</div>
+          <div class="setting-hint">Barre d'oxygÃ¨ne, timer, indicateurs</div>
         </div>
         <div class="setting-control">
           <div class="toggle on" id="toggle-hud" onclick="toggleSwitch(this)"></div>
@@ -702,16 +703,16 @@ input[type="range"]::-moz-range-thumb {
     <!-- GAMEPLAY -->
     <div class="tab-panel" id="tab-gameplay">
       <div class="section-title">Gameplay</div>
-      <div class="section-desc">PARAMÈTRES DE JEU // MOTOMOTO PROTOCOL</div>
+      <div class="section-desc">PARAMÃˆTRES DE JEU // MOTOMOTO PROTOCOL</div>
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">Difficulté</div>
-          <div class="setting-hint">Affecte les événements et la fréquence des transmissions</div>
+          <div class="setting-label">DifficultÃ©</div>
+          <div class="setting-hint">Affecte les Ã©vÃ©nements et la frÃ©quence des transmissions</div>
         </div>
         <div class="setting-control">
           <div class="select-custom">
-            <button class="select-btn" onclick="toggleDropdown('diff-dd')">Normal ▾</button>
+            <button class="select-btn" onclick="toggleDropdown('diff-dd')">Normal â–¾</button>
             <div class="select-dropdown" id="diff-dd">
               <div class="select-option" onclick="selectOpt(this, 'diff-dd', 'Facile')">Facile</div>
               <div class="select-option sel" onclick="selectOpt(this, 'diff-dd', 'Normal')">Normal</div>
@@ -726,7 +727,7 @@ input[type="range"]::-moz-range-thumb {
       <div class="setting-row">
         <div class="setting-info">
           <div class="setting-label">Afficher le timer</div>
-          <div class="setting-hint">Compte à rebours visible pendant l'extraction</div>
+          <div class="setting-hint">Compte Ã  rebours visible pendant l'extraction</div>
         </div>
         <div class="setting-control">
           <div class="toggle on" id="toggle-timer" onclick="toggleSwitch(this)"></div>
@@ -735,8 +736,8 @@ input[type="range"]::-moz-range-thumb {
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">Transmissions chiffrées</div>
-          <div class="setting-hint">Active les messages secrets entre joueurs (mécanique sociale)</div>
+          <div class="setting-label">Transmissions chiffrÃ©es</div>
+          <div class="setting-hint">Active les messages secrets entre joueurs (mÃ©canique sociale)</div>
         </div>
         <div class="setting-control">
           <div class="toggle on" id="toggle-transmissions" onclick="toggleSwitch(this)"></div>
@@ -764,15 +765,15 @@ input[type="range"]::-moz-range-thumb {
       </div>
     </div>
 
-    <!-- DONNÉES -->
+    <!-- DONNÃ‰ES -->
     <div class="tab-panel" id="tab-donnees">
-      <div class="section-title">Données</div>
-      <div class="section-desc">GESTION DES DONNÉES LOCALES // MOTOMOTO STORAGE</div>
+      <div class="section-title">DonnÃ©es</div>
+      <div class="section-desc">GESTION DES DONNÃ‰ES LOCALES // MOTOMOTO STORAGE</div>
 
       <div class="setting-row">
         <div class="setting-info">
           <div class="setting-label">Sauvegarde automatique</div>
-          <div class="setting-hint">Sauvegarder les préférences dans le navigateur</div>
+          <div class="setting-hint">Sauvegarder les prÃ©fÃ©rences dans le navigateur</div>
         </div>
         <div class="setting-control">
           <div class="toggle on" id="toggle-save" onclick="toggleSwitch(this)"></div>
@@ -781,8 +782,8 @@ input[type="range"]::-moz-range-thumb {
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">Données de session</div>
-          <div class="setting-hint">Personnage, couleurs, nom d'opérateur</div>
+          <div class="setting-label">DonnÃ©es de session</div>
+          <div class="setting-hint">Personnage, couleurs, nom d'opÃ©rateur</div>
         </div>
         <div class="setting-control">
           <button class="danger-btn" onclick="clearSession()">EFFACER</button>
@@ -791,11 +792,11 @@ input[type="range"]::-moz-range-thumb {
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">Tout réinitialiser</div>
-          <div class="setting-hint">Remet tous les paramètres par défaut</div>
+          <div class="setting-label">Tout rÃ©initialiser</div>
+          <div class="setting-hint">Remet tous les paramÃ¨tres par dÃ©faut</div>
         </div>
         <div class="setting-control">
-          <button class="danger-btn" onclick="resetAll()">RÉINITIALISER</button>
+          <button class="danger-btn" onclick="resetAll()">RÃ‰INITIALISER</button>
         </div>
       </div>
 
@@ -803,8 +804,8 @@ input[type="range"]::-moz-range-thumb {
 
       <div class="setting-row">
         <div class="setting-info">
-          <div class="setting-label">Crédits</div>
-          <div class="setting-hint">Studio EDDA — Corentin Flatrès — 2026</div>
+          <div class="setting-label">CrÃ©dits</div>
+          <div class="setting-hint">Studio EDDA â€” Corentin FlatrÃ¨s â€” 2026</div>
         </div>
         <div class="setting-control" style="font-size:9px;color:rgba(247,255,195,.2);letter-spacing:.1em;">
           v0.1-alpha
@@ -817,7 +818,7 @@ input[type="range"]::-moz-range-thumb {
   <!-- FOOTER -->
   <div class="footer">
     <span>MOTOMOTO SYSTEMS // SETTINGS v0.1</span>
-    <span class="save-notice" id="save-notice">Les paramètres sont sauvegardés automatiquement</span>
+    <span class="save-notice" id="save-notice">Les paramÃ¨tres sont sauvegardÃ©s automatiquement</span>
     <span>SESSION ACTIVE</span>
   </div>
 
@@ -902,7 +903,7 @@ function selectOpt(opt, ddId, val) {
   const dd = document.getElementById(ddId);
   dd.querySelectorAll('.select-option').forEach(o => o.classList.remove('sel'));
   opt.classList.add('sel');
-  dd.previousElementSibling.textContent = val + ' ▾';
+  dd.previousElementSibling.textContent = val + ' â–¾';
   dd.classList.remove('open');
   saveSettings();
 }
@@ -936,23 +937,23 @@ document.addEventListener('click', e => {
 // Save / load settings
 function saveSettings() {
   const notice = document.getElementById('save-notice');
-  notice.textContent = 'Sauvegardé ✓';
+  notice.textContent = 'SauvegardÃ© âœ“';
   notice.classList.add('saved');
   setTimeout(() => {
-    notice.textContent = 'Les paramètres sont sauvegardés automatiquement';
+    notice.textContent = 'Les paramÃ¨tres sont sauvegardÃ©s automatiquement';
     notice.classList.remove('saved');
   }, 1500);
 }
 
 function clearSession() {
-  if (confirm('Effacer les données de session ?')) {
+  if (confirm('Effacer les donnÃ©es de session ?')) {
     localStorage.removeItem('arecibo_session');
     saveSettings();
   }
 }
 
 function resetAll() {
-  if (confirm('Réinitialiser tous les paramètres ?')) {
+  if (confirm('RÃ©initialiser tous les paramÃ¨tres ?')) {
     location.reload();
   }
 }
@@ -1000,3 +1001,4 @@ window.addEventListener('arecibo-pixel-dither-change', () => syncPixelDitherButt
 <script src="assets/theme-audio.js?v=theme-audio-1"></script>
 </body>
 </html>
+
