@@ -762,14 +762,14 @@ function applySasWireRepairSuccessState() {
     roomState.classList.add('active');
     roomState.textContent = 'STABLE';
   }
-  if (launchLabel) launchLabel.textContent = 'SAS REPARE';
-  if (launchIcon) launchIcon.textContent = 'OK';
+  if (launchLabel) launchLabel.textContent = 'TUTO TERMINE';
+  if (launchIcon) launchIcon.textContent = '--';
   if (launchBtn) {
-    launchBtn.disabled = false;
-    launchBtn.style.opacity = '';
-    launchBtn.style.filter = '';
-    launchBtn.classList.add('ready');
-    launchBtn.setAttribute('aria-disabled', 'false');
+    launchBtn.disabled = true;
+    launchBtn.style.opacity = '.44';
+    launchBtn.style.filter = 'grayscale(.25)';
+    launchBtn.classList.remove('ready');
+    launchBtn.setAttribute('aria-disabled', 'true');
   }
   syncSceneBackdropImage();
 }
@@ -1145,17 +1145,21 @@ function applyOpeningStoryState() {
   renderMessages(getStoryMessages());
 
   if (launchLabel) {
-    launchLabel.textContent = isReturn ? 'PORTE DU SAS A REPARER' : 'SORTIR DANS LES DEBRIS';
+    launchLabel.textContent = sasWireRepaired
+      ? 'TUTO TERMINE'
+      : isReturn
+        ? 'PORTE DU SAS A REPARER'
+        : 'SORTIR DANS LES DEBRIS';
   }
   if (launchIcon) {
-    launchIcon.textContent = isReturn ? '!' : '+';
+    launchIcon.textContent = sasWireRepaired ? '--' : isReturn ? '!' : '+';
   }
   if (launchBtn) {
     launchBtn.classList.remove('ready');
-    launchBtn.disabled = isReturn;
-    launchBtn.style.opacity = isReturn ? '.66' : '';
-    launchBtn.style.filter = isReturn ? 'saturate(.78)' : '';
-    launchBtn.setAttribute('aria-disabled', String(isReturn));
+    launchBtn.disabled = isReturn || sasWireRepaired;
+    launchBtn.style.opacity = sasWireRepaired ? '.44' : isReturn ? '.66' : '';
+    launchBtn.style.filter = sasWireRepaired ? 'grayscale(.25)' : isReturn ? 'saturate(.78)' : '';
+    launchBtn.setAttribute('aria-disabled', String(isReturn || sasWireRepaired));
   }
 
   if (bridgeMeta) {
@@ -3216,6 +3220,10 @@ function startOpeningDebrisMission() {
 }
 
 launchBtn.addEventListener('click', () => {
+  if (isSasWireRepairComplete()) {
+    return;
+  }
+
   if (storyPhase === 'opening-return') {
     openMessages();
     return;
