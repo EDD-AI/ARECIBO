@@ -782,6 +782,7 @@ function applySasWireRepairSuccessState() {
     launchBtn.setAttribute('aria-disabled', 'true');
   }
   syncSceneBackdropImage();
+  renderMessages(getStoryMessages());
 }
 
 function resolveAssetUrl(path) {
@@ -1059,6 +1060,29 @@ function unlockPersonalLoot(items) {
 
 function getStoryMessages(phase = storyPhase) {
   if (phase === 'opening-return') {
+    if (isSasWireRepairComplete()) {
+      return [
+        {
+          sender:'MOTOMOTO // CRIS',
+          time:'SYSTEME STABILISE',
+          subject:'CABINE PERSONNELLE DEBLOQUEE',
+          text:`Le sas est a nouveau operationnel. ${getCabinRoomLabel()} est maintenant accessible sur la carte. Allez la visiter pour voir a quoi elle ressemble avant la suite des reparations.`
+        },
+        {
+          sender:'MOTOMOTO // CRIS',
+          time:'MISE A JOUR DE BORD',
+          subject:'ACCES INTERNE ETENDU',
+          text:'Le pont principal et votre cabine viennent d etre declasses en zones accessibles. Les autres sections restent hors ligne tant que la coque et les systemes critiques ne sont pas stabilises.'
+        },
+        {
+          warning:true,
+          badge:'!! WARNING !!',
+          time:'ALERTE STRUCTURELLE',
+          subject:'COQUE TOUJOURS ENDOMMAGEE',
+          text:'L alarme du sas est coupee, mais la coque reste en etat critique. Les sorties et les reparations suivantes devront etre planifiees avec prudence.'
+        }
+      ];
+    }
     return [
       {
         sender:'MOTOMOTO // CRIS',
