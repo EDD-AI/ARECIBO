@@ -295,6 +295,10 @@ function formatPlayerPackageName(value) {
   return cleaned || 'COCO';
 }
 
+function getCabinRoomLabel() {
+  return `CABINE ${formatPlayerPackageName(window.areciboPlayerName || 'COCO')}`;
+}
+
 function initPlayerPackageName() {
   const storageKey = 'areciboPlayerName';
   const requestedName = params.get('player') || params.get('name') || params.get('pilot');
@@ -309,6 +313,11 @@ function initPlayerPackageName() {
   if (personalWindow) personalWindow.setAttribute('aria-label', `Package ${playerName}`);
   if (messageIndicator) messageIndicator.setAttribute('aria-label', `Ouvrir 2 messages personnels de ${playerName}`);
   if (messagesTitle) messagesTitle.textContent = `PACKAGE ${playerName} // MESSAGES //`;
+  const cabinNode = document.querySelector('.room-node[data-room="CABINE"]');
+  if (cabinNode) {
+    cabinNode.textContent = `CABINE ${playerName}`;
+    cabinNode.setAttribute('aria-label', `Cabine ${playerName}`);
+  }
 
   window.areciboPlayerName = playerName;
   updateLocalCursorProfile();
@@ -754,6 +763,7 @@ function applySasWireRepairSuccessState() {
   setHullSystemStatus('critical');
   shipScene?.classList.add('is-sas-wire-repaired');
   setRoomNodeState('PONT PRINCIPAL', 'open');
+  setRoomNodeState('CABINE', 'open');
   if (bridgeMeta) {
     bridgeMeta.textContent = 'MOTOMOTO // SAS EXPEDITION // SYSTEME DU SAS STABILISE';
   }
@@ -788,6 +798,8 @@ function syncSceneBackdropImage() {
     image = activePontRepairState?.image || 'assets/pont-principal-state-05-broken-4-doors-closed.png';
   } else if (roomScene === 'quarters') {
     image = 'assets/quartier-fenetre.png';
+  } else if (roomScene === 'cabin') {
+    image = 'assets/cabine.png';
   } else if (shipScene.classList.contains('is-sas-repair-ready')) {
     image = 'assets/sas-repair/sas-grille-ouverte.png';
   }
@@ -1143,7 +1155,8 @@ function applyOpeningStoryState() {
   roomNodes.forEach(node => {
     const isSas = (node.dataset.room || '') === 'SAS EXPEDITION';
     const isPont = (node.dataset.room || '') === 'PONT PRINCIPAL';
-    const isUnlocked = isSas || (sasWireRepaired && isPont);
+    const isCabin = (node.dataset.room || '') === 'CABINE';
+    const isUnlocked = isSas || (sasWireRepaired && (isPont || isCabin));
     node.dataset.state = isUnlocked ? 'open' : 'locked';
     node.classList.toggle('locked', !isUnlocked);
     node.classList.toggle('active', isSas);
@@ -1566,6 +1579,44 @@ function startPortholeSpace() {
     }
   }
 
+  function drawDistantBlackHole(now) {
+    if (!shipScene || shipScene.dataset.roomScene !== 'cabin') return;
+
+    const cx = width * .69;
+    const cy = height * .38;
+    const radius = Math.max(12, Math.min(width, height) * .075);
+    const pulse = 1 + Math.sin(now * .00028) * .035;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+
+    const halo = ctx.createRadialGradient(cx, cy, radius * .18, cx, cy, radius * 2.8);
+    halo.addColorStop(0, 'rgba(249,142,60,.16)');
+    halo.addColorStop(.34, 'rgba(244,110,38,.12)');
+    halo.addColorStop(.62, 'rgba(181,49,20,.06)');
+    halo.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 2.8 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = .95;
+    ctx.fillStyle = '#020202';
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = .6;
+    ctx.strokeStyle = 'rgba(255,157,84,.3)';
+    ctx.lineWidth = Math.max(1, radius * .08);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, radius * 1.65, radius * .48, -.22, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
   function draw(now = performance.now()) {
     ctx.fillStyle = 'rgba(0, 0, 0, .42)';
     ctx.fillRect(0, 0, width, height);
@@ -1603,6 +1654,7 @@ function startPortholeSpace() {
       ctx.fillRect(particle.x, particle.y, particle.r, particle.r);
     });
 
+    drawDistantBlackHole(now);
     updateDebris(now);
 
     ctx.globalAlpha = 1;
@@ -1872,14 +1924,16 @@ function setShipScene(room) {
 
   const isPont = room === 'PONT PRINCIPAL';
   const isQuarters = room === 'QUARTIERS';
-  const scene = isPont ? 'pont' : isQuarters ? 'quarters' : 'sas';
+  const isCabin = room === 'CABINE';
+  const scene = isPont ? 'pont' : isQuarters ? 'quarters' : isCabin ? 'cabin' : 'sas';
   const previousScene = shipScene.dataset.roomScene || 'sas';
   const changed = previousScene !== scene;
 
   shipScene.dataset.roomScene = scene;
   shipScene.classList.toggle('is-room-pont', isPont);
   shipScene.classList.toggle('is-room-quarters', isQuarters);
-  shipScene.classList.toggle('is-room-sas', !isPont && !isQuarters);
+  shipScene.classList.toggle('is-room-cabin', isCabin);
+  shipScene.classList.toggle('is-room-sas', !isPont && !isQuarters && !isCabin);
   syncSceneBackdropImage();
   shipScene.setAttribute(
     'aria-label',
@@ -1887,7 +1941,9 @@ function setShipScene(room) {
       ? 'Pont principal du MOTOMOTO'
       : isQuarters
         ? 'Quartiers du MOTOMOTO'
-        : 'Sas expedition du MOTOMOTO'
+        : isCabin
+          ? `Cabine ${window.areciboPlayerName || 'COCO'} du MOTOMOTO`
+          : 'Sas expedition du MOTOMOTO'
   );
 
   if (bridgeMeta) {
@@ -1895,7 +1951,9 @@ function setShipScene(room) {
       ? `MOTOMOTO // PONT PRINCIPAL // ${activePontRepairState.label.toUpperCase()} // ${activePontRepairState.detail.toUpperCase()}`
       : isQuarters
         ? 'MOTOMOTO // QUARTIERS // BAIE OBSERVATION'
-        : 'MOTOMOTO // SAS EXPEDITION // SALVAGE PROTOCOL';
+        : isCabin
+          ? `MOTOMOTO // ${getCabinRoomLabel()} // PERSONNALISATION`
+          : 'MOTOMOTO // SAS EXPEDITION // SALVAGE PROTOCOL';
   }
 
   if (changed) {
@@ -2095,13 +2153,15 @@ function initShipMap() {
       roomState.classList.remove('warn');
       roomState.classList.add('active');
       roomState.textContent = 'ACTIF';
-      roomCurrent.textContent = room;
+      roomCurrent.textContent = room === 'CABINE' ? getCabinRoomLabel() : room;
       mapMessage.classList.remove('warn');
       mapMessage.textContent = room === 'SAS EXPEDITION'
         ? 'Sas expedition actif : depart possible depuis le bouton central.'
         : room === 'QUARTIERS'
           ? 'Quartiers actifs : baie d observation ouverte sur le ciel etoile.'
-          : `Pont principal selectionne : ${activePontRepairState.label.toLowerCase()}, ${activePontRepairState.detail}.`;
+          : room === 'CABINE'
+            ? `Cabine ${formatPlayerPackageName(window.areciboPlayerName || 'COCO')} active : espace personnel ouvert sur le vide.`
+            : `Pont principal selectionne : ${activePontRepairState.label.toLowerCase()}, ${activePontRepairState.detail}.`;
       setShipScene(room);
       window.location.hash = roomToHash(room);
     });

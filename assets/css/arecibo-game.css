@@ -18,6 +18,7 @@
   --airlock-timer-width:13.2vh;
   --airlock-timer-height:3.8vh;
   --quarters-scene-image:url('../quartier-fenetre.png');
+  --cabin-scene-image:url('../cabine.png');
 }
 
 @media (min-aspect-ratio: 339/190) {
@@ -267,6 +268,9 @@ body::after {
 }
 .bridge.is-room-quarters .scene-backdrop {
   --scene-image:var(--quarters-scene-image);
+}
+.bridge.is-room-cabin .scene-backdrop {
+  --scene-image:var(--cabin-scene-image);
 }
 .bridge.is-stepping-back .scene-backdrop {
   animation:sceneStepBack .86s cubic-bezier(.2,.78,.22,1) both;
@@ -1836,6 +1840,7 @@ body::after {
 .room-engine { left:11%; bottom:25%; width:28%; height:18%; }
 .room-cargo { right:11%; bottom:25%; width:28%; height:18%; }
 .room-crew { left:27%; bottom:5%; width:20%; height:16%; clip-path:polygon(0 0, 100% 0, 100% 78%, 78% 100%, 0 100%); }
+.room-cabin { left:41.5%; bottom:8.5%; width:17%; height:12.5%; clip-path:polygon(10% 0, 90% 0, 100% 24%, 100% 100%, 0 100%, 0 24%); }
 .room-lab { right:27%; bottom:5%; width:20%; height:16%; clip-path:polygon(0 0, 100% 0, 100% 100%, 22% 100%, 0 78%); }
 .map-legend {
   display:grid;
@@ -2146,6 +2151,9 @@ body::after {
 }
 .bridge.is-room-quarters .airlock-shield,
 .bridge.is-room-quarters .airlock-timer,
+.bridge.is-room-cabin .airlock-shield,
+.bridge.is-room-cabin .airlock-timer,
+.bridge.is-room-cabin .extraction-console,
 .bridge.is-room-quarters .extraction-console {
   opacity:0;
   pointer-events:none;
@@ -2170,6 +2178,26 @@ body::after {
 .bridge.is-room-quarters .space-porthole canvas {
   filter:none;
   opacity:.98;
+}
+.bridge.is-room-cabin .space-porthole {
+  left:38.6%;
+  top:25.9%;
+  width:22.8%;
+  height:38.4%;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(247,255,195,.02), transparent 64%),
+    #010101;
+  box-shadow:none;
+  opacity:1;
+  z-index:1;
+}
+.bridge.is-room-cabin .space-porthole::after {
+  background:none;
+}
+.bridge.is-room-cabin .space-porthole canvas {
+  filter:none;
+  opacity:.99;
 }
 .bridge.is-room-pont .airlock-shield {
   animation:none;
