@@ -70,6 +70,7 @@ const messageCount = messageIndicator ? messageIndicator.querySelector('.message
 const messagesTitle = document.getElementById('messages-title');
 const messagesBody = document.getElementById('messages-body');
 const shipScene = document.getElementById('ship-scene');
+const sceneBackdrop = document.querySelector('.scene-backdrop');
 const hullStatus = document.getElementById('hull-status');
 const engineStatus = document.getElementById('engine-status');
 const personalHudDock = document.querySelector('.personal-hud-dock');
@@ -770,6 +771,24 @@ function applySasWireRepairSuccessState() {
     launchBtn.classList.add('ready');
     launchBtn.setAttribute('aria-disabled', 'false');
   }
+  syncSceneBackdropImage();
+}
+
+function syncSceneBackdropImage() {
+  if (!shipScene || !sceneBackdrop) return;
+
+  const roomScene = shipScene.dataset.roomScene || 'sas';
+  let image = 'assets/sas-2.png';
+
+  if (roomScene === 'pont') {
+    image = activePontRepairState?.image || 'assets/pont-principal-state-05-broken-4-doors-closed.png';
+  } else if (roomScene === 'quarters') {
+    image = 'assets/quartier-fenetre.png';
+  } else if (shipScene.classList.contains('is-sas-repair-ready')) {
+    image = 'assets/sas-repair/sas-grille-ouverte.png';
+  }
+
+  sceneBackdrop.style.setProperty('--scene-image', `url('${image}')`);
 }
 
 function setHullSystemStatus(status = 'critical') {
@@ -1122,6 +1141,7 @@ function applyOpeningStoryState() {
   });
 
   setShipScene('SAS EXPEDITION');
+  syncSceneBackdropImage();
   renderMessages(getStoryMessages());
 
   if (launchLabel) {
@@ -1847,6 +1867,7 @@ function setShipScene(room) {
   shipScene.classList.toggle('is-room-pont', isPont);
   shipScene.classList.toggle('is-room-quarters', isQuarters);
   shipScene.classList.toggle('is-room-sas', !isPont && !isQuarters);
+  syncSceneBackdropImage();
   shipScene.setAttribute(
     'aria-label',
     isPont
@@ -1939,6 +1960,7 @@ function setPontRepairState(stateId) {
   activePontRepairState = nextState;
   shipScene.dataset.pontRepairState = nextState.id;
   shipScene.style.setProperty('--pont-scene-image', `url('${nextState.image}')`);
+  syncSceneBackdropImage();
   setShipCondition(nextState.condition, nextState.hullIntegrity);
 
   if (shipScene.dataset.roomScene === 'pont' && bridgeMeta) {
