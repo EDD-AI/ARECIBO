@@ -151,7 +151,7 @@ canvas#starfield-bg {
   aspect-ratio: 1;
   z-index: 1;
   pointer-events: none;
-  opacity: .46;
+  opacity: .68;
   transform:
     translate3d(
       calc(var(--menu-parallax-x, 0) * -34px),
@@ -161,10 +161,10 @@ canvas#starfield-bg {
   transition: transform .22s ease-out;
   will-change: transform;
   filter:
-    saturate(.84)
-    brightness(.72)
-    blur(.15px)
-    drop-shadow(0 0 26px rgba(247,255,195,.06));
+    saturate(.88)
+    brightness(.8)
+    blur(.1px)
+    drop-shadow(0 0 34px rgba(0,0,0,.26));
 }
 .menu-planet img {
   width: 100%;
@@ -172,6 +172,7 @@ canvas#starfield-bg {
   display: block;
   object-fit: contain;
   image-rendering: auto;
+  opacity: .98;
 }
 
 /* Scanlines */
@@ -1880,19 +1881,20 @@ body::after {
         hash(id + 41.7 + seed) - 0.5
       ) * 0.68;
       vec2 pos = gv - offset;
-      float dist = length(pos);
-      float star = smoothstep(0.12, 0.0, dist);
+      vec2 pixelPos = floor(pos * 18.0) / 18.0;
+      float dist = max(abs(pixelPos.x), abs(pixelPos.y));
+      float star = smoothstep(0.085, 0.0, dist);
 
       float cross = 0.0;
       if (n > twinkleBand) {
-        cross += smoothstep(0.09, 0.0, abs(pos.x)) * smoothstep(0.3, 0.0, abs(pos.y));
-        cross += smoothstep(0.09, 0.0, abs(pos.y)) * smoothstep(0.3, 0.0, abs(pos.x));
+        cross += smoothstep(0.05, 0.0, abs(pixelPos.x)) * smoothstep(0.18, 0.0, abs(pixelPos.y));
+        cross += smoothstep(0.05, 0.0, abs(pixelPos.y)) * smoothstep(0.18, 0.0, abs(pixelPos.x));
       }
 
-      float twinkle = 0.84 + sin(uTime * (0.35 + n * 1.7) + n * 9.0) * (0.08 + n * 0.12);
-      float intensity = active * (star + cross * 0.42) * twinkle;
+      float twinkle = 0.9 + sin(uTime * (0.22 + n * 1.15) + n * 9.0) * (0.03 + n * 0.05);
+      float intensity = active * (star + cross * 0.22) * twinkle;
 
-      vec3 color = mix(vec3(0.86, 0.88, 0.78), vec3(0.98, 0.99, 0.86), smoothstep(0.72, 1.0, n));
+      vec3 color = mix(vec3(0.52, 0.54, 0.48), vec3(0.8, 0.82, 0.72), smoothstep(0.78, 1.0, n));
       return color * intensity;
     }
 
@@ -1902,12 +1904,12 @@ body::after {
       centered += uParallax * 0.025;
 
       vec3 color = vec3(0.008, 0.008, 0.01);
-      color += starLayer(centered + vec2(0.11, -0.06), 38.0, 1.0, 0.028, 0.92);
-      color += starLayer(centered - vec2(0.05, 0.03), 64.0, 8.0, 0.018, 0.95);
-      color += starLayer(centered + vec2(0.02, 0.01), 96.0, 17.0, 0.012, 0.97);
+      color += starLayer(centered + vec2(0.11, -0.06), 34.0, 1.0, 0.014, 0.965);
+      color += starLayer(centered - vec2(0.05, 0.03), 58.0, 8.0, 0.009, 0.982);
+      color += starLayer(centered + vec2(0.02, 0.01), 86.0, 17.0, 0.005, 0.992);
 
-      float haze = exp(-length(centered * vec2(1.15, 0.92)) * 3.2) * 0.03;
-      color += vec3(0.025, 0.022, 0.018) * haze;
+      float haze = exp(-length(centered * vec2(1.15, 0.92)) * 3.2) * 0.012;
+      color += vec3(0.014, 0.013, 0.012) * haze;
 
       gl_FragColor = vec4(color, 1.0);
     }
