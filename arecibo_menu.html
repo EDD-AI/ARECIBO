@@ -892,6 +892,73 @@ canvas#starfield-bg {
   z-index: 10;
 }
 
+/* ===== CLEAN MENU PASS ===== */
+body::before {
+  background:
+    radial-gradient(ellipse at center, transparent 62%, rgba(0,0,0,.18) 84%, rgba(0,0,0,.56) 100%) !important;
+  box-shadow:
+    inset 0 0 48px rgba(0,0,0,.7),
+    inset 0 0 128px rgba(0,0,0,.42) !important;
+  filter: none !important;
+  opacity: .28 !important;
+}
+body::after {
+  background: none !important;
+  box-shadow: none !important;
+  border-color: rgba(247,255,195,.035) !important;
+  opacity: .16 !important;
+}
+.screen {
+  filter: none !important;
+  transform: none !important;
+  animation: none !important;
+}
+.screen::after {
+  background:
+    radial-gradient(ellipse at center, transparent 66%, rgba(0,0,0,.22) 100%),
+    repeating-linear-gradient(0deg, rgba(247,255,195,.026) 0 1px, transparent 1px 10px) !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  opacity: .2 !important;
+}
+.singularity-wrap {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+#particles-canvas {
+  display: none !important;
+}
+.logo-text {
+  min-width: auto;
+  text-shadow: none !important;
+}
+.logo-letter,
+.logo-letter-threshold,
+.logo-letter-absorbed {
+  color: var(--cream) !important;
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+  animation: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+.logo-letter-absorbed::before,
+.logo-letter-absorbed::after,
+.logo-swallow,
+#logo-arecibo::before,
+#logo-arecibo::after {
+  display: none !important;
+  content: none !important;
+}
+#logo-arecibo:hover .logo-letter {
+  color: var(--cream) !important;
+  animation: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
 .crt-filter-defs {
   position: absolute;
   width: 0;
