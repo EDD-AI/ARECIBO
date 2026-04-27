@@ -709,44 +709,44 @@ canvas#starfield-bg {
 }
 .logo-letter-absorbed {
   position: relative;
-  opacity: .7;
-  color: rgba(247,255,195,.82);
+  opacity: .9;
+  color: rgba(247,255,195,.94);
   transform:
-    translate(calc(var(--gravity-x) + 2px), calc(var(--gravity-y) - 1px))
-    skewX(calc(var(--gravity-skew) + .22deg))
-    scaleX(.9)
-    scaleY(calc(var(--gravity-stretch) * 1.03));
-  filter: blur(calc(var(--gravity-blur) + .12px)) brightness(1.06);
-  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,.98) 0 42%, rgba(0,0,0,.84) 58%, rgba(0,0,0,.38) 78%, transparent 100%);
-  mask-image: linear-gradient(90deg, rgba(0,0,0,.98) 0 42%, rgba(0,0,0,.84) 58%, rgba(0,0,0,.38) 78%, transparent 100%);
+    translate(calc(var(--gravity-x) + 1px), calc(var(--gravity-y) - .5px))
+    skewX(calc(var(--gravity-skew) + .14deg))
+    scaleX(.95)
+    scaleY(calc(var(--gravity-stretch) * 1.015));
+  filter: blur(calc(var(--gravity-blur) + .04px)) brightness(1.04);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,.98) 0 58%, rgba(0,0,0,.9) 72%, rgba(0,0,0,.58) 88%, transparent 100%);
+  mask-image: linear-gradient(90deg, rgba(0,0,0,.98) 0 58%, rgba(0,0,0,.9) 72%, rgba(0,0,0,.58) 88%, transparent 100%);
   text-shadow:
-    1px -1px rgba(247,255,195,.14),
-    6px -3px rgba(250,90,31,.16),
-    14px -7px rgba(250,90,31,.08),
-    20px -12px rgba(247,255,195,.04);
+    1px -1px rgba(247,255,195,.18),
+    4px -2px rgba(250,90,31,.14),
+    10px -5px rgba(250,90,31,.06),
+    16px -8px rgba(247,255,195,.03);
 }
 .logo-letter-absorbed::before {
   content: attr(data-char);
   position: absolute;
   inset: 0;
-  color: rgba(247,255,195,.74);
-  opacity: .92;
+  color: rgba(247,255,195,.88);
+  opacity: .96;
   transform: translate(-1px, .1px) scaleX(.98);
-  filter: blur(.04px);
-  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,.98) 0 54%, rgba(0,0,0,.84) 68%, rgba(0,0,0,.22) 88%, transparent 100%);
-  mask-image: linear-gradient(90deg, rgba(0,0,0,.98) 0 54%, rgba(0,0,0,.84) 68%, rgba(0,0,0,.22) 88%, transparent 100%);
+  filter: blur(.02px);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,.98) 0 62%, rgba(0,0,0,.9) 76%, rgba(0,0,0,.44) 92%, transparent 100%);
+  mask-image: linear-gradient(90deg, rgba(0,0,0,.98) 0 62%, rgba(0,0,0,.9) 76%, rgba(0,0,0,.44) 92%, transparent 100%);
   pointer-events: none;
 }
 .logo-letter-absorbed::after {
   content: attr(data-char);
   position: absolute;
   inset: 0;
-  color: rgba(250,90,31,.24);
-  transform: translate(8px, -4px) scaleX(1.16) scaleY(1.05);
-  filter: blur(3.2px);
-  opacity: .78;
-  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,.52) 0 14%, rgba(0,0,0,.22) 28%, transparent 72%);
-  mask-image: linear-gradient(90deg, rgba(0,0,0,.52) 0 14%, rgba(0,0,0,.22) 28%, transparent 72%);
+  color: rgba(250,90,31,.2);
+  transform: translate(5px, -2px) scaleX(1.08) scaleY(1.03);
+  filter: blur(2px);
+  opacity: .56;
+  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,.42) 0 18%, rgba(0,0,0,.18) 34%, transparent 76%);
+  mask-image: linear-gradient(90deg, rgba(0,0,0,.42) 0 18%, rgba(0,0,0,.18) 34%, transparent 76%);
   pointer-events: none;
 }
 .logo-letter:nth-child(2) {
@@ -774,33 +774,33 @@ canvas#starfield-bg {
   --gravity-shadow: .045;
 }
 .logo-letter:nth-child(5) {
-  --gravity-x: .62px;
-  --gravity-y: -.72px;
-  --gravity-skew: .14deg;
-  --gravity-stretch: 1.008;
-  --gravity-blur: .055px;
+  --gravity-x: .48px;
+  --gravity-y: -.52px;
+  --gravity-skew: .1deg;
+  --gravity-stretch: 1.006;
+  --gravity-blur: .035px;
   --gravity-shadow: .055;
 }
 .logo-letter:nth-child(6) {
-  --gravity-x: .9px;
-  --gravity-y: -1.15px;
-  --gravity-skew: .18deg;
-  --gravity-stretch: 1.012;
-  --gravity-blur: .075px;
+  --gravity-x: .72px;
+  --gravity-y: -.82px;
+  --gravity-skew: .13deg;
+  --gravity-stretch: 1.009;
+  --gravity-blur: .05px;
   --gravity-shadow: .065;
 }
 .logo-letter:nth-child(7) {
-  --gravity-x: 1.6px;
-  --gravity-y: -3.2px;
-  --gravity-skew: .28deg;
-  --gravity-stretch: 1.04;
-  --gravity-blur: .22px;
-  --gravity-shadow: .15;
+  --gravity-x: 1.02px;
+  --gravity-y: -1.8px;
+  --gravity-skew: .18deg;
+  --gravity-stretch: 1.02;
+  --gravity-blur: .11px;
+  --gravity-shadow: .1;
   animation: logoGravityPull 6.8s ease-in-out infinite;
   text-shadow:
-    2px -6px rgba(247,255,195,.18),
-    4px -12px rgba(247,255,195,.08),
-    3px -9px rgba(250,90,31,.12);
+    1px -3px rgba(247,255,195,.14),
+    3px -7px rgba(247,255,195,.06),
+    2px -6px rgba(250,90,31,.08);
 }
 
 .logo-swallow {
@@ -814,9 +814,9 @@ canvas#starfield-bg {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 82% 48%, rgba(0,0,0,.98) 0 18%, rgba(0,0,0,.94) 28%, rgba(0,0,0,.72) 43%, rgba(0,0,0,.34) 57%, transparent 74%),
-    radial-gradient(ellipse at 74% 47%, rgba(250,90,31,.2) 0 10%, rgba(250,90,31,.08) 18%, transparent 36%);
-  filter: blur(3px);
+    radial-gradient(ellipse at 82% 48%, rgba(0,0,0,.96) 0 16%, rgba(0,0,0,.9) 24%, rgba(0,0,0,.56) 38%, rgba(0,0,0,.22) 52%, transparent 72%),
+    radial-gradient(ellipse at 74% 47%, rgba(250,90,31,.16) 0 8%, rgba(250,90,31,.06) 16%, transparent 34%);
+  filter: blur(2px);
   animation: logoEventHorizon 6.6s ease-in-out infinite;
 }
 .logo-swallow::after {
@@ -824,15 +824,15 @@ canvas#starfield-bg {
   position: absolute;
   right: 4%;
   top: 34%;
-  width: 48%;
-  height: 34%;
+  width: 42%;
+  height: 30%;
   border-radius: 50%;
   background:
     radial-gradient(circle at 54% 52%, rgba(0,0,0,1) 0 43%, rgba(0,0,0,.86) 56%, transparent 72%);
   box-shadow:
-    0 0 38px rgba(0,0,0,.92),
-    0 0 64px rgba(250,90,31,.1);
-  opacity: .92;
+    0 0 30px rgba(0,0,0,.88),
+    0 0 44px rgba(250,90,31,.06);
+  opacity: .8;
 }
 
 #logo-arecibo:hover .logo-letter {
@@ -2625,128 +2625,8 @@ window.addEventListener('DOMContentLoaded', () => syncPixelDitherButtons());
   }, true);
 
   function drawDebris(now, well) {
-    if (!reduceMotion.matches && now > nextDebrisAt && debris.length < 4) {
-      debris.push(createDebris(well));
-      scheduleNextDebris(now);
-    }
-
-    if (!reduceMotion.matches && now > nextMacroDebrisAt && macroDebris.length < 3) {
-      macroDebris.push(createMacroDebris(well));
-      scheduleNextMacroDebris(now);
-    }
-
-    for (let i = debris.length - 1; i >= 0; i--) {
-      const d = debris[i];
-      d.prevX = d.x;
-      d.prevY = d.y;
-      d.life++;
-
-      const dx = well.x - d.x;
-      const dy = well.y - d.y;
-      const dist = Math.max(1, Math.hypot(dx, dy));
-      const nx = dx / dist;
-      const ny = dy / dist;
-      const tangent = d.spin * Math.min(18, well.radius / dist * 12);
-      const accel = .055 + Math.min(.2, well.radius / dist * .14);
-
-      d.vx += nx * accel - ny * tangent;
-      d.vy += ny * accel + nx * tangent;
-      d.vx *= .997;
-      d.vy *= .997;
-      d.x += d.vx;
-      d.y += d.vy;
-      d.angle += d.spin * 5.4;
-      d.trail.unshift({ x: d.x, y: d.y, size: d.size });
-      if (d.trail.length > 13) d.trail.pop();
-
-      const swallowed = dist < well.radius * .5;
-      const fade = Math.max(0, Math.min(1, 1 - d.life / d.maxLife));
-      const heat = Math.min(1, d.heat + (1 - Math.min(1, dist / (well.radius * 2.4))) * .7);
-      const color = heat > .85 ? '247,255,195' : heat > .58 ? '250,168,70' : '250,90,31';
-      const alpha = d.opacity * (.38 + heat * .46) * Math.max(.2, fade);
-
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      d.trail.forEach((point, trailIndex) => {
-        const trailAlpha = alpha * (1 - trailIndex / d.trail.length) * .22;
-        ctx.fillStyle = `rgba(${color},${trailAlpha.toFixed(3)})`;
-        const trailSize = Math.max(1, point.size * (1 - trailIndex / d.trail.length) * .72);
-        ctx.fillRect(Math.round(point.x - trailSize / 2), Math.round(point.y - trailSize / 2), trailSize, trailSize);
-      });
-
-      ctx.translate(d.x, d.y);
-      ctx.rotate(d.angle);
-      ctx.fillStyle = `rgba(${color},${alpha.toFixed(3)})`;
-      ctx.fillRect(-d.size / 2, -d.size / 2, d.size, d.size);
-      ctx.fillStyle = `rgba(0,0,0,${(.32 * alpha).toFixed(3)})`;
-      ctx.fillRect(-d.size * .12, -d.size * .12, d.size * .5, d.size * .5);
-      ctx.restore();
-
-      if (swallowed || d.life > d.maxLife || d.x > canvas.width + 160 || d.y < -160 || d.y > canvas.height + 160) {
-        debris.splice(i, 1);
-      }
-    }
-
-    for (let i = macroDebris.length - 1; i >= 0; i--) {
-      const d = macroDebris[i];
-      d.prevX = d.x;
-      d.prevY = d.y;
-      d.life++;
-
-      const dx = well.x - d.x;
-      const dy = well.y - d.y;
-      const dist = Math.max(1, Math.hypot(dx, dy));
-      const nx = dx / dist;
-      const ny = dy / dist;
-      const tangent = d.spin * Math.min(22, well.radius / dist * 16);
-      const accel = .035 + Math.min(.14, well.radius / dist * .11);
-
-      d.vx += nx * accel - ny * tangent;
-      d.vy += ny * accel + nx * tangent;
-      d.vx *= .996;
-      d.vy *= .996;
-      d.x += d.vx;
-      d.y += d.vy;
-      d.angle += d.spin * 4.4;
-      d.trail.unshift({ x: d.x, y: d.y, size: d.size, angle: d.angle });
-      if (d.trail.length > 10) d.trail.pop();
-
-      const swallowed = dist < well.radius * .52;
-      const fade = Math.max(0, Math.min(1, 1 - d.life / d.maxLife));
-      const heat = Math.min(1, d.heat + (1 - Math.min(1, dist / (well.radius * 2.6))) * .55);
-      const color = heat > .88 ? '247,255,195' : heat > .56 ? '250,168,70' : '250,90,31';
-      const alpha = d.opacity * (.24 + heat * .42) * Math.max(.16, fade);
-
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      d.trail.forEach((point, trailIndex) => {
-        const trailAlpha = alpha * (1 - trailIndex / d.trail.length) * .17;
-        ctx.save();
-        ctx.translate(point.x, point.y);
-        ctx.rotate(point.angle);
-        ctx.fillStyle = `rgba(${color},${trailAlpha.toFixed(3)})`;
-        ctx.fillRect(
-          -point.size * .32,
-          -point.size * .18,
-          point.size * .64,
-          point.size * .34
-        );
-        ctx.restore();
-      });
-
-      ctx.translate(d.x, d.y);
-      ctx.rotate(d.angle);
-      ctx.fillStyle = `rgba(${color},${alpha.toFixed(3)})`;
-      ctx.fillRect(-d.size * .5, -d.size * .22, d.size, d.size * d.innerSize);
-      ctx.fillRect(-d.size * .18, -d.size * .42, d.size * .36, d.size * d.stretch * .18);
-      ctx.fillStyle = `rgba(0,0,0,${(.26 * alpha).toFixed(3)})`;
-      ctx.fillRect(-d.size * .12, -d.size * .12, d.size * .28, d.size * .18);
-      ctx.restore();
-
-      if (swallowed || d.life > d.maxLife || d.x < -220 || d.x > canvas.width + 220 || d.y < -220 || d.y > canvas.height + 220) {
-        macroDebris.splice(i, 1);
-      }
-    }
+    debris.length = 0;
+    macroDebris.length = 0;
   }
 
   function drawLogoDust(now, well) {
