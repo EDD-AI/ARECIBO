@@ -1305,7 +1305,8 @@ canvas#starfield-bg {
   }
 }
 </style>
-<link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-1">
+<script src="assets/visual-settings.js?v=pixel-dither-3"></script>
+<link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-3">
 </head>
 <body>
 <svg class="crt-filter-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -1859,6 +1860,8 @@ menuItems.forEach(item => {
   if (!soundToggle) return;
   const key = 'areciboAudioMuted';
   const menuTracks = [
+    'assets/audio/music/Main Title 1.mp3',
+    'assets/audio/music/Main Title 2.mp3',
     'assets/audio/music/arecibo-menu-main.ogg',
     'assets/audio/music/arecibo-menu-main.mp3'
   ];
@@ -1974,7 +1977,7 @@ function goTo(e, page) {
   t.classList.add('active');
   const routes = {
     creation: 'arecibo_creation.html?next=intro',
-    intro: 'arecibo_intro.html?v=global-pixel-dither-1',
+    intro: 'arecibo_intro.html?v=global-pixel-dither-3',
     lobby: 'arecibo_lobby.html',
     game: 'arecibo_game.html?v=solo-prototype'
   };
@@ -2048,6 +2051,7 @@ function openSettings(e) {
   e.preventDefault();
   const overlay = document.getElementById('settings-overlay');
   overlay.classList.add('open');
+  syncPixelDitherButtons(overlay);
   setTimeout(() => overlay.querySelector('.settings-panel').classList.add('visible'), 10);
 }
 
@@ -2080,9 +2084,32 @@ function selectLang(btn) {
   btn.classList.add('sel');
 }
 
+function syncPixelDitherButtons(root = document) {
+  const current = typeof window.getAreciboPixelDither === 'function'
+    ? window.getAreciboPixelDither()
+    : 'strong';
+  root.querySelectorAll('[data-pixel-dither-group] .pixel-btn').forEach(btn => {
+    btn.classList.toggle('sel', btn.dataset.pixelDither === current);
+  });
+}
+
+function selectPixelDither(btn, mode) {
+  const row = btn ? btn.closest('[data-pixel-dither-group]') : null;
+  if (row) {
+    row.querySelectorAll('.pixel-btn').forEach(item => item.classList.remove('sel'));
+  }
+  if (btn) btn.classList.add('sel');
+  if (typeof window.setAreciboPixelDither === 'function') {
+    window.setAreciboPixelDither(mode);
+  }
+}
+
 function toggleSwitch(el) {
   el.classList.toggle('on');
 }
+
+window.addEventListener('arecibo-pixel-dither-change', () => syncPixelDitherButtons());
+window.addEventListener('DOMContentLoaded', () => syncPixelDitherButtons());
 
 (function() {
   const overlay = document.getElementById('credits-overlay');
@@ -2882,6 +2909,32 @@ function toggleSwitch(el) {
   border-color: rgba(247,255,195,.14);
   color: rgba(247,255,195,.28);
 }
+.sp-pixel-row {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.pixel-btn {
+  background: none;
+  border: 1px solid rgba(247,255,195,.3);
+  color: rgba(247,255,195,.6);
+  font-family: 'Pixelify Sans', monospace;
+  font-size: 14px;
+  letter-spacing: .08em;
+  padding: 8px 18px;
+  cursor: none;
+  transition: all .12s;
+  border-radius: 4px;
+}
+.pixel-btn:hover {
+  border-color: rgba(247,255,195,.6);
+  color: var(--cream);
+}
+.pixel-btn.sel {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: rgba(250,90,31,.08);
+}
 .sp-toggle-row {
   display: flex;
   align-items: center;
@@ -2960,6 +3013,14 @@ function toggleSwitch(el) {
           <button class="lang-btn sel" onclick="selectLang(this)">FR</button>
           <button class="lang-btn disabled" type="button" disabled aria-disabled="true" title="Bientot disponible">EN</button>
           <button class="lang-btn disabled" type="button" disabled aria-disabled="true" title="Bientot disponible">SP</button>
+        </div>
+      </div>
+      <div>
+        <div class="sp-section-label">Filtre pixel</div>
+        <div class="sp-pixel-row" data-pixel-dither-group>
+          <button class="pixel-btn" type="button" data-pixel-dither="off" onclick="selectPixelDither(this, 'off')">OFF</button>
+          <button class="pixel-btn" type="button" data-pixel-dither="normal" onclick="selectPixelDither(this, 'normal')">NORMAL</button>
+          <button class="pixel-btn sel" type="button" data-pixel-dither="strong" onclick="selectPixelDither(this, 'strong')">FORT</button>
         </div>
       </div>
       <div>

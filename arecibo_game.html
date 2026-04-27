@@ -9,7 +9,8 @@
 <title>ARECIBO - Sas expedition</title>
 <link rel="stylesheet" href="assets/css/arecibo-game.css?v=sas-warning-hotspot-1">
 <link rel="stylesheet" href="assets/css/arecibo-expedition.css?v=sas-warning-hotspot-1">
-<link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-1">
+<script src="assets/visual-settings.js?v=pixel-dither-3"></script>
+<link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-3">
 </head>
 <body>
 <div class="cursor" id="cursor"></div>
@@ -393,8 +394,16 @@
         <div class="sp-section-label">Langues</div>
         <div class="sp-lang-row">
           <button class="lang-btn sel" onclick="selectLang(this)">FR</button>
-          <button class="lang-btn" onclick="selectLang(this)">EN</button>
-          <button class="lang-btn" onclick="selectLang(this)">SP</button>
+          <button class="lang-btn disabled" type="button" disabled aria-disabled="true" title="Bientot disponible">EN</button>
+          <button class="lang-btn disabled" type="button" disabled aria-disabled="true" title="Bientot disponible">SP</button>
+        </div>
+      </div>
+      <div>
+        <div class="sp-section-label">Filtre pixel</div>
+        <div class="sp-pixel-row" data-pixel-dither-group>
+          <button class="pixel-btn" type="button" data-pixel-dither="off" onclick="selectPixelDither(this, 'off')">OFF</button>
+          <button class="pixel-btn" type="button" data-pixel-dither="normal" onclick="selectPixelDither(this, 'normal')">NORMAL</button>
+          <button class="pixel-btn sel" type="button" data-pixel-dither="strong" onclick="selectPixelDither(this, 'strong')">FORT</button>
         </div>
       </div>
       <div>

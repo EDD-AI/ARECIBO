@@ -2709,6 +2709,46 @@ body::after {
 }
 .lang-btn:hover { border-color:rgba(247,255,195,.6); color:var(--cream); }
 .lang-btn.sel { border-color:var(--orange); color:var(--orange); }
+.lang-btn.disabled,
+.lang-btn:disabled {
+  border-color:rgba(247,255,195,.14);
+  color:rgba(247,255,195,.28);
+  background:rgba(247,255,195,.02);
+  cursor:default;
+  opacity:.72;
+  pointer-events:none;
+}
+.lang-btn.disabled:hover,
+.lang-btn:disabled:hover {
+  border-color:rgba(247,255,195,.14);
+  color:rgba(247,255,195,.28);
+}
+.sp-pixel-row {
+  display:flex;
+  gap:9px;
+  flex-wrap:wrap;
+}
+.pixel-btn {
+  background:none;
+  border:1px solid rgba(247,255,195,.3);
+  color:rgba(247,255,195,.6);
+  font-family:'Pixelify Sans', monospace;
+  font-size:14px;
+  letter-spacing:.08em;
+  padding:8px 18px;
+  cursor:none;
+  transition:all .12s;
+  border-radius:4px;
+}
+.pixel-btn:hover {
+  border-color:rgba(247,255,195,.6);
+  color:var(--cream);
+}
+.pixel-btn.sel {
+  border-color:var(--orange);
+  color:var(--orange);
+  background:rgba(250,90,31,.08);
+}
 .sp-toggle-row {
   display:flex;
   align-items:center;

@@ -329,6 +329,41 @@ input[type="range"]::-moz-range-thumb {
   color: var(--cream);
 }
 .select-option.sel { color: var(--orange); }
+.select-option[aria-disabled="true"] {
+  color: rgba(247,255,195,.24);
+  background: rgba(247,255,195,.02);
+  pointer-events: none;
+}
+.select-option[aria-disabled="true"]:hover {
+  color: rgba(247,255,195,.24);
+  background: rgba(247,255,195,.02);
+}
+.sp-pixel-row {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.pixel-btn {
+  background: none;
+  border: 1px solid rgba(247,255,195,.3);
+  color: rgba(247,255,195,.6);
+  font-family: var(--f-pixel);
+  font-size: 11px;
+  letter-spacing: .08em;
+  padding: 8px 16px;
+  cursor: none;
+  transition: all .12s;
+  border-radius: 4px;
+}
+.pixel-btn:hover {
+  border-color: rgba(247,255,195,.6);
+  color: var(--cream);
+}
+.pixel-btn.sel {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: rgba(250,90,31,.08);
+}
 
 /* DANGER ZONE */
 .danger-btn {
@@ -373,7 +408,8 @@ input[type="range"]::-moz-range-thumb {
 }
 .page-transition.active { opacity: 1; pointer-events: all; }
 </style>
-<link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-1">
+<script src="assets/visual-settings.js?v=pixel-dither-3"></script>
+<link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-3">
 </head>
 <body>
 <div class="cursor" id="cursor"></div>
@@ -575,6 +611,20 @@ input[type="range"]::-moz-range-thumb {
           <div class="toggle on" id="toggle-cursor" onclick="toggleSwitch(this)"></div>
         </div>
       </div>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Filtre pixel / dither</div>
+          <div class="setting-hint">Renforce le rendu pixel beige et le grain du terminal</div>
+        </div>
+        <div class="setting-control">
+          <div class="sp-pixel-row" data-pixel-dither-group>
+            <button class="pixel-btn" type="button" data-pixel-dither="off" onclick="selectPixelDither(this, 'off')">OFF</button>
+            <button class="pixel-btn" type="button" data-pixel-dither="normal" onclick="selectPixelDither(this, 'normal')">NORMAL</button>
+            <button class="pixel-btn sel" type="button" data-pixel-dither="strong" onclick="selectPixelDither(this, 'strong')">FORT</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- INTERFACE -->
@@ -592,8 +642,8 @@ input[type="range"]::-moz-range-thumb {
             <button class="select-btn" onclick="toggleDropdown('lang-dd')">FR Français ▾</button>
             <div class="select-dropdown" id="lang-dd">
               <div class="select-option sel" onclick="selectOpt(this, 'lang-dd', 'FR Français')">FR Français</div>
-              <div class="select-option" onclick="selectOpt(this, 'lang-dd', 'EN English')">EN English</div>
-              <div class="select-option" onclick="selectOpt(this, 'lang-dd', 'SP Spanish')">SP Spanish</div>
+              <div class="select-option" aria-disabled="true">EN English</div>
+              <div class="select-option" aria-disabled="true">SP Spanish</div>
             </div>
           </div>
         </div>
@@ -826,11 +876,33 @@ function toggleDropdown(id) {
   document.getElementById(id).classList.toggle('open');
 }
 function selectOpt(opt, ddId, val) {
+  if (opt.getAttribute('aria-disabled') === 'true') return;
   const dd = document.getElementById(ddId);
   dd.querySelectorAll('.select-option').forEach(o => o.classList.remove('sel'));
   opt.classList.add('sel');
   dd.previousElementSibling.textContent = val + ' ▾';
   dd.classList.remove('open');
+  saveSettings();
+}
+
+function syncPixelDitherButtons(root = document) {
+  const current = typeof window.getAreciboPixelDither === 'function'
+    ? window.getAreciboPixelDither()
+    : 'strong';
+  root.querySelectorAll('[data-pixel-dither-group] .pixel-btn').forEach(btn => {
+    btn.classList.toggle('sel', btn.dataset.pixelDither === current);
+  });
+}
+
+function selectPixelDither(btn, mode) {
+  const row = btn ? btn.closest('[data-pixel-dither-group]') : null;
+  if (row) {
+    row.querySelectorAll('.pixel-btn').forEach(item => item.classList.remove('sel'));
+  }
+  if (btn) btn.classList.add('sel');
+  if (typeof window.setAreciboPixelDither === 'function') {
+    window.setAreciboPixelDither(mode);
+  }
   saveSettings();
 }
 document.addEventListener('click', e => {
@@ -874,7 +946,9 @@ window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     document.getElementById('transition').style.opacity = '0';
   }, 50);
+  syncPixelDitherButtons();
 });
+window.addEventListener('arecibo-pixel-dither-change', () => syncPixelDitherButtons());
 </script>
 </body>
 </html>

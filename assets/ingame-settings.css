@@ -164,6 +164,36 @@
   color:var(--orange, #ff4c1c);
 }
 
+.sp-pixel-row {
+  display:flex;
+  gap:9px;
+  flex-wrap:wrap;
+}
+
+.pixel-btn {
+  background:none;
+  border:1px solid rgba(247,255,195,.3);
+  color:rgba(247,255,195,.6);
+  font-family:'Pixelify Sans', monospace;
+  font-size:13px;
+  letter-spacing:.08em;
+  padding:8px 15px;
+  cursor:none;
+  transition:all .12s;
+  border-radius:4px;
+}
+
+.pixel-btn:hover {
+  border-color:rgba(247,255,195,.6);
+  color:var(--cream, #f7ffc3);
+}
+
+.pixel-btn.sel {
+  border-color:var(--orange, #ff4c1c);
+  color:var(--orange, #ff4c1c);
+  background:rgba(255,76,28,.08);
+}
+
 .sp-toggle-row {
   display:flex;
   align-items:center;

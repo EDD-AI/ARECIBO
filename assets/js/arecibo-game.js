@@ -3211,6 +3211,7 @@ function openSettings(event) {
   const overlay = document.getElementById('settings-overlay');
   if (!overlay) return;
   overlay.classList.add('open');
+  syncPixelDitherButtons(overlay);
   setTimeout(() => overlay.querySelector('.settings-panel').classList.add('visible'), 10);
 }
 
@@ -3244,15 +3245,39 @@ function updateSlider(el, valId) {
 }
 
 function selectLang(btn) {
+  if (!btn || btn.disabled || btn.classList.contains('disabled')) return;
   const row = btn.closest('.sp-lang-row');
   const buttons = row ? row.querySelectorAll('.lang-btn') : document.querySelectorAll('.lang-btn');
   buttons.forEach(button => button.classList.remove('sel'));
   btn.classList.add('sel');
 }
 
+function syncPixelDitherButtons(root = document) {
+  const current = typeof window.getAreciboPixelDither === 'function'
+    ? window.getAreciboPixelDither()
+    : 'strong';
+  root.querySelectorAll('[data-pixel-dither-group] .pixel-btn').forEach(btn => {
+    btn.classList.toggle('sel', btn.dataset.pixelDither === current);
+  });
+}
+
+function selectPixelDither(btn, mode) {
+  const row = btn ? btn.closest('[data-pixel-dither-group]') : null;
+  if (row) {
+    row.querySelectorAll('.pixel-btn').forEach(item => item.classList.remove('sel'));
+  }
+  if (btn) btn.classList.add('sel');
+  if (typeof window.setAreciboPixelDither === 'function') {
+    window.setAreciboPixelDither(mode);
+  }
+}
+
 function toggleSwitch(el) {
   el.classList.toggle('on');
 }
+
+window.addEventListener('arecibo-pixel-dither-change', () => syncPixelDitherButtons());
+window.addEventListener('DOMContentLoaded', () => syncPixelDitherButtons());
 
 document.addEventListener('keydown', event => {
   if (event.key !== 'Escape') return;

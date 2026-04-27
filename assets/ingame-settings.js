@@ -25,15 +25,23 @@
               <span class="sp-val" id="sv3">60%</span>
             </div>
           </div>
-          <div>
-            <div class="sp-section-label">Langues</div>
-            <div class="sp-lang-row">
-              <button class="lang-btn sel" type="button">FR</button>
-              <button class="lang-btn" type="button">EN</button>
-              <button class="lang-btn" type="button">SP</button>
-            </div>
-          </div>
-          <div>
+	          <div>
+	            <div class="sp-section-label">Langues</div>
+	            <div class="sp-lang-row">
+	              <button class="lang-btn sel" type="button">FR</button>
+	              <button class="lang-btn disabled" type="button" disabled aria-disabled="true" title="Bientot disponible">EN</button>
+	              <button class="lang-btn disabled" type="button" disabled aria-disabled="true" title="Bientot disponible">SP</button>
+	            </div>
+	          </div>
+	          <div>
+	            <div class="sp-section-label">Filtre pixel</div>
+	            <div class="sp-pixel-row" data-pixel-dither-group>
+	              <button class="pixel-btn" type="button" data-pixel-dither="off">OFF</button>
+	              <button class="pixel-btn" type="button" data-pixel-dither="normal">NORMAL</button>
+	              <button class="pixel-btn sel" type="button" data-pixel-dither="strong">FORT</button>
+	            </div>
+	          </div>
+	          <div>
             <div class="sp-section-label">Données</div>
             <div class="sp-toggle-row">
               <span class="sp-toggle-label">sauvegarde automatique</span>
@@ -56,13 +64,14 @@
     setTimeout(() => overlay.classList.remove('open'), 320);
   }
 
-  function openSettings(event) {
-    if (event) event.preventDefault();
-    const overlay = document.getElementById('settings-overlay');
-    if (!overlay) return;
-    overlay.classList.add('open');
-    setTimeout(() => overlay.querySelector('.settings-panel').classList.add('visible'), 10);
-  }
+	  function openSettings(event) {
+	    if (event) event.preventDefault();
+	    const overlay = document.getElementById('settings-overlay');
+	    if (!overlay) return;
+	    overlay.classList.add('open');
+	    syncPixelDitherButtons(overlay);
+	    setTimeout(() => overlay.querySelector('.settings-panel').classList.add('visible'), 10);
+	  }
 
   function placeTab(tab) {
     const back = document.querySelector('.back-btn');
@@ -101,22 +110,44 @@
         if (valueNode) valueNode.textContent = `${input.value}%`;
       });
     });
-    document.querySelectorAll('.sp-lang-row .lang-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        button.closest('.sp-lang-row').querySelectorAll('.lang-btn').forEach(item => item.classList.remove('sel'));
-        button.classList.add('sel');
-      });
-    });
-    document.querySelectorAll('.sp-toggle').forEach(toggle => {
-      toggle.addEventListener('click', () => {
-        toggle.classList.toggle('on');
-        toggle.setAttribute('aria-checked', toggle.classList.contains('on') ? 'true' : 'false');
-      });
-    });
-    document.addEventListener('keydown', event => {
-      if (event.key === 'Escape') closeSettings();
-    });
-  }
+	    document.querySelectorAll('.sp-lang-row .lang-btn').forEach(button => {
+	      button.addEventListener('click', () => {
+	        if (button.disabled || button.classList.contains('disabled')) return;
+	        button.closest('.sp-lang-row').querySelectorAll('.lang-btn').forEach(item => item.classList.remove('sel'));
+	        button.classList.add('sel');
+	      });
+	    });
+	    document.querySelectorAll('[data-pixel-dither-group] .pixel-btn').forEach(button => {
+	      button.addEventListener('click', () => {
+	        const row = button.closest('[data-pixel-dither-group]');
+	        if (row) row.querySelectorAll('.pixel-btn').forEach(item => item.classList.remove('sel'));
+	        button.classList.add('sel');
+	        if (typeof window.setAreciboPixelDither === 'function') {
+	          window.setAreciboPixelDither(button.dataset.pixelDither);
+	        }
+	      });
+	    });
+	    document.querySelectorAll('.sp-toggle').forEach(toggle => {
+	      toggle.addEventListener('click', () => {
+	        toggle.classList.toggle('on');
+	        toggle.setAttribute('aria-checked', toggle.classList.contains('on') ? 'true' : 'false');
+	      });
+	    });
+	    window.addEventListener('arecibo-pixel-dither-change', () => syncPixelDitherButtons(document));
+	    document.addEventListener('keydown', event => {
+	      if (event.key === 'Escape') closeSettings();
+	    });
+	    syncPixelDitherButtons(document);
+	  }
+
+	  function syncPixelDitherButtons(root) {
+	    const current = typeof window.getAreciboPixelDither === 'function'
+	      ? window.getAreciboPixelDither()
+	      : 'strong';
+	    (root || document).querySelectorAll('[data-pixel-dither-group] .pixel-btn').forEach(button => {
+	      button.classList.toggle('sel', button.dataset.pixelDither === current);
+	    });
+	  }
 
   window.openAreciboSettings = openSettings;
   window.closeAreciboSettings = closeSettings;
