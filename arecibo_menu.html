@@ -145,9 +145,9 @@ canvas#starfield-bg {
 }
 .menu-planet {
   position: absolute;
-  left: clamp(-220px, -10vw, -70px);
-  top: clamp(90px, 14vh, 180px);
-  width: clamp(380px, 44vw, 860px);
+  left: clamp(-280px, -13vw, -96px);
+  top: clamp(70px, 12vh, 160px);
+  width: clamp(460px, 52vw, 980px);
   aspect-ratio: 1;
   z-index: 1;
   pointer-events: none;
@@ -173,6 +173,21 @@ canvas#starfield-bg {
   object-fit: contain;
   image-rendering: auto;
   opacity: .98;
+}
+.menu-frame-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9700;
+  pointer-events: none;
+  opacity: .96;
+  mix-blend-mode: screen;
+}
+.menu-frame-overlay img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  opacity: .92;
 }
 
 /* Scanlines */
@@ -1602,6 +1617,9 @@ body::after {
     <div class="menu-planet" aria-hidden="true">
       <img src="assets/backgrounds/menu-planet-2.png" alt="">
     </div>
+  </div>
+  <div class="menu-frame-overlay" aria-hidden="true">
+    <img src="assets/backgrounds/menu-frame-effect.png" alt="">
   </div>
 
   <div class="lines-wrap">
