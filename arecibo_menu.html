@@ -620,23 +620,27 @@ canvas#starfield-bg {
 /* ===== LOGO ===== */
 .logo {
   position: absolute;
-  right: 5.6vw;
-  bottom: 5.6vh;
-  text-align: right;
-  z-index: 10;
+  right: clamp(84px, 9vw, 180px);
+  top: 49.4%;
+  transform: translateY(-50%);
+  text-align: left;
+  z-index: 7;
   opacity: 0;
   animation: fadeIn .7s ease forwards .4s;
 }
 .logo-text {
+  position: relative;
   font-family: var(--f-logo);
   font-weight: 400;
-  font-size: clamp(72px, 10vw, 150px);
+  font-size: clamp(88px, 12vw, 220px);
   color: var(--cream);
   line-height: .92;
-  letter-spacing: -.01em;
+  letter-spacing: -.018em;
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 0;
+  isolation: isolate;
+  min-width: clamp(420px, 42vw, 860px);
 }
 
 .logo-letter {
@@ -661,6 +665,43 @@ canvas#starfield-bg {
   text-shadow:
     calc(var(--gravity-x) * 1.25) calc(var(--gravity-y) * 1.3) rgba(247,255,195,var(--gravity-shadow)),
     calc(var(--gravity-x) * 2.1) calc(var(--gravity-y) * 2.2) rgba(250,90,31,calc(var(--gravity-shadow) * .72));
+}
+.logo-letter-threshold {
+  opacity: .92;
+  filter: blur(.14px);
+  text-shadow:
+    1px -1px rgba(247,255,195,.14),
+    8px -5px rgba(250,90,31,.12),
+    16px -8px rgba(250,90,31,.05);
+}
+.logo-letter-absorbed {
+  position: relative;
+  opacity: .22;
+  color: rgba(247,255,195,.46);
+  transform:
+    translate(calc(var(--gravity-x) + 4px), calc(var(--gravity-y) - 2px))
+    skewX(calc(var(--gravity-skew) + .45deg))
+    scaleX(.82)
+    scaleY(calc(var(--gravity-stretch) * 1.06));
+  filter: blur(calc(var(--gravity-blur) + 1.6px)) brightness(1.06);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,.98) 0 18%, rgba(0,0,0,.68) 34%, rgba(0,0,0,.2) 52%, transparent 76%);
+  mask-image: linear-gradient(90deg, rgba(0,0,0,.98) 0 18%, rgba(0,0,0,.68) 34%, rgba(0,0,0,.2) 52%, transparent 76%);
+  text-shadow:
+    8px -4px rgba(250,90,31,.12),
+    16px -8px rgba(250,90,31,.08),
+    24px -14px rgba(247,255,195,.04);
+}
+.logo-letter-absorbed::after {
+  content: attr(data-char);
+  position: absolute;
+  inset: 0;
+  color: rgba(250,90,31,.16);
+  transform: translate(10px, -6px) scaleX(1.18) scaleY(1.06);
+  filter: blur(3.8px);
+  opacity: .72;
+  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,.45) 0 10%, rgba(0,0,0,.2) 20%, transparent 58%);
+  mask-image: linear-gradient(90deg, rgba(0,0,0,.45) 0 10%, rgba(0,0,0,.2) 20%, transparent 58%);
+  pointer-events: none;
 }
 .logo-letter:nth-child(2) {
   --gravity-x: .18px;
@@ -716,6 +757,38 @@ canvas#starfield-bg {
     3px -9px rgba(250,90,31,.12);
 }
 
+.logo-swallow {
+  position: absolute;
+  inset: -18% -6% -18% 45%;
+  pointer-events: none;
+  z-index: 4;
+}
+.logo-swallow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 78% 48%, rgba(0,0,0,.98) 0 22%, rgba(0,0,0,.94) 34%, rgba(0,0,0,.72) 49%, rgba(0,0,0,.34) 63%, transparent 78%),
+    radial-gradient(ellipse at 70% 47%, rgba(250,90,31,.18) 0 10%, rgba(250,90,31,.08) 16%, transparent 34%);
+  filter: blur(3.5px);
+  animation: logoEventHorizon 6.6s ease-in-out infinite;
+}
+.logo-swallow::after {
+  content: '';
+  position: absolute;
+  right: 4%;
+  top: 34%;
+  width: 48%;
+  height: 34%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 54% 52%, rgba(0,0,0,1) 0 43%, rgba(0,0,0,.86) 56%, transparent 72%);
+  box-shadow:
+    0 0 38px rgba(0,0,0,.92),
+    0 0 64px rgba(250,90,31,.1);
+  opacity: .92;
+}
+
 #logo-arecibo:hover .logo-letter {
   color: var(--cream);
   animation: logoSignalBreak .24s steps(2,end) infinite;
@@ -768,9 +841,11 @@ canvas#starfield-bg {
 .logo-sub {
   font-family: var(--f-pixel);
   font-size: 10px;
-  color: rgba(247,255,195,.18);
+  color: rgba(247,255,195,.16);
   letter-spacing: .14em;
-  margin-top: 8px;
+  margin-top: 10px;
+  padding-left: .45em;
+  width: max-content;
 }
 
 .coord {
@@ -888,6 +963,21 @@ canvas#starfield-bg {
   46% {
     transform: translate(2.8px, -5.7px) skewX(.58deg) scaleY(1.088) scaleX(.986);
     filter: blur(.45px);
+  }
+}
+
+@keyframes logoEventHorizon {
+  0%, 100% {
+    transform: translate(0,0) scale(1);
+    opacity: .94;
+  }
+  44% {
+    transform: translate(4px,-2px) scale(1.035);
+    opacity: 1;
+  }
+  72% {
+    transform: translate(-3px,2px) scale(.988);
+    opacity: .9;
   }
 }
 
@@ -1405,7 +1495,7 @@ canvas#starfield-bg {
 
   <div class="logo">
     <div class="logo-text" id="logo-arecibo" data-text="ARECIBO">
-      <span class="logo-letter" style="--i:0">A</span><span class="logo-letter" style="--i:1">R</span><span class="logo-letter" style="--i:2">E</span><span class="logo-letter" style="--i:3">C</span><span class="logo-letter" style="--i:4">I</span><span class="logo-letter" style="--i:5">B</span><span class="logo-letter" style="--i:6">O</span>
+      <span class="logo-letter" data-char="A" style="--i:0">A</span><span class="logo-letter" data-char="R" style="--i:1">R</span><span class="logo-letter" data-char="E" style="--i:2">E</span><span class="logo-letter logo-letter-threshold" data-char="C" style="--i:3">C</span><span class="logo-letter logo-letter-absorbed" data-char="I" style="--i:4">I</span><span class="logo-letter logo-letter-absorbed" data-char="B" style="--i:5">B</span><span class="logo-letter logo-letter-absorbed" data-char="O" style="--i:6">O</span><span class="logo-swallow" aria-hidden="true"></span>
     </div>
     <div class="logo-sub">version P-A 0-01</div>
   </div>
@@ -2162,6 +2252,10 @@ window.addEventListener('DOMContentLoaded', () => syncPixelDitherButtons());
   const canvas = document.getElementById('particles-canvas');
   const ctx = canvas.getContext('2d');
   const singularity = document.querySelector('.singularity-wrap');
+  const logo = document.getElementById('logo-arecibo');
+  const logoDustLetters = logo
+    ? Array.from(logo.querySelectorAll('.logo-letter-threshold, .logo-letter-absorbed'))
+    : [];
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   function resize() {
@@ -2176,9 +2270,11 @@ window.addEventListener('DOMContentLoaded', () => syncPixelDitherButtons());
   const debris = [];
   const macroDebris = [];
   const astronauts = [];
+  const logoDust = [];
   let nextDebrisAt = performance.now() + 1700 + Math.random() * 3800;
   let nextMacroDebrisAt = performance.now() + 4200 + Math.random() * 7600;
   let nextAstronautAt = performance.now() + 35000 + Math.random() * 60000;
+  let nextLogoDustAt = performance.now() + 60;
 
   function getGravityWell() {
     if (!singularity) {
@@ -2325,6 +2421,41 @@ window.addEventListener('DOMContentLoaded', () => syncPixelDitherButtons());
       size: 2.2 + Math.random() * .55,
       opacity: .86,
       life: 0,
+      trail: []
+    };
+  }
+
+  function scheduleNextLogoDust(now) {
+    nextLogoDustAt = now + (reduceMotion.matches ? 220 : 48 + Math.random() * 88);
+  }
+
+  function createLogoDust(well) {
+    if (!logoDustLetters.length) return null;
+    const source = logoDustLetters[Math.floor(Math.random() * logoDustLetters.length)];
+    const rect = source.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+
+    const startX = rect.left + rect.width * (.18 + Math.random() * .48);
+    const startY = rect.top + rect.height * (.2 + Math.random() * .58);
+    const dx = well.x - startX;
+    const dy = well.y - startY;
+    const dist = Math.max(1, Math.hypot(dx, dy));
+    const absorbed = source.classList.contains('logo-letter-absorbed');
+
+    return {
+      x: startX,
+      y: startY,
+      prevX: startX,
+      prevY: startY,
+      vx: dx / dist * (.42 + Math.random() * .24) + (Math.random() - .5) * .18,
+      vy: dy / dist * (.18 + Math.random() * .16) + (Math.random() - .5) * .12,
+      size: absorbed ? 1.3 + Math.random() * 2.1 : .8 + Math.random() * 1.4,
+      spin: (Math.random() - .5) * .05,
+      angle: Math.random() * Math.PI * 2,
+      opacity: absorbed ? .34 + Math.random() * .3 : .18 + Math.random() * .18,
+      heat: absorbed ? .48 + Math.random() * .5 : .22 + Math.random() * .32,
+      life: 0,
+      maxLife: 42 + Math.random() * 42,
       trail: []
     };
   }
@@ -2558,6 +2689,64 @@ window.addEventListener('DOMContentLoaded', () => syncPixelDitherButtons());
     }
   }
 
+  function drawLogoDust(now, well) {
+    if (!reduceMotion.matches && logoDustLetters.length && now > nextLogoDustAt && logoDust.length < 52) {
+      const fragment = createLogoDust(well);
+      if (fragment) logoDust.push(fragment);
+      scheduleNextLogoDust(now);
+    }
+
+    for (let i = logoDust.length - 1; i >= 0; i--) {
+      const dust = logoDust[i];
+      dust.prevX = dust.x;
+      dust.prevY = dust.y;
+      dust.life++;
+
+      const dx = well.x - dust.x;
+      const dy = well.y - dust.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      const nx = dx / dist;
+      const ny = dy / dist;
+      const pull = Math.min(1, well.radius * 2.2 / dist);
+      const tangent = dust.spin * (1 + pull * 18);
+      const accel = .08 + pull * .34;
+
+      dust.vx += nx * accel - ny * tangent;
+      dust.vy += ny * accel + nx * tangent;
+      dust.vx *= .988;
+      dust.vy *= .988;
+      dust.x += dust.vx;
+      dust.y += dust.vy;
+      dust.angle += dust.spin * 5.2;
+      dust.trail.unshift({ x: dust.x, y: dust.y, size: dust.size });
+      if (dust.trail.length > 6) dust.trail.pop();
+
+      const swallowed = dist < well.radius * .48;
+      const fade = Math.max(0, Math.min(1, 1 - dust.life / dust.maxLife));
+      const glow = Math.max(0, Math.min(1, 1 - dist / (well.radius * 2.1)));
+      const color = dust.heat > .72 ? '247,255,195' : dust.heat > .46 ? '250,168,70' : '250,90,31';
+      const alpha = dust.opacity * Math.max(.08, fade) * (.38 + glow * .56);
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      dust.trail.forEach((point, index) => {
+        const trailAlpha = alpha * (1 - index / dust.trail.length) * .2;
+        ctx.fillStyle = `rgba(${color},${trailAlpha.toFixed(3)})`;
+        const size = Math.max(1, point.size * (1 - index / dust.trail.length) * .7);
+        ctx.fillRect(Math.round(point.x - size / 2), Math.round(point.y - size / 2), size, size);
+      });
+      ctx.translate(dust.x, dust.y);
+      ctx.rotate(dust.angle);
+      ctx.fillStyle = `rgba(${color},${alpha.toFixed(3)})`;
+      ctx.fillRect(-dust.size / 2, -dust.size / 2, dust.size, dust.size);
+      ctx.restore();
+
+      if (swallowed || dust.life > dust.maxLife || dust.x < -80 || dust.x > canvas.width + 160 || dust.y < -120 || dust.y > canvas.height + 120) {
+        logoDust.splice(i, 1);
+      }
+    }
+  }
+
   function draw(now = 0) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const well = getGravityWell();
@@ -2608,6 +2797,7 @@ window.addEventListener('DOMContentLoaded', () => syncPixelDitherButtons());
     });
     drawDebris(now, well);
     drawAstronauts(now, well);
+    drawLogoDust(now, well);
     requestAnimationFrame(draw);
   }
   draw();
