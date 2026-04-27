@@ -1,5 +1,6 @@
 const cursor = document.getElementById('cursor');
 const remotePresenceLayer = document.getElementById('remote-presence-layer');
+let cursorNameLabel = null;
 let pointerX = window.innerWidth * 0.5;
 let pointerY = window.innerHeight * 0.5;
 document.addEventListener('mousemove', event => {
@@ -9,6 +10,15 @@ document.addEventListener('mousemove', event => {
   cursor.style.top = event.clientY + 'px';
   queuePresenceBroadcast();
 });
+
+function ensureLocalCursorLabel() {
+  if (!cursor) return null;
+  if (cursorNameLabel && cursor.contains(cursorNameLabel)) return cursorNameLabel;
+  cursorNameLabel = document.createElement('div');
+  cursorNameLabel.className = 'cursor-name';
+  cursor.appendChild(cursorNameLabel);
+  return cursorNameLabel;
+}
 
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => document.getElementById('transition').classList.add('out'), 80);
@@ -217,6 +227,16 @@ function getPlayerProfile() {
   };
 }
 
+function updateLocalCursorProfile() {
+  if (!cursor) return;
+  const profile = getPlayerProfile();
+  const playerName = formatPlayerPackageName(profile.name || window.areciboPlayerName || 'COCO');
+  const label = ensureLocalCursorLabel();
+  cursor.style.setProperty('--cursor-color', profile.primaryColor || '#FA5A1F');
+  cursor.setAttribute('aria-label', `Curseur de ${playerName}`);
+  if (label) label.textContent = playerName;
+}
+
 async function injectPlayerAvatar(target, options = {}) {
   if (!target || !window.AreciboPlayerProfile || typeof window.AreciboPlayerProfile.renderHeadSvg !== 'function') return;
   const token = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -290,6 +310,7 @@ function initPlayerPackageName() {
   if (messagesTitle) messagesTitle.textContent = `PACKAGE ${playerName} // MESSAGES //`;
 
   window.areciboPlayerName = playerName;
+  updateLocalCursorProfile();
 }
 
 function getPresenceClientId() {
@@ -3405,6 +3426,11 @@ document.addEventListener('click', event => {
   if (!target) return;
   emitPresenceInteraction(target, event);
 }, true);
+window.addEventListener('storage', event => {
+  if (event.key === 'areciboPlayerProfile' || event.key === 'areciboPlayerName') {
+    updateLocalCursorProfile();
+  }
+});
 if (expeditionResultAction) {
   expeditionResultAction.addEventListener('click', () => {
     if (!expeditionResultPending) return;

@@ -82,6 +82,7 @@ body::after {
 }
 
 .cursor {
+  --cursor-color: var(--orange);
   position:fixed;
   width:14px;
   height:14px;
@@ -89,6 +90,9 @@ body::after {
   pointer-events:none;
   z-index:9999;
   transform:translate(-50%,-50%);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.26),
+    0 0 8px color-mix(in srgb, var(--cursor-color) 34%, transparent);
 }
 .cursor::after {
   content:'';
@@ -97,8 +101,26 @@ body::after {
   left:50%;
   width:3px;
   height:3px;
-  background:var(--orange);
+  background:var(--cursor-color);
+  box-shadow:0 0 8px color-mix(in srgb, var(--cursor-color) 72%, transparent);
   transform:translate(-50%,-50%);
+}
+.cursor-name {
+  position:absolute;
+  left:50%;
+  top:-8px;
+  transform:translate(-50%, -100%);
+  min-width:max-content;
+  padding:2px 6px;
+  border:1px solid rgba(247,255,195,.24);
+  background:rgba(0,0,0,.72);
+  color:rgba(247,255,195,.96);
+  font-family:'Pixelify Sans', monospace;
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  box-shadow:0 0 10px rgba(0,0,0,.28);
 }
 .remote-presence-layer {
   position:fixed;
