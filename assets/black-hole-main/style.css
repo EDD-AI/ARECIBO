@@ -16,9 +16,12 @@ body
 
 .experience
 {
-    position: fixed;
-    inset: 0;
-    width: 100vw;
-    height: 100vh;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 100vh;
+    height: 100vw;
     background: transparent;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    transform-origin: center center;
 }
