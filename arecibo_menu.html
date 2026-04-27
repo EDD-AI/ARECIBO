@@ -284,8 +284,7 @@ canvas#starfield-bg {
   filter: contrast(1.35);
   z-index: 8;
 }
-.singularity-noise,
-.singularity-core-noise {
+.singularity-noise {
   position: absolute;
   border-radius: 50%;
   pointer-events: none;
@@ -301,18 +300,6 @@ canvas#starfield-bg {
     radial-gradient(circle at 54% 46%, rgba(250,90,31,.16), transparent 52%);
   filter: blur(.6px) contrast(1.25);
   animation: singularityNoiseDrift 8.5s linear infinite;
-}
-.singularity-core-noise {
-  inset: 10%;
-  z-index: 9;
-  opacity: .46;
-  mix-blend-mode: screen;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(0,0,0,.95) 0 40%, transparent 58%),
-    repeating-radial-gradient(circle at 52% 48%, rgba(247,255,195,.05) 0 1px, transparent 1px 3px),
-    repeating-conic-gradient(from 0deg, rgba(250,90,31,.07) 0deg 10deg, transparent 10deg 22deg, rgba(247,255,195,.045) 22deg 28deg, transparent 28deg 40deg);
-  filter: blur(.45px) contrast(1.4) brightness(.98);
-  animation: singularityCoreNoiseSpin 5.8s linear infinite;
 }
 .singularity-core::before {
   content: '';
@@ -1490,7 +1477,6 @@ canvas#starfield-bg {
       <div class="singularity-arc back"></div>
       <div class="singularity-noise"></div>
       <div class="singularity-core"></div>
-      <div class="singularity-core-noise"></div>
       <div class="singularity-arc front"></div>
     </div>
     <canvas id="singularity-waves"></canvas>
