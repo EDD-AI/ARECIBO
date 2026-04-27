@@ -4,8 +4,9 @@
 
   const MUTE_KEY = 'areciboAudioMuted';
   const TRACKS = {
-    menu: ['assets/audio/music/Main Title 1.mp3'],
+    menu: ['assets/audio/music/Main Title 1.mp3', 'assets/audio/music/Main Title 2.mp3'],
     lobby: ['assets/audio/music/Main Title 2.mp3'],
+    ship: ['assets/audio/music/Main Title 2.mp3'],
     settings: ['assets/audio/music/Main Title 1.mp3']
   };
 
@@ -66,6 +67,12 @@
     return true;
   }
 
+  function advanceTrack() {
+    if (!tracks.length) return false;
+    const nextIndex = (trackIndex + 1) % tracks.length;
+    return loadTrack(nextIndex);
+  }
+
   function playTheme() {
     if (readMuted()) {
       player.pause();
@@ -86,12 +93,14 @@
   }
 
   player.preload = 'none';
-  player.loop = true;
+  player.loop = false;
+  player.addEventListener('ended', () => {
+    if (!advanceTrack()) return;
+    if (unlocked && !readMuted()) playTheme();
+  });
   player.addEventListener('error', () => {
-    if (trackIndex + 1 < tracks.length) {
-      loadTrack(trackIndex + 1);
-      if (unlocked && !readMuted()) playTheme();
-    }
+    if (!advanceTrack()) return;
+    if (unlocked && !readMuted()) playTheme();
   });
 
   document.addEventListener('pointerdown', unlockAudio, { once: true });
