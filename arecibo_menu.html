@@ -134,6 +134,7 @@ body::after {
   position: absolute;
   inset: 0;
   z-index: 0;
+  overflow: hidden;
 }
 canvas#starfield-bg {
   position: absolute;
@@ -141,6 +142,36 @@ canvas#starfield-bg {
   width: 100%;
   height: 100%;
   z-index: 0;
+}
+.menu-planet {
+  position: absolute;
+  left: clamp(-220px, -10vw, -70px);
+  top: clamp(90px, 14vh, 180px);
+  width: clamp(380px, 44vw, 860px);
+  aspect-ratio: 1;
+  z-index: 1;
+  pointer-events: none;
+  opacity: .46;
+  transform:
+    translate3d(
+      calc(var(--menu-parallax-x, 0) * -34px),
+      calc(var(--menu-parallax-y, 0) * -18px),
+      0
+    );
+  transition: transform .22s ease-out;
+  will-change: transform;
+  filter:
+    saturate(.84)
+    brightness(.72)
+    blur(.15px)
+    drop-shadow(0 0 26px rgba(247,255,195,.06));
+}
+.menu-planet img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  image-rendering: auto;
 }
 
 /* Scanlines */
@@ -346,6 +377,7 @@ canvas#starfield-bg {
     drop-shadow(-10px 0 16px rgba(250,90,31,.06));
   image-rendering: pixelated;
   will-change: left, top, transform, opacity;
+  transition: opacity .18s ease;
 }
 .menu-vessel[data-vessel-index="1"] { z-index: 6; }
 .menu-vessel[data-vessel-index="2"] {
@@ -1522,7 +1554,12 @@ body::after {
 <div class="page-transition" id="transition"></div>
 
 <div class="screen">
-  <div class="starfield"><canvas id="starfield-bg"></canvas></div>
+  <div class="starfield">
+    <canvas id="starfield-bg"></canvas>
+    <div class="menu-planet" aria-hidden="true">
+      <img src="assets/backgrounds/menu-planet-2.png" alt="">
+    </div>
+  </div>
 
   <div class="lines-wrap">
     <svg viewBox="-139 0 1851 1080" preserveAspectRatio="xMidYMid meet" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1699,29 +1736,127 @@ body::after {
 
 <script>
 (function() {
+  const root = document.documentElement;
+  const state = { currentX: 0, currentY: 0, targetX: 0, targetY: 0 };
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function updateTarget(clientX, clientY) {
+    state.targetX = ((clientX / window.innerWidth) - .5) * 2;
+    state.targetY = ((clientY / window.innerHeight) - .5) * 2;
+  }
+
+  window.__menuParallaxState = state;
+
+  document.addEventListener('mousemove', event => {
+    if (reduceMotion.matches) return;
+    updateTarget(event.clientX, event.clientY);
+  });
+
+  window.addEventListener('mouseleave', () => {
+    state.targetX = 0;
+    state.targetY = 0;
+  });
+
+  function tick() {
+    state.currentX += (state.targetX - state.currentX) * .08;
+    state.currentY += (state.targetY - state.currentY) * .08;
+    root.style.setProperty('--menu-parallax-x', state.currentX.toFixed(4));
+    root.style.setProperty('--menu-parallax-y', state.currentY.toFixed(4));
+    requestAnimationFrame(tick);
+  }
+
+  tick();
+})();
+
+(function() {
   const c = document.getElementById('starfield-bg');
   const ctx = c.getContext('2d');
-  c.width = window.innerWidth;
-  c.height = window.innerHeight;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const parallax = window.__menuParallaxState || { currentX: 0, currentY: 0 };
+  let width = 0;
+  let height = 0;
 
-  const STARS = 320;
+  function resize() {
+    width = c.width = window.innerWidth;
+    height = c.height = window.innerHeight;
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+
+  const STARS = 340;
+  const DUST = 42;
   const stars = Array.from({ length: STARS }, (_, i) => ({
-    x: Math.random() * c.width,
-    y: Math.random() * c.height,
-    r: i < 20 ? 1.2 : i < 80 ? 0.8 : 0.5,
-    a: 0.1 + Math.random() * 0.7,
+    x: Math.random() * width,
+    y: Math.random() * height,
+    r: i < 18 ? 1.8 : i < 70 ? 1.2 : i < 160 ? 0.9 : 0.55,
+    baseA: i < 18 ? 0.58 + Math.random() * 0.3 : 0.16 + Math.random() * 0.48,
+    depth: i < 18 ? 1.55 : i < 70 ? 1.1 : i < 160 ? 0.76 : 0.42,
+    twinkleSpeed: 0.35 + Math.random() * 1.15,
+    twinkleOffset: Math.random() * Math.PI * 2
+  }));
+  const dust = Array.from({ length: DUST }, () => ({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    size: 0.7 + Math.random() * 2.6,
+    alpha: 0.04 + Math.random() * 0.08,
+    speedX: 0.02 + Math.random() * 0.09,
+    speedY: (Math.random() - 0.5) * 0.04,
+    depth: 0.24 + Math.random() * 0.4
   }));
 
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, c.width, c.height);
-  stars.forEach(s => {
-    ctx.globalAlpha = s.a;
-    ctx.fillStyle = '#F7FFC3';
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fill();
-  });
-  ctx.globalAlpha = 1;
+  function draw(time = 0) {
+    const px = parallax.currentX || 0;
+    const py = parallax.currentY || 0;
+    const t = time * 0.001;
+
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#020202';
+    ctx.fillRect(0, 0, width, height);
+
+    dust.forEach(particle => {
+      particle.x += particle.speedX;
+      particle.y += particle.speedY;
+      if (particle.x > width + 40) {
+        particle.x = -40;
+        particle.y = Math.random() * height;
+      }
+      if (particle.y < -30) particle.y = height + 30;
+      if (particle.y > height + 30) particle.y = -30;
+
+      const x = particle.x - px * 28 * particle.depth;
+      const y = particle.y - py * 22 * particle.depth;
+
+      ctx.globalAlpha = particle.alpha;
+      ctx.fillStyle = '#bfc49a';
+      ctx.fillRect(x, y, particle.size, particle.size);
+    });
+
+    stars.forEach(star => {
+      const twinkle = 0.78 + Math.sin((t * star.twinkleSpeed) + star.twinkleOffset) * 0.22;
+      const alpha = Math.max(0.05, Math.min(1, star.baseA * twinkle));
+      const x = star.x - px * 24 * star.depth;
+      const y = star.y - py * 18 * star.depth;
+
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#f7ffc3';
+      ctx.fillRect(x, y, star.r, star.r);
+
+      if (star.depth > 1.2) {
+        ctx.globalAlpha = alpha * 0.26;
+        ctx.fillStyle = '#fff8d6';
+        ctx.fillRect(x - 1, y, star.r + 2, star.r);
+        ctx.fillRect(x, y - 1, star.r, star.r + 2);
+      }
+    });
+
+    ctx.globalAlpha = 1;
+    if (!reduceMotion.matches) {
+      requestAnimationFrame(draw);
+    }
+  }
+
+  draw();
 })();
 
 (function() {
@@ -1914,6 +2049,7 @@ menuItems.forEach(item => {
 (function() {
   const vessels = Array.from(document.querySelectorAll('.menu-vessel'));
   const singularity = document.querySelector('.singularity-wrap');
+  const parallax = window.__menuParallaxState || { currentX: 0, currentY: 0 };
   if (!vessels.length || !singularity) return;
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -1992,8 +2128,8 @@ menuItems.forEach(item => {
       const arc = Math.sin(progress * Math.PI);
       const baseX = start.x + (target.x - start.x) * progress + config.orbitOffsetX * (1 - progress * .58);
       const baseY = start.y + (target.y - start.y) * progress - arc * window.innerHeight * (.09 + config.arcBoost) + config.orbitOffsetY * (1 - progress * .42);
-      let x = baseX;
-      let y = baseY;
+      let x = baseX + (parallax.currentX || 0) * (18 + config.index * 6);
+      let y = baseY + (parallax.currentY || 0) * (12 + config.index * 4);
       let dx = target.x - x;
       let dy = target.y - y;
       let angle = Math.atan2(dy, dx) * 180 / Math.PI;
