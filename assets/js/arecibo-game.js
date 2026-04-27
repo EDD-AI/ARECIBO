@@ -774,6 +774,10 @@ function applySasWireRepairSuccessState() {
   syncSceneBackdropImage();
 }
 
+function resolveAssetUrl(path) {
+  return new URL(path, window.location.href).href;
+}
+
 function syncSceneBackdropImage() {
   if (!shipScene || !sceneBackdrop) return;
 
@@ -788,8 +792,9 @@ function syncSceneBackdropImage() {
     image = 'assets/sas-repair/sas-grille-ouverte.png';
   }
 
-  sceneBackdrop.style.setProperty('--scene-image', `url('${image}')`);
-  sceneBackdrop.style.backgroundImage = `linear-gradient(rgba(5,7,3,.1), rgba(5,7,3,.1)), url('${image}')`;
+  const resolvedImage = resolveAssetUrl(image);
+  sceneBackdrop.style.setProperty('--scene-image', `url("${resolvedImage}")`);
+  sceneBackdrop.style.backgroundImage = `linear-gradient(rgba(5,7,3,.1), rgba(5,7,3,.1)), url("${resolvedImage}")`;
   sceneBackdrop.style.backgroundPosition = 'center';
   sceneBackdrop.style.backgroundSize = 'cover';
   sceneBackdrop.style.backgroundRepeat = 'no-repeat';
@@ -1967,7 +1972,7 @@ function setPontRepairState(stateId) {
 
   activePontRepairState = nextState;
   shipScene.dataset.pontRepairState = nextState.id;
-  shipScene.style.setProperty('--pont-scene-image', `url('${nextState.image}')`);
+  shipScene.style.setProperty('--pont-scene-image', `url("${resolveAssetUrl(nextState.image)}")`);
   syncSceneBackdropImage();
   setShipCondition(nextState.condition, nextState.hullIntegrity);
 
