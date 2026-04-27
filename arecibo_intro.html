@@ -468,6 +468,9 @@ body.intro-ready .intro-shell {
 <script src="assets/ingame-settings.js?v=ingame-settings-tabs"></script>
 <script>
 const NEXT = 'arecibo_game.html?v=bridge-main&storyPhase=opening-briefing';
+try {
+  localStorage.removeItem('areciboSasRepairCutWire');
+} catch (err) {}
 const BOOT_TYPE_SPEED = 10;
 const BOOT_LINE_PAUSE = 82;
 const HELLO_TYPE_SPEED = 48;

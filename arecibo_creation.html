@@ -600,6 +600,7 @@ function saveProfile() {
   try {
     localStorage.setItem('areciboStoryPhase', 'opening-briefing');
     localStorage.removeItem('areciboOpeningMailAutoOpened');
+    localStorage.removeItem('areciboSasRepairCutWire');
   } catch (err) {}
   renderPreview();
   transition.style.opacity = '1';
