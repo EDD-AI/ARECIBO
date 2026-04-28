@@ -5,8 +5,11 @@
   const mode = params.get('mode') || '';
   const timerKey = sessionCode ? `areciboMotomotoTimer:${sessionCode}` : '';
 
-  const canvas = document.getElementById('spaceCanvas');
-  const blackHoleLayer = document.getElementById('blackHoleLayer');
+  const rearCanvases = [
+    document.getElementById('rearCanvasLeft'),
+    document.getElementById('rearCanvasCenter'),
+    document.getElementById('rearCanvasRight')
+  ].filter(Boolean);
   const timerValue = document.getElementById('missionTimerValue');
   const timerCaption = document.getElementById('missionTimerCaption');
   const overlay = document.getElementById('endOverlay');
@@ -27,11 +30,7 @@
   const roleCardRisk = document.getElementById('roleCardRisk');
   const roleCardPortrait = document.getElementById('roleCardPortrait');
 
-  let ctx = null;
-  let viewportWidth = 0;
-  let viewportHeight = 0;
-  let stars = [];
-  let particles = [];
+  let panes = [];
   let ended = false;
 
   const roleKey = sessionCode ? `areciboRole:${sessionCode}` : 'areciboRole:local';
@@ -154,52 +153,54 @@
   const startedAt = ensureStartTime();
 
   function resize() {
-    viewportWidth = window.innerWidth;
-    viewportHeight = window.innerHeight;
-    if (!canvas) return;
-
     const ratio = window.devicePixelRatio || 1;
-    canvas.width = Math.floor(viewportWidth * ratio);
-    canvas.height = Math.floor(viewportHeight * ratio);
-    canvas.style.width = `${viewportWidth}px`;
-    canvas.style.height = `${viewportHeight}px`;
-    ctx = canvas.getContext('2d');
-    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 
-    buildStars();
-    buildParticles();
+    panes = rearCanvases.map((canvas, index) => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+      canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+      const starCount = Math.max(18, Math.floor((rect.width * rect.height) / 5400));
+      const particleCount = Math.max(5, Math.floor(rect.width / 90));
+      return {
+        canvas,
+        ctx,
+        width: rect.width,
+        height: rect.height,
+        offset: index * 0.8 + Math.random() * 0.4,
+        stars: Array.from({ length: starCount }, () => ({
+          x: Math.random() * rect.width,
+          y: Math.random() * rect.height,
+          size: Math.random() > 0.88 ? 2 : Math.random() > 0.45 ? 1.4 : 1,
+          alpha: 0.16 + Math.random() * 0.34,
+          pulse: 1.6 + Math.random() * 3.8,
+          phase: Math.random() * Math.PI * 2
+        })),
+        particles: Array.from({ length: particleCount }, () => ({
+          x: Math.random() * rect.width,
+          y: Math.random() * rect.height,
+          vx: 0.08 + Math.random() * 0.16,
+          vy: -0.06 + Math.random() * 0.12,
+          size: 1 + Math.random() * 1.3,
+          alpha: 0.08 + Math.random() * 0.12
+        }))
+      };
+    });
   }
 
-  function buildStars() {
-    const count = Math.max(70, Math.floor((viewportWidth * viewportHeight) / 26000));
-    stars = Array.from({ length: count }, () => ({
-      x: Math.random() * viewportWidth,
-      y: Math.random() * viewportHeight,
-      z: 0.18 + Math.random() * 0.92,
-      size: Math.random() > 0.88 ? 2.4 : Math.random() > 0.45 ? 1.6 : 1,
-      alpha: 0.18 + Math.random() * 0.44,
-      pulse: 1.6 + Math.random() * 4.2,
-      phase: Math.random() * Math.PI * 2
-    }));
-  }
-
-  function buildParticles() {
-    const count = Math.max(18, Math.floor(viewportWidth / 60));
-    particles = Array.from({ length: count }, () => spawnParticle(true));
-  }
-
-  function spawnParticle(initial = false) {
-    const side = Math.random();
-    const yBand = viewportHeight * (0.14 + Math.random() * 0.56);
-    return {
-      x: initial ? Math.random() * viewportWidth * 0.86 : viewportWidth * (side < 0.86 ? 1.06 : 0.92 + Math.random() * 0.12),
-      y: initial ? Math.random() * viewportHeight : yBand,
-      driftX: -0.18 - Math.random() * 0.38,
-      driftY: -0.1 + Math.random() * 0.2,
-      radius: Math.random() > 0.84 ? 2.2 : 1.1 + Math.random() * 0.9,
-      alpha: 0.16 + Math.random() * 0.24,
-      orbit: 40 + Math.random() * 160,
-      pull: 0.0009 + Math.random() * 0.0018
+  function respawnParticle(pane, index) {
+    pane.particles[index] = {
+      x: -8 - Math.random() * 18,
+      y: Math.random() * pane.height,
+      vx: 0.08 + Math.random() * 0.16,
+      vy: -0.06 + Math.random() * 0.12,
+      size: 1 + Math.random() * 1.3,
+      alpha: 0.08 + Math.random() * 0.12
     };
   }
 
@@ -215,81 +216,53 @@
     return Math.max(0, Math.min(1, elapsed / DURATION_MS));
   }
 
-  function drawSpace(time, progress) {
-    if (!ctx) return;
+  function drawSpace(time) {
+    panes.forEach(pane => {
+      const { ctx, width, height, stars, particles, offset } = pane;
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#020201';
+      ctx.fillRect(0, 0, width, height);
 
-    ctx.clearRect(0, 0, viewportWidth, viewportHeight);
-    ctx.fillStyle = '#020201';
-    ctx.fillRect(0, 0, viewportWidth, viewportHeight);
+      const haze = ctx.createRadialGradient(width * 0.56, height * 0.52, 0, width * 0.56, height * 0.52, Math.max(width, height) * 0.78);
+      haze.addColorStop(0, 'rgba(247,255,195,0.02)');
+      haze.addColorStop(0.55, 'rgba(250,90,31,0.015)');
+      haze.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = haze;
+      ctx.fillRect(0, 0, width, height);
 
-    const bhX = viewportWidth * 0.5;
-    const bhY = viewportHeight * 0.4;
-    const pullRadius = Math.min(viewportWidth, viewportHeight) * (0.18 + progress * 0.62);
+      stars.forEach(star => {
+        const twinkle = 0.82 + Math.sin(time * 0.001 * star.pulse + star.phase + offset) * 0.18;
+        ctx.globalAlpha = Math.min(1, star.alpha * twinkle);
+        ctx.fillStyle = 'rgba(247,255,195,1)';
+        ctx.fillRect(star.x, star.y, star.size, star.size);
+      });
 
-    const fog = ctx.createRadialGradient(
-      bhX,
-      bhY,
-      0,
-      bhX,
-      bhY,
-      pullRadius * 1.25
-    );
-    fog.addColorStop(0, `rgba(255, 241, 208, ${0.015 + progress * 0.12})`);
-    fog.addColorStop(0.36, `rgba(255, 193, 102, ${0.02 + progress * 0.08})`);
-    fog.addColorStop(0.72, `rgba(250, 90, 31, ${0.01 + progress * 0.05})`);
-    fog.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = fog;
-    ctx.fillRect(0, 0, viewportWidth, viewportHeight);
+      particles.forEach((particle, index) => {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
 
-    stars.forEach(star => {
-      const twinkle = 0.82 + Math.sin(time * 0.001 * star.pulse + star.phase) * 0.18;
-      const dx = bhX - star.x;
-      const dy = bhY - star.y;
-      const dist = Math.hypot(dx, dy);
-      const warp = Math.max(0, 1 - dist / (pullRadius * 1.55));
-      const stretch = warp * progress * 16 * star.z;
-      const angle = Math.atan2(dy, dx);
-      const size = star.size * (1 + warp * 0.4);
+        const tailX = particle.x - particle.vx * 20;
+        const tailY = particle.y - particle.vy * 20;
+        const grad = ctx.createLinearGradient(particle.x, particle.y, tailX, tailY);
+        grad.addColorStop(0, `rgba(247,255,195,${particle.alpha})`);
+        grad.addColorStop(1, 'rgba(247,255,195,0)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = particle.size;
+        ctx.beginPath();
+        ctx.moveTo(particle.x, particle.y);
+        ctx.lineTo(tailX, tailY);
+        ctx.stroke();
 
-      ctx.save();
-      ctx.translate(star.x, star.y);
-      ctx.rotate(angle);
-      ctx.globalAlpha = Math.min(1, star.alpha * twinkle * (1 + warp * 0.9));
-      ctx.fillStyle = 'rgba(247,255,195,1)';
-      ctx.fillRect(-size * 0.5, -size * 0.5, size + stretch, size);
-      ctx.restore();
-    });
+        ctx.globalAlpha = particle.alpha;
+        ctx.fillStyle = 'rgba(247,255,195,1)';
+        ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
 
-    particles.forEach((particle, index) => {
-      const dx = bhX - particle.x;
-      const dy = bhY - particle.y;
-      const dist = Math.max(1, Math.hypot(dx, dy));
-      const force = particle.pull * (0.5 + progress * 2.4);
-      particle.driftX += (dx / dist) * force * 18;
-      particle.driftY += (dy / dist) * force * 18;
-      particle.x += particle.driftX;
-      particle.y += particle.driftY;
+        if (particle.x > width + 30 || particle.y < -30 || particle.y > height + 30) {
+          respawnParticle(pane, index);
+        }
+      });
 
-      const tailX = particle.x - particle.driftX * 18;
-      const tailY = particle.y - particle.driftY * 18;
-      const grad = ctx.createLinearGradient(particle.x, particle.y, tailX, tailY);
-      grad.addColorStop(0, `rgba(247,255,195,${particle.alpha + progress * 0.08})`);
-      grad.addColorStop(1, 'rgba(247,255,195,0)');
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = particle.radius;
-      ctx.beginPath();
-      ctx.moveTo(particle.x, particle.y);
-      ctx.lineTo(tailX, tailY);
-      ctx.stroke();
-
-      ctx.globalAlpha = particle.alpha + progress * 0.1;
-      ctx.fillStyle = progress > 0.62 ? 'rgba(255,226,168,1)' : 'rgba(247,255,195,1)';
-      ctx.fillRect(particle.x, particle.y, particle.radius, particle.radius);
       ctx.globalAlpha = 1;
-
-      if (dist < Math.max(18, pullRadius * 0.12) || particle.x < -40 || particle.y < -40 || particle.y > viewportHeight + 40) {
-        particles[index] = spawnParticle(false);
-      }
     });
   }
 
@@ -310,11 +283,6 @@
     }
   }
 
-  function updateBlackHole(progress) {
-    if (!blackHoleLayer) return;
-    blackHoleLayer.style.setProperty('--bh-progress', progress.toFixed(4));
-  }
-
   function finishGame() {
     if (ended) return;
     ended = true;
@@ -323,8 +291,7 @@
 
   function frame(time) {
     const progress = getProgress();
-    drawSpace(time, progress);
-    updateBlackHole(progress);
+    drawSpace(time);
     updateTimer(progress);
 
     if (progress >= 1) finishGame();

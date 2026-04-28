@@ -12,14 +12,16 @@
 </head>
 <body data-theme-audio="ship">
   <main class="motomoto-scene" aria-label="Ecran principal MOTOMOTO">
-    <canvas class="space-canvas" id="spaceCanvas"></canvas>
-
-    <section class="black-hole-layer" id="blackHoleLayer" aria-hidden="true">
-      <div class="black-hole-halo"></div>
-      <div class="black-hole-disc"></div>
-      <div class="black-hole-disc-lower"></div>
-      <div class="black-hole-lens"></div>
-      <div class="black-hole-core"></div>
+    <section class="rear-space-layer" aria-hidden="true">
+      <div class="rear-space-pane rear-space-pane-left">
+        <canvas class="rear-space-canvas" id="rearCanvasLeft"></canvas>
+      </div>
+      <div class="rear-space-pane rear-space-pane-center">
+        <canvas class="rear-space-canvas" id="rearCanvasCenter"></canvas>
+      </div>
+      <div class="rear-space-pane rear-space-pane-right">
+        <canvas class="rear-space-canvas" id="rearCanvasRight"></canvas>
+      </div>
     </section>
 
     <section class="round-console" aria-label="Controle principal du vaisseau">
