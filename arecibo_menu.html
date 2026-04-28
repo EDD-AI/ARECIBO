@@ -145,9 +145,9 @@ canvas#starfield-bg {
 }
 .menu-planet {
   position: absolute;
-  left: clamp(-360px, -17vw, -140px);
-  top: clamp(40px, 9vh, 130px);
-  width: clamp(560px, 62vw, 1180px);
+  left: clamp(-460px, -21vw, -180px);
+  top: clamp(20px, 7vh, 112px);
+  width: clamp(700px, 72vw, 1460px);
   aspect-ratio: 1;
   z-index: 1;
   pointer-events: none;
@@ -976,10 +976,10 @@ body::after {
   opacity: .2 !important;
 }
 .singularity-wrap {
-  top: 0 !important;
-  right: clamp(-110px, -4vw, 8px) !important;
-  width: clamp(840px, 58vw, 1480px) !important;
-  height: 100vh !important;
+  top: -7vh !important;
+  right: clamp(-150px, -6vw, -12px) !important;
+  width: clamp(980px, 66vw, 1840px) !important;
+  height: 114vh !important;
   aspect-ratio: auto !important;
   opacity: 1 !important;
   visibility: visible !important;
@@ -1005,10 +1005,10 @@ body::after {
 }
 .menu-blackhole-embed {
   position: absolute;
-  left: -20%;
-  top: -10%;
-  width: 138%;
-  height: 120%;
+  left: -14%;
+  top: -4%;
+  width: 124%;
+  height: 108%;
   border: 0;
   background: transparent;
   pointer-events: none;
@@ -1019,7 +1019,9 @@ body::after {
   mix-blend-mode: screen;
 }
 #particles-canvas {
-  display: none !important;
+  display: block !important;
+  z-index: 2 !important;
+  opacity: .92 !important;
 }
 .logo-text {
   min-width: auto;
@@ -2547,7 +2549,7 @@ function createSessionChoice() {
     const transition = document.getElementById('transition');
     transition.classList.add('active');
     setTimeout(() => {
-      window.location.href = `arecibo_game.html?v=multi-host-${code}`;
+      window.location.href = `arecibo_intro.html?v=reboot-intro&sessionCode=${code}&mode=host`;
     }, 420);
   }, 520);
 }
@@ -3081,8 +3083,118 @@ window.addEventListener('DOMContentLoaded', () => syncPixelDitherButtons());
   }, true);
 
   function drawDebris(now, well) {
-    debris.length = 0;
-    macroDebris.length = 0;
+    if (!reduceMotion.matches && now > nextDebrisAt && debris.length < 14) {
+      debris.push(createDebris(well));
+      scheduleNextDebris(now);
+    }
+    if (!reduceMotion.matches && now > nextMacroDebrisAt && macroDebris.length < 3) {
+      macroDebris.push(createMacroDebris(well));
+      scheduleNextMacroDebris(now);
+    }
+
+    for (let i = debris.length - 1; i >= 0; i--) {
+      const piece = debris[i];
+      piece.prevX = piece.x;
+      piece.prevY = piece.y;
+      piece.life++;
+
+      const dx = well.x - piece.x;
+      const dy = well.y - piece.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      const nx = dx / dist;
+      const ny = dy / dist;
+      const pull = Math.min(1, well.radius * 2.5 / dist);
+      const tangent = piece.spin * (3.4 + pull * 34);
+      const accel = .055 + pull * .32;
+
+      piece.vx += nx * accel - ny * tangent;
+      piece.vy += ny * accel + nx * tangent;
+      piece.vx *= .992;
+      piece.vy *= .992;
+      piece.x += piece.vx;
+      piece.y += piece.vy;
+      piece.angle += piece.spin * (2.6 + pull * 10);
+      piece.trail.unshift({ x: piece.x, y: piece.y, size: piece.size });
+      if (piece.trail.length > 7) piece.trail.pop();
+
+      const swallowed = dist < well.radius * .52;
+      const fade = Math.max(0, Math.min(1, 1 - piece.life / piece.maxLife));
+      const glow = Math.max(0, Math.min(1, 1 - dist / (well.radius * 2.5)));
+      const color = piece.heat > .72 ? '247,255,195' : piece.heat > .4 ? '250,168,70' : '250,90,31';
+      const alpha = piece.opacity * Math.max(.1, fade) * (.34 + glow * .52);
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      piece.trail.forEach((point, index) => {
+        const trailAlpha = alpha * (1 - index / piece.trail.length) * .18;
+        const size = Math.max(1, point.size * (1 - index / piece.trail.length) * .52);
+        ctx.fillStyle = `rgba(${color},${trailAlpha.toFixed(3)})`;
+        ctx.fillRect(Math.round(point.x - size * .5), Math.round(point.y - size * .5), size, size);
+      });
+      ctx.translate(piece.x, piece.y);
+      ctx.rotate(piece.angle);
+      ctx.fillStyle = `rgba(${color},${alpha.toFixed(3)})`;
+      ctx.fillRect(-piece.size * .45, -piece.size * .22, piece.size * .9, piece.size * .44);
+      ctx.fillRect(-piece.size * .22, -piece.size * .45, piece.size * .44, piece.size * .9);
+      ctx.restore();
+
+      if (swallowed || piece.life > piece.maxLife || piece.x < -140 || piece.x > canvas.width + 160 || piece.y < -160 || piece.y > canvas.height + 160) {
+        debris.splice(i, 1);
+      }
+    }
+
+    for (let i = macroDebris.length - 1; i >= 0; i--) {
+      const piece = macroDebris[i];
+      piece.prevX = piece.x;
+      piece.prevY = piece.y;
+      piece.life++;
+
+      const dx = well.x - piece.x;
+      const dy = well.y - piece.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      const nx = dx / dist;
+      const ny = dy / dist;
+      const pull = Math.min(1, well.radius * 2.9 / dist);
+      const tangent = piece.spin * (1.4 + pull * 16);
+      const accel = .028 + pull * .16;
+
+      piece.vx += nx * accel - ny * tangent;
+      piece.vy += ny * accel + nx * tangent;
+      piece.vx *= .994;
+      piece.vy *= .994;
+      piece.x += piece.vx;
+      piece.y += piece.vy;
+      piece.angle += piece.spin * (1.1 + pull * 4);
+      piece.trail.unshift({ x: piece.x, y: piece.y, size: piece.size });
+      if (piece.trail.length > 8) piece.trail.pop();
+
+      const swallowed = dist < well.radius * .58;
+      const fade = Math.max(0, Math.min(1, 1 - piece.life / piece.maxLife));
+      const glow = Math.max(0, Math.min(1, 1 - dist / (well.radius * 3.1)));
+      const alpha = piece.opacity * Math.max(.14, fade) * (.38 + glow * .48);
+      const outer = piece.heat > .58 ? '247,255,195' : '250,168,70';
+      const core = piece.heat > .38 ? '250,90,31' : '107,92,74';
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      piece.trail.forEach((point, index) => {
+        const trailAlpha = alpha * (1 - index / piece.trail.length) * .12;
+        const size = Math.max(2, point.size * (1 - index / piece.trail.length) * .38);
+        ctx.fillStyle = `rgba(${outer},${trailAlpha.toFixed(3)})`;
+        ctx.fillRect(Math.round(point.x - size * .5), Math.round(point.y - size * .18), size, Math.max(1, size * .36));
+      });
+      ctx.translate(piece.x, piece.y);
+      ctx.rotate(piece.angle);
+      ctx.fillStyle = `rgba(${outer},${alpha.toFixed(3)})`;
+      ctx.fillRect(-piece.size * .5, -piece.size * .18, piece.size, piece.size * .36);
+      ctx.fillStyle = `rgba(${core},${(alpha * .72).toFixed(3)})`;
+      ctx.fillRect(-piece.size * piece.innerSize, -piece.size * .1, piece.size * piece.innerSize * 2, piece.size * .2);
+      ctx.restore();
+
+      if (swallowed || piece.life > piece.maxLife || piece.x < -220 || piece.x > canvas.width + 220 || piece.y < -220 || piece.y > canvas.height + 220) {
+        macroDebris.splice(i, 1);
+      }
+    }
   }
 
   function drawLogoDust(now, well) {

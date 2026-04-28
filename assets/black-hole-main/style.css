@@ -17,11 +17,11 @@ body
 .experience
 {
     position: absolute;
-    left: 50%;
+    left: 57%;
     top: 50%;
-    width: 100vh;
-    height: 100vw;
+    width: 138vmax;
+    height: 138vmax;
     background: transparent;
-    transform: translate(-50%, -50%) rotate(-90deg);
+    transform: translate(-50%, -50%) rotate(-90deg) scale(.78);
     transform-origin: center center;
 }
