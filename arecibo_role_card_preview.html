@@ -3,39 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ARECIBO // Carte de rôle</title>
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ARECIBO // Carte de role</title>
 <link rel="icon" type="image/png" href="assets/picto-arecibo-pageweb.png">
 <link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-3">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&display=swap');
 
 :root {
-  --bg:#040504;
-  --panel:#050806;
-  --panel-soft:#081008;
-  --line:rgba(247,255,195,.72);
-  --line-soft:rgba(247,255,195,.24);
+  --bg:#040404;
   --cream:#f7ffc3;
   --cream-dim:rgba(247,255,195,.58);
-  --orange:#fa5a1f;
-  --orange-soft:rgba(250,90,31,.18);
-  --blue:#88b8c7;
-  --blue-dark:#40606c;
+  --line:rgba(247,255,195,.28);
+  --line-soft:rgba(247,255,195,.12);
+  --captain:#fa7a2c;
+  --captain-soft:rgba(250,122,44,.18);
+  --captain-glow:rgba(250,122,44,.42);
 }
 
 * { box-sizing:border-box; }
+
 html, body {
   margin:0;
   min-height:100%;
-  background:#1f1f1f;
+  background:#000;
   color:var(--cream);
   font-family:'Pixelify Sans', monospace;
+  overflow:hidden;
 }
 
 body {
-  display:grid;
-  place-items:center;
-  overflow:hidden;
+  position:relative;
+  cursor:none;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(247,255,195,.08), transparent 26%),
+    radial-gradient(circle at 50% 110%, rgba(250,122,44,.08), transparent 34%),
+    #000;
 }
 
 body::before,
@@ -47,47 +52,128 @@ body::after {
 }
 
 body::before {
+  z-index:2;
   background:
-    radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.22) 82%, rgba(0,0,0,.54) 100%),
-    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,.12) 3px, rgba(0,0,0,.12) 4px);
-  opacity:.58;
+    radial-gradient(ellipse at center, transparent 56%, rgba(0,0,0,.26) 78%, rgba(0,0,0,.74) 100%),
+    repeating-linear-gradient(0deg, rgba(247,255,195,.035) 0 1px, transparent 1px 8px),
+    repeating-linear-gradient(90deg, rgba(247,255,195,.012) 0 1px, transparent 1px 8px);
+  opacity:.52;
 }
 
 body::after {
-  background:
-    repeating-linear-gradient(90deg, rgba(247,255,195,.018) 0 1px, transparent 1px 8px);
-  mix-blend-mode:normal;
-  opacity:.24;
-}
-
-.preview-wrap {
-  width:min(92vw, 980px);
-  display:grid;
-  grid-template-columns:minmax(360px, 560px) minmax(220px, 320px);
-  gap:clamp(18px, 3vw, 42px);
-  align-items:center;
-}
-
-.role-card {
-  position:relative;
-  background:linear-gradient(180deg, rgba(7,10,8,.98), rgba(2,4,3,.98));
-  border:1px solid var(--line);
+  z-index:3;
+  inset:clamp(10px, 1.3vw, 22px);
+  border:1px solid rgba(247,255,195,.05);
+  border-radius:clamp(24px, 4.2vw, 72px);
   box-shadow:
-    0 0 0 2px rgba(8,18,11,.92),
-    0 0 0 8px rgba(0,0,0,.24),
-    0 18px 34px rgba(0,0,0,.34),
-    inset 0 0 0 1px rgba(247,255,195,.08),
-    inset 0 0 10px rgba(247,255,195,.03);
-  padding:12px 12px 10px;
-  image-rendering:pixelated;
+    inset 0 0 80px rgba(0,0,0,.64),
+    inset 0 0 180px rgba(0,0,0,.42);
+  opacity:.52;
 }
 
-.role-card::before {
+.scene {
+  position:relative;
+  width:100vw;
+  height:100vh;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  overflow:hidden;
+}
+
+.console-stage {
+  position:relative;
+  width:min(92vw, 1120px);
+  height:min(92vh, 1000px);
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  z-index:5;
+}
+
+.console-base {
+  position:absolute;
+  left:50%;
+  bottom:clamp(16px, 3vh, 34px);
+  width:min(40vw, 430px);
+  transform:translateX(-50%);
+  image-rendering:auto;
+  filter:
+    drop-shadow(0 12px 28px rgba(0,0,0,.55))
+    drop-shadow(0 0 18px rgba(247,255,195,.06));
+}
+
+.projection-beam {
+  position:absolute;
+  left:50%;
+  bottom:clamp(220px, 27vh, 290px);
+  width:min(26vw, 260px);
+  height:min(40vh, 420px);
+  transform:translateX(-50%);
+  background:
+    linear-gradient(180deg, rgba(250,122,44,0) 0%, rgba(250,122,44,.06) 18%, rgba(250,122,44,.16) 58%, rgba(250,122,44,0) 100%);
+  clip-path:polygon(47% 0, 53% 0, 88% 100%, 12% 100%);
+  filter:blur(6px);
+  opacity:.72;
+  z-index:4;
+  animation:beamPulse 4.4s ease-in-out infinite;
+}
+
+.projection-core {
+  position:absolute;
+  left:50%;
+  bottom:clamp(530px, 58vh, 610px);
+  width:min(44vw, 520px);
+  height:min(68vh, 760px);
+  transform:translateX(-50%);
+  perspective:1200px;
+  z-index:7;
+}
+
+.hologram-card {
+  position:absolute;
+  inset:0;
+  padding:14px;
+  color:#fff3cf;
+  background:
+    linear-gradient(180deg, rgba(15,9,4,.82), rgba(6,4,3,.68)),
+    linear-gradient(135deg, rgba(250,122,44,.08), transparent 42%);
+  border:1px solid rgba(250,122,44,.46);
+  box-shadow:
+    0 0 0 1px rgba(250,122,44,.14),
+    0 0 18px rgba(250,122,44,.22),
+    0 0 64px rgba(250,122,44,.14),
+    inset 0 0 0 1px rgba(255,243,207,.04),
+    inset 0 0 34px rgba(250,122,44,.06);
+  transform:
+    rotateX(14deg)
+    translateY(0)
+    scale(1);
+  transform-origin:center bottom;
+  backdrop-filter:blur(2px);
+  overflow:hidden;
+  animation:holoFloat 4.8s ease-in-out infinite;
+}
+
+.hologram-card::before,
+.hologram-card::after {
   content:'';
   position:absolute;
-  inset:6px;
-  border:1px solid rgba(247,255,195,.12);
+  inset:0;
   pointer-events:none;
+}
+
+.hologram-card::before {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,243,207,.08), transparent 22%),
+    repeating-linear-gradient(0deg, rgba(255,243,207,.06) 0 1px, transparent 1px 7px);
+  mix-blend-mode:screen;
+  opacity:.54;
+}
+
+.hologram-card::after {
+  inset:10px;
+  border:1px solid rgba(255,243,207,.18);
 }
 
 .role-topbar,
@@ -95,14 +181,14 @@ body::after {
 .role-bottombar {
   display:grid;
   align-items:center;
-  border-bottom:1px solid var(--line);
+  border-bottom:1px solid rgba(255,243,207,.28);
 }
 
 .role-topbar {
   grid-template-columns:auto 1fr auto;
-  gap:14px;
-  min-height:44px;
-  padding:4px 8px 7px;
+  gap:12px;
+  min-height:42px;
+  padding:4px 8px 8px;
 }
 
 .role-badge {
@@ -114,20 +200,20 @@ body::after {
 }
 
 .role-badge-mark {
-  width:22px;
-  height:22px;
-  border:1px solid var(--line);
+  width:18px;
+  height:18px;
+  border:1px solid rgba(255,243,207,.52);
   display:grid;
   place-items:center;
-  font-size:14px;
-  color:var(--orange);
+  font-size:12px;
+  color:var(--captain);
 }
 
 .role-signal {
   text-align:center;
   font-size:17px;
   letter-spacing:.18em;
-  color:var(--cream-dim);
+  color:rgba(255,243,207,.72);
 }
 
 .role-cells {
@@ -138,32 +224,31 @@ body::after {
 
 .role-cells span {
   height:10px;
-  border:1px solid var(--line);
-  background:rgba(247,255,195,.08);
+  border:1px solid rgba(255,243,207,.3);
+  background:rgba(255,243,207,.08);
 }
 
 .role-cells span:nth-child(-n+3) {
-  background:rgba(247,255,195,.65);
+  background:rgba(255,243,207,.72);
 }
 
 .role-midbar {
   grid-template-columns:1fr auto;
   gap:12px;
   padding:8px 8px 10px;
-  min-height:74px;
+  min-height:76px;
 }
 
 .role-rank {
   font-size:22px;
   letter-spacing:.12em;
-  color:var(--cream);
 }
 
 .role-name {
   display:block;
-  margin-top:2px;
-  font-size:44px;
-  line-height:.92;
+  margin-top:3px;
+  font-size:52px;
+  line-height:.9;
   letter-spacing:.04em;
 }
 
@@ -172,30 +257,30 @@ body::after {
   font-size:16px;
   line-height:1.15;
   letter-spacing:.1em;
-  color:var(--cream-dim);
+  color:rgba(255,243,207,.74);
 }
 
 .role-access .access-glitch {
   display:block;
-  margin-top:8px;
-  color:rgba(247,255,195,.26);
+  margin-top:7px;
+  color:rgba(255,243,207,.28);
 }
 
 .role-main {
   display:grid;
-  grid-template-columns:minmax(180px, 250px) 1fr;
-  gap:12px;
-  padding:8px 0 0;
-  border-bottom:1px solid var(--line);
+  grid-template-columns:minmax(180px, 230px) 1fr;
+  gap:14px;
+  padding:10px 0 0;
+  border-bottom:1px solid rgba(255,243,207,.28);
 }
 
 .portrait-frame {
   position:relative;
-  min-height:286px;
-  border:1px solid var(--line);
+  min-height:296px;
+  border:1px solid rgba(255,243,207,.34);
   background:
-    radial-gradient(circle at 38% 35%, rgba(255,255,255,.08), transparent 38%),
-    linear-gradient(180deg, rgba(20,24,22,.94), rgba(10,12,11,.98));
+    radial-gradient(circle at 36% 32%, rgba(255,255,255,.08), transparent 28%),
+    linear-gradient(180deg, rgba(22,18,13,.88), rgba(9,8,7,.92));
   overflow:hidden;
 }
 
@@ -204,101 +289,90 @@ body::after {
   position:absolute;
   inset:0;
   background:
-    radial-gradient(circle at 40% 38%, rgba(255,255,255,.08), transparent 22%),
+    radial-gradient(circle at 40% 38%, rgba(255,255,255,.12), transparent 20%),
     repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 4px),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 1px, transparent 1px 4px);
+    repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 1px, transparent 1px 4px);
   mix-blend-mode:screen;
-  opacity:.56;
-  pointer-events:none;
-}
-
-.portrait-frame::after {
-  content:'';
-  position:absolute;
-  inset:0;
-  background:
-    radial-gradient(circle at 50% 50%, transparent 0 55%, rgba(0,0,0,.14) 74%, rgba(0,0,0,.32) 100%);
-  pointer-events:none;
-}
-
-.portrait-image {
-  position:absolute;
-  inset:16px 12px 8px;
-  display:grid;
-  place-items:end center;
-  filter:
-    grayscale(1)
-    contrast(1.08)
-    brightness(1.04);
-}
-
-.portrait-image img {
-  width:92%;
-  height:92%;
-  object-fit:contain;
-  image-rendering:pixelated;
-  opacity:.88;
+  opacity:.64;
 }
 
 .portrait-grid {
   position:absolute;
   inset:0;
   background:
-    repeating-linear-gradient(0deg, transparent 0 9px, rgba(247,255,195,.035) 9px 10px),
-    repeating-linear-gradient(90deg, transparent 0 9px, rgba(247,255,195,.025) 9px 10px);
-  mix-blend-mode:screen;
-  pointer-events:none;
+    repeating-linear-gradient(0deg, transparent 0 9px, rgba(255,243,207,.04) 9px 10px),
+    repeating-linear-gradient(90deg, transparent 0 9px, rgba(255,243,207,.03) 9px 10px);
+}
+
+.portrait-image {
+  position:absolute;
+  inset:16px 10px 10px;
+  display:grid;
+  place-items:end center;
+  filter:
+    grayscale(1)
+    contrast(1.12)
+    brightness(1.1)
+    drop-shadow(0 0 22px rgba(250,122,44,.18));
+}
+
+.portrait-image img {
+  width:90%;
+  height:90%;
+  object-fit:contain;
+  opacity:.88;
 }
 
 .role-meta {
-  padding:8px 6px 10px 2px;
+  position:relative;
+  padding:10px 8px 10px 0;
   font-size:19px;
-  letter-spacing:.08em;
   line-height:1.14;
+  letter-spacing:.08em;
 }
 
-.role-meta .meta-line {
+.meta-line {
   display:flex;
   gap:10px;
   align-items:flex-start;
-  margin-bottom:5px;
+  margin-bottom:6px;
 }
 
-.role-meta .meta-label {
-  color:var(--cream-dim);
-  min-width:88px;
+.meta-label {
+  color:rgba(255,243,207,.62);
+  min-width:90px;
 }
 
-.role-meta .meta-value {
-  color:var(--cream);
+.meta-value {
+  color:#fff3cf;
 }
 
-.role-meta .meta-role {
-  margin-top:12px;
-  font-size:30px;
+.meta-role {
+  margin-top:16px;
+  font-size:34px;
   line-height:.9;
 }
 
-.role-meta .meta-role small {
+.meta-role small {
   display:block;
-  margin-top:7px;
+  margin-top:8px;
   font-size:22px;
-  color:var(--orange);
+  color:var(--captain);
   letter-spacing:.12em;
 }
 
-.role-meta .meta-stamp {
+.meta-stamp {
   position:absolute;
-  right:14px;
+  right:12px;
   top:132px;
   width:22px;
   height:22px;
-  border:1px solid var(--line-soft);
+  border:1px solid rgba(255,243,207,.24);
 }
 
 .role-text {
-  padding:10px 8px 12px;
-  min-height:184px;
+  padding:12px 8px 12px;
+  min-height:206px;
   font-size:19px;
   line-height:1.08;
   letter-spacing:.06em;
@@ -306,8 +380,7 @@ body::after {
 }
 
 .role-text strong {
-  color:var(--orange);
-  font-weight:700;
+  color:var(--captain);
 }
 
 .role-bottombar {
@@ -317,175 +390,190 @@ body::after {
   min-height:54px;
   padding:10px 8px 2px;
   border-bottom:none;
-  color:rgba(247,255,195,.42);
+  color:rgba(255,243,207,.42);
   font-size:16px;
   letter-spacing:.14em;
 }
 
-.role-bottombar .bottom-mark {
+.bottom-mark {
   display:flex;
   align-items:center;
   gap:4px;
 }
 
-.role-bottombar .bottom-mark::before,
-.role-bottombar .bottom-mark::after {
+.bottom-mark::before,
+.bottom-mark::after {
   content:'';
   width:18px;
   height:12px;
-  border-top:1px solid rgba(247,255,195,.2);
-  border-bottom:1px solid rgba(247,255,195,.08);
+  border-top:1px solid rgba(255,243,207,.22);
+  border-bottom:1px solid rgba(255,243,207,.08);
 }
 
-.role-side {
-  display:grid;
-  gap:16px;
-  align-content:start;
+.holo-glow {
+  position:absolute;
+  inset:-6% -3%;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(250,122,44,.22), transparent 46%),
+    radial-gradient(circle at 50% 100%, rgba(250,122,44,.18), transparent 34%);
+  filter:blur(18px);
+  opacity:.8;
+  z-index:-1;
 }
 
-.side-panel {
-  border:1px solid rgba(247,255,195,.26);
-  background:rgba(6,7,6,.88);
-  padding:14px 16px;
-  box-shadow:inset 0 0 10px rgba(247,255,195,.03);
+.holo-ghost {
+  position:absolute;
+  inset:0;
+  border:1px solid rgba(250,122,44,.14);
+  transform:translate(10px, 12px) scale(.985);
+  opacity:.38;
 }
 
-.side-panel h2 {
-  margin:0 0 10px;
-  font-size:18px;
-  letter-spacing:.14em;
-  color:var(--orange);
+.cursor {
+  position:fixed;
+  width:14px;
+  height:14px;
+  border:1.5px solid var(--cream);
+  pointer-events:none;
+  z-index:9999;
+  transform:translate(-50%, -50%);
 }
 
-.side-panel p,
-.side-panel li {
-  margin:0;
-  font-size:17px;
-  line-height:1.2;
-  color:rgba(247,255,195,.76);
+.cursor::after {
+  content:'';
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:3px;
+  height:3px;
+  background:var(--captain);
+  transform:translate(-50%, -50%);
 }
 
-.side-panel ul {
-  margin:0;
-  padding-left:16px;
-  display:grid;
-  gap:8px;
+@keyframes holoFloat {
+  0%, 100% {
+    transform:rotateX(14deg) translateY(0) scale(1);
+    filter:drop-shadow(0 0 22px rgba(250,122,44,.14));
+  }
+  50% {
+    transform:rotateX(14deg) translateY(-8px) scale(1.01);
+    filter:drop-shadow(0 0 30px rgba(250,122,44,.24));
+  }
 }
 
-.tag {
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:4px 8px;
-  border:1px solid rgba(250,90,31,.4);
-  color:var(--orange);
-  background:rgba(250,90,31,.08);
-  font-size:15px;
-  letter-spacing:.12em;
+@keyframes beamPulse {
+  0%, 100% { opacity:.54; transform:translateX(-50%) scaleY(1); }
+  50% { opacity:.82; transform:translateX(-50%) scaleY(1.05); }
 }
 
 @media (max-width: 920px) {
-  .preview-wrap {
-    width:min(96vw, 640px);
-    grid-template-columns:1fr;
+  .console-stage {
+    width:100vw;
+    height:100vh;
   }
-  .role-main {
-    grid-template-columns:1fr;
+
+  .console-base {
+    width:min(58vw, 360px);
+    bottom:18px;
   }
-  .portrait-frame {
-    min-height:220px;
+
+  .projection-core {
+    width:min(74vw, 430px);
+    height:min(62vh, 620px);
+    bottom:clamp(470px, 58vh, 560px);
   }
+
+  .role-name { font-size:40px; }
+  .role-main { grid-template-columns:1fr; }
+  .portrait-frame { min-height:200px; }
+  .role-text { font-size:16px; min-height:0; }
 }
 </style>
 </head>
 <body>
-  <main class="preview-wrap">
-    <section class="role-card" aria-label="Exemple de carte de rôle ARECIBO">
-      <header class="role-topbar">
-        <div class="role-badge">
-          <span class="role-badge-mark">✶</span>
-          <span>MOTOMOTO</span>
-        </div>
-        <div class="role-signal">SIGNAL LOW</div>
-        <div class="role-cells" aria-hidden="true">
-          <span></span><span></span><span></span><span></span>
-        </div>
-      </header>
+  <main class="scene">
+    <section class="console-stage" aria-label="Projection holographique de carte role">
+      <div class="projection-beam" aria-hidden="true"></div>
 
-      <div class="role-midbar">
-        <div class="role-rank">
-          OFFICIER
-          <span class="role-name">CAPITAINE</span>
-        </div>
-        <div class="role-access">
-          ACCESS
-          <span class="access-glitch">+++++++</span>
-        </div>
-      </div>
+      <section class="projection-core" aria-label="Carte role holographique">
+        <div class="holo-glow" aria-hidden="true"></div>
+        <div class="holo-ghost" aria-hidden="true"></div>
+        <article class="hologram-card role-captain">
+          <header class="role-topbar">
+            <div class="role-badge">
+              <span class="role-badge-mark">*</span>
+              <span>MOTOMOTO</span>
+            </div>
+            <div class="role-signal">SIGNAL LOW</div>
+            <div class="role-cells" aria-hidden="true">
+              <span></span><span></span><span></span><span></span>
+            </div>
+          </header>
 
-      <section class="role-main">
-        <div class="portrait-frame">
-          <div class="portrait-grid" aria-hidden="true"></div>
-          <div class="portrait-image">
-            <img src="assets/animals/head-03.svg" alt="Illustration provisoire du rôle">
+          <div class="role-midbar">
+            <div class="role-rank">
+              OFFICIER
+              <span class="role-name">CAPITAINE</span>
+            </div>
+            <div class="role-access">
+              ACCESS
+              <span class="access-glitch">+++++++</span>
+            </div>
           </div>
-        </div>
 
-        <div class="role-meta">
-          <div class="meta-line"><span class="meta-label">ESPECE</span><span class="meta-value">CANIDE // SURVIVANT</span></div>
-          <div class="meta-line"><span class="meta-label">PROFIL</span><span class="meta-value">COMMAND // AUTHORIZED</span></div>
-          <div class="meta-line"><span class="meta-label">CODE</span><span class="meta-value">AR-01-CPT-7402</span></div>
-          <div class="meta-line"><span class="meta-label">NAV.</span><span class="meta-value">PRIORITY ROUTE // ARECIBO</span></div>
-          <div class="meta-role">
-            CAPITAINE
-            <small>DECISION FINALE</small>
-          </div>
-          <div class="meta-stamp" aria-hidden="true"></div>
-        </div>
+          <section class="role-main">
+            <div class="portrait-frame">
+              <div class="portrait-grid" aria-hidden="true"></div>
+              <div class="portrait-image">
+                <img src="assets/animals/head-03.svg" alt="Illustration provisoire du role capitaine">
+              </div>
+            </div>
+
+            <div class="role-meta">
+              <div class="meta-line"><span class="meta-label">ESPECE</span><span class="meta-value">CANIDE // SURVIVANT</span></div>
+              <div class="meta-line"><span class="meta-label">PROFIL</span><span class="meta-value">COMMAND // AUTHORIZED</span></div>
+              <div class="meta-line"><span class="meta-label">CODE</span><span class="meta-value">AR-01-CPT-1402</span></div>
+              <div class="meta-line"><span class="meta-label">NAV.</span><span class="meta-value">PRIORITY ROUTE // ARECIBO</span></div>
+              <div class="meta-role">
+                CAPITAINE
+                <small>DECISION FINALE</small>
+              </div>
+              <div class="meta-stamp" aria-hidden="true"></div>
+            </div>
+          </section>
+
+          <section class="role-text">
+            <strong>AUTORISATION ACTIVE.</strong><br>
+            VOUS ETES LE SEUL MEMBRE DE L'EQUIPAGE CAPABLE DE VALIDER LA DECISION FINALE A CHAQUE ROUND.<br><br>
+            ECOUTEZ LES SIGNAUX DU TIMONIER.<br>
+            ECOUTEZ LES PROPOSITIONS DES MATELOTS.<br>
+            GARDEZ LE CAP.<br><br>
+            SI L'EQUIPAGE PERD CONFIANCE EN VOUS, IL PEUT VOUS DESTITUER.
+          </section>
+
+          <footer class="role-bottombar">
+            <span class="bottom-mark">SYS</span>
+            <span>PROPERTY OF MOTOMOTO // ARECIBO SALVAGE PROTOCOL</span>
+            <span class="bottom-mark" style="justify-self:end;">ARC</span>
+          </footer>
+        </article>
       </section>
 
-      <section class="role-text">
-        <strong>AUTORISATION ACTIVE.</strong><br>
-        VOUS ETES LE SEUL MEMBRE DE L'EQUIPAGE CAPABLE DE VALIDER LA DECISION FINALE A CHAQUE ROUND.<br><br>
-        ECOUTEZ LES SIGNAUX DU TIMONIER.<br>
-        ECOUTEZ LES PROPOSITIONS DES MATelots.<br>
-        GARDEZ LE CAP.<br><br>
-        SI L'EQUIPAGE PERD CONFIANCE EN VOUS, IL PEUT VOUS DESTITUER.
-      </section>
-
-      <footer class="role-bottombar">
-        <span class="bottom-mark">SYS</span>
-        <span>PROPERTY OF MOTOMOTO // ARECIBO SALVAGE PROTOCOL</span>
-        <span class="bottom-mark" style="justify-self:end;">ARC</span>
-      </footer>
+      <img class="console-base" src="assets/console-aventure-vrtcl.png" alt="Console aventure verticale">
     </section>
-
-    <aside class="role-side">
-      <section class="side-panel">
-        <h2>EXEMPLE</h2>
-        <p>Version carte rôle test pour valider la DA avant d'enchaîner la vraie distribution après l'intro.</p>
-      </section>
-
-      <section class="side-panel">
-        <h2>CE QUI EST FIXE</h2>
-        <ul>
-          <li>la structure badge / portrait / capacité</li>
-          <li>la typo pixel et l'ambiance terminal</li>
-          <li>le ton "document d'accès" rétro SF</li>
-        </ul>
-      </section>
-
-      <section class="side-panel">
-        <h2>CE QU'ON REMPLACERA</h2>
-        <ul>
-          <li>la tête centrale par ton illustration finale</li>
-          <li>le texte exact rôle par rôle</li>
-          <li>les variantes cachées, infecté, agent, observateur</li>
-        </ul>
-      </section>
-
-      <div class="tag">PREVIEW ROLE CARD // CAPITAINE</div>
-    </aside>
   </main>
+
+  <div class="cursor" id="cursor"></div>
+
+<script>
+(() => {
+  const cursor = document.getElementById('cursor');
+  window.addEventListener('mousemove', event => {
+    if (!cursor) return;
+    cursor.style.left = `${event.clientX}px`;
+    cursor.style.top = `${event.clientY}px`;
+  });
+})();
+</script>
 </body>
 </html>
