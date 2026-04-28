@@ -38,8 +38,8 @@ body {
   position:relative;
   cursor:none;
   background:
-    radial-gradient(circle at 50% 18%, rgba(247,255,195,.08), transparent 26%),
-    radial-gradient(circle at 50% 110%, rgba(250,122,44,.08), transparent 34%),
+    radial-gradient(circle at 50% 18%, rgba(247,255,195,.05), transparent 22%),
+    radial-gradient(circle at 50% 110%, rgba(250,122,44,.06), transparent 32%),
     #000;
 }
 
@@ -80,6 +80,76 @@ body::after {
   justify-content:center;
   overflow:hidden;
 }
+
+.animated-line-bg {
+  position:absolute;
+  inset:-8% -4%;
+  z-index:1;
+  pointer-events:none;
+  opacity:.96;
+}
+
+.animated-line-bg::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(250,122,44,.08), transparent 34%),
+    radial-gradient(circle at 50% 50%, rgba(250,122,44,.04), transparent 52%);
+  filter:blur(18px);
+  opacity:.72;
+}
+
+.flow-line {
+  position:absolute;
+  top:-18%;
+  bottom:-18%;
+  width:2px;
+  background:linear-gradient(180deg,
+    rgba(250,122,44,0) 0%,
+    rgba(250,122,44,.26) 14%,
+    rgba(250,122,44,.72) 48%,
+    rgba(250,122,44,.22) 82%,
+    rgba(250,122,44,0) 100%);
+  box-shadow:
+    0 0 10px rgba(250,122,44,.18),
+    0 0 26px rgba(250,122,44,.08);
+  transform-origin:center center;
+  animation:lineDrift var(--dur, 7s) ease-in-out infinite;
+}
+
+.flow-line::before,
+.flow-line::after {
+  content:'';
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  border-radius:999px;
+}
+
+.flow-line::before {
+  top:12%;
+  width:8px;
+  height:8px;
+  background:rgba(250,122,44,.74);
+  box-shadow:0 0 14px rgba(250,122,44,.34);
+  animation:pulseNode var(--pulse, 2.8s) ease-in-out infinite;
+}
+
+.flow-line::after {
+  top:0;
+  width:14px;
+  height:34%;
+  background:linear-gradient(180deg, rgba(250,122,44,.24), rgba(250,122,44,0));
+  filter:blur(8px);
+  opacity:.56;
+}
+
+.flow-line.line-a { left:21%; --dur:8.6s; --pulse:3.4s; transform:rotate(-8deg) scaleY(1.06); }
+.flow-line.line-b { left:34%; --dur:7.1s; --pulse:2.9s; transform:rotate(-3deg) scaleY(.96); }
+.flow-line.line-c { left:50%; --dur:6.8s; --pulse:2.5s; transform:rotate(0deg) scaleY(1.1); }
+.flow-line.line-d { left:66%; --dur:7.9s; --pulse:3.1s; transform:rotate(4deg) scaleY(.98); }
+.flow-line.line-e { left:79%; --dur:8.9s; --pulse:3.6s; transform:rotate(8deg) scaleY(1.04); }
 
 .console-stage {
   position:relative;
@@ -435,6 +505,28 @@ body::after {
   50% { opacity:.82; transform:translateX(-50%) scaleY(1.05); }
 }
 
+@keyframes lineDrift {
+  0%, 100% {
+    filter:brightness(.9) saturate(1);
+    opacity:.56;
+  }
+  50% {
+    filter:brightness(1.18) saturate(1.08);
+    opacity:.92;
+  }
+}
+
+@keyframes pulseNode {
+  0%, 100% {
+    transform:translateX(-50%) scale(.86);
+    opacity:.48;
+  }
+  50% {
+    transform:translateX(-50%) scale(1.28);
+    opacity:.96;
+  }
+}
+
 @media (max-width: 920px) {
   .console-stage {
     width:100vw;
@@ -455,6 +547,13 @@ body::after {
 </head>
 <body>
   <main class="scene">
+    <div class="animated-line-bg" aria-hidden="true">
+      <span class="flow-line line-a"></span>
+      <span class="flow-line line-b"></span>
+      <span class="flow-line line-c"></span>
+      <span class="flow-line line-d"></span>
+      <span class="flow-line line-e"></span>
+    </div>
     <section class="console-stage" aria-label="Projection holographique de carte role">
       <section class="projection-core" aria-label="Carte role holographique">
         <div class="holo-glow" aria-hidden="true"></div>
