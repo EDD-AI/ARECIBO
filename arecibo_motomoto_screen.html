@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ARECIBO - MOTOMOTO</title>
+<link rel="icon" type="image/png" href="assets/picto-arecibo-pageweb.png">
+<link rel="stylesheet" href="assets/css/arecibo-motomoto-screen.css?v=motomoto-screen-1">
+</head>
+<body data-theme-audio="ship">
+  <main class="motomoto-scene" aria-label="Ecran principal MOTOMOTO">
+    <canvas class="space-canvas" id="spaceCanvas"></canvas>
+
+    <section class="black-hole-layer" id="blackHoleLayer" aria-hidden="true">
+      <div class="black-hole-halo"></div>
+      <div class="black-hole-disc"></div>
+      <div class="black-hole-disc-lower"></div>
+      <div class="black-hole-lens"></div>
+      <div class="black-hole-core"></div>
+    </section>
+
+    <section class="round-console" aria-label="Controle principal du vaisseau">
+      <div class="round-console-panel">
+        <div class="console-kicker">MOTOMOTO // CONTROLE CENTRAL</div>
+        <h1 class="console-title">SYSTEME<br>VAISSEAU</h1>
+        <div class="console-grid">
+          <div class="console-row"><span>Coque</span><strong class="warning">69%</strong></div>
+          <div class="console-row"><span>Carburant</span><strong>42%</strong></div>
+          <div class="console-row"><span>Signal</span><strong>INSTABLE</strong></div>
+          <div class="console-row"><span>Distance</span><strong>ARECIBO</strong></div>
+        </div>
+        <div class="console-signal">
+          <div class="console-signal-bar"><div class="console-signal-fill"></div></div>
+        </div>
+        <div class="console-footnote">PRIORITE // TENIR 25:00</div>
+      </div>
+    </section>
+
+    <img class="bridge-shell" src="assets/motomoto-screen-01.png" alt="Ecran MOTOMOTO 1">
+    <div class="bridge-glow" aria-hidden="true"></div>
+
+    <aside class="mission-timer" aria-label="Compte a rebours">
+      <div class="mission-timer-label">TEMPS AVANT CONVERGENCE</div>
+      <div class="mission-timer-value" id="missionTimerValue">25:00</div>
+      <div class="mission-timer-caption" id="missionTimerCaption">25 MINUTES AVANT CONVERGENCE</div>
+    </aside>
+
+    <section class="end-overlay" id="endOverlay" aria-live="polite">
+      <article class="end-card">
+        <div class="end-kicker">MOTOMOTO // DERNIERE TRANSMISSION</div>
+        <h2 class="end-title">ABSORPTION<br>COMPLETE</h2>
+        <p class="end-copy">Le trou noir a atteint les baies frontales. Le vaisseau est perdu. Fin de la partie.</p>
+      </article>
+    </section>
+  </main>
+
+  <div class="cursor" id="cursor"></div>
+
+  <script src="assets/js/arecibo-motomoto-screen.js?v=motomoto-screen-1"></script>
+  <script src="assets/theme-audio.js?v=theme-audio-1"></script>
+</body>
+</html>

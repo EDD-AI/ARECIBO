@@ -471,7 +471,7 @@ body.intro-ready .intro-shell {
 const params = new URLSearchParams(window.location.search);
 const nextCode = params.get('sessionCode');
 const nextMode = params.get('mode');
-const NEXT = `arecibo_reboot_placeholder.html?v=reboot-placeholder-1${nextCode ? `&sessionCode=${encodeURIComponent(nextCode)}` : ''}${nextMode ? `&mode=${encodeURIComponent(nextMode)}` : ''}`;
+const NEXT = `arecibo_motomoto_screen.html?v=motomoto-screen-1${nextCode ? `&sessionCode=${encodeURIComponent(nextCode)}` : ''}${nextMode ? `&mode=${encodeURIComponent(nextMode)}` : ''}`;
 try {
   localStorage.removeItem('areciboSasRepairCutWire');
 } catch (err) {}
