@@ -2533,6 +2533,9 @@ document.addEventListener('keydown', event => {
 
 function joinSessionChoice() {
   rememberMultiplayerSession('join', '');
+  if (typeof window.playAreciboStartSound === 'function') {
+    window.playAreciboStartSound();
+  }
   const transition = document.getElementById('transition');
   transition.classList.add('active');
   setTimeout(() => {
@@ -2544,6 +2547,9 @@ function createSessionChoice() {
   const code = generateSessionCode();
   const codeLine = document.getElementById('multi-choice-code');
   rememberMultiplayerSession('host', code);
+  if (typeof window.playAreciboStartSound === 'function') {
+    window.playAreciboStartSound();
+  }
   if (codeLine) codeLine.textContent = `SESSION CREEE // ${code}`;
   setTimeout(() => {
     const transition = document.getElementById('transition');

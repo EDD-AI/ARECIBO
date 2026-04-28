@@ -19,9 +19,11 @@
     'assets/audio/effects/SD_UI_HOVER_02.mp3',
     'assets/audio/effects/SD_UI_HOVER_03.mp3'
   ];
+  const startTrack = 'assets/audio/effects/SD_UI_START.mp3';
   let unlocked = false;
   let trackIndex = 0;
   let activeHover = null;
+  let activeStart = null;
   let lastHoverAt = 0;
 
   function readMuted() {
@@ -88,6 +90,38 @@
 
     hover.addEventListener('ended', () => {
       if (activeHover === hover) activeHover = null;
+    }, { once: true });
+  }
+
+  function stopStartSound() {
+    if (!activeStart) return;
+    try {
+      activeStart.pause();
+      activeStart.currentTime = 0;
+    } catch (err) {}
+    activeStart = null;
+  }
+
+  function playStartSound() {
+    if (!unlocked || readMuted() || !startTrack) return;
+
+    stopHoverSound();
+    stopStartSound();
+
+    const start = new Audio(startTrack);
+    start.preload = 'auto';
+    start.volume = Math.min(1, readEffectsVolume() * 0.84);
+    start.playbackRate = 0.988 + Math.random() * 0.028;
+    start.preservesPitch = false;
+    activeStart = start;
+
+    const playPromise = start.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => {});
+    }
+
+    start.addEventListener('ended', () => {
+      if (activeStart === start) activeStart = null;
     }, { once: true });
   }
 
@@ -217,4 +251,5 @@
 
   broadcastMuted(readMuted());
   syncVolume();
+  window.playAreciboStartSound = playStartSound;
 })();
