@@ -11,6 +11,21 @@
   const timerCaption = document.getElementById('missionTimerCaption');
   const overlay = document.getElementById('endOverlay');
   const cursor = document.getElementById('cursor');
+  const roleOverlay = document.getElementById('roleOverlay');
+  const roleDismiss = document.getElementById('roleCardDismiss');
+  const activeRoleValue = document.getElementById('activeRoleValue');
+  const roleCardName = document.getElementById('roleCardName');
+  const roleCardSpecies = document.getElementById('roleCardSpecies');
+  const roleCardProfile = document.getElementById('roleCardProfile');
+  const roleCardCode = document.getElementById('roleCardCode');
+  const roleCardNav = document.getElementById('roleCardNav');
+  const roleCardRole = document.getElementById('roleCardRole');
+  const roleCardPower = document.getElementById('roleCardPower');
+  const roleCardCopyHead = document.getElementById('roleCardCopyHead');
+  const roleCardCopy = document.getElementById('roleCardCopy');
+  const roleCardRules = document.getElementById('roleCardRules');
+  const roleCardRisk = document.getElementById('roleCardRisk');
+  const roleCardPortrait = document.getElementById('roleCardPortrait');
 
   let ctx = null;
   let viewportWidth = 0;
@@ -18,6 +33,109 @@
   let stars = [];
   let particles = [];
   let ended = false;
+
+  const roleKey = sessionCode ? `areciboRole:${sessionCode}` : 'areciboRole:local';
+  const roleSeenKey = sessionCode ? `areciboRoleSeen:${sessionCode}` : 'areciboRoleSeen:local';
+  const ROLE_DATA = {
+    capitaine: {
+      label: 'CAPITAINE',
+      rank: 'OFFICIER',
+      accent: '#fa7a2c',
+      soft: 'rgba(250,122,44,0.18)',
+      glow: 'rgba(250,122,44,0.42)',
+      species: 'CANIDE // SURVIVANT',
+      profile: 'COMMAND // AUTHORIZED',
+      code: 'AR-01-CPT-1402',
+      nav: 'PRIORITY ROUTE // ARECIBO',
+      power: 'DECISION FINALE',
+      head: 'AUTORISATION ACTIVE.',
+      copy: 'Vous etes le seul membre de l equipage capable de valider la decision finale a chaque round.',
+      rules: 'Ecoutez les signaux du Timonier. Ecoutez les propositions des Matelots. Gardez le cap.',
+      risk: 'Si l equipage perd confiance en vous, il peut vous destituer.',
+      portrait: 'assets/animals/head-03.svg'
+    },
+    timonier: {
+      label: 'TIMONIER',
+      rank: 'OFFICIER',
+      accent: '#7dd9ff',
+      soft: 'rgba(125,217,255,0.18)',
+      glow: 'rgba(125,217,255,0.42)',
+      species: 'PRIMATE // SURVIVANT',
+      profile: 'SIGNAL // NAV DATA',
+      code: 'AR-02-NAV-8820',
+      nav: 'DISTANCE // ROUTE // DANGERS',
+      power: 'LECTURE DU SIGNAL',
+      head: 'ACCES NAVIGATION OUVERT.',
+      copy: 'Vous voyez les donnees de navigation et l etat du signal Arecibo plus clairement que le reste de l equipage.',
+      rules: 'Vous pouvez transmettre la verite ou falsifier les donnees. Personne ne sait si vous mentez.',
+      risk: 'Si le Capitaine vous croit, vous pilotez le destin du vaisseau.',
+      portrait: 'assets/animals/head-02.svg'
+    },
+    matelot: {
+      label: 'MATELOT',
+      rank: 'EQUIPAGE',
+      accent: '#dbe79b',
+      soft: 'rgba(219,231,155,0.18)',
+      glow: 'rgba(219,231,155,0.38)',
+      species: 'FELIDE // SURVIVANT',
+      profile: 'CREW // SALVAGE',
+      code: 'AR-03-CRT-5117',
+      nav: 'ORDRES // DEBAT // SURVIE',
+      power: 'PRESSION COLLECTIVE',
+      head: 'STATUT OPERATIONNEL.',
+      copy: 'Vous recevez des informations partielles sur les evenements et vous proposez vos actions au Capitaine.',
+      rules: 'Debattez. Orientez les choix. Si besoin, vous pouvez voter pour destituer le Capitaine.',
+      risk: 'Certains Matelots portent peut etre un role cache. Peut etre vous.',
+      portrait: 'assets/animals/head-01.svg'
+    }
+  };
+
+  function ensureRole() {
+    const roleIds = Object.keys(ROLE_DATA);
+    try {
+      const existing = localStorage.getItem(roleKey);
+      if (existing && ROLE_DATA[existing]) return existing;
+      const picked = roleIds[Math.floor(Math.random() * roleIds.length)];
+      localStorage.setItem(roleKey, picked);
+      return picked;
+    } catch (err) {
+      return roleIds[0];
+    }
+  }
+
+  const currentRoleId = ensureRole();
+  const currentRole = ROLE_DATA[currentRoleId] || ROLE_DATA.capitaine;
+
+  function applyRoleTheme() {
+    document.documentElement.style.setProperty('--role-accent', currentRole.accent);
+    document.documentElement.style.setProperty('--role-accent-soft', currentRole.soft);
+    document.documentElement.style.setProperty('--role-accent-glow', currentRole.glow);
+
+    if (activeRoleValue) activeRoleValue.textContent = currentRole.label;
+    if (roleCardName) roleCardName.textContent = currentRole.label;
+    if (roleCardSpecies) roleCardSpecies.textContent = currentRole.species;
+    if (roleCardProfile) roleCardProfile.textContent = currentRole.profile;
+    if (roleCardCode) roleCardCode.textContent = currentRole.code;
+    if (roleCardNav) roleCardNav.textContent = currentRole.nav;
+    if (roleCardRole) roleCardRole.textContent = currentRole.label;
+    if (roleCardPower) roleCardPower.textContent = currentRole.power;
+    if (roleCardCopyHead) roleCardCopyHead.textContent = currentRole.head;
+    if (roleCardCopy) roleCardCopy.textContent = currentRole.copy;
+    if (roleCardRules) roleCardRules.textContent = currentRole.rules;
+    if (roleCardRisk) roleCardRisk.textContent = currentRole.risk;
+    if (roleCardPortrait) roleCardPortrait.src = currentRole.portrait;
+  }
+
+  function hideRoleOverlay() {
+    if (!roleOverlay) return;
+    roleOverlay.classList.remove('is-visible');
+    try { localStorage.setItem(roleSeenKey, 'true'); } catch (err) {}
+  }
+
+  function maybeShowRoleOverlay() {
+    if (!roleOverlay) return;
+    roleOverlay.classList.add('is-visible');
+  }
 
   function ensureStartTime() {
     const now = Date.now();
@@ -221,9 +339,26 @@
     });
   }
 
+  function bindRoleOverlay() {
+    if (roleDismiss) {
+      roleDismiss.addEventListener('click', hideRoleOverlay);
+    }
+
+    window.addEventListener('keydown', event => {
+      if (!roleOverlay || !roleOverlay.classList.contains('is-visible')) return;
+      if (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape') {
+        event.preventDefault();
+        hideRoleOverlay();
+      }
+    });
+  }
+
   function init() {
+    applyRoleTheme();
     resize();
     bindCursor();
+    bindRoleOverlay();
+    maybeShowRoleOverlay();
     requestAnimationFrame(frame);
   }
 

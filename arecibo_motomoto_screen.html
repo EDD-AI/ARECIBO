@@ -42,6 +42,11 @@
     <img class="bridge-shell" src="assets/motomoto-screen-01.png" alt="Ecran MOTOMOTO 1">
     <div class="bridge-glow" aria-hidden="true"></div>
 
+    <aside class="active-role-chip" aria-label="Role actif">
+      <div class="active-role-chip-label">ROLE ACTIF</div>
+      <div class="active-role-chip-value" id="activeRoleValue">CAPITAINE</div>
+    </aside>
+
     <aside class="mission-timer" aria-label="Compte a rebours">
       <div class="mission-timer-label">TEMPS AVANT CONVERGENCE</div>
       <div class="mission-timer-value" id="missionTimerValue">25:00</div>
@@ -53,6 +58,66 @@
         <div class="end-kicker">MOTOMOTO // DERNIERE TRANSMISSION</div>
         <h2 class="end-title">ABSORPTION<br>COMPLETE</h2>
         <p class="end-copy">Le trou noir a atteint les baies frontales. Le vaisseau est perdu. Fin de la partie.</p>
+      </article>
+    </section>
+
+    <section class="role-overlay is-visible" id="roleOverlay" aria-live="polite">
+      <div class="role-overlay-backdrop"></div>
+      <article class="role-card" id="roleCard" aria-label="Carte de role">
+        <header class="role-card-topbar">
+          <div class="role-card-badge">
+            <span class="role-card-badge-mark">*</span>
+            <span>MOTOMOTO</span>
+          </div>
+          <div class="role-card-signal">SIGNAL LOW</div>
+          <div class="role-card-cells" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        </header>
+
+        <section class="role-card-midbar">
+          <div class="role-card-rank">
+            OFFICIER
+            <span class="role-card-name" id="roleCardName">CAPITAINE</span>
+          </div>
+          <div class="role-card-access">
+            ACCESS
+            <span class="role-card-access-glitch">+++++++</span>
+          </div>
+        </section>
+
+        <section class="role-card-main">
+          <div class="role-card-portrait-frame">
+            <img class="role-card-portrait" id="roleCardPortrait" src="assets/animals/head-03.svg" alt="Illustration du role">
+          </div>
+
+          <div class="role-card-meta">
+            <div class="role-card-meta-grid">
+              <div class="role-card-meta-label">ESPECE</div><div class="role-card-meta-value" id="roleCardSpecies">CANIDE // SURVIVANT</div>
+              <div class="role-card-meta-label">PROFIL</div><div class="role-card-meta-value" id="roleCardProfile">COMMAND // AUTHORIZED</div>
+              <div class="role-card-meta-label">CODE</div><div class="role-card-meta-value" id="roleCardCode">AR-01-CPT-1402</div>
+              <div class="role-card-meta-label">NAV.</div><div class="role-card-meta-value" id="roleCardNav">PRIORITY ROUTE // ARECIBO</div>
+            </div>
+
+            <div class="role-card-roleblock">
+              <div class="role-card-role" id="roleCardRole">CAPITAINE</div>
+              <div class="role-card-rolepower" id="roleCardPower">DECISION FINALE</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="role-card-copy">
+          <div class="role-card-copy-head" id="roleCardCopyHead">AUTORISATION ACTIVE.</div>
+          <p id="roleCardCopy">Vous etes le seul membre de l'equipage capable de valider la decision finale a chaque round.</p>
+          <p id="roleCardRules">Ecoutez les signaux du Timonier. Ecoutez les propositions des Matelots. Gardez le cap.</p>
+          <p id="roleCardRisk">Si l'equipage perd confiance en vous, il peut vous destituer.</p>
+        </section>
+
+        <footer class="role-card-footer">
+          <span>__SYS__</span>
+          <span>PROPERTY OF MOTOMOTO // ARECIBO SALVAGE PROTOCOL</span>
+          <span>ARQ</span>
+        </footer>
+
+        <button class="role-card-dismiss" id="roleCardDismiss" type="button">COMPRIS</button>
       </article>
     </section>
   </main>
