@@ -468,7 +468,10 @@ body.intro-ready .intro-shell {
 
 <script src="assets/ingame-settings.js?v=ingame-settings-tabs"></script>
 <script>
-const NEXT = 'arecibo_role_card_preview.html?v=reboot-role-card-1';
+const params = new URLSearchParams(window.location.search);
+const nextCode = params.get('sessionCode');
+const nextMode = params.get('mode');
+const NEXT = `arecibo_reboot_placeholder.html?v=reboot-placeholder-1${nextCode ? `&sessionCode=${encodeURIComponent(nextCode)}` : ''}${nextMode ? `&mode=${encodeURIComponent(nextMode)}` : ''}`;
 try {
   localStorage.removeItem('areciboSasRepairCutWire');
 } catch (err) {}

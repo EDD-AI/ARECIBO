@@ -449,7 +449,7 @@ function joinSession() {
   const transition = document.getElementById('transition');
   transition.classList.add('active');
   setTimeout(() => {
-    window.location.href = `arecibo_game.html?v=multi-join-${code}`;
+    window.location.href = `arecibo_intro.html?v=reboot-intro&sessionCode=${code}&mode=join`;
   }, 420);
 }
 

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ARECIBO - Reboot</title>
+<link rel="icon" type="image/png" href="assets/picto-arecibo-pageweb.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&display=swap');
+
+:root {
+  --cream:#F7FFC3;
+  --orange:#FA5A1F;
+  --bg:#000;
+  --f-pixel:'Pixelify Sans', monospace;
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+
+html, body {
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#000;
+}
+
+body {
+  color:var(--cream);
+  font-family:var(--f-pixel);
+  cursor:none;
+}
+
+body::before,
+body::after {
+  content:'';
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+}
+
+body::before {
+  z-index:2;
+  background:
+    radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.34) 80%, rgba(0,0,0,.86) 100%),
+    repeating-linear-gradient(0deg, rgba(247,255,195,.042) 0 1px, transparent 1px 9px);
+  box-shadow:
+    inset 0 0 72px rgba(0,0,0,.94),
+    inset 0 0 180px rgba(0,0,0,.68);
+  opacity:.62;
+}
+
+body::after {
+  z-index:3;
+  inset:clamp(10px, 1.4vw, 22px);
+  border:1px solid rgba(247,255,195,.05);
+  border-radius:clamp(24px, 4.2vw, 78px);
+  box-shadow:inset 0 0 92px rgba(0,0,0,.62);
+  opacity:.58;
+}
+
+.screen {
+  position:relative;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+}
+
+.starfield {
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+}
+
+.star {
+  position:absolute;
+  width:2px;
+  height:2px;
+  background:rgba(247,255,195,.88);
+  box-shadow:0 0 8px rgba(247,255,195,.16);
+  animation:twinkle var(--dur, 6s) ease-in-out infinite;
+  opacity:var(--alpha, .5);
+}
+
+.shell {
+  position:relative;
+  z-index:5;
+  width:min(760px, calc(100vw - 72px));
+  margin:0 auto;
+  padding-top:18vh;
+  text-align:center;
+}
+
+.code {
+  color:rgba(250,90,31,.9);
+  font-size:clamp(18px, 2vw, 28px);
+  letter-spacing:.12em;
+  margin-bottom:26px;
+}
+
+.title {
+  font-size:clamp(34px, 5vw, 82px);
+  letter-spacing:.08em;
+  line-height:.96;
+  margin-bottom:18px;
+}
+
+.copy {
+  color:rgba(247,255,195,.68);
+  font-size:clamp(16px, 1.4vw, 22px);
+  letter-spacing:.08em;
+  line-height:1.5;
+  max-width:740px;
+  margin:0 auto;
+}
+
+.cursor {
+  position:fixed;
+  width:14px;
+  height:14px;
+  border:1.5px solid var(--cream);
+  pointer-events:none;
+  z-index:9999;
+  transform:translate(-50%, -50%);
+}
+
+.cursor::after {
+  content:'';
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:3px;
+  height:3px;
+  background:var(--orange);
+  transform:translate(-50%, -50%);
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity:var(--alpha, .5); transform:scale(1); }
+  50% { opacity:calc(var(--alpha, .5) + .28); transform:scale(1.4); }
+}
+</style>
+</head>
+<body>
+  <div class="screen">
+    <div class="starfield" id="starfield"></div>
+    <section class="shell" aria-label="Transition reboot ARECIBO">
+      <div class="code" id="session-code-line">SESSION // ----</div>
+      <h1 class="title">PHASE SUIVANTE<br>EN CONSTRUCTION</h1>
+      <p class="copy">L’ancien jeu est désormais coupé. À partir d’ici, on branchera le nouveau flux ARECIBO.</p>
+    </section>
+  </div>
+  <div class="cursor" id="cursor"></div>
+<script>
+(() => {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('sessionCode');
+  const mode = params.get('mode');
+  const codeLine = document.getElementById('session-code-line');
+  if (codeLine) {
+    const prefix = mode === 'join' ? 'SESSION REJOINTE' : 'SESSION CREEE';
+    codeLine.textContent = code ? `${prefix} // ${code}` : 'SESSION // ----';
+  }
+
+  const starfield = document.getElementById('starfield');
+  if (starfield) {
+    const count = 58;
+    for (let i = 0; i < count; i++) {
+      const star = document.createElement('span');
+      star.className = 'star';
+      star.style.left = `${Math.random() * 100}%`;
+      star.style.top = `${Math.random() * 100}%`;
+      star.style.setProperty('--alpha', (0.24 + Math.random() * 0.52).toFixed(2));
+      star.style.setProperty('--dur', `${4 + Math.random() * 7}s`);
+      const size = Math.random() > .86 ? 3 : Math.random() > .45 ? 2 : 1;
+      star.style.width = `${size}px`;
+      star.style.height = `${size}px`;
+      starfield.appendChild(star);
+    }
+  }
+
+  const cursor = document.getElementById('cursor');
+  window.addEventListener('mousemove', event => {
+    if (!cursor) return;
+    cursor.style.left = `${event.clientX}px`;
+    cursor.style.top = `${event.clientY}px`;
+  });
+})();
+</script>
+<script src="assets/theme-audio.js?v=theme-audio-1"></script>
+</body>
+</html>
