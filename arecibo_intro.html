@@ -481,6 +481,8 @@ const HELLO_TYPE_SPEED = 48;
 const HELLO_HOLD = 1500;
 const FINAL_FADE_HOLD = 900;
 const PRELOAD_TIMEOUT = 2600;
+const HELLO_JINGLE_LEAD = 1000;
+const JINGLE_FALLBACK_DURATION = 2200;
 
 const PRELOAD_STATUS = {
   loaded: 0,
@@ -489,6 +491,9 @@ const PRELOAD_STATUS = {
   failed: false
 };
 let preloadPromise = null;
+let motoJingle = null;
+let motoJingleReady = false;
+let motoJingleResolvers = [];
 
 const PANEL_LIGHTS = [
   [3.80, 4.62], [11.30, 4.63], [88.73, 4.64], [93.22, 4.68], [98.34, 4.87],
@@ -727,6 +732,67 @@ const BOOT_LINES = [
   { text: '> RUNNING DIAGNOSTIC...', className: 'command' },
   { text: ': CHECKING SYSTEMS', className: 'status' }
 ];
+
+function ensureMotoJingle() {
+  if (motoJingle) return motoJingle;
+  motoJingle = new Audio('assets/audio/effects/SD_Jingle_Moto.mp3');
+  motoJingle.preload = 'auto';
+  const onReady = () => {
+    motoJingleReady = true;
+    motoJingleResolvers.splice(0).forEach(resolve => resolve());
+  };
+  motoJingle.addEventListener('canplaythrough', onReady, { once: true });
+  motoJingle.addEventListener('loadedmetadata', onReady, { once: true });
+  motoJingle.load();
+  return motoJingle;
+}
+
+function waitForMotoJingleReady() {
+  ensureMotoJingle();
+  if (motoJingleReady) return Promise.resolve();
+  return new Promise(resolve => {
+    motoJingleResolvers.push(resolve);
+    delay(resolve, 1200);
+  });
+}
+
+function playMotoJingle() {
+  const audio = ensureMotoJingle();
+  return waitForMotoJingleReady().then(() => new Promise(resolve => {
+    let finished = false;
+    const done = () => {
+      if (finished) return;
+      finished = true;
+      audio.removeEventListener('ended', done);
+      resolve();
+    };
+
+    try {
+      audio.currentTime = 0;
+    } catch (err) {}
+
+    audio.volume = 1;
+    audio.addEventListener('ended', done, { once: true });
+
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise.then(() => {
+        const duration = Number.isFinite(audio.duration) && audio.duration > 0
+          ? audio.duration * 1000 + 120
+          : JINGLE_FALLBACK_DURATION;
+        delay(done, duration);
+      }).catch(() => {
+        done();
+      });
+      return;
+    }
+
+    const duration = Number.isFinite(audio.duration) && audio.duration > 0
+      ? audio.duration * 1000 + 120
+      : JINGLE_FALLBACK_DURATION;
+    delay(done, duration);
+  }));
+}
 
 function addPreloadTarget(targets, value, baseUrl = location.href) {
   if (!value || /^(data:|blob:|mailto:|tel:|#)/i.test(value)) return;
@@ -980,11 +1046,20 @@ function showHelloWorld() {
   delay(() => appendBootLine('> loading session...', 'dim'), 520);
 
   delay(() => {
-    const hello = appendBootLine('>hello world.', 'orange', HELLO_TYPE_SPEED);
+    const jingleDone = playMotoJingle();
     delay(() => {
-      if (hello) hello.classList.add('boot-cursor');
-      finishBootSequence();
-    }, 900);
+      const hello = appendBootLine('>hello world.', 'orange', HELLO_TYPE_SPEED);
+      const helloDone = new Promise(resolve => {
+        delay(() => {
+          if (hello) hello.classList.add('boot-cursor');
+          resolve();
+        }, 900);
+      });
+
+      Promise.all([jingleDone, helloDone]).then(() => {
+        finishBootSequence();
+      });
+    }, HELLO_JINGLE_LEAD);
   }, 1280);
 }
 
@@ -1027,6 +1102,7 @@ function startIntroText() {
 
 waitForIntroFrame().then(() => {
   document.body.classList.add('intro-ready');
+  ensureMotoJingle();
   delay(startIntroText, 260);
 });
 </script>
