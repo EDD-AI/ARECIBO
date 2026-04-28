@@ -235,7 +235,7 @@ body::after {
 .round-console {
   position: absolute;
   left: 50%;
-  top: 45.25%;
+  top: 43.7%;
   width: min(23.8vw, 23.8vh, 360px);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
@@ -280,6 +280,7 @@ body::after {
   z-index: 2;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  transform: translateY(-8%);
 }
 
 .console-kicker {
@@ -793,6 +794,7 @@ body::after {
 
   .round-console {
     width: min(31vw, 31vh, 320px);
+    top: 43.2%;
   }
 
   .role-card {
@@ -803,7 +805,7 @@ body::after {
 @media (max-width: 820px) {
   .round-console {
     width: min(36vw, 36vh, 280px);
-    top: 44.5%;
+    top: 42.8%;
   }
 
   .console-title {
