@@ -28,10 +28,12 @@
     'assets/audio/effects/SD_UI_HOVER_02.mp3',
     'assets/audio/effects/SD_UI_HOVER_03.mp3'
   ];
+  const clickTrack = 'assets/audio/effects/SD_UI_CLICK.mp3';
   const startTrack = 'assets/audio/effects/SD_UI_START.mp3';
   let unlocked = false;
   let trackIndex = 0;
   let activeHover = null;
+  let activeClick = null;
   let activeStart = null;
   let lastHoverAt = 0;
 
@@ -114,6 +116,37 @@
       activeStart.currentTime = 0;
     } catch (err) {}
     activeStart = null;
+  }
+
+  function stopClickSound() {
+    if (!activeClick) return;
+    try {
+      activeClick.pause();
+      activeClick.currentTime = 0;
+    } catch (err) {}
+    activeClick = null;
+  }
+
+  function playClickSound() {
+    if (!unlocked || readMuted() || !clickTrack) return;
+
+    stopClickSound();
+
+    const click = new Audio(clickTrack);
+    click.preload = 'auto';
+    click.volume = Math.min(1, readEffectsVolume() * 0.72);
+    click.playbackRate = 0.985 + Math.random() * 0.035;
+    click.preservesPitch = false;
+    activeClick = click;
+
+    const playPromise = click.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => {});
+    }
+
+    click.addEventListener('ended', () => {
+      if (activeClick === click) activeClick = null;
+    }, { once: true });
   }
 
   function playStartSound() {
@@ -236,6 +269,17 @@
     '.pixel-btn',
     '.credits-close'
   ];
+  const clickSelectors = [
+    '.sound-toggle',
+    '.discord',
+    '.multi-choice-action',
+    '.multi-choice-close',
+    '.sp-close',
+    '.lang-btn:not(.disabled):not(:disabled)',
+    '.pixel-btn',
+    '.credits-close',
+    '.role-card-dismiss'
+  ];
 
   function bindHoverSounds() {
     document.querySelectorAll(hoverSelectors.join(',')).forEach(node => {
@@ -246,13 +290,29 @@
     });
   }
 
+  function bindClickSounds() {
+    document.querySelectorAll(clickSelectors.join(',')).forEach(node => {
+      if (node.dataset.clickSoundBound === 'true') return;
+      node.dataset.clickSoundBound = 'true';
+      node.addEventListener('click', playClickSound);
+    });
+  }
+
   bindHoverSounds();
+  bindClickSounds();
   document.addEventListener('mouseover', event => {
     if (!event.target || typeof event.target.closest !== 'function') return;
     const target = event.target.closest(hoverSelectors.join(','));
     if (!target) return;
     if (target.dataset.hoverSoundBound === 'true') return;
     bindHoverSounds();
+  });
+  document.addEventListener('click', event => {
+    if (!event.target || typeof event.target.closest !== 'function') return;
+    const target = event.target.closest(clickSelectors.join(','));
+    if (!target) return;
+    if (target.dataset.clickSoundBound === 'true') return;
+    bindClickSounds();
   });
 
   window.addEventListener('arecibo-audio-settings-change', syncVolume);
@@ -294,4 +354,5 @@
   broadcastMuted(readMuted());
   syncVolume();
   window.playAreciboStartSound = playStartSound;
+  window.playAreciboClickSound = playClickSound;
 })();
