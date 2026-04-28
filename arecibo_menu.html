@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -970,21 +970,19 @@ body::after {
   opacity: .2 !important;
 }
 .singularity-wrap {
-  top: 50% !important;
-  right: clamp(-24px, 1.5vw, 56px) !important;
-  width: clamp(620px, 58vh, 900px) !important;
-  height: clamp(860px, 112vh, 1380px) !important;
+  top: 0 !important;
+  right: clamp(-52px, -2vw, 12px) !important;
+  width: clamp(620px, 46vw, 900px) !important;
+  height: 100vh !important;
   aspect-ratio: auto !important;
   opacity: 1 !important;
   visibility: visible !important;
   filter: none !important;
-  transform:
-    translate3d(
+  transform: translate3d(
       calc(var(--menu-parallax-x, 0) * 14px),
       calc(var(--menu-parallax-y, 0) * 10px),
       0
-    )
-    translateY(-50%) !important;
+    ) !important;
   transition: transform .22s ease-out;
   will-change: transform;
   overflow: visible;
@@ -1001,10 +999,10 @@ body::after {
 }
 .menu-blackhole-embed {
   position: absolute;
-  left: -8%;
-  top: -4%;
-  width: 116%;
-  height: 108%;
+  left: -14%;
+  top: -6%;
+  width: 128%;
+  height: 112%;
   border: 0;
   background: transparent;
   pointer-events: none;
