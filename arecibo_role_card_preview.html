@@ -76,7 +76,7 @@ body::after {
   width:100vw;
   height:100vh;
   display:flex;
-  align-items:flex-end;
+  align-items:center;
   justify-content:center;
   overflow:hidden;
 }
@@ -86,46 +86,15 @@ body::after {
   width:min(92vw, 1120px);
   height:min(92vh, 1000px);
   display:flex;
-  align-items:flex-end;
+  align-items:center;
   justify-content:center;
   z-index:5;
 }
 
-.console-base {
-  position:absolute;
-  left:50%;
-  bottom:clamp(16px, 3vh, 34px);
-  width:min(40vw, 430px);
-  transform:translateX(-50%);
-  image-rendering:auto;
-  filter:
-    drop-shadow(0 12px 28px rgba(0,0,0,.55))
-    drop-shadow(0 0 18px rgba(247,255,195,.06));
-}
-
-.projection-beam {
-  position:absolute;
-  left:50%;
-  bottom:clamp(220px, 27vh, 290px);
-  width:min(26vw, 260px);
-  height:min(40vh, 420px);
-  transform:translateX(-50%);
-  background:
-    linear-gradient(180deg, rgba(250,122,44,0) 0%, rgba(250,122,44,.06) 18%, rgba(250,122,44,.16) 58%, rgba(250,122,44,0) 100%);
-  clip-path:polygon(47% 0, 53% 0, 88% 100%, 12% 100%);
-  filter:blur(6px);
-  opacity:.72;
-  z-index:4;
-  animation:beamPulse 4.4s ease-in-out infinite;
-}
-
 .projection-core {
-  position:absolute;
-  left:50%;
-  bottom:clamp(530px, 58vh, 610px);
+  position:relative;
   width:min(44vw, 520px);
   height:min(68vh, 760px);
-  transform:translateX(-50%);
   perspective:1200px;
   z-index:7;
 }
@@ -472,15 +441,9 @@ body::after {
     height:100vh;
   }
 
-  .console-base {
-    width:min(58vw, 360px);
-    bottom:18px;
-  }
-
   .projection-core {
-    width:min(74vw, 430px);
-    height:min(62vh, 620px);
-    bottom:clamp(470px, 58vh, 560px);
+    width:min(78vw, 430px);
+    height:min(72vh, 620px);
   }
 
   .role-name { font-size:40px; }
@@ -493,8 +456,6 @@ body::after {
 <body>
   <main class="scene">
     <section class="console-stage" aria-label="Projection holographique de carte role">
-      <div class="projection-beam" aria-hidden="true"></div>
-
       <section class="projection-core" aria-label="Carte role holographique">
         <div class="holo-glow" aria-hidden="true"></div>
         <div class="holo-ghost" aria-hidden="true"></div>
@@ -558,8 +519,6 @@ body::after {
           </footer>
         </article>
       </section>
-
-      <img class="console-base" src="assets/console-aventure-vrtcl.png" alt="Console aventure verticale">
     </section>
   </main>
 
