@@ -215,8 +215,8 @@ body::after {
 .round-console {
   position: absolute;
   left: 50%;
-  top: 45.2%;
-  width: min(25.5vw, 25.5vh, 390px);
+  top: 45.25%;
+  width: min(23.8vw, 23.8vh, 360px);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   border-radius: 50%;
@@ -230,21 +230,21 @@ body::after {
 .round-console::before {
   content: '';
   position: absolute;
-  inset: 6%;
+  inset: 1.9%;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 50% 50%, rgba(247, 255, 195, 0.1), rgba(3, 4, 5, 0.68) 38%, rgba(0, 0, 0, 0.84) 82%),
-    radial-gradient(circle at 50% 50%, rgba(250, 90, 31, 0.08), transparent 54%);
+    radial-gradient(circle at 50% 42%, rgba(247, 255, 195, 0.12), rgba(18, 17, 11, 0.96) 16%, rgba(7, 7, 6, 0.985) 40%, rgba(1, 1, 1, 0.995) 78%),
+    radial-gradient(circle at 50% 50%, rgba(250, 90, 31, 0.06), transparent 56%);
   box-shadow:
-    inset 0 0 42px rgba(247, 255, 195, 0.06),
-    inset 0 0 90px rgba(0, 0, 0, 0.92),
-    0 0 28px rgba(0, 0, 0, 0.44);
+    inset 0 0 42px rgba(247, 255, 195, 0.045),
+    inset 0 0 110px rgba(0, 0, 0, 0.98),
+    0 0 28px rgba(0, 0, 0, 0.52);
 }
 
 .round-console::after {
   content: '';
   position: absolute;
-  inset: 10%;
+  inset: 7.5%;
   border-radius: 50%;
   border: 1px solid rgba(247, 255, 195, 0.12);
   box-shadow: 0 0 12px rgba(247, 255, 195, 0.08);
@@ -252,9 +252,11 @@ body::after {
 
 .round-console-panel {
   position: relative;
-  width: 68%;
+  width: 62%;
   display: grid;
-  gap: 10px;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
   z-index: 2;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -262,19 +264,21 @@ body::after {
 
 .console-kicker {
   color: rgba(247, 255, 195, 0.56);
-  font-size: clamp(10px, 0.68vw, 13px);
+  font-size: clamp(9px, 0.58vw, 11px);
+  line-height: 1.15;
   text-align: center;
 }
 
 .console-title {
-  font-size: clamp(20px, 1.6vw, 30px);
+  font-size: clamp(22px, 1.58vw, 30px);
   line-height: 0.96;
   text-align: center;
 }
 
 .console-grid {
   display: grid;
-  gap: 8px;
+  width: 100%;
+  gap: 7px;
 }
 
 .console-row {
@@ -284,7 +288,7 @@ body::after {
   align-items: center;
   padding-bottom: 4px;
   border-bottom: 1px solid rgba(247, 255, 195, 0.08);
-  font-size: clamp(11px, 0.78vw, 14px);
+  font-size: clamp(11px, 0.72vw, 13px);
   color: rgba(247, 255, 195, 0.84);
 }
 
@@ -300,6 +304,7 @@ body::after {
 
 .console-signal {
   display: grid;
+  width: 100%;
   gap: 8px;
   margin-top: 4px;
 }
@@ -325,7 +330,7 @@ body::after {
 .console-footnote {
   text-align: center;
   color: rgba(247, 255, 195, 0.5);
-  font-size: clamp(9px, 0.64vw, 12px);
+  font-size: clamp(8px, 0.54vw, 10px);
 }
 
 .mission-timer {
