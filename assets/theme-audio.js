@@ -14,8 +14,15 @@
   if (!tracks || !tracks.length) return;
 
   const player = new Audio();
+  const hoverTracks = [
+    'assets/audio/effects/SD_UI_HOVER_01.mp3',
+    'assets/audio/effects/SD_UI_HOVER_02.mp3',
+    'assets/audio/effects/SD_UI_HOVER_03.mp3'
+  ];
   let unlocked = false;
   let trackIndex = 0;
+  let activeHover = null;
+  let lastHoverAt = 0;
 
   function readMuted() {
     try { return localStorage.getItem(MUTE_KEY) === 'true'; }
@@ -40,6 +47,48 @@
     const master = readVolume('master', 80) / 100;
     const music = readVolume('music', 60) / 100;
     player.volume = Math.max(0, Math.min(1, master * music));
+  }
+
+  function readEffectsVolume() {
+    const master = readVolume('master', 80) / 100;
+    const effects = readVolume('effects', 60) / 100;
+    return Math.max(0, Math.min(1, master * effects));
+  }
+
+  function stopHoverSound() {
+    if (!activeHover) return;
+    try {
+      activeHover.pause();
+      activeHover.currentTime = 0;
+    } catch (err) {}
+    activeHover = null;
+  }
+
+  function playHoverSound() {
+    if (!unlocked || readMuted() || !hoverTracks.length) return;
+
+    const now = performance.now();
+    if (now - lastHoverAt < 55) return;
+    lastHoverAt = now;
+
+    stopHoverSound();
+
+    const src = hoverTracks[Math.floor(Math.random() * hoverTracks.length)];
+    const hover = new Audio(src);
+    hover.preload = 'auto';
+    hover.volume = readEffectsVolume() * 0.48;
+    hover.playbackRate = 0.975 + Math.random() * 0.055;
+    hover.preservesPitch = false;
+    activeHover = hover;
+
+    const playPromise = hover.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => {});
+    }
+
+    hover.addEventListener('ended', () => {
+      if (activeHover === hover) activeHover = null;
+    }, { once: true });
   }
 
   function syncToggleButton(isMuted) {
@@ -105,6 +154,36 @@
 
   document.addEventListener('pointerdown', unlockAudio, { once: true });
   document.addEventListener('keydown', unlockAudio, { once: true });
+
+  const hoverSelectors = [
+    '.menu-item',
+    '.sound-toggle',
+    '.discord',
+    '.multi-choice-action',
+    '.multi-choice-close',
+    '.sp-close',
+    '.lang-btn:not(.disabled):not(:disabled)',
+    '.pixel-btn',
+    '.credits-close'
+  ];
+
+  function bindHoverSounds() {
+    document.querySelectorAll(hoverSelectors.join(',')).forEach(node => {
+      if (node.dataset.hoverSoundBound === 'true') return;
+      node.dataset.hoverSoundBound = 'true';
+      node.addEventListener('mouseenter', playHoverSound);
+      node.addEventListener('focus', playHoverSound);
+    });
+  }
+
+  bindHoverSounds();
+  document.addEventListener('mouseover', event => {
+    if (!event.target || typeof event.target.closest !== 'function') return;
+    const target = event.target.closest(hoverSelectors.join(','));
+    if (!target) return;
+    if (target.dataset.hoverSoundBound === 'true') return;
+    bindHoverSounds();
+  });
 
   window.addEventListener('arecibo-audio-settings-change', syncVolume);
   window.addEventListener('arecibo-audio-muted-change', event => {
