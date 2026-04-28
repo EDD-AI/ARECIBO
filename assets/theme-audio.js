@@ -3,6 +3,7 @@
   if (!theme) return;
 
   const MUTE_KEY = 'areciboAudioMuted';
+  const PRIMED_KEY = 'areciboAudioPrimed';
   const TRACKS = {
     menu: ['assets/audio/music/Main Title 1.mp3', 'assets/audio/music/Main Title 2.mp3']
   };
@@ -59,11 +60,12 @@
   function syncVolume() {
     const master = readVolume('master', 80) / 100;
     const music = readVolume('music', 60) / 100;
+    const effects = readVolume('effects', 60) / 100;
     if (player) {
       player.volume = Math.max(0, Math.min(1, master * music));
     }
     if (ambiencePlayer && ambienceConfig) {
-      ambiencePlayer.volume = Math.max(0, Math.min(1, master * music * ambienceConfig.gain));
+      ambiencePlayer.volume = Math.max(0, Math.min(1, master * effects * ambienceConfig.gain));
     }
   }
 
@@ -233,6 +235,7 @@
   function unlockAudio() {
     if (unlocked) return;
     unlocked = true;
+    try { sessionStorage.setItem(PRIMED_KEY, 'true'); } catch (err) {}
     playTheme();
   }
 
@@ -270,6 +273,7 @@
     '.credits-close'
   ];
   const clickSelectors = [
+    '.menu-item',
     '.sound-toggle',
     '.discord',
     '.multi-choice-action',
@@ -278,7 +282,8 @@
     '.lang-btn:not(.disabled):not(:disabled)',
     '.pixel-btn',
     '.credits-close',
-    '.role-card-dismiss'
+    '.role-card-dismiss',
+    '#arecibo-settings-tab'
   ];
 
   function bindHoverSounds() {
@@ -353,6 +358,14 @@
 
   broadcastMuted(readMuted());
   syncVolume();
+  try {
+    if (sessionStorage.getItem(PRIMED_KEY) === 'true') {
+      unlocked = true;
+      setTimeout(() => {
+        if (!readMuted()) playTheme();
+      }, 60);
+    }
+  } catch (err) {}
   window.playAreciboStartSound = playStartSound;
   window.playAreciboClickSound = playClickSound;
 })();
