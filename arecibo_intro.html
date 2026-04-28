@@ -494,6 +494,10 @@ let preloadPromise = null;
 let motoJingle = null;
 let motoJingleReady = false;
 let motoJingleResolvers = [];
+const TEXT_TICK_SRC = 'assets/audio/effects/SD_UI_TEXT.mp3';
+const TEXT_TICK_POOL_SIZE = 6;
+const textTickPool = [];
+let textTickIndex = 0;
 
 const PANEL_LIGHTS = [
   [3.80, 4.62], [11.30, 4.63], [88.73, 4.64], [93.22, 4.68], [98.34, 4.87],
@@ -747,6 +751,38 @@ function ensureMotoJingle() {
   return motoJingle;
 }
 
+function ensureTextTickPool() {
+  if (textTickPool.length) return textTickPool;
+  for (let i = 0; i < TEXT_TICK_POOL_SIZE; i++) {
+    const audio = new Audio(TEXT_TICK_SRC);
+    audio.preload = 'auto';
+    textTickPool.push(audio);
+  }
+  return textTickPool;
+}
+
+function playTextTick(character) {
+  if (!character || !/\S/.test(character)) return;
+
+  const pool = ensureTextTickPool();
+  const audio = pool[textTickIndex];
+  textTickIndex = (textTickIndex + 1) % pool.length;
+
+  try {
+    audio.pause();
+    audio.currentTime = 0;
+  } catch (err) {}
+
+  audio.volume = 0.14;
+  audio.playbackRate = 0.93 + Math.random() * 0.14;
+  audio.preservesPitch = false;
+
+  const playPromise = audio.play();
+  if (playPromise && typeof playPromise.catch === 'function') {
+    playPromise.catch(() => {});
+  }
+}
+
 function waitForMotoJingleReady() {
   ensureMotoJingle();
   if (motoJingleReady) return Promise.resolve();
@@ -897,8 +933,10 @@ function typeChar() {
   const para = STORY[paraIndex];
 
   if (charIndex < para.length) {
-    fullText += para[charIndex];
+    const nextCharacter = para[charIndex];
+    fullText += nextCharacter;
     storyEl.innerHTML = fullText.replace(/\n/g, '<br>') + '<span class="cursor-char"></span>';
+    playTextTick(nextCharacter);
     charIndex++;
     delay(typeChar, SPEED);
   } else {
@@ -967,6 +1005,9 @@ function typeBootText(line, text, speed, done) {
   function tick() {
     if (line.dataset.bootTypeToken !== token) return;
     line.textContent = text.slice(0, index);
+    if (index > 0) {
+      playTextTick(text[index - 1]);
+    }
     index++;
 
     if (index <= text.length) {
@@ -1103,6 +1144,7 @@ function startIntroText() {
 waitForIntroFrame().then(() => {
   document.body.classList.add('intro-ready');
   ensureMotoJingle();
+  ensureTextTickPool();
   delay(startIntroText, 260);
 });
 </script>
