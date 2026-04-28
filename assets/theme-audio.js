@@ -4,23 +4,24 @@
 
   const MUTE_KEY = 'areciboAudioMuted';
   const TRACKS = {
-    menu: ['assets/audio/music/Main Title 1.mp3', 'assets/audio/music/Main Title 2.mp3'],
-    lobby: ['assets/audio/music/Main Title 2.mp3'],
-    ship: ['assets/audio/music/Main Title 2.mp3'],
-    settings: ['assets/audio/music/Main Title 1.mp3']
+    menu: ['assets/audio/music/Main Title 1.mp3', 'assets/audio/music/Main Title 2.mp3']
   };
   const AMBIENCE_TRACKS = {
-    ship: {
+    intro: {
       src: 'assets/audio/ambience/SD_AMB_SHIP_01.mp3',
-      gain: 0.42
+      gain: 0.46
+    },
+    ship: {
+      src: 'assets/audio/ambience/SD_AMB_SHIP_02.mp3',
+      gain: 0.46
     }
   };
 
-  const tracks = TRACKS[theme];
-  if (!tracks || !tracks.length) return;
+  const tracks = TRACKS[theme] || [];
   const ambienceConfig = AMBIENCE_TRACKS[theme] || null;
+  if (!tracks.length && !ambienceConfig) return;
 
-  const player = new Audio();
+  const player = tracks.length ? new Audio() : null;
   const ambiencePlayer = ambienceConfig ? new Audio() : null;
   const hoverTracks = [
     'assets/audio/effects/SD_UI_HOVER_01.mp3',
@@ -56,7 +57,9 @@
   function syncVolume() {
     const master = readVolume('master', 80) / 100;
     const music = readVolume('music', 60) / 100;
-    player.volume = Math.max(0, Math.min(1, master * music));
+    if (player) {
+      player.volume = Math.max(0, Math.min(1, master * music));
+    }
     if (ambiencePlayer && ambienceConfig) {
       ambiencePlayer.volume = Math.max(0, Math.min(1, master * music * ambienceConfig.gain));
     }
@@ -154,7 +157,7 @@
   }
 
   function loadTrack(index) {
-    if (!tracks[index]) return false;
+    if (!player || !tracks[index]) return false;
     trackIndex = index;
     player.src = tracks[index];
     player.load();
@@ -169,15 +172,17 @@
 
   function playTheme() {
     if (readMuted()) {
-      player.pause();
+      if (player) player.pause();
       if (ambiencePlayer) ambiencePlayer.pause();
       return;
     }
     syncVolume();
-    if (!player.src && !loadTrack(0)) return;
-    const playPromise = player.play();
-    if (playPromise && typeof playPromise.catch === 'function') {
-      playPromise.catch(() => {});
+    if (player) {
+      if (!player.src && !loadTrack(0)) return;
+      const playPromise = player.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {});
+      }
     }
     if (ambiencePlayer && ambienceConfig) {
       if (!ambiencePlayer.src) {
@@ -198,20 +203,24 @@
     playTheme();
   }
 
-  player.preload = 'none';
-  player.loop = false;
+  if (player) {
+    player.preload = 'none';
+    player.loop = false;
+  }
   if (ambiencePlayer) {
     ambiencePlayer.preload = 'none';
     ambiencePlayer.loop = true;
   }
-  player.addEventListener('ended', () => {
-    if (!advanceTrack()) return;
-    if (unlocked && !readMuted()) playTheme();
-  });
-  player.addEventListener('error', () => {
-    if (!advanceTrack()) return;
-    if (unlocked && !readMuted()) playTheme();
-  });
+  if (player) {
+    player.addEventListener('ended', () => {
+      if (!advanceTrack()) return;
+      if (unlocked && !readMuted()) playTheme();
+    });
+    player.addEventListener('error', () => {
+      if (!advanceTrack()) return;
+      if (unlocked && !readMuted()) playTheme();
+    });
+  }
 
   document.addEventListener('pointerdown', unlockAudio, { once: true });
   document.addEventListener('keydown', unlockAudio, { once: true });
@@ -249,7 +258,7 @@
   window.addEventListener('arecibo-audio-settings-change', syncVolume);
   window.addEventListener('arecibo-audio-muted-change', event => {
     if (event.detail && event.detail.muted) {
-      player.pause();
+      if (player) player.pause();
       if (ambiencePlayer) ambiencePlayer.pause();
     }
     else if (unlocked) playTheme();
@@ -260,7 +269,7 @@
     if (event.key === MUTE_KEY) {
       const isMuted = readMuted();
       if (isMuted) {
-        player.pause();
+        if (player) player.pause();
         if (ambiencePlayer) ambiencePlayer.pause();
       }
       else if (unlocked) playTheme();
