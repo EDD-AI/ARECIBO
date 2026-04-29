@@ -238,11 +238,31 @@
 
   function prepareAmbiencePlayers() {
     if (!ambiencePlayers.length || !ambienceConfig) return;
-    ambiencePlayers.forEach(audio => {
+    ambiencePlayers.forEach((audio, index) => {
       if (!audio.src) {
         audio.src = ambienceConfig.src;
         audio.load();
       }
+      if (audio.dataset.ambienceBound === 'true') return;
+      audio.dataset.ambienceBound = 'true';
+
+      audio.addEventListener('loadedmetadata', () => {
+        if (index === activeAmbienceIndex && !ambienceTransitioning) {
+          scheduleAmbienceLoop(index);
+        }
+      });
+
+      audio.addEventListener('durationchange', () => {
+        if (index === activeAmbienceIndex && !ambienceTransitioning) {
+          scheduleAmbienceLoop(index);
+        }
+      });
+
+      audio.addEventListener('ended', () => {
+        if (!unlocked || readMuted() || ambienceTransitioning) return;
+        if (index !== activeAmbienceIndex) return;
+        queueNextAmbience();
+      });
     });
   }
 
