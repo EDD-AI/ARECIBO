@@ -122,10 +122,25 @@
   function syncDoorShell() {
     const anyOpen = doorState.left || doorState.right;
 
-    if (bridgeShellClosed) bridgeShellClosed.classList.toggle('is-visible', !anyOpen);
+    // Fond ouvert visible dès qu'une porte est ouverte
     if (bridgeShellOpen) bridgeShellOpen.classList.toggle('is-visible', anyOpen);
-    if (bridgeDoorLeft) bridgeDoorLeft.classList.toggle('is-visible', anyOpen && !doorState.left);
-    if (bridgeDoorRight) bridgeDoorRight.classList.toggle('is-visible', anyOpen && !doorState.right);
+
+    // Écran fermé disparaît dès qu'une porte s'ouvre
+    if (bridgeShellClosed) {
+      bridgeShellClosed.classList.toggle('is-visible', !anyOpen);
+      bridgeShellClosed.classList.toggle('is-hidden', anyOpen);
+    }
+
+    // Portes : glissent sur l'écran principal
+    if (bridgeDoorLeft) {
+      bridgeDoorLeft.classList.toggle('is-open', doorState.left);
+      // Visible seulement si le fond ouvert est affiché (sinon inutile)
+      bridgeDoorLeft.style.opacity = anyOpen ? '1' : '0';
+    }
+    if (bridgeDoorRight) {
+      bridgeDoorRight.classList.toggle('is-open', doorState.right);
+      bridgeDoorRight.style.opacity = anyOpen ? '1' : '0';
+    }
 
     if (doorHotspotLeft) {
       doorHotspotLeft.setAttribute('aria-label', doorState.left ? 'Fermer le sas gauche' : 'Ouvrir le sas gauche');
@@ -144,38 +159,10 @@
     if (doorCinematicPanel) doorCinematicPanel.classList.remove('start-open');
   }
 
-  function playDoorCinematic(side, opening) {
-    if (!doorCinematic || !doorCinematicView || !doorCinematicPanel || !doorCinematicCaption) return;
-
-    const isLeft = side === 'left';
-    const panelSrc = isLeft ? 'assets/motomoto-door-left.png' : 'assets/motomoto-door-right.png';
-
-    window.clearTimeout(cinematicTimer);
-    hideDoorCinematic();
-
-    doorCinematicPanel.src = panelSrc;
-    doorCinematicView.classList.add(isLeft ? 'is-left' : 'is-right');
-    doorCinematic.classList.add('is-visible', isLeft ? 'is-left' : 'is-right');
-    doorCinematicCaption.textContent = `SAS ${isLeft ? 'GAUCHE' : 'DROIT'} // ${opening ? 'OUVERTURE' : 'FERMETURE'}`;
-
-    if (!opening) {
-      doorCinematicPanel.classList.add('start-open');
-    }
-
-    requestAnimationFrame(() => {
-      doorCinematic.classList.add(opening ? 'is-opening' : 'is-closing');
-    });
-
-    cinematicTimer = window.setTimeout(() => {
-      hideDoorCinematic();
-    }, 980);
-  }
-
   function toggleDoor(side) {
-    const opening = !doorState[side];
-    playDoorCinematic(side, opening);
-    doorState[side] = opening;
+    doorState[side] = !doorState[side];
     syncDoorShell();
+    // Plus de cinématique popup — l'animation est directement sur l'écran
   }
 
   function applyRoleTheme() {
