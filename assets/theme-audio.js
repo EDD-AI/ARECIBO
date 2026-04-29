@@ -10,11 +10,15 @@
   const AMBIENCE_TRACKS = {
     intro: {
       src: 'assets/audio/ambience/SD_AMB_SHIP_01.mp3',
-      gain: 0.46
+      gain: 0.46,
+      overlapSec: 0.6,
+      crossfadeMs: 520
     },
     ship: {
       src: 'assets/audio/ambience/SD_AMB_SHIP_02.mp3',
-      gain: 0.46
+      gain: 0.46,
+      overlapSec: 0.95,
+      crossfadeMs: 900
     }
   };
 
@@ -23,7 +27,7 @@
   if (!tracks.length && !ambienceConfig) return;
 
   const player = tracks.length ? new Audio() : null;
-  const ambiencePlayer = ambienceConfig ? new Audio() : null;
+  const ambiencePlayers = ambienceConfig ? [new Audio(), new Audio()] : [];
   const hoverTracks = [
     'assets/audio/effects/SD_UI_HOVER_01.mp3',
     'assets/audio/effects/SD_UI_HOVER_02.mp3',
@@ -37,6 +41,10 @@
   let activeClick = null;
   let activeStart = null;
   let lastHoverAt = 0;
+  let activeAmbienceIndex = -1;
+  let ambienceLoopTimer = null;
+  let ambienceFadeFrame = 0;
+  let ambienceTransitioning = false;
 
   function readMuted() {
     try { return localStorage.getItem(MUTE_KEY) === 'true'; }
@@ -60,12 +68,15 @@
   function syncVolume() {
     const master = readVolume('master', 80) / 100;
     const music = readVolume('music', 60) / 100;
-    const effects = readVolume('effects', 60) / 100;
     if (player) {
       player.volume = Math.max(0, Math.min(1, master * music));
     }
-    if (ambiencePlayer && ambienceConfig) {
-      ambiencePlayer.volume = Math.max(0, Math.min(1, master * effects * ambienceConfig.gain));
+    if (ambiencePlayers.length && ambienceConfig) {
+      const baseAmbienceVolume = readEffectsVolume() * ambienceConfig.gain;
+      ambiencePlayers.forEach((audio, index) => {
+        const mix = Number(audio.dataset.mix || (index === activeAmbienceIndex ? 1 : 0));
+        audio.volume = Math.max(0, Math.min(1, baseAmbienceVolume * mix));
+      });
     }
   }
 
@@ -205,10 +216,147 @@
     return loadTrack(nextIndex);
   }
 
+  function clearAmbienceLoopTimer() {
+    if (!ambienceLoopTimer) return;
+    clearTimeout(ambienceLoopTimer);
+    ambienceLoopTimer = null;
+  }
+
+  function cancelAmbienceFade() {
+    if (!ambienceFadeFrame) return;
+    cancelAnimationFrame(ambienceFadeFrame);
+    ambienceFadeFrame = 0;
+  }
+
+  function setAmbienceMix(index, mix) {
+    const audio = ambiencePlayers[index];
+    if (!audio) return;
+    const clamped = Math.max(0, Math.min(1, mix));
+    audio.dataset.mix = String(clamped);
+    audio.volume = readEffectsVolume() * ambienceConfig.gain * clamped;
+  }
+
+  function prepareAmbiencePlayers() {
+    if (!ambiencePlayers.length || !ambienceConfig) return;
+    ambiencePlayers.forEach(audio => {
+      if (!audio.src) {
+        audio.src = ambienceConfig.src;
+        audio.load();
+      }
+    });
+  }
+
+  function scheduleAmbienceLoop(index) {
+    clearAmbienceLoopTimer();
+    const audio = ambiencePlayers[index];
+    if (!audio || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+    const overlapSec = ambienceConfig.overlapSec || 0.8;
+    const remainingMs = Math.max(80, (audio.duration - audio.currentTime - overlapSec) * 1000);
+    ambienceLoopTimer = setTimeout(() => {
+      if (!unlocked || readMuted() || activeAmbienceIndex !== index) return;
+      queueNextAmbience();
+    }, remainingMs);
+  }
+
+  function stopAmbience() {
+    clearAmbienceLoopTimer();
+    cancelAmbienceFade();
+    ambienceTransitioning = false;
+    activeAmbienceIndex = -1;
+    ambiencePlayers.forEach(audio => {
+      audio.dataset.mix = '0';
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = 0;
+      } catch (err) {}
+    });
+  }
+
+  function fadeAmbience(fromIndex, toIndex) {
+    cancelAmbienceFade();
+    const duration = ambienceConfig.crossfadeMs || 700;
+    const startAt = performance.now();
+
+    const step = () => {
+      const progress = Math.min(1, (performance.now() - startAt) / duration);
+      setAmbienceMix(fromIndex, 1 - progress);
+      setAmbienceMix(toIndex, progress);
+
+      if (progress < 1) {
+        ambienceFadeFrame = requestAnimationFrame(step);
+        return;
+      }
+
+      const previous = ambiencePlayers[fromIndex];
+      if (previous) {
+        try {
+          previous.pause();
+          previous.currentTime = 0;
+        } catch (err) {}
+      }
+      activeAmbienceIndex = toIndex;
+      ambienceTransitioning = false;
+      scheduleAmbienceLoop(toIndex);
+    };
+
+    ambienceFadeFrame = requestAnimationFrame(step);
+  }
+
+  function queueNextAmbience() {
+    if (!ambiencePlayers.length || ambienceTransitioning || !ambienceConfig) return;
+    prepareAmbiencePlayers();
+
+    const nextIndex = activeAmbienceIndex < 0 ? 0 : (activeAmbienceIndex + 1) % ambiencePlayers.length;
+    const nextAudio = ambiencePlayers[nextIndex];
+    if (!nextAudio) return;
+
+    ambienceTransitioning = true;
+    clearAmbienceLoopTimer();
+    nextAudio.currentTime = 0;
+    setAmbienceMix(nextIndex, 0);
+
+    const playPromise = nextAudio.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => {
+        ambienceTransitioning = false;
+      });
+    }
+
+    if (activeAmbienceIndex < 0) {
+      setAmbienceMix(nextIndex, 1);
+      activeAmbienceIndex = nextIndex;
+      ambienceTransitioning = false;
+      scheduleAmbienceLoop(nextIndex);
+      return;
+    }
+
+    fadeAmbience(activeAmbienceIndex, nextIndex);
+  }
+
+  function ensureAmbiencePlaying() {
+    if (!ambiencePlayers.length || !ambienceConfig || readMuted()) return;
+    prepareAmbiencePlayers();
+
+    if (activeAmbienceIndex >= 0) {
+      const current = ambiencePlayers[activeAmbienceIndex];
+      if (current && current.paused && !ambienceTransitioning) {
+        const playPromise = current.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {});
+        }
+      }
+      scheduleAmbienceLoop(activeAmbienceIndex);
+      return;
+    }
+
+    queueNextAmbience();
+  }
+
   function playTheme() {
     if (readMuted()) {
       if (player) player.pause();
-      if (ambiencePlayer) ambiencePlayer.pause();
+      stopAmbience();
       return;
     }
     syncVolume();
@@ -219,17 +367,7 @@
         playPromise.catch(() => {});
       }
     }
-    if (ambiencePlayer && ambienceConfig) {
-      if (!ambiencePlayer.src) {
-        ambiencePlayer.src = ambienceConfig.src;
-        ambiencePlayer.load();
-      }
-      ambiencePlayer.loop = true;
-      const ambiencePromise = ambiencePlayer.play();
-      if (ambiencePromise && typeof ambiencePromise.catch === 'function') {
-        ambiencePromise.catch(() => {});
-      }
-    }
+    ensureAmbiencePlaying();
   }
 
   function unlockAudio() {
@@ -243,9 +381,12 @@
     player.preload = 'none';
     player.loop = false;
   }
-  if (ambiencePlayer) {
-    ambiencePlayer.preload = 'none';
-    ambiencePlayer.loop = true;
+  if (ambiencePlayers.length) {
+    ambiencePlayers.forEach(audio => {
+      audio.preload = 'auto';
+      audio.loop = false;
+      audio.dataset.mix = '0';
+    });
   }
   if (player) {
     player.addEventListener('ended', () => {
@@ -324,7 +465,7 @@
   window.addEventListener('arecibo-audio-muted-change', event => {
     if (event.detail && event.detail.muted) {
       if (player) player.pause();
-      if (ambiencePlayer) ambiencePlayer.pause();
+      stopAmbience();
     }
     else if (unlocked) playTheme();
     syncToggleButton(readMuted());
@@ -335,7 +476,7 @@
       const isMuted = readMuted();
       if (isMuted) {
         if (player) player.pause();
-        if (ambiencePlayer) ambiencePlayer.pause();
+        stopAmbience();
       }
       else if (unlocked) playTheme();
       syncToggleButton(isMuted);
