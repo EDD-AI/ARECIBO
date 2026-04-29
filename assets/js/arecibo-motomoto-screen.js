@@ -39,6 +39,8 @@
   const roleCardRules = document.getElementById('roleCardRules');
   const roleCardRisk = document.getElementById('roleCardRisk');
   const roleCardPortrait = document.getElementById('roleCardPortrait');
+  const settingsOverlay = document.getElementById('settings-overlay');
+  const settingsTab = document.getElementById('arecibo-settings-tab');
 
   let panes = [];
   let ended = false;
@@ -205,6 +207,108 @@
   function maybeShowRoleOverlay() {
     if (!roleOverlay) return;
     roleOverlay.classList.add('is-visible');
+  }
+
+  function isRoleOverlayVisible() {
+    return !!(roleOverlay && roleOverlay.classList.contains('is-visible'));
+  }
+
+  function isSettingsOpen() {
+    return !!(settingsOverlay && settingsOverlay.classList.contains('open'));
+  }
+
+  function openSettings() {
+    if (!settingsOverlay) return;
+    settingsOverlay.classList.add('open');
+    syncPixelDitherButtons(settingsOverlay);
+    window.setTimeout(() => {
+      const panel = settingsOverlay.querySelector('.settings-panel');
+      if (panel) panel.classList.add('visible');
+    }, 10);
+  }
+
+  function closeSettings() {
+    if (!settingsOverlay) return;
+    const panel = settingsOverlay.querySelector('.settings-panel');
+    if (panel) panel.classList.remove('visible');
+    window.setTimeout(() => settingsOverlay.classList.remove('open'), 320);
+  }
+
+  function toggleSettings() {
+    if (isSettingsOpen()) {
+      closeSettings();
+    } else {
+      openSettings();
+    }
+  }
+
+  function readAudioSliderValue(setting, fallback) {
+    try {
+      const raw = localStorage.getItem(`areciboAudioVolume:${setting}`);
+      const value = Number(raw);
+      return Number.isFinite(value) ? Math.max(0, Math.min(100, value)) : fallback;
+    } catch (err) {
+      return fallback;
+    }
+  }
+
+  function updateSlider(input, valueId) {
+    const value = Math.max(0, Math.min(100, Number(input.value) || 0));
+    const targetId = valueId || input.dataset.valueId;
+    input.value = value;
+    if (targetId) {
+      const target = document.getElementById(targetId);
+      if (target) target.textContent = `${value}%`;
+    }
+
+    const setting = input.dataset.audioSetting;
+    if (!setting) return;
+
+    try { localStorage.setItem(`areciboAudioVolume:${setting}`, String(value)); } catch (err) {}
+    window.dispatchEvent(new CustomEvent('arecibo-audio-settings-change', {
+      detail: { setting, value }
+    }));
+  }
+
+  function selectLang(button) {
+    if (!button || button.disabled || button.classList.contains('disabled')) return;
+    document.querySelectorAll('#settings-overlay .lang-btn').forEach(node => node.classList.remove('sel'));
+    button.classList.add('sel');
+  }
+
+  function syncPixelDitherButtons(root = document) {
+    const current = typeof window.getAreciboPixelDither === 'function'
+      ? window.getAreciboPixelDither()
+      : 'strong';
+    root.querySelectorAll('[data-pixel-dither-group] .pixel-btn').forEach(btn => {
+      btn.classList.toggle('sel', btn.dataset.pixelDither === current);
+    });
+  }
+
+  function selectPixelDither(button, mode) {
+    const row = button ? button.closest('[data-pixel-dither-group]') : null;
+    if (row) row.querySelectorAll('.pixel-btn').forEach(node => node.classList.remove('sel'));
+    if (button) button.classList.add('sel');
+    if (typeof window.setAreciboPixelDither === 'function') {
+      window.setAreciboPixelDither(mode);
+    }
+  }
+
+  function toggleSwitch(node) {
+    if (!node) return;
+    node.classList.toggle('on');
+  }
+
+  function hydrateSettingsPanel() {
+    if (!settingsOverlay) return;
+    settingsOverlay.querySelectorAll('input[data-audio-setting]').forEach(input => {
+      const fallback = Number(input.dataset.default) || Number(input.value) || 0;
+      const value = readAudioSliderValue(input.dataset.audioSetting, fallback);
+      input.value = value;
+      const target = document.getElementById(input.dataset.valueId || '');
+      if (target) target.textContent = `${value}%`;
+    });
+    syncPixelDitherButtons(settingsOverlay);
   }
 
   function ensureStartTime() {
@@ -390,10 +494,25 @@
     if (roleDismiss) {
       roleDismiss.addEventListener('click', hideRoleOverlay);
     }
+  }
+
+  function bindSettings() {
+    if (settingsTab) {
+      settingsTab.addEventListener('click', toggleSettings);
+    }
 
     window.addEventListener('keydown', event => {
-      if (!roleOverlay || !roleOverlay.classList.contains('is-visible')) return;
-      if (event.key === 'Enter' || event.key === ' ' || event.key === 'Escape') {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (isRoleOverlayVisible()) {
+          hideRoleOverlay();
+          return;
+        }
+        toggleSettings();
+        return;
+      }
+
+      if (isRoleOverlayVisible() && (event.key === 'Enter' || event.key === ' ')) {
         event.preventDefault();
         hideRoleOverlay();
       }
@@ -403,14 +522,24 @@
   function init() {
     applyRoleTheme();
     syncDoorShell();
+    hydrateSettingsPanel();
     resize();
     bindCursor();
     bindDoors();
     bindRoleOverlay();
+    bindSettings();
     maybeShowRoleOverlay();
     requestAnimationFrame(frame);
   }
 
+  window.openGameSettings = openSettings;
+  window.closeGameSettings = closeSettings;
+  window.updateGameSlider = updateSlider;
+  window.selectGameLang = selectLang;
+  window.selectGamePixelDither = selectPixelDither;
+  window.toggleGameSwitch = toggleSwitch;
+
   window.addEventListener('resize', resize);
+  window.addEventListener('arecibo-pixel-dither-change', () => syncPixelDitherButtons(settingsOverlay || document));
   init();
 })();

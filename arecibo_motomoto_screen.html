@@ -8,7 +8,9 @@
 <meta http-equiv="Expires" content="0">
 <title>ARECIBO - MOTOMOTO</title>
 <link rel="icon" type="image/png" href="assets/picto-arecibo-pageweb.png">
-<link rel="stylesheet" href="assets/css/arecibo-motomoto-screen.css?v=motomoto-screen-1">
+<script src="assets/visual-settings.js?v=pixel-dither-3"></script>
+<link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-3">
+<link rel="stylesheet" href="assets/css/arecibo-motomoto-screen.css?v=motomoto-screen-2">
 </head>
 <body data-theme-audio="ship">
   <main class="motomoto-scene" aria-label="Ecran principal MOTOMOTO">
@@ -164,9 +166,67 @@
     </section>
   </main>
 
+  <button class="arecibo-settings-tab pixel-btn" id="arecibo-settings-tab" type="button" aria-label="Ouvrir les options">> SETTINGS</button>
+
+  <div id="settings-overlay" onclick="if(event.target===this)closeGameSettings()">
+    <div class="settings-panel">
+      <div class="sp-header">
+        <button class="sp-close" onclick="closeGameSettings()">x</button>
+        <span class="sp-title">MENU // SETTINGS //</span>
+      </div>
+      <div class="sp-body">
+        <div>
+          <div class="sp-section-label">Son</div>
+          <div class="sp-slider-row">
+            <span class="sp-slider-label">Volume général</span>
+            <input type="range" min="0" max="100" value="80" data-audio-setting="master" data-default="80" data-value-id="gsv1" oninput="updateGameSlider(this,'gsv1')">
+            <span class="sp-val" id="gsv1">80%</span>
+          </div>
+          <div class="sp-slider-row">
+            <span class="sp-slider-label">Musique</span>
+            <input type="range" min="0" max="100" value="60" data-audio-setting="music" data-default="60" data-value-id="gsv2" oninput="updateGameSlider(this,'gsv2')">
+            <span class="sp-val" id="gsv2">60%</span>
+          </div>
+          <div class="sp-slider-row">
+            <span class="sp-slider-label">Effets sonores</span>
+            <input type="range" min="0" max="100" value="60" data-audio-setting="effects" data-default="60" data-value-id="gsv3" oninput="updateGameSlider(this,'gsv3')">
+            <span class="sp-val" id="gsv3">60%</span>
+          </div>
+        </div>
+        <div>
+          <div class="sp-section-label">Langues</div>
+          <div class="sp-lang-row">
+            <button class="lang-btn sel" onclick="selectGameLang(this)">FR</button>
+            <button class="lang-btn disabled" type="button" disabled aria-disabled="true" title="Bientot disponible">EN</button>
+            <button class="lang-btn disabled" type="button" disabled aria-disabled="true" title="Bientot disponible">SP</button>
+          </div>
+        </div>
+        <div>
+          <div class="sp-section-label">Filtre pixel</div>
+          <div class="sp-pixel-row" data-pixel-dither-group>
+            <button class="pixel-btn" type="button" data-pixel-dither="off" onclick="selectGamePixelDither(this, 'off')">OFF</button>
+            <button class="pixel-btn" type="button" data-pixel-dither="normal" onclick="selectGamePixelDither(this, 'normal')">NORMAL</button>
+            <button class="pixel-btn sel" type="button" data-pixel-dither="strong" onclick="selectGamePixelDither(this, 'strong')">FORT</button>
+          </div>
+        </div>
+        <div>
+          <div class="sp-section-label">Données</div>
+          <div class="sp-toggle-row">
+            <span class="sp-toggle-label">sauvegarde automatique</span>
+            <div class="sp-toggle on" onclick="toggleGameSwitch(this)"></div>
+          </div>
+          <div class="sp-toggle-row">
+            <span class="sp-toggle-label">Données de session</span>
+            <div class="sp-toggle on" onclick="toggleGameSwitch(this)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="cursor" id="cursor"></div>
 
-  <script src="assets/js/arecibo-motomoto-screen.js?v=motomoto-screen-1"></script>
-  <script src="assets/theme-audio.js?v=theme-audio-2"></script>
+  <script src="assets/js/arecibo-motomoto-screen.js?v=motomoto-screen-2"></script>
+  <script src="assets/theme-audio.js?v=theme-audio-3"></script>
 </body>
 </html>
