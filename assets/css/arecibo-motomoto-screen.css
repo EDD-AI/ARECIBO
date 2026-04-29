@@ -401,12 +401,12 @@ body::after {
 
 .active-role-chip {
   position: absolute;
-  top: clamp(14px, 3.5vh, 48px);
+  top: 22%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 16;
   min-width: min(280px, 32vw);
-  padding: 10px 22px 12px;
+  padding: 8px 22px 12px;
   border: 1px solid rgba(247, 255, 195, 0.22);
   background:
     linear-gradient(180deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.56)),
@@ -417,6 +417,21 @@ body::after {
   backdrop-filter: blur(8px);
   text-align: center;
   white-space: nowrap;
+}
+
+.active-role-chip-picto {
+  display: block;
+  margin: 0 auto 6px;
+  width: clamp(20px, 1.8vw, 28px);
+  height: clamp(20px, 1.8vw, 28px);
+  color: var(--role-accent);
+  opacity: 0.85;
+  filter: drop-shadow(0 0 6px var(--role-accent-glow));
+}
+
+.active-role-chip-picto svg {
+  width: 100%;
+  height: 100%;
 }
 
 .active-role-chip-label {
@@ -560,9 +575,9 @@ body::after {
 
 .mission-timer {
   position: absolute;
-  right: 17.2%;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 26%;
+  top: 37%;
+  transform: none;
   z-index: 15;
   width: clamp(100px, 9vw, 148px);
   padding: 12px 10px;
@@ -1246,7 +1261,7 @@ body::after {
   }
 
   .mission-timer {
-    right: 17.2%;
+    right: 25%;
     width: clamp(80px, 8vw, 130px);
     padding: 10px 8px;
   }
@@ -1281,7 +1296,7 @@ body::after {
   }
 
   .mission-timer {
-    right: 16.5%;
+    right: 24%;
     width: clamp(72px, 7.5vw, 120px);
     padding: 8px 6px;
   }
@@ -1295,7 +1310,7 @@ body::after {
   }
 
   .active-role-chip {
-    top: 12px;
+    top: 18%;
     left: 50%;
     transform: translateX(-50%);
     min-width: 0;

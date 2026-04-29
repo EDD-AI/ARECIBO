@@ -27,6 +27,7 @@
   const roleOverlay = document.getElementById('roleOverlay');
   const roleDismiss = document.getElementById('roleCardDismiss');
   const activeRoleValue = document.getElementById('activeRoleValue');
+  const activeRolePicto = document.getElementById('activeRolePicto');
   const roleCardName = document.getElementById('roleCardName');
   const roleCardSpecies = document.getElementById('roleCardSpecies');
   const roleCardProfile = document.getElementById('roleCardProfile');
@@ -165,12 +166,36 @@
     // Plus de cinématique popup — l'animation est directement sur l'écran
   }
 
+  const ROLE_PICTOS = {
+    capitaine: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="12,2 14.6,9.2 22.2,9.2 16.3,13.8 18.5,21 12,16.4 5.5,21 7.7,13.8 1.8,9.2 9.4,9.2" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/>
+    </svg>`,
+    timonier: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="1.3"/>
+      <circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.3"/>
+      <line x1="12" y1="2.5" x2="12" y2="6.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="12" y1="17.5" x2="12" y2="21.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="2.5" y1="12" x2="6.5" y2="12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="17.5" y1="12" x2="21.5" y2="12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="5.1" y1="5.1" x2="8" y2="8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="16" y1="16" x2="18.9" y2="18.9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="18.9" y1="5.1" x2="16" y2="8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="8" y1="16" x2="5.1" y2="18.9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+    </svg>`,
+    matelot: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="7.5" r="3.5" stroke="currentColor" stroke-width="1.3"/>
+      <path d="M4.5 21c0-4.142 3.358-7.5 7.5-7.5s7.5 3.358 7.5 7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      <circle cx="12" cy="12" r="10.5" stroke="currentColor" stroke-width="1.1" stroke-dasharray="2 3"/>
+    </svg>`
+  };
+
   function applyRoleTheme() {
     document.documentElement.style.setProperty('--role-accent', currentRole.accent);
     document.documentElement.style.setProperty('--role-accent-soft', currentRole.soft);
     document.documentElement.style.setProperty('--role-accent-glow', currentRole.glow);
 
     if (activeRoleValue) activeRoleValue.textContent = currentRole.label;
+    if (activeRolePicto) activeRolePicto.innerHTML = ROLE_PICTOS[currentRoleId] || ROLE_PICTOS.matelot;
     if (roleCardName) roleCardName.textContent = currentRole.label;
     if (roleCardSpecies) roleCardSpecies.textContent = currentRole.species;
     if (roleCardProfile) roleCardProfile.textContent = currentRole.profile;
