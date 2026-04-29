@@ -42,6 +42,7 @@
   const roleCardPortrait = document.getElementById('roleCardPortrait');
   const settingsOverlay = document.getElementById('settings-overlay');
   const settingsTab = document.getElementById('arecibo-settings-tab');
+  const bhWarp = document.getElementById('blackHoleWarp');
 
   let panes = [];
   let ended = false;
@@ -352,7 +353,7 @@
       const ctx = canvas.getContext('2d');
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 
-      const starCount = Math.max(18, Math.floor((rect.width * rect.height) / 5400));
+      const starCount = Math.max(32, Math.floor((rect.width * rect.height) / 2800));
       const particleCount = Math.max(5, Math.floor(rect.width / 90));
       return {
         canvas,
@@ -363,8 +364,8 @@
         stars: Array.from({ length: starCount }, () => ({
           x: Math.random() * rect.width,
           y: Math.random() * rect.height,
-          size: Math.random() > 0.88 ? 2 : Math.random() > 0.45 ? 1.4 : 1,
-          alpha: 0.16 + Math.random() * 0.34,
+          size: Math.random() > 0.82 ? 2.2 : Math.random() > 0.4 ? 1.6 : 1,
+          alpha: 0.32 + Math.random() * 0.52,
           pulse: 1.6 + Math.random() * 3.8,
           phase: Math.random() * Math.PI * 2
         })),
@@ -470,6 +471,34 @@
     }
   }
 
+  // ─── TROU NOIR ────────────────────────────────────────────────────
+  function initBlackHole() {
+    if (!bhWarp) return;
+    bhWarp.style.width = '52px';
+    bhWarp.style.height = '52px';
+    bhWarp.style.left = '84%';
+    bhWarp.style.top = '13%';
+  }
+
+  function updateBlackHole(progress) {
+    if (!bhWarp) return;
+    const vmax = Math.max(window.innerWidth, window.innerHeight);
+    const startSize = 52;
+    const endSize = vmax * 2.8;
+    const size = startSize * Math.pow(endSize / startSize, progress);
+    const left = 0.84 + (0.5 - 0.84) * progress;
+    const top = 0.13 + (0.5 - 0.13) * progress;
+    bhWarp.style.width = size + 'px';
+    bhWarp.style.height = size + 'px';
+    bhWarp.style.left = (left * 100) + '%';
+    bhWarp.style.top = (top * 100) + '%';
+    if (progress >= 0.86) {
+      bhWarp.classList.add('is-consuming');
+    } else {
+      bhWarp.classList.remove('is-consuming');
+    }
+  }
+
   function finishGame() {
     if (ended) return;
     ended = true;
@@ -480,7 +509,7 @@
     const progress = getProgress();
     drawSpace(time);
     updateTimer(progress);
-
+    updateBlackHole(progress);
     if (progress >= 1) finishGame();
     requestAnimationFrame(frame);
   }
@@ -540,6 +569,7 @@
     bindDoors();
     bindRoleOverlay();
     bindSettings();
+    initBlackHole();
     maybeShowRoleOverlay();
     requestAnimationFrame(frame);
   }
