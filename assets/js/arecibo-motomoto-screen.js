@@ -14,6 +14,16 @@
   const timerCaption = document.getElementById('missionTimerCaption');
   const overlay = document.getElementById('endOverlay');
   const cursor = document.getElementById('cursor');
+  const bridgeShellClosed = document.getElementById('bridgeShellClosed');
+  const bridgeShellOpen = document.getElementById('bridgeShellOpen');
+  const bridgeDoorLeft = document.getElementById('bridgeDoorLeft');
+  const bridgeDoorRight = document.getElementById('bridgeDoorRight');
+  const doorHotspotLeft = document.getElementById('doorHotspotLeft');
+  const doorHotspotRight = document.getElementById('doorHotspotRight');
+  const doorCinematic = document.getElementById('doorCinematic');
+  const doorCinematicView = document.getElementById('doorCinematicView');
+  const doorCinematicPanel = document.getElementById('doorCinematicPanel');
+  const doorCinematicCaption = document.getElementById('doorCinematicCaption');
   const roleOverlay = document.getElementById('roleOverlay');
   const roleDismiss = document.getElementById('roleCardDismiss');
   const activeRoleValue = document.getElementById('activeRoleValue');
@@ -32,6 +42,8 @@
 
   let panes = [];
   let ended = false;
+  const doorState = { left: false, right: false };
+  let cinematicTimer = 0;
 
   const roleKey = sessionCode ? `areciboRole:${sessionCode}` : 'areciboRole:local';
   const roleSeenKey = sessionCode ? `areciboRoleSeen:${sessionCode}` : 'areciboRoleSeen:local';
@@ -104,6 +116,65 @@
 
   const currentRoleId = ensureRole();
   const currentRole = ROLE_DATA[currentRoleId] || ROLE_DATA.capitaine;
+
+  function syncDoorShell() {
+    const anyOpen = doorState.left || doorState.right;
+
+    if (bridgeShellClosed) bridgeShellClosed.classList.toggle('is-visible', !anyOpen);
+    if (bridgeShellOpen) bridgeShellOpen.classList.toggle('is-visible', anyOpen);
+    if (bridgeDoorLeft) bridgeDoorLeft.classList.toggle('is-visible', anyOpen && !doorState.left);
+    if (bridgeDoorRight) bridgeDoorRight.classList.toggle('is-visible', anyOpen && !doorState.right);
+
+    if (doorHotspotLeft) {
+      doorHotspotLeft.setAttribute('aria-label', doorState.left ? 'Fermer le sas gauche' : 'Ouvrir le sas gauche');
+      doorHotspotLeft.dataset.state = doorState.left ? 'open' : 'closed';
+    }
+    if (doorHotspotRight) {
+      doorHotspotRight.setAttribute('aria-label', doorState.right ? 'Fermer le sas droit' : 'Ouvrir le sas droit');
+      doorHotspotRight.dataset.state = doorState.right ? 'open' : 'closed';
+    }
+  }
+
+  function hideDoorCinematic() {
+    if (!doorCinematic) return;
+    doorCinematic.classList.remove('is-visible', 'is-left', 'is-right', 'is-opening', 'is-closing');
+    if (doorCinematicView) doorCinematicView.classList.remove('is-left', 'is-right');
+    if (doorCinematicPanel) doorCinematicPanel.classList.remove('start-open');
+  }
+
+  function playDoorCinematic(side, opening) {
+    if (!doorCinematic || !doorCinematicView || !doorCinematicPanel || !doorCinematicCaption) return;
+
+    const isLeft = side === 'left';
+    const panelSrc = isLeft ? 'assets/motomoto-door-left.png' : 'assets/motomoto-door-right.png';
+
+    window.clearTimeout(cinematicTimer);
+    hideDoorCinematic();
+
+    doorCinematicPanel.src = panelSrc;
+    doorCinematicView.classList.add(isLeft ? 'is-left' : 'is-right');
+    doorCinematic.classList.add('is-visible', isLeft ? 'is-left' : 'is-right');
+    doorCinematicCaption.textContent = `SAS ${isLeft ? 'GAUCHE' : 'DROIT'} // ${opening ? 'OUVERTURE' : 'FERMETURE'}`;
+
+    if (!opening) {
+      doorCinematicPanel.classList.add('start-open');
+    }
+
+    requestAnimationFrame(() => {
+      doorCinematic.classList.add(opening ? 'is-opening' : 'is-closing');
+    });
+
+    cinematicTimer = window.setTimeout(() => {
+      hideDoorCinematic();
+    }, 980);
+  }
+
+  function toggleDoor(side) {
+    const opening = !doorState[side];
+    playDoorCinematic(side, opening);
+    doorState[side] = opening;
+    syncDoorShell();
+  }
 
   function applyRoleTheme() {
     document.documentElement.style.setProperty('--role-accent', currentRole.accent);
@@ -306,6 +377,15 @@
     });
   }
 
+  function bindDoors() {
+    if (doorHotspotLeft) {
+      doorHotspotLeft.addEventListener('click', () => toggleDoor('left'));
+    }
+    if (doorHotspotRight) {
+      doorHotspotRight.addEventListener('click', () => toggleDoor('right'));
+    }
+  }
+
   function bindRoleOverlay() {
     if (roleDismiss) {
       roleDismiss.addEventListener('click', hideRoleOverlay);
@@ -322,8 +402,10 @@
 
   function init() {
     applyRoleTheme();
+    syncDoorShell();
     resize();
     bindCursor();
+    bindDoors();
     bindRoleOverlay();
     maybeShowRoleOverlay();
     requestAnimationFrame(frame);

@@ -62,8 +62,16 @@
       </div>
     </section>
 
-    <img class="bridge-shell" src="assets/motomoto-screen-01.png" alt="Ecran MOTOMOTO 1">
+    <div class="bridge-shell-stack" aria-hidden="true">
+      <img class="bridge-shell bridge-shell-open" id="bridgeShellOpen" src="assets/motomoto-doors-open-base.png" alt="">
+      <img class="bridge-shell bridge-shell-door bridge-shell-door-left" id="bridgeDoorLeft" src="assets/motomoto-door-left.png" alt="">
+      <img class="bridge-shell bridge-shell-door bridge-shell-door-right" id="bridgeDoorRight" src="assets/motomoto-door-right.png" alt="">
+      <img class="bridge-shell bridge-shell-closed is-visible" id="bridgeShellClosed" src="assets/motomoto-screen-01.png" alt="Ecran MOTOMOTO 1">
+    </div>
     <div class="bridge-glow" aria-hidden="true"></div>
+
+    <button class="door-hotspot door-hotspot-left" id="doorHotspotLeft" type="button" aria-label="Ouvrir le sas gauche"></button>
+    <button class="door-hotspot door-hotspot-right" id="doorHotspotRight" type="button" aria-label="Ouvrir le sas droit"></button>
 
     <aside class="active-role-chip" aria-label="Role actif">
       <div class="active-role-chip-label">ROLE ACTIF</div>
@@ -82,6 +90,17 @@
         <h2 class="end-title">ABSORPTION<br>COMPLETE</h2>
         <p class="end-copy">Le trou noir a atteint les baies frontales. Le vaisseau est perdu. Fin de la partie.</p>
       </article>
+    </section>
+
+    <section class="door-cinematic" id="doorCinematic" aria-hidden="true">
+      <div class="door-cinematic-backdrop"></div>
+      <div class="door-cinematic-stage">
+        <div class="door-cinematic-view" id="doorCinematicView">
+          <img class="door-cinematic-base" id="doorCinematicBase" src="assets/motomoto-doors-open-base.png" alt="">
+          <img class="door-cinematic-panel" id="doorCinematicPanel" src="assets/motomoto-door-left.png" alt="">
+        </div>
+        <div class="door-cinematic-caption" id="doorCinematicCaption">SAS GAUCHE // OUVERTURE</div>
+      </div>
     </section>
 
     <section class="role-overlay is-visible" id="roleOverlay" aria-live="polite">
