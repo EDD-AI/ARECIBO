@@ -425,7 +425,7 @@ body::after {
 
 .active-role-chip {
   position: absolute;
-  top: 22%;
+  top: 14.2%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 16;
@@ -599,28 +599,24 @@ body::after {
 
 .mission-timer {
   position: absolute;
-  right: 23%;
-  top: 42%;
-  transform: none;
+  left: 50%;
+  top: 8.8%;
+  transform: translateX(-50%);
   z-index: 15;
-  width: clamp(100px, 9vw, 148px);
-  padding: 12px 10px;
-  border: 1px solid rgba(247, 255, 195, 0.1);
-  background: rgba(0, 0, 0, 0.85);
-  box-shadow:
-    0 0 14px rgba(0, 0, 0, 0.6),
-    inset 0 0 18px rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(4px);
+  width: clamp(112px, 8.5vw, 154px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mission-timer-label {
-  color: rgba(247, 255, 195, 0.35);
-  font-size: clamp(7px, 0.6vw, 9px);
-  letter-spacing: 0.12em;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  line-height: 1.4;
+  display: none;
 }
 
 .mission-timer-value {
@@ -633,12 +629,7 @@ body::after {
 }
 
 .mission-timer-caption {
-  margin-top: 6px;
-  color: rgba(247, 255, 195, 0.3);
-  font-size: clamp(7px, 0.6vw, 9px);
-  text-align: center;
-  letter-spacing: 0.1em;
-  line-height: 1.4;
+  display: none;
 }
 
 .role-overlay {
@@ -1009,13 +1000,13 @@ body::after {
   position: fixed;
   left: 18px;
   bottom: 18px;
-  z-index: 34;
+  z-index: 46;
   min-width: 170px;
   padding: 11px 18px;
-  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.94)),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 68%);
+    linear-gradient(180deg, rgba(10, 10, 10, 0.96), rgba(0, 0, 0, 0.98)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 68%);
   color: #ffffff;
   font-family: var(--f-pixel);
   font-size: 16px;
@@ -1024,8 +1015,8 @@ body::after {
   text-align: left;
   text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
   box-shadow:
-    0 0 18px rgba(0, 0, 0, 0.5),
-    inset 0 0 14px rgba(255, 255, 255, 0.04);
+    0 0 24px rgba(255, 255, 255, 0.12),
+    inset 0 0 18px rgba(255, 255, 255, 0.08);
   cursor: none;
 }
 
@@ -1286,9 +1277,11 @@ body::after {
   }
 
   .mission-timer {
-    right: 25%;
+    left: 50%;
+    top: 8.6%;
+    transform: translateX(-50%);
     width: clamp(80px, 8vw, 130px);
-    padding: 10px 8px;
+    padding: 0;
   }
 
   .round-console {
@@ -1321,9 +1314,11 @@ body::after {
   }
 
   .mission-timer {
-    right: 24%;
+    left: 50%;
+    top: 8.4%;
+    transform: translateX(-50%);
     width: clamp(72px, 7.5vw, 120px);
-    padding: 8px 6px;
+    padding: 0;
   }
 
   .arecibo-settings-tab {
@@ -1335,7 +1330,7 @@ body::after {
   }
 
   .active-role-chip {
-    top: 18%;
+    top: 11.4%;
     left: 50%;
     transform: translateX(-50%);
     min-width: 0;
