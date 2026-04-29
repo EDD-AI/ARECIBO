@@ -401,34 +401,39 @@ body::after {
 
 .active-role-chip {
   position: absolute;
-  top: clamp(22px, 2.2vh, 40px);
-  right: clamp(26px, 2.4vw, 48px);
+  top: clamp(14px, 3.5vh, 48px);
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 16;
-  min-width: min(240px, 24vw);
-  padding: 12px 14px 14px;
-  border: 1px solid rgba(247, 255, 195, 0.18);
+  min-width: min(280px, 32vw);
+  padding: 10px 22px 12px;
+  border: 1px solid rgba(247, 255, 195, 0.22);
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0.42)),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.56)),
     linear-gradient(135deg, var(--role-accent-soft), transparent 56%);
   box-shadow:
-    0 0 24px rgba(0, 0, 0, 0.34),
+    0 0 24px rgba(0, 0, 0, 0.5),
     inset 0 0 18px rgba(247, 255, 195, 0.03);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
+  text-align: center;
+  white-space: nowrap;
 }
 
 .active-role-chip-label {
-  color: rgba(247, 255, 195, 0.52);
-  font-size: clamp(10px, 0.8vw, 13px);
-  letter-spacing: 0.12em;
-  margin-bottom: 5px;
+  color: rgba(247, 255, 195, 0.45);
+  font-size: clamp(9px, 0.72vw, 11px);
+  letter-spacing: 0.18em;
+  margin-bottom: 4px;
+  text-transform: uppercase;
 }
 
 .active-role-chip-value {
   color: var(--role-accent);
-  font-size: clamp(24px, 2.2vw, 38px);
+  font-size: clamp(28px, 2.8vw, 44px);
   line-height: 0.92;
-  text-align: right;
-  text-shadow: 0 0 16px var(--role-accent-glow);
+  text-align: center;
+  text-shadow: 0 0 20px var(--role-accent-glow);
+  letter-spacing: 0.06em;
 }
 
 .round-console {
@@ -555,40 +560,46 @@ body::after {
 
 .mission-timer {
   position: absolute;
-  right: clamp(28px, 2.5vw, 52px);
-  bottom: clamp(22px, 2.4vh, 42px);
+  right: 17.2%;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 15;
-  min-width: min(240px, 28vw);
-  padding: 14px 18px 16px;
-  border: 1px solid rgba(247, 255, 195, 0.18);
-  background: rgba(0, 0, 0, 0.52);
+  width: clamp(100px, 9vw, 148px);
+  padding: 12px 10px;
+  border: 1px solid rgba(247, 255, 195, 0.1);
+  background: rgba(0, 0, 0, 0.85);
   box-shadow:
-    0 0 22px rgba(0, 0, 0, 0.34),
-    inset 0 0 24px rgba(247, 255, 195, 0.03);
-  backdrop-filter: blur(6px);
+    0 0 14px rgba(0, 0, 0, 0.6),
+    inset 0 0 18px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+  text-align: center;
 }
 
 .mission-timer-label {
-  color: rgba(247, 255, 195, 0.56);
-  font-size: clamp(10px, 0.84vw, 14px);
+  color: rgba(247, 255, 195, 0.35);
+  font-size: clamp(7px, 0.6vw, 9px);
   letter-spacing: 0.12em;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   text-transform: uppercase;
+  line-height: 1.4;
 }
 
 .mission-timer-value {
   color: var(--orange);
-  font-size: clamp(30px, 3vw, 50px);
-  line-height: 0.9;
-  text-align: right;
-  text-shadow: 0 0 16px rgba(250, 90, 31, 0.28);
+  font-size: clamp(22px, 2.4vw, 38px);
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 0 12px rgba(250, 90, 31, 0.5);
+  font-variant-numeric: tabular-nums;
 }
 
 .mission-timer-caption {
-  margin-top: 8px;
-  color: rgba(247, 255, 195, 0.56);
-  font-size: clamp(10px, 0.76vw, 13px);
-  text-align: right;
+  margin-top: 6px;
+  color: rgba(247, 255, 195, 0.3);
+  font-size: clamp(7px, 0.6vw, 9px);
+  text-align: center;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
 }
 
 .role-overlay {
@@ -1235,8 +1246,9 @@ body::after {
   }
 
   .mission-timer {
-    min-width: 0;
-    width: min(210px, 40vw);
+    right: 17.2%;
+    width: clamp(80px, 8vw, 130px);
+    padding: 10px 8px;
   }
 
   .round-console {
@@ -1269,10 +1281,9 @@ body::after {
   }
 
   .mission-timer {
-    right: 18px;
-    bottom: 18px;
-    width: min(180px, 42vw);
-    padding: 12px 14px;
+    right: 16.5%;
+    width: clamp(72px, 7.5vw, 120px);
+    padding: 8px 6px;
   }
 
   .arecibo-settings-tab {
@@ -1284,11 +1295,12 @@ body::after {
   }
 
   .active-role-chip {
-    top: 16px;
-    right: 16px;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
     min-width: 0;
-    width: min(180px, 44vw);
-    padding: 10px 12px 12px;
+    width: min(200px, 50vw);
+    padding: 8px 14px 10px;
   }
 
   .role-card {
