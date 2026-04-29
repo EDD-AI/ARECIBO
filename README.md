@@ -1,46 +1,84 @@
-# ARECIBO — Salvage Protocol
+# ARECIBO
 
-> Jeu navigateur coop d'extraction et exploration spatiale.
+Prototype navigateur de jeu narratif multijoueur SF pour Studio EDDA.
 
-## Concept
+Le projet est maintenant dans une phase de **reboot propre** :
+- on garde le **menu**
+- on garde les **settings**
+- on garde l'**intro**
+- on garde la **DA / l'audio / les overlays**
+- on reconstruit le coeur du jeu autour du nouvel ecran **MOTOMOTO**
 
-L'événement
-En 1974, les humains envoient le message d'Arecibo dans l'espace. Un acte d'espoir. Une bouteille jetée dans l'infini. Ce qu'ils ne savent pas, c'est qu'un trou noir se trouve sur la trajectoire du signal. Le message est aspiré. Disparu. Enfermé dans la singularité.
-Mais un trou noir n'efface pas il compresse, stocke, retient. Le message d'Arecibo existe encore, quelque part dans le champ gravitationnel, émettant une fréquence infime, indéchiffrable depuis la Terre.
-L'équipage
-Avant d'envoyer des hommes, on a envoyé des animaux. Des chiens, des singes, des chats. Laïka. Ham. Félicette. Des corps sacrifiés au nom de la science, expédiés dans le vide sans billet retour.
-Certains sont morts. Certains ont disparu. Mais quelques-uns du programme MOTOMOTO ont survécu — récupérés, soignés, entraînés. Ils ont appris à piloter, à réparer, à survivre dans l'espace. Pas parce qu'ils ont choisi. Parce qu'ils n'avaient pas d'autre endroit où aller.
-Ce sont des animaux en combinaison d'astronaute. Ni héros, ni martyrs. Juste les seuls disponibles pour une mission que personne d'autre ne voulait faire.
-La mission
-Le MOTOMOTO dérive vers le trou noir. Pas assez vitele trou noir aspire tout autour de lui, et le vaisseau manque de carburant, de pièces, de temps. L'équipage sort en extraction pour récupérer ce qui traîne sur leur passage : des carcasses de sondes perdues, des débris de satellites, des fragments sur de petites planètes condamnées elles aussi à être englouties.
-Chaque objet récupéré permet au MOTOMOTO d'avancer encore un peu. De se rapprocher suffisamment du trou noir pour capter la fréquence du message d'Arecibo et en extraire les données avant que tout disparaisse.
-Avant que le trou noir n'aspire tout. Y compris eux.
-## Stack
+## Etat actuel
 
-- HTML / CSS / JS vanilla (front)
-- Esthétique SF vintage retrofuturiste (Alien 1979, 2001)
-- Fonts : Power Grotesk (logo) · Degular (titres) · Pixelify Sans (UI pixel)
-- Palette : #F7FFC3 (cream) · #FA5A1F (orange) · #000 (bg)
+Flow actif :
 
-## Fichiers
+`Menu -> Intro -> Ecran MOTOMOTO -> Carte role -> Nouvelle boucle de jeu`
 
-```
-/
-├── index.html              → Séquence de boot (terminal)
-├── arecibo_menu.html       → Menu principal
-├── arecibo_intro.html      → Générique lore + terminal MOTOMOTO
-├── arecibo_game.html       → Prototype session SOLO
-├── arecibo_creation.html   → Création de personnage (mise de côté)
-├── arecibo_lobby.html      → Lobby multijoueur (WIP)
-├── assets/backgrounds/starfield.png → Background étoilé
-└── fonts/
-    ├── PowerGrotesk-Regular.woff2
-    ├── Degular-Black.woff2
-    └── Degular-Bold.woff2
-```
+Pages encore utiles :
+- `arecibo_menu.html` : menu principal
+- `arecibo_intro.html` : intro textuelle + boot
+- `arecibo_motomoto_screen.html` : nouvel ecran principal de partie
+- `arecibo_role_card_preview.html` : preview / direction visuelle des cartes role
+- `arecibo_lobby.html` : connexion / code de session
+- `arecibo_settings.html` : page settings standalone
 
-## Flow
+Pages legacy conservees comme reference visuelle / technique :
+- `arecibo_game.html`
+- `arecibo_game2.html`
+- `arecibo_creation.html`
+- `arecibo_minigame_defense.html`
+- `arecibo_minigame_scan_operator.html`
+- `arecibo_minigame_scan_partner.html`
 
-`Boot terminal` → `Menu` → `Solo (session directe)` ou `Multi (lobby)` → `Session extraction`
+Ces fichiers legacy ne sont pas la base du nouveau jeu. On les garde seulement comme banque d'idees ou de composants.
 
-## Studio EDDA — 2026
+## Structure utile
+
+### Pages
+- `arecibo_menu.html`
+- `arecibo_intro.html`
+- `arecibo_lobby.html`
+- `arecibo_motomoto_screen.html`
+- `arecibo_role_card_preview.html`
+- `arecibo_settings.html`
+
+### Scripts partages
+- `assets/theme-audio.js` : musique, ambiances, hover/click/start
+- `assets/visual-settings.js` : etat du filtre pixel
+- `assets/player-profile.js` : profil joueur
+
+### Styles partagés
+- `assets/terminal-filter.css`
+- `assets/ingame-settings.css`
+
+### Repertoires principaux
+- `assets/audio/` : musiques, ambiances, effets
+- `assets/backgrounds/` : fonds menu
+- `assets/css/` : styles specifiques de pages/scenes
+- `assets/js/` : logique specifique de pages/scenes
+- `assets/animals/` : tetes / avatars
+- `assets/black-hole-main/` : module trou noir du menu
+
+## Convention de travail
+
+Pour garder le repo lisible :
+- tout nouveau systeme de jeu va dans une page / scene clairement nommee
+- les nouveaux assets doivent aller dans un dossier explicite
+- les prototypes temporaires doivent etre documentes ou supprimes vite
+- les fichiers de test locaux ne doivent pas finir dans Git
+- les textes visibles par le joueur doivent garder leurs accents
+
+## Documentation
+
+Voir aussi :
+- [docs/PROJECT_STRUCTURE.md](C:\Users\Coco\Documents\Codex\ARECIBO-git\docs\PROJECT_STRUCTURE.md)
+
+## Notes
+
+Le nouveau jeu vise un format :
+- navigateur
+- multi joueur
+- communication parallele sur Discord
+- distribution automatique de roles
+- arbitrage 100% gere par le jeu
