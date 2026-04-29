@@ -575,8 +575,8 @@ body::after {
 
 .mission-timer {
   position: absolute;
-  right: 26%;
-  top: 37%;
+  right: 23%;
+  top: 42%;
   transform: none;
   z-index: 15;
   width: clamp(100px, 9vw, 148px);
