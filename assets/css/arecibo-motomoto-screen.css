@@ -60,6 +60,30 @@ body::after {
   mix-blend-mode: screen;
 }
 
+/* ─── TROU NOIR ─────────────────────────────────────────────── */
+.black-hole-warp {
+  position: absolute;
+  z-index: 2;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  will-change: width, height, left, top;
+}
+
+.black-hole-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  pointer-events: none;
+  display: block;
+}
+
+.black-hole-warp.is-consuming {
+  z-index: 36;
+  border-radius: 0;
+}
+
 .motomoto-scene {
   position: relative;
   width: 100vw;
@@ -988,19 +1012,20 @@ body::after {
   z-index: 34;
   min-width: 170px;
   padding: 11px 18px;
-  border: 1px solid rgba(247, 255, 195, 0.22);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
   background:
-    linear-gradient(180deg, rgba(6, 6, 6, 0.84), rgba(0, 0, 0, 0.92)),
-    linear-gradient(135deg, rgba(250, 90, 31, 0.1), transparent 68%);
-  color: rgba(247, 255, 195, 0.9);
+    linear-gradient(180deg, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.94)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 68%);
+  color: #ffffff;
   font-family: var(--f-pixel);
   font-size: 16px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   text-align: left;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
   box-shadow:
-    0 0 16px rgba(0, 0, 0, 0.32),
-    inset 0 0 14px rgba(247, 255, 195, 0.02);
+    0 0 18px rgba(0, 0, 0, 0.5),
+    inset 0 0 14px rgba(255, 255, 255, 0.04);
   cursor: none;
 }
 
