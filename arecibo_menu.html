@@ -686,11 +686,11 @@ canvas#starfield-bg {
 /* ===== LOGO ===== */
 .logo {
   position: absolute;
-  right: clamp(84px, 9vw, 180px);
-  top: 49.4%;
-  transform: translateY(-50%);
+  left: 8.1vw;
+  top: 22.2vh;
+  transform: none;
   text-align: left;
-  z-index: 7;
+  z-index: 10;
   opacity: 0;
   animation: fadeIn .7s ease forwards .4s;
 }
@@ -698,15 +698,15 @@ canvas#starfield-bg {
   position: relative;
   font-family: var(--f-logo);
   font-weight: 400;
-  font-size: clamp(88px, 12vw, 220px);
+  font-size: clamp(64px, 7.8vw, 138px);
   color: var(--cream);
   line-height: .92;
-  letter-spacing: -.018em;
+  letter-spacing: -.014em;
   display: flex;
   justify-content: flex-start;
   gap: 0;
   isolation: isolate;
-  min-width: clamp(420px, 42vw, 860px);
+  min-width: auto;
   text-shadow:
     0 0 10px rgba(247,255,195,.05),
     0 0 22px rgba(250,90,31,.035);
