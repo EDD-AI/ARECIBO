@@ -337,69 +337,6 @@ body::after {
   box-shadow: 0 0 18px rgba(0, 0, 0, 0.26);
 }
 
-.ship-lightfield {
-  position: absolute;
-  inset: 0;
-  z-index: 11;
-  pointer-events: none;
-}
-
-.ship-led,
-.ship-pulse {
-  position: absolute;
-  left: var(--x);
-  top: var(--y);
-  transform: translate(-50%, -50%);
-}
-
-.ship-led {
-  width: var(--w);
-  height: var(--h);
-  min-width: 12px;
-  min-height: 3px;
-  border-radius: 999px;
-  opacity: 0.34;
-  animation: shipBlink var(--dur, 3.2s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
-}
-
-.ship-led-white {
-  background: linear-gradient(90deg, rgba(255, 247, 215, 0.15), rgba(255, 248, 230, 0.95), rgba(255, 247, 215, 0.15));
-  box-shadow:
-    0 0 8px rgba(255, 247, 215, 0.26),
-    0 0 18px rgba(255, 247, 215, 0.14);
-}
-
-.ship-led-orange {
-  background: linear-gradient(90deg, rgba(250, 90, 31, 0.12), rgba(250, 120, 50, 0.95), rgba(250, 90, 31, 0.12));
-  box-shadow:
-    0 0 8px rgba(250, 120, 50, 0.32),
-    0 0 20px rgba(250, 120, 50, 0.18);
-}
-
-.ship-pulse {
-  width: var(--size);
-  height: var(--size);
-  border-radius: 50%;
-  opacity: 0.42;
-  animation: shipPulse var(--dur, 3.4s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
-}
-
-.ship-pulse-white {
-  background: radial-gradient(circle, rgba(255, 248, 232, 0.98) 0 24%, rgba(255, 248, 232, 0.32) 52%, rgba(255, 248, 232, 0) 82%);
-  box-shadow:
-    0 0 12px rgba(255, 248, 232, 0.34),
-    0 0 24px rgba(255, 248, 232, 0.14);
-}
-
-.ship-pulse-orange {
-  background: radial-gradient(circle, rgba(250, 120, 50, 0.98) 0 24%, rgba(250, 120, 50, 0.28) 52%, rgba(250, 120, 50, 0) 82%);
-  box-shadow:
-    0 0 12px rgba(250, 120, 50, 0.36),
-    0 0 26px rgba(250, 120, 50, 0.16);
-}
-
 .active-role-chip {
   position: absolute;
   top: 14.2%;
