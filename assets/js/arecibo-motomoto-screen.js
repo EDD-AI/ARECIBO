@@ -42,7 +42,6 @@
   const roleCardPortrait = document.getElementById('roleCardPortrait');
   const settingsOverlay = document.getElementById('settings-overlay');
   const settingsTab = document.getElementById('arecibo-settings-tab');
-  const bhWarp = document.getElementById('blackHoleWarp');
 
   let panes = [];
   let ended = false;
@@ -472,33 +471,6 @@
   }
 
   // ─── TROU NOIR ────────────────────────────────────────────────────
-  function initBlackHole() {
-    if (!bhWarp) return;
-    bhWarp.style.width = '52px';
-    bhWarp.style.height = '52px';
-    bhWarp.style.left = '84%';
-    bhWarp.style.top = '13%';
-  }
-
-  function updateBlackHole(progress) {
-    if (!bhWarp) return;
-    const vmax = Math.max(window.innerWidth, window.innerHeight);
-    const startSize = 52;
-    const endSize = vmax * 2.8;
-    const size = startSize * Math.pow(endSize / startSize, progress);
-    const left = 0.84 + (0.5 - 0.84) * progress;
-    const top = 0.13 + (0.5 - 0.13) * progress;
-    bhWarp.style.width = size + 'px';
-    bhWarp.style.height = size + 'px';
-    bhWarp.style.left = (left * 100) + '%';
-    bhWarp.style.top = (top * 100) + '%';
-    if (progress >= 0.86) {
-      bhWarp.classList.add('is-consuming');
-    } else {
-      bhWarp.classList.remove('is-consuming');
-    }
-  }
-
   function finishGame() {
     if (ended) return;
     ended = true;
@@ -509,7 +481,6 @@
     const progress = getProgress();
     drawSpace(time);
     updateTimer(progress);
-    updateBlackHole(progress);
     if (progress >= 1) finishGame();
     requestAnimationFrame(frame);
   }
@@ -569,7 +540,6 @@
     bindDoors();
     bindRoleOverlay();
     bindSettings();
-    initBlackHole();
     maybeShowRoleOverlay();
     requestAnimationFrame(frame);
   }

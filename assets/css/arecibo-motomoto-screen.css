@@ -61,29 +61,6 @@ body::after {
 }
 
 /* ─── TROU NOIR ─────────────────────────────────────────────── */
-.black-hole-warp {
-  position: absolute;
-  z-index: 2;
-  border-radius: 50%;
-  overflow: hidden;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  will-change: width, height, left, top;
-}
-
-.black-hole-frame {
-  width: 100%;
-  height: 100%;
-  border: none;
-  pointer-events: none;
-  display: block;
-}
-
-.black-hole-warp.is-consuming {
-  z-index: 36;
-  border-radius: 0;
-}
-
 .motomoto-scene {
   position: relative;
   width: 100vw;
