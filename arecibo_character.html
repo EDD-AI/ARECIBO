@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ARECIBO - PERSONNAGE</title>
+<link rel="icon" type="image/png" href="assets/picto-arecibo-pageweb.png">
+<script src="assets/visual-settings.js?v=pixel-dither-3"></script>
+<link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-3">
+<link rel="stylesheet" href="assets/css/arecibo-character.css?v=character-1">
+</head>
+<body data-theme-audio="menu">
+  <main class="character-scene" aria-label="Éditeur de personnage">
+    <canvas class="character-stars" id="charStars" aria-hidden="true"></canvas>
+
+    <header class="character-head">
+      <div class="character-kicker">MOTOMOTO // REGISTRE D'ÉQUIPAGE</div>
+      <h1 class="character-title">FICHE DE SURVIVANT</h1>
+      <div class="character-sub" id="characterSub">IDENTIFIEZ-VOUS AVANT L'EMBARQUEMENT</div>
+    </header>
+
+    <section class="character-layout">
+      <!-- ─── CARTE D'IDENTITÉ (aperçu live) ─────────────────── -->
+      <article class="id-card" id="idCard" aria-label="Aperçu de la carte d'identité">
+        <header class="id-card-topbar">
+          <div class="id-card-badge"><span class="id-card-badge-mark">*</span><span>MOTOMOTO</span></div>
+          <div class="id-card-serial" id="idCardSerial">AR-REG-0001</div>
+          <div class="id-card-cells" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        </header>
+
+        <div class="id-card-portrait-zone">
+          <button class="id-card-arrow" id="headPrev" type="button" aria-label="Tête précédente">&lt;</button>
+          <div class="id-card-portrait-frame">
+            <div class="id-card-portrait" id="idCardPortrait" aria-hidden="true"></div>
+            <div class="id-card-portrait-scan" aria-hidden="true"></div>
+          </div>
+          <button class="id-card-arrow" id="headNext" type="button" aria-label="Tête suivante">&gt;</button>
+        </div>
+
+        <div class="id-card-name" id="idCardName">COCO</div>
+        <div class="id-card-trait" id="idCardTrait">—</div>
+
+        <footer class="id-card-footer">
+          <span>__SYS__</span>
+          <span>ARECIBO SALVAGE PROTOCOL</span>
+          <span id="idCardHeadNum">01/24</span>
+        </footer>
+      </article>
+
+      <!-- ─── CONTRÔLES ───────────────────────────────────────── -->
+      <section class="character-controls">
+        <div class="control-block">
+          <div class="control-label">INDICATIF</div>
+          <input class="control-name-input" id="nameInput" type="text" maxlength="10" autocomplete="off" spellcheck="false" placeholder="VOTRE NOM">
+        </div>
+
+        <div class="control-block">
+          <div class="control-label">TÊTE</div>
+          <div class="control-heads" id="headsGrid"></div>
+        </div>
+
+        <div class="control-block">
+          <div class="control-label">PELAGE</div>
+          <div class="control-swatches" id="primarySwatches"></div>
+        </div>
+
+        <div class="control-block">
+          <div class="control-label">MARQUES</div>
+          <div class="control-swatches" id="secondarySwatches"></div>
+        </div>
+
+        <div class="control-actions">
+          <button class="control-btn control-btn-ghost" id="randomBtn" type="button">⟳ ALÉATOIRE</button>
+        </div>
+      </section>
+    </section>
+
+    <footer class="character-footer">
+      <button class="control-btn control-btn-ghost" id="backBtn" type="button">&lt; RETOUR MENU</button>
+      <button class="control-btn control-btn-primary" id="validateBtn" type="button">VALIDER &amp; EMBARQUER &gt;</button>
+    </footer>
+  </main>
+
+  <div class="page-transition" id="transition" aria-hidden="true"></div>
+  <div class="cursor" id="cursor"></div>
+
+  <script src="assets/player-profile.js?v=profile-1"></script>
+  <script src="assets/js/arecibo-character.js?v=character-1"></script>
+  <script src="assets/theme-audio.js?v=theme-audio-3"></script>
+</body>
+</html>

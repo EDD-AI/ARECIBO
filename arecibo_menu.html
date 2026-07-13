@@ -2539,7 +2539,7 @@ function joinSessionChoice() {
   const transition = document.getElementById('transition');
   transition.classList.add('active');
   setTimeout(() => {
-    window.location.href = 'arecibo_lobby.html?v=multi-join';
+    window.location.href = 'arecibo_character.html?v=character-1&next=join';
   }, 420);
 }
 
@@ -2555,7 +2555,7 @@ function createSessionChoice() {
     const transition = document.getElementById('transition');
     transition.classList.add('active');
     setTimeout(() => {
-      window.location.href = `arecibo_intro.html?v=reboot-intro&sessionCode=${code}&mode=host`;
+      window.location.href = `arecibo_character.html?v=character-1&next=host&sessionCode=${code}`;
     }, 420);
   }, 520);
 }
