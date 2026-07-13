@@ -16,6 +16,7 @@ Flow actif :
 `Menu -> Intro -> Ecran MOTOMOTO -> Carte role -> Nouvelle boucle de jeu`
 
 Pages encore utiles :
+- `arecibo_demo.html` : demo jouable solo de la boucle de jeu (joueur = Capitaine, equipage simule)
 - `arecibo_menu.html` : menu principal
 - `arecibo_intro.html` : intro textuelle + boot
 - `arecibo_motomoto_screen.html` : nouvel ecran principal de partie

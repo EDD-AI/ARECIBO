@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ARECIBO - DEMO</title>
+<link rel="icon" type="image/png" href="assets/picto-arecibo-pageweb.png">
+<script src="assets/visual-settings.js?v=pixel-dither-3"></script>
+<link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-3">
+<link rel="stylesheet" href="assets/css/arecibo-motomoto-screen.css?v=motomoto-screen-5">
+<link rel="stylesheet" href="assets/css/arecibo-demo.css?v=demo-2">
+</head>
+<body data-theme-audio="ship">
+  <main class="motomoto-scene" aria-label="Demo jouable ARECIBO">
+    <section class="rear-space-layer" aria-hidden="true">
+      <div class="rear-space-pane rear-space-pane-left">
+        <canvas class="rear-space-canvas" id="rearCanvasLeft"></canvas>
+      </div>
+      <div class="rear-space-pane rear-space-pane-center">
+        <canvas class="rear-space-canvas" id="rearCanvasCenter"></canvas>
+      </div>
+      <div class="rear-space-pane rear-space-pane-right">
+        <canvas class="rear-space-canvas" id="rearCanvasRight"></canvas>
+      </div>
+    </section>
+
+    <section class="round-console" aria-label="Controle principal du vaisseau">
+      <div class="round-console-panel">
+        <div class="console-kicker">MOTOMOTO // CONTROLE CENTRAL</div>
+        <h1 class="console-title">SYSTEME<br>VAISSEAU</h1>
+        <div class="console-grid">
+          <div class="console-row"><span>Coque</span><strong id="consoleHull">69%</strong></div>
+          <div class="console-row"><span>Carburant</span><strong id="consoleFuel">42%</strong></div>
+          <div class="console-row"><span>Signal</span><strong id="consoleSignal">INSTABLE</strong></div>
+          <div class="console-row"><span>Distance</span><strong>ARECIBO</strong></div>
+        </div>
+        <div class="console-signal">
+          <div class="console-signal-bar"><div class="console-signal-fill" id="consoleSignalFill"></div></div>
+        </div>
+        <div class="console-footnote" id="consoleFootnote">PRIORITE // TENIR 08:00</div>
+      </div>
+    </section>
+
+    <div class="bridge-shell-stack" aria-hidden="true">
+      <img class="bridge-shell bridge-shell-open" id="bridgeShellOpen" src="assets/motomoto-doors-open-base.png" alt="">
+      <img class="bridge-shell bridge-shell-door bridge-shell-door-left" id="bridgeDoorLeft" src="assets/motomoto-door-left.png" alt="">
+      <img class="bridge-shell bridge-shell-door bridge-shell-door-right" id="bridgeDoorRight" src="assets/motomoto-door-right.png" alt="">
+      <img class="bridge-shell bridge-shell-closed is-visible" id="bridgeShellClosed" src="assets/motomoto-screen-01.png" alt="Ecran MOTOMOTO 1">
+    </div>
+    <div class="bridge-glow" aria-hidden="true"></div>
+
+    <button class="door-hotspot door-hotspot-left" id="doorHotspotLeft" type="button" aria-label="Aller aux quartiers"></button>
+    <button class="door-hotspot door-hotspot-right" id="doorHotspotRight" type="button" aria-label="Aller au sas tribord"></button>
+
+    <!-- ─── PIÈCE LATÉRALE ──────────────────────────────────────── -->
+    <section class="room-view" id="roomView" aria-hidden="true">
+      <div class="room-view-backdrop"></div>
+      <div class="room-view-stage">
+        <div class="room-view-frame">
+          <canvas class="room-view-space" id="roomSpaceCanvas"></canvas>
+          <img class="room-view-img" id="roomViewImg" src="assets/quartier-fenetre.png" alt="Pièce du vaisseau">
+        </div>
+        <div class="room-view-bar">
+          <span class="room-view-caption" id="roomViewCaption">QUARTIERS</span>
+          <button class="room-view-close pixel-btn" id="roomViewClose" type="button">&lt; RETOUR AU POSTE</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="active-role-chip" aria-label="Role actif">
+      <span class="active-role-chip-picto" id="activeRolePicto" aria-hidden="true"></span>
+      <div class="active-role-chip-label">ROLE ACTIF</div>
+      <div class="active-role-chip-value" id="activeRoleValue">CAPITAINE</div>
+    </aside>
+
+    <aside class="mission-timer" aria-label="Compte a rebours">
+      <div class="mission-timer-value" id="missionTimerValue">08:00</div>
+    </aside>
+
+    <!-- ─── COMMS ÉQUIPAGE (gauche) ─────────────────────────────── -->
+    <aside class="demo-comms" id="demoComms" aria-label="Communications de l'équipage">
+      <header class="demo-comms-head">
+        <span class="demo-comms-title">COMMS // ÉQUIPAGE</span>
+        <span class="demo-comms-live">● LIVE</span>
+      </header>
+      <div class="demo-comms-feed" id="commsFeed"></div>
+    </aside>
+
+    <!-- ─── ÉQUIPAGE (droite) ───────────────────────────────────── -->
+    <aside class="demo-crew" id="demoCrew" aria-label="Membres de l'équipage">
+      <header class="demo-crew-head">ÉQUIPAGE</header>
+      <div class="demo-crew-list" id="crewList"></div>
+      <div class="demo-crew-scans" id="crewScans">SCANS MÉDICAUX : 2</div>
+    </aside>
+
+    <!-- ─── FICHE MEMBRE / SCAN ─────────────────────────────────── -->
+    <section class="member-modal" id="memberModal" aria-hidden="true">
+      <div class="member-modal-backdrop" id="memberModalBackdrop"></div>
+      <article class="member-card" id="memberCard">
+        <header class="member-card-head">
+          <img class="member-card-portrait" id="memberPortrait" src="assets/animals/head-01.svg" alt="">
+          <div>
+            <div class="member-card-name" id="memberName">KESSEL</div>
+            <div class="member-card-role" id="memberRole">MATELOT // PONT</div>
+          </div>
+        </header>
+        <div class="member-card-status" id="memberStatus">STATUT : À BORD</div>
+        <div class="member-card-actions">
+          <button class="member-btn" id="memberScanBtn" type="button">SCANNER <span class="member-btn-cost">− 8 CARBURANT</span></button>
+          <button class="member-btn member-btn-danger" id="memberEjectBtn" type="button">ÉJECTER PAR LE SAS</button>
+          <button class="member-btn member-btn-ghost" id="memberCloseBtn" type="button">FERMER</button>
+        </div>
+      </article>
+    </section>
+
+    <!-- ─── ÉVÉNEMENT (bas centre) ──────────────────────────────── -->
+    <section class="demo-event" id="eventPanel" aria-live="polite">
+      <div class="demo-event-inner">
+        <header class="demo-event-head">
+          <span class="demo-event-kicker" id="eventKicker">ALERTE</span>
+          <span class="demo-event-countdown" id="eventCountdown">30</span>
+        </header>
+        <div class="demo-event-body">
+          <div class="demo-event-copy">
+            <h2 class="demo-event-title" id="eventTitle">—</h2>
+            <p class="demo-event-text" id="eventText">—</p>
+          </div>
+          <div class="demo-event-visual" id="eventVisual" aria-hidden="true">
+            <img id="eventVisualImg" src="" alt="">
+          </div>
+        </div>
+        <div class="demo-event-options" id="eventOptions"></div>
+        <div class="demo-event-timerbar"><div class="demo-event-timerfill" id="eventTimerFill"></div></div>
+      </div>
+    </section>
+
+    <!-- ─── FIN DE PARTIE ───────────────────────────────────────── -->
+    <section class="end-overlay" id="endOverlay" aria-live="polite">
+      <article class="end-card">
+        <div class="end-kicker" id="endKicker">MOTOMOTO // DERNIERE TRANSMISSION</div>
+        <div class="end-visual" id="endVisual" aria-hidden="true">
+          <img class="end-visual-planet" src="assets/backgrounds/menu-planet-2.png" alt="">
+          <img class="end-visual-ship" src="assets/ship-launch-detourer-crop.png" alt="">
+        </div>
+        <h2 class="end-title" id="endTitle">ABSORPTION<br>COMPLETE</h2>
+        <p class="end-copy" id="endCopy">Temps écoulé. Le vaisseau est perdu. Fin de la partie.</p>
+        <button class="role-card-dismiss demo-replay" id="replayBtn" type="button">REJOUER</button>
+      </article>
+    </section>
+
+    <!-- ─── CARTE DE RÔLE (début) ───────────────────────────────── -->
+    <section class="role-overlay is-visible" id="roleOverlay" aria-live="polite">
+      <div class="role-overlay-backdrop"></div>
+      <article class="role-card" id="roleCard" aria-label="Carte de role">
+        <header class="role-card-topbar">
+          <div class="role-card-badge">
+            <span class="role-card-badge-mark">*</span>
+            <span>MOTOMOTO</span>
+          </div>
+          <div class="role-card-signal">DEMO SOLO</div>
+          <div class="role-card-cells" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        </header>
+
+        <section class="role-card-midbar">
+          <div class="role-card-rank">
+            OFFICIER
+            <span class="role-card-name">CAPITAINE</span>
+          </div>
+          <div class="role-card-access">
+            ACCESS
+            <span class="role-card-access-glitch">+++++++</span>
+          </div>
+        </section>
+
+        <section class="role-card-main">
+          <div class="role-card-portrait-frame">
+            <img class="role-card-portrait" src="assets/animals/head-03.svg" alt="Illustration du role">
+          </div>
+
+          <div class="role-card-meta">
+            <div class="role-card-meta-grid">
+              <div class="role-card-meta-label">ESPECE</div><div class="role-card-meta-value">CANIDE // SURVIVANT</div>
+              <div class="role-card-meta-label">PROFIL</div><div class="role-card-meta-value">COMMAND // AUTHORIZED</div>
+              <div class="role-card-meta-label">CODE</div><div class="role-card-meta-value">AR-01-CPT-1402</div>
+              <div class="role-card-meta-label">NAV.</div><div class="role-card-meta-value">PRIORITY ROUTE // ARECIBO</div>
+            </div>
+
+            <div class="role-card-roleblock">
+              <div class="role-card-role">CAPITAINE</div>
+              <div class="role-card-rolepower">DECISION FINALE</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="role-card-copy">
+          <div class="role-card-copy-head">AUTORISATION ACTIVE.</div>
+          <p>Vous commandez le MOTOMOTO. Votre équipage — VEGA au poste de timonier, KESSEL et TILT en soute et sur le pont — vous transmet ce qu'il voit. Vous seul décidez.</p>
+          <p>Vous ne voyez ni les routes, ni l'état réel du vaisseau : écoutez les comms, recoupez, tranchez. Tenez 8 minutes jusqu'à ARECIBO.</p>
+          <p>Attention : si un membre d'équipage sort du vaisseau, ce qui revient n'est peut-être plus tout à fait lui.</p>
+        </section>
+
+        <footer class="role-card-footer">
+          <span>__SYS__</span>
+          <span>PROPERTY OF MOTOMOTO // ARECIBO SALVAGE PROTOCOL</span>
+          <span>ARQ</span>
+        </footer>
+
+        <button class="role-card-dismiss" id="roleCardDismiss" type="button">PRENDRE LE COMMANDEMENT</button>
+      </article>
+    </section>
+  </main>
+
+  <button class="arecibo-settings-tab pixel-btn" id="arecibo-settings-tab" type="button" aria-label="Ouvrir les options">> SETTINGS</button>
+
+  <div id="settings-overlay" onclick="if(event.target===this)closeGameSettings()">
+    <div class="settings-panel">
+      <div class="sp-header">
+        <button class="sp-close" onclick="closeGameSettings()">x</button>
+        <span class="sp-title">MENU // SETTINGS //</span>
+      </div>
+      <div class="sp-body">
+        <div>
+          <div class="sp-section-label">Son</div>
+          <div class="sp-slider-row">
+            <span class="sp-slider-label">Volume général</span>
+            <input type="range" min="0" max="100" value="80" data-audio-setting="master" data-default="80" data-value-id="gsv1" oninput="updateGameSlider(this,'gsv1')">
+            <span class="sp-val" id="gsv1">80%</span>
+          </div>
+          <div class="sp-slider-row">
+            <span class="sp-slider-label">Musique</span>
+            <input type="range" min="0" max="100" value="60" data-audio-setting="music" data-default="60" data-value-id="gsv2" oninput="updateGameSlider(this,'gsv2')">
+            <span class="sp-val" id="gsv2">60%</span>
+          </div>
+          <div class="sp-slider-row">
+            <span class="sp-slider-label">Effets sonores</span>
+            <input type="range" min="0" max="100" value="60" data-audio-setting="effects" data-default="60" data-value-id="gsv3" oninput="updateGameSlider(this,'gsv3')">
+            <span class="sp-val" id="gsv3">60%</span>
+          </div>
+        </div>
+        <div>
+          <div class="sp-section-label">Filtre pixel</div>
+          <div class="sp-pixel-row" data-pixel-dither-group>
+            <button class="pixel-btn" type="button" data-pixel-dither="off" onclick="selectGamePixelDither(this, 'off')">OFF</button>
+            <button class="pixel-btn" type="button" data-pixel-dither="normal" onclick="selectGamePixelDither(this, 'normal')">NORMAL</button>
+            <button class="pixel-btn sel" type="button" data-pixel-dither="strong" onclick="selectGamePixelDither(this, 'strong')">FORT</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cursor" id="cursor"></div>
+
+  <script src="assets/player-profile.js?v=profile-1"></script>
+  <script src="assets/js/arecibo-demo.js?v=demo-2"></script>
+  <script src="assets/theme-audio.js?v=theme-audio-3"></script>
+</body>
+</html>
