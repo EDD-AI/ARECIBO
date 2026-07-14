@@ -152,6 +152,9 @@
   const clamp = v => Math.max(0, Math.min(100, Math.round(v)));
   const rand = (a, b) => a + Math.random() * (b - a);
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  // Les textes d'événements acceptent une chaîne OU un tableau de
+  // variantes : le tableau est tiré au sort à chaque partie.
+  const pickText = v => (Array.isArray(v) ? pick(v) : v);
 
   function aliveNpcs() {
     return Object.keys(NPCS).filter(id => !state.ejected[id]);
@@ -254,7 +257,7 @@
       text: 'Un choc sourd côté tribord. La moitié des capteurs du pont ne répondent plus.',
       decide: 34,
       msgs: [
-        { npc: 'kessel', d: 1800, t: 'Coque à {hull}. Un panneau tribord est plié, ça siffle quelque part.', lie: 'Coque nickel, aucun dégât. Le choc venait de l’intérieur, un outil qui traînait.' },
+        { npc: 'kessel', d: 1800, t: ['Coque à {hull}. Un panneau tribord est plié, ça siffle quelque part.', 'Coque à {hull}. Je sens la vibration jusque dans mes dents, c’est jamais bon signe.', 'Coque à {hull}. Ce truc est accroché juste au-dessus du réservoir, capitaine.'], lie: ['Coque nickel, aucun dégât. Le choc venait de l’intérieur, un outil qui traînait.', 'Rien à signaler sur la coque. Tu as dû rêver ce choc, capitaine.'] },
         { npc: 'vega', d: 5200, t: 'Champ de débris droit devant. Contact dans 40 secondes si on garde ce cap.', lie: 'Route parfaitement dégagée devant nous. Aucun contact sur les scopes.' },
         { npc: 'tilt', d: 9000, t: 'Réserves à {fuel}. Si tu pousses les moteurs, on va le sentir passer.', lie: 'Les réserves débordent, cap’taine. Pousse les moteurs, aucun souci.' }
       ],
@@ -272,7 +275,7 @@
       text: 'Une vieille station de ravitaillement dérive à portée. Enseigne à moitié morte : « DERNIER PLEIN AVANT LE VIDE ».',
       decide: 34,
       msgs: [
-        { npc: 'tilt', d: 2000, t: 'Réserves à {fuel}. Franchement, je dirais pas non à un plein.', lie: 'On est large en carburant, pas la peine de s’arrêter dans ce piège à rats.' },
+        { npc: 'tilt', d: 2000, t: ['Réserves à {fuel}. Franchement, je dirais pas non à un plein.', 'Réserves à {fuel}. Une station-service au milieu de nulle part, c’est louche OU c’est un miracle.', '{fuel} de carburant restant. Je dis ça, je dis rien. Mais je le redirai.'], lie: ['On est large en carburant, pas la peine de s’arrêter dans ce piège à rats.', 'Nos réserves débordent, cette station ne vaut pas le détour. Continue.'] },
         { npc: 'vega', d: 6000, t: 'L’accostage est faisable, mais la station tourne sur elle-même. Faudra sortir à la main.', lie: 'Accostage impossible, la station tourne bien trop vite. Passe au large.' },
         { npc: 'kessel', d: 10000, t: 'Le sas tribord est opérationnel. Je peux y aller. J’ai un bon pressentiment.', lie: 'Les sas sont grippés, personne ne sort. Tant pis pour le plein.' }
       ],
@@ -1068,7 +1071,7 @@
     evt.msgs.forEach(msg => {
       window.setTimeout(() => {
         if (state.activeEvent !== evt || state.over) return;
-        const text = isLiar(msg.npc) && msg.lie ? msg.lie : msg.t;
+        const text = pickText(isLiar(msg.npc) && msg.lie ? msg.lie : msg.t);
         if (!state.ejected[msg.npc]) pushMessage(msg.npc, text);
       }, msg.d);
     });
@@ -1669,6 +1672,19 @@
     bindUi();
     window.setInterval(logicTick, 250);
     requestAnimationFrame(frame);
+  }
+
+  // Outils de test : actifs uniquement avec ?debug=1 dans l'URL.
+  if (params.get('debug') === '1') {
+    window.__areciboDemo = {
+      startEventById(id) {
+        const evt = EVENTS.find(e => e.id === id);
+        if (evt && !state.activeEvent) startEvent(evt);
+      },
+      state,
+      grep: grepMinigame,
+      wires: wiresMinigame
+    };
   }
 
   window.openGameSettings = openSettings;
