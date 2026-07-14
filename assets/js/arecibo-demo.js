@@ -1370,11 +1370,11 @@
     { x: 30, y: 68, c: '#fa5a1f' }, { x: 70, y: 68, c: '#f7ffc3' }
   ];
 
+  // Coordonnées relevées sur motomoto-screen-01.png : les deux petits
+  // écrans noirs peints sur les consoles latérales.
   const WALL_SCREEN_SPOTS = [
-    { x: 27, y: 45, amber: false },
-    { x: 66.5, y: 45, amber: true },
-    { x: 27.5, y: 63, amber: true },
-    { x: 66.5, y: 63, amber: false }
+    { x: 27.3, y: 41.8, w: 4.6, h: 4.6, amber: false },
+    { x: 68.2, y: 41.8, w: 4.6, h: 4.6, amber: true }
   ];
 
   const DATA_WORDS = ['NAV', 'O2', 'PWR', 'SYS', 'CRG', 'SIG', 'ENV', 'THR', 'LNK', 'BAK'];
@@ -1386,24 +1386,43 @@
     return `${w}.${n} ${grepChunk(4)}${flag}`;
   }
 
+  // L'image du cockpit (1920x1080) est affichée en object-fit: cover :
+  // on convertit les % de l'IMAGE en pixels écran pour que LEDs et
+  // écrans restent calés sur le décor à n'importe quelle taille.
+  const BRIDGE_RATIO = 1920 / 1080;
+  const lifeNodes = [];
+
+  function positionBridgeLife() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const scale = Math.max(vw / 1920, vh / 1080);
+    const dw = 1920 * scale;
+    const dh = 1080 * scale;
+    const ox = (vw - dw) / 2;
+    const oy = (vh - dh) / 2;
+    lifeNodes.forEach(item => {
+      item.node.style.left = `${ox + (item.x / 100) * dw}px`;
+      item.node.style.top = `${oy + (item.y / 100) * dh}px`;
+      if (item.w) item.node.style.width = `${(item.w / 100) * dw}px`;
+      if (item.h) item.node.style.height = `${(item.h / 100) * dh}px`;
+    });
+  }
+
   function buildBridgeLife() {
     if (!bridgeLife) return;
     LED_SPOTS.forEach(spot => {
       const led = document.createElement('span');
       led.className = 'bridge-led';
-      led.style.left = `${spot.x}%`;
-      led.style.top = `${spot.y}%`;
       led.style.setProperty('--led-color', spot.c);
       led.style.setProperty('--led-dur', `${(1.6 + Math.random() * 3.2).toFixed(2)}s`);
       led.style.setProperty('--led-delay', `${(Math.random() * 3).toFixed(2)}s`);
       bridgeLife.appendChild(led);
+      lifeNodes.push({ node: led, x: spot.x, y: spot.y });
     });
 
     WALL_SCREEN_SPOTS.forEach(spot => {
       const screen = document.createElement('div');
       screen.className = 'wall-screen' + (spot.amber ? ' is-amber' : '');
-      screen.style.left = `${spot.x}%`;
-      screen.style.top = `${spot.y}%`;
       const inner = document.createElement('span');
       inner.className = 'wall-screen-inner';
       const lines = Array.from({ length: 6 }, dataLine);
@@ -1411,7 +1430,9 @@
       screen.appendChild(inner);
       bridgeLife.appendChild(screen);
       wallScreens.push({ node: inner, lines });
+      lifeNodes.push({ node: screen, x: spot.x, y: spot.y, w: spot.w, h: spot.h });
     });
+    positionBridgeLife();
 
     // Les écrans « reçoivent » une nouvelle ligne de données
     // régulièrement, chacun à son rythme.
@@ -1822,7 +1843,7 @@
   window.selectGameLang = () => {};
   window.toggleGameSwitch = node => node && node.classList.toggle('on');
 
-  window.addEventListener('resize', () => { resize(); drawRoomSpace(); if (eva.active) drawEvaStars(); });
+  window.addEventListener('resize', () => { resize(); drawRoomSpace(); positionBridgeLife(); if (eva.active) drawEvaStars(); });
   window.addEventListener('arecibo-pixel-dither-change', () => syncPixelDitherButtons(settingsOverlay || document));
   init();
 })();
