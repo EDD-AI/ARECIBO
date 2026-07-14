@@ -105,6 +105,33 @@ sortir est parfois nécessaire (ressources, réparations), et celui qui sort
    15 minutes. Pistes : devient « conscience du vaisseau » avec infos à
    distiller, ou flotte dehors et communique par signaux dégradés.
 
+## 7 bis. Interaction entre joueurs — le cœur du fun
+
+Principe : **on ne parle que quand on se doit des choses.** Chaque
+mécanique doit répondre à la question : « quelle phrase force-t-elle
+à dire sur Discord ? »
+
+1. **Un verbe par rôle** : les Matelots se déplacent physiquement dans
+   les pièces (mini-jeux sur place — loin de son poste, on ne voit plus
+   ses infos : savoir OU agir) ; le Timonier trace/exécute la route ;
+   le Capitaine répartit l'énergie (moteurs/bouclier/signal — jamais
+   assez pour tout, ses choix contraignent les actions des autres).
+2. **L'information coûte** : codes à décoder à deux (l'un voit le code,
+   l'autre a le manuel — façon Keep Talking) ; capteurs qui divergent
+   par design → débats sincères où le xénomorphe peut se cacher.
+3. **Enjeux personnels** : objectifs secrets innocents à chaque partie
+   (finir avec du carburant en réserve, ouvrir le sas 2 fois, zéro
+   éjection...) ; loot d'EVA privé (on déclare ce qu'on veut) ; jauges
+   personnelles (O2, fatigue) et droit de refuser un ordre.
+4. **Simultanéité** : deux incidents en même temps dans deux pièces →
+   triage et délégation, les pics de conversation.
+5. **Le xénomorphe laisse des traces** : sabotage avec indices
+   physiques découvrables (fil coupé, porte entrouverte) → enquête
+   spatiale et temporelle (« qui était en soute à la minute 4 ? »).
+
+Ordre de prototypage : postes physiques + info au poste, puis
+objectifs secrets + loot privé, puis double incident.
+
 ## 8. Exemples d'événements (ton à valider)
 
 - **« Quelque chose a accroché la coque. »** Le Capitaine voit trois options
