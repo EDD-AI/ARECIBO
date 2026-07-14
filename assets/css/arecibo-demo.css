@@ -9,6 +9,79 @@
   --sys: rgba(247, 255, 195, 0.55);
 }
 
+/* La vignette sombre et les scanlines (body::before/after, z-40 dans
+   le CSS motomoto) passent SOUS les fenêtres de dialogue : elles
+   n'assombrissent plus que le décor du vaisseau. */
+body::before,
+body::after {
+  z-index: 14;
+}
+
+/* ─── VIE DU COCKPIT : LEDS + ÉCRANS MURAUX ───────────────────── */
+.bridge-life {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+}
+
+.bridge-led {
+  position: absolute;
+  width: clamp(4px, 0.5vw, 8px);
+  height: clamp(4px, 0.5vw, 8px);
+  border-radius: 50%;
+  background: var(--led-color, var(--orange));
+  box-shadow: 0 0 10px var(--led-color, var(--orange));
+  opacity: 0.2;
+  animation: ledBlink var(--led-dur, 2.4s) ease-in-out infinite;
+  animation-delay: var(--led-delay, 0s);
+}
+
+@keyframes ledBlink {
+  0%, 100% { opacity: 0.14; }
+  12% { opacity: 0.95; }
+  24% { opacity: 0.3; }
+  36% { opacity: 0.8; }
+  60% { opacity: 0.18; }
+}
+
+.wall-screen {
+  position: absolute;
+  width: clamp(70px, 7.2vw, 130px);
+  height: clamp(42px, 4.6vw, 82px);
+  overflow: hidden;
+  padding: 4px 6px;
+  background: rgba(2, 3, 1, 0.85);
+  border: 1px solid rgba(247, 255, 195, 0.14);
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.8), 0 0 12px rgba(247, 255, 195, 0.05);
+  font-family: var(--f-pixel);
+  font-size: clamp(6px, 0.5vw, 9px);
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  color: rgba(247, 255, 195, 0.5);
+  animation: wallScreenFlicker 7s steps(20) infinite;
+}
+
+.wall-screen.is-amber {
+  color: rgba(250, 122, 44, 0.55);
+  border-color: rgba(250, 90, 31, 0.18);
+}
+
+.wall-screen-inner {
+  display: block;
+  white-space: pre;
+}
+
+@keyframes wallScreenFlicker {
+  0%, 100% { opacity: 0.85; }
+  7% { opacity: 0.55; }
+  8% { opacity: 0.9; }
+  43% { opacity: 0.7; }
+  44% { opacity: 0.92; }
+  77% { opacity: 0.5; }
+  78% { opacity: 0.88; }
+}
+
 /* ─── COMMS ÉQUIPAGE (colonne gauche) ─────────────────────────── */
 .demo-comms {
   position: absolute;

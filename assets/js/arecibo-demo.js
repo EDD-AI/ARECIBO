@@ -1357,6 +1357,73 @@
     }
   }
 
+  // ─── VIE DU COCKPIT : LEDS + ÉCRANS MURAUX ─────────────────────
+  // Positions en % de l'écran → suivent le redimensionnement.
+  const bridgeLife = $('bridgeLife');
+  const wallScreens = [];
+
+  const LED_SPOTS = [
+    { x: 7.2, y: 47, c: '#fa5a1f' }, { x: 8.6, y: 52, c: '#f7ffc3' },
+    { x: 6.4, y: 57, c: '#dbe79b' }, { x: 9.4, y: 62, c: '#fa5a1f' },
+    { x: 92.4, y: 47, c: '#f7ffc3' }, { x: 91, y: 52, c: '#fa5a1f' },
+    { x: 93.4, y: 57, c: '#dbe79b' }, { x: 90.2, y: 62, c: '#fa5a1f' },
+    { x: 30, y: 68, c: '#fa5a1f' }, { x: 70, y: 68, c: '#f7ffc3' }
+  ];
+
+  const WALL_SCREEN_SPOTS = [
+    { x: 27, y: 45, amber: false },
+    { x: 66.5, y: 45, amber: true },
+    { x: 27.5, y: 63, amber: true },
+    { x: 66.5, y: 63, amber: false }
+  ];
+
+  const DATA_WORDS = ['NAV', 'O2', 'PWR', 'SYS', 'CRG', 'SIG', 'ENV', 'THR', 'LNK', 'BAK'];
+
+  function dataLine() {
+    const w = pick(DATA_WORDS);
+    const n = Math.floor(Math.random() * 999).toString().padStart(3, '0');
+    const flag = Math.random() < 0.08 ? ' !!' : Math.random() < 0.3 ? ' OK' : '';
+    return `${w}.${n} ${grepChunk(4)}${flag}`;
+  }
+
+  function buildBridgeLife() {
+    if (!bridgeLife) return;
+    LED_SPOTS.forEach(spot => {
+      const led = document.createElement('span');
+      led.className = 'bridge-led';
+      led.style.left = `${spot.x}%`;
+      led.style.top = `${spot.y}%`;
+      led.style.setProperty('--led-color', spot.c);
+      led.style.setProperty('--led-dur', `${(1.6 + Math.random() * 3.2).toFixed(2)}s`);
+      led.style.setProperty('--led-delay', `${(Math.random() * 3).toFixed(2)}s`);
+      bridgeLife.appendChild(led);
+    });
+
+    WALL_SCREEN_SPOTS.forEach(spot => {
+      const screen = document.createElement('div');
+      screen.className = 'wall-screen' + (spot.amber ? ' is-amber' : '');
+      screen.style.left = `${spot.x}%`;
+      screen.style.top = `${spot.y}%`;
+      const inner = document.createElement('span');
+      inner.className = 'wall-screen-inner';
+      const lines = Array.from({ length: 6 }, dataLine);
+      inner.textContent = lines.join('\n');
+      screen.appendChild(inner);
+      bridgeLife.appendChild(screen);
+      wallScreens.push({ node: inner, lines });
+    });
+
+    // Les écrans « reçoivent » une nouvelle ligne de données
+    // régulièrement, chacun à son rythme.
+    window.setInterval(() => {
+      const target = pick(wallScreens);
+      if (!target) return;
+      target.lines.push(dataLine());
+      while (target.lines.length > 6) target.lines.shift();
+      target.node.textContent = target.lines.join('\n');
+    }, 700);
+  }
+
   // ─── DÉCOR (canvas espace, repris de l'écran MOTOMOTO) ──────────
   let panes = [];
 
@@ -1392,9 +1459,67 @@
           vy: -0.06 + Math.random() * 0.12,
           size: 1 + Math.random() * 1.3,
           alpha: 0.08 + Math.random() * 0.12
-        }))
+        })),
+        debris: [],
+        nextDebrisAt: performance.now() + rand(1500, 6000)
       };
     });
+  }
+
+  function spawnDebris(pane) {
+    const fast = Math.random() < 0.3;
+    pane.debris.push({
+      x: -14,
+      y: Math.random() * pane.height,
+      vx: fast ? rand(1.6, 3.4) : rand(0.35, 1.1),
+      vy: rand(-0.25, 0.25),
+      size: fast ? rand(1.5, 3) : rand(2.5, 6.5),
+      rot: Math.random() * Math.PI * 2,
+      vrot: rand(-0.03, 0.03),
+      alpha: rand(0.25, 0.6),
+      sides: 3 + Math.floor(Math.random() * 3)
+    });
+  }
+
+  function drawDebris(pane, now) {
+    if (now >= pane.nextDebrisAt) {
+      spawnDebris(pane);
+      // Parfois un petit essaim, sinon un débris isolé.
+      if (Math.random() < 0.22) {
+        spawnDebris(pane);
+        spawnDebris(pane);
+      }
+      pane.nextDebrisAt = now + rand(2600, 9000);
+    }
+
+    const { ctx } = pane;
+    for (let i = pane.debris.length - 1; i >= 0; i--) {
+      const d = pane.debris[i];
+      d.x += d.vx;
+      d.y += d.vy;
+      d.rot += d.vrot;
+      if (d.x > pane.width + 20 || d.y < -20 || d.y > pane.height + 20) {
+        pane.debris.splice(i, 1);
+        continue;
+      }
+      ctx.save();
+      ctx.translate(d.x, d.y);
+      ctx.rotate(d.rot);
+      ctx.globalAlpha = d.alpha;
+      ctx.fillStyle = 'rgba(200, 205, 165, 1)';
+      ctx.beginPath();
+      for (let s = 0; s < d.sides; s++) {
+        const angle = (s / d.sides) * Math.PI * 2;
+        const radius = d.size * (0.7 + ((s * 37) % 10) / 22);
+        const px = Math.cos(angle) * radius;
+        const py = Math.sin(angle) * radius;
+        if (s === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
   }
 
   function respawnParticle(pane, index) {
@@ -1428,6 +1553,8 @@
         ctx.fillStyle = 'rgba(247,255,195,1)';
         ctx.fillRect(star.x, star.y, star.size, star.size);
       });
+
+      drawDebris(pane, time);
 
       particles.forEach((particle, index) => {
         particle.x += particle.vx;
@@ -1669,6 +1796,7 @@
     renderCrew();
     hydrateSettingsPanel();
     resize();
+    buildBridgeLife();
     bindUi();
     window.setInterval(logicTick, 250);
     requestAnimationFrame(frame);
