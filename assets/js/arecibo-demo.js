@@ -126,9 +126,9 @@
     started: false,
     over: false,
     startedAt: 0,
-    hull: 69,
-    fuel: 47,
-    signal: 58,
+    hull: 60 + Math.floor(Math.random() * 16),
+    fuel: 42 + Math.floor(Math.random() * 13),
+    signal: 50 + Math.floor(Math.random() * 15),
     infectionRun: params.get('xeno') === '1' ? true : params.get('xeno') === '0' ? false : Math.random() < 0.65,
     infectedId: null,
     infectedSince: 0,
@@ -261,7 +261,7 @@
       options: [
         { label: 'Pousser les moteurs', hint: 'esquive rapide — coûte du carburant', fx: { fuel: -10 }, out: 'Les moteurs hurlent. Le champ de débris glisse sur bâbord et la chose accrochée se détache dans le sillage.' },
         { label: 'Couper les moteurs', hint: 'dérive silencieuse — risqué', fx: { hull: -8, signal: -4 }, out: 'Le MOTOMOTO dérive. Deux impacts sourds. Quelque chose raye la coque sur toute sa longueur.' },
-        { label: 'Envoyer Kessel décrocher la chose', hint: 'sortie en sas', fx: { hull: 4 }, exposes: 'kessel', out: 'KESSEL sort par le sas tribord. Trois longues minutes de silence radio. Il revient avec l’objet : une plaque gravée « ARECIBO ».' }
+        { label: 'Envoyer Kessel décrocher la chose', hint: 'sortie en sas — vous incarnerez Kessel', fx: { hull: 4 }, exposes: 'kessel', out: 'KESSEL sort par le sas tribord. Trois longues minutes de silence radio. Il revient avec l’objet : une plaque gravée « ARECIBO ».', eva: { object: 'LA CHOSE ACCROCHÉE', find: 'Une plaque de coque gravée : « ARECIBO ». Elle est tiède. Les plaques ne devraient pas être tièdes.' } }
       ],
       timeout: { fx: { hull: -10 }, out: 'Personne n’a tranché. La chose a fini par percer un caisson avant de se détacher toute seule.' }
     },
@@ -277,7 +277,7 @@
         { npc: 'kessel', d: 10000, t: 'Le sas tribord est opérationnel. Je peux y aller. J’ai un bon pressentiment.', lie: 'Les sas sont grippés, personne ne sort. Tant pis pour le plein.' }
       ],
       options: [
-        { label: 'Accoster et envoyer Tilt', hint: 'plein complet — sortie en sas', fx: { fuel: 24 }, exposes: 'tilt', out: 'TILT revient en roulant deux bidons devant lui. Il fredonne un truc que personne ne connaît.' },
+        { label: 'Accoster et envoyer Tilt', hint: 'plein complet — vous incarnerez Tilt', fx: { fuel: 24 }, exposes: 'tilt', out: 'TILT revient en roulant deux bidons devant lui. Il fredonne un truc que personne ne connaît.', eva: { object: 'LES CUVES DE LA STATION', find: 'Deux bidons pleins. Sur la cuve, une inscription à la craie : « SERVEZ-VOUS. ON N’EN AURA PLUS BESOIN. »' } },
         { label: 'Siphonner à distance', hint: 'plus sûr, moins efficace', fx: { fuel: 9, signal: -5 }, out: 'Le bras télescopique racle le réservoir de la station. Quelques litres, et un paquet d’interférences.' },
         { label: 'Passer au large', hint: 'aucun risque, aucun gain', fx: {}, out: 'La station disparaît derrière vous. Sur l’enseigne, une lumière s’éteint pour de bon.' }
       ],
@@ -386,7 +386,7 @@
         { npc: 'tilt', d: 10000, t: 'Nos réserves sont à {fuel}. Un détour de plus et je commence à pédaler.', lie: 'Le détour ne coûte presque rien, on a tout le carburant qu’il faut. Prends le chemin long et sûr.' }
       ],
       options: [
-        { label: 'Envoyer Kessel fouiller', hint: 'butin possible — sortie en sas', fx: { fuel: 12 }, exposes: 'kessel', out: 'KESSEL revient avec une cellule de carburant... et une combinaison qui n’est pas la sienne. « Elle était pliée. Sur une couchette. Encore tiède. »' },
+        { label: 'Envoyer Kessel fouiller', hint: 'butin possible — vous incarnerez Kessel', fx: { fuel: 12 }, exposes: 'kessel', out: 'KESSEL revient avec une cellule de carburant... et une combinaison qui n’est pas la sienne. « Elle était pliée. Sur une couchette. Encore tiède. »', eva: { object: 'LA SOUTE ÉVENTRÉE', find: 'Une cellule de carburant intacte. Et une combinaison pliée sur une couchette. Vous la touchez : encore tiède.' } },
         { label: 'Passer dessous', hint: 'direct — la coque frotte', fx: { hull: -7 }, out: 'Le ventre du MOTOMOTO embrasse la carcasse dans un crissement à réveiller les morts. Mais ça passe.' },
         { label: 'Contourner', hint: 'sûr — coûte du carburant', fx: { fuel: -9 }, out: 'Vous contournez le géant mort. Par les baies éventrées, personne ne regarde passer votre vaisseau. Probablement.' }
       ],
@@ -423,11 +423,28 @@
         { npc: 'vega', d: 9500, t: 'Sans intervention, il lâchera avant l’arrivée. Mathématiquement, c’est un mauvais pari.', lie: 'Il tiendra sans problème jusqu’à ARECIBO, mes courbes sont formelles. N’y touche pas.' }
       ],
       options: [
-        { label: 'Réparation propre', hint: 'fiable — pompe sur le signal', fx: { signal: -9, hull: 3 }, out: 'KESSEL ressoude la carte mère au milligramme près. Le recycleur ronronne à nouveau comme un chat content.' },
+        { label: 'Réparation au panneau', hint: 'mini-jeu — coupez le bon fil', minigame: 'wires', success: { fx: { hull: 5, signal: -3 }, out: 'Le bon fil. Le recycleur repart en ronronnant comme un chat content. KESSEL siffle, admiratif.' }, fail: { fx: { hull: -8 }, out: 'Mauvais fil. La moitié du pont s’éteint et quelque chose claque très fort en soute. Personne n’en parlera.' } },
         { label: 'Bricolage de soute', hint: 'gratuit — aléatoire', fx: { hull: -4 }, out: 'TILT enroule trois colliers de serrage et frappe deux fois. Ça marche. Personne ne demande pourquoi.' },
         { label: 'Ne rien faire', hint: 'espérer que ça tienne', fx: { hull: -8 }, out: 'Le recycleur tient... puis crache une pièce qui ricoche dans les conduits et perce un joint. Évidemment.' }
       ],
       timeout: { fx: { hull: -8 }, out: 'À force d’attendre, le recycleur a choisi tout seul : il a lâché un morceau.' }
+    },
+    {
+      id: 'archives',
+      kicker: 'SYSTÈME DE BORD',
+      title: 'L’ordinateur exige un opérateur',
+      text: 'Le vieil OS du MOTOMOTO verrouille la navigation : il veut qu’une main vivante retrouve un fichier dans ses archives. Il dit que c’est « une question de confiance ».',
+      decide: 30,
+      msgs: [
+        { npc: 'vega', d: 2000, t: 'Sans ce fichier, je navigue à l’estime. Et mon estime est mauvaise.', lie: 'Ignore cette machine sénile, je peux naviguer sans fichier. Fais-moi confiance.' },
+        { npc: 'kessel', d: 6000, t: 'Cet OS a survécu à trois équipages. Il fait ça quand il s’ennuie. Ou quand il a peur.', lie: 'Débranche ce terminal, il nous fait perdre du temps. Arrache la prise.' },
+        { npc: 'tilt', d: 10000, t: 'Les archives médicales sont dedans aussi. On pourrait... jeter un œil, pendant qu’on y est.', lie: 'Surtout ne fouille pas les archives, c’est un nid à virus. N’ouvre RIEN.' }
+      ],
+      options: [
+        { label: 'Faire la recherche', hint: 'mini-jeu — retrouvez la séquence', minigame: 'grep', success: { fx: { signal: 10 }, out: 'Le fichier se décompresse. L’OS ronronne et déverrouille la navigation. Les archives médicales défilent au passage...' }, fail: { fx: { signal: -8 }, out: 'L’OS soupire électroniquement et se verrouille pour bouder. Navigation en mode dégradé.' } },
+        { label: 'Débrancher le terminal', hint: 'brutal — l’OS s’en souviendra', fx: { signal: -4, hull: -2 }, out: 'Vous débranchez. Toutes les portes du bord claquent en même temps. Coïncidence, sûrement.' }
+      ],
+      timeout: { fx: { signal: -6 }, out: 'L’OS a attendu. Personne n’est venu. Il a mis la navigation en mode « vexé ».' }
     }
   ];
 
@@ -449,9 +466,23 @@
       'Inventaire de soute refait. Il nous reste onze rations et un paquet de biscuits contesté.',
       'Il fait froid en bas. Le genre de froid qui a une opinion.',
       'Je chantonne pour la cloison 4. Au cas où quelque chose écouterait, autant que ce soit poli.',
-      'Rappel amical : le dernier qui prend un biscuit sans le noter aura affaire à moi.'
+      'Rappel amical : le dernier qui prend un biscuit sans le noter aura affaire à moi.',
+      'La cloison 4 est silencieuse depuis une heure. Je sais pas si c’est mieux.',
+      'J’ai réparé le monte-charge. Enfin, il descend. C’est déjà la moitié du travail.',
+      'Quelqu’un d’autre trouve que le vaisseau sent différent depuis tout à l’heure ?'
     ]
   };
+
+  IDLE_LINES.vega.push(
+    'Correction de trajectoire de 0,4 degré. Vous n’avez rien senti ? Parfait. C’est mon travail.',
+    'ARECIBO a « cligné » deux fois sur le scope. Les planètes ne clignent pas. Je note quand même.',
+    'Si mes calculs sont bons, on arrive. Si mes calculs sont mauvais, on arrive quelque part.'
+  );
+  IDLE_LINES.kessel.push(
+    'Le hublot tribord a une nouvelle rayure. Elle est de l’intérieur. Bref.',
+    'J’ai resserré 34 boulons aujourd’hui. Le 35e a refusé. Je respecte ça.',
+    'Rien à signaler sur le pont. C’est bien ça qui m’inquiète.'
+  );
 
   const INFECTED_IDLE_LINES = [
     'Tout va bien ici. Tout va parfaitement bien.',
@@ -617,6 +648,371 @@
     }
   }
 
+  // ─── MINI-JEUX : FENÊTRE TERMINAL CRT ───────────────────────────
+  const minigameOverlay = $('minigameOverlay');
+  const crtWindow = $('crtWindow');
+  const crtTitle = $('crtTitle');
+  const crtSubbar = $('crtSubbar');
+  const crtBody = $('crtBody');
+  const crtTimer = $('crtTimer');
+  const crtTimerFill = $('crtTimerFill');
+  const crtStatusLeft = $('crtStatusLeft');
+  const crtResult = $('crtResult');
+
+  const mg = { active: false, done: false, deadline: 0, total: 0, onEnd: null };
+
+  function startMinigame(def, onEnd) {
+    mg.active = true;
+    mg.done = false;
+    mg.onEnd = onEnd;
+    mg.total = def.seconds * 1000;
+    mg.deadline = Date.now() + mg.total;
+    if (crtWindow) crtWindow.classList.toggle('is-orange', !!def.orange);
+    if (crtTitle) crtTitle.textContent = def.title;
+    if (crtSubbar) crtSubbar.textContent = def.subtitle;
+    if (crtStatusLeft) crtStatusLeft.textContent = 'READY_';
+    if (crtResult) {
+      crtResult.classList.remove('is-visible', 'is-fail');
+      crtResult.textContent = '';
+    }
+    if (crtBody) {
+      crtBody.innerHTML = '';
+      def.build(crtBody);
+    }
+    if (minigameOverlay) {
+      minigameOverlay.classList.add('is-visible');
+      minigameOverlay.setAttribute('aria-hidden', 'false');
+    }
+    playSfx('on', 0.6);
+  }
+
+  function endMinigame(success, message) {
+    if (!mg.active || mg.done) return;
+    mg.done = true;
+    if (crtResult) {
+      crtResult.textContent = message || (success ? 'ACCÈS ACCORDÉ' : 'ÉCHEC // VERROUILLAGE');
+      crtResult.classList.add('is-visible');
+      crtResult.classList.toggle('is-fail', !success);
+    }
+    playSfx(success ? 'on' : 'wrong', 0.75);
+    window.setTimeout(() => {
+      mg.active = false;
+      if (minigameOverlay) {
+        minigameOverlay.classList.remove('is-visible');
+        minigameOverlay.setAttribute('aria-hidden', 'true');
+      }
+      const cb = mg.onEnd;
+      mg.onEnd = null;
+      if (cb) cb(success);
+    }, 1900);
+  }
+
+  function minigameTick(now) {
+    if (!mg.active || mg.done) return;
+    const remaining = Math.max(0, mg.deadline - now);
+    if (crtTimer) {
+      crtTimer.textContent = String(Math.ceil(remaining / 1000));
+      crtTimer.classList.toggle('is-low', remaining < 6000);
+    }
+    if (crtTimerFill) crtTimerFill.style.transform = `scaleX(${remaining / mg.total})`;
+    if (remaining <= 0) endMinigame(false, 'TEMPS ÉCOULÉ');
+  }
+
+  // Mini-jeu 1 : GREP // ARCHIVES — retrouver une séquence dans des
+  // centaines de fichiers avant la fin du temps. 3 erreurs = échec.
+  const GREP_PREFIXES = ['LOG', 'MED', 'NAV', 'SYS', 'CRG', 'O2', 'BAK', 'ENV', 'COM', 'PWR'];
+  const GREP_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+  function grepChunk(len) {
+    let out = '';
+    for (let i = 0; i < len; i++) out += GREP_CHARS[Math.floor(Math.random() * GREP_CHARS.length)];
+    return out;
+  }
+
+  function grepMinigame(onEnd) {
+    const seq = `${grepChunk(2)}-${grepChunk(4)}`;
+    let wrongs = 0;
+
+    startMinigame({
+      title: 'MOTOMOTO OS v0.9 — /archives',
+      subtitle: 'RECHERCHE MANUELLE // LE MOTEUR D’INDEXATION EST MORT EN 2214',
+      seconds: 30,
+      build(body) {
+        const head = document.createElement('div');
+        head.className = 'grep-target';
+        head.innerHTML = `SÉQUENCE RECHERCHÉE : <strong>${seq}</strong> — 3 ERREURS = VERROUILLAGE`;
+        body.appendChild(head);
+
+        const grid = document.createElement('div');
+        grid.className = 'grep-grid';
+        const total = 180;
+        const targetIndex = 30 + Math.floor(Math.random() * (total - 40));
+
+        for (let i = 0; i < total; i++) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'grep-file';
+          const prefix = pick(GREP_PREFIXES);
+          const body1 = grepChunk(2) + '-' + grepChunk(4);
+          const isTarget = i === targetIndex;
+          btn.textContent = `${prefix}_${isTarget ? seq : body1}.dat`;
+          btn.addEventListener('click', () => {
+            if (isTarget) {
+              endMinigame(true, 'FICHIER TROUVÉ // DÉCRYPTAGE...');
+            } else {
+              btn.classList.add('is-wrong');
+              wrongs += 1;
+              playSfx('wrong', 0.4);
+              if (crtStatusLeft) crtStatusLeft.textContent = `ERREURS : ${wrongs}/3_`;
+              if (wrongs >= 3) endMinigame(false, 'VERROUILLAGE // TROP D’ERREURS');
+            }
+          });
+          grid.appendChild(btn);
+        }
+        body.appendChild(grid);
+      }
+    }, onEnd);
+  }
+
+  // Mini-jeu 2 : COUPE-CIRCUIT — couper le bon fil, un seul essai.
+  // Réutilise les visuels sas-repair de la V1.
+  const WIRES = [
+    { id: 'ROUGE', color: '#ff5340', img: 'assets/sas-repair/tableau ouvert fil rouge coupe.png' },
+    { id: 'BLEU', color: '#5aa8ff', img: 'assets/sas-repair/tableau ouvert fil bleu coupe.png' },
+    { id: 'VERT', color: '#7dff7a', img: 'assets/sas-repair/tableau ouvert fil vert coupe.png' },
+    { id: 'JAUNE', color: '#ffe75a', img: 'assets/sas-repair/tableau ouvert fil jaune coupe.png' },
+    { id: 'ORANGE', color: '#ff9c40', img: 'assets/sas-repair/tableau ouvert fil orange coupe.png' },
+    { id: 'VIOLET', color: '#c58aff', img: 'assets/sas-repair/tableau ouvert fil violet coupe.png' }
+  ];
+
+  function wiresMinigame(onEnd) {
+    const target = pick(WIRES);
+    let cut = false;
+
+    startMinigame({
+      orange: true,
+      title: 'PANNEAU DE DÉRIVATION // PONT INFÉRIEUR',
+      subtitle: 'UN SEUL FIL. UN SEUL ESSAI. PAS DE PRESSION.',
+      seconds: 14,
+      build(body) {
+        const stage = document.createElement('div');
+        stage.className = 'wires-stage';
+        stage.innerHTML = `
+          <div class="wires-instruction">VEGA : « Coupe le fil <strong style="color:${target.color}">${target.id}</strong>. Enfin... je crois. »</div>
+          <div class="wires-board"><img id="wiresImg" src="assets/sas-repair/tableau-ouvert.png" alt="Tableau électrique ouvert"></div>
+          <div class="wires-buttons"></div>`;
+        const buttons = stage.querySelector('.wires-buttons');
+        WIRES.forEach(wire => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'wire-btn';
+          btn.style.setProperty('--wire', wire.color);
+          btn.textContent = wire.id;
+          btn.addEventListener('click', () => {
+            if (cut) return;
+            cut = true;
+            const img = stage.querySelector('#wiresImg');
+            if (img) img.src = wire.img;
+            playClick();
+            window.setTimeout(() => {
+              endMinigame(wire.id === target.id,
+                wire.id === target.id ? 'DÉRIVATION STABILISÉE' : 'MAUVAIS FIL // SURCHARGE');
+            }, 1000);
+          });
+          buttons.appendChild(btn);
+        });
+        body.appendChild(stage);
+      }
+    }, onEnd);
+  }
+
+  const MINIGAMES = { grep: grepMinigame, wires: wiresMinigame };
+
+  // Fouiller les archives peut révéler le xénomorphe : c'est le vrai
+  // butin du mini-jeu GREP quand une infection est en cours.
+  function revealArchiveIntel() {
+    window.setTimeout(() => {
+      if (state.over) return;
+      if (state.infectedId) {
+        const npc = NPCS[state.infectedId];
+        pushMessage('system', `ARCHIVES MÉDICALES // ANOMALIE : le dossier de ${npc.name} a été modifié il y a 12 minutes. Auteur de la modification : ${npc.name}.`, 'is-glitch');
+        playSfx('wrong', 0.5);
+      } else {
+        pushMessage('system', 'ARCHIVES MÉDICALES // Tous les dossiers concordent. Pour l’instant, vous êtes seuls à bord.');
+      }
+    }, 2400);
+  }
+
+  // ─── SORTIE EVA (le joueur incarne le membre exposé) ────────────
+  const evaOverlay = $('evaOverlay');
+  const evaStars = $('evaStars');
+  const evaBannerName = $('evaBannerName');
+  const evaObjects = $('evaObjects');
+  const evaHudFeed = $('evaHudFeed');
+  const evaO2Fill = $('evaO2Fill');
+  const evaO2Value = $('evaO2Value');
+  const evaReturnBtn = $('evaReturnBtn');
+  const evaFlashlight = $('evaFlashlight');
+  const evaGlitch = $('evaGlitch');
+
+  const EVA_DURATION_MS = 45000;
+  const eva = {
+    active: false,
+    npc: null,
+    onDone: null,
+    deadline: 0,
+    inspectedMain: false,
+    beatDone: false,
+    willInfect: false
+  };
+
+  function evaHudLine(text, danger = false) {
+    if (!evaHudFeed) return;
+    const line = document.createElement('div');
+    line.className = 'eva-hud-line' + (danger ? ' is-danger' : '');
+    line.textContent = text;
+    evaHudFeed.appendChild(line);
+    while (evaHudFeed.children.length > 3) evaHudFeed.removeChild(evaHudFeed.firstChild);
+  }
+
+  function drawEvaStars() {
+    if (!evaStars) return;
+    const ratio = window.devicePixelRatio || 1;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    evaStars.width = width * ratio;
+    evaStars.height = height * ratio;
+    const ctx = evaStars.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.fillStyle = '#010101';
+    ctx.fillRect(0, 0, width, height);
+    const count = Math.floor((width * height) / 3400);
+    for (let i = 0; i < count; i++) {
+      ctx.globalAlpha = 0.18 + Math.random() * 0.6;
+      ctx.fillStyle = '#f7ffc3';
+      const size = Math.random() > 0.86 ? 2.2 : 1.2;
+      ctx.fillRect(Math.random() * width, Math.random() * height, size, size);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function buildEvaObjects(evaData) {
+    if (!evaObjects) return;
+    evaObjects.innerHTML = '';
+
+    const defs = [
+      {
+        main: true, label: evaData.object, find: evaData.find,
+        left: '58%', top: '30%', dur: '8s'
+      },
+      {
+        img: 'assets/debris-scene/bouteille-oxygene.png', label: 'BOUTEILLE DÉRIVANTE',
+        find: 'Une bouteille d’oxygène cabossée. Le manomètre indique encore un tiers. Vous la sanglez à votre harnais. [O2 +8s]',
+        bonusO2: 8000, left: '26%', top: '48%', dur: '6.4s'
+      },
+      {
+        img: 'assets/debris-loot/pince-coupante.png', label: 'OUTIL PERDU',
+        find: 'Une pince coupante, gravée d’initiales inconnues. Quelqu’un, quelque part, a lâché prise.',
+        left: '74%', top: '62%', dur: '7.2s'
+      }
+    ];
+
+    defs.forEach(def => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'eva-object';
+      btn.style.left = def.left;
+      btn.style.top = def.top;
+      btn.style.setProperty('--float-dur', def.dur);
+      btn.innerHTML = def.main
+        ? `<span class="eva-object-core"></span><span class="eva-object-label">${def.label}</span>`
+        : `<img src="${def.img}" alt=""><span class="eva-object-label">${def.label}</span>`;
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('is-done')) return;
+        btn.classList.add('is-done');
+        playClick();
+        evaHudLine(def.find);
+        if (def.bonusO2) eva.deadline += def.bonusO2;
+        if (def.main) eva.inspectedMain = true;
+      });
+      evaObjects.appendChild(btn);
+    });
+  }
+
+  function evaInfectionBeat() {
+    if (eva.beatDone || !eva.active) return;
+    eva.beatDone = true;
+    if (eva.willInfect) {
+      if (evaGlitch) {
+        evaGlitch.classList.remove('is-active');
+        void evaGlitch.offsetWidth;
+        evaGlitch.classList.add('is-active');
+      }
+      playSfx('wrong', 0.7);
+      window.setTimeout(() => {
+        if (!eva.active) return;
+        evaHudLine('Quelque chose vous a effleuré. Votre combinaison n’a rien enregistré.', true);
+        window.setTimeout(() => {
+          if (eva.active) evaHudLine(`SEUL ${NPCS[eva.npc].name} A VÉCU CET INSTANT. À vous de décider ce que vous en dites.`, true);
+        }, 2600);
+      }, 1500);
+    } else {
+      evaHudLine('Une ombre passe entre les étoiles. Probablement la vôtre. Probablement.');
+    }
+  }
+
+  function startEva(npcId, evaData, onDone) {
+    eva.active = true;
+    eva.npc = npcId;
+    eva.onDone = onDone;
+    eva.deadline = Date.now() + EVA_DURATION_MS;
+    eva.inspectedMain = false;
+    eva.beatDone = false;
+    eva.willInfect = state.infectionRun && !state.infectedId;
+
+    const npc = NPCS[npcId];
+    if (evaBannerName) evaBannerName.textContent = `VOUS INCARNEZ ${npc.name} // ${npc.role}`;
+    if (evaOverlay) {
+      evaOverlay.style.setProperty('--eva-color', npc.color);
+      evaOverlay.classList.add('is-visible');
+      evaOverlay.setAttribute('aria-hidden', 'false');
+    }
+    if (evaReturnBtn) evaReturnBtn.classList.add('is-visible');
+    if (evaHudFeed) evaHudFeed.innerHTML = '';
+    drawEvaStars();
+    buildEvaObjects(evaData);
+    setDoors(true, 'right');
+    playSfx('on', 0.7);
+    evaHudLine('Le sas se referme derrière vous. Votre respiration est le seul bruit de l’univers.');
+
+    // Le moment privé arrive au coeur de la sortie.
+    window.setTimeout(evaInfectionBeat, 14000 + Math.random() * 6000);
+  }
+
+  function finishEva(timedOut = false) {
+    if (!eva.active) return;
+    eva.active = false;
+    const infect = eva.willInfect && eva.beatDone;
+    const done = eva.onDone;
+    eva.onDone = null;
+    if (evaOverlay) {
+      evaOverlay.classList.remove('is-visible');
+      evaOverlay.setAttribute('aria-hidden', 'true');
+    }
+    setDoors(false);
+    playSfx('off', 0.7);
+    if (timedOut) pushMessage('system', `RÉSERVE O2 ÉPUISÉE // RETOUR FORCÉ DE ${NPCS[eva.npc].name}`);
+    if (done) done(infect);
+  }
+
+  function evaTick(now) {
+    if (!eva.active) return;
+    const remaining = Math.max(0, eva.deadline - now);
+    if (evaO2Value) evaO2Value.textContent = String(Math.ceil(remaining / 1000));
+    if (evaO2Fill) evaO2Fill.style.transform = `scaleX(${Math.min(1, remaining / EVA_DURATION_MS)})`;
+    if (remaining <= 0) finishEva(true);
+  }
+
   // ─── ÉVÉNEMENTS : DÉROULEMENT ───────────────────────────────────
   let eventQueue = [];
 
@@ -685,48 +1081,73 @@
     state.eventsResolved += 1;
     if (eventPanel) eventPanel.classList.remove('is-visible');
 
-    let fx, out;
-    if (optionIndex === -1) {
-      fx = evt.timeout.fx; out = evt.timeout.out;
-      pushMessage('system', 'AUCUNE DÉCISION // PROTOCOLE PAR DÉFAUT');
-    } else {
-      const opt = evt.options[optionIndex];
-      fx = opt.fx; out = opt.out;
-      if (opt.exposes && !state.ejected[opt.exposes]) handleExposure(opt.exposes);
-      if (opt.special === 'ultrason') {
-        state.ultrasonUsed = true;
-        window.setTimeout(() => {
-          if (state.over) return;
-          if (state.infectedId) {
-            pushMessage('system', 'ULTRASON // RÉPONSE BIOLOGIQUE INCONNUE À BORD // LOCALISATION IMPOSSIBLE', 'is-glitch');
-            playSfx('wrong', 0.6);
-          } else if (state.infectionRun) {
-            pushMessage('system', 'ULTRASON // AUCUN ÉCHO BIOLOGIQUE ANORMAL... POUR L’INSTANT');
-          } else {
-            pushMessage('system', 'ULTRASON // AUCUN ÉCHO BIOLOGIQUE ANORMAL');
-          }
-        }, 2600);
-      }
-    }
-
-    window.setTimeout(() => {
-      if (state.over) return;
-      pushMessage('system', out, 'is-event');
-      applyEffects(fx);
-    }, 900);
-
-    // Infection garantie de démarrer si le run la prévoit mais que le
-    // joueur n'a exposé personne : une brèche silencieuse s'en charge.
-    if (state.infectionRun && !state.infectedId && state.eventsResolved >= 3) {
+    const finish = (fx, out) => {
       window.setTimeout(() => {
-        if (state.over || state.infectedId) return;
-        pushMessage('system', 'micro-brèche détectée pont inférieur // colmatage automatique', 'is-glitch');
-        infect(pick(aliveNpcs()));
-      }, 6000);
+        if (state.over) return;
+        pushMessage('system', out, 'is-event');
+        applyEffects(fx);
+      }, 900);
+
+      // Infection garantie de démarrer si le run la prévoit mais que le
+      // joueur n'a exposé personne : une brèche silencieuse s'en charge.
+      if (state.infectionRun && !state.infectedId && state.eventsResolved >= 3) {
+        window.setTimeout(() => {
+          if (state.over || state.infectedId) return;
+          pushMessage('system', 'micro-brèche détectée pont inférieur // colmatage automatique', 'is-glitch');
+          infect(pick(aliveNpcs()));
+        }, 6000);
+      }
+
+      state.nextEventAt = Date.now() + rand(26000, 38000);
+      state.nextIdleAt = Date.now() + rand(9000, 14000);
+    };
+
+    if (optionIndex === -1) {
+      pushMessage('system', 'AUCUNE DÉCISION // PROTOCOLE PAR DÉFAUT');
+      finish(evt.timeout.fx, evt.timeout.out);
+      return;
     }
 
-    state.nextEventAt = Date.now() + rand(26000, 38000);
-    state.nextIdleAt = Date.now() + rand(9000, 14000);
+    const opt = evt.options[optionIndex];
+
+    if (opt.special === 'ultrason') {
+      state.ultrasonUsed = true;
+      window.setTimeout(() => {
+        if (state.over) return;
+        if (state.infectedId) {
+          pushMessage('system', 'ULTRASON // RÉPONSE BIOLOGIQUE INCONNUE À BORD // LOCALISATION IMPOSSIBLE', 'is-glitch');
+          playSfx('wrong', 0.6);
+        } else if (state.infectionRun) {
+          pushMessage('system', 'ULTRASON // AUCUN ÉCHO BIOLOGIQUE ANORMAL... POUR L’INSTANT');
+        } else {
+          pushMessage('system', 'ULTRASON // AUCUN ÉCHO BIOLOGIQUE ANORMAL');
+        }
+      }, 2600);
+    }
+
+    // Tâche manuelle : mini-jeu à temps limité au terminal.
+    if (opt.minigame && MINIGAMES[opt.minigame]) {
+      pushMessage('system', 'TÂCHE MANUELLE REQUISE // UN OPÉRATEUR AU TERMINAL', 'is-event');
+      MINIGAMES[opt.minigame](success => {
+        const res = success ? opt.success : opt.fail;
+        if (opt.minigame === 'grep' && success) revealArchiveIntel();
+        finish(res.fx, res.out);
+      });
+      return;
+    }
+
+    // Sortie en sas : le joueur incarne le membre exposé, en direct.
+    if (opt.eva && opt.exposes && !state.ejected[opt.exposes]) {
+      pushMessage('system', `${NPCS[opt.exposes].name.toUpperCase()} PASSE LE SAS // TRANSFERT DE POINT DE VUE`, 'is-event');
+      startEva(opt.exposes, opt.eva, gotInfected => {
+        if (gotInfected) infect(opt.exposes);
+        finish(opt.fx, opt.out);
+      });
+      return;
+    }
+
+    if (opt.exposes && !state.ejected[opt.exposes]) handleExposure(opt.exposes);
+    finish(opt.fx, opt.out);
   }
 
   function idleTick(now) {
@@ -887,6 +1308,11 @@
     if (eventPanel) eventPanel.classList.remove('is-visible');
     closeMemberModal();
     closeRoom();
+    if (eva.active) {
+      eva.active = false;
+      eva.onDone = null;
+      if (evaOverlay) evaOverlay.classList.remove('is-visible');
+    }
     if (endVisual) endVisual.classList.toggle('is-visible', arrival);
     if (endKicker) endKicker.textContent = win ? 'MOTOMOTO // TRANSMISSION FINALE' : 'MOTOMOTO // DERNIERE TRANSMISSION';
     if (endTitle) {
@@ -1049,24 +1475,30 @@
     if (remaining <= 0) resolveEvent(-1);
   }
 
+  // La logique tourne sur un interval (fiable même en onglet inactif) ;
+  // le rendu des canvas reste sur requestAnimationFrame.
+  function logicTick() {
+    if (!state.started || state.over) return;
+    const now = Date.now();
+    updateTimer();
+    updateDecisionTimer(now);
+    evaTick(now);
+    minigameTick(now);
+    if (!state.activeEvent && !eva.active && !mg.active && now >= state.nextEventAt) {
+      const evt = eventQueue.shift();
+      if (evt) {
+        startEvent(evt);
+      } else {
+        state.nextEventAt = now + 60000;
+      }
+    }
+    idleTick(now);
+    sabotageTick(now);
+    checkVictory();
+  }
+
   function frame(time) {
     drawSpace(time);
-    if (state.started && !state.over) {
-      const now = Date.now();
-      updateTimer();
-      updateDecisionTimer(now);
-      if (!state.activeEvent && now >= state.nextEventAt) {
-        const evt = eventQueue.shift();
-        if (evt) {
-          startEvent(evt);
-        } else {
-          state.nextEventAt = now + 60000;
-        }
-      }
-      idleTick(now);
-      sabotageTick(now);
-      checkVictory();
-    }
     requestAnimationFrame(frame);
   }
 
@@ -1179,6 +1611,14 @@
         startGame();
       });
     }
+    if (evaReturnBtn) evaReturnBtn.addEventListener('click', () => { playClick(); finishEva(false); });
+    if (evaOverlay) {
+      evaOverlay.addEventListener('mousemove', event => {
+        if (!evaFlashlight) return;
+        evaFlashlight.style.setProperty('--torch-x', `${event.clientX}px`);
+        evaFlashlight.style.setProperty('--torch-y', `${event.clientY}px`);
+      });
+    }
     if (doorHotspotLeft) doorHotspotLeft.addEventListener('click', () => { playClick(); openRoom('left'); });
     if (doorHotspotRight) doorHotspotRight.addEventListener('click', () => { playClick(); openRoom('right'); });
     if (roomViewClose) roomViewClose.addEventListener('click', () => { playClick(); closeRoom(); });
@@ -1227,6 +1667,7 @@
     hydrateSettingsPanel();
     resize();
     bindUi();
+    window.setInterval(logicTick, 250);
     requestAnimationFrame(frame);
   }
 
@@ -1237,7 +1678,7 @@
   window.selectGameLang = () => {};
   window.toggleGameSwitch = node => node && node.classList.toggle('on');
 
-  window.addEventListener('resize', () => { resize(); drawRoomSpace(); });
+  window.addEventListener('resize', () => { resize(); drawRoomSpace(); if (eva.active) drawEvaStars(); });
   window.addEventListener('arecibo-pixel-dither-change', () => syncPixelDitherButtons(settingsOverlay || document));
   init();
 })();

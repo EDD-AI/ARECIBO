@@ -11,7 +11,7 @@
 <script src="assets/visual-settings.js?v=pixel-dither-3"></script>
 <link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-3">
 <link rel="stylesheet" href="assets/css/arecibo-motomoto-screen.css?v=motomoto-screen-5">
-<link rel="stylesheet" href="assets/css/arecibo-demo.css?v=demo-2">
+<link rel="stylesheet" href="assets/css/arecibo-demo.css?v=demo-4">
 </head>
 <body data-theme-audio="ship">
   <main class="motomoto-scene" aria-label="Demo jouable ARECIBO">
@@ -137,6 +137,54 @@
       </div>
     </section>
 
+    <!-- ─── MINI-JEU (fenêtre terminal CRT) ─────────────────────── -->
+    <section class="minigame-overlay" id="minigameOverlay" aria-hidden="true">
+      <div class="minigame-backdrop"></div>
+      <article class="crt-window" id="crtWindow">
+        <header class="crt-titlebar">
+          <span class="crt-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span class="crt-title" id="crtTitle">MOTOMOTO OS v0.9</span>
+          <span class="crt-timer" id="crtTimer">25</span>
+        </header>
+        <div class="crt-subbar" id="crtSubbar">TÂCHE PRIORITAIRE // TEMPS LIMITÉ</div>
+        <div class="crt-body" id="crtBody"></div>
+        <footer class="crt-statusbar">
+          <span id="crtStatusLeft">READY_</span>
+          <span id="crtStatusRight">EN MULTI, CETTE TÂCHE ÉCHOIT À UN SEUL JOUEUR</span>
+        </footer>
+        <div class="crt-timerbar"><div class="crt-timerfill" id="crtTimerFill"></div></div>
+        <div class="crt-result" id="crtResult" aria-live="polite"></div>
+      </article>
+    </section>
+
+    <!-- ─── SORTIE EVA (le joueur incarne le membre exposé) ─────── -->
+    <section class="eva-overlay" id="evaOverlay" aria-hidden="true">
+      <canvas class="eva-stars" id="evaStars"></canvas>
+      <img class="eva-ship" src="assets/ship-launch-detourer-crop.png" alt="" aria-hidden="true">
+      <div class="eva-flashlight" id="evaFlashlight" aria-hidden="true"></div>
+
+      <header class="eva-banner">
+        <div class="eva-banner-kicker">SORTIE EVA // CHANGEMENT DE POINT DE VUE</div>
+        <div class="eva-banner-name" id="evaBannerName">VOUS INCARNEZ TILT</div>
+        <div class="eva-banner-note">En multijoueur, seul ce joueur vit cette scène. Ce que vous voyez ici, l'équipage ne le saura que si vous le racontez.</div>
+      </header>
+
+      <div class="eva-objects" id="evaObjects"></div>
+
+      <div class="eva-hud-feed" id="evaHudFeed"></div>
+
+      <footer class="eva-hud">
+        <div class="eva-o2">
+          <span class="eva-o2-label">O2</span>
+          <div class="eva-o2-bar"><div class="eva-o2-fill" id="evaO2Fill"></div></div>
+          <span class="eva-o2-value" id="evaO2Value">45</span>
+        </div>
+        <button class="eva-return pixel-btn" id="evaReturnBtn" type="button">&lt; REGAGNER LE SAS</button>
+      </footer>
+
+      <div class="eva-glitch" id="evaGlitch" aria-hidden="true"></div>
+    </section>
+
     <!-- ─── FIN DE PARTIE ───────────────────────────────────────── -->
     <section class="end-overlay" id="endOverlay" aria-live="polite">
       <article class="end-card">
@@ -255,7 +303,7 @@
   <div class="cursor" id="cursor"></div>
 
   <script src="assets/player-profile.js?v=profile-1"></script>
-  <script src="assets/js/arecibo-demo.js?v=demo-2"></script>
+  <script src="assets/js/arecibo-demo.js?v=demo-4"></script>
   <script src="assets/theme-audio.js?v=theme-audio-3"></script>
 </body>
 </html>
