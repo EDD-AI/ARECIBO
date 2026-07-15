@@ -462,6 +462,25 @@
         { label: 'Débrancher le terminal', hint: 'brutal — l’OS s’en souviendra', fx: { signal: -4, hull: -2 }, out: 'Vous débranchez. Toutes les portes du bord claquent en même temps. Coïncidence, sûrement.' }
       ],
       timeout: { fx: { signal: -6 }, out: 'L’OS a attendu. Personne n’est venu. Il a mis la navigation en mode « vexé ».' }
+    },
+    {
+      id: 'pirates',
+      kicker: 'CONTACT HOSTILE',
+      img: 'assets/ship-launch-detourer-crop.png',
+      title: 'Un vaisseau pirate se colle à votre sillage',
+      text: 'Ses tourelles s’orientent vers vous. Un message crypté clignote en boucle sur la console : « CARBURANT OU CARCASSE. »',
+      decide: 26,
+      msgs: [
+        { npc: 'kessel', d: 1800, t: 'Je peux tenir la tourelle dorsale. Elle est rouillée mais elle répond encore.', lie: 'La tourelle dorsale est morte depuis des mois. Inutile d’y penser.' },
+        { npc: 'tilt', d: 5800, t: 'On a {fuel} de réserves. Payer leur tribut, ça va faire mal.', lie: 'On a largement de quoi payer leur tribut sans problème, capitaine.' },
+        { npc: 'vega', d: 9800, t: 'Je peux tenter une fuite, mais leur coque a l’air plus rapide que la nôtre.', lie: 'Leur vaisseau est lent, la fuite est sans risque. Fonce.' }
+      ],
+      options: [
+        { label: 'Défendre la tourelle dorsale', hint: 'mini-jeu — repoussez l’escadrille', minigame: 'invaders', success: { fx: { hull: -3 }, out: 'Le dernier chasseur pirate explose en confettis de métal. Le vaisseau mère vire de bord, dégoûté par si peu de butin.' }, fail: { fx: { hull: -16, fuel: -6 }, out: 'Ils abordent par la coque. Ce qu’ils prennent, on ne le revoit jamais. La tourelle fume encore, vide.' } },
+        { label: 'Payer le tribut demandé', hint: 'perte de carburant garantie', fx: { fuel: -18 }, out: 'Une cellule de carburant part par le sas de largage. Le vaisseau pirate l’attrape au vol et disparaît sans un mot.' },
+        { label: 'Pousser les moteurs à fond', hint: 'fuite risquée', fx: { fuel: -10, signal: -6 }, out: 'La fuite dure une éternité de trois minutes. Ils finissent par lâcher prise, ou par se lasser. Personne ne sait lequel.' }
+      ],
+      timeout: { fx: { hull: -10, fuel: -8 }, out: 'Le temps de se décider, ils sont déjà à quai. Le pillage est rapide, méthodique, et terriblement silencieux.' }
     }
   ];
 
@@ -843,7 +862,170 @@
     }, onEnd);
   }
 
-  const MINIGAMES = { grep: grepMinigame, wires: wiresMinigame };
+  // Mini-jeu 3 : DÉFENSE DORSALE — un Space Invaders sommaire pour
+  // repousser une escadrille pirate. Souris ou flèches pour viser,
+  // clic ou espace pour tirer. Défaite si un envahisseur atteint la
+  // tourelle, si elle encaisse 3 tirs, ou si le temps s'écoule.
+  function invadersMinigame(onEnd) {
+    let raf = null;
+    let cleaned = false;
+    const keys = {};
+
+    function onKeyDown(e) {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === ' ') e.preventDefault();
+      keys[e.key] = true;
+    }
+    function onKeyUp(e) { keys[e.key] = false; }
+
+    function cleanup() {
+      if (cleaned) return;
+      cleaned = true;
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+    }
+
+    startMinigame({
+      title: 'TOURELLE DORSALE // CIBLAGE MANUEL',
+      subtitle: '← → OU SOURIS POUR VISER — ESPACE OU CLIC POUR TIRER',
+      seconds: 32,
+      build(body) {
+        const wrap = document.createElement('div');
+        wrap.className = 'invaders-wrap';
+        const canvas = document.createElement('canvas');
+        canvas.className = 'invaders-canvas';
+        wrap.appendChild(canvas);
+        body.appendChild(wrap);
+
+        const W = canvas.width = Math.max(320, Math.min(680, body.clientWidth - 4 || 640));
+        const H = canvas.height = 300;
+        const ctx = canvas.getContext('2d');
+
+        const COLS = 6, ROWS = 3;
+        const iW = 28, iH = 16, gapX = 14, gapY = 16;
+        const gridW = COLS * (iW + gapX) - gapX;
+        let originX = (W - gridW) / 2;
+        let originY = 22;
+        let dir = 1;
+        let speed = 0.35;
+
+        const invaders = [];
+        for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) invaders.push({ x: c, y: r, alive: true });
+
+        const player = { x: W / 2, w: 34, h: 12 };
+        const bullets = [];
+        const enemyBullets = [];
+        let lives = 3;
+        let lastShot = 0;
+        let lastEnemyShot = 0;
+        let finished = false;
+
+        function shoot(t) {
+          if (t - lastShot < 260) return;
+          lastShot = t;
+          bullets.push({ x: player.x, y: H - 26 });
+        }
+
+        canvas.addEventListener('mousemove', e => {
+          const rect = canvas.getBoundingClientRect();
+          const scaleX = W / rect.width; // le canvas peut être affiché à une taille CSS différente de sa résolution interne
+          const localX = (e.clientX - rect.left) * scaleX;
+          player.x = Math.max(player.w / 2, Math.min(W - player.w / 2, localX));
+        });
+        canvas.addEventListener('click', () => shoot(performance.now()));
+
+        function finish(success, msg) {
+          if (finished) return;
+          finished = true;
+          cleanup();
+          endMinigame(success, msg);
+        }
+
+        function loop(t) {
+          if (mg.done) { cleanup(); return; }
+          raf = requestAnimationFrame(loop);
+
+          if (keys.ArrowLeft) player.x = Math.max(player.w / 2, player.x - 4.2);
+          if (keys.ArrowRight) player.x = Math.min(W - player.w / 2, player.x + 4.2);
+          if (keys[' ']) shoot(t);
+
+          const alive = invaders.filter(iv => iv.alive);
+          if (alive.length === 0) { finish(true, 'ESCADRILLE PIRATE DÉTRUITE'); return; }
+
+          speed = 0.35 + (COLS * ROWS - alive.length) * 0.035;
+          originX += dir * speed;
+          if (originX <= 4 || originX + gridW >= W - 4) {
+            dir *= -1;
+            originY += 12;
+          }
+
+          let maxY = -Infinity;
+          alive.forEach(iv => { maxY = Math.max(maxY, originY + iv.y * (iH + gapY) + iH); });
+          if (maxY >= H - 40) { finish(false, 'ABORDAGE // TOURELLE SUBMERGÉE'); return; }
+
+          if (t - lastEnemyShot > 900) {
+            lastEnemyShot = t;
+            const shooter = alive[Math.floor(Math.random() * alive.length)];
+            if (shooter) {
+              enemyBullets.push({
+                x: originX + shooter.x * (iW + gapX) + iW / 2,
+                y: originY + shooter.y * (iH + gapY) + iH
+              });
+            }
+          }
+
+          bullets.forEach(b => { b.y -= 6; });
+          enemyBullets.forEach(b => { b.y += 3.4; });
+          for (let i = bullets.length - 1; i >= 0; i--) if (bullets[i].y < -20) bullets.splice(i, 1);
+          for (let i = enemyBullets.length - 1; i >= 0; i--) if (enemyBullets[i].y > H + 20) enemyBullets.splice(i, 1);
+
+          bullets.forEach(b => {
+            alive.forEach(iv => {
+              if (!iv.alive || b.y < -15) return;
+              const x = originX + iv.x * (iW + gapX);
+              const y = originY + iv.y * (iH + gapY);
+              if (b.x > x && b.x < x + iW && b.y > y && b.y < y + iH) {
+                iv.alive = false;
+                b.y = -100;
+                playSfx('on', 0.1);
+              }
+            });
+          });
+
+          const py = H - 20;
+          for (let i = enemyBullets.length - 1; i >= 0; i--) {
+            const b = enemyBullets[i];
+            if (b.y > py - 6 && b.y < py + player.h && Math.abs(b.x - player.x) < player.w / 2) {
+              enemyBullets.splice(i, 1);
+              lives -= 1;
+              playSfx('wrong', 0.35);
+              if (crtStatusLeft) crtStatusLeft.textContent = `VIES : ${'X '.repeat(Math.max(0, lives)).trim()}`;
+              if (lives <= 0) { finish(false, 'TOURELLE HORS SERVICE'); return; }
+            }
+          }
+
+          ctx.clearRect(0, 0, W, H);
+          ctx.fillStyle = '#9dffa0';
+          alive.forEach(iv => {
+            ctx.fillRect(originX + iv.x * (iW + gapX), originY + iv.y * (iH + gapY), iW, iH);
+          });
+          ctx.fillStyle = '#fa5a1f';
+          ctx.fillRect(player.x - player.w / 2, H - 20, player.w, player.h);
+          ctx.fillStyle = '#f7ffc3';
+          bullets.forEach(b => ctx.fillRect(b.x - 1, b.y - 6, 2, 8));
+          ctx.fillStyle = '#ff6a3c';
+          enemyBullets.forEach(b => ctx.fillRect(b.x - 1, b.y - 4, 2, 8));
+        }
+
+        if (crtStatusLeft) crtStatusLeft.textContent = 'VIES : X X X';
+        window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('keyup', onKeyUp);
+        raf = requestAnimationFrame(loop);
+      }
+    }, success => { cleanup(); onEnd(success); });
+  }
+
+  const MINIGAMES = { grep: grepMinigame, wires: wiresMinigame, invaders: invadersMinigame };
 
   // Fouiller les archives peut révéler le xénomorphe : c'est le vrai
   // butin du mini-jeu GREP quand une infection est en cours.

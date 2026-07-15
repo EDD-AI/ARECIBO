@@ -1000,6 +1000,23 @@ body::after {
   pointer-events: none;
 }
 
+/* DÉFENSE DORSALE : mini Space Invaders */
+.invaders-wrap {
+  display: grid;
+  justify-items: center;
+}
+
+.invaders-canvas {
+  width: 100%;
+  max-width: 680px;
+  height: auto;
+  aspect-ratio: 680 / 300;
+  border: 1px solid var(--phos-dim);
+  background: #010401;
+  cursor: none;
+  image-rendering: pixelated;
+}
+
 /* COUPE-CIRCUIT : tableau de fils */
 .wires-stage {
   position: relative;
