@@ -1232,6 +1232,15 @@ body::after {
   background: rgba(247, 255, 195, 0.04);
 }
 
+/* Débris sans image dédiée : même forme, teinte crème plus sobre. */
+.eva-object-core-dim {
+  width: clamp(40px, 4.2vw, 68px);
+  height: clamp(40px, 4.2vw, 68px);
+  border-color: rgba(247, 255, 195, 0.4);
+  background: radial-gradient(circle at 50% 50%, rgba(247, 255, 195, 0.16), rgba(0, 0, 0, 0.5) 74%);
+  box-shadow: 0 0 18px rgba(247, 255, 195, 0.18), inset 0 0 12px rgba(247, 255, 195, 0.12);
+}
+
 .eva-hud-feed {
   position: absolute;
   left: 50%;

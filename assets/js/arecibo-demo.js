@@ -476,7 +476,7 @@
         { npc: 'vega', d: 9800, t: 'Je peux tenter une fuite, mais leur coque a l’air plus rapide que la nôtre.', lie: 'Leur vaisseau est lent, la fuite est sans risque. Fonce.' }
       ],
       options: [
-        { label: 'Défendre la tourelle dorsale', hint: 'mini-jeu — repoussez l’escadrille', minigame: 'invaders', success: { fx: { hull: -3 }, out: 'Le dernier chasseur pirate explose en confettis de métal. Le vaisseau mère vire de bord, dégoûté par si peu de butin.' }, fail: { fx: { hull: -16, fuel: -6 }, out: 'Ils abordent par la coque. Ce qu’ils prennent, on ne le revoit jamais. La tourelle fume encore, vide.' } },
+        { label: 'Défendre la tourelle dorsale', hint: 'mini-jeu — repoussez les vagues de mines', minigame: 'invaders', success: { fx: { hull: -3 }, out: 'La dernière mine explose en confettis de métal. Le vaisseau pirate vire de bord, dégoûté par si peu de butin.' }, fail: { fx: { hull: -16, fuel: -6 }, out: 'Ils abordent par la coque. Ce qu’ils prennent, on ne le revoit jamais. La tourelle fume encore, vide.' } },
         { label: 'Payer le tribut demandé', hint: 'perte de carburant garantie', fx: { fuel: -18 }, out: 'Une cellule de carburant part par le sas de largage. Le vaisseau pirate l’attrape au vol et disparaît sans un mot.' },
         { label: 'Pousser les moteurs à fond', hint: 'fuite risquée', fx: { fuel: -10, signal: -6 }, out: 'La fuite dure une éternité de trois minutes. Ils finissent par lâcher prise, ou par se lasser. Personne ne sait lequel.' }
       ],
@@ -862,10 +862,10 @@
     }, onEnd);
   }
 
-  // Mini-jeu 3 : DÉFENSE DORSALE — un Space Invaders sommaire pour
-  // repousser une escadrille pirate. Souris ou flèches pour viser,
-  // clic ou espace pour tirer. Défaite si un envahisseur atteint la
-  // tourelle, si elle encaisse 3 tirs, ou si le temps s'écoule.
+  // Mini-jeu 3 : DÉFENSE DORSALE — repousser des mines pirates par
+  // vagues (repris de l'ancien prototype de défense d'astéroïdes,
+  // en plus compact). Souris ou flèches pour viser, clic ou espace
+  // pour tirer. Pas de tir ennemi : le danger, c'est ce qui passe.
   function invadersMinigame(onEnd) {
     let raf = null;
     let cleaned = false;
@@ -886,9 +886,9 @@
     }
 
     startMinigame({
-      title: 'TOURELLE DORSALE // CIBLAGE MANUEL',
+      title: 'TOURELLE DORSALE // DÉFENSE ANTI-MINES',
       subtitle: '← → OU SOURIS POUR VISER — ESPACE OU CLIC POUR TIRER',
-      seconds: 32,
+      seconds: 34,
       build(body) {
         const wrap = document.createElement('div');
         wrap.className = 'invaders-wrap';
@@ -901,36 +901,61 @@
         const H = canvas.height = 300;
         const ctx = canvas.getContext('2d');
 
-        const COLS = 6, ROWS = 3;
-        const iW = 28, iH = 16, gapX = 14, gapY = 16;
-        const gridW = COLS * (iW + gapX) - gapX;
-        let originX = (W - gridW) / 2;
-        let originY = 22;
-        let dir = 1;
-        let speed = 0.35;
+        const WAVES = [5, 7, 9];
+        let waveIndex = 0;
+        let toSpawn = 0;
+        let spawnTimer = 0;
 
-        const invaders = [];
-        for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) invaders.push({ x: c, y: r, alive: true });
-
-        const player = { x: W / 2, w: 34, h: 12 };
+        const player = { x: W / 2, w: 26, h: 16 };
+        const mines = [];
         const bullets = [];
-        const enemyBullets = [];
+        const particles = [];
         let lives = 3;
         let lastShot = 0;
-        let lastEnemyShot = 0;
         let finished = false;
+        let waveBanner = '';
+        let waveBannerUntil = 0;
+
+        function announceWave() {
+          waveBanner = `VAGUE ${waveIndex + 1}/${WAVES.length}`;
+          waveBannerUntil = performance.now() + 1400;
+          if (crtSubbar) crtSubbar.textContent = `${waveBanner} // ${WAVES[waveIndex]} MINES EN APPROCHE`;
+          toSpawn = WAVES[waveIndex];
+          spawnTimer = 0;
+        }
+        announceWave();
+
+        function spawnMine() {
+          const speed = 0.55 + waveIndex * 0.22 + Math.random() * 0.3;
+          mines.push({
+            x: 24 + Math.random() * (W - 48),
+            y: -16,
+            r: 8 + Math.random() * 5,
+            speed,
+            wobble: Math.random() * Math.PI * 2,
+            wobbleSpeed: 1.4 + Math.random() * 1.4,
+            wobbleAmp: 10 + Math.random() * 18
+          });
+        }
+
+        function burst(x, y) {
+          for (let i = 0; i < 8; i++) {
+            const a = (i / 8) * Math.PI * 2;
+            particles.push({ x, y, vx: Math.cos(a) * 1.8, vy: Math.sin(a) * 1.8, life: 1 });
+          }
+        }
 
         function shoot(t) {
-          if (t - lastShot < 260) return;
+          if (t - lastShot < 240) return;
           lastShot = t;
-          bullets.push({ x: player.x, y: H - 26 });
+          bullets.push({ x: player.x, y: H - 30 });
         }
 
         canvas.addEventListener('mousemove', e => {
           const rect = canvas.getBoundingClientRect();
           const scaleX = W / rect.width; // le canvas peut être affiché à une taille CSS différente de sa résolution interne
           const localX = (e.clientX - rect.left) * scaleX;
-          player.x = Math.max(player.w / 2, Math.min(W - player.w / 2, localX));
+          player.x = Math.max(player.w, Math.min(W - player.w, localX));
         });
         canvas.addEventListener('click', () => shoot(performance.now()));
 
@@ -941,80 +966,104 @@
           endMinigame(success, msg);
         }
 
+        let lastT = null;
+
         function loop(t) {
           if (mg.done) { cleanup(); return; }
           raf = requestAnimationFrame(loop);
 
-          if (keys.ArrowLeft) player.x = Math.max(player.w / 2, player.x - 4.2);
-          if (keys.ArrowRight) player.x = Math.min(W - player.w / 2, player.x + 4.2);
+          // Delta-time (comme l'ancien prototype de défense) : le jeu
+          // reste correct quel que soit le taux de rafraîchissement.
+          if (lastT === null) lastT = t;
+          const dt = Math.min(0.05, Math.max(0, (t - lastT) / 1000));
+          lastT = t;
+
+          if (keys.ArrowLeft) player.x = Math.max(player.w, player.x - 260 * dt);
+          if (keys.ArrowRight) player.x = Math.min(W - player.w, player.x + 260 * dt);
           if (keys[' ']) shoot(t);
 
-          const alive = invaders.filter(iv => iv.alive);
-          if (alive.length === 0) { finish(true, 'ESCADRILLE PIRATE DÉTRUITE'); return; }
-
-          speed = 0.35 + (COLS * ROWS - alive.length) * 0.035;
-          originX += dir * speed;
-          if (originX <= 4 || originX + gridW >= W - 4) {
-            dir *= -1;
-            originY += 12;
-          }
-
-          let maxY = -Infinity;
-          alive.forEach(iv => { maxY = Math.max(maxY, originY + iv.y * (iH + gapY) + iH); });
-          if (maxY >= H - 40) { finish(false, 'ABORDAGE // TOURELLE SUBMERGÉE'); return; }
-
-          if (t - lastEnemyShot > 900) {
-            lastEnemyShot = t;
-            const shooter = alive[Math.floor(Math.random() * alive.length)];
-            if (shooter) {
-              enemyBullets.push({
-                x: originX + shooter.x * (iW + gapX) + iW / 2,
-                y: originY + shooter.y * (iH + gapY) + iH
-              });
+          // tirage de la vague en cours
+          if (toSpawn > 0) {
+            spawnTimer -= dt * 1000;
+            if (spawnTimer <= 0) {
+              spawnMine();
+              toSpawn -= 1;
+              spawnTimer = 480 - waveIndex * 60;
             }
           }
 
-          bullets.forEach(b => { b.y -= 6; });
-          enemyBullets.forEach(b => { b.y += 3.4; });
-          for (let i = bullets.length - 1; i >= 0; i--) if (bullets[i].y < -20) bullets.splice(i, 1);
-          for (let i = enemyBullets.length - 1; i >= 0; i--) if (enemyBullets[i].y > H + 20) enemyBullets.splice(i, 1);
+          // fin de vague : plus rien à l'écran ni à tirer
+          if (toSpawn === 0 && mines.length === 0 && bullets.length === 0) {
+            waveIndex += 1;
+            if (waveIndex >= WAVES.length) { finish(true, 'CHAMP DE MINES NEUTRALISÉ'); return; }
+            announceWave();
+          }
 
-          bullets.forEach(b => {
-            alive.forEach(iv => {
-              if (!iv.alive || b.y < -15) return;
-              const x = originX + iv.x * (iW + gapX);
-              const y = originY + iv.y * (iH + gapY);
-              if (b.x > x && b.x < x + iW && b.y > y && b.y < y + iH) {
-                iv.alive = false;
-                b.y = -100;
-                playSfx('on', 0.1);
-              }
-            });
+          mines.forEach(m => {
+            m.y += m.speed * 60 * dt;
+            m.wobble += 1.2 * m.wobbleSpeed * dt;
+            m.x += Math.sin(m.wobble) * 21 * dt;
           });
+          bullets.forEach(b => { b.y -= 384 * dt; });
+          particles.forEach(p => { p.x += p.vx * 60 * dt; p.y += p.vy * 60 * dt; p.life -= 3 * dt; });
+          for (let i = particles.length - 1; i >= 0; i--) if (particles[i].life <= 0) particles.splice(i, 1);
+          for (let i = bullets.length - 1; i >= 0; i--) if (bullets[i].y < -10) bullets.splice(i, 1);
 
-          const py = H - 20;
-          for (let i = enemyBullets.length - 1; i >= 0; i--) {
-            const b = enemyBullets[i];
-            if (b.y > py - 6 && b.y < py + player.h && Math.abs(b.x - player.x) < player.w / 2) {
-              enemyBullets.splice(i, 1);
+          for (let i = mines.length - 1; i >= 0; i--) {
+            const m = mines[i];
+            if (m.y - m.r > H) {
+              mines.splice(i, 1);
               lives -= 1;
-              playSfx('wrong', 0.35);
+              playSfx('wrong', 0.3);
               if (crtStatusLeft) crtStatusLeft.textContent = `VIES : ${'X '.repeat(Math.max(0, lives)).trim()}`;
-              if (lives <= 0) { finish(false, 'TOURELLE HORS SERVICE'); return; }
+              if (lives <= 0) { finish(false, 'MINES PASSÉES // COQUE PERCÉE'); return; }
+            }
+          }
+
+          for (let bi = bullets.length - 1; bi >= 0; bi--) {
+            const b = bullets[bi];
+            for (let mi = mines.length - 1; mi >= 0; mi--) {
+              const m = mines[mi];
+              const dx = b.x - m.x, dy = b.y - m.y;
+              if (dx * dx + dy * dy <= (m.r + 3) * (m.r + 3)) {
+                burst(m.x, m.y);
+                playSfx('on', 0.1);
+                mines.splice(mi, 1);
+                bullets.splice(bi, 1);
+                break;
+              }
             }
           }
 
           ctx.clearRect(0, 0, W, H);
           ctx.fillStyle = '#9dffa0';
-          alive.forEach(iv => {
-            ctx.fillRect(originX + iv.x * (iW + gapX), originY + iv.y * (iH + gapY), iW, iH);
+          mines.forEach(m => {
+            ctx.beginPath();
+            ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+            ctx.fill();
           });
+          particles.forEach(p => {
+            ctx.globalAlpha = Math.max(0, p.life);
+            ctx.fillStyle = '#f7ffc3';
+            ctx.fillRect(p.x - 1.5, p.y - 1.5, 3, 3);
+          });
+          ctx.globalAlpha = 1;
           ctx.fillStyle = '#fa5a1f';
-          ctx.fillRect(player.x - player.w / 2, H - 20, player.w, player.h);
+          ctx.beginPath();
+          ctx.moveTo(player.x, H - 30);
+          ctx.lineTo(player.x - player.w / 2, H - 14);
+          ctx.lineTo(player.x + player.w / 2, H - 14);
+          ctx.closePath();
+          ctx.fill();
           ctx.fillStyle = '#f7ffc3';
           bullets.forEach(b => ctx.fillRect(b.x - 1, b.y - 6, 2, 8));
-          ctx.fillStyle = '#ff6a3c';
-          enemyBullets.forEach(b => ctx.fillRect(b.x - 1, b.y - 4, 2, 8));
+
+          if (t < waveBannerUntil) {
+            ctx.fillStyle = 'rgba(157,255,160,0.9)';
+            ctx.font = '16px "Pixelify Sans", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(waveBanner, W / 2, H / 2);
+          }
         }
 
         if (crtStatusLeft) crtStatusLeft.textContent = 'VIES : X X X';
@@ -1095,6 +1144,52 @@
     ctx.globalAlpha = 1;
   }
 
+  // Objets secondaires : un tirage différent à chaque sortie, jamais
+  // garanti. Positions piochées séparément pour éviter les chevauchements.
+  const EVA_EXTRAS = [
+    {
+      img: 'assets/debris-scene/bouteille-oxygene.png', label: 'BOUTEILLE DÉRIVANTE',
+      find: 'Une bouteille d’oxygène cabossée. Le manomètre indique encore un tiers. Vous la sanglez à votre harnais. [O2 +8s]',
+      bonusO2: 8000
+    },
+    {
+      img: 'assets/debris-loot/pince-coupante.png', label: 'OUTIL PERDU',
+      find: 'Une pince coupante, gravée d’initiales inconnues. Quelqu’un, quelque part, a lâché prise.'
+    },
+    {
+      label: 'DÉBRIS INCONNU',
+      find: 'Un fragment de coque qui n’appartient à aucun vaisseau que vous connaissez. Vous le laissez filer.'
+    },
+    {
+      label: 'GANT DÉCHIRÉ',
+      find: 'Un gant de combinaison, déchiré à la paume. Vide, heureusement. Vous préférez ne pas y penser davantage.'
+    },
+    {
+      label: 'BALISE MORTE',
+      find: 'Une balise de détresse, froide et silencieuse depuis longtemps. Le nom gravé dessus ne vous dit rien.'
+    },
+    {
+      label: 'PAGE DE CARNET',
+      find: 'Une page arrachée, couverte de givre. L’écriture est illisible. Vous la glissez dans une poche, par réflexe.'
+    }
+  ];
+
+  const EVA_EXTRA_SPOTS = [
+    { left: '26%', top: '48%', dur: '6.4s' },
+    { left: '74%', top: '62%', dur: '7.2s' },
+    { left: '20%', top: '68%', dur: '7.8s' },
+    { left: '80%', top: '32%', dur: '6.8s' }
+  ];
+
+  function shuffled(arr) {
+    const out = arr.slice();
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+
   function buildEvaObjects(evaData) {
     if (!evaObjects) return;
     evaObjects.innerHTML = '';
@@ -1103,18 +1198,14 @@
       {
         main: true, label: evaData.object, find: evaData.find,
         left: '58%', top: '30%', dur: '8s'
-      },
-      {
-        img: 'assets/debris-scene/bouteille-oxygene.png', label: 'BOUTEILLE DÉRIVANTE',
-        find: 'Une bouteille d’oxygène cabossée. Le manomètre indique encore un tiers. Vous la sanglez à votre harnais. [O2 +8s]',
-        bonusO2: 8000, left: '26%', top: '48%', dur: '6.4s'
-      },
-      {
-        img: 'assets/debris-loot/pince-coupante.png', label: 'OUTIL PERDU',
-        find: 'Une pince coupante, gravée d’initiales inconnues. Quelqu’un, quelque part, a lâché prise.',
-        left: '74%', top: '62%', dur: '7.2s'
       }
     ];
+
+    // 0, 1 ou 2 objets secondaires — jamais garantis, jamais les mêmes.
+    const extraCount = pick([0, 1, 1, 2]);
+    const extras = shuffled(EVA_EXTRAS).slice(0, extraCount);
+    const spots = shuffled(EVA_EXTRA_SPOTS);
+    extras.forEach((extra, index) => defs.push({ ...extra, ...spots[index] }));
 
     defs.forEach(def => {
       const btn = document.createElement('button');
@@ -1125,7 +1216,9 @@
       btn.style.setProperty('--float-dur', def.dur);
       btn.innerHTML = def.main
         ? `<span class="eva-object-core"></span><span class="eva-object-label">${def.label}</span>`
-        : `<img src="${def.img}" alt=""><span class="eva-object-label">${def.label}</span>`;
+        : def.img
+          ? `<img src="${def.img}" alt=""><span class="eva-object-label">${def.label}</span>`
+          : `<span class="eva-object-core eva-object-core-dim"></span><span class="eva-object-label">${def.label}</span>`;
       btn.addEventListener('click', () => {
         if (btn.classList.contains('is-done')) return;
         btn.classList.add('is-done');
@@ -1193,15 +1286,36 @@
     eva.active = false;
     const infect = eva.willInfect && eva.beatDone;
     const done = eva.onDone;
+    const npcId = eva.npc;
     eva.onDone = null;
     if (evaOverlay) {
       evaOverlay.classList.remove('is-visible');
       evaOverlay.setAttribute('aria-hidden', 'true');
     }
-    setDoors(false);
     playSfx('off', 0.7);
-    if (timedOut) pushMessage('system', `RÉSERVE O2 ÉPUISÉE // RETOUR FORCÉ DE ${NPCS[eva.npc].name}`);
+    if (timedOut) pushMessage('system', `RÉSERVE O2 ÉPUISÉE // RETOUR FORCÉ DE ${NPCS[npcId].name}`);
+    enterAirlockAfterEva(npcId);
     if (done) done(infect);
+  }
+
+  // Au retour de sortie, on ne revient pas directement au poste : on
+  // arrive d'abord dans le sas tribord (même vue que la pièce
+  // latérale), le temps que le cycle de pressurisation se termine.
+  function enterAirlockAfterEva(npcId) {
+    const room = ROOMS.right;
+    roomOpen = 'right';
+    setDoors(true, 'right');
+    if (roomViewImg) roomViewImg.src = room.img;
+    if (roomViewCaption) roomViewCaption.textContent = room.caption;
+    if (roomView) {
+      roomView.classList.add('is-visible');
+      roomView.setAttribute('aria-hidden', 'false');
+    }
+    drawRoomSpace();
+    pushMessage('system', `${NPCS[npcId].name} REGAGNE LE SAS // CYCLE DE PRESSURISATION EN COURS`);
+    window.setTimeout(() => {
+      if (roomOpen === 'right' && !state.over) closeRoom();
+    }, 3200);
   }
 
   function evaTick(now) {
