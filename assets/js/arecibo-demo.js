@@ -22,6 +22,7 @@
   const consoleSignal = $('consoleSignal');
   const consoleSignalFill = $('consoleSignalFill');
   const consoleFootnote = $('consoleFootnote');
+  const consoleDistance = $('consoleDistance');
   const commsFeed = $('commsFeed');
   const crewList = $('crewList');
   const crewScans = $('crewScans');
@@ -149,6 +150,8 @@
     innocentsEjected: 0,
     trust: 62 + Math.floor(Math.random() * 18),
     eventVotes: null,
+    distanceStart: 3800 + Math.floor(Math.random() * 2600),
+    distanceDrift: 0,
     alienActive: false,
     alienDone: false,
     alienStep: 0,
@@ -223,6 +226,7 @@
     if (fx.fuel) { state.fuel = clamp(state.fuel + fx.fuel); parts.push(`CARBURANT ${fx.fuel > 0 ? '+' : ''}${fx.fuel}`); }
     if (fx.signal) { state.signal = clamp(state.signal + fx.signal); parts.push(`SIGNAL ${fx.signal > 0 ? '+' : ''}${fx.signal}`); }
     updateConsole();
+    if (fx.hull && fx.hull < 0) state.distanceDrift += Math.abs(fx.hull) * 22;
     if (fx.hull && fx.hull <= -5) shakeScene();
     if (!silent && parts.length) pushMessage('system', parts.join(' // '));
     checkDefeat();
@@ -1878,6 +1882,21 @@
     const remaining = Math.max(0, DURATION_MS - (Date.now() - state.startedAt));
     if (timerValue) timerValue.textContent = formatTime(remaining);
     if (consoleFootnote) consoleFootnote.textContent = `PRIORITE // TENIR ${formatTime(remaining)}`;
+    updateDistance(remaining);
+  }
+
+  // La coque encaissée dévie la trajectoire (le drift se résorbe
+  // peu à peu, comme une correction de cap) : la distance affichée
+  // n'est donc jamais une simple ligne droite vers zéro.
+  function updateDistance(remaining) {
+    if (!consoleDistance) return;
+    state.distanceDrift *= 0.992;
+    const progress = 1 - remaining / DURATION_MS;
+    const base = state.distanceStart * (1 - progress) + state.distanceDrift;
+    const wobble = Math.sin(Date.now() / 1400) * Math.min(3, base * 0.004);
+    const ua = Math.max(0, Math.round(base + wobble));
+    consoleDistance.textContent = `${ua.toLocaleString('fr-FR')} UA`;
+    consoleDistance.classList.toggle('warning', state.distanceDrift > 40);
   }
 
   function updateDecisionTimer(now) {
@@ -2097,6 +2116,7 @@
     document.documentElement.style.setProperty('--role-accent-soft', 'rgba(250,122,44,0.18)');
     document.documentElement.style.setProperty('--role-accent-glow', 'rgba(250,122,44,0.42)');
     updateConsole();
+    updateDistance(DURATION_MS);
     renderCrew();
     hydrateSettingsPanel();
     resize();
