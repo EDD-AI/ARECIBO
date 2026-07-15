@@ -589,6 +589,28 @@ body::after {
   background: rgba(157, 255, 208, 0.1);
 }
 
+/* Tribunal de bord : motion de défiance — teinte rouge, plus tendue
+   que le reste des événements. */
+.demo-event.is-tribunal .demo-event-inner {
+  border-color: rgba(255, 75, 51, 0.55);
+  box-shadow: 0 0 34px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 75, 51, 0.14),
+    inset 0 0 22px rgba(255, 75, 51, 0.06);
+}
+
+.demo-event.is-tribunal .demo-event-kicker {
+  color: #ff4b33;
+}
+
+.event-option-tribunal {
+  border-color: rgba(255, 75, 51, 0.32);
+}
+
+.event-option-tribunal:hover,
+.event-option-tribunal:focus-visible {
+  border-color: #ff4b33;
+  background: rgba(255, 75, 51, 0.1);
+}
+
 .demo-event-timerbar {
   height: 4px;
   border: 1px solid rgba(250, 90, 31, 0.3);

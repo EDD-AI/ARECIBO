@@ -149,6 +149,7 @@
     xenoEjected: false,
     innocentsEjected: 0,
     trust: 62 + Math.floor(Math.random() * 18),
+    trustReprieveArmed: true,
     eventVotes: null,
     distanceStart: 3800 + Math.floor(Math.random() * 2600),
     distanceDrift: 0,
@@ -1489,12 +1490,109 @@
     }
 
     updateTrustDisplay();
-    if (state.trust <= 0 && !state.over) {
-      endGame(false, 'DESTITUÉ<br>PAR L’ÉQUIPAGE', 'L’équipage a cessé de vous écouter depuis un moment déjà. Cette fois, VEGA prend la barre sans vous. Le MOTOMOTO continue sans son capitaine.');
+    if (state.trust <= 20 && state.trustReprieveArmed && !state.over && !tribunal.active) {
+      startNoConfidenceVote();
     }
   }
 
+  // ─── MOTION DE DÉFIANCE (destitution jouable) ───────────────────
+  // Plutôt qu'une fin silencieuse quand la confiance s'effondre,
+  // l'équipage se réunit et vote à voix haute. Le Capitaine a un
+  // dernier mot pour infléchir le résultat, puis chaque PNJ révèle
+  // sa position un par un — un vrai moment « tout le monde se
+  // regarde » plutôt qu'un simple seuil technique.
+  const tribunal = { active: false };
+
+  const TRIBUNAL_DEFENSES = [
+    { label: 'Rappeler froidement les faits', hint: 'sobre — la meilleure chance', delta: -0.16 },
+    { label: 'En appeler à la loyauté de l’équipage', hint: 'jouer l’affect — plus risqué', delta: -0.07 },
+    { label: 'Ne rien dire, assumer', hint: 'aucun filet', delta: 0 }
+  ];
+
+  const TRIBUNAL_AGAINST = {
+    vega: 'Je suis désolée, capitaine. Je vote pour vous démettre.',
+    kessel: 'On ne peut plus se permettre vos erreurs. Contre vous.',
+    tilt: 'J’aurais préféré ne pas avoir à le dire. Contre.'
+  };
+  const TRIBUNAL_FOR = {
+    vega: 'Vous avez encore ma confiance.',
+    kessel: 'On reste avec vous, capitaine. Pour l’instant.',
+    tilt: 'Je vote pour vous. On n’abandonne pas.'
+  };
+
+  function startNoConfidenceVote() {
+    if (tribunal.active || state.over) return;
+    tribunal.active = true;
+    state.trustReprieveArmed = false;
+    if (state.activeEvent) { state.activeEvent = null; }
+    playSfx('wrong', 0.5);
+    pushMessage('system', 'L’ÉQUIPAGE SE RÉUNIT // MOTION DE DÉFIANCE CONTRE LE CAPITAINE', 'is-glitch');
+
+    if (eventKicker) eventKicker.textContent = 'TRIBUNAL DE BORD';
+    if (eventTitle) eventTitle.textContent = 'L’équipage doute de vous.';
+    if (eventText) eventText.textContent = 'Trop de décisions contestées. Avant le vote, vous avez droit à un dernier mot.';
+    if (eventVisual) eventVisual.classList.remove('is-visible');
+    if (eventOptions) {
+      eventOptions.innerHTML = '';
+      TRIBUNAL_DEFENSES.forEach(def => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'event-option event-option-tribunal';
+        btn.innerHTML = `<span class="event-option-label">${def.label}</span><span class="event-option-hint">${def.hint}</span>`;
+        btn.addEventListener('click', () => { playClick(); resolveTribunalDefense(def.delta); });
+        eventOptions.appendChild(btn);
+      });
+    }
+    if (eventPanel) {
+      eventPanel.classList.add('is-visible');
+      eventPanel.classList.add('is-tribunal');
+    }
+  }
+
+  function resolveTribunalDefense(delta) {
+    if (eventPanel) {
+      eventPanel.classList.remove('is-visible');
+      eventPanel.classList.remove('is-tribunal');
+    }
+    const alive = aliveNpcs();
+    const votes = {};
+    alive.forEach(npc => {
+      let p = Math.max(0, Math.min(1, (45 - state.trust) / 45)) + delta;
+      if (isLiar(npc)) p += 0.25; // l'infecté pousse discrètement à la destitution
+      votes[npc] = Math.random() < Math.max(0.05, Math.min(0.92, p));
+    });
+    window.setTimeout(() => revealTribunalVotes(alive, votes, 0), 900);
+  }
+
+  function revealTribunalVotes(alive, votes, index) {
+    if (state.over) return;
+    if (index >= alive.length) {
+      window.setTimeout(() => finishTribunal(votes), 900);
+      return;
+    }
+    const npc = alive[index];
+    const against = votes[npc];
+    pushMessage(npc, against ? TRIBUNAL_AGAINST[npc] : TRIBUNAL_FOR[npc], against ? 'is-glitch' : '');
+    playSfx(against ? 'wrong' : 'on', 0.4);
+    window.setTimeout(() => revealTribunalVotes(alive, votes, index + 1), 1500);
+  }
+
+  function finishTribunal(votes) {
+    tribunal.active = false;
+    if (state.over) return;
+    const total = Object.keys(votes).length;
+    const against = Object.values(votes).filter(Boolean).length;
+    if (total > 0 && against > total / 2) {
+      endGame(false, 'DESTITUÉ<br>PAR L’ÉQUIPAGE', 'Le vote est net. VEGA prend la barre. Vous n’êtes plus le capitaine de ce vaisseau — vous n’êtes plus qu’un passager, jusqu’à ARECIBO.');
+      return;
+    }
+    state.trust = 38;
+    pushMessage('system', `MOTION REJETÉE (${total - against}/${total}). Vous restez capitaine. De justesse.`);
+    updateTrustDisplay();
+  }
+
   function updateTrustDisplay() {
+    if (state.trust > 45) state.trustReprieveArmed = true;
     if (crewScans) {
       const scanLine = `SCANS MÉDICAUX : ${state.scansLeft}`;
       crewScans.innerHTML = `${scanLine}<br>CONFIANCE : <span class="${state.trust < 35 ? 'trust-low' : ''}">${state.trust}%</span>`;
@@ -1743,6 +1841,7 @@
       if (evaOverlay) evaOverlay.classList.remove('is-visible');
     }
     state.alienActive = false;
+    tribunal.active = false;
     if (endVisual) endVisual.classList.toggle('is-visible', arrival);
     if (endKicker) endKicker.textContent = win ? 'MOTOMOTO // TRANSMISSION FINALE' : 'MOTOMOTO // DERNIERE TRANSMISSION';
     if (endTitle) {
@@ -2213,7 +2312,7 @@
     evaTick(now);
     minigameTick(now);
     alienTick(now);
-    if (!state.activeEvent && !eva.active && !mg.active && !state.alienActive && now >= state.nextEventAt) {
+    if (!state.activeEvent && !eva.active && !mg.active && !state.alienActive && !tribunal.active && now >= state.nextEventAt) {
       if (!maybeStartAlienEncounter()) {
         const evt = eventQueue.shift();
         if (evt) {
@@ -2223,7 +2322,7 @@
         }
       }
     }
-    if (!state.alienActive) {
+    if (!state.alienActive && !tribunal.active) {
       idleTick(now);
       sabotageTick(now);
     }
@@ -2432,7 +2531,8 @@
       state,
       grep: grepMinigame,
       wires: wiresMinigame,
-      startAlien() { if (!state.alienActive && !state.activeEvent) startAlienEncounter(); }
+      startAlien() { if (!state.alienActive && !state.activeEvent) startAlienEncounter(); },
+      startTribunal() { state.trust = 15; state.trustReprieveArmed = true; startNoConfidenceVote(); }
     };
   }
 
