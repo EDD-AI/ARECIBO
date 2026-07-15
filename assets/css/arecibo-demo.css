@@ -577,6 +577,18 @@ body::after {
   text-shadow: 0 0 10px rgba(250, 90, 31, 0.5);
 }
 
+/* Rencontre rare : palette distincte (vert/cyan) pour signaler
+   qu'il ne s'agit pas d'un événement ordinaire. */
+.event-option-alien {
+  border-color: rgba(157, 255, 208, 0.35);
+}
+
+.event-option-alien:hover,
+.event-option-alien:focus-visible {
+  border-color: #9dffd0;
+  background: rgba(157, 255, 208, 0.1);
+}
+
 .demo-event-timerbar {
   height: 4px;
   border: 1px solid rgba(250, 90, 31, 0.3);

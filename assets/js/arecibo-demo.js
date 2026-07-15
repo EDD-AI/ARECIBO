@@ -148,7 +148,11 @@
     xenoEjected: false,
     innocentsEjected: 0,
     trust: 62 + Math.floor(Math.random() * 18),
-    eventVotes: null
+    eventVotes: null,
+    alienActive: false,
+    alienDone: false,
+    alienStep: 0,
+    alienDeadline: 0
   };
 
   const clamp = v => Math.max(0, Math.min(100, Math.round(v)));
@@ -1438,6 +1442,7 @@
       eva.onDone = null;
       if (evaOverlay) evaOverlay.classList.remove('is-visible');
     }
+    state.alienActive = false;
     if (endVisual) endVisual.classList.toggle('is-visible', arrival);
     if (endKicker) endKicker.textContent = win ? 'MOTOMOTO // TRANSMISSION FINALE' : 'MOTOMOTO // DERNIERE TRANSMISSION';
     if (endTitle) {
@@ -1477,6 +1482,141 @@
     } else {
       endGame(true, 'ARECIBO<br>EN VUE', 'Le voyage s’achève dans le bruit, le doute et la mauvaise musique. L’équipage est entier, le vaisseau tient debout. ARECIBO vous ouvre ses portes.', true);
     }
+  }
+
+  // ─── RENCONTRE RARE : LE CONTACT ────────────────────────────────
+  // ~5% de chance à chaque tirage d'événement (après un minimum de
+  // rounds pour la pacing). Cinq choix d'affilée, un seul juste par
+  // round : au premier faux pas, silence total. Les cinq bons choix
+  // ouvrent la seule vraie fin « parfaite » du jeu.
+  const ALIEN_CHANCE = 0.05;
+  const ALIEN_ROUND_MS = 16000;
+
+  const ALIEN_ROUNDS = [
+    {
+      kicker: 'CONTACT // SÉQUENCE 1/5',
+      title: 'Ça frappe au sas, en rythme.',
+      text: 'Trois coups. Une pause. Trois coups. Ce n’est pas un débris. Ce n’est pas un membre de l’équipage.',
+      options: [
+        { label: 'Répondre : trois coups, une pause', correct: true },
+        { label: 'Répondre par un signal aléatoire', correct: false },
+        { label: 'Ne pas répondre', correct: false }
+      ]
+    },
+    {
+      kicker: 'CONTACT // SÉQUENCE 2/5',
+      title: 'Une carte s’allume sur vos écrans.',
+      text: 'Un tracé de lumière, au-delà de tout ce que vos instruments connaissent. Ils veulent vous montrer quelque chose.',
+      options: [
+        { label: 'Suivre exactement le tracé', correct: true },
+        { label: 'Suivre en gardant une marge de sécurité', correct: false },
+        { label: 'Couper la navigation', correct: false }
+      ]
+    },
+    {
+      kicker: 'CONTACT // SÉQUENCE 3/5',
+      title: 'Leur monde meurt.',
+      text: 'Une planète grise, craquelée, sous un ciel d’une couleur qui ne devrait pas exister. Ils vous montrent ce qui pompe leur lumière.',
+      options: [
+        { label: 'Offrir votre énergie de bord, sans hésiter', correct: true },
+        { label: 'Négocier avant de donner quoi que ce soit', correct: false },
+        { label: 'Leur montrer votre propre détresse d’abord', correct: false }
+      ]
+    },
+    {
+      kicker: 'CONTACT // SÉQUENCE 4/5',
+      title: 'Ils vous tendent quelque chose.',
+      text: 'Une forme, ni main ni outil. Elle attend, immobile. Le moindre geste peut tout changer.',
+      options: [
+        { label: 'La saisir sans hésiter', correct: true },
+        { label: 'L’examiner avant de toucher', correct: false },
+        { label: 'Reculer, par réflexe', correct: false }
+      ]
+    },
+    {
+      kicker: 'CONTACT // SÉQUENCE 5/5',
+      title: 'La dernière question.',
+      text: 'Une pensée s’installe dans votre tête, sans mot : « Pourquoi devrions-nous vous sauver ? »',
+      options: [
+        { label: '« Parce qu’on a essayé de vous comprendre. »', correct: true },
+        { label: '« Parce qu’on est plus forts ensemble. »', correct: false },
+        { label: 'Ne rien répondre', correct: false }
+      ]
+    }
+  ];
+
+  function maybeStartAlienEncounter() {
+    if (state.alienDone || state.alienActive || state.eventsResolved < 2) return false;
+    if (Math.random() >= ALIEN_CHANCE) return false;
+    startAlienEncounter();
+    return true;
+  }
+
+  function startAlienEncounter() {
+    state.alienActive = true;
+    state.alienStep = 0;
+    pushMessage('system', 'SIGNAL INCONNU // CONTACT AU SAS TRIBORD', 'is-event');
+    playSfx('alarm', 0.4);
+    renderAlienRound();
+  }
+
+  function renderAlienRound() {
+    const round = ALIEN_ROUNDS[state.alienStep];
+    state.alienDeadline = Date.now() + ALIEN_ROUND_MS;
+
+    if (eventKicker) eventKicker.textContent = round.kicker;
+    if (eventTitle) eventTitle.textContent = round.title;
+    if (eventText) eventText.textContent = round.text;
+    if (eventVisual) eventVisual.classList.remove('is-visible');
+    if (eventOptions) {
+      eventOptions.innerHTML = '';
+      round.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'event-option event-option-alien';
+        btn.innerHTML = `<span class="event-option-label">${opt.label}</span>`;
+        btn.addEventListener('click', () => {
+          playClick();
+          resolveAlienChoice(opt.correct);
+        });
+        eventOptions.appendChild(btn);
+      });
+    }
+    if (eventPanel) eventPanel.classList.add('is-visible');
+  }
+
+  function resolveAlienChoice(correct) {
+    if (!state.alienActive) return;
+    if (eventPanel) eventPanel.classList.remove('is-visible');
+
+    if (!correct) {
+      state.alienActive = false;
+      state.alienDone = true;
+      window.setTimeout(() => {
+        endGame(false, 'SILENCE<br>TOTAL', 'Le mauvais geste, le mauvais mot, le mauvais rythme. Le sas ne s’ouvre plus jamais. Il ne reste personne pour raconter ce qui s’est passé ce jour-là.');
+      }, 700);
+      return;
+    }
+
+    state.alienStep += 1;
+    if (state.alienStep >= ALIEN_ROUNDS.length) {
+      state.alienActive = false;
+      state.alienDone = true;
+      window.setTimeout(() => {
+        endGame(true, 'CONTACT<br>TRANSCENDANT', 'Le monde gris reprend des couleurs devant vos yeux. Une pensée calme et immense s’installe en vous : vous savez, désormais, tout ce qu’il y a à savoir. Le MOTOMOTO reprend sa route vers ARECIBO — mais plus rien, à bord, ne sera tout à fait pareil.', true);
+      }, 900);
+      return;
+    }
+
+    window.setTimeout(renderAlienRound, 1100);
+  }
+
+  function alienTick(now) {
+    if (!state.alienActive) return;
+    const remaining = Math.max(0, state.alienDeadline - now);
+    if (eventCountdown) eventCountdown.textContent = String(Math.ceil(remaining / 1000));
+    if (eventTimerFill) eventTimerFill.style.transform = `scaleX(${remaining / ALIEN_ROUND_MS})`;
+    if (remaining <= 0) resolveAlienChoice(false);
   }
 
   // ─── VIE DU COCKPIT : LEDS + ÉCRANS MURAUX ─────────────────────
@@ -1757,16 +1897,21 @@
     updateDecisionTimer(now);
     evaTick(now);
     minigameTick(now);
-    if (!state.activeEvent && !eva.active && !mg.active && now >= state.nextEventAt) {
-      const evt = eventQueue.shift();
-      if (evt) {
-        startEvent(evt);
-      } else {
-        state.nextEventAt = now + 60000;
+    alienTick(now);
+    if (!state.activeEvent && !eva.active && !mg.active && !state.alienActive && now >= state.nextEventAt) {
+      if (!maybeStartAlienEncounter()) {
+        const evt = eventQueue.shift();
+        if (evt) {
+          startEvent(evt);
+        } else {
+          state.nextEventAt = now + 60000;
+        }
       }
     }
-    idleTick(now);
-    sabotageTick(now);
+    if (!state.alienActive) {
+      idleTick(now);
+      sabotageTick(now);
+    }
     checkVictory();
   }
 
@@ -1970,7 +2115,8 @@
       },
       state,
       grep: grepMinigame,
-      wires: wiresMinigame
+      wires: wiresMinigame,
+      startAlien() { if (!state.alienActive && !state.activeEvent) startAlienEncounter(); }
     };
   }
 
