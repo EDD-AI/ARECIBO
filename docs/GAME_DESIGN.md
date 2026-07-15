@@ -132,6 +132,17 @@ mécanique doit répondre à la question : « quelle phrase force-t-elle
 Ordre de prototypage : postes physiques + info au poste, puis
 objectifs secrets + loot privé, puis double incident.
 
+**Implémenté (démo solo, juillet 2026) :** la motion de défiance —
+quand la confiance du Capitaine s'effondre, l'équipage se réunit en
+un vrai « tribunal de bord » plutôt qu'une fin silencieuse. Le
+Capitaine a un dernier mot (3 défenses, chacune influence les
+chances sans les garantir), puis chaque PNJ révèle son vote à voix
+haute. Majorité contre → destitution ; sinon sursis (confiance
+restaurée, la motion peut se redéclencher plus tard). En multi
+réel, ce sera un moment où les VRAIS joueurs devront se regarder et
+trancher ensemble — c'est le mécanisme le plus proche du Loup-Garou
+qu'on ait construit, sans aucun rôle caché dans le coup lui-même.
+
 ## 8. Exemples d'événements (ton à valider)
 
 - **« Quelque chose a accroché la coque. »** Le Capitaine voit trois options
