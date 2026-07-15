@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ARECIBO - EMBARQUEMENT</title>
+<link rel="icon" type="image/png" href="assets/picto-arecibo-pageweb.png">
+<script src="assets/visual-settings.js?v=pixel-dither-3"></script>
+<link rel="stylesheet" href="assets/terminal-filter.css?v=global-pixel-dither-3">
+<link rel="stylesheet" href="assets/css/arecibo-waiting.css?v=waiting-1">
+</head>
+<body data-theme-audio="menu">
+  <main class="waiting-scene" aria-label="Salle d'embarquement">
+    <canvas class="waiting-stars" id="waitingStars" aria-hidden="true"></canvas>
+
+    <section class="waiting-frame">
+      <header class="waiting-head">
+        <div class="waiting-kicker">MOTOMOTO // SALLE D'EMBARQUEMENT</div>
+        <h1 class="waiting-title">ÉQUIPAGE EN CONNEXION</h1>
+        <div class="waiting-session" id="waitingSession">SESSION ----</div>
+      </header>
+
+      <div class="waiting-players" id="waitingPlayers"></div>
+
+      <div class="waiting-log" id="waitingLog" aria-live="polite"></div>
+
+      <footer class="waiting-foot">
+        <button class="waiting-btn waiting-btn-ghost" id="waitingBack" type="button">&lt; RETOUR MENU</button>
+        <button class="waiting-btn waiting-btn-launch" id="waitingLaunch" type="button" disabled>EN ATTENTE DE L'ÉQUIPAGE...</button>
+      </footer>
+    </section>
+  </main>
+
+  <div class="page-transition" id="transition" aria-hidden="true"></div>
+  <div class="cursor" id="cursor"></div>
+
+  <script src="assets/player-profile.js?v=profile-1"></script>
+  <script src="assets/js/arecibo-waiting.js?v=waiting-1"></script>
+  <script src="assets/theme-audio.js?v=theme-audio-3"></script>
+</body>
+</html>

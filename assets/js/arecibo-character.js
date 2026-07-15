@@ -163,7 +163,7 @@
   function destination() {
     if (next === 'join') return 'arecibo_lobby.html?v=multi-join';
     if (next === 'host' && sessionCode) {
-      return `arecibo_intro.html?v=reboot-intro&sessionCode=${encodeURIComponent(sessionCode)}&mode=host`;
+      return `arecibo_waiting.html?v=waiting-1&sessionCode=${encodeURIComponent(sessionCode)}`;
     }
     if (next === 'demo') return 'arecibo_demo.html';
     return 'arecibo_menu.html';

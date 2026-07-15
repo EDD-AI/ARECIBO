@@ -146,7 +146,9 @@
     ejectArmed: false,
     ultrasonUsed: false,
     xenoEjected: false,
-    innocentsEjected: 0
+    innocentsEjected: 0,
+    trust: 62 + Math.floor(Math.random() * 18),
+    eventVotes: null
   };
 
   const clamp = v => Math.max(0, Math.min(100, Math.round(v)));
@@ -185,6 +187,10 @@
     if (author === 'system') {
       head.innerHTML = '__SYS__';
       node.classList.add('is-system');
+    } else if (author === 'player') {
+      node.classList.add('is-player');
+      node.style.setProperty('--msg-color', '#fa7a2c');
+      head.innerHTML = `${playerName} <small>// CAPITAINE</small>`;
     } else {
       const npc = NPCS[author];
       node.style.setProperty('--msg-color', npc.color);
@@ -1030,11 +1036,58 @@
     eventQueue = [openers[0], ...[...openers.slice(1), ...rest].sort(() => Math.random() - 0.5)];
   }
 
+  // ─── VOTE DE L'ÉQUIPAGE ─────────────────────────────────────────
+  // Chaque PNJ vote pour l'option qu'il juge la moins risquée, selon
+  // les jauges qu'elle affecte. Un PNJ infecté vote À L'INVERSE (il
+  // pousse discrètement vers la pire option) — son vote peut donc
+  // trahir un mensonge tenu dans ses messages.
+  function optionRiskScore(opt) {
+    const fx = opt.fx || (opt.success ? opt.success.fx : null) || {};
+    let score = (fx.hull || 0) + (fx.fuel || 0) + (fx.signal || 0);
+    if (opt.exposes) score -= 3;
+    if (opt.minigame) score -= 1;
+    return score;
+  }
+
+  function weightedPick(weights) {
+    const total = weights.reduce((a, b) => a + b, 0);
+    if (total <= 0) return Math.floor(Math.random() * weights.length);
+    let roll = Math.random() * total;
+    for (let i = 0; i < weights.length; i++) {
+      roll -= weights[i];
+      if (roll <= 0) return i;
+    }
+    return weights.length - 1;
+  }
+
+  function computeVotes(evt) {
+    const scores = evt.options.map(optionRiskScore);
+    const votes = {};
+    aliveNpcs().forEach(npc => {
+      const infected = isLiar(npc);
+      const weights = scores.map(s => Math.exp((infected ? -s : s) / 5));
+      votes[npc] = weightedPick(weights);
+    });
+    return votes;
+  }
+
+  function renderVoteMark(npc, optionIndex) {
+    const row = eventOptions ? eventOptions.querySelectorAll('.event-option-votes')[optionIndex] : null;
+    if (!row) return;
+    const mark = document.createElement('span');
+    mark.className = 'vote-mark';
+    mark.style.setProperty('--vote-color', NPCS[npc].color);
+    mark.textContent = NPCS[npc].name.slice(0, 1);
+    mark.title = NPCS[npc].name;
+    row.appendChild(mark);
+  }
+
   function startEvent(evt) {
     if (state.over) return;
     state.activeEvent = evt;
     state.decideTotal = evt.decide * 1000;
     state.decideDeadline = Date.now() + state.decideTotal;
+    state.eventVotes = computeVotes(evt);
 
     playSfx('on', 0.55);
     pushMessage('system', `ÉVÉNEMENT // ${evt.title.toUpperCase()}`, 'is-event');
@@ -1057,7 +1110,7 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'event-option';
-        btn.innerHTML = `<span class="event-option-label">${opt.label}</span><span class="event-option-hint">${opt.hint}</span>`;
+        btn.innerHTML = `<span class="event-option-label">${opt.label}</span><span class="event-option-hint">${opt.hint}</span><span class="event-option-votes" aria-hidden="true"></span>`;
         btn.addEventListener('click', () => {
           playClick();
           resolveEvent(index);
@@ -1068,13 +1121,80 @@
     if (eventPanel) eventPanel.classList.add('is-visible');
 
     // Les infos partielles arrivent en décalé, comme sur un vrai vocal.
+    // Le vote de chacun s'affiche juste après son message.
     evt.msgs.forEach(msg => {
       window.setTimeout(() => {
         if (state.activeEvent !== evt || state.over) return;
         const text = pickText(isLiar(msg.npc) && msg.lie ? msg.lie : msg.t);
         if (!state.ejected[msg.npc]) pushMessage(msg.npc, text);
+        if (state.eventVotes && state.eventVotes[msg.npc] !== undefined) {
+          window.setTimeout(() => {
+            if (state.activeEvent === evt) renderVoteMark(msg.npc, state.eventVotes[msg.npc]);
+          }, 700);
+        }
       }, msg.d);
     });
+
+    // PNJ sans message dédié pour cet événement : vote quand même,
+    // avec un léger délai aléatoire.
+    Object.keys(state.eventVotes).forEach(npc => {
+      if (evt.msgs.some(m => m.npc === npc)) return;
+      window.setTimeout(() => {
+        if (state.activeEvent === evt) renderVoteMark(npc, state.eventVotes[npc]);
+      }, rand(2000, evt.decide * 700));
+    });
+  }
+
+  function tallyMajority(votes) {
+    const counts = {};
+    Object.values(votes).forEach(idx => { counts[idx] = (counts[idx] || 0) + 1; });
+    let bestIdx = null, bestCount = 0;
+    Object.entries(counts).forEach(([idx, count]) => {
+      if (count > bestCount) { bestCount = count; bestIdx = Number(idx); }
+    });
+    const total = Object.keys(votes).length;
+    const tie = Object.values(counts).filter(c => c === bestCount).length > 1;
+    return { bestIdx, bestCount, total, tie };
+  }
+
+  function applyDecisionTrust(evt, optionIndex) {
+    const votes = state.eventVotes;
+    if (!votes || Object.keys(votes).length === 0) return;
+    const { bestIdx, bestCount, total, tie } = tallyMajority(votes);
+
+    if (optionIndex === -1) {
+      state.trust = clamp(state.trust - 5);
+      return;
+    }
+
+    const supporters = Object.entries(votes).filter(([, idx]) => idx === optionIndex).map(([npc]) => NPCS[npc].name);
+
+    if (supporters.length === total && total > 0) {
+      state.trust = clamp(state.trust + 6);
+      pushMessage('system', `DÉCISION UNANIME SUIVIE (${total}/${total}).`);
+    } else if (!tie && optionIndex === bestIdx) {
+      state.trust = clamp(state.trust + 4);
+      pushMessage('system', `VOUS AVEZ SUIVI LA MAJORITÉ (${bestCount}/${total}) : ${supporters.join(', ')}.`);
+    } else if (supporters.length > 0) {
+      state.trust = clamp(state.trust - 4);
+      pushMessage('system', `DÉCISION MINORITAIRE. Soutenue par ${supporters.join(', ')} seulement.`);
+    } else {
+      state.trust = clamp(state.trust - 9);
+      const majOpt = evt.options[bestIdx];
+      pushMessage('system', `VOUS ÊTES ALLÉ CONTRE L'AVIS DE L'ÉQUIPAGE. Personne n'avait voté pour ce choix (majorité : « ${majOpt ? majOpt.label : '—'} »).`, 'is-glitch');
+    }
+
+    updateTrustDisplay();
+    if (state.trust <= 0 && !state.over) {
+      endGame(false, 'DESTITUÉ<br>PAR L’ÉQUIPAGE', 'L’équipage a cessé de vous écouter depuis un moment déjà. Cette fois, VEGA prend la barre sans vous. Le MOTOMOTO continue sans son capitaine.');
+    }
+  }
+
+  function updateTrustDisplay() {
+    if (crewScans) {
+      const scanLine = `SCANS MÉDICAUX : ${state.scansLeft}`;
+      crewScans.innerHTML = `${scanLine}<br>CONFIANCE : <span class="${state.trust < 35 ? 'trust-low' : ''}">${state.trust}%</span>`;
+    }
   }
 
   function resolveEvent(optionIndex) {
@@ -1083,6 +1203,8 @@
     state.activeEvent = null;
     state.eventsResolved += 1;
     if (eventPanel) eventPanel.classList.remove('is-visible');
+    applyDecisionTrust(evt, optionIndex);
+    if (state.over) return;
 
     const finish = (fx, out) => {
       window.setTimeout(() => {
@@ -1188,7 +1310,7 @@
       });
       crewList.appendChild(btn);
     });
-    if (crewScans) crewScans.textContent = `SCANS MÉDICAUX : ${state.scansLeft}`;
+    updateTrustDisplay();
   }
 
   function openMemberModal(id) {
@@ -1257,7 +1379,7 @@
         ? `SCAN // ${NPCS[id].name} : ORGANISME ÉTRANGER DÉTECTÉ`
         : `SCAN // ${NPCS[id].name} : RAS`, infected ? 'is-glitch' : '');
       playSfx(infected ? 'wrong' : 'on', 0.7);
-      if (crewScans) crewScans.textContent = `SCANS MÉDICAUX : ${state.scansLeft}`;
+      updateTrustDisplay();
     }, 3400);
   }
 
@@ -1773,6 +1895,18 @@
     if (doorHotspotLeft) doorHotspotLeft.addEventListener('click', () => { playClick(); openRoom('left'); });
     if (doorHotspotRight) doorHotspotRight.addEventListener('click', () => { playClick(); openRoom('right'); });
     if (roomViewClose) roomViewClose.addEventListener('click', () => { playClick(); closeRoom(); });
+    const commsForm = $('commsForm');
+    const commsField = $('commsField');
+    if (commsForm && commsField) {
+      commsForm.addEventListener('submit', event => {
+        event.preventDefault();
+        const text = commsField.value.trim();
+        if (!text) return;
+        pushMessage('player', text);
+        commsField.value = '';
+      });
+    }
+
     if (memberScanBtn) memberScanBtn.addEventListener('click', () => { playClick(); runScan(); });
     if (memberEjectBtn) memberEjectBtn.addEventListener('click', () => { playClick(); runEject(); });
     if (memberCloseBtn) memberCloseBtn.addEventListener('click', () => { playClick(); closeMemberModal(); });
@@ -1782,6 +1916,10 @@
 
     window.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
+        if (document.activeElement === commsField) {
+          commsField.blur();
+          return;
+        }
         event.preventDefault();
         if (roomOpen) {
           closeRoom();

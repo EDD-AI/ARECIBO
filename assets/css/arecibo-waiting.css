@@ -1,0 +1,301 @@
+/* ─── ARECIBO — SALLE D'EMBARQUEMENT (d'après la frame 6 du Figma) ── */
+
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&display=swap');
+
+:root {
+  --cream: #f7ffc3;
+  --orange: #fa5a1f;
+  --bg: #040402;
+  --f-pixel: 'Pixelify Sans', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+body {
+  position: relative;
+  color: var(--cream);
+  font-family: var(--f-pixel);
+  cursor: none;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  background: repeating-linear-gradient(0deg, rgba(247, 255, 195, 0.03) 0 1px, transparent 1px 7px);
+  opacity: 0.55;
+  mix-blend-mode: screen;
+}
+
+.waiting-scene {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(14px, 3vh, 36px);
+  background: var(--bg);
+}
+
+.waiting-stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* Le cadre crème de la frame 6 */
+.waiting-frame {
+  position: relative;
+  z-index: 2;
+  width: min(96vw, 1240px);
+  height: min(90vh, 760px);
+  border: 1px solid var(--cream);
+  outline: 1px solid rgba(247, 255, 195, 0.25);
+  outline-offset: 8px;
+  background: rgba(2, 2, 1, 0.72);
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: clamp(8px, 1.6vh, 18px);
+  padding: clamp(16px, 3vh, 32px) clamp(18px, 3vw, 44px);
+}
+
+.waiting-head {
+  text-align: center;
+  display: grid;
+  gap: 5px;
+}
+
+.waiting-kicker {
+  color: rgba(247, 255, 195, 0.5);
+  font-size: clamp(10px, 0.8vw, 13px);
+  letter-spacing: 0.2em;
+}
+
+.waiting-title {
+  font-size: clamp(24px, 3vw, 46px);
+  line-height: 0.95;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 24px rgba(247, 255, 195, 0.16);
+}
+
+.waiting-session {
+  color: var(--orange);
+  font-size: clamp(12px, 1vw, 17px);
+  letter-spacing: 0.22em;
+}
+
+/* Joueurs sur leurs halos */
+.waiting-players {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: clamp(20px, 4.5vw, 90px);
+  padding-bottom: clamp(8px, 2vh, 22px);
+}
+
+.waiting-player {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.waiting-player.is-connected {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.waiting-player-head {
+  width: clamp(54px, 6.5vw, 110px);
+  height: clamp(54px, 6.5vw, 110px);
+  display: grid;
+  place-items: center;
+  animation: playerBob 3.4s ease-in-out infinite;
+  animation-delay: var(--bob-delay, 0s);
+}
+
+.waiting-player-head svg,
+.waiting-player-head img {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6));
+}
+
+@keyframes playerBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+.waiting-player-name {
+  font-size: clamp(18px, 2vw, 34px);
+  letter-spacing: 0.04em;
+  color: var(--p-color, var(--cream));
+  text-shadow: 0 0 16px rgba(0, 0, 0, 0.8);
+  text-transform: lowercase;
+}
+
+.waiting-player-halo {
+  width: clamp(70px, 8.5vw, 150px);
+  height: clamp(14px, 1.6vw, 26px);
+  border-radius: 50%;
+  border: 1.5px solid var(--p-color, var(--cream));
+  opacity: 0.55;
+  box-shadow: 0 0 18px var(--p-color, var(--cream));
+  margin-top: -2px;
+}
+
+.waiting-player-badge {
+  margin-top: 4px;
+  padding: 3px 12px;
+  border: 1px solid var(--cream);
+  font-size: clamp(10px, 0.85vw, 15px);
+  letter-spacing: 0.08em;
+  color: var(--cream);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.waiting-player-badge.is-wait {
+  border-color: #ff4b33;
+  color: #ff4b33;
+  animation: waitBlink 1.1s steps(2) infinite;
+}
+
+@keyframes waitBlink {
+  50% { opacity: 0.35; }
+}
+
+/* Journal de connexion */
+.waiting-log {
+  min-height: 3.4em;
+  max-height: 5.4em;
+  overflow: hidden;
+  display: grid;
+  gap: 3px;
+  justify-items: center;
+  align-content: end;
+  font-size: clamp(11px, 0.85vw, 15px);
+  color: rgba(247, 255, 195, 0.55);
+  letter-spacing: 0.08em;
+}
+
+.waiting-log-line {
+  animation: logIn 0.4s ease;
+}
+
+@keyframes logIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Pied */
+.waiting-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.waiting-btn {
+  padding: 13px 24px;
+  border: 1px solid rgba(247, 255, 195, 0.3);
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--cream);
+  font-family: var(--f-pixel);
+  font-size: clamp(13px, 1.05vw, 18px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: none;
+  transition: border-color 0.14s, color 0.14s, box-shadow 0.14s;
+}
+
+.waiting-btn:hover,
+.waiting-btn:focus-visible {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.waiting-btn-ghost {
+  border-color: rgba(247, 255, 195, 0.18);
+  color: rgba(247, 255, 195, 0.6);
+}
+
+.waiting-btn-launch:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.waiting-btn-launch.is-ready {
+  border-color: var(--orange);
+  color: var(--orange);
+  text-shadow: 0 0 14px rgba(250, 90, 31, 0.5);
+  box-shadow: 0 0 22px rgba(250, 90, 31, 0.2);
+  animation: launchPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes launchPulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(250, 90, 31, 0.14); }
+  50% { box-shadow: 0 0 30px rgba(250, 90, 31, 0.34); }
+}
+
+.page-transition {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.42s ease;
+  z-index: 60;
+}
+
+.page-transition.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.cursor {
+  position: fixed;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--cream);
+  pointer-events: none;
+  z-index: 999;
+  transform: translate(-50%, -50%);
+}
+
+.cursor::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  background: var(--orange);
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 900px) {
+  .waiting-players {
+    flex-wrap: wrap;
+    align-items: start;
+  }
+
+  .waiting-foot {
+    flex-direction: column;
+  }
+}

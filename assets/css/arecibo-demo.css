@@ -85,9 +85,9 @@ body::after {
 .demo-comms {
   position: absolute;
   left: 4.4%;
-  top: 37%;
-  bottom: 21%;
-  width: min(21vw, 340px);
+  top: 33%;
+  bottom: 18%;
+  width: min(25vw, 420px);
   z-index: 18;
   display: flex;
   flex-direction: column;
@@ -159,9 +159,40 @@ body::after {
 }
 
 .comms-msg-text {
-  font-size: clamp(12px, 0.88vw, 15px);
-  line-height: 1.32;
+  font-size: clamp(13px, 1.02vw, 18px);
+  line-height: 1.36;
   color: rgba(247, 255, 195, 0.92);
+}
+
+.comms-msg.is-player .comms-msg-text {
+  color: #ffd9a8;
+}
+
+.demo-comms-input {
+  border-top: 1px solid rgba(247, 255, 195, 0.14);
+  padding: 8px;
+}
+
+.demo-comms-field {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid rgba(247, 255, 195, 0.22);
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--cream);
+  font-family: var(--f-pixel);
+  font-size: clamp(12px, 0.95vw, 16px);
+  letter-spacing: 0.06em;
+  cursor: none;
+  outline: none;
+  transition: border-color 0.14s;
+}
+
+.demo-comms-field:focus {
+  border-color: rgba(250, 90, 31, 0.6);
+}
+
+.demo-comms-field::placeholder {
+  color: rgba(247, 255, 195, 0.3);
 }
 
 .comms-msg.is-system .comms-msg-author { color: var(--sys); }
@@ -517,6 +548,33 @@ body::after {
   font-size: clamp(10px, 0.7vw, 12px);
   letter-spacing: 0.06em;
   color: rgba(247, 255, 195, 0.5);
+}
+
+.event-option-votes {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  min-height: 18px;
+}
+
+.vote-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--vote-color, var(--cream));
+  color: var(--vote-color, var(--cream));
+  font-size: 10px;
+  letter-spacing: 0;
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 8px var(--vote-color, transparent);
+  animation: commsIn 0.3s ease;
+}
+
+.trust-low {
+  color: var(--orange);
+  text-shadow: 0 0 10px rgba(250, 90, 31, 0.5);
 }
 
 .demo-event-timerbar {
