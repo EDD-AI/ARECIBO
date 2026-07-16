@@ -267,6 +267,7 @@
     {
       id: 'accroche',
       kicker: 'ALERTE PROXIMITÉ',
+      scene: 'debris',
       img: 'assets/debris-scene/exterieur.png',
       title: 'Quelque chose a accroché la coque',
       text: 'Un choc sourd côté tribord. La moitié des capteurs du pont ne répondent plus.',
@@ -286,6 +287,7 @@
     {
       id: 'station',
       kicker: 'OPPORTUNITÉ',
+      scene: 'station',
       title: 'Station-service orbitale abandonnée',
       text: 'Une vieille station de ravitaillement dérive à portée. Enseigne à moitié morte : « DERNIER PLEIN AVANT LE VIDE ».',
       decide: 34,
@@ -304,6 +306,7 @@
     {
       id: 'meteores',
       kicker: 'LE JEU A TIRÉ UNE CARTE',
+      scene: 'meteors',
       title: 'PLUIE DE MÉTÉORES',
       text: '« Le ciel vous tombe dessus. Reculer est impossible. » La carte s’est affichée toute seule sur la console.',
       decide: 30,
@@ -375,6 +378,7 @@
     {
       id: 'detresse',
       kicker: 'TRANSMISSION ENTRANTE',
+      scene: 'beacon',
       img: 'assets/debris-loot/messages.png',
       title: 'Une voix connue dans le signal',
       text: 'Une balise de détresse répète un message. Le timbre de la voix vous est étrangement familier. Impossible de savoir d’où.',
@@ -394,6 +398,7 @@
     {
       id: 'cargo',
       kicker: 'CONTACT',
+      scene: 'hulk',
       img: 'assets/ship-launch-detourer-crop.png',
       title: 'Un cargo fantôme en travers de la route',
       text: 'Un transporteur éventré dérive lentement, feux morts, soutes ouvertes. Il bloque le couloir le plus direct vers ARECIBO.',
@@ -413,6 +418,7 @@
     {
       id: 'balise',
       kicker: 'NAVIGATION',
+      scene: 'beacon',
       img: 'assets/backgrounds/menu-planet-2.png',
       title: 'Une balise ARECIBO. Ou presque.',
       text: 'Un émetteur diffuse la signature d’approche d’ARECIBO. Mais le préfixe date d’un protocole abandonné. Vraie balise fatiguée, ou leurre ?',
@@ -467,6 +473,7 @@
     {
       id: 'pirates',
       kicker: 'CONTACT HOSTILE',
+      scene: 'ship',
       img: 'assets/ship-launch-detourer-crop.png',
       title: 'Un vaisseau pirate se colle à votre sillage',
       text: 'Ses tourelles s’orientent vers vous. Un message crypté clignote en boucle sur la console : « CARBURANT OU CARCASSE. »',
@@ -1393,6 +1400,7 @@
     state.decideTotal = evt.decide * 1000;
     state.decideDeadline = Date.now() + state.decideTotal;
     state.eventVotes = computeVotes(evt);
+    setSceneFx(evt.scene || null);
 
     playSfx('on', 0.55);
     pushMessage('system', `ÉVÉNEMENT // ${evt.title.toUpperCase()}`, 'is-event');
@@ -1605,6 +1613,9 @@
     state.activeEvent = null;
     state.eventsResolved += 1;
     if (eventPanel) eventPanel.classList.remove('is-visible');
+    // La scène du hublot s'éteint en fondu quelques secondes après la
+    // décision : on laisse le temps de voir la conséquence.
+    window.setTimeout(clearSceneFx, 5000);
     applyDecisionTrust(evt, optionIndex);
     if (state.over) return;
 
@@ -1842,6 +1853,7 @@
     }
     state.alienActive = false;
     tribunal.active = false;
+    clearSceneFx();
     if (endVisual) endVisual.classList.toggle('is-visible', arrival);
     if (endKicker) endKicker.textContent = win ? 'MOTOMOTO // TRANSMISSION FINALE' : 'MOTOMOTO // DERNIERE TRANSMISSION';
     if (endTitle) {
@@ -1954,6 +1966,7 @@
   function startAlienEncounter() {
     state.alienActive = true;
     state.alienStep = 0;
+    setSceneFx('alien');
     pushMessage('system', 'SIGNAL INCONNU // CONTACT AU SAS TRIBORD', 'is-event');
     playSfx('alarm', 0.4);
     renderAlienRound();
@@ -2148,22 +2161,23 @@
     });
   }
 
-  function spawnDebris(pane) {
-    const fast = Math.random() < 0.3;
+  function spawnDebris(pane, meteor = false) {
+    const fast = meteor || Math.random() < 0.3;
     pane.debris.push({
       x: -14,
-      y: Math.random() * pane.height,
-      vx: fast ? rand(1.6, 3.4) : rand(0.35, 1.1),
-      vy: rand(-0.25, 0.25),
+      y: Math.random() * pane.height * (meteor ? 0.7 : 1),
+      vx: meteor ? rand(4, 7.5) : fast ? rand(1.6, 3.4) : rand(0.35, 1.1),
+      vy: meteor ? rand(0.9, 2) : rand(-0.25, 0.25),
       size: fast ? rand(1.5, 3) : rand(2.5, 6.5),
       rot: Math.random() * Math.PI * 2,
       vrot: rand(-0.03, 0.03),
-      alpha: rand(0.25, 0.6),
-      sides: 3 + Math.floor(Math.random() * 3)
+      alpha: meteor ? rand(0.5, 0.9) : rand(0.25, 0.6),
+      sides: 3 + Math.floor(Math.random() * 3),
+      meteor
     });
   }
 
-  function drawDebris(pane, now) {
+  function drawDebris(pane, now, fxAlpha = 0) {
     if (now >= pane.nextDebrisAt) {
       spawnDebris(pane);
       // Parfois un petit essaim, sinon un débris isolé.
@@ -2172,6 +2186,23 @@
         spawnDebris(pane);
       }
       pane.nextDebrisAt = now + rand(2600, 9000);
+    }
+
+    // Scène « pluie de météores » : le champ s'intensifie brutalement.
+    if (sceneFx.mode === 'meteors' && fxAlpha > 0.2) {
+      if (!pane.nextMeteorAt || now >= pane.nextMeteorAt) {
+        spawnDebris(pane, true);
+        if (Math.random() < 0.35) spawnDebris(pane, true);
+        pane.nextMeteorAt = now + rand(160, 520);
+      }
+    }
+
+    // Scène « champ de débris » : plus dense que la normale, sans furie.
+    if (sceneFx.mode === 'debris' && fxAlpha > 0.2) {
+      if (!pane.nextMeteorAt || now >= pane.nextMeteorAt) {
+        spawnDebris(pane);
+        pane.nextMeteorAt = now + rand(500, 1300);
+      }
     }
 
     const { ctx } = pane;
@@ -2184,11 +2215,25 @@
         pane.debris.splice(i, 1);
         continue;
       }
+      // Traînée incandescente derrière les météores.
+      if (d.meteor) {
+        const tailX = d.x - d.vx * 7;
+        const tailY = d.y - d.vy * 7;
+        const grad = ctx.createLinearGradient(d.x, d.y, tailX, tailY);
+        grad.addColorStop(0, `rgba(255, 190, 120, ${d.alpha * 0.8})`);
+        grad.addColorStop(1, 'rgba(255, 190, 120, 0)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = d.size * 0.9;
+        ctx.beginPath();
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(tailX, tailY);
+        ctx.stroke();
+      }
       ctx.save();
       ctx.translate(d.x, d.y);
       ctx.rotate(d.rot);
       ctx.globalAlpha = d.alpha;
-      ctx.fillStyle = 'rgba(200, 205, 165, 1)';
+      ctx.fillStyle = d.meteor ? 'rgba(235, 210, 170, 1)' : 'rgba(200, 205, 165, 1)';
       ctx.beginPath();
       for (let s = 0; s < d.sides; s++) {
         const angle = (s / d.sides) * Math.PI * 2;
@@ -2215,8 +2260,148 @@
     };
   }
 
+  // ─── SCÈNES RÉACTIVES DANS LES HUBLOTS ─────────────────────────
+  // Chaque événement peut déclarer une `scene` : les hublots arrière
+  // la jouent en direct (silhouette pirate, pluie de météores,
+  // carcasse à la dérive, balise au loin...), avec fondu d'entrée
+  // et de sortie. Même décor, dix fois plus de choses à regarder.
+  const sceneFx = { mode: null, start: 0, fadeAt: 0, progress: 0 };
+
+  const shipSilhouette = new Image();
+  shipSilhouette.src = 'assets/ship-launch-detourer-crop.png';
+
+  function setSceneFx(mode) {
+    if (!mode) { clearSceneFx(); return; }
+    sceneFx.mode = mode;
+    sceneFx.start = performance.now();
+    sceneFx.fadeAt = 0;
+  }
+
+  function clearSceneFx() {
+    if (sceneFx.mode && !sceneFx.fadeAt) sceneFx.fadeAt = performance.now();
+  }
+
+  function sceneAlpha(time) {
+    if (!sceneFx.mode) return 0;
+    let alpha = Math.min(1, (time - sceneFx.start) / 1600);
+    if (sceneFx.fadeAt) {
+      alpha *= Math.max(0, 1 - (time - sceneFx.fadeAt) / 2200);
+      if (alpha <= 0) { sceneFx.mode = null; sceneFx.fadeAt = 0; return 0; }
+    }
+    return alpha;
+  }
+
+  function drawSceneFx(pane, paneIndex, time, alpha) {
+    const { ctx, width, height } = pane;
+    const mode = sceneFx.mode;
+    const t = (time - sceneFx.start) / 1000;
+
+    // Silhouette du MOTOMOTO-like : pirate qui traverse ou carcasse.
+    if ((mode === 'ship' || mode === 'hulk') && paneIndex === 1 && shipSilhouette.complete && shipSilhouette.naturalWidth) {
+      const imgRatio = shipSilhouette.naturalHeight / shipSilhouette.naturalWidth;
+      ctx.save();
+      if (mode === 'ship') {
+        // Traverse lentement de droite à gauche, feux rouges pirates.
+        const w = width * 0.44;
+        const h = w * imgRatio;
+        const x = width + w - ((t * width) / 26) % (width + w * 2);
+        const y = height * 0.16 + Math.sin(t * 0.5) * 6;
+        ctx.globalAlpha = alpha * 0.9;
+        ctx.filter = 'brightness(0.32) sepia(0.5)';
+        ctx.translate(x + w / 2, y + h / 2);
+        ctx.scale(-1, 1);
+        ctx.drawImage(shipSilhouette, -w / 2, -h / 2, w, h);
+        ctx.filter = 'none';
+        ctx.scale(-1, 1);
+        const blink = Math.sin(t * 6) > 0.2 ? 1 : 0.15;
+        ctx.globalAlpha = alpha * blink;
+        ctx.fillStyle = '#ff3b26';
+        ctx.beginPath();
+        ctx.arc(-w * 0.34, -h * 0.12, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // Carcasse : masse sombre quasi immobile qui tangue à peine.
+        const w = width * 0.62;
+        const h = w * imgRatio;
+        const x = width * 0.24 + Math.sin(t * 0.18) * 4;
+        const y = height * 0.2 + Math.cos(t * 0.14) * 5;
+        ctx.globalAlpha = alpha * 0.8;
+        ctx.filter = 'brightness(0.18) sepia(0.3)';
+        ctx.translate(x + w / 2, y + h / 2);
+        ctx.rotate(-0.12 + Math.sin(t * 0.1) * 0.02);
+        ctx.drawImage(shipSilhouette, -w / 2, -h / 2, w, h);
+      }
+      ctx.restore();
+    }
+
+    // Balise en détresse : point orange qui pulse au loin.
+    if (mode === 'beacon' && paneIndex === (sceneFx.beaconPane ?? 2)) {
+      const bx = width * 0.62;
+      const by = height * 0.38;
+      const pulse = (Math.sin(t * 2.4) + 1) / 2;
+      const glow = ctx.createRadialGradient(bx, by, 0, bx, by, 26 + pulse * 18);
+      glow.addColorStop(0, `rgba(250, 90, 31, ${alpha * (0.35 + pulse * 0.4)})`);
+      glow.addColorStop(1, 'rgba(250, 90, 31, 0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(bx - 50, by - 50, 100, 100);
+      ctx.globalAlpha = alpha * (0.5 + pulse * 0.5);
+      ctx.fillStyle = '#ffcf9e';
+      ctx.fillRect(bx - 1.5, by - 1.5, 3, 3);
+      ctx.globalAlpha = 1;
+    }
+
+    // Station : silhouette anguleuse + enseigne qui grésille.
+    if (mode === 'station' && paneIndex === 1) {
+      const sx = width * 0.6 + Math.sin(t * 0.12) * 3;
+      const sy = height * 0.3;
+      const s = Math.min(width, height) / 90;
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.85;
+      ctx.fillStyle = '#141210';
+      ctx.strokeStyle = 'rgba(200,205,165,0.28)';
+      ctx.lineWidth = 1;
+      ctx.translate(sx, sy);
+      ctx.rotate(0.08);
+      ctx.fillRect(-9 * s, -3 * s, 18 * s, 6 * s);
+      ctx.strokeRect(-9 * s, -3 * s, 18 * s, 6 * s);
+      ctx.fillRect(-2 * s, -7 * s, 4 * s, 4 * s);
+      ctx.strokeRect(-2 * s, -7 * s, 4 * s, 4 * s);
+      ctx.beginPath();
+      ctx.moveTo(0, -7 * s);
+      ctx.lineTo(0, -11 * s);
+      ctx.stroke();
+      // L'enseigne : elle clignote mal, évidemment.
+      const flicker = Math.random() < 0.86 ? 1 : 0.2;
+      ctx.globalAlpha = alpha * 0.75 * flicker;
+      ctx.fillStyle = '#fa5a1f';
+      ctx.fillRect(-6 * s, -1.4 * s, 5 * s, 1.6 * s);
+      ctx.restore();
+    }
+
+    // Contact : lueur verte irréelle + trois lumières en formation.
+    if (mode === 'alien') {
+      const glow = ctx.createRadialGradient(width * 0.5, height * 1.1, 0, width * 0.5, height * 1.1, height * 1.3);
+      glow.addColorStop(0, `rgba(120, 255, 170, ${alpha * 0.13})`);
+      glow.addColorStop(1, 'rgba(120, 255, 170, 0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, width, height);
+      if (paneIndex === 1) {
+        for (let i = 0; i < 3; i++) {
+          const angle = t * 0.5 + (i / 3) * Math.PI * 2;
+          const lx = width * 0.5 + Math.cos(angle) * width * 0.18;
+          const ly = height * 0.42 + Math.sin(angle * 1.4) * height * 0.14;
+          ctx.globalAlpha = alpha * (0.5 + Math.sin(t * 3 + i) * 0.3);
+          ctx.fillStyle = '#9dffd0';
+          ctx.fillRect(lx - 1.5, ly - 1.5, 3, 3);
+        }
+        ctx.globalAlpha = 1;
+      }
+    }
+  }
+
   function drawSpace(time) {
-    panes.forEach(pane => {
+    const fxAlpha = sceneAlpha(time);
+    panes.forEach((pane, paneIndex) => {
       const { ctx, width, height, stars, particles, offset } = pane;
       ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = '#020201';
@@ -2235,8 +2420,11 @@
         ctx.fillStyle = 'rgba(247,255,195,1)';
         ctx.fillRect(star.x, star.y, star.size, star.size);
       });
+      ctx.globalAlpha = 1;
 
-      drawDebris(pane, time);
+      if (fxAlpha > 0) drawSceneFx(pane, paneIndex, time, fxAlpha);
+
+      drawDebris(pane, time, fxAlpha);
 
       particles.forEach((particle, index) => {
         particle.x += particle.vx;
@@ -2532,7 +2720,9 @@
       grep: grepMinigame,
       wires: wiresMinigame,
       startAlien() { if (!state.alienActive && !state.activeEvent) startAlienEncounter(); },
-      startTribunal() { state.trust = 15; state.trustReprieveArmed = true; startNoConfidenceVote(); }
+      startTribunal() { state.trust = 15; state.trustReprieveArmed = true; startNoConfidenceVote(); },
+      scene: setSceneFx,
+      clearScene: clearSceneFx
     };
   }
 
