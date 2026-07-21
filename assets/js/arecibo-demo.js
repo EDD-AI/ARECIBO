@@ -2283,7 +2283,7 @@
   const sceneFx = { mode: null, start: 0, fadeAt: 0, progress: 0 };
 
   const shipSilhouette = new Image();
-  shipSilhouette.src = 'assets/ship-launch-detourer-crop.png';
+  shipSilhouette.src = 'assets/vaisseau.png';
 
   function setSceneFx(mode) {
     if (!mode) { clearSceneFx(); return; }
@@ -2378,38 +2378,43 @@
       const vh = window.innerHeight;
       ctx.save();
       if (mode === 'ship') {
-        // Traverse tout l'écran de droite à gauche, feu rouge pirate.
-        const w = vw * 0.26;
+        // Un vaisseau qui glisse lentement près des hublots, de droite
+        // à gauche, en traversant les trois vitres. Assez éclairé pour
+        // qu'on reconnaisse un vaisseau, pas un rectangle sombre.
+        const w = vw * 0.34;
         const h = w * imgRatio;
-        const gx = vw + w - ((t * vw) / 30) % (vw + w * 2);
-        const gy = vh * 0.1 + Math.sin(t * 0.5) * 8;
+        const span = vw + w * 2;
+        // +5 s d'avance pour qu'il soit déjà en vue à l'ouverture.
+        const gx = vw + w - (((t + 5) * (vw / 22)) % span);
+        const gy = vh * 0.11 + Math.sin(t * 0.4) * 7;
+        const lx = gx - pane.screenX;
+        const ly = gy - pane.screenY;
+        ctx.globalAlpha = alpha;
+        ctx.filter = 'brightness(0.72) contrast(1.08)';
+        ctx.drawImage(shipSilhouette, lx, ly, w, h);
+        ctx.filter = 'none';
+        // Feu de position rouge qui clignote, à l'avant du vaisseau.
+        const blink = Math.sin(t * 5) > 0 ? 1 : 0.2;
+        ctx.globalAlpha = alpha * blink;
+        ctx.fillStyle = '#ff3b26';
+        ctx.shadowColor = '#ff3b26';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(lx + w * 0.12, ly + h * 0.52, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } else {
+        // Carcasse : vaisseau mort, sombre, quasi immobile, qui tangue.
+        const w = vw * 0.4;
+        const h = w * imgRatio;
+        const gx = vw * 0.34 + Math.sin(t * 0.18) * 5;
+        const gy = vh * 0.12 + Math.cos(t * 0.14) * 6;
         const lx = gx - pane.screenX;
         const ly = gy - pane.screenY;
         ctx.globalAlpha = alpha * 0.9;
-        ctx.filter = 'brightness(0.32) sepia(0.5)';
+        ctx.filter = 'brightness(0.32) contrast(0.95)';
         ctx.translate(lx + w / 2, ly + h / 2);
-        ctx.scale(-1, 1);
-        ctx.drawImage(shipSilhouette, -w / 2, -h / 2, w, h);
-        ctx.filter = 'none';
-        ctx.scale(-1, 1);
-        const blink = Math.sin(t * 6) > 0.2 ? 1 : 0.15;
-        ctx.globalAlpha = alpha * blink;
-        ctx.fillStyle = '#ff3b26';
-        ctx.beginPath();
-        ctx.arc(-w * 0.34, -h * 0.12, 2.4, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        // Carcasse : masse sombre quasi immobile qui tangue à peine.
-        const w = vw * 0.34;
-        const h = w * imgRatio;
-        const gx = vw * 0.4 + Math.sin(t * 0.18) * 5;
-        const gy = vh * 0.1 + Math.cos(t * 0.14) * 6;
-        const lx = gx - pane.screenX;
-        const ly = gy - pane.screenY;
-        ctx.globalAlpha = alpha * 0.8;
-        ctx.filter = 'brightness(0.18) sepia(0.3)';
-        ctx.translate(lx + w / 2, ly + h / 2);
-        ctx.rotate(-0.12 + Math.sin(t * 0.1) * 0.02);
+        ctx.rotate(-0.1 + Math.sin(t * 0.1) * 0.02);
         ctx.drawImage(shipSilhouette, -w / 2, -h / 2, w, h);
       }
       ctx.restore();
