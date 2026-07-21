@@ -2149,6 +2149,10 @@
         ctx,
         width: rect.width,
         height: rect.height,
+        // Position du hublot à l'écran : permet de dessiner des objets
+        // en coordonnées globales qui traversent les trois vitres.
+        screenX: rect.left,
+        screenY: rect.top,
         offset: index * 0.8 + Math.random() * 0.4,
         stars: Array.from({ length: starCount }, () => ({
           x: Math.random() * rect.width,
@@ -2302,24 +2306,76 @@
     return alpha;
   }
 
+  // ─── LE CHAMP NOIR SE RAPPROCHE ────────────────────────────────
+  // Le trou noir grandit dans les hublots à mesure que le timer
+  // s'écoule : discret au début, il dévore le ciel sur la fin.
+  // À 00:00, il occupe tout — et l'overlay ABSORPTION prend le relais.
+  function missionProgress() {
+    if (!state.started) return 0;
+    return Math.max(0, Math.min(1, (Date.now() - state.startedAt) / DURATION_MS));
+  }
+
+  function drawBlackHole(pane, time, progress) {
+    if (progress <= 0.03) return;
+    const { ctx } = pane;
+    const gx = window.innerWidth * 0.5 - pane.screenX;
+    const gy = window.innerHeight * 0.16 - pane.screenY;
+    const maxR = Math.max(window.innerWidth, window.innerHeight) * 1.05;
+    const r = 4 + Math.pow(progress, 2.1) * maxR;
+    const visib = Math.min(1, progress * 4);
+
+    // Disque d'accrétion : halo orange qui respire lentement.
+    const breathe = 1 + Math.sin(time * 0.0011) * 0.04;
+    const glowR = r * 1.55 * breathe;
+    const glow = ctx.createRadialGradient(gx, gy, Math.max(1, r * 0.9), gx, gy, glowR);
+    glow.addColorStop(0, `rgba(255, 196, 120, ${0.5 * visib})`);
+    glow.addColorStop(0.35, `rgba(250, 90, 31, ${0.22 * visib})`);
+    glow.addColorStop(1, 'rgba(250, 90, 31, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, pane.width, pane.height);
+
+    // Liseré incandescent au bord de l'horizon.
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 214, 150, ${0.75 * visib})`;
+    ctx.lineWidth = Math.max(1.2, r * 0.015);
+    ctx.shadowColor = 'rgba(255, 190, 110, 0.9)';
+    ctx.shadowBlur = 10 + r * 0.04;
+    ctx.beginPath();
+    ctx.arc(gx, gy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Le cœur : un noir parfait qui avale les étoiles.
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.arc(gx, gy, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   function drawSceneFx(pane, paneIndex, time, alpha) {
     const { ctx, width, height } = pane;
     const mode = sceneFx.mode;
     const t = (time - sceneFx.start) / 1000;
 
-    // Silhouette du MOTOMOTO-like : pirate qui traverse ou carcasse.
-    if ((mode === 'ship' || mode === 'hulk') && paneIndex === 1 && shipSilhouette.complete && shipSilhouette.naturalWidth) {
+    // Silhouette du vaisseau (pirate ou carcasse) : positionnée en
+    // coordonnées GLOBALES d'écran, puis dessinée dans chaque hublot —
+    // elle traverse ainsi les trois vitres, pas seulement le centre.
+    if ((mode === 'ship' || mode === 'hulk') && shipSilhouette.complete && shipSilhouette.naturalWidth) {
       const imgRatio = shipSilhouette.naturalHeight / shipSilhouette.naturalWidth;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
       ctx.save();
       if (mode === 'ship') {
-        // Traverse lentement de droite à gauche, feux rouges pirates.
-        const w = width * 0.44;
+        // Traverse tout l'écran de droite à gauche, feu rouge pirate.
+        const w = vw * 0.26;
         const h = w * imgRatio;
-        const x = width + w - ((t * width) / 26) % (width + w * 2);
-        const y = height * 0.16 + Math.sin(t * 0.5) * 6;
+        const gx = vw + w - ((t * vw) / 30) % (vw + w * 2);
+        const gy = vh * 0.1 + Math.sin(t * 0.5) * 8;
+        const lx = gx - pane.screenX;
+        const ly = gy - pane.screenY;
         ctx.globalAlpha = alpha * 0.9;
         ctx.filter = 'brightness(0.32) sepia(0.5)';
-        ctx.translate(x + w / 2, y + h / 2);
+        ctx.translate(lx + w / 2, ly + h / 2);
         ctx.scale(-1, 1);
         ctx.drawImage(shipSilhouette, -w / 2, -h / 2, w, h);
         ctx.filter = 'none';
@@ -2332,13 +2388,15 @@
         ctx.fill();
       } else {
         // Carcasse : masse sombre quasi immobile qui tangue à peine.
-        const w = width * 0.62;
+        const w = vw * 0.34;
         const h = w * imgRatio;
-        const x = width * 0.24 + Math.sin(t * 0.18) * 4;
-        const y = height * 0.2 + Math.cos(t * 0.14) * 5;
+        const gx = vw * 0.4 + Math.sin(t * 0.18) * 5;
+        const gy = vh * 0.1 + Math.cos(t * 0.14) * 6;
+        const lx = gx - pane.screenX;
+        const ly = gy - pane.screenY;
         ctx.globalAlpha = alpha * 0.8;
         ctx.filter = 'brightness(0.18) sepia(0.3)';
-        ctx.translate(x + w / 2, y + h / 2);
+        ctx.translate(lx + w / 2, ly + h / 2);
         ctx.rotate(-0.12 + Math.sin(t * 0.1) * 0.02);
         ctx.drawImage(shipSilhouette, -w / 2, -h / 2, w, h);
       }
@@ -2412,6 +2470,7 @@
 
   function drawSpace(time) {
     const fxAlpha = sceneAlpha(time);
+    const holeProgress = missionProgress();
     panes.forEach((pane, paneIndex) => {
       const { ctx, width, height, stars, particles, offset } = pane;
       ctx.clearRect(0, 0, width, height);
@@ -2432,6 +2491,8 @@
         ctx.fillRect(star.x, star.y, star.size, star.size);
       });
       ctx.globalAlpha = 1;
+
+      drawBlackHole(pane, time, holeProgress);
 
       if (fxAlpha > 0) drawSceneFx(pane, paneIndex, time, fxAlpha);
 
