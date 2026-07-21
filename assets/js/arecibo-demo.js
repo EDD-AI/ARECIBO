@@ -2307,22 +2307,34 @@
   }
 
   // ─── LE CHAMP NOIR SE RAPPROCHE ────────────────────────────────
-  // Le trou noir grandit dans les hublots à mesure que le timer
-  // s'écoule : discret au début, il dévore le ciel sur la fin.
-  // À 00:00, il occupe tout — et l'overlay ABSORPTION prend le relais.
-  function missionProgress() {
-    if (!state.started) return 0;
-    return Math.max(0, Math.min(1, (Date.now() - state.startedAt) / DURATION_MS));
+  // Croissance LINÉAIRE et continue : un point minuscule au début de
+  // la partie, il grossit régulièrement jusqu'à devenir immense quand
+  // il reste 30 s, puis achève d'avaler l'écran dans les 30 dernières
+  // secondes (l'overlay ABSORPTION prend alors le relais).
+  function blackHoleState() {
+    if (!state.started) return null;
+    const elapsed = Date.now() - state.startedAt;
+    const big = Math.max(window.innerWidth, window.innerHeight);
+    const immenseAt = Math.max(1000, DURATION_MS - 30000); // 30 s avant la fin
+    const immenseR = big * 0.92;
+    let r;
+    if (elapsed <= immenseAt) {
+      r = 3 + (elapsed / immenseAt) * immenseR; // montée régulière, continue
+    } else {
+      const p2 = Math.min(1, (elapsed - immenseAt) / 30000);
+      r = immenseR + p2 * (big * 1.35 - immenseR);
+    }
+    // La lueur monte doucement sur les premières secondes.
+    const visib = Math.min(1, elapsed / 8000 + 0.05);
+    return { r, visib };
   }
 
-  function drawBlackHole(pane, time, progress) {
-    if (progress <= 0.03) return;
+  function drawBlackHole(pane, time, hole) {
+    if (!hole || hole.r <= 3) return;
     const { ctx } = pane;
+    const { r, visib } = hole;
     const gx = window.innerWidth * 0.5 - pane.screenX;
     const gy = window.innerHeight * 0.16 - pane.screenY;
-    const maxR = Math.max(window.innerWidth, window.innerHeight) * 1.05;
-    const r = 4 + Math.pow(progress, 2.1) * maxR;
-    const visib = Math.min(1, progress * 4);
 
     // Disque d'accrétion : halo orange qui respire lentement.
     const breathe = 1 + Math.sin(time * 0.0011) * 0.04;
@@ -2470,7 +2482,7 @@
 
   function drawSpace(time) {
     const fxAlpha = sceneAlpha(time);
-    const holeProgress = missionProgress();
+    const hole = blackHoleState();
     panes.forEach((pane, paneIndex) => {
       const { ctx, width, height, stars, particles, offset } = pane;
       ctx.clearRect(0, 0, width, height);
@@ -2492,7 +2504,7 @@
       });
       ctx.globalAlpha = 1;
 
-      drawBlackHole(pane, time, holeProgress);
+      drawBlackHole(pane, time, hole);
 
       if (fxAlpha > 0) drawSceneFx(pane, paneIndex, time, fxAlpha);
 
