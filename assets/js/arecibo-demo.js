@@ -547,7 +547,7 @@
       ]
     },
     right: {
-      img: 'assets/sas-2.png',
+      img: 'assets/sas-3.png',
       caption: 'SAS TRIBORD // ZONE D’EXPOSITION',
       enter: 'Le sas tribord. La porte extérieure n’est qu’à quelques centimètres du vide.',
       flavor: [
@@ -555,6 +555,17 @@
         { npc: 'vega', text: 'Je vois ta signature thermique dans le sas. Referme bien derrière toi. S’il te plaît.' }
       ],
       infectedHint: 'Une odeur, dans le sas. Douce. Organique. Personne n’en a parlé dans les comms.'
+    },
+    soute: {
+      img: 'assets/soute.png',
+      caption: 'SOUTE // PONT INFÉRIEUR',
+      enter: 'La soute. Des caisses jusqu’au plafond, et la cloison 4 quelque part dans l’ombre, au fond.',
+      flavor: [
+        { npc: 'tilt', text: 'Hé ! C’est MA soute. Touche pas aux caisses de la rangée trois, elles sont... classées.' },
+        { npc: 'tilt', text: 'Si tu descends en soute, tape deux coups sur la cloison en arrivant. C’est la politesse, ici.' },
+        { npc: 'kessel', text: 'La caisse marquée M contient les pièces détachées. Enfin, contenait. On va dire contenait.' }
+      ],
+      infectedHint: 'La cloison 4 est tiède sous la main. Les cloisons ne devraient pas être tièdes. Personne ne le sait encore.'
     }
   };
 
@@ -592,7 +603,7 @@
     const room = ROOMS[side];
     if (!room) return;
     roomOpen = side;
-    setDoors(true, side);
+    if (side !== 'soute') setDoors(true, side); // la soute s'atteint par la trappe, pas par les portes latérales
     playSfx('on', 0.7);
     if (roomViewImg) roomViewImg.src = room.img;
     if (roomViewCaption) roomViewCaption.textContent = room.caption;
@@ -604,7 +615,7 @@
       }
       drawRoomSpace();
       pushMessage('system', room.enter);
-      if (side === 'right' && state.infectedId && room.infectedHint) {
+      if (state.infectedId && room.infectedHint) {
         window.setTimeout(() => {
           if (roomOpen === side && !state.over) pushMessage('system', room.infectedHint, 'is-glitch');
         }, 2600);
@@ -2641,6 +2652,8 @@
     }
     if (doorHotspotLeft) doorHotspotLeft.addEventListener('click', () => { playClick(); openRoom('left'); });
     if (doorHotspotRight) doorHotspotRight.addEventListener('click', () => { playClick(); openRoom('right'); });
+    const souteHotspot = $('souteHotspot');
+    if (souteHotspot) souteHotspot.addEventListener('click', () => { playClick(); openRoom('soute'); });
     if (roomViewClose) roomViewClose.addEventListener('click', () => { playClick(); closeRoom(); });
     const commsForm = $('commsForm');
     const commsField = $('commsField');

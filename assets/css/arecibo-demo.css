@@ -625,6 +625,33 @@ body::after {
   transform-origin: left center;
 }
 
+/* ─── TRAPPE DE SOUTE (accès pont inférieur) ──────────────────── */
+.soute-hotspot {
+  position: absolute;
+  left: 50%;
+  bottom: 1.2%;
+  transform: translateX(-50%);
+  z-index: 13;
+  padding: 8px 22px 10px;
+  border: 1px solid rgba(247, 255, 195, 0.14);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(247, 255, 195, 0.45);
+  font-family: var(--f-pixel);
+  font-size: clamp(10px, 0.8vw, 14px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: none;
+  transition: color 0.16s, border-color 0.16s, background 0.16s, box-shadow 0.16s;
+}
+
+.soute-hotspot:hover,
+.soute-hotspot:focus-visible {
+  color: var(--orange);
+  border-color: rgba(250, 90, 31, 0.55);
+  background: rgba(250, 90, 31, 0.08);
+  box-shadow: 0 0 18px rgba(250, 90, 31, 0.16);
+}
+
 /* ─── PIÈCES LATÉRALES ────────────────────────────────────────── */
 .room-view {
   position: absolute;
