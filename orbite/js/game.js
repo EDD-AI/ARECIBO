@@ -1454,7 +1454,9 @@
     drag = null;
     clearPreview();
     if (!d.moved) {
-      if (!cancelled) openDetail(d.src, d.el);
+      // La fiche s'ouvre au « click » qui suit : l'ouvrir dès le relâchement laisserait ce click
+      // tomber sur le fond de la feuille (et la refermer aussitôt) ou sur l'un de ses boutons.
+      if (!cancelled) tap = { src: d.src, el: d.el, t: performance.now() };
       return;
     }
     const ghostRect = d.ghost.querySelector('.orb').getBoundingClientRect();
@@ -1498,6 +1500,13 @@
     }
   }
 
+  let tap = null;
+  document.addEventListener('click', (e) => {
+    const t = tap;
+    tap = null;
+    if (!t || performance.now() - t.t > 800 || !t.el.isConnected || !t.el.contains(e.target)) return;
+    if (ui.screen === 'game' && !ui.busy && $('overlay').hidden) openDetail(t.src, t.el);
+  });
   document.addEventListener('pointerup', (e) => endDrag(e, false));
   document.addEventListener('pointercancel', (e) => endDrag(e, true));
 
@@ -1621,7 +1630,9 @@
     }
     const kws = new Set(kw);
     for (const w of found) if (KW_BY_NAME[w]) kws.add(KW_BY_NAME[w]);
-    return `<p class="sheet-text">${rich}</p><div class="kw-list">${defs.join('')}${kwList([...kws])}</div>`;
+    const kwHtml = defs.join('') + kwList([...kws]);
+    const power = text ? `<p class="sheet-text">${rich}</p>` : '<p class="sheet-text plain">Aucun pouvoir : un astre simple, sans effet.</p>';
+    return `<div class="power-box" style="--c:${R.FAMILIES[R.CARD[id].fam].color}"><span class="power-label">POUVOIR</span>${power}</div>${kwHtml ? `<div class="kw-list">${kwHtml}</div>` : ''}`;
   }
 
   // Fiche rapide : touchez un astre en combat, chez un rival ou en fin de partie.

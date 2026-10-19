@@ -381,7 +381,7 @@ canvas.sphere { display: block; image-rendering: pixelated; image-rendering: cri
 .law .tag { margin: 0 0 6px; color: var(--dim); font-size: 12px; font-style: italic; }
 .law .txt { margin: 0; font-size: 13px; line-height: 1.35; }
 .law .starter { margin: 6px 0 0; color: var(--dim); font-size: 11px; letter-spacing: 0.06em; }
-.fam-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; letter-spacing: 0.12em; color: var(--c); }
+.fam-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; letter-spacing: 0.12em; color: var(--c); }
 .fam-chip::before { content: ''; width: 6px; height: 6px; background: var(--c); }
 #lawGo { margin-top: 12px; }
 
@@ -711,39 +711,44 @@ body.in-combat .banner { top: calc(50% - 34px); }
 .overlay.center .sheet { border: 1px solid var(--line); animation: sheetPop 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; width: min(var(--col), calc(100vw - 24px)); }
 @keyframes sheetUp { from { transform: translateY(40px); opacity: 0; } }
 @keyframes sheetPop { from { transform: scale(0.92); opacity: 0; } }
-.sheet h2 { margin: 2px 0 4px; font-size: 22px; font-weight: 600; letter-spacing: 0.06em; }
+.sheet h2 { margin: 2px 0 4px; font-size: 24px; font-weight: 600; letter-spacing: 0.06em; }
 .sheet h3 { margin: 0 0 10px; font-size: 13px; font-weight: 400; letter-spacing: 0.2em; color: var(--dim); }
 .sheet p { line-height: 1.4; }
 .sheet-top { display: grid; grid-template-columns: 116px 1fr; gap: 14px; align-items: center; }
 .sheet-orb { width: 116px; height: 116px; }
-.sheet-stats, .peek-stats { display: flex; gap: 16px; font-size: 20px; font-weight: 600; margin-top: 6px; }
+.sheet-stats, .peek-stats { display: flex; gap: 18px; font-size: 26px; font-weight: 600; margin-top: 6px; }
 .sheet-stats .stat, .peek-stats .stat { display: inline-flex; align-items: baseline; gap: 6px; }
-.sheet-stats small, .peek-stats small { font-size: 10px; font-weight: 400; letter-spacing: 0.16em; color: var(--dim); }
-.sheet-stats .atk { color: var(--atk); }
-.sheet-stats .hp { color: var(--hp); }
-.sheet-text { margin: 14px 0 8px; font-size: 15px; }
-.sheet-text b { font-weight: 600; color: var(--ink); }
+.sheet-stats small, .peek-stats small { font-size: 11px; font-weight: 500; letter-spacing: 0.14em; color: var(--dim); }
+.sheet-stats .atk, .peek-stats .atk { color: var(--atk); }
+.sheet-stats .hp, .peek-stats .hp { color: var(--hp); }
+/* Le pouvoir de l'astre, encadré à la couleur de sa famille. */
+.power-box { margin: 16px 0 10px; padding: 10px 12px 12px; border-left: 3px solid var(--c, var(--ink)); background: rgba(241, 236, 218, 0.05); }
+.power-label { display: block; margin-bottom: 4px; font-size: 11px; letter-spacing: 0.2em; color: var(--c, var(--dim)); }
+.sheet-text { margin: 0; font-size: 18px; line-height: 1.45; color: var(--ink); }
+.sheet-text.plain { color: var(--dim); font-size: 16px; }
+.sheet-text b { font-weight: 600; color: var(--c, var(--ink)); }
 
 /* Fiche rapide d'un astre (combat, rivaux, fin de partie). */
 .peek {
   position: fixed;
   z-index: 45;
-  width: min(300px, calc(100vw - 20px));
+  width: min(340px, calc(100vw - 20px));
   padding: 12px 14px 10px;
   background: rgba(3, 3, 5, 0.97);
   border: 1px solid var(--line);
   pointer-events: auto;
 }
 .peek.in { animation: sheetPop 0.18s ease-out both; }
-.peek h4 { margin: 4px 0 0; font-size: 18px; font-weight: 600; letter-spacing: 0.06em; }
-.peek .peek-stats { font-size: 16px; }
-.peek .sheet-text { margin: 10px 0 6px; font-size: 13px; line-height: 1.35; }
-.peek .kw-list { margin: 4px 0 0; gap: 4px; }
-.peek .kw-list div { font-size: 11px; }
+.peek h4 { margin: 4px 0 0; font-size: 20px; font-weight: 600; letter-spacing: 0.06em; }
+.peek .peek-stats { font-size: 22px; }
+.peek .power-box { margin: 10px 0 6px; padding: 8px 10px 10px; }
+.peek .sheet-text { font-size: 16px; line-height: 1.4; }
+.peek .kw-list { margin: 6px 0 0; gap: 6px; }
+.peek .kw-list div { font-size: 13px; }
 .rival-board .unit, #endBoard .unit, #enemy .unit, body.in-combat #board .unit { cursor: pointer; }
 .kw-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
-.kw-list div { font-size: 12px; color: var(--dim); }
-.kw-list b { color: var(--ink); font-weight: 400; letter-spacing: 0.08em; margin-right: 6px; }
+.kw-list div { font-size: 14px; line-height: 1.4; color: rgba(241, 236, 218, 0.74); }
+.kw-list b { display: block; color: var(--ink); font-weight: 600; font-size: 12px; letter-spacing: 0.12em; }
 .sheet-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .sheet-actions .btn { flex: 1; min-width: 0; padding: 0 12px; font-size: 13px; letter-spacing: 0.1em; white-space: nowrap; }
 .sheet-actions .btn[data-act="left"], .sheet-actions .btn[data-act="right"] { flex: 0 0 52px; }
