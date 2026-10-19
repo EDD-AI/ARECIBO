@@ -639,6 +639,7 @@
       const bl = botLaws[Math.floor(rng() * botLaws.length)];
       const b = newPlayer(state, 'bot' + i, names[i], bl.id, true);
       b.greed = Math.floor(rng() * 4) - 1;
+      b.skill = 1;
       if (rng() < 0.3) b.pref = families[Math.floor(rng() * families.length)];
       state.players.push(b);
     }
@@ -1140,6 +1141,10 @@
   }
 
   // ─── Bots ───────────────────────────────────────────────────
+  // Les bots des parties ont skill 1 (IA experte) ; skill 0 garde l'IA de base, utile pour
+  // mesurer l'écart (orbite/tools/bots-duel.js).
+  const expert = (p) => p.skill > 0;
+  function famCount(p, fam) { return fam === 'neutre' ? 0 : p.board.concat(p.hand).filter((u) => famOf(u) === fam).length; }
   function cardValue(p, id) {
     const c = CARD[id];
     let v = c.atk + c.hp + c.tier * 3.2 + (c.kw ? c.kw.length * 1.5 : 0);
@@ -1178,8 +1183,15 @@
 
   function botTurn(state, p) {
     const rng = rngFor(state, 'bot:' + p.id);
+    // IA experte : suit la famille qui domine déjà son système.
+    if (expert(p) && state.round >= 4) {
+      const top = FAMILY_KEYS.map((f) => [f, famCount(p, f)]).sort((a, b) => b[1] - a[1])[0];
+      if (top && top[1] >= 3) p.pref = top[0];
+    }
     botDeploy(state, p);
-    const want = Math.min(6, 1 + Math.floor((state.round + p.greed) / 2));
+    // L'IA experte monte de niveau plus tard : elle remplit d'abord son système, puis investit
+    // l'énergie restante. C'est ce qui la rend nettement plus solide en début de partie.
+    const want = Math.min(6, 1 + Math.floor((state.round + p.greed - (expert(p) ? 3 : 0)) / 2));
     if (p.tier < want && p.gold >= upgradeCost(p) && (state.round >= 3 || upgradeCost(p) <= p.gold - BUY_COST || p.gold >= 5)) upgrade(state, p);
     if (p.law === 'ingenierie' && p.gold >= 1 && p.gold % 3 === 1) usePower(state, null, p);
     if (p.law === 'renversement') {
@@ -1188,7 +1200,7 @@
     }
     // Les Comètes grandissent à chaque actualisation : le bot en profite.
     if (rollCost(p) === 0) roll(state, p);
-    const maxRolls = 3 + Math.min(3, p.board.filter((u) => famOf(u) === 'comete').length);
+    const maxRolls = 3 + Math.min(3, p.board.filter((u) => famOf(u) === 'comete').length) + (expert(p) && p.tier >= 4 ? 4 : 0);
     let rolls = 0;
     for (let guard = 0; guard < 40; guard++) {
       botDeploy(state, p);
@@ -1206,6 +1218,11 @@
     }
     botDeploy(state, p);
     if (p.gold >= 1 && p.tier < 6 && p.gold >= upgradeCost(p)) upgrade(state, p);
+    if (expert(p) && !p.frozen) {
+      // Garde le marché s'il contient une copie d'un astre déjà possédé ou un astre de sa famille.
+      const keep = p.shop.some((id) => id && (ownedCopies(p, id).length >= 1 || (CARD[id].fam === p.pref && CARD[id].tier >= p.tier)));
+      if (keep) freeze(state, p);
+    }
   }
 
   // ─── Fin de cycle : combats, dégâts, éliminations ───────────

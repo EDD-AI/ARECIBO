@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 16;
+  const VERSION = 17;
   const DUST_KEY = 'orbite.poussieres';
   const SPEED_KEY = 'orbite.vitesse';
 
@@ -2075,10 +2075,15 @@
     return new Promise((resolve) => {
       ui.discoverDone = resolve;
       const items = p.discover.map((id, i) => {
-        const c = R.CARD[id];
-        return `<button class="discover-item" data-act="choose" data-i="${i}">
+        const c = R.CARD[id], f = R.FAMILIES[c.fam];
+        // La couleur de la famille encadre l'astre ; on rappelle combien de ses cousins sont déjà là.
+        const kin = c.fam === 'neutre' ? 0 : p.board.concat(p.hand).filter((u) => R.famOf(u) === c.fam).length;
+        const mine = R.LAW[p.law].fam === c.fam;
+        return `<button class="discover-item${mine ? ' mine' : ''}" data-act="choose" data-i="${i}" style="--c:${f.color}">
+          <span class="fam-chip">${f.name.toUpperCase()}</span>
           <div class="orb" data-planet="${id}"></div>
           <b>${esc(c.name)}</b>
+          <em class="kin">${mine ? 'Famille de votre loi' : kin ? `${kin} dans votre système` : '&nbsp;'}</em>
           <span class="s"><span class="atk">${c.atk}</span> · <span class="hp">${c.hp}</span></span>
           <small>${esc(R.cardText(id, false))}</small>
         </button>`;

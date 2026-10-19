@@ -311,6 +311,8 @@ vente et l’élimination les rendent. Quand un bot joue une famille, ses astres
 
 **Trois copies** d’un même astre fusionnent en un **astre doré** (statistiques et effets
 doublés). Le placer ouvre une **découverte** : un astre au choix parmi trois du niveau supérieur.
+Chaque choix est encadré de la couleur de sa famille, avec son nom. Il indique aussi « Famille de
+votre loi », ou combien d’astres de cette famille sont déjà dans votre système.
 
 ## Familles
 
@@ -350,6 +352,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `fonts/` | Chakra Petch (woff2, latin) et sa licence SIL OFL |
 | `tests/rules.test.mjs` | Tests des règles |
 | `tools/equilibrage.js` | Simulation de parties entre bots : classement moyen par loi, famille et astre |
+| `tools/bots-duel.js` | Force des bots : IA experte contre IA de base dans les mêmes parties |
 | `manifest.webmanifest`, `sw.js`, `icons/` | Installation sur téléphone et hors ligne |
 
 ## Tests
@@ -383,3 +386,18 @@ exploitera mieux les placements et les synergies, d’autres familles peuvent do
 Avec les 12 familles (6 000 parties) : rang moyen des lois de 4,18 (Ingénierie) à 4,91 (Gravité),
 familles dominantes de 3,68 (Vie) à 4,55 (Anomalies), Comètes à 4,35. Les bots actualisent
 davantage quand ils ont des Comètes et utilisent l’actualisation gratuite de la loi du passage.
+
+**IA experte (v17).** Les 7 bots d’une partie jouent avec l’IA experte (`skill: 1`) :
+- ils montent de niveau plus tard : ils remplissent d’abord leur système, puis investissent
+  l’énergie restante ;
+- à partir du cycle 4, ils suivent la famille qui domine déjà leur système ;
+- ils gèlent un marché qui contient une copie d’un astre qu’ils possèdent ou un astre de leur
+  famille ;
+- ils actualisent davantage au niveau 4 et plus.
+
+Mesuré avec `node orbite/tools/bots-duel.js 3000`, dans les mêmes parties, IA experte contre IA de
+base : rang moyen 3,67 contre 5,33, et 18 % de victoires contre 7 %. Un joueur qui joue comme
+l’ancienne IA passe d’un rang moyen de 4,03 à 5,46 face aux nouveaux bots.
+
+Pistes essayées puis écartées, car neutres ou nuisibles : monter de niveau plus tôt (nettement
+plus faible), pondérer la synergie de famille et réordonner le système.
