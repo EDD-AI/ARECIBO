@@ -56,6 +56,7 @@
       </button>
       <p class="subtitle center" id="menuLine"></p>
       <nav class="menu-list" id="menuList" aria-label="Menu principal">
+        <button class="menu-item" id="campBtn">CAMPAGNE <small>DÉMO · ACTE I</small></button>
         <button class="menu-item" id="soloBtn">JOUER SOLO</button>
         <button class="menu-item soon" id="multiBtn">MULTIJOUEUR <small>BIENTÔT</small></button>
         <button class="menu-item" id="marketBtn">MARCHÉ STELLAIRE</button>
@@ -192,6 +193,64 @@
       <button class="btn primary" id="againBtn">REJOUER</button>
       <button class="link" id="endHome">Accueil</button>
     </section>
+
+    <!-- CAMPAGNE : récit -->
+    <section class="screen intro" id="cStory" aria-label="Campagne">
+      <div class="orb cs-orb" id="csOrb" data-fit="body"></div>
+      <div class="cs-head"><div class="pixel-word" id="csTitle"></div><p class="cs-sub" id="csSub"></p></div>
+      <p class="subtitle cs-line" id="csLine"></p>
+      <button class="link cs-skip" id="csSkip">PASSER</button>
+    </section>
+
+    <!-- CAMPAGNE : dialogue entre Créateurs (le nôtre, toujours à gauche, reste une silhouette) -->
+    <section class="screen intro" id="cTalk" aria-label="Dialogue">
+      <div class="ct-figure ct-left" id="ctLeft" aria-hidden="true"></div>
+      <div class="ct-figure ct-right" id="ctRight" aria-hidden="true"></div>
+      <div class="ct-box" id="ctBox"><b class="ct-name" id="ctName"></b><p class="ct-text" id="ctText"></p><span class="ct-next">▾</span></div>
+      <button class="link cs-skip" id="ctSkip">PASSER</button>
+    </section>
+
+    <!-- CAMPAGNE : carte des chemins -->
+    <section class="screen" id="cMap" aria-label="Carte de la campagne">
+      <header class="screen-head">
+        <button class="icon-btn" id="cmBack" aria-label="Retour au menu"></button>
+        <h2>Acte I <small>La Nébuleuse natale</small></h2>
+        <span class="cm-hp" id="cmHp"></span>
+      </header>
+      <div class="cm-bar"><button class="chip cm-deck" id="cmDeck"></button><div class="cm-relics" id="cmRelics"></div></div>
+      <div class="cm-scroll" id="cmScroll"><div class="cm-map" id="cmMap"></div></div>
+    </section>
+
+    <!-- CAMPAGNE : combat -->
+    <section class="screen" id="cFight" aria-label="Combat de campagne">
+      <header class="cf-top"><span class="cf-floor" id="cfFloor"></span><div class="cm-relics" id="cfRelics"></div></header>
+      <div class="cf-foes" id="cfFoes"></div>
+      <p class="cf-hint" id="cfHint"></p>
+      <div class="cf-me" id="cfMe">
+        <div class="orb cf-me-orb" id="cfMeOrb" data-planet="camp-world"></div>
+        <div class="cf-me-info"><div class="cf-hpbar" id="cfMeHp"></div><div class="cf-badges" id="cfMeBadges"></div></div>
+      </div>
+      <div class="cf-hand" id="cfHand"></div>
+      <footer class="cf-bar">
+        <button class="cf-pile" id="cfDraw" aria-label="Pioche"></button>
+        <div class="cf-energy" id="cfEnergy"></div>
+        <button class="btn primary cf-end" id="cfEnd">FIN DU TOUR</button>
+        <button class="cf-pile" id="cfDisc" aria-label="Défausse"></button>
+      </footer>
+      <div class="banner" id="cfBanner"></div>
+    </section>
+
+    <!-- CAMPAGNE : fin d'expédition -->
+    <section class="screen" id="cEnd" aria-label="Fin de l’expédition">
+      <div class="orb ce-orb" id="ceOrb" data-planet="camp-world" data-fit="body"></div>
+      <p class="end-kicker" id="ceKicker"></p>
+      <h2 class="ce-title" id="ceTitle"></h2>
+      <p class="end-text" id="ceText"></p>
+      <div class="ce-stats" id="ceStats"></div>
+      <div class="ce-gain" id="ceGain"></div>
+      <button class="btn primary" id="ceAgain">NOUVELLE EXPÉDITION</button>
+      <button class="link" id="ceHome">Menu</button>
+    </section>
   </main>
 
   <div class="overlay lvlup" id="lvlup" hidden>
@@ -219,5 +278,7 @@
   <script src="js/world.js"></script>
   <script src="js/energy.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/campagne.js"></script>
+  <script src="js/campagne-ui.js"></script>
 </body>
 </html>

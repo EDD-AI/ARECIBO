@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 13;
+  const VERSION = 14;
   const DUST_KEY = 'orbite.poussieres';
   const SPEED_KEY = 'orbite.vitesse';
 
@@ -48,7 +48,11 @@
     loop: ['.XXX.', 'X...X', 'X.X.X', '...X.', 'XXX..'],
     sword: ['.....XX', '....XXX', '...XXX.', 'X.XXX..', '.XXX...', '.XXX...', 'X...X..'],
     skull: ['.XXXX.', 'XXXXXX', 'X.XX.X', 'XXXXXX', '.XXXX.', '.X.X..'],
-    spark: ['...X...', '...X...', '..XXX..', 'XXXXXXX', '..XXX..', '...X...', '...X...']
+    spark: ['...X...', '...X...', '..XXX..', 'XXXXXXX', '..XXX..', '...X...', '...X...'],
+    shield: ['XXXXXXX', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'],
+    ask: ['.XXX.', 'X...X', '...X.', '..X..', '.....', '..X..'],
+    moon: ['..XXX.', '.XX...', 'XX....', 'XX....', '.XX...', '..XXX.'],
+    flame: ['..X...', '..XX..', '.XXX.X', '.XXXXX', 'XXXXXX', '.XXXX.']
   };
   function icon(name, cls) {
     const g = ICONS[name];
@@ -271,7 +275,7 @@
   // ─── Écrans ─────────────────────────────────────────────────
   async function show(name) {
     if (ui.updatePending && name !== 'game') { saveGame(); ui.updatePending = false; updateReady(true); }
-    stage.sky = name === 'game' ? equippedSky() : 0;
+    stage.sky = name === 'game' || name === 'cFight' ? equippedSky() : 0;
     if (coach.steps === GAME_STEPS && name !== 'game') coachStop(false);
     if (coach.steps === LAW_STEPS && name !== 'laws') coachStop(false);
     if (coach.steps === MENU_STEPS && name !== 'menu') coachStop(true);
@@ -284,11 +288,11 @@
     const next = $(name);
     next.classList.add('active');
     ui.screen = name;
-    stage.starsOn = !['splash', 'title', 'wake'].includes(name);
-    SFX.ambience({ splash: 'off', title: 'off', wake: 'wake', game: 'game', end: 'game' }[name] || 'menu');
-    SFX.music(['title', 'wake', 'menu', 'market', 'profile', 'laws'].includes(name));
+    stage.starsOn = !['splash', 'title', 'wake', 'cStory'].includes(name);
+    SFX.ambience({ splash: 'off', title: 'off', wake: 'wake', game: 'game', end: 'game', cStory: 'wake', cFight: 'battle', cEnd: 'game' }[name] || 'menu');
+    SFX.music(['title', 'wake', 'menu', 'market', 'profile', 'laws', 'cMap'].includes(name));
     // Pendant la partie, le ciel s'efface derrière les planètes pour rester lisible.
-    const busySky = ['laws', 'game', 'end'].includes(name);
+    const busySky = ['laws', 'game', 'end', 'cFight'].includes(name);
     stage.starArea = busySky ? 3600 : 1800;
     stage.starDim = busySky ? 0.6 : 0.85;
     [...next.querySelectorAll('[data-planet]')].forEach((o, i) => revealIn(o, 60 + i * 35));
@@ -515,7 +519,9 @@
 
   function layoutMenu() {
     const W = window.innerWidth, H = window.innerHeight;
-    const horizon = Math.round(H * (W > H ? 0.66 : 0.6));
+    // L'horizon remonte si besoin pour que tous les boutons du menu tiennent sous lui.
+    const listH = $('menuList').offsetHeight || 260;
+    const horizon = Math.round(Math.min(H * (W > H ? 0.66 : 0.6), H - listH - 64));
     const R = Math.round(Math.min(W * 0.82, H * 0.6));
     const cy = horizon + R * 0.3;
     const pl = $('menuPlanet');
@@ -547,7 +553,7 @@
     ground.style.top = horizon - 4 + 'px';
     ground.style.height = gh + 'px';
     ground.innerHTML = `<path d="${path}" fill="#020407"/>${rims}`;
-    $('menuList').style.top = horizon + Math.max(18, (H - horizon) * 0.12) + 'px';
+    $('menuList').style.top = horizon + Math.max(14, Math.min((H - horizon) * 0.12, H - horizon - listH - 40)) + 'px';
   }
 
   function renderMenu() {
@@ -1180,7 +1186,8 @@
     { id: 'fin', text: 'Dernier secret : <b>trois copies</b> du même astre fusionnent en un astre <b>doré</b>, deux fois plus fort. Visez le podium : les 3 premiers gagnent des poussières d’étoiles. À vous !', next: 'JOUER' }
   ];
   const MENU_STEPS = [
-    { id: 'solo', target: '#soloBtn', text: '<b>Jouer solo</b> : une partie contre 7 rivaux. La première est guidée pas à pas.', next: 'SUIVANT', delay: 0 },
+    { id: 'campagne', target: '#campBtn', text: 'La <b>Campagne</b> : éveillez-vous en Créateur, façonnez votre monde carte après carte et affrontez des astres de plus en plus puissants, jusqu’à Kronos.', next: 'SUIVANT', delay: 0 },
+    { id: 'solo', target: '#soloBtn', text: '<b>Jouer solo</b> : une partie contre 7 rivaux. La première est guidée pas à pas.', next: 'SUIVANT' },
     { id: 'marche', target: '#marketBtn', text: 'Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.', next: 'SUIVANT' },
     { id: 'profil', target: '#profileBtn', text: 'Votre <b>profil</b> : pseudo, niveau, statistiques et historique. Chaque partie rapporte de l’expérience.', next: 'SUIVANT' },
     { id: 'reglages', target: '#settingsBtn', text: '<b>Paramètres</b> : son, musique, règles du jeu, et ce guide si vous voulez le revoir.', next: 'C’EST PARTI' }
@@ -2656,6 +2663,15 @@
     return { rank: r, cycles: cycles * 5, total: r + cycles * 5 };
   }
 
+  // Expérience gagnée hors d'une partie classique (Campagne) : chaque niveau franchi a sa scène.
+  async function giveXp(n) {
+    const from = xpTotal(), to = from + Math.max(0, n);
+    store.set(XP_KEY, String(to));
+    const a = levelInfo(from).lvl, b = levelInfo(to).lvl;
+    for (let l = a + 1; l <= b; l++) { addDust(LEVEL_GIFT); await levelUpScene(l); }
+    return { from, to, before: a, after: b };
+  }
+
   // La barre se remplit ; chaque niveau franchi déclenche l'explosion d'une planète.
   async function fillXp(from, to) {
     let cur = from;
@@ -2868,6 +2884,12 @@
   });
 
   window.__orbite = { ui, rules: R, stage, show, renderGame, fight, enterMenu, backToMenu, endScreen };
+  // Outils partagés avec le mode Campagne (js/campagne-ui.js).
+  window.__orbite.api = {
+    show, openSheet, closeSheet, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
+    pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient,
+    coachStart, coachStop, tuto, famColor, renderMenu
+  };
 
   // ─── Démarrage ──────────────────────────────────────────────
   boot();
