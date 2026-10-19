@@ -33,9 +33,14 @@
     tempete: { name: 'Tempête', color: '#5fe0c3', text: 'Géantes gazeuses : Rafale et attaque qui monte à chaque coup.' },
     mineral: { name: 'Minéral', color: '#dcbd8c', text: 'Remparts de roche qui accumulent les points de vie.' },
     machine: { name: 'Machine', color: '#b8c4d8', text: 'Sondes et stations qui s’arriment les unes aux autres.' },
+    lune: { name: 'Lunes', color: '#f2e3a0', text: 'Satellites qui renforcent leurs voisins : l’ordre du système compte.' },
+    comete: { name: 'Comètes', color: '#5f86ff', text: 'Elles grandissent quand vous actualisez la taverne et récompensent la vente.' },
+    cristal: { name: 'Cristal', color: '#ff7ad9', text: 'Résonance : chaque Cristal joué renforce les autres.' },
+    anomalie: { name: 'Anomalies', color: '#e6ff6e', text: 'Le chaos : astres aléatoires, découvertes et mots-clés imprévus.' },
     neutre: { name: 'Neutre', color: '#9aa3ad', text: 'Présents dans toutes les parties.' }
   };
-  const FAMILY_KEYS = ['vie', 'neant', 'envers', 'brasier', 'glace', 'tempete', 'mineral', 'machine'];
+  const FAMILY_KEYS = ['vie', 'neant', 'envers', 'brasier', 'glace', 'tempete', 'mineral', 'machine', 'lune', 'comete', 'cristal', 'anomalie'];
+  const RANDOM_KW = ['bouclier', 'rafale', 'venin', 'renaissance', 'rempart'];
 
   const KEYWORDS = {
     rempart: { name: 'Rempart', text: 'Les ennemis doivent l’attaquer en priorité.' },
@@ -291,6 +296,122 @@
       text: 'Début de combat : vos autres astres gagnent +{2}/+{2}.',
       start(c, u, m) { for (const v of c.allies(u.side)) if (v !== u) c.buff(v, 2 * m, 2 * m); } },
 
+    // LUNES : l'ordre compte, elles renforcent leurs voisins.
+    { id: 'phobos', fam: 'lune', tier: 1, atk: 2, hp: 2, name: 'Phobos', look: { type: 'moon', seed: 9101 },
+      text: 'Naissance : l’astre à sa droite gagne +{1}/+{1}.',
+      play(x, u, m) { x.buff(x.right(u), m, m); } },
+    { id: 'selene', fam: 'lune', tier: 1, atk: 1, hp: 3, name: 'Séléné', look: { type: 'moon', seed: 9102, hueShift: 40 },
+      text: 'Début de combat : ses voisins gagnent +{1} Attaque pour le combat.',
+      start(c, u, m) { for (const v of c.neighbors(u)) c.buff(v, m, 0); } },
+    { id: 'callisto', fam: 'lune', tier: 2, atk: 3, hp: 3, name: 'Callisto', look: { type: 'moon', seed: 9103 },
+      text: 'Après l’attaque d’un astre voisin : gagne +{1}/+{1} pour le combat.',
+      allyAttack(c, u, m, a) { if (c.neighbors(u).includes(a)) c.buff(u, m, m); } },
+    { id: 'io', fam: 'lune', tier: 2, atk: 2, hp: 4, name: 'Io', look: { type: 'lava', seed: 9104, hueShift: 30 },
+      text: 'Fin de cycle : un voisin aléatoire gagne +{1}/+{1}.',
+      endTurn(x, u, m) { x.buff(x.rnd(x.neighbors(u)), m, m); } },
+    { id: 'titania', fam: 'lune', tier: 3, atk: 3, hp: 5, name: 'Titania', kw: ['rempart'], look: { type: 'ice', seed: 9105 },
+      text: 'Rempart. Début de combat : ses voisins gagnent Bouclier.',
+      start(c, u) { for (const v of c.neighbors(u)) c.kw(v, 'bouclier'); } },
+    { id: 'europe', fam: 'lune', tier: 3, atk: 4, hp: 4, name: 'Europe', look: { type: 'ice', seed: 9106, hueShift: 20 },
+      text: 'Fin de cycle : vos autres Lunes gagnent +{1}/+{1}.',
+      endTurn(x, u, m) { for (const v of x.fam('lune', u)) x.buff(v, m, m); } },
+    { id: 'ganymede', fam: 'lune', tier: 4, atk: 5, hp: 6, name: 'Ganymède', look: { type: 'moon', seed: 9107, ring: true },
+      text: 'Début de combat : chaque Lune donne +{1}/+{1} à ses voisins pour le combat.',
+      start(c, u, m) { for (const l of c.alliesFam(u.side, 'lune')) for (const v of c.neighbors(l)) c.buff(v, m, m); } },
+    { id: 'maree', fam: 'lune', tier: 5, atk: 6, hp: 7, name: 'Grande Marée', look: { type: 'ocean', seed: 9108, moons: 2 },
+      text: 'Fin de cycle : vos astres voisins d’une Lune gagnent +{1}/+{1}.',
+      endTurn(x, u, m) { const set = new Set(); for (const l of x.fam('lune')) for (const v of x.neighbors(l)) set.add(v); for (const v of set) x.buff(v, m, m); } },
+    { id: 'pleinelune', fam: 'lune', tier: 6, atk: 8, hp: 9, name: 'Pleine Lune', look: { type: 'moon', seed: 9109, shell: true },
+      text: 'Début de combat : vos autres astres gagnent +{1}/+{1} par Lune (3 au plus).',
+      start(c, u, m) { const n = Math.min(3, c.alliesFam(u.side, 'lune').length) * m; for (const v of c.allies(u.side)) if (v !== u) c.buff(v, n, n); } },
+
+    // COMÈTES : elles grandissent quand vous actualisez et récompensent la vente.
+    { id: 'meteore', fam: 'comete', tier: 1, atk: 2, hp: 3, name: 'Météore', look: { type: 'asteroid', seed: 9201 },
+      text: 'Quand vous actualisez la taverne, gagne +{1} Attaque.',
+      roll(x, u, m) { x.buff(u, m, 0); } },
+    { id: 'halley', fam: 'comete', tier: 1, atk: 2, hp: 3, name: 'Halley', look: { type: 'ice', seed: 9202, debris: true },
+      text: 'Vendu : un astre aléatoire de votre système gagne +{1}/+{1}.',
+      sold(x, u, m) { x.buff(x.rnd(x.others(u)), m, m); } },
+    { id: 'encke', fam: 'comete', tier: 2, atk: 3, hp: 4, name: 'Encke', look: { type: 'ice', seed: 9203, hueShift: 40 },
+      text: 'Quand vous actualisez : une Comète aléatoire gagne +{1}/+{1}.',
+      roll(x, u, m) { x.buff(x.rnd(x.fam('comete')), m, m); } },
+    { id: 'swift', fam: 'comete', tier: 2, atk: 3, hp: 3, name: 'Swift', kw: ['rafale'], look: { type: 'asteroid', seed: 9204, debris: true },
+      text: 'Rafale. Quand vous actualisez, gagne +{1} PV.',
+      roll(x, u, m) { x.buff(u, 0, m); } },
+    { id: 'halebopp', fam: 'comete', tier: 3, atk: 4, hp: 5, name: 'Hale-Bopp', look: { type: 'ice', seed: 9205, ring: true },
+      text: 'Quand vous actualisez : vos autres Comètes gagnent +{1} PV.',
+      roll(x, u, m) { for (const v of x.fam('comete', u)) x.buff(v, 0, m); } },
+    { id: 'tchouri', fam: 'comete', tier: 3, atk: 4, hp: 6, name: 'Tchouri', look: { type: 'asteroid', seed: 9206 },
+      text: 'Fin de cycle : gagne +{1}/+{1} par actualisation faite ce cycle (5 au plus).',
+      endTurn(x, u, m) { const n = Math.min(5, x.p.rolls || 0) * m; if (n) x.buff(u, n, n); } },
+    { id: 'ison', fam: 'comete', tier: 4, atk: 5, hp: 6, name: 'Ison', look: { type: 'ice', seed: 9207, debris: true },
+      text: 'Vendu : vos Comètes gagnent +{2}/+{2}.',
+      sold(x, u, m) { for (const v of x.fam('comete', u)) x.buff(v, 2 * m, 2 * m); } },
+    { id: 'perseides', fam: 'comete', tier: 5, atk: 6, hp: 8, name: 'Perséides', look: { type: 'asteroid', seed: 9208, debris: true },
+      text: 'Début de combat : inflige {2} dégâts à un ennemi aléatoire pour chaque Comète.',
+      start(c, u, m) { const n = c.alliesFam(u.side, 'comete').length; for (let i = 0; i < n; i++) c.dmg(u, c.rnd(c.allies(1 - u.side)), 2 * m); } },
+    { id: 'hyakutake', fam: 'comete', tier: 6, atk: 8, hp: 9, name: 'Hyakutake', look: { type: 'ice', seed: 9209, ring: true, moons: 1 },
+      text: 'Quand vous actualisez : vos Comètes gagnent +{1}/+{1}.',
+      roll(x, u, m) { for (const v of x.fam('comete')) x.buff(v, m, m); } },
+
+    // CRISTAL : résonance, chaque Cristal joué renforce les autres.
+    { id: 'quartz', fam: 'cristal', tier: 1, atk: 2, hp: 2, name: 'Quartz', look: { type: 'crystal', seed: 9301 },
+      text: 'Quand vous jouez un autre Cristal, gagne +{1}/+{1}.',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') x.buff(u, m, m); } },
+    { id: 'amethyste', fam: 'cristal', tier: 1, atk: 2, hp: 3, name: 'Améthyste', look: { type: 'crystal', seed: 9302, hueShift: 60 },
+      text: 'Naissance : un autre Cristal aléatoire gagne +{1}/+{1}.',
+      play(x, u, m) { x.buff(x.rnd(x.fam('cristal', u)), m, m); } },
+    { id: 'prisme', fam: 'cristal', tier: 2, atk: 2, hp: 4, name: 'Prisme', look: { type: 'crystal', seed: 9303, shell: true },
+      text: 'Quand vous jouez un Cristal, vos Cristaux gagnent +{1} PV.',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') for (const v of x.fam('cristal')) x.buff(v, 0, m); } },
+    { id: 'saphir', fam: 'cristal', tier: 2, atk: 3, hp: 3, name: 'Saphir', look: { type: 'crystal', seed: 9304, hueShift: 180 },
+      text: 'Début de combat : gagne +{1}/+{1} par autre Cristal.',
+      start(c, u, m) { const n = (c.alliesFam(u.side, 'cristal').length - 1) * m; if (n > 0) c.buff(u, n, n); } },
+    { id: 'rubis', fam: 'cristal', tier: 3, atk: 4, hp: 4, name: 'Rubis', look: { type: 'crystal', seed: 9305, hueShift: 300 },
+      text: 'Quand vous jouez un Cristal, il gagne +{2}/+{1}.',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') x.buff(b, 2 * m, m); } },
+    { id: 'opale', fam: 'cristal', tier: 3, atk: 3, hp: 5, name: 'Opale', kw: ['bouclier'], look: { type: 'crystal', seed: 9306, shell: true },
+      text: 'Bouclier. Quand vous jouez un Cristal, gagne +{1}/+{1}.',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') x.buff(u, m, m); } },
+    { id: 'emeraude', fam: 'cristal', tier: 4, atk: 5, hp: 5, name: 'Émeraude', look: { type: 'crystal', seed: 9307, hueShift: 120 },
+      text: 'Quand vous jouez un Cristal, vos Cristaux gagnent +{1}/+{1}.',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') for (const v of x.fam('cristal')) x.buff(v, m, m); } },
+    { id: 'diamant', fam: 'cristal', tier: 5, atk: 6, hp: 8, name: 'Diamant', look: { type: 'crystal', seed: 9308, ring: true },
+      text: 'Début de combat : vos autres Cristaux gagnent +{2}/+{2}.',
+      start(c, u, m) { for (const v of c.alliesFam(u.side, 'cristal')) if (v !== u) c.buff(v, 2 * m, 2 * m); } },
+    { id: 'coeurcristal', fam: 'cristal', tier: 6, atk: 8, hp: 8, name: 'Cœur de cristal', look: { type: 'crystal', seed: 9309, shell: true, moons: 1 },
+      text: 'Quand vous jouez un Cristal, vos Cristaux gagnent +{2}/+{2}.',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') for (const v of x.fam('cristal')) x.buff(v, 2 * m, 2 * m); } },
+
+    // ANOMALIES : le hasard, des astres qui surgissent de nulle part.
+    { id: 'fluctuation', fam: 'anomalie', tier: 1, atk: 2, hp: 2, name: 'Fluctuation', look: { type: 'portal', seed: 9401, hueShift: 90 },
+      text: 'Naissance : ajoute un astre de niveau 1 aléatoire à votre main.',
+      play(x, u, m) { for (let i = 0; i < m; i++) x.addHand(1); } },
+    { id: 'paradoxe', fam: 'anomalie', tier: 1, atk: 3, hp: 2, name: 'Paradoxe', look: { type: 'toxic', seed: 9402, hueShift: 60 },
+      text: 'Effondrement : invoque un astre de niveau 1 aléatoire.',
+      death(c, u, m, i) { for (let k = 0; k < m; k++) c.summonRandom(u.side, 1, i); } },
+    { id: 'distorsion', fam: 'anomalie', tier: 2, atk: 3, hp: 3, name: 'Distorsion', look: { type: 'portal', seed: 9403, hueShift: 140 },
+      text: 'Début de combat : un allié aléatoire gagne un mot-clé aléatoire.',
+      start(c, u, m) { for (let k = 0; k < m; k++) c.randomKw(c.rnd(c.allies(u.side))); } },
+    { id: 'troublanc', fam: 'anomalie', tier: 2, atk: 2, hp: 4, name: 'Trou blanc', look: { type: 'star', seed: 9404, starClass: 'étoile blanche' },
+      text: 'Effondrement : invoque un astre de niveau 2 aléatoire.',
+      death(c, u, m, i) { for (let k = 0; k < m; k++) c.summonRandom(u.side, 2, i); } },
+    { id: 'tesseract', fam: 'anomalie', tier: 3, atk: 4, hp: 4, name: 'Tesseract', look: { type: 'mecha', seed: 9405, hueShift: 80 },
+      text: 'Naissance : découvrez un astre de votre niveau.',
+      play(x, u) { u.dtier = Math.max(1, x.p.tier); } },
+    { id: 'pulsation', fam: 'anomalie', tier: 3, atk: 3, hp: 5, name: 'Pulsation', look: { type: 'star', seed: 9406, starClass: 'étoile exotique' },
+      text: 'Début de combat : deux alliés aléatoires gagnent un mot-clé aléatoire.',
+      start(c, u, m) { for (const v of c.pickAllies(u.side, 2 * m)) c.randomKw(v); } },
+    { id: 'evenement', fam: 'anomalie', tier: 4, atk: 5, hp: 6, name: 'Horizon', look: { type: 'blackhole', seed: 9407 },
+      text: 'Effondrement : invoque un astre de niveau 4 aléatoire.',
+      death(c, u, m, i) { for (let k = 0; k < m; k++) c.summonRandom(u.side, 4, i); } },
+    { id: 'multivers', fam: 'anomalie', tier: 5, atk: 6, hp: 7, name: 'Multivers', look: { type: 'portal', seed: 9408, ring: true },
+      text: 'Fin de cycle : ajoute un astre de niveau 3 aléatoire à votre main.',
+      endTurn(x, u, m) { for (let i = 0; i < m; i++) x.addHand(3); } },
+    { id: 'bigbang', fam: 'anomalie', tier: 6, atk: 8, hp: 8, name: 'Big Bang', look: { type: 'star', seed: 9409, starClass: 'géante bleue' },
+      text: 'Effondrement : remplit votre système d’astres de niveau 2 aléatoires.',
+      death(c, u, m, i) { for (let k = 0; k < 7; k++) if (!c.summonRandom(u.side, 2, i)) break; } },
+
     // JETONS (hors réserve)
     { id: 'debris', fam: 'neant', tier: 1, atk: 1, hp: 1, name: 'Débris', token: true, look: { type: 'asteroid', seed: 8181 },
       text: 'Fragment d’un monde effondré.' },
@@ -307,6 +428,10 @@
     { id: 'stase', fam: 'glace', name: 'Loi de stase', starter: 'nive', tagline: 'Le silence est une forteresse.', text: 'Début de combat : vos deux premiers astres gagnent Bouclier.' },
     { id: 'vents', fam: 'tempete', name: 'Loi des vents', starter: 'brume', tagline: 'Tout ce qui bouge frappe.', text: 'Après chaque attaque, l’astre attaquant gagne +1 Attaque pour le combat.' },
     { id: 'gravite', fam: 'mineral', name: 'Loi de gravité', starter: 'silex', tagline: 'Ce qui pèse dure.', text: 'Fin de cycle : vos Remparts gagnent +0/+1.' },
+    { id: 'marees', fam: 'lune', name: 'Loi des marées', starter: 'phobos', tagline: 'Rien ne tourne seul.', text: 'Fin de cycle : l’astre à droite de chaque Lune gagne +1 PV.' },
+    { id: 'passage', fam: 'comete', name: 'Loi du passage', starter: 'meteore', tagline: 'Tout repasse un jour.', text: 'Votre première actualisation de chaque cycle est gratuite.' },
+    { id: 'resonance', fam: 'cristal', name: 'Loi de résonance', starter: 'quartz', tagline: 'Une note, et tout vibre.', text: 'Quand vous jouez un Cristal, un autre Cristal aléatoire gagne +1/+1.' },
+    { id: 'chaos', fam: 'anomalie', name: 'Loi du chaos', starter: 'fluctuation', tagline: 'Le hasard a toujours raison.', text: 'Début de combat : un allié aléatoire gagne un mot-clé aléatoire.' },
     { id: 'ingenierie', fam: 'machine', name: 'Loi d’ingénierie', starter: 'sonde', tagline: 'Assembler les mondes.', text: 'Pouvoir (1 énergie, une fois par cycle) : ajoute une Sonde 3/3 Arrimage à votre main.', active: { cost: 1, target: false } }
   ];
   const LAW = Object.fromEntries(LAWS.map((l) => [l.id, l]));
@@ -410,6 +535,15 @@
       gold(n) {
         p.gold = Math.min(99, p.gold + n);
         x.events.push({ t: 'gold', n });
+      },
+      // Un astre du niveau donné, pris dans la réserve partagée, rejoint la main.
+      addHand(tier) {
+        if (p.hand.length >= HAND_MAX) return;
+        const id = drawFromPool(state, tier, rng, tier);
+        if (!id) return;
+        const nu = makeUnit(state, id);
+        p.hand.push(nu);
+        x.events.push({ t: 'hand', uid: nu.uid, id });
       }
     };
     return x;
@@ -598,6 +732,7 @@
     p.board.splice(at, 0, u);
     hook(u, 'play', x, at);
     for (const v of p.board.slice()) if (v !== u) hook(v, 'allyPlay', x, u);
+    if (p.law === 'resonance' && famOf(u) === 'cristal') x.buff(x.rnd(x.fam('cristal', u)), 1, 1);
     let discover = false;
     if (u.dtier) {
       const t = u.dtier;
@@ -615,21 +750,29 @@
     const i = p.board.findIndex((u) => u.uid === uid);
     if (i < 0) return fail('Seuls les astres du système se vendent.');
     const [u] = p.board.splice(i, 1);
+    const x = shopCtx(state, p);
+    hook(u, 'sold', x);
     releaseUnit(state, u);
     p.gold = Math.min(99, p.gold + 1);
-    return { ok: true };
+    return { ok: true, events: x.events };
   }
 
   function roll(state, p) {
     p = p || you(state);
     if (state.phase !== 'shop' || !p.alive) return fail('Le marché est fermé.');
     if (p.discover.length) return fail('Choisissez d’abord votre découverte.');
-    if (p.gold < ROLL_COST) return fail('Il faut 1 énergie.');
-    p.gold -= ROLL_COST;
+    const cost = rollCost(p);
+    if (p.gold < cost) return fail('Il faut 1 énergie.');
+    p.gold -= cost;
+    if (p.law === 'passage') p.freeRoll = true;
     p.frozen = false;
     rollShop(state, p);
-    return { ok: true };
+    p.rolls = (p.rolls || 0) + 1;
+    const x = shopCtx(state, p);
+    for (const v of p.board.slice()) hook(v, 'roll', x);
+    return { ok: true, events: x.events };
   }
+  const rollCost = (p) => (p.law === 'passage' && !p.freeRoll ? 0 : ROLL_COST);
 
   function freeze(state, p) {
     p = p || you(state);
@@ -730,6 +873,8 @@
     p.gold = Math.min(MAX_GOLD, state.round + 2);
     p.discount += 1;
     p.powerUsed = false;
+    p.rolls = 0;
+    p.freeRoll = false;
     const x = shopCtx(state, p);
     for (const u of p.board.slice()) hook(u, 'startTurn', x);
     if (p.frozen) { p.frozen = false; refillShop(state, p); }
@@ -744,6 +889,11 @@
       const weak = p.board.slice().sort((a, b) => a.atk + a.hp - (b.atk + b.hp))[0];
       x.events.push({ t: 'law' });
       x.buff(weak, 0, 1);
+    }
+    if (p.law === 'marees') {
+      const moons = p.board.filter((u) => famOf(u) === 'lune');
+      if (moons.length) x.events.push({ t: 'law' });
+      for (const l of moons) x.buff(x.right(l), 0, 1);
     }
     if (p.law === 'gravite') {
       const walls = p.board.filter((u) => u.kw.includes('rempart'));
@@ -780,6 +930,23 @@
       sideList: (s) => sides[s].filter((u) => !u.dead),
       alliesFam: (s, f) => alive(s).filter((u) => famOf(u) === f),
       ranked: (s) => alive(s).slice().sort((x, y) => y.atk - x.atk || y.hp - x.hp),
+      neighbors(u) {
+        const l = sides[u.side].filter((v) => !v.dead);
+        const i = l.indexOf(u);
+        return [l[i - 1], l[i + 1]].filter((v) => v && v.hp > 0);
+      },
+      pickAllies: (s, n) => shuffle(alive(s).slice(), rng).slice(0, n),
+      randomKw(u) {
+        if (!u) return;
+        const k = RANDOM_KW.filter((kk) => !u.kw.includes(kk));
+        if (k.length) c.kw(u, k[Math.floor(rng() * k.length)]);
+      },
+      // Un astre aléatoire du niveau donné, parmi les familles de la partie (hors réserve).
+      summonRandom(s, tier, index) {
+        const ids = CARDS.filter((cd) => !cd.token && cd.tier === tier && (cd.fam === 'neutre' || state.families.includes(cd.fam))).map((cd) => cd.id);
+        if (!ids.length) return null;
+        return c.summon(s, ids[Math.floor(rng() * ids.length)], index, 1);
+      },
       buff(u, da, dh, perm) {
         if (!u || u.dead || (!da && !dh)) return;
         u.atk = Math.max(0, u.atk + da);
@@ -937,6 +1104,7 @@
     for (const s of [turn, 1 - turn]) {
       const p = players[s], first = alive(s)[0];
       if (p.law === 'combustion') { log({ t: 'law', side: s, law: p.law }); const t = c.rnd(alive(1 - s)); if (t) hit(t, 3 + countOf(s, 'tison'), null, 'effect'); }
+      if (p.law === 'chaos') { log({ t: 'law', side: s, law: p.law }); c.randomKw(c.rnd(alive(s))); }
       if (p.law === 'stase' && first) { log({ t: 'law', side: s, law: p.law }); for (const u of alive(s).slice(0, 2)) c.kw(u, 'bouclier'); }
     }
     for (const s of [turn, 1 - turn]) for (const u of alive(s)) fire(u, 'start');
@@ -1018,8 +1186,11 @@
       const t = p.board.filter((u) => u.atk > 0 && u.hp > u.atk && !u.kw.includes('rempart')).sort((a, b) => b.hp - b.atk - (a.hp - a.atk))[0];
       if (t) usePower(state, t.uid, p);
     }
+    // Les Comètes grandissent à chaque actualisation : le bot en profite.
+    if (rollCost(p) === 0) roll(state, p);
+    const maxRolls = 3 + Math.min(3, p.board.filter((u) => famOf(u) === 'comete').length);
     let rolls = 0;
-    for (let guard = 0; guard < 25; guard++) {
+    for (let guard = 0; guard < 40; guard++) {
       botDeploy(state, p);
       if (p.gold < BUY_COST) break;
       const opts = p.shop.map((id, i) => (id ? { i, id, v: cardValue(p, id) + rng() * 2 } : null)).filter(Boolean).sort((a, b) => b.v - a.v);
@@ -1028,7 +1199,7 @@
       const weak = full ? p.board.slice().sort((a, b) => unitValue(p, a) - unitValue(p, b))[0] : null;
       const bar = full ? unitValue(p, weak) + 3 : 0;
       if (!best || best.v < bar || !canBuy(state, best.i, p).ok) {
-        if (p.gold >= BUY_COST + ROLL_COST && rolls < 3) { roll(state, p); rolls++; continue; }
+        if (p.gold >= BUY_COST + ROLL_COST && rolls < maxRolls) { roll(state, p); rolls++; continue; }
         break;
       }
       buy(state, best.i, p);
@@ -1131,7 +1302,7 @@
   }
 
   return {
-    START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
+    rollCost, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
     FAMILIES, FAMILY_KEYS, KEYWORDS, CARDS, CARD, LAWS, LAW,
     cardOf, famOf, cardText, upgradeCost, lawChoices, newGame, alivePlayers,
     buy, canBuy, play, canMagnet, sell, roll, freeze, upgrade, reorder, usePower, canUsePower, choose, endTurn,

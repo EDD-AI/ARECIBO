@@ -920,8 +920,9 @@
     const cost = R.upgradeCost(p);
     $('upBtn').innerHTML = p.tier >= 6 ? 'MAX' : `${icon('up')} <i>${cost}</i>`;
     $('upBtn').disabled = p.tier >= 6 || p.gold < cost;
-    $('rollBtn').innerHTML = `${icon('roll')} <i>1</i>`;
-    $('rollBtn').disabled = p.gold < R.ROLL_COST;
+    const rc = R.rollCost(p);
+    $('rollBtn').innerHTML = `${icon('roll')} <i>${rc}</i>`;
+    $('rollBtn').disabled = p.gold < rc;
     $('freezeBtn').innerHTML = icon('snow');
     $('freezeBtn').classList.toggle('on', p.frozen);
   }
@@ -1267,6 +1268,15 @@
     renderEnergy(1);
     renderTavernHead();
     renderShop(true);
+    // Les Comètes grandissent à chaque actualisation.
+    for (const e of res.events || []) {
+      const el = e.t === 'trigger' ? elByUid(e.uid) : null;
+      if (el) {
+        const [x, y] = center(el.querySelector('.orb'));
+        stage.burst(x, y, { n: 10, colors: [[255, 255, 255], hexRgb(famColor(R.CARD[el.dataset.id].fam))], speed: 45, life: 0.45 });
+      }
+    }
+    renderBoard();
     renderPower();
     renderFight();
     saveGame();
@@ -1571,9 +1581,16 @@
     'Habitable': 'Ne fonctionne que si votre système contient un Soleil.',
     'Soleil': 'Compte comme un Soleil pour les effets Habitable.',
     'Débris': 'Petit astre de roche laissé par un monde effondré.',
-    'pour le combat': 'Le bonus disparaît à la fin du combat.'
+    'pour le combat': 'Le bonus disparaît à la fin du combat.',
+    'Vendu': 'Se déclenche quand vous vendez l’astre.',
+    'actualisez': 'Renouveler la taverne avec le bouton d’actualisation.',
+    'actualisation': 'Renouveler la taverne avec le bouton d’actualisation.',
+    'découvrez': 'Choisissez un astre parmi trois.',
+    'mot-clé aléatoire': 'Bouclier, Rafale, Venin, Renaissance ou Rempart.',
+    'voisins': 'Les astres juste à sa gauche et à sa droite.',
+    'voisin': 'Un astre juste à sa gauche ou à sa droite.'
   };
-  const HOOKS = ['play', 'endTurn', 'startTurn', 'buy', 'start', 'attack', 'allyAttack', 'allyDeath', 'shieldBreak', 'damaged', 'allyKill', 'reborn', 'allyReborn'];
+  const HOOKS = ['play', 'endTurn', 'startTurn', 'buy', 'start', 'attack', 'allyAttack', 'allyDeath', 'shieldBreak', 'damaged', 'allyKill', 'reborn', 'allyReborn', 'allyPlay', 'roll', 'sold'];
   function cardMarks(id) {
     const c = R.CARD[id];
     return {
@@ -1784,7 +1801,7 @@
       <li>Votre système compte <b>7 orbites</b>, votre main 10 astres. Les astres attaquent de gauche à droite : l’ordre compte.</li>
       <li><b>Touchez un astre</b> pour lire ce qu’il fait, même en combat ou chez un rival. Sous chaque astre : ${icon('sword')} son <b>Attaque</b> et ${icon('heart')} ses <b>PV</b>. En haut à droite : ${icon('skull')} il a un effet d’<b>Effondrement</b> (quand il est détruit, comme laisser des Débris), ${icon('spark')} il a un autre effet.</li>
       <li><b>Trois copies</b> d’un même astre fusionnent en un <b>astre doré</b> (stats doublées). Le placer offre une <b>découverte</b> du niveau supérieur.</li>
-      <li>Chaque partie active <b>5 familles</b> sur 8, plus les neutres. La réserve est <b>partagée</b> : si des rivaux jouent une famille, ses astres se font rares.</li>
+      <li>Chaque partie active <b>5 familles</b> sur 12, plus les neutres. La réserve est <b>partagée</b> : si des rivaux jouent une famille, ses astres se font rares.</li>
       <li>Le perdant subit : niveau du gagnant + niveaux de ses astres survivants. <b>Maximum ${R.DAMAGE_CAP} dégâts</b> tant que plus de trois univers sont en vie.</li>
       <li>Seuls les <b>trois premiers</b> gagnent des poussières d’étoiles : ${R.REWARDS[1]}, ${R.REWARDS[2]} et ${R.REWARDS[3]}.</li>
       <li>Chaque partie rapporte de l’<b>expérience</b>. Les niveaux ouvrent des améliorations au <b>Marché stellaire</b> : avec vos poussières, faites renaître votre planète, celle qui tourne derrière le menu.</li>

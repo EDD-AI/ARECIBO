@@ -118,8 +118,9 @@ En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 | Élément | Valeur |
 |---|---|
 | Univers par partie | 8 (vous + 7 bots) |
-| Familles | 8 au total, **5 actives par partie** (dont celle de votre loi) + les neutres |
-| Astres | 9 par famille + 8 neutres = **80**, dont **53 achetables** dans une partie |
+| Familles | 12 au total, **5 actives par partie** (dont celle de votre loi) + les neutres : 792 combinaisons |
+| Lois | 12 (une par famille), 3 proposées au départ |
+| Astres | 9 par famille + 8 neutres = **116**, dont **53 achetables** dans une partie |
 | Copies par astre | niveau 1 : 16 · 2 : 15 · 3 : 13 · 4 : 11 · 5 : 9 · 6 : 7 |
 | Taverne | 3 / 4 / 4 / 5 / 5 / 6 astres selon le niveau (1 à 6) |
 | Énergie | 3 au premier cycle, +1 par cycle, maximum 10 |
@@ -148,6 +149,10 @@ doublés). Le placer ouvre une **découverte** : un astre au choix parmi trois d
 | Tempête | Géantes gazeuses : Rafale et attaque qui monte |
 | Minéral | Remparts de roche qui accumulent les PV |
 | Machine | Sondes et stations qui s’arriment entre elles (Arrimage) |
+| Lunes | L’ordre compte : elles renforcent leurs voisins (loi des marées) |
+| Comètes | Elles grandissent quand vous actualisez la taverne et récompensent la vente (loi du passage : première actualisation gratuite) |
+| Cristal | Résonance : chaque Cristal joué renforce les autres (loi de résonance) |
+| Anomalies | Le hasard : astres aléatoires en main ou invoqués, découvertes, mots-clés aléatoires (loi du chaos) |
 
 Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrimage.
 
@@ -197,3 +202,7 @@ Brasier renforcés (statistiques, Titan +2/+1, Foreuse +1/+2, Sondes 3/3). Les s
 dominante restent plus faibles (rang 5,05), ce qui récompense l’engagement dans une famille.
 La Vie reste la plus forte (20 % de victoires). Les bots jouent simplement : un vrai joueur
 exploitera mieux les placements et les synergies, d’autres familles peuvent donc ressortir.
+
+Avec les 12 familles (6 000 parties) : rang moyen des lois de 4,18 (Ingénierie) à 4,91 (Gravité),
+familles dominantes de 3,68 (Vie) à 4,55 (Anomalies), Comètes à 4,35. Les bots actualisent
+davantage quand ils ont des Comètes et utilisent l’actualisation gratuite de la loi du passage.

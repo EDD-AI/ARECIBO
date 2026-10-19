@@ -45,6 +45,10 @@
     tempete: { color: '#5fe0c3', sparks: 6, surf(p, t) { return 0.5 + 0.45 * Math.sin(p[1] * 9 + fbm(p[0] * 2 + t * 1.2, p[1] * 2, p[2] * 2) * 5); } },
     mineral: { color: '#dcbd8c', sparks: 8, rocks: true, veins: 0.6, surf(p, t) { const f = fbm(p[0] * 3.2 + t * 0.15, p[1] * 3.2, p[2] * 3.2); return f > 0.55 ? f * 1.1 : f * 0.6; } },
     machine: { color: '#b8c4d8', sparks: 4, veins: 0.5, surf(p, t) { const lat = Math.asin(Math.max(-1, Math.min(1, p[1]))), lon = Math.atan2(p[0], p[2]) + t * 0.6; const g = Math.abs(Math.sin(lat * 5)) < 0.12 || Math.abs(Math.sin(lon * 4)) < 0.1; const pulse = Math.sin(lon * 4 - t * 4) > 0.8 ? 0.35 : 0; return (g ? 0.75 + pulse : 0.28) + fbm(p[0] * 4, p[1] * 4, t) * 0.12; } },
+    lune: { color: '#f2e3a0', sparks: 2, surf(p, t) { const cr = fbm(p[0] * 3.5 + t * 0.1, p[1] * 3.5, p[2] * 3.5); const phase = 0.5 + 0.5 * Math.sin(p[0] * 2.2 + t * 0.7); return (cr > 0.62 ? 0.35 : 0.7) * (0.35 + 0.75 * phase); } },
+    comete: { color: '#5f86ff', sparks: 9, surf(p, t) { const s = fbm(p[0] * 2 - t * 2.2, p[1] * 7, p[2] * 2); return s * 1.1 + Math.max(0, p[0]) * 0.25; } },
+    cristal: { color: '#ff7ad9', sparks: 5, surf(p, t) { const q = p.map((v) => Math.round(v * 2.5) / 2.5); const res = 0.5 + 0.5 * Math.sin(t * 3 + (q[0] + q[1] * 2) * 4); return fbm(q[0] * 2, q[1] * 2, q[2] * 2 + t * 0.2) * 0.7 + res * 0.4; } },
+    anomalie: { color: '#e6ff6e', alt: '#ff6ee6', sparks: 6, surf(p, t) { const g = Math.floor(t * 6) % 7 === 0 ? 0.4 : 0; return fbm(p[0] * 3 + g * 9, p[1] * 3 + Math.sin(t * 5) * 0.3, p[2] * 3 + t) + g; } },
     neutre: { color: '#9aa3ad', sparks: 3, surf(p, t) { return fbm(p[0] * 2.5 + t * 0.2, p[1] * 2.5, p[2] * 2.5); } }
   };
 
