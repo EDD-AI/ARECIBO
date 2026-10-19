@@ -1,10 +1,12 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
-const CACHE = 'orbite-v9';
+// Garder ce numéro égal à VERSION dans js/game.js et à version.json.
+const CACHE = 'orbite-v10';
 const SHELL = [
   './',
   './index.html',
   './atelier.html',
   './manifest.webmanifest',
+  './version.json',
   './css/fonts.css',
   './css/game.css',
   './fonts/chakra-petch-400.woff2',
@@ -94,13 +96,20 @@ async function fromCache(req) {
   });
 }
 
-// Réseau d'abord (pour recevoir les mises à jour), cache en secours.
+// Réseau d'abord (pour recevoir les mises à jour), cache en secours. Les fichiers du jeu sont
+// toujours revalidés auprès du serveur (cache: 'no-cache') : le cache HTTP du navigateur ne peut
+// pas resservir une ancienne version.
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  const same = new URL(e.request.url).origin === location.origin;
+  // Les navigations gardent la requête d'origine (redirections de GitHub Pages).
+  const net = same && e.request.mode !== 'navigate'
+    ? fetch(e.request.url, { cache: 'no-cache', headers: e.request.headers, credentials: 'same-origin' })
+    : fetch(e.request);
   e.respondWith(
-    fetch(e.request)
+    net
       .then((res) => {
-        if (res.status === 200 && new URL(e.request.url).origin === location.origin) {
+        if (res.status === 200 && same) {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(e.request, copy));
         }

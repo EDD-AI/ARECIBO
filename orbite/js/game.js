@@ -8,6 +8,8 @@
   const SFX = window.OrbiteSfx;
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
+  // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
+  const VERSION = 10;
   const DUST_KEY = 'orbite.poussieres';
   const SPEED_KEY = 'orbite.vitesse';
 
@@ -268,6 +270,7 @@
 
   // ─── Écrans ─────────────────────────────────────────────────
   async function show(name) {
+    if (ui.updatePending && name !== 'game') { saveGame(); ui.updatePending = false; updateReady(true); }
     stage.sky = name === 'game' ? equippedSky() : 0;
     if (coach.steps === GAME_STEPS && name !== 'game') coachStop(false);
     if (coach.steps === LAW_STEPS && name !== 'laws') coachStop(false);
@@ -881,7 +884,8 @@
       <button class="btn" data-act="set" data-v="intro">REVOIR L’INTRODUCTION</button>
       <button class="btn" data-act="set" data-v="credits">CRÉDITS</button>
       <button class="btn ghost" data-act="set" data-v="reset">EFFACER LA PROGRESSION</button>
-    </div><p class="muted">Poussières d’étoiles, niveau, planète et partie en cours restent sur cet appareil.</p>`;
+    </div><p class="muted">Poussières d’étoiles, niveau, planète et partie en cours restent sur cet appareil.</p>
+    <p class="muted version">ORBITE · version ${VERSION}</p>`;
   }
 
   // Installation : le jeu s'ajoute à l'écran d'accueil et se joue ensuite hors ligne.
@@ -2861,9 +2865,36 @@
   boot();
 
   // Certains cadres (aperçus, iframes isolées) refusent même l'accès à navigator.serviceWorker.
+  let swReg = null;
   try {
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-      navigator.serviceWorker.register('sw.js').catch(() => { /* hors ligne indisponible */ });
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((r) => { swReg = r; }).catch(() => { /* hors ligne indisponible */ });
     }
   } catch (err) { /* hors ligne indisponible */ }
+
+  // Mises à jour : une appli installée qu'on rouvre est souvent juste réveillée, sans recharger la
+  // page. À chaque retour au premier plan (et toutes les 15 min), on compare la version en ligne à
+  // celle-ci ; si elle est plus récente, la page se recharge, ou au retour au menu si une partie
+  // est en cours (elle est sauvegardée).
+  async function checkUpdate() {
+    if (!location.protocol.startsWith('http')) return;
+    try { if (swReg) swReg.update(); } catch (err) { /* sans importance */ }
+    try {
+      const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      const v = Number((await r.json()).v);
+      if (v > VERSION) updateReady();
+    } catch (err) { /* hors ligne : on garde cette version */ }
+  }
+  function updateReady(force) {
+    // Garde-fou : pas plus d'un rechargement automatique toutes les deux minutes.
+    let last = 0;
+    try { last = Number(sessionStorage.getItem('orbite.maj')) || 0; } catch (err) { /* indisponible */ }
+    if (Date.now() - last < 120000) return;
+    if (!force && (ui.screen === 'game' || ui.busy)) { ui.updatePending = true; return; }
+    try { sessionStorage.setItem('orbite.maj', String(Date.now())); } catch (err) { /* indisponible */ }
+    location.reload();
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });
+  setTimeout(checkUpdate, 4000);
+  setInterval(checkUpdate, 15 * 60 * 1000);
 })();
