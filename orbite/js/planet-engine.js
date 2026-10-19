@@ -928,6 +928,14 @@
       body.lens.outer = 1.42;
       body.pitch = (body.pitch < 0 ? -1 : 1) * 0.42;
     }
+    // Allure imposée par la carte (trous noirs) : couleurs du disque et du halo, taille du halo,
+    // largeur et inclinaison du disque. Sert à distinguer Umbra, Abysse, Néant et Horizon.
+    if (body.lens) {
+      if (opts.hot) { body.pal[9] = gradRamp(opts.hot); if (body.disk) body.disk.hot = opts.hot; }
+      if (opts.lens) body.lens.outer = opts.lens;
+      if (body.disk && opts.diskScale) body.disk.outer = body.disk.inner + (body.disk.outer - body.disk.inner) * opts.diskScale;
+      if (body.disk && opts.pitch != null) body.pitch = opts.pitch;
+    }
 
     // Anneaux et débris : il faut incliner l'axe pour que l'ellipse se voie.
     const rr = makeRng(hashSeed(seed, 3));
