@@ -920,6 +920,8 @@
     g.light = [Math.cos(la) * lk, Math.sin(la) * lk, lz];
 
     // Sur une carte, le trou noir doit rester lisible : disque court et incliné.
+    // Un trou noir peut se passer de disque d'accrétion (opts.disk === false) : une sphère d'ombre nue.
+    if (opts.disk === false) body.disk = null;
     if (body.disk && compact) {
       body.disk.inner = 1.5;
       body.disk.outer = 2.35;
