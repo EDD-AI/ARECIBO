@@ -116,7 +116,7 @@
     '…',
     'Une pensée. La toute première.',
     'Vous ouvrez les yeux sur le vide.',
-    'Rien n’existe encore. Pas même vous, tout à fait.',
+    'Rien n’existe encore. Il y a tout à faire.',
     'Vous êtes un Créateur. Et un Créateur doit créer.',
     'Rassemblez la poussière.'
   ];
