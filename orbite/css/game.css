@@ -272,6 +272,17 @@ body.modal #gl { z-index: 35; }
 .menu-item:active { letter-spacing: 0.34em; }
 .menu-item small { display: block; margin-top: 3px; font-size: 9px; letter-spacing: 0.3em; color: var(--dim); }
 .menu-item.soon { color: var(--dim); }
+.title-version {
+  position: absolute;
+  bottom: calc(var(--safe-b) + 14px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: rgba(241, 236, 218, 0.4);
+}
 .menu-foot {
   position: absolute;
   bottom: calc(var(--safe-b) + 14px);

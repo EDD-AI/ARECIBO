@@ -210,7 +210,7 @@ sans recharger la page. Le jeu compare donc sa version (`VERSION` dans `js/game.
 Si la version en ligne est plus récente, la page se recharge. Si une partie est en cours, le
 rechargement attend le retour au menu, et la partie reste sauvegardée. Le service worker revalide
 chaque fichier auprès du serveur, pour que le cache du navigateur ne resserve jamais une ancienne
-version. La version s’affiche en bas des Paramètres.
+version. La version s’affiche sur l’écran-titre, en bas du menu et en bas des Paramètres.
 
 **À chaque mise en ligne**, augmenter ensemble `VERSION` (`js/game.js`), `version.json` et le nom
 du cache dans `sw.js`.
