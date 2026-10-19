@@ -24,6 +24,7 @@ uniform float uPhase;
 uniform float uFlash;
 uniform float uDim;
 uniform float uFlip;
+uniform float uFrost;
 out vec4 outColor;
 
 float bayer4(vec2 fc) {
@@ -32,7 +33,14 @@ float bayer4(vec2 fc) {
   int m[16] = int[16](0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5);
   return (float(m[i]) + 0.5) / 16.0;
 }
-vec4 fin(vec3 c) { return vec4(mix(c, vec3(1.0), uFlash) * uDim, 1.0); }
+// uFrost : l'astre est pris dans la glace (Création gelée), ses couleurs virent au bleu givré.
+vec4 fin(vec3 c) {
+  if (uFrost > 0.0) {
+    float l = dot(c, vec3(0.3, 0.59, 0.11));
+    c = mix(c, mix(vec3(0.1, 0.2, 0.36), vec3(0.86, 0.97, 1.0), l), uFrost * 0.6);
+  }
+  return vec4(mix(c, vec3(1.0), uFlash) * uDim, 1.0);
+}
 vec3 rotY(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z); }
 vec3 rotAxis(vec3 p, vec3 ax, float a) { float c = cos(a), s = sin(a); return p * c + cross(ax, p) * s + ax * dot(ax, p) * (1.0 - c); }
 
@@ -768,6 +776,29 @@ void main() {
       if (I < dth * 0.85) discard;
       col = pal(uRow, clamp(int(I * 7.0) + 1, 1, 7));
     }
+  } else if (uMode == 6) {
+    // Coque de glace : facettes translucides qui montent du bas (uA.x = progression), arêtes vives, reflet qui passe.
+    float rs = uA.y;
+    if (r > rs + 0.03) discard;
+    float lvl = -rs + uA.x * rs * 2.3;
+    float front = lvl + 0.12 * snoise(vec3(xy.x * 3.0, 0.0, uSeed.x));
+    if (xy.y > front) discard;
+    float rr = r / rs;
+    Vor v = voronoi(vec3(xy * 2.8, 0.37) + uSeed);
+    float edge = v.f2 - v.f1;
+    vec2 cd = normalize(v.pt.xy - uSeed.xy + vec2(1e-4));
+    float face = 0.5 + 0.5 * dot(cd, normalize(vec2(-0.6, 0.8)));
+    float glint = fract((xy.x - xy.y) * 0.45 - uPhase * 2.0);
+    vec3 icy = vec3(0.55, 0.84, 1.0), pale = vec3(0.82, 0.95, 1.0), deep = vec3(0.3, 0.55, 0.85);
+    if (xy.y > front - 0.06) col = vec3(1.0);
+    else if (rr > 0.965) col = pale;
+    else if (glint < 0.035 && rr < 0.97) col = vec3(1.0);
+    else if (edge < 0.05) col = face > 0.55 ? pale : icy;
+    else {
+      float f = smoothstep(0.6, 1.0, rr) * 0.7 + v.id.x * 0.14 + face * 0.08;
+      if (f < dth) discard;
+      col = f > 0.6 ? icy : deep;
+    }
   } else if (uMode == 5) {
     // Queue de comète, à l'opposé de l'étoile : poussière large et courbe, ions fins et droits.
     vec2 d = normalize(uA.zw);
@@ -920,6 +951,95 @@ void main() {
 }
 `;
 
+
+  // Fonds animés (cosmétiques) : dessinés derrière les étoiles pendant une partie.
+  // 1 nébuleuse, 2 aurore, 3 galaxie, 4 étoiles filantes, 5 trou noir lointain.
+  const FS_SKY = HEAD + COMMON + `
+uniform vec2 uRes;
+uniform float uT;
+uniform int uSky;
+uniform vec3 uSeed;
+float post(float v, float n, float dth) { return floor(clamp(v, 0.0, 1.0) * n + dth) / n; }
+void main() {
+  vec2 fc = gl_FragCoord.xy;
+  float dth = bayer4(fc);
+  vec2 uv = fc / uRes.y;
+  float ax = uRes.x / uRes.y;
+  float y = fc.y / uRes.y;
+  vec3 col = vec3(0.0);
+  if (uSky == 1) {
+    vec3 p = vec3(uv * 2.2 + vec2(uT * 0.012, uT * 0.005), uT * 0.018);
+    float a = fbm01(p + uSeed, 5);
+    float b = fbm01(p * 1.6 + vec3(7.0, 3.0, -uT * 0.012) + uSeed.zyx, 4);
+    float va = post(smoothstep(0.5, 0.8, a), 4.0, dth * 0.9);
+    float vb = post(smoothstep(0.56, 0.82, b), 3.0, dth * 0.9);
+    col = vec3(0.22, 0.07, 0.3) * va + vec3(0.03, 0.17, 0.21) * vb * (1.0 - va * 0.6);
+  } else if (uSky == 2) {
+    float I = 0.0;
+    vec3 tint = vec3(0.0);
+    for (int k = 0; k < 2; k++) {
+      float fk = float(k);
+      float c = 0.78 - fk * 0.16 + 0.05 * sin(uv.x * (2.4 + fk) + uT * (0.22 + fk * 0.07) + fk * 2.0)
+        + 0.06 * (fbm01(vec3(uv.x * 1.4, uT * 0.05, fk * 5.0) + uSeed, 3) - 0.5);
+      float d = y - c;
+      float rays = fbm01(vec3(uv.x * 16.0 + fk * 9.0, uT * 0.3, 2.0 + fk) + uSeed, 3);
+      float band = d > 0.0 ? exp(-d * (8.0 + fk * 4.0)) : exp(-d * d * 2600.0);
+      float v = band * (0.3 + 0.9 * rays) * (1.0 - fk * 0.45);
+      if (v > I) { I = v; tint = mix(vec3(0.12, 0.55, 0.32), vec3(0.3, 0.12, 0.45), clamp(d * 4.0 + 0.1, 0.0, 1.0)); }
+    }
+    col = tint * post(I * 0.75, 5.0, dth);
+  } else if (uSky == 3) {
+    vec2 v = uv - vec2(ax * 0.5, 0.56);
+    v = mat2(0.94, -0.34, 0.34, 0.94) * v;
+    v.y /= 0.42;
+    float r = length(v);
+    float ang = atan(v.y, v.x) - uT * 0.025;
+    float arms = 0.5 + 0.5 * cos(2.0 * ang - log(r + 0.015) * 5.5);
+    float n = fbm01(vec3(v * 9.0, uT * 0.02) + uSeed, 3);
+    float dens = pow(arms, 3.0) * exp(-r * 4.2) * (0.6 + 0.6 * n) + exp(-r * 22.0) * 1.3;
+    float lv = post(dens * 0.75, 6.0, dth);
+    col = mix(vec3(0.12, 0.17, 0.38), vec3(0.55, 0.42, 0.26), clamp(exp(-r * 9.0) * 1.4, 0.0, 1.0)) * lv;
+  } else if (uSky == 4) {
+    col = vec3(0.02, 0.03, 0.07) * post(y, 4.0, dth);
+    for (int i = 0; i < 6; i++) {
+      float fi = float(i);
+      float P = 4.5 + fi * 1.3;
+      float tt = uT + fi * 2.37;
+      float cyc = floor(tt / P);
+      float k = fract(tt / P);
+      if (k > 0.2) continue;
+      vec3 h = hash33(vec3(fi, cyc, 3.0) + uSeed);
+      vec2 dir = normalize(vec2(-0.7 - h.z * 0.4, -0.42));
+      vec2 head = vec2(0.2 + h.x * ax, 0.62 + h.y * 0.42) + dir * (k / 0.2) * 0.85;
+      vec2 rel = uv - head;
+      float along = dot(rel, -dir);
+      float across = abs(dot(rel, vec2(-dir.y, dir.x))) * uRes.y;
+      float len = 0.16;
+      if (along > -0.004 && along < len && across < 0.9) {
+        float I = (1.0 - along / len) * (1.0 - k / 0.2 * 0.6);
+        if (I > dth * 0.8) col = max(col, mix(vec3(0.3, 0.45, 0.8), vec3(1.0), I) * (0.35 + 0.6 * I));
+      }
+    }
+  } else if (uSky == 5) {
+    vec2 c = vec2(ax * 0.82, 0.17);
+    vec2 v = (uv - c) / 0.72;
+    float rr = length(v);
+    vec2 w = mat2(0.96, -0.28, 0.28, 0.96) * v;
+    w.y /= 0.3;
+    float r = length(w);
+    float ang = atan(w.y, w.x);
+    float swirl = fbm01(vec3(cos(ang - uT * 0.35) * 2.0, sin(ang - uT * 0.35) * 2.0, r * 7.0) + uSeed, 3);
+    float disk = smoothstep(0.05, 0.08, r) * (1.0 - smoothstep(0.1, 0.3, r)) * (0.4 + 0.9 * swirl);
+    float ring = exp(-abs(rr - 0.062) * 160.0);
+    float glow = exp(-rr * 6.0) * 0.25;
+    float I = max(max(disk, ring * 0.9), glow);
+    if (rr < 0.055) I = 0.0;
+    col = mix(vec3(0.45, 0.18, 0.05), vec3(0.95, 0.75, 0.4), clamp(I * 1.2 - 0.2, 0.0, 1.0)) * post(I * 0.45, 6.0, dth);
+  }
+  outColor = fin(col);
+}
+`;
+
   // ─── Utilitaires GL ──────────────────────────────────────────
   function compile(gl, type, src) {
     const s = gl.createShader(type);
@@ -977,6 +1097,7 @@ void main() {
       this.progHalo = this.program(VS_QUAD, FS_HALO, ['aPos']);
       this.progRing = this.program(VS_QUAD, FS_RING, ['aPos']);
       this.progBg = this.program(VS_QUAD, FS_BG, ['aPos']);
+      this.progSky = null;
       this.progSprite = this.program(VS_SPRITE, FS_SPRITE, ['aPos', 'aSize', 'aShape', 'aCol']);
 
       this.quadVao = gl.createVertexArray();
@@ -1067,6 +1188,7 @@ void main() {
       gl.uniform1f(this.loc(prog, 'uFlash'), st.flash);
       gl.uniform1f(this.loc(prog, 'uDim'), st.dim);
       gl.uniform1f(this.loc(prog, 'uFlip'), st.flip);
+      gl.uniform1f(this.loc(prog, 'uFrost'), st.frost || 0);
     }
 
     clip(cx, cy, r) {
@@ -1206,7 +1328,8 @@ void main() {
         phase: o.phase || 0,
         flash: o.flash || 0,
         dim: o.dim == null ? 1 : o.dim,
-        flip: o.flip ? -1 : 1
+        flip: o.flip ? -1 : 1,
+        frost: o.frost || 0
       };
       if (st.reveal <= 0.001) return;
       gl.viewport(0, 0, this.W, this.H);
@@ -1272,6 +1395,10 @@ void main() {
       if (b.atmo) this.haloPass(0, cx, cy, R, 1 + b.atmo.w, [b.atmo.w, b.atmo.inner, b.atmo.pow, b.atmo.outer], b.pal, 12, b.seed, light, st);
       if (b.shell) this.haloPass(1, cx, cy, R, b.shell.rs * (1 + b.shell.glow), [b.shell.rs, b.shell.rim, b.shell.glow, b.shell.cycles], b.pal, 13, b.seed, light, st);
       if (o.shield) this.haloPass(1, cx, cy, R, 1.3, [1.2, 1.1, 0.08, 1], b.pal, 13, b.seed, light, st);
+      if (o.frost > 0.01) {
+        const rs = Math.min(1.25, Math.max(1.12, (b.bound || 1) + 0.12));
+        this.haloPass(6, cx, cy, R, rs + 0.05, [o.frost, rs, 0, 0], b.pal, 0, b.seed, light, Object.assign({}, st, { frost: 0 }));
+      }
 
       if (g.ring) this.ringPass(g, 1, P);
       this.drawLayer('front', st);
@@ -1425,6 +1552,22 @@ void main() {
     }
 
     // ─── Décor (atelier) ──────────────────────────────────────
+    // Fond animé d'une partie (cosmétique) ; le programme n'est compilé qu'au premier usage.
+    drawSky(mode, t, st) {
+      const gl = this.gl;
+      if (!this.progSky) this.progSky = this.program(VS_QUAD, FS_SKY, ['aPos']);
+      const pr = this.progSky;
+      gl.disable(gl.SCISSOR_TEST);
+      gl.viewport(0, 0, this.W, this.H);
+      gl.useProgram(pr.p);
+      this.common(pr, st);
+      gl.uniform2f(this.loc(pr, 'uRes'), this.W, this.H);
+      gl.uniform1f(this.loc(pr, 'uT'), t % 3600);
+      gl.uniform1i(this.loc(pr, 'uSky'), mode);
+      gl.uniform3f(this.loc(pr, 'uSeed'), 3.1, -7.4, 11.2);
+      this.quad();
+    }
+
     drawBackground(field, st) {
       const gl = this.gl, pr = this.progBg;
       gl.disable(gl.SCISSOR_TEST);

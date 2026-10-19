@@ -70,7 +70,12 @@
         <h2>Marché stellaire</h2>
         <span class="dust" id="marketDust"></span>
       </header>
-      <div class="mk-scroll">
+      <nav class="mk-tabs" id="mkTabs" role="tablist">
+        <button class="on" data-tab="planete" role="tab">MA PLANÈTE</button>
+        <button data-tab="creation" role="tab">CRÉATION</button>
+        <button data-tab="cosmetiques" role="tab">COSMÉTIQUES</button>
+      </nav>
+      <div class="mk-scroll mk-pane" data-pane="planete">
         <div class="mk-hero">
           <div class="orb mk-planet" id="mkPlanet" data-planet="world-big" data-fit="body"></div>
           <div class="mk-state">
@@ -82,6 +87,17 @@
         </div>
         <div class="mk-next" id="mkNext"></div>
         <div class="mk-list" id="mkList"></div>
+      </div>
+      <div class="mk-scroll mk-pane" data-pane="creation" hidden>
+        <div class="mk-soon">
+          <span class="mk-kicker">CRÉATION</span>
+          <b>Bientôt</b>
+          <p>Un atelier pour créer vos propres astres arrive dans une prochaine version.</p>
+        </div>
+      </div>
+      <div class="mk-scroll mk-pane" data-pane="cosmetiques" hidden>
+        <p class="mk-intro">Des fonds animés qui remplacent le noir pendant vos parties. Touchez-en un pour l’essayer derrière cet écran.</p>
+        <div class="cos-list" id="cosList"></div>
       </div>
     </section>
 

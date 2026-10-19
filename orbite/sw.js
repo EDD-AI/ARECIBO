@@ -1,5 +1,5 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
-const CACHE = 'orbite-v7';
+const CACHE = 'orbite-v9';
 const SHELL = [
   './',
   './index.html',
@@ -26,7 +26,6 @@ const SHELL = [
   './audio/back.mp3',
   './audio/blast.mp3',
   './audio/break.mp3',
-  './audio/close.mp3',
   './audio/coin.mp3',
   './audio/confirm.mp3',
   './audio/crumble1.mp3',
@@ -45,7 +44,6 @@ const SHELL = [
   './audio/glass5.mp3',
   './audio/glass6.mp3',
   './audio/hover.mp3',
-  './audio/open.mp3',
   './audio/place1.mp3',
   './audio/place2.mp3',
   './audio/place3.mp3',
@@ -58,7 +56,6 @@ const SHELL = [
   './audio/tap.mp3',
   './audio/type.mp3',
   './audio/wind.mp3',
-  './audio/zap.mp3',
   './audio/menu.mp3',
   './audio/click1.mp3',
   './audio/click2.mp3',

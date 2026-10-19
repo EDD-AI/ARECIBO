@@ -11,7 +11,7 @@ grotte et un placement gauche/droite selon la planète concernée.
 | `tap` | UI Audio · click3 | boutons, si les déclics ne sont pas encore chargés |
 | `hover` | UI Audio · rollover2 | survol à la souris |
 | `type` | Interface Sounds · tick_004 | sous-titres tapés |
-| `open`, `close`, `back` | Interface Sounds · open_002, close_002, back_002 | feuilles, vente, souffle des attaques (`open` ralenti) |
+| `back` | Interface Sounds · back_002 | vente |
 | `error` | Interface Sounds · error_004 | action refusée |
 | `drop1`–`drop3` | Interface Sounds · drop_002 à drop_004 | achat, gouttes de l’ambiance |
 | `pluck1`, `pluck2` | Interface Sounds · pluck_001, pluck_002 | bonus, planète soulevée |
@@ -19,10 +19,10 @@ grotte et un placement gauche/droite selon la planète concernée.
 | `confirm`, `down` | Interface Sounds · confirmation_004, minimize_008 | victoire, défaite |
 | `scratch` | Interface Sounds · scratch_005 | venin |
 | `roll` | Interface Sounds · scroll_002 (0,55 s) | actualiser la taverne |
-| `place1`–`place4` | Starter Kit City Builder · placement-a à d | planète posée, impacts |
+| `place1`–`place4` | Starter Kit City Builder · placement-a à d | planète posée, impacts, ouverture et fermeture des fiches (joués plus aigus) |
 | `crumble1`–`crumble4` | Starter Kit City Builder · removal-a à d | vente, gros impacts, destruction |
 | `break`, `coin` | Starter Kit 3D Platformer · break, coin | destruction, poussières gagnées |
-| `blast`, `zap` | Starter Kit FPS · enemy_destroy, enemy_hurt | éclat lointain, touche sci-fi des impacts |
+| `blast` | Starter Kit FPS · enemy_destroy | éclat lointain |
 | `rise` | Interface Sounds · glass_004, réverbéré puis inversé | lancement du jeu, renaissance |
 | `wind` | Starter Kit City Builder · ambience, oiseaux retirés (passe-bas), descendue d’une quarte | ambiance |
 
@@ -61,3 +61,8 @@ SOFTWARE.
 ```
 
 Merci à Kenney : [kenney.nl](https://kenney.nl).
+
+Les anciens sons d’ouverture et de fermeture (`open_002`, `close_002`) et `enemy_hurt` ont été retirés :
+leur hauteur glissait vers le haut ou vers le bas, ce qui sonnait comme un laser. Les fiches s’ouvrent
+désormais sur un petit caillou posé (parfois un tintement de cristal), et le souffle des attaques est
+un bruit filtré synthétisé, différent à chaque fois.

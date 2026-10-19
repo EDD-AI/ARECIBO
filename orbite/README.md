@@ -1,7 +1,7 @@
 # ORBITE
 
 Autobattler de planètes façon *Champs de bataille* (Hearthstone), pensé pour le téléphone.
-On choisit une **loi** (elle donne un premier astre), on achète des planètes dans la **taverne**,
+On choisit une **loi** (elle donne un premier astre), on achète des planètes dans la **Création** (là où naissent les astres),
 on compose un **système solaire** de 7 orbites, puis le système combat seul contre un des
 **7 univers rivaux** (bots). Le dernier univers en vie gagne. Seuls les trois premiers gagnent
 des **poussières d’étoiles**.
@@ -25,6 +25,37 @@ des **poussières d’étoiles**.
 Les **Paramètres** gèrent le son, la vitesse des combats, l’atelier, les crédits, et permettent de
 revoir l’introduction.
 
+## Tutoriel
+
+Pensé pour quelqu’un qui n’a jamais joué à un jeu de ce genre. Un « coach » assombrit l’écran,
+éclaire ce qu’il faut toucher, montre le geste avec un doigt animé (toucher ou glisser) et explique
+en une phrase. Il avance quand le joueur fait l’action demandée, ou sur « SUIVANT ».
+
+- **Guide du menu** (première visite) : Jouer solo, Marché stellaire et poussières d’étoiles,
+  Profil, Paramètres.
+- **Première partie guidée** :
+  - le choix de la loi ;
+  - les PV et l’énergie ;
+  - lire une fiche puis acheter, et glisser l’astre de la main au système ;
+  - l’ordre d’attaque et le combat ;
+  - le calcul des dégâts ;
+  - actualiser, geler, monter de niveau, vendre, le pouvoir et les rivaux ;
+  - enfin, les astres dorés et le podium.
+- « Passer le tutoriel » est proposé à chaque étape. Paramètres → **Guide du menu** et
+  **Refaire le tutoriel** les relancent. La prochaine partie est alors guidée.
+
+Le coach se trouve dans `js/game.js` (`coachStart`, étapes `MENU_STEPS`, `LAW_STEPS`,
+`GAME_STEPS`). Le jeu lui signale ses actions par `tuto('fiche' | 'achat' | 'placer' | 'combat' | 'cycle'…)`.
+
+## Effets de fin de cycle
+
+- **Gel** : la glace prend les astres de la Création un à un, de gauche à droite, avec un craquement
+  cristallin. Une coque pixel art facettée monte du bas (mode 6 du shader de halo) et les couleurs
+  virent au bleu givré (`uFrost`). Au dégel, la glace éclate.
+- **Dégâts** : à la fin d’un combat, chaque astre survivant du vainqueur tire une comète vers les PV
+  du perdant, puis le niveau de création frappe en dernier. Un grand compteur grimpe à chaque impact.
+  Les PV de la cible défilent ensuite jusqu’à leur nouvelle valeur.
+
 ## Votre planète : le jeu dans le jeu
 
 La planète du menu est la vôtre. Au départ elle est **morte et noire**. Au **Marché stellaire**,
@@ -42,6 +73,24 @@ les poussières d’étoiles achètent des **améliorations** qui la font renaî
 joueur) et fait varier la roche, la lave sur la face de nuit, le niveau des mers, les calottes, les
 nuages, l’atmosphère, la végétation, les lumières des villes, puis ajoute lune, satellites et
 anneau (`livingWorld` dans `js/planet-engine.js`). Au niveau 120 elle ressemble à la Terre.
+
+## Marché stellaire
+
+Trois onglets :
+
+- **Ma planète** : les 24 améliorations décrites plus haut.
+- **Création** : vide pour l’instant (« Bientôt »), réservé à un futur atelier de création d’astres.
+- **Cosmétiques** : des **fonds animés** qui remplacent le noir pendant les parties, à **650
+  poussières d’étoiles** chacun. Toucher un fond l’essaie aussitôt derrière l’écran du marché. Une
+  fois acheté, il s’équipe ; « Noir » remet le fond d’origine. Les fonds disponibles :
+  - Nébuleuse pourpre ;
+  - Aurore boréale ;
+  - Galaxie spirale ;
+  - Pluie d’étoiles filantes ;
+  - Trou noir lointain.
+
+  Ils sont dessinés en pixel art par `FS_SKY` (`js/planet-renderer.js`), sombres pour garder les
+  astres lisibles, et enregistrés dans `orbite.cosmetiques`.
 
 ## Profil
 
@@ -167,7 +216,7 @@ En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 | Lois | 12 (une par famille), 3 proposées au départ |
 | Astres | 9 par famille + 8 neutres = **116**, dont **53 achetables** dans une partie |
 | Copies par astre | niveau 1 : 16 · 2 : 15 · 3 : 13 · 4 : 11 · 5 : 9 · 6 : 7 |
-| Taverne | 3 / 4 / 4 / 5 / 5 / 6 astres selon le niveau (1 à 6) |
+| Création | 3 / 4 / 4 / 5 / 5 / 6 astres selon le niveau (1 à 6) |
 | Énergie | 3 au premier cycle, +1 par cycle, maximum 10 |
 | Coûts | acheter 3 · vendre +1 · actualiser 1 · geler gratuit |
 | Montée de niveau | 5 / 7 / 8 / 9 / 10, −1 à chaque cycle sans monter |
@@ -195,7 +244,7 @@ doublés). Le placer ouvre une **découverte** : un astre au choix parmi trois d
 | Minéral | Remparts de roche qui accumulent les PV |
 | Machine | Sondes et stations qui s’arriment entre elles (Arrimage) |
 | Lunes | L’ordre compte : elles renforcent leurs voisins (loi des marées) |
-| Comètes | Elles grandissent quand vous actualisez la taverne et récompensent la vente (loi du passage : première actualisation gratuite) |
+| Comètes | Elles grandissent quand vous actualisez la Création et récompensent la vente (loi du passage : première actualisation gratuite) |
 | Cristal | Résonance : chaque Cristal joué renforce les autres (loi de résonance) |
 | Anomalies | Le hasard : astres aléatoires en main ou invoqués, découvertes, mots-clés aléatoires (loi du chaos) |
 
@@ -205,7 +254,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 
 | Fichier | Rôle |
 |---|---|
-| `js/rules.js` | Règles pures et déterministes : catalogue, lois, taverne, fusion, combat (journal d’événements), bots |
+| `js/rules.js` | Règles pures et déterministes : catalogue, lois, création, fusion, combat (journal d’événements), bots |
 | `js/energy.js` | Sphères d’énergie des lois : petites sphères pixel art animées selon la famille (souffle, vortex, bascule, flammes, facettes, bandes, roche, grille) |
 | `js/world.js` | Votre planète : les 24 améliorations, leurs ères, niveaux, prix et effets |
 | `js/planet-engine.js` | Génome des planètes : une graine → astre, palette, nuages, anneaux, lunes, nom et fiche |

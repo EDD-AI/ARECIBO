@@ -11,8 +11,8 @@
   const MUSIC_VOL = 0.42;
   const BASE = 'audio/';
   const NAMES = [
-    'hover', 'tap', 'type', 'open', 'close', 'back', 'error', 'roll', 'confirm', 'down', 'scratch', 'coin',
-    'drop1', 'drop2', 'drop3', 'pluck1', 'pluck2', 'break', 'blast', 'zap', 'rise', 'wind',
+    'hover', 'tap', 'type', 'back', 'error', 'roll', 'confirm', 'down', 'scratch', 'coin',
+    'drop1', 'drop2', 'drop3', 'pluck1', 'pluck2', 'break', 'blast', 'rise', 'wind',
     'glass1', 'glass2', 'glass3', 'glass4', 'glass5', 'glass6',
     'place1', 'place2', 'place3', 'place4', 'crumble1', 'crumble2', 'crumble3', 'crumble4',
     'click1', 'click2', 'click3', 'click4', 'click5'
@@ -286,6 +286,34 @@
     src.start(t);
   }
 
+  // Souffle naturel : bruit passé dans un filtre passe-bande qui s'ouvre puis se referme.
+  function swoosh(pan) {
+    const a = audio();
+    if (!a) return;
+    const t = a.currentTime, d = 0.22 + Math.random() * 0.1;
+    const len = Math.floor(a.sampleRate * d);
+    const buf = a.createBuffer(1, len, a.sampleRate);
+    const ch = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+    const src = a.createBufferSource();
+    src.buffer = buf;
+    const f = a.createBiquadFilter();
+    f.type = 'bandpass';
+    f.Q.value = 0.9;
+    const f0 = 380 + Math.random() * 220;
+    f.frequency.setValueAtTime(f0, t);
+    f.frequency.linearRampToValueAtTime(f0 * 1.6, t + d * 0.5);
+    f.frequency.linearRampToValueAtTime(f0 * 0.9, t + d);
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.09, t + d * 0.4);
+    g.gain.linearRampToValueAtTime(0.0001, t + d);
+    let out = src.connect(f).connect(g);
+    if (pan && a.createStereoPanner) { const p = a.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, pan)); out = out.connect(p); }
+    out.connect(sfxBus);
+    src.start(t);
+  }
+
   const chime = (rates, o) => rates.forEach((r, i) => play('glass1', Object.assign({ rate: r, jit: 0.01, delay: i * (o.step || 0.07) }, o)));
 
   const SFX = {
@@ -306,8 +334,13 @@
       if (Math.random() < 0.3) play(PLACE, { vol: 0.06, rate: 1.7, jit: 0.15, delay: 0.005 });
     },
     type() { play('type', { vol: 0.07, jit: 0.12 }) || tone(1500 + Math.random() * 300, 0.018, { vol: 0.012, type: 'triangle' }); },
-    open() { play('open', { vol: 0.13, rate: 0.85 }); },
-    close() { play('close', { vol: 0.1, rate: 0.9 }); },
+    // Ouvrir ou fermer une fiche : un petit caillou posé, jamais tout à fait le même, parfois
+    // un tintement de cristal très léger. Pas de balayage de hauteur (effet « laser »).
+    open() {
+      play(PLACE, { vol: 0.13, rate: 1.55, jit: 0.14 });
+      if (Math.random() < 0.4) play(GLASS, { vol: 0.03, rate: 2.2, jit: 0.1, rev: 0.6, delay: 0.015 });
+    },
+    close() { play(PLACE, { vol: 0.08, rate: 1.2, jit: 0.14 }); },
     error() { play('error', { vol: 0.22 }) || tone(220, 0.12, { vol: 0.05, type: 'triangle' }); },
     start() {
       if (!play('rise', { vol: 0.55, rev: 0.4, jit: 0 })) {
@@ -333,6 +366,16 @@
       if (!play('glass4', { vol: 0.3, rate: 1.15, rev: 0.6 })) { tone(1400, 0.2, { to: 1900, vol: 0.05 }); return; }
       play('glass2', { vol: 0.22, rate: 1.5, delay: 0.05 });
     },
+    // Une planète prise dans la glace : craquement cristallin, un peu plus aigu à chaque planète.
+    frost(i) {
+      play(GLASS, { vol: 0.2, rate: 1.25 + (i || 0) * 0.12, jit: 0.04, rev: 0.5 });
+      play(PLACE, { vol: 0.08, rate: 2.2, jit: 0.1 });
+    },
+    // Dégel : la glace se brise.
+    thaw() {
+      if (!play(['glass5', 'glass6'], { vol: 0.32, rate: 1.3, rev: 0.3 })) { tone(1600, 0.1, { to: 700, vol: 0.05 }); return; }
+      play(CRUMBLE, { vol: 0.14, rate: 1.8, delay: 0.03 });
+    },
     level() {
       if (!buffers.glass1) { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.12, { delay: i * 0.07, vol: 0.05, type: 'square' })); return; }
       chime([1, 1.26, 1.5], { vol: 0.3, rev: 0.45 });
@@ -342,11 +385,12 @@
       chime([1, 1.26, 1.5, 2, 2.52], { vol: 0.3, rev: 0.6, step: 0.065 });
       play('glass4', { vol: 0.28, rate: 0.9, rev: 1, delay: 0.32 });
     },
-    whoosh(pan) { play('open', { vol: 0.16, rate: 0.55, jit: 0.08, pan }); },
+    // Souffle d'une attaque : bruit filtré qui passe, à hauteur variable.
+    whoosh(pan) { swoosh(pan); },
     hit(power, pan) {
       power = power || 2;
       if (!play(PLACE, { vol: Math.min(0.75, 0.45 + power * 0.04), rate: 0.7, rev: 0.2, pan })) { noise(0.09, { vol: 0.14, cut: 1400 }); tone(140, 0.08, { type: 'triangle', vol: 0.08 }); return; }
-      play('zap', { vol: 0.08, rate: 0.6, pan });
+      play(CRUMBLE, { vol: 0.08, rate: 1.7, jit: 0.15, pan, delay: 0.02 });
       if (power >= 4) play(CRUMBLE, { vol: Math.min(0.45, 0.15 + power * 0.03), rate: 0.85, pan, delay: 0.02 });
     },
     shield(pan) { play(['glass5', 'glass6'], { vol: 0.42, rate: 0.95, rev: 0.35, pan }) || tone(1800, 0.12, { to: 900, vol: 0.06 }); },
