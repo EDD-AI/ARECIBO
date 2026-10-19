@@ -277,8 +277,11 @@ sur l’appareil.
 **Mises à jour.** Une appli installée qu’on rouvre est souvent juste réveillée par le téléphone,
 sans recharger la page. Le jeu compare donc sa version (`VERSION` dans `js/game.js`) à
 `version.json` en ligne, au démarrage, à chaque retour au premier plan et toutes les 15 minutes.
-Si la version en ligne est plus récente, la page se recharge. Si une partie est en cours, le
-rechargement attend le retour au menu, et la partie reste sauvegardée. Le service worker revalide
+Si la version en ligne est plus récente, la page se recharge, mais seulement au menu. Pendant une
+partie, une campagne ou l’écran de fin (gain d’expérience, passage de niveau), le rechargement
+attend le retour au menu, et la partie reste sauvegardée. Les poussières du classement et le cadeau
+de chaque niveau franchi sont versés dès l’arrivée sur l’écran de fin : l’animation ne fait que les
+afficher. Le service worker revalide
 chaque fichier auprès du serveur, pour que le cache du navigateur ne resserve jamais une ancienne
 version. La version s’affiche sur l’écran-titre, en bas du menu et en bas des Paramètres.
 
