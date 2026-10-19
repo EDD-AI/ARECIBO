@@ -1943,7 +1943,10 @@
   // ─── Démarrage ──────────────────────────────────────────────
   boot();
 
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    navigator.serviceWorker.register('sw.js').catch(() => { /* hors ligne indisponible */ });
-  }
+  // Certains cadres (aperçus, iframes isolées) refusent même l'accès à navigator.serviceWorker.
+  try {
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      navigator.serviceWorker.register('sw.js').catch(() => { /* hors ligne indisponible */ });
+    }
+  } catch (err) { /* hors ligne indisponible */ }
 })();
