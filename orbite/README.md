@@ -25,6 +25,54 @@ des **poussières d’étoiles**.
 Les **Paramètres** gèrent le son, la vitesse des combats, l’atelier, les crédits, et permettent de
 revoir l’introduction.
 
+## Campagne (démo · acte I)
+
+Un mode solo raconté, en *deck builder* à la Slay the Spire, où l’on meurt et recommence.
+
+**Histoire.** Vous vous réveillez dans le vide, en Créateur. La poussière converge et forme un
+premier monde minuscule, que vous devez faire grandir jusqu’à vaincre **Kronos**, la géante qui
+dévore ses lunes. Des phrases tapées sur fond noir posent le récit : réveil, arrivée devant
+Kronos, victoire, défaite.
+
+**Dialogues.** Des cinématiques font parler d’autres Créateurs. Le vôtre est toujours à gauche,
+en silhouette noire à capuche éclairée en contre-jour : sans visage, sans couleur, nommé « ??? ».
+Face à lui :
+- **Vela, la Tisseuse d’étoiles** (liseré violet, couronne d’étoiles) : elle vous rencontre après
+  votre première victoire, revient avant Kronos, et après la victoire elle annonce l’acte II ;
+- **L’Ancien** (liseré ambre, bâton), un Créateur dévoré par Kronos : il apparaît dans un mystère
+  et donne un conseil pour le combat.
+
+Les silhouettes sont générées en pixel art (`figureSvg` dans `js/campagne-ui.js`).
+
+**Carte des chemins.** Elle compte 9 étages et des embranchements à suivre, avant le boss. Les cases :
+- **Affrontement** : astres errants (poussière, cailloux, comète, lune morte, météore, planète naine) ;
+- **Astre puissant** : Géante rouge, astéroïdes jumeaux ; ils donnent un **vestige** ;
+- **Mystère** : événement raconté, avec un choix ;
+- **Sanctuaire** : se reposer (+30 % PV) ou façonner (améliorer une carte) ;
+- **Kronos** : appelle ses lunes, les dévore pour se soigner et se renforcer. Frappez les lunes
+  d’abord.
+
+**Combat.** Au tour par tour, avec 3 énergies, 5 cartes en main et l’**intention** de chaque ennemi
+affichée au-dessus de lui.
+- Toucher une carte la sélectionne. La toucher de nouveau la joue, ou bien on touche l’astre à viser.
+- **Bouclier** : absorbe les dégâts jusqu’au tour suivant.
+- **Masse** : dégâts en plus.
+- **Fissure** : +50 % de dégâts subis.
+- **Érosion** : −25 % de dégâts infligés.
+- **Brûlure** : perte de PV chaque tour.
+- Il y a 24 cartes (attaque, défense, création, pouvoir), toutes améliorables (« + »), et 6 vestiges.
+
+**Votre monde change avec vos cartes** (`worldChannels`) : magma, eau, nuages, puis la vie. Il suit
+le moteur de la planète du menu.
+
+**Récompenses.** Une expédition rapporte de l’**expérience** au Créateur (étages, astres puissants,
+victoire) et des **poussières d’étoiles**. La partie en cours est sauvegardée, et un tutoriel guide
+le premier combat.
+
+Les règles sont pures et testées (`js/campagne.js`, `tests/campagne.test.mjs`). L’IA d’équilibrage
+(`node tools/campagne-sim.js 2000`) gagne environ 21 % de ses expéditions en jouant sans finesse ;
+un joueur qui lit les intentions fait nettement mieux.
+
 ## Tutoriel
 
 Pensé pour quelqu’un qui n’a jamais joué à un jeu de ce genre. Un « coach » assombrit l’écran,
@@ -265,6 +313,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 
 | Fichier | Rôle |
 |---|---|
+| `js/campagne.js`, `js/campagne-ui.js` | Campagne : règles (cartes, ennemis, carte, combat) et interface (récit, dialogues, carte, combat) |
 | `js/rules.js` | Règles pures et déterministes : catalogue, lois, création, fusion, combat (journal d’événements), bots |
 | `js/energy.js` | Sphères d’énergie des lois : petites sphères pixel art animées selon la famille (souffle, vortex, bascule, flammes, facettes, bandes, roche, grille) |
 | `js/world.js` | Votre planète : les 24 améliorations, leurs ères, niveaux, prix et effets |

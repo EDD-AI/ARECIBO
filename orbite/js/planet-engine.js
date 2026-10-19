@@ -1092,6 +1092,8 @@
     const cool = water;
     for (const k of [3, 4, 5, 6, 11]) {
       let row = DEAD[k];
+      // rock : roche nue éclairée (monde de poussière de la Campagne), au lieu du noir du menu.
+      row = lerpRow(row, BARE[k], clamp01(p.rock) * 0.85);
       row = lerpRow(row, VOLC[k], heat * (1 - 0.6 * cool));
       row = lerpRow(row, BARE[k], cool * 0.85);
       const lifeK = k === 6 ? life * 0.6 : k === 3 ? Math.max(life, water * 0.7) : life;
