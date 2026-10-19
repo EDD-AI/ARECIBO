@@ -24,7 +24,7 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--ink);
-  font-family: 'Pixelify Sans', ui-monospace, monospace;
+  font-family: 'Chakra Petch', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
   overflow: hidden;
   overscroll-behavior: none;
   user-select: none;
@@ -160,12 +160,6 @@ body.modal #gl { z-index: 35; }
 #menu { width: 100vw; padding: 0; overflow: hidden; }
 .menu-planet { position: absolute; left: 0; top: 0; pointer-events: none; }
 .menu-ground { position: absolute; left: 0; width: 100%; pointer-events: none; shape-rendering: crispEdges; }
-.creator { position: absolute; width: 20px; height: 30px; shape-rendering: crispEdges; pointer-events: none; }
-.creator .f2 { visibility: hidden; }
-.creator.wind .f1 { animation: scarfA 1.2s steps(1) infinite; }
-.creator.wind .f2 { animation: scarfB 1.2s steps(1) infinite; }
-@keyframes scarfA { 50% { visibility: hidden; } }
-@keyframes scarfB { 50% { visibility: visible; } }
 .menu-top {
   position: absolute;
   top: calc(var(--safe-t) + 7%);

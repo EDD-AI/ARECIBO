@@ -15,9 +15,9 @@ des **poussières d’étoiles**.
 2. Titre **ORBITE**, un astéroïde gravite autour ; « Touchez pour commencer ». Au toucher, le titre
    éclate en pixels.
 3. **Première fois seulement** : écran noir, sous-titre en bas « Réveillez-vous. Bonjour, créateur. »
-4. **Menu** : une planète géante se lève sur l’horizon et tourne très lentement, une silhouette
-   regarde depuis le sol, des poussières montent, des étoiles filantes passent. La première fois,
-   « Voilà votre terrain de jeu. » s’écrit au centre.
+4. **Menu** : une planète géante se lève sur l’horizon et tourne très lentement, des poussières
+   montent du sol, des étoiles filantes passent. La première fois, « Voilà votre terrain de jeu. »
+   s’écrit au centre.
 5. Menu : **Jouer solo**, **Multijoueur** (bientôt), **Marché stellaire**, **Paramètres**.
 
 Le **Marché stellaire** dépense les poussières d’étoiles : chaque achat débloque un nouvel

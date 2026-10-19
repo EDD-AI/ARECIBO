@@ -23,8 +23,15 @@
       this.last = performance.now();
       this.modal = false;
       this.modalEl = null;
-      this.stars = OP.makeStarfield(0x0b17, 1400);
+      this.stars = OP.makeStarfield(0x0b17, 900);
       this.stars.theme = { top: [0, 0, 0], bot: [0, 0, 0], stars: [[255, 255, 255], [196, 214, 255], [255, 226, 200]] };
+      // Fond sobre : des points fins et pâles, très peu d'étoiles en croix.
+      this.stars.stars.forEach((st, i) => {
+        if (st.kind === 3 || (st.kind === 2 && i % 4)) st.kind = 1;
+        if (st.kind === 1 && i % 3) st.kind = 0;
+        st.dim *= 0.75;
+      });
+      this.starArea = 1800;
       this.fit();
       window.addEventListener('resize', () => this.fit());
       requestAnimationFrame((t) => this.loop(t));
@@ -214,6 +221,20 @@
         reveal: s.reveal, flash: s.flash, dim: dim * own,
         flip: g.flip, golden: el.dataset.golden === '1', shield: el.dataset.shield === '1', ghost: el.dataset.ghost === '1'
       });
+      // data-clip : rien n'est dessiné sous cette ligne (l'horizon du menu), quel que soit le décor HTML.
+      if (el.dataset.clip) this.clearBelow(parseFloat(el.dataset.clip));
+    }
+
+    clearBelow(y) {
+      const gl = this.r.gl;
+      const was = gl.isEnabled(gl.SCISSOR_TEST);
+      const box = gl.getParameter(gl.SCISSOR_BOX);
+      gl.enable(gl.SCISSOR_TEST);
+      gl.scissor(0, 0, this.r.W, Math.max(0, Math.floor(this.toArt(0, y)[1])));
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.scissor(box[0], box[1], box[2], box[3]);
+      if (!was) gl.disable(gl.SCISSOR_TEST);
     }
 
     loop(now) {
@@ -231,7 +252,9 @@
         skip = (x, y) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
       }
       this.starFade = Math.max(0, Math.min(1, (this.starFade || 0) + (this.starsOn === false ? -dt : dt) * 0.7));
-      if (this.starFade > 0.01) r.drawStars(this.stars, phase, { reveal: this.starFade, phase, flash: 0, dim: dimBg * 0.85, flip: 1 }, Math.round((r.W * r.H) / 260), skip);
+      // Densité fixée en pixels CSS (une étoile pour starArea px²), quelle que soit la résolution.
+      const starCount = Math.round((window.innerWidth * window.innerHeight) / this.starArea);
+      if (this.starFade > 0.01) r.drawStars(this.stars, phase, { reveal: this.starFade, phase, flash: 0, dim: dimBg * (this.starDim || 0.85), flip: 1 }, starCount, skip);
       const els = document.querySelectorAll('[data-planet]');
       const top = [];
       for (const el of els) {

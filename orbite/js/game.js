@@ -250,6 +250,10 @@
     next.classList.add('active');
     ui.screen = name;
     stage.starsOn = !['splash', 'title', 'wake'].includes(name);
+    // Pendant la partie, le ciel s'efface derrière les planètes pour rester lisible.
+    const busySky = ['laws', 'game', 'end'].includes(name);
+    stage.starArea = busySky ? 3600 : 1800;
+    stage.starDim = busySky ? 0.6 : 0.85;
     [...next.querySelectorAll('[data-planet]')].forEach((o, i) => revealIn(o, 60 + i * 35));
   }
 
@@ -426,16 +430,6 @@
   const currentHorizon = () => HORIZONS.find((h) => h.id === store.get(HZ_ON, 'aube')) || HORIZONS[0];
   function applyHorizon() { stage.register('horizon', currentHorizon().look); }
 
-  const CREATOR = {
-    body: ['...XXX....', '...XXX....', '...XXX....', '....X.....', '..XXXXX...', '.XXXXXXX..', '..XXXXX...', '..XXXXX...', '..XXXXX...', '..XXXXX...', '..XX.XX...', '..XX.XX...', '..X...X...', '..X...X...', '..X...X...'],
-    f1: ['.....XX...', '......XXX.', '..........'],
-    f2: ['.....XX...', '......XX..', '........XX']
-  };
-  function creatorSvg() {
-    const rects = (rows, dy) => rows.map((row, y) => [...row].map((c, x) => (c === 'X' ? `<rect x="${x}" y="${y + dy}" width="1.02" height="1.02"/>` : '')).join('')).join('');
-    return `<g fill="#020407">${rects(CREATOR.body, 0)}</g><g class="f1" fill="#020407">${rects(CREATOR.f1, 4)}</g><g class="f2" fill="#020407">${rects(CREATOR.f2, 4)}</g>`;
-  }
-
   function layoutMenu() {
     const W = window.innerWidth, H = window.innerHeight;
     const horizon = Math.round(H * (W > H ? 0.66 : 0.6));
@@ -445,6 +439,7 @@
     pl.style.width = pl.style.height = 2 * R + 'px';
     pl.style.left = W / 2 - R + 'px';
     pl.style.top = cy - R + 'px';
+    pl.dataset.clip = horizon + 5;
     ui.menuR = R;
     ui.horizon = horizon;
     const g = stage.genome ? stage.genome('horizon') : null;
@@ -455,27 +450,20 @@
     let rims = '';
     const half = Math.sqrt(Math.max(0, R * R - (R * 0.3) ** 2));
     for (let x = 0; x < W + step; x += step) {
-      const mound = Math.max(0, 1 - Math.abs(x - W * 0.6) / 70) * 3;
       if (Math.random() < 0.35) y = Math.max(1, Math.min(8, y + (Math.random() < 0.5 ? -1 : 1)));
-      const yy = Math.round(y - mound);
+      const yy = y;
       path += ` H${x} V${yy}`;
       const lit = Math.max(0, 1 - Math.abs(x - W / 2) / half);
       if (lit > 0.05) rims += `<rect x="${x}" y="${yy}" width="${step}" height="1" fill="rgb(${rim.join(',')})" opacity="${(lit * 0.9).toFixed(2)}"/>`;
     }
     path += ` H${W} V${gh} Z`;
     const ground = $('menuGround');
+    // Étiré sur toute la largeur et jusqu'en bas, même si l'écran change de taille.
     ground.setAttribute('viewBox', `0 0 ${W} ${gh}`);
-    ground.setAttribute('width', W);
-    ground.setAttribute('height', gh);
+    ground.setAttribute('preserveAspectRatio', 'none');
     ground.style.top = horizon - 4 + 'px';
+    ground.style.height = gh + 'px';
     ground.innerHTML = `<path d="${path}" fill="#020407"/>${rims}`;
-    const cr = $('creator');
-    const cs = W > 700 ? 3 : 2;
-    cr.style.width = 10 * cs + 'px';
-    cr.style.height = 15 * cs + 'px';
-    cr.style.left = W * 0.6 - 4 * cs + 'px';
-    cr.style.top = horizon - 15 * cs + 'px';
-    if (!cr.innerHTML) cr.innerHTML = creatorSvg();
     $('menuList').style.top = horizon + Math.max(18, (H - horizon) * 0.12) + 'px';
   }
 
@@ -511,13 +499,10 @@
     document.querySelectorAll('.menu-item').forEach((b) => b.classList.remove('show'));
     $('menuWord').parentElement.classList.add('menu-fade');
     $('menuGround').style.opacity = 0;
-    $('creator').style.opacity = 0;
     await show('menu');
     const pl = $('menuPlanet');
     pl.animate([{ transform: `translateY(${Math.round(ui.menuR * 0.8)}px)` }, { transform: 'translateY(0)' }], { duration: first ? 5200 : 2400, easing: 'cubic-bezier(.16,.7,.2,1)' });
     $('menuGround').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 900, fill: 'forwards' });
-    $('creator').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1600, delay: first ? 2600 : 700, fill: 'forwards' });
-    $('creator').classList.add('wind');
     startAmbient();
     if (first) {
       await wait(3000);
@@ -538,7 +523,6 @@
     await show('menu');
     $('menuWord').parentElement.classList.remove('menu-fade');
     $('menuGround').style.opacity = 1;
-    $('creator').style.opacity = 1;
     document.querySelectorAll('.menu-item').forEach((b) => b.classList.add('show'));
     startAmbient();
   }

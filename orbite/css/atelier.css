@@ -15,7 +15,7 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--ink);
-  font-family: 'Pixelify Sans', monospace;
+  font-family: 'Chakra Petch', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
