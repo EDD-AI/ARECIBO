@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 24;
+  const VERSION = 25;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -104,9 +104,10 @@
     d.innerHTML = text;
     d.style.left = x + 'px';
     d.style.top = y + 'px';
-    d.style.animationDuration = dur(900) + 'ms';
+    const ms = /\bbuff\b/.test(cls || '') ? 1300 : 900;
+    d.style.animationDuration = dur(ms) + 'ms';
     document.body.appendChild(d);
-    setTimeout(() => d.remove(), dur(950));
+    setTimeout(() => d.remove(), dur(ms + 50));
   }
   function popOn(el, text, cls) {
     if (!el) return;
@@ -1409,9 +1410,33 @@
   }
 
   // ─── Effets pendant la création (buffs, mots-clés…) ──────────────────
+  // Texte d'un bonus : « +1 ⚔ +1 ♥ », en vert (ou en rouge s'il retire quelque chose).
+  function buffText(a, h) {
+    const part = (n, ic) => (n ? `<span>${n > 0 ? '+' : ''}${n}${icon(ic)}</span>` : '');
+    return part(a, 'sword') + part(h, 'heart');
+  }
+
   async function playShopEvents(events, model) {
     const units = model || null;
-    for (const e of events || []) {
+    const list = events || [];
+    // Les chiffres affichés repartent de l'état d'avant les effets, puis montent à chaque bonus
+    // (le système a parfois déjà été redessiné avec les valeurs finales) : chaque +1 se voit.
+    const shown = new Map();
+    if (!units && ui.state) {
+      const p = me();
+      for (const u of p.board.concat(p.hand)) shown.set(u.uid, { atk: u.atk, hp: u.hp });
+      for (let i = list.length - 1; i >= 0; i--) {
+        const e = list[i], st = shown.get(e.uid);
+        if (!st) continue;
+        if (e.t === 'buff') { st.atk -= e.a; st.hp -= e.h; }
+        else if (e.t === 'swap') { const t = st.atk; st.atk = st.hp; st.hp = t; }
+      }
+      const touched = new Set(list.filter((e) => e.t === 'buff' || e.t === 'swap').map((e) => e.uid));
+      for (const uid of touched) { const st = shown.get(uid); if (st) setStats(elByUid(uid), Math.max(0, st.atk), st.hp, false); }
+    }
+    let streak = 0;
+    for (const e of list) {
+      if (e.t !== 'buff') streak = 0;
       if (e.t === 'trigger') {
         const el = elByUid(e.uid);
         if (el) {
@@ -1422,17 +1447,26 @@
         await sleep(120);
       } else if (e.t === 'buff') {
         const el = elByUid(e.uid);
+        const st = shown.get(e.uid);
+        if (st) { st.atk = Math.max(0, st.atk + e.a); st.hp += e.h; }
         if (el) {
-          const atk = Number(el.querySelector('.atk').textContent) + e.a;
-          const hp = Number(el.querySelector('.hp').textContent) + e.h;
-          setStats(el, Math.max(0, atk), hp, true);
-          popOn(el, `+${e.a}/+${e.h}`, 'good');
-          const [x, y] = center(el.querySelector('.orb'));
-          stage.burst(x, y, { n: 14, colors: [[159, 240, 154], [255, 255, 255]], speed: 40, up: 30, life: 0.6 });
-          SFX.buff();
+          const atk = st ? st.atk : Math.max(0, Number(el.querySelector('.atk').textContent) + e.a);
+          const hp = st ? st.hp : Number(el.querySelector('.hp').textContent) + e.h;
+          setStats(el, atk, hp, true);
+          const good = e.a + e.h >= 0;
+          popOn(el, buffText(e.a, e.h), good ? 'good buff' : 'bad buff');
+          const orb = el.querySelector('.orb');
+          const [x, y] = center(orb);
+          const r = orb.getBoundingClientRect().width * 0.45;
+          const col = good ? [159, 240, 154] : [255, 120, 120];
+          stage.ring(x, y, r, { n: 26, colors: [col, [255, 255, 255]], speed: 30, life: 0.5, flat: 0.5 });
+          stage.burst(x, y, { n: 14, colors: [col, [255, 255, 255]], speed: 40, up: 30, life: 0.6 });
+          el.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }], { duration: 280, easing: 'ease-out' });
+          SFX.buff(panOf(el), streak);
         }
+        streak++;
         if (units) { const u = units.find((v) => v.uid === e.uid); if (u) { u.atk += e.a; u.hp += e.h; } }
-        await sleep(170);
+        await sleep(streak > 3 ? 120 : 190);
       } else if (e.t === 'kw') {
         const el = elByUid(e.uid);
         if (el) {
@@ -1448,8 +1482,9 @@
         const el = elByUid(e.uid);
         if (el) {
           await el.animate([{ transform: 'rotateY(0)' }, { transform: 'rotateY(90deg) scale(1.1)' }, { transform: 'rotateY(0)' }], { duration: 420 }).finished.catch(() => {});
-          const a = el.querySelector('.atk').textContent, h = el.querySelector('.hp').textContent;
-          setStats(el, h, a, true);
+          const st = shown.get(e.uid);
+          if (st) { const t = st.atk; st.atk = st.hp; st.hp = t; setStats(el, st.atk, st.hp, true); }
+          else { const a = el.querySelector('.atk').textContent, h = el.querySelector('.hp').textContent; setStats(el, h, a, true); }
           popOn(el, 'INVERSÉ', 'info');
         }
       } else if (e.t === 'gold') {
