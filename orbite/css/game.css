@@ -373,7 +373,10 @@ body.modal #gl { z-index: 35; }
 }
 .law:active { transform: scale(0.985); }
 .law.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 8%, transparent); }
-.law .orb { width: 92px; height: 92px; }
+.law .sphere { width: 92px; height: 92px; }
+canvas.sphere { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+.power .sphere.mini { width: 26px; height: 26px; flex: none; }
+.power-txt { min-width: 0; }
 .law h3 { margin: 4px 0 2px; font-size: 16px; font-weight: 600; letter-spacing: 0.04em; }
 .law .tag { margin: 0 0 6px; color: var(--dim); font-size: 12px; font-style: italic; }
 .law .txt { margin: 0; font-size: 13px; line-height: 1.35; }
@@ -750,7 +753,7 @@ body.in-combat .banner { top: calc(50% - 34px); }
 
 .rival-list { display: flex; flex-direction: column; gap: 2px; }
 .rival-row { display: grid; grid-template-columns: 22px 40px 1fr auto; gap: 10px; align-items: center; padding: 8px 2px; border-bottom: 1px solid var(--faint); text-align: left; width: 100%; }
-.rival-row .orb { width: 40px; height: 40px; }
+.rival-row .orb, .rival-row .sphere { width: 40px; height: 40px; }
 .rival-row .n { font-size: 14px; letter-spacing: 0.06em; }
 .rival-row .l { font-size: 11px; color: var(--dim); }
 .rival-row .h { font-size: 16px; color: var(--hp); }

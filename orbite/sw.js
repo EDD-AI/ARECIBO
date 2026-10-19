@@ -1,5 +1,5 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
-const CACHE = 'orbite-v3';
+const CACHE = 'orbite-v4';
 const SHELL = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const SHELL = [
   './js/sfx.js',
   './js/rules.js',
   './js/world.js',
+  './js/energy.js',
   './js/game.js',
   './js/atelier.js',
   './icons/icon-192.png',

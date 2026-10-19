@@ -850,7 +850,7 @@
     $('lawList').innerHTML = ui.lawOptions.map((id) => {
       const l = R.LAW[id], st = R.CARD[l.starter], f = R.FAMILIES[l.fam];
       return `<button class="law" data-law="${id}" style="--c:${f.color}">
-        <div class="orb" data-planet="${l.starter}"></div>
+        <canvas class="sphere" data-fam="${l.fam}" aria-hidden="true"></canvas>
         <div>
           <span class="fam-chip">${f.name.toUpperCase()}</span>
           <h3>${esc(l.name)}</h3>
@@ -860,6 +860,14 @@
         </div>
       </button>`;
     }).join('');
+    mountEnergy($('lawList'));
+  }
+  // Les lois sont des sphères d'énergie animées, colorées selon le pouvoir de leur famille.
+  function mountEnergy(root) {
+    for (const c of root.querySelectorAll('canvas.sphere:not([data-on])')) {
+      c.dataset.on = '1';
+      window.OrbiteEnergy.mount(c, c.dataset.fam);
+    }
   }
 
   $('lawList').addEventListener('click', (e) => {
@@ -869,7 +877,7 @@
     ui.lawPick = b.dataset.law;
     for (const x of $('lawList').children) x.classList.toggle('on', x === b);
     $('lawGo').disabled = false;
-    stage.flash(b.querySelector('.orb'), 0.5);
+    window.OrbiteEnergy.pulse(b.querySelector('canvas.sphere'));
   });
 
   $('lawGo').addEventListener('click', async () => {
@@ -1000,7 +1008,13 @@
     b.classList.toggle('armed', ui.targeting);
     const label = p.law === 'renversement' ? 'INVERSER' : p.law === 'ingenierie' ? '+ SONDE' : law.name.toUpperCase();
     const cost = active ? ` · ${law.active.cost} ${icon('bolt')}` : '';
-    b.innerHTML = `<span class="fam-dot"></span><span><b>${active ? 'POUVOIR' : 'LOI'}${active && p.powerUsed ? ' · UTILISÉ' : ''}</b>${label}${cost}</span>`;
+    const txt = `<b>${active ? 'POUVOIR' : 'LOI'}${active && p.powerUsed ? ' · UTILISÉ' : ''}</b>${label}${cost}`;
+    const cv = b.querySelector('canvas.sphere');
+    if (cv && cv.dataset.fam === law.fam) b.querySelector('.power-txt').innerHTML = txt;
+    else {
+      b.innerHTML = `<canvas class="sphere mini" data-fam="${law.fam}" aria-hidden="true"></canvas><span class="power-txt">${txt}</span>`;
+      mountEnergy(b);
+    }
   }
 
   function renderFight() {
@@ -1730,7 +1744,7 @@
       const board = p.board.map(staticUnit).join('');
       return `<button class="rival-row ${p.alive ? '' : 'dead'}" data-act="rival">
           <span class="rk">${p.alive ? i + 1 : p.rank}</span>
-          <span class="orb" data-planet="${law.starter}"></span>
+          <canvas class="sphere" data-fam="${law.fam}" aria-hidden="true"></canvas>
           <span><span class="n">${esc(p.name)}</span><br><span class="l" style="color:${famColor(law.fam)}">${esc(law.name)} · niveau ${p.tier}</span></span>
           <span class="h">${p.alive ? Math.max(0, p.hp) : 'éliminé'}</span>
         </button>
@@ -1738,6 +1752,7 @@
     }).join('');
     openSheet(`<h3>UNIVERS EN LICE · ${R.alivePlayers(s).length}</h3><div class="rival-list">${rows}</div>
       <p class="muted">Touchez un univers pour voir son dernier système, puis un astre pour lire ce qu’il fait. Les dégâts sont plafonnés à ${R.DAMAGE_CAP} tant que plus de trois univers sont en vie.</p>`);
+    mountEnergy($('sheet'));
   }
 
   function openFamilies() {
