@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 19;
+  const VERSION = 20;
   const DUST_KEY = 'orbite.poussieres';
   const SPEED_KEY = 'orbite.vitesse';
 
@@ -275,7 +275,9 @@
   // ─── Écrans ─────────────────────────────────────────────────
   async function show(name) {
     if (name !== 'menu' && $('menuList')) $('menuList').classList.remove('solo-open');
-    if (ui.updatePending && name !== 'game') { saveGame(); ui.updatePending = false; updateReady(true); }
+    // Une mise à jour en attente ne recharge la page qu'au retour au menu : jamais pendant une partie,
+    // une campagne ou l'écran de fin (gain d'expérience, passage de niveau).
+    if (ui.updatePending && name === 'menu') { saveGame(); ui.updatePending = false; setTimeout(() => updateReady(true), 0); }
     // Fonds : le cosmétique équipé pendant les parties (atténué pour la lisibilité), le ciel de la
     // Nébuleuse natale derrière la carte de campagne.
     stage.sky = name === 'game' || name === 'cFight' ? equippedSky() : name === 'cMap' ? 7 : 0;
@@ -2626,7 +2628,12 @@
       s.xpGiven = true;
       xpTo = xpFrom + gain.total;
       store.set(XP_KEY, String(xpTo));
+      // Le cadeau de chaque niveau franchi est versé tout de suite : l'animation qui suit ne fait
+      // que l'afficher, rien n'est perdu si l'appli se ferme pendant l'écran de fin.
+      s.levelGift = (levelInfo(xpTo).lvl - levelInfo(xpFrom).lvl) * LEVEL_GIFT;
+      if (s.levelGift) addDust(s.levelGift);
     }
+    const gift = s.levelGift || 0;
     $('end').classList.add('pending');
     const lv0 = levelInfo(xpFrom);
     $('xpLvl').textContent = lv0.lvl;
@@ -2641,13 +2648,13 @@
         : 'Votre univers s’est éteint. Seuls les trois premiers gagnent des poussières.';
     $('endBoard').innerHTML = me().board.map(staticUnit).join('');
     $('endDust').textContent = '+0';
-    $('endTotal').innerHTML = 'Total ' + icon('dust') + ' ' + (dust() - (s.reward || 0));
+    $('endTotal').innerHTML = 'Total ' + icon('dust') + ' ' + (dust() - (s.reward || 0) - gift);
     await show('end');
     if (rank <= 3) SFX.win(); else SFX.lose();
     const reward = s.reward || 0;
     if (reward) {
       const t0 = performance.now();
-      const base = dust() - reward;
+      const base = dust() - reward - gift;
       await new Promise((resolve) => {
         const tick = (now) => {
           const k = Math.min(1, (now - t0) / 1400);
@@ -2666,7 +2673,7 @@
       });
     }
     await wait(250);
-    await fillXp(xpFrom, xpTo);
+    await fillXp(xpFrom, xpTo, dust() - gift);
     $('end').classList.remove('pending');
   }
 
@@ -2700,7 +2707,7 @@
   }
 
   // La barre se remplit ; chaque niveau franchi déclenche l'explosion d'une planète.
-  async function fillXp(from, to) {
+  async function fillXp(from, to, shown) {
     let cur = from;
     while (cur < to) {
       const lv = levelInfo(cur);
@@ -2721,8 +2728,8 @@
       });
       cur = target;
       if (cur >= next) {
-        addDust(LEVEL_GIFT);
-        $('endTotal').innerHTML = 'Total ' + icon('dust') + ' ' + dust();
+        shown += LEVEL_GIFT;
+        $('endTotal').innerHTML = 'Total ' + icon('dust') + ' ' + shown;
         await levelUpScene(lv.lvl + 1);
         $('xpLvl').textContent = lv.lvl + 1;
         $('xpFill').style.width = '0%';
@@ -2939,8 +2946,8 @@
 
   // Mises à jour : une appli installée qu'on rouvre est souvent juste réveillée, sans recharger la
   // page. À chaque retour au premier plan (et toutes les 15 min), on compare la version en ligne à
-  // celle-ci ; si elle est plus récente, la page se recharge, ou au retour au menu si une partie
-  // est en cours (elle est sauvegardée).
+  // celle-ci ; si elle est plus récente, la page se recharge tout de suite si l'on est au menu,
+  // sinon au prochain retour au menu (la partie en cours est sauvegardée).
   async function checkUpdate() {
     if (!location.protocol.startsWith('http')) return;
     try { if (swReg) swReg.update(); } catch (err) { /* sans importance */ }
@@ -2955,7 +2962,7 @@
     let last = 0;
     try { last = Number(sessionStorage.getItem('orbite.maj')) || 0; } catch (err) { /* indisponible */ }
     if (Date.now() - last < 120000) return;
-    if (!force && (ui.screen === 'game' || ui.busy)) { ui.updatePending = true; return; }
+    if (!force && (ui.screen !== 'menu' || ui.busy || document.querySelector('.coach:not([hidden])'))) { ui.updatePending = true; return; }
     try { sessionStorage.setItem('orbite.maj', String(Date.now())); } catch (err) { /* indisponible */ }
     location.reload();
   }
