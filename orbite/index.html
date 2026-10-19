@@ -80,7 +80,7 @@
         <button data-tab="creation" role="tab">CRÉATION</button>
         <button data-tab="cosmetiques" role="tab">COSMÉTIQUES</button>
       </nav>
-      <div class="mk-scroll mk-pane" data-pane="planete">
+      <div class="mk-scroll mk-pane" data-pane="planete" data-clipbox>
         <div class="mk-hero">
           <div class="orb mk-planet" id="mkPlanet" data-planet="world-big" data-fit="body"></div>
           <div class="mk-state">
@@ -93,7 +93,8 @@
         <div class="mk-next" id="mkNext"></div>
         <div class="mk-list" id="mkList"></div>
       </div>
-      <div class="mk-scroll mk-pane" data-pane="creation" hidden>
+      <div class="mk-scroll mk-pane" data-pane="creation" data-clipbox hidden>
+        <div class="forge" id="forge"></div>
         <a class="mk-atelier" href="atelier.html">
           <span class="orb mk-atelier-orb" data-planet="atelier-apercu"></span>
           <span class="mk-kicker">CRÉATION</span>
@@ -282,5 +283,7 @@
   <script src="js/game.js"></script>
   <script src="js/campagne.js"></script>
   <script src="js/campagne-ui.js"></script>
+  <script src="js/forge.js"></script>
+  <script src="js/forge-ui.js"></script>
 </body>
 </html>

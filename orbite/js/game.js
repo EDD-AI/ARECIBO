@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 25;
+  const VERSION = 26;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -812,6 +812,7 @@
     for (const b of $('mkTabs').children) b.classList.toggle('on', b.dataset.tab === tab);
     for (const p of document.querySelectorAll('#market .mk-pane')) p.hidden = p.dataset.pane !== tab;
     if (tab === 'cosmetiques') { ui.cosPick = cosmetics().on || ''; renderCosmetics(); }
+    if (tab === 'creation' && window.__orbite.forge) window.__orbite.forge.render();
     stage.sky = tab === 'cosmetiques' && SKY_BY_ID[ui.cosPick] ? SKY_BY_ID[ui.cosPick].mode : 0;
     stage.skyGain = 1;
   }

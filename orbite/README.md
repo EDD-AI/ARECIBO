@@ -162,7 +162,36 @@ anneau (`livingWorld` dans `js/planet-engine.js`). Au niveau 120 elle ressemble 
 Trois onglets :
 
 - **Ma planète** : les 24 améliorations décrites plus haut.
-- **Création** : l’**Atelier des planètes** (`atelier.html`), le générateur pixel art avec export PNG et GIF, présenté avec une planète d’aperçu différente à chaque visite. Il n’est plus dans les Paramètres.
+- **Création** : la **Forge des mondes**, puis l’**Atelier des planètes** (`atelier.html`), le générateur pixel art avec export PNG et GIF.
+
+### Forge des mondes
+
+Une collection de planètes à façonner soi-même avec les poussières d’étoiles, en plus de « Ma
+planète ».
+- **Semer une graine** : la première est offerte. Les suivantes coûtent 30, 80, 150, 250 puis 400
+  poussières, pour 6 mondes au plus.
+- **Nourrir** fait grandir le monde d’un palier, et il grossit à l’écran. Il y a 15 paliers, de plus
+  en plus chers : 3, 4, 5, 7, 9, 12, 16, 21, 28, 36, 46, 58, 72, 90 et 110, soit 517 poussières pour
+  un monde complet.
+- **Chaque palier ouvre un emplacement.** Chaque ajout en prend un et se paie :
+  - ceinture de débris (10) ;
+  - facettes (10) ;
+  - silhouette (12) : double, brisée, amas, bloc, monolithe, diamant ou tore ;
+  - anneau (15) ;
+  - jusqu’à trois lunes (12, 20, 30) ;
+  - coque de lumière (25).
+
+  Certains ajouts demandent une taille minimale. Retirer un ajout est gratuit et libère sa place,
+  sans remboursement.
+- **Nature** : la première est offerte au premier repas, la changer coûte 6 + 2 × taille. Le cristal
+  demande une taille 3, la géante gazeuse une taille 6.
+- **Teinte** : 12 teintes à 2 poussières, montrées par de vraies mini-planètes.
+- **Remodeler le relief** (3) redessine les continents.
+- **Renommer** est gratuit.
+
+Les règles sont dans `js/forge.js` (testées par `tests/forge.test.mjs`) et l’interface dans
+`js/forge-ui.js`. La collection est enregistrée dans `orbite.forge`. Une liste qui défile et porte
+`data-clipbox` empêche ses astres de déborder sur l’en-tête : le moteur reçoit un cadre (`bound`).
 - **Cosmétiques** : des **fonds animés** qui remplacent le noir pendant les parties, à **650
   poussières d’étoiles** chacun. Toucher un fond l’essaie aussitôt derrière l’écran du marché. Une
   fois acheté, il s’équipe ; « Noir » remet le fond d’origine. Les fonds disponibles :
@@ -369,6 +398,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | Fichier | Rôle |
 |---|---|
 | `js/campagne.js`, `js/campagne-ui.js` | Campagne : règles (cartes, ennemis, carte, combat) et interface (récit, dialogues, carte, combat) |
+| `js/forge.js`, `js/forge-ui.js` | Forge des mondes : règles (paliers, prix, ajouts) et interface (onglet Création) |
 | `js/rules.js` | Règles pures et déterministes : catalogue, lois, création, fusion, combat (journal d’événements), bots |
 | `js/energy.js` | Sphères d’énergie des lois : petites sphères pixel art animées selon la famille (souffle, vortex, bascule, flammes, facettes, bandes, roche, grille) |
 | `js/world.js` | Votre planète : les 24 améliorations, leurs ères, niveaux, prix et effets |
@@ -381,7 +411,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `js/atelier.js` | Page générateur |
 | `css/` | Styles du jeu et de l’atelier ; `css/fonts.css` déclare la police embarquée |
 | `fonts/` | Chakra Petch (woff2, latin) et sa licence SIL OFL |
-| `tests/rules.test.mjs` | Tests des règles |
+| `tests/rules.test.mjs`, `tests/campagne.test.mjs`, `tests/forge.test.mjs` | Tests des règles, de la campagne et de la Forge |
 | `tools/equilibrage.js` | Simulation de parties entre bots : classement moyen par loi, famille et astre |
 | `tools/bots-duel.js` | Force des bots : IA experte contre IA de base dans les mêmes parties |
 | `manifest.webmanifest`, `sw.js`, `icons/` | Installation sur téléphone et hors ligne |
@@ -389,7 +419,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 ## Tests
 
 ```
-node --test orbite/tests/rules.test.mjs
+node --test orbite/tests/rules.test.mjs orbite/tests/campagne.test.mjs orbite/tests/forge.test.mjs
 ```
 
 Les tests vérifient la conservation de la réserve partagée à chaque action, les limites de main
