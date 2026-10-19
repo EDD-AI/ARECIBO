@@ -315,8 +315,8 @@ fiche de chaque astre les choisit avec `look.shape` dans `js/rules.js`.
 |---|---|
 | Comète (noyau de glace, queue soufflée à l’opposé de l’étoile) | Halley, Encke, Hale-Bopp, Hyakutake ; Météore et Ison en feu |
 | Planète brisée (morceaux écartés, cœur qui brûle dans les fissures) | Vestige (violet), Géode (vert), Forge stellaire (orange) |
-| Astéroïde double (deux lobes soudés) | Tchouri, Agate, Écho, Ossuaire |
-| Amas de cristaux (piquants) | Améthyste, Obsidienne (verre noir) |
+| Astéroïde double (deux lobes soudés) | Tchouri, Agate, Écho, Ossuaire, Comète (glace) |
+| Amas de cristaux (piquants) | Améthyste, Obsidienne (verre noir), Spore (Envers) |
 | Bipyramide | Diamant, Saphir, Émeraude, Foreuse, Sonde |
 | Bloc (cube arrondi) ou monolithe (dalle) | Basalte, Prisme, Sentinelle, Tesseract ; Monolithe, Quartz |
 | Anneau-monde (tore) | Station, Paradoxe |
