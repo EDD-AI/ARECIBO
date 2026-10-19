@@ -20,7 +20,9 @@ des **poussières d’étoiles**.
    montent du sol, des étoiles filantes passent. La première fois, « Voilà votre terrain de jeu. »
    s’écrit au centre.
 5. Menu : **Jouer solo**, **Multijoueur** (bientôt), **Marché stellaire**, **Paramètres**, et en
-   haut à droite le **profil** (pseudo, niveau, avatar = votre planète).
+   haut à droite le **profil** (pseudo, niveau, avatar = votre planète). **Jouer solo** se déplie
+   en accordéon sur **Campagne** et **Affrontement** (contre 7 univers) ; Multijoueur se replie
+   dessous. Le menu reste rangé.
 
 Les **Paramètres** gèrent le son, la vitesse des combats, l’atelier, les crédits, et permettent de
 revoir l’introduction.
@@ -44,7 +46,22 @@ Face à lui :
 
 Les silhouettes sont générées en pixel art (`figureSvg` dans `js/campagne-ui.js`).
 
-**Carte des chemins.** Elle compte 9 étages et des embranchements à suivre, avant le boss. Les cases :
+**Carte des chemins : un ciel en relief.** Les 9 étages sont posés dans un espace en perspective.
+Chaque rangée s’éloigne vers l’horizon où attend Kronos. Chaque astre flotte à sa propre hauteur et
+à sa propre distance : près de vous, ils sont grands et nets ; au loin, petits et voilés de brume.
+Des galaxies, une géante à anneaux et des astres errants peuplent les côtés.
+- **Glisser vers le haut** fait avancer le regard dans le ciel, avec de l’inertie. Les routes sont
+  en pointillés, épaisses au premier plan et fines au loin. Celles qui partent de votre monde
+  brillent et défilent.
+- **Toucher un astre entouré** fait voyager votre monde le long de la route : une traînée d’étoiles
+  le suit et la caméra l’accompagne, aussi sur les côtés. On choisit sa boucle : affronter, tenter
+  un mystère, se reposer ou défier un astre puissant, jusqu’à Kronos.
+- **Tutoriel de la carte** (première visite, `MAP_STEPS`) : les étapes, les routes, les types
+  d’astres, puis glisser pour regarder et toucher un astre pour partir.
+- Le code est dans `js/campagne-ui.js` (`worldLayout`, `project`, `placeMap`, `goNode`). Le fond
+  est un ciel dédié (mode 7 de `FS_SKY`), qui défile lentement avec la caméra.
+
+Les étapes :
 - **Affrontement** : astres errants (poussière, cailloux, comète, lune morte, météore, planète naine) ;
 - **Astre puissant** : Géante rouge, astéroïdes jumeaux ; ils donnent un **vestige** ;
 - **Mystère** : événement raconté, avec un choix ;
@@ -79,8 +96,10 @@ Pensé pour quelqu’un qui n’a jamais joué à un jeu de ce genre. Un « coac
 éclaire ce qu’il faut toucher, montre le geste avec un doigt animé (toucher ou glisser) et explique
 en une phrase. Il avance quand le joueur fait l’action demandée, ou sur « SUIVANT ».
 
-- **Guide du menu** (première visite) : Jouer solo, Marché stellaire et poussières d’étoiles,
-  Profil, Paramètres.
+- **Guide du menu** (première visite) : Jouer solo (ouvre Campagne et Affrontement), Marché
+  stellaire et poussières d’étoiles, Profil, Paramètres.
+- **Campagne** : le premier combat est guidé, et la carte en relief a son propre guide
+  (`MAP_STEPS`).
 - **Première partie guidée** :
   - le choix de la loi ;
   - les PV et l’énergie ;
@@ -131,14 +150,17 @@ Trois onglets :
 - **Cosmétiques** : des **fonds animés** qui remplacent le noir pendant les parties, à **650
   poussières d’étoiles** chacun. Toucher un fond l’essaie aussitôt derrière l’écran du marché. Une
   fois acheté, il s’équipe ; « Noir » remet le fond d’origine. Les fonds disponibles :
-  - Nébuleuse pourpre ;
-  - Aurore boréale ;
-  - Galaxie spirale ;
-  - Pluie d’étoiles filantes ;
-  - Trou noir lointain.
+  - **Nébuleuse pourpre** : nuages roses et violets, filaments sombres, cœur brûlant ;
+  - **Aurore boréale** : voiles verts et roses au-dessus de montagnes, reflétés dans un lac ;
+  - **Galaxie spirale** : cœur doré, bras bleus et roses ;
+  - **Voie lactée** : bande laiteuse et étoiles filantes jaillies d’un même point ;
+  - **Trou noir** : disque d’accrétion brûlant, lumière courbée ;
+  - **Piliers de la création** : colonnes de gaz sombre aux bords embrasés.
 
-  Ils sont dessinés en pixel art par `FS_SKY` (`js/planet-renderer.js`), sombres pour garder les
-  astres lisibles, et enregistrés dans `orbite.cosmetiques`.
+  Ce sont de vrais *splash arts* peints en pixel art par `FS_SKY` (`js/planet-renderer.js`). Ils sont
+  calculés à mi-résolution dans une texture, rafraîchie toutes les 50 ms, puis agrandie : c’est
+  léger pour le téléphone. Ils sont tramés en paliers de couleur pour le rendu pixel, et assombris
+  en partie pour garder les astres lisibles. Ils sont enregistrés dans `orbite.cosmetiques`.
 
 ## Profil
 

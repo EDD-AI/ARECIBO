@@ -56,8 +56,11 @@
       </button>
       <p class="subtitle center" id="menuLine"></p>
       <nav class="menu-list" id="menuList" aria-label="Menu principal">
-        <button class="menu-item" id="campBtn">CAMPAGNE <small>DÉMO · ACTE I</small></button>
-        <button class="menu-item" id="soloBtn">JOUER SOLO</button>
+        <button class="menu-item" id="soloBtn" aria-expanded="false">JOUER SOLO</button>
+        <div class="menu-sub" id="soloSub">
+          <button class="menu-item sub" id="campBtn">CAMPAGNE <small>DÉMO · ACTE I</small></button>
+          <button class="menu-item sub" id="quickBtn">AFFRONTEMENT <small>CONTRE 7 UNIVERS</small></button>
+        </div>
         <button class="menu-item soon" id="multiBtn">MULTIJOUEUR <small>BIENTÔT</small></button>
         <button class="menu-item" id="marketBtn">MARCHÉ STELLAIRE</button>
         <button class="menu-item" id="settingsBtn">PARAMÈTRES</button>
@@ -218,7 +221,7 @@
         <span class="cm-hp" id="cmHp"></span>
       </header>
       <div class="cm-bar"><button class="chip cm-deck" id="cmDeck"></button><div class="cm-relics" id="cmRelics"></div></div>
-      <div class="cm-scroll" id="cmScroll"><div class="cm-map" id="cmMap"></div></div>
+      <div class="cm-view" id="cmView"><svg class="cm-lines" id="cmLines" aria-hidden="true"></svg><div class="cm-layer" id="cmMap"></div><p class="cm-hint" id="cmHint">Glissez vers le haut pour regarder plus loin</p></div>
     </section>
 
     <!-- CAMPAGNE : combat -->
