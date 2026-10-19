@@ -167,6 +167,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `js/atelier.js` | Page générateur |
 | `css/` | Styles du jeu et de l’atelier |
 | `tests/rules.test.mjs` | Tests des règles |
+| `tools/equilibrage.js` | Simulation de parties entre bots : classement moyen par loi, famille et astre |
 | `manifest.webmanifest`, `sw.js`, `icons/` | Installation sur téléphone et hors ligne |
 
 ## Tests
@@ -181,6 +182,18 @@ le plafond de dégâts, le déterminisme et 160 parties complètes jouées par d
 
 ## Équilibrage
 
-Initial, réglé sur des parties simulées entre bots (rang moyen de chaque famille entre ~3,6 et
-~5,3 pour une moyenne idéale de 4,5). Les bots jouent simplement : un vrai joueur exploitera
-mieux les placements et les synergies.
+Réglé sur des parties entières simulées entre 8 bots : `node orbite/tools/equilibrage.js 6000`
+(environ 40 secondes). Idéal : rang moyen 4,5 et 12,5 % de victoires.
+
+| Mesure (6 000 parties) | Avant | Après |
+|---|---|---|
+| Rang moyen des lois (tous les univers) | 3,51 (Symbiose) à 5,21 (Ingénierie) | 4,20 à 4,85 |
+| Victoires de la meilleure loi | 26 % (Symbiose) | 16 % |
+| Rang moyen par famille dominante | 3,16 (Vie) à 5,57 (Machine) | 3,67 (Vie) à 4,58 (Machine) |
+
+Changements : Symbiose (+1 PV seulement), Éden, Terra et Genèse affaiblis ; Entropie ne renforce
+plus que le Néant ; Gravité (+0/+1) et Colosse (+1/+1) affaiblis ; Tempête, Machine, Envers et
+Brasier renforcés (statistiques, Titan +2/+1, Foreuse +1/+2, Sondes 3/3). Les systèmes sans famille
+dominante restent plus faibles (rang 5,05), ce qui récompense l’engagement dans une famille.
+La Vie reste la plus forte (20 % de victoires). Les bots jouent simplement : un vrai joueur
+exploitera mieux les placements et les synergies, d’autres familles peuvent donc ressortir.

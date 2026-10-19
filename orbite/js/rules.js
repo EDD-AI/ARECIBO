@@ -67,17 +67,17 @@
       endTurn(x, u, m) { x.habitable((b) => { for (const v of x.neighbors(u)) if (famOf(v) === 'vie') x.buff(v, m + b, m + b); }); } },
     { id: 'sol', fam: 'vie', tier: 3, atk: 3, hp: 5, name: 'Sol', sun: true, look: { type: 'star', seed: 505, starClass: 'naine jaune' },
       text: 'Soleil. Vos effets Habitable donnent +{1}/+{1} de plus.' },
-    { id: 'terra', fam: 'vie', tier: 3, atk: 4, hp: 4, name: 'Terra', look: { type: 'earth', seed: 606, moons: 1 },
+    { id: 'terra', fam: 'vie', tier: 3, atk: 3, hp: 4, name: 'Terra', look: { type: 'earth', seed: 606, moons: 1 },
       text: 'Habitable : fin de cycle, avec un Soleil, 2 autres astres de Vie gagnent +{1}/+{1}.',
       endTurn(x, u, m) { x.habitable((b) => { for (const v of x.pick(x.fam('vie', u), 2)) x.buff(v, m + b, m + b); }); } },
-    { id: 'genese', fam: 'vie', tier: 4, atk: 4, hp: 6, name: 'Genèse', look: { type: 'ocean', seed: 707, shell: true },
+    { id: 'genese', fam: 'vie', tier: 4, atk: 3, hp: 5, name: 'Genèse', look: { type: 'ocean', seed: 707, shell: true },
       text: 'Fin de cycle : vos autres astres de Vie gagnent +{1} PV, ou +{1}/+{1} avec un Soleil.',
       endTurn(x, u, m) { const sun = x.hasSun(); for (const v of x.fam('vie', u)) x.buff(v, sun ? m : 0, m); } },
     { id: 'helios', fam: 'vie', tier: 5, atk: 6, hp: 8, name: 'Hélios', sun: true, look: { type: 'star', seed: 808, starClass: 'étoile blanche' },
       text: 'Soleil. Vos effets Habitable se déclenchent {1} fois de plus.' },
-    { id: 'eden', fam: 'vie', tier: 6, atk: 8, hp: 9, name: 'Éden', look: { type: 'earth', seed: 909, shell: true, moons: 1 },
-      text: 'Fin de cycle : vos astres de Vie gagnent +{1}/+{1}, ou +{2}/+{2} avec un Soleil.',
-      endTurn(x, u, m) { const k = (x.hasSun() ? 2 : 1) * m; for (const v of x.fam('vie')) x.buff(v, k, k); } },
+    { id: 'eden', fam: 'vie', tier: 6, atk: 7, hp: 8, name: 'Éden', look: { type: 'earth', seed: 909, shell: true, moons: 1 },
+      text: 'Fin de cycle : vos astres de Vie gagnent +{1}/+{1}.',
+      endTurn(x, u, m) { for (const v of x.fam('vie')) x.buff(v, m, m); } },
 
     // NÉANT
     { id: 'cendre', fam: 'neant', tier: 1, atk: 2, hp: 1, name: 'Cendre', look: { type: 'dead', seed: 111 },
@@ -113,7 +113,7 @@
     { id: 'faille', fam: 'envers', tier: 1, atk: 1, hp: 2, name: 'Faille', look: { type: 'portal', seed: 1313, mood: 'envers', flip: true },
       text: 'Naissance : l’astre à sa gauche gagne Renaissance.',
       play(x, u) { x.kw(x.left(u), 'renaissance'); } },
-    { id: 'miroir', fam: 'envers', tier: 2, atk: 3, hp: 3, name: 'Miroir', look: { type: 'crystal', seed: 1414, mood: 'envers', flip: true },
+    { id: 'miroir', fam: 'envers', tier: 2, atk: 3, hp: 4, name: 'Miroir', look: { type: 'crystal', seed: 1414, mood: 'envers', flip: true },
       text: 'Effondrement : l’allié à sa gauche gagne Renaissance.',
       death(c, u, m, i) { c.kw(c.sideList(u.side)[i - 1], 'renaissance'); } },
     { id: 'revenant', fam: 'envers', tier: 2, atk: 3, hp: 3, name: 'Revenant', kw: ['renaissance'], look: { type: 'dead', seed: 1515, mood: 'envers', flip: true },
@@ -122,24 +122,24 @@
     { id: 'antipode', fam: 'envers', tier: 3, atk: 4, hp: 4, name: 'Antipode', look: { type: 'toxic', seed: 1616, mood: 'envers', flip: true },
       text: 'Quand un allié revient avec Renaissance, vos astres de l’Envers gagnent +{2}/+{2} pour le combat.',
       allyReborn(c, u, m) { for (const v of c.alliesFam(u.side, 'envers')) c.buff(v, 2 * m, 2 * m); } },
-    { id: 'spore', fam: 'envers', tier: 3, atk: 2, hp: 3, name: 'Spore', kw: ['venin'], look: { type: 'toxic', seed: 1717, mood: 'envers', flip: true },
+    { id: 'spore', fam: 'envers', tier: 3, atk: 2, hp: 4, name: 'Spore', kw: ['venin'], look: { type: 'toxic', seed: 1717, mood: 'envers', flip: true },
       text: 'Venin.' },
-    { id: 'outremonde', fam: 'envers', tier: 4, atk: 5, hp: 5, name: 'Outremonde', look: { type: 'portal', seed: 1818, flip: true },
+    { id: 'outremonde', fam: 'envers', tier: 4, atk: 5, hp: 6, name: 'Outremonde', look: { type: 'portal', seed: 1818, flip: true },
       text: 'Début de combat : inverse l’Attaque et les PV de l’ennemi le plus fort.',
       textGold: 'Début de combat : inverse l’Attaque et les PV des deux ennemis les plus forts.',
       start(c, u, m) { const t = c.ranked(1 - u.side).slice(0, m); for (const v of t) c.swap(v); } },
-    { id: 'revers', fam: 'envers', tier: 5, atk: 6, hp: 6, name: 'Revers', look: { type: 'crystal', seed: 1919, mood: 'envers', flip: true, debris: true },
+    { id: 'revers', fam: 'envers', tier: 5, atk: 6, hp: 8, name: 'Revers', look: { type: 'crystal', seed: 1919, mood: 'envers', flip: true, debris: true },
       text: 'Début de combat : vos astres de l’Envers gagnent Renaissance.',
       start(c, u) { for (const v of c.alliesFam(u.side, 'envers')) c.kw(v, 'renaissance'); } },
-    { id: 'envers', fam: 'envers', tier: 6, atk: 8, hp: 8, name: 'L’Envers', look: { type: 'portal', seed: 2020, mood: 'envers', flip: true },
+    { id: 'envers', fam: 'envers', tier: 6, atk: 8, hp: 10, name: 'L’Envers', look: { type: 'portal', seed: 2020, mood: 'envers', flip: true },
       text: 'Début de combat : inverse l’Attaque et les PV des ennemis qui ont plus d’Attaque que de PV.',
       start(c, u) { for (const v of c.allies(1 - u.side)) if (v.atk > v.hp) c.swap(v); } },
 
     // BRASIER
-    { id: 'braise', fam: 'brasier', tier: 1, atk: 2, hp: 2, name: 'Braise', look: { type: 'lava', seed: 2121 },
+    { id: 'braise', fam: 'brasier', tier: 1, atk: 2, hp: 3, name: 'Braise', look: { type: 'lava', seed: 2121 },
       text: 'Début de combat : inflige {1} dégât à un ennemi aléatoire.',
       start(c, u, m) { c.dmg(u, c.rnd(c.allies(1 - u.side)), m); } },
-    { id: 'scorie', fam: 'brasier', tier: 1, atk: 3, hp: 2, name: 'Scorie', look: { type: 'lava', seed: 2222, moons: 1 },
+    { id: 'scorie', fam: 'brasier', tier: 1, atk: 3, hp: 3, name: 'Scorie', look: { type: 'lava', seed: 2222, moons: 1 },
       text: 'Effondrement : inflige {2} dégâts à un ennemi aléatoire.',
       death(c, u, m) { c.dmg(u, c.rnd(c.allies(1 - u.side)), 2 * m); } },
     { id: 'vulcain', fam: 'brasier', tier: 2, atk: 3, hp: 3, name: 'Vulcain', look: { type: 'lava', seed: 2323, ring: true },
@@ -147,7 +147,7 @@
       attack(c, u, m) { for (const v of c.allies(1 - u.side)) c.dmg(u, v, m); } },
     { id: 'tison', fam: 'brasier', tier: 2, atk: 2, hp: 4, name: 'Tison', look: { type: 'star', seed: 2424, starClass: 'naine rouge' },
       text: 'Vos effets infligent +{1} dégât.' },
-    { id: 'magma', fam: 'brasier', tier: 3, atk: 4, hp: 4, name: 'Magma', look: { type: 'lava', seed: 2525, moons: 1 },
+    { id: 'magma', fam: 'brasier', tier: 3, atk: 4, hp: 5, name: 'Magma', look: { type: 'lava', seed: 2525, moons: 1 },
       text: 'Début de combat : inflige {3} dégâts à l’ennemi le plus fort.',
       start(c, u, m) { c.dmg(u, c.ranked(1 - u.side)[0], 3 * m); } },
     { id: 'pyro', fam: 'brasier', tier: 3, atk: 3, hp: 5, name: 'Pyrosphère', look: { type: 'lava', seed: 2626, debris: true },
@@ -156,7 +156,7 @@
     { id: 'nova', fam: 'brasier', tier: 4, atk: 5, hp: 4, name: 'Nova', look: { type: 'star', seed: 2727, starClass: 'étoile orange' },
       text: 'Effondrement : inflige {3} dégâts à tous les ennemis.',
       death(c, u, m) { for (const v of c.allies(1 - u.side)) c.dmg(u, v, 3 * m); } },
-    { id: 'geante', fam: 'brasier', tier: 5, atk: 6, hp: 7, name: 'Géante rouge', look: { type: 'star', seed: 2828, starClass: 'naine rouge' },
+    { id: 'geante', fam: 'brasier', tier: 5, atk: 6, hp: 8, name: 'Géante rouge', look: { type: 'star', seed: 2828, starClass: 'naine rouge' },
       text: 'Début de combat : inflige {2} dégâts à tous les ennemis.',
       start(c, u, m) { for (const v of c.allies(1 - u.side)) c.dmg(u, v, 2 * m); } },
     { id: 'supernova', fam: 'brasier', tier: 6, atk: 8, hp: 8, name: 'Supernova', look: { type: 'star', seed: 2929, starClass: 'géante bleue' },
@@ -191,10 +191,10 @@
       allyKill(c, u, m, killer) { if (famOf(killer) === 'glace') c.kw(killer, 'bouclier'); } },
 
     // TEMPÊTE
-    { id: 'brume', fam: 'tempete', tier: 1, atk: 2, hp: 3, name: 'Brume', look: { type: 'gas', seed: 4141 },
+    { id: 'brume', fam: 'tempete', tier: 1, atk: 2, hp: 4, name: 'Brume', look: { type: 'gas', seed: 4141 },
       text: 'Quand vous achetez un astre, gagne +{1} Attaque.',
       buy(x, u, m) { x.buff(u, m, 0); } },
-    { id: 'zephyr', fam: 'tempete', tier: 1, atk: 2, hp: 2, name: 'Zéphyr', kw: ['rafale'], look: { type: 'gas', seed: 4242 },
+    { id: 'zephyr', fam: 'tempete', tier: 1, atk: 2, hp: 3, name: 'Zéphyr', kw: ['rafale'], look: { type: 'gas', seed: 4242 },
       text: 'Rafale.' },
     { id: 'cumulus', fam: 'tempete', tier: 2, atk: 3, hp: 4, name: 'Cumulus', look: { type: 'gas', seed: 4343 },
       text: 'Naissance : vos autres astres de Tempête gagnent +{2} Attaque.',
@@ -202,16 +202,16 @@
     { id: 'nimbus', fam: 'tempete', tier: 2, atk: 3, hp: 4, name: 'Nimbus', look: { type: 'gas', seed: 4444, ring: true },
       text: 'Après son attaque : gagne +{2} Attaque pour le combat.',
       attack(c, u, m) { c.buff(u, 2 * m, 0); } },
-    { id: 'cyclone', fam: 'tempete', tier: 3, atk: 4, hp: 4, name: 'Cyclone', kw: ['rafale'], look: { type: 'gas', seed: 4545 },
+    { id: 'cyclone', fam: 'tempete', tier: 3, atk: 4, hp: 6, name: 'Cyclone', kw: ['rafale'], look: { type: 'gas', seed: 4545 },
       text: 'Rafale. Après chaque attaque : gagne +{1} Attaque pour le combat.',
       attack(c, u, m) { c.buff(u, m, 0); } },
     { id: 'orage', fam: 'tempete', tier: 3, atk: 3, hp: 6, name: 'Orage', look: { type: 'gas', seed: 4646, moons: 2 },
       text: 'Quand vous achetez un astre de Tempête, vos astres de Tempête gagnent +{1}/+{1}.',
       buy(x, u, m, b) { if (famOf(b) === 'tempete') for (const v of x.fam('tempete')) x.buff(v, m, m); } },
     { id: 'titan', fam: 'tempete', tier: 4, atk: 5, hp: 7, name: 'Titan', look: { type: 'gas', seed: 4747, ring: true, moons: 1 },
-      text: 'Fin de cycle : vos astres de Tempête gagnent +{2} Attaque.',
-      endTurn(x, u, m) { for (const v of x.fam('tempete')) x.buff(v, 2 * m, 0); } },
-    { id: 'ouragan', fam: 'tempete', tier: 5, atk: 6, hp: 7, name: 'Ouragan', kw: ['megarafale'], look: { type: 'gas', seed: 4848 },
+      text: 'Fin de cycle : vos astres de Tempête gagnent +{2}/+{1}.',
+      endTurn(x, u, m) { for (const v of x.fam('tempete')) x.buff(v, 2 * m, m); } },
+    { id: 'ouragan', fam: 'tempete', tier: 5, atk: 6, hp: 9, name: 'Ouragan', kw: ['megarafale'], look: { type: 'gas', seed: 4848 },
       text: 'Méga-rafale.' },
     { id: 'tempest', fam: 'tempete', tier: 6, atk: 8, hp: 9, name: 'Tempest', look: { type: 'gas', seed: 4949, ring: true, moons: 2 },
       text: 'Début de combat : vos astres de Tempête gagnent Rafale.',
@@ -241,31 +241,31 @@
       text: 'Rempart. Début de combat : vos autres Remparts gagnent +{3}/+{3}.',
       start(c, u, m) { for (const v of c.allies(u.side)) if (v !== u && v.kw.includes('rempart')) c.buff(v, 3 * m, 3 * m); } },
     { id: 'colosse', fam: 'mineral', tier: 6, atk: 8, hp: 14, name: 'Colosse', kw: ['rempart'], look: { type: 'asteroid', seed: 5959, debris: true },
-      text: 'Rempart. Fin de cycle : vos Remparts gagnent +{1}/+{2}.',
-      endTurn(x, u, m) { for (const v of x.board().filter((v) => v.kw.includes('rempart'))) x.buff(v, m, 2 * m); } },
+      text: 'Rempart. Fin de cycle : vos Remparts gagnent +{1}/+{1}.',
+      endTurn(x, u, m) { for (const v of x.board().filter((v) => v.kw.includes('rempart'))) x.buff(v, m, m); } },
 
     // MACHINE
-    { id: 'sonde', fam: 'machine', tier: 1, atk: 2, hp: 2, name: 'Sonde', kw: ['arrimage'], look: { type: 'mecha', seed: 6161 },
+    { id: 'sonde', fam: 'machine', tier: 1, atk: 2, hp: 3, name: 'Sonde', kw: ['arrimage'], look: { type: 'mecha', seed: 6161 },
       text: 'Arrimage.' },
-    { id: 'relais', fam: 'machine', tier: 1, atk: 2, hp: 3, name: 'Relais', look: { type: 'mecha', seed: 6262 },
-      text: 'Effondrement : invoque une Sonde {2}/{2} avec Arrimage.',
+    { id: 'relais', fam: 'machine', tier: 1, atk: 2, hp: 4, name: 'Relais', look: { type: 'mecha', seed: 6262 },
+      text: 'Effondrement : invoque une Sonde {3}/{3} avec Arrimage.',
       death(c, u, m, i) { c.summon(u.side, 'sonde-t', i, m); } },
-    { id: 'station', fam: 'machine', tier: 2, atk: 2, hp: 4, name: 'Station', kw: ['arrimage', 'bouclier'], look: { type: 'mecha', seed: 6363, ring: true },
+    { id: 'station', fam: 'machine', tier: 2, atk: 3, hp: 4, name: 'Station', kw: ['arrimage', 'bouclier'], look: { type: 'mecha', seed: 6363, ring: true },
       text: 'Arrimage. Bouclier.' },
     { id: 'foreuse', fam: 'machine', tier: 2, atk: 3, hp: 4, name: 'Foreuse', look: { type: 'mecha', seed: 6464 },
-      text: 'Naissance : vos autres Machines gagnent +{1}/+{1}.',
-      play(x, u, m) { for (const v of x.fam('machine', u)) x.buff(v, m, m); } },
-    { id: 'dyson', fam: 'machine', tier: 3, atk: 3, hp: 5, name: 'Dyson', look: { type: 'mecha', seed: 6565, moons: 1 },
+      text: 'Naissance : vos autres Machines gagnent +{1}/+{2}.',
+      play(x, u, m) { for (const v of x.fam('machine', u)) x.buff(v, m, 2 * m); } },
+    { id: 'dyson', fam: 'machine', tier: 3, atk: 4, hp: 6, name: 'Dyson', look: { type: 'mecha', seed: 6565, moons: 1 },
       text: 'Début de cycle : gagnez {1} énergie.',
       startTurn(x, u, m) { x.gold(m); } },
-    { id: 'arecibo', fam: 'machine', tier: 3, atk: 3, hp: 5, name: 'Arecibo', kw: ['arrimage', 'rempart'], look: { type: 'mecha', seed: 6666 },
+    { id: 'arecibo', fam: 'machine', tier: 3, atk: 4, hp: 6, name: 'Arecibo', kw: ['arrimage', 'rempart'], look: { type: 'mecha', seed: 6666 },
       text: 'Arrimage. Rempart.' },
-    { id: 'sentinelle', fam: 'machine', tier: 4, atk: 4, hp: 6, name: 'Sentinelle', kw: ['arrimage', 'bouclier', 'rempart'], look: { type: 'mecha', seed: 6767, ring: true },
+    { id: 'sentinelle', fam: 'machine', tier: 4, atk: 5, hp: 8, name: 'Sentinelle', kw: ['arrimage', 'bouclier', 'rempart'], look: { type: 'mecha', seed: 6767, ring: true },
       text: 'Arrimage. Bouclier. Rempart.' },
-    { id: 'forge', fam: 'machine', tier: 5, atk: 6, hp: 7, name: 'Forge stellaire', look: { type: 'mecha', seed: 6868, moons: 2 },
+    { id: 'forge', fam: 'machine', tier: 5, atk: 7, hp: 8, name: 'Forge stellaire', look: { type: 'mecha', seed: 6868, moons: 2 },
       text: 'Début de combat : vos Machines gagnent Bouclier.',
       start(c, u) { for (const v of c.alliesFam(u.side, 'machine')) c.kw(v, 'bouclier'); } },
-    { id: 'oeil', fam: 'machine', tier: 6, atk: 7, hp: 9, name: 'L’Œil', kw: ['arrimage', 'rafale', 'bouclier', 'venin'], look: { type: 'mecha', seed: 6969 },
+    { id: 'oeil', fam: 'machine', tier: 6, atk: 8, hp: 10, name: 'L’Œil', kw: ['arrimage', 'rafale', 'bouclier', 'venin'], look: { type: 'mecha', seed: 6969 },
       text: 'Arrimage. Rafale. Bouclier. Venin.' },
 
     // NEUTRES
@@ -294,20 +294,20 @@
     // JETONS (hors réserve)
     { id: 'debris', fam: 'neant', tier: 1, atk: 1, hp: 1, name: 'Débris', token: true, look: { type: 'asteroid', seed: 8181 },
       text: 'Fragment d’un monde effondré.' },
-    { id: 'sonde-t', fam: 'machine', tier: 1, atk: 2, hp: 2, name: 'Sonde', token: true, kw: ['arrimage'], look: { type: 'mecha', seed: 8282 },
+    { id: 'sonde-t', fam: 'machine', tier: 1, atk: 3, hp: 3, name: 'Sonde', token: true, kw: ['arrimage'], look: { type: 'mecha', seed: 8282 },
       text: 'Arrimage.' }
   ];
   const CARD = Object.fromEntries(CARDS.map((c) => [c.id, c]));
 
   const LAWS = [
-    { id: 'symbiose', fam: 'vie', name: 'Loi de symbiose', starter: 'aube', tagline: 'Tout commence par une étoile.', text: 'Fin de cycle : votre astre le plus faible gagne +1 PV, ou +1/+1 si c’est un astre de Vie.' },
-    { id: 'entropie', fam: 'neant', name: 'Loi de l’entropie', starter: 'cendre', tagline: 'Rien ne meurt en vain.', text: 'Quand un de vos astres s’effondre, les autres gagnent +1 Attaque pour le combat.' },
+    { id: 'symbiose', fam: 'vie', name: 'Loi de symbiose', starter: 'aube', tagline: 'Tout commence par une étoile.', text: 'Fin de cycle : votre astre le plus faible gagne +1 PV.' },
+    { id: 'entropie', fam: 'neant', name: 'Loi de l’entropie', starter: 'cendre', tagline: 'Rien ne meurt en vain.', text: 'Quand un de vos astres s’effondre, vos astres du Néant gagnent +1 Attaque pour le combat.' },
     { id: 'renversement', fam: 'envers', name: 'Loi du renversement', starter: 'reflet', tagline: 'Le haut est en bas.', text: 'Pouvoir (gratuit, une fois par cycle) : inverse l’Attaque et les PV d’un de vos astres, puis il gagne +1/+1.', active: { cost: 0, target: true } },
     { id: 'combustion', fam: 'brasier', name: 'Loi de combustion', starter: 'braise', tagline: 'Brûler avant de disparaître.', text: 'Début de combat : inflige 3 dégâts à un ennemi aléatoire.' },
     { id: 'stase', fam: 'glace', name: 'Loi de stase', starter: 'nive', tagline: 'Le silence est une forteresse.', text: 'Début de combat : vos deux premiers astres gagnent Bouclier.' },
     { id: 'vents', fam: 'tempete', name: 'Loi des vents', starter: 'brume', tagline: 'Tout ce qui bouge frappe.', text: 'Après chaque attaque, l’astre attaquant gagne +1 Attaque pour le combat.' },
-    { id: 'gravite', fam: 'mineral', name: 'Loi de gravité', starter: 'silex', tagline: 'Ce qui pèse dure.', text: 'Fin de cycle : vos Remparts gagnent +0/+2.' },
-    { id: 'ingenierie', fam: 'machine', name: 'Loi d’ingénierie', starter: 'sonde', tagline: 'Assembler les mondes.', text: 'Pouvoir (1 énergie, une fois par cycle) : ajoute une Sonde 2/2 Arrimage à votre main.', active: { cost: 1, target: false } }
+    { id: 'gravite', fam: 'mineral', name: 'Loi de gravité', starter: 'silex', tagline: 'Ce qui pèse dure.', text: 'Fin de cycle : vos Remparts gagnent +0/+1.' },
+    { id: 'ingenierie', fam: 'machine', name: 'Loi d’ingénierie', starter: 'sonde', tagline: 'Assembler les mondes.', text: 'Pouvoir (1 énergie, une fois par cycle) : ajoute une Sonde 3/3 Arrimage à votre main.', active: { cost: 1, target: false } }
   ];
   const LAW = Object.fromEntries(LAWS.map((l) => [l.id, l]));
 
@@ -743,12 +743,12 @@
     if (p.law === 'symbiose' && p.board.length) {
       const weak = p.board.slice().sort((a, b) => a.atk + a.hp - (b.atk + b.hp))[0];
       x.events.push({ t: 'law' });
-      x.buff(weak, famOf(weak) === 'vie' ? 1 : 0, 1);
+      x.buff(weak, 0, 1);
     }
     if (p.law === 'gravite') {
       const walls = p.board.filter((u) => u.kw.includes('rempart'));
       if (walls.length) x.events.push({ t: 'law' });
-      for (const u of walls) x.buff(u, 0, 2);
+      for (const u of walls) x.buff(u, 0, 1);
     }
     return x.events;
   }
@@ -886,7 +886,7 @@
               for (let k = 0; k < times; k++) { log({ t: 'fx', cid: u.cid }); card.death(c, u, u.m, idx); }
             }
             for (const v of alive(s)) fire(v, 'allyDeath', u);
-            if (players[s].law === 'entropie') for (const v of alive(s)) c.buff(v, 1, 0);
+            if (players[s].law === 'entropie') for (const v of alive(s)) if (famOf(v) === 'neant') c.buff(v, 1, 0);
             const k = u.killer;
             if (k && !k.dead && k.hp > 0) for (const v of alive(k.side)) fire(v, 'allyKill', k, u);
             if (u.kw.includes('renaissance') && !u.rebornUsed) {
