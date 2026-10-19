@@ -43,7 +43,10 @@
     wind: ['XX..XX..', '.XX..XX.', '..XX..XX', '.XX..XX.', 'XX..XX..'],
     drop: ['..X..', '.XXX.', 'XXXXX', 'XXXXX', '.XXX.'],
     magnet: ['X...X', 'X...X', 'X...X', 'XX.XX', '.XXX.'],
-    loop: ['.XXX.', 'X...X', 'X.X.X', '...X.', 'XXX..']
+    loop: ['.XXX.', 'X...X', 'X.X.X', '...X.', 'XXX..'],
+    sword: ['.....XX', '....XXX', '...XXX.', 'X.XXX..', '.XXX...', '.XXX...', 'X...X..'],
+    skull: ['.XXXX.', 'XXXXXX', 'X.XX.X', 'XXXXXX', '.XXXX.', '.X.X..'],
+    spark: ['...X...', '...X...', '..XXX..', 'XXXXXXX', '..XXX..', '...X...', '...X...']
   };
   function icon(name, cls) {
     const g = ICONS[name];
@@ -52,6 +55,16 @@
     g.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === 'X') rects += `<rect x="${x}" y="${y}" width="1.02" height="1.02"/>`; }));
     return `<svg class="pix ${cls || ''}" viewBox="0 0 ${w} ${h}" fill="currentColor" aria-hidden="true">${rects}</svg>`;
   }
+  // Les mêmes icônes en masque CSS, pour l'épée et le cœur devant chaque statistique.
+  function iconUrl(name) {
+    const g = ICONS[name];
+    const w = Math.max(...g.map((r) => r.length)), h = g.length;
+    let rects = '';
+    g.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === 'X') rects += `<rect x='${x}' y='${y}' width='1' height='1'/>`; }));
+    return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} ${h}' shape-rendering='crispEdges'>${rects}</svg>`)}")`;
+  }
+  document.documentElement.style.setProperty('--ico-atk', iconUrl('sword'));
+  document.documentElement.style.setProperty('--ico-hp', iconUrl('heart'));
 
   // ─── Outils ─────────────────────────────────────────────────
   const me = () => ui.state.players[0];
@@ -158,7 +171,12 @@
     else if (u.kw.includes('rafale')) k += icon('wind');
     if (u.kw.includes('venin')) k += `<span style="color:${famColor('envers')}">${icon('drop')}</span>`;
     if (u.kw.includes('arrimage') && (where === 'shop' || where === 'hand')) k += icon('magnet');
+    const marks = cardMarks(u.id);
+    if (marks.death) k = `<span class="mark" title="Effondrement">${icon('skull')}</span>` + k;
+    if (marks.effect) k = `<span class="mark" title="Effet">${icon('spark')}</span>` + k;
     el.querySelector('.kws').innerHTML = k;
+    el.dataset.kw = u.kw.join(' ');
+    el.dataset.golden = u.golden ? '1' : '0';
     if (where === 'shop') el.querySelector('.tierdots').innerHTML = '<i></i>'.repeat(c.tier);
     el.dataset.id = u.id;
     if (u.uid) el.dataset.uid = u.uid;
@@ -270,6 +288,7 @@
 
   // ─── Intro : Studio EDDA → titre → réveil → menu ────────────
   const WAKE_KEY = 'orbite.reveil';
+  const HINT_KEY = 'orbite.astuce';
   const HZ_OWNED = 'orbite.horizons';
   const HZ_ON = 'orbite.horizon';
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -593,8 +612,25 @@
       <button class="btn" data-act="set" data-v="help">COMMENT JOUER</button>
       <a class="btn" href="atelier.html">ATELIER DES PLANÈTES</a>
       <button class="btn" data-act="set" data-v="intro">REVOIR L’INTRODUCTION</button>
+      <button class="btn" data-act="set" data-v="credits">CRÉDITS</button>
       <button class="btn ghost" data-act="set" data-v="reset">EFFACER LA PROGRESSION</button>
     </div><p class="muted">Poussières d’étoiles, horizons et partie en cours restent sur cet appareil.</p>`;
+  }
+
+  // Crédits : qui a fait quoi, et les licences des ressources libres utilisées.
+  function creditsHtml() {
+    return `<h3>CRÉDITS</h3><div class="credits">
+      <section><b>ORBITE</b><span>Un jeu Studio Edda</span></section>
+      <section><b>PLANÈTES</b><span>Moteur de planètes d’ORBITE</span>
+        <small>Pixel art calculé en direct (WebGL2) : chaque graine donne un astre unique.</small></section>
+      <section><b>SONS</b><span>Kenney · kenney.nl</span>
+        <small>Interface Sounds et UI Audio (CC0), sons des Starter Kits FPS et 3D Platformer (CC0) et du Starter Kit City Builder (licence MIT). Copies issues des portages de Hugo Locurcio.</small></section>
+      <section><b>POLICE</b><span>Chakra Petch · Cadson Demak</span>
+        <small>SIL Open Font License, servie par Google Fonts.</small></section>
+      <section><b>LICENCE MIT · STARTER KIT CITY BUILDER</b>
+        <small class="legal">Copyright (c) 2025 Kenney. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</small></section>
+    </div>
+    <div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} PARAMÈTRES</button></div>`;
   }
 
   async function settingsAction(v, btn) {
@@ -604,6 +640,8 @@
       store.set(SPEED_KEY, String(ui.speed));
       openSheet(settingsHtml());
     } else if (v === 'help') openSheet(helpHtml());
+    else if (v === 'credits') openSheet(creditsHtml());
+    else if (v === 'settings') openSheet(settingsHtml());
     else if (v === 'intro') {
       closeSheet();
       stopAmbient();
@@ -667,6 +705,10 @@
     await show('game');
     renderGame(true);
     banner('CYCLE 1', 'Achetez des astres, puis lancez le combat.');
+    if (store.get(HINT_KEY, '') !== '1') {
+      store.set(HINT_KEY, '1');
+      setTimeout(() => toast('Touchez un astre pour lire ce qu’il fait. Glissez-le pour l’acheter ou le placer.', 5200), 2200);
+    }
   });
 
   // ─── Rendu de la partie ─────────────────────────────────────
@@ -1321,12 +1363,95 @@
         <div>
           <span class="fam-chip" style="--c:${f.color}">${f.name.toUpperCase()} · NIVEAU ${c.tier}${u.golden ? ' · DORÉ' : ''}</span>
           <h2>${esc(c.name)}</h2>
-          <div class="sheet-stats"><span class="atk">${u.atk}</span><span class="hp">${u.hp}</span></div>
+          ${statsHtml(u.atk, u.hp, 'sheet-stats')}
         </div>
       </div>
-      <p class="sheet-text">${esc(R.cardText(u.id, u.golden))}</p>
-      <div class="kw-list">${kwList(u.kw)}</div>${att}`;
+      ${effectHtml(u.id, u.golden, u.kw)}${att}`;
   }
+
+  // ─── Comprendre un astre ────────────────────────────────────
+  // Termes des textes, expliqués sous l'effet.
+  const TERMS = {
+    'Début de combat': 'Se déclenche juste avant la première attaque.',
+    'Début de cycle': 'Se déclenche au début de chaque phase d’achat.',
+    'Fin de cycle': 'Se déclenche quand vous lancez le combat, à la fin de vos achats.',
+    'Naissance': 'Se déclenche quand vous placez l’astre dans votre système.',
+    'Effondrement': 'Se déclenche quand l’astre est détruit en combat.',
+    'Habitable': 'Ne fonctionne que si votre système contient un Soleil.',
+    'Soleil': 'Compte comme un Soleil pour les effets Habitable.',
+    'Débris': 'Petit astre de roche laissé par un monde effondré.',
+    'pour le combat': 'Le bonus disparaît à la fin du combat.'
+  };
+  const HOOKS = ['play', 'endTurn', 'startTurn', 'buy', 'start', 'attack', 'allyAttack', 'allyDeath', 'shieldBreak', 'damaged', 'allyKill', 'reborn', 'allyReborn'];
+  function cardMarks(id) {
+    const c = R.CARD[id];
+    return {
+      death: typeof c.death === 'function',
+      effect: HOOKS.some((h) => typeof c[h] === 'function') || !!c.sun || /Vos effets/.test(c.text)
+    };
+  }
+  const KW_BY_NAME = Object.fromEntries(Object.entries(R.KEYWORDS).map(([k, v]) => [v.name, k]));
+  const WORDS = [...Object.keys(TERMS), ...Object.keys(KW_BY_NAME)].sort((a, b) => b.length - a.length);
+  const WORD_RE = new RegExp('(' + WORDS.map((w) => w.replace(/[-]/g, '\\-')).join('|') + ')', 'g');
+
+  function statsHtml(atk, hp, cls) {
+    return `<div class="${cls}"><span class="stat"><span class="atk">${atk}</span><small>ATTAQUE</small></span><span class="stat"><span class="hp">${hp}</span><small>PV</small></span></div>`;
+  }
+  function effectHtml(id, golden, kw) {
+    const text = R.cardText(id, golden);
+    const found = new Set();
+    const rich = esc(text).replace(WORD_RE, (w) => { found.add(w); return `<b>${w}</b>`; });
+    const defs = [];
+    for (const w of WORDS) {
+      if (!found.has(w)) continue;
+      if (TERMS[w]) defs.push(`<div><b>${w.toUpperCase()}</b>${esc(TERMS[w])}</div>`);
+    }
+    const kws = new Set(kw);
+    for (const w of found) if (KW_BY_NAME[w]) kws.add(KW_BY_NAME[w]);
+    return `<p class="sheet-text">${rich}</p><div class="kw-list">${defs.join('')}${kwList([...kws])}</div>`;
+  }
+
+  // Fiche rapide : touchez un astre en combat, chez un rival ou en fin de partie.
+  const peek = document.createElement('div');
+  peek.className = 'peek';
+  peek.hidden = true;
+  document.body.appendChild(peek);
+  function showPeek(el) {
+    const id = el.dataset.id;
+    const c = id && R.CARD[id];
+    if (!c) return;
+    const f = R.FAMILIES[c.fam];
+    const golden = el.dataset.golden === '1';
+    const orb = el.querySelector('.orb');
+    const kw = new Set((el.dataset.kw || '').split(' ').filter(Boolean));
+    if (orb && orb.dataset.shield === '1') kw.add('bouclier'); else if (orb && orb.dataset.shield === '0') kw.delete('bouclier');
+    if (orb && orb.dataset.ghost === '1') kw.add('renaissance'); else if (orb && orb.dataset.ghost === '0') kw.delete('renaissance');
+    const atk = el.querySelector('.atk') ? el.querySelector('.atk').textContent : c.atk;
+    const hp = el.querySelector('.hp') ? el.querySelector('.hp').textContent : c.hp;
+    peek.innerHTML = `<span class="fam-chip" style="--c:${f.color}">${f.name.toUpperCase()} · NIVEAU ${c.tier}${golden ? ' · DORÉ' : ''}</span>
+      <h4>${esc(c.name)}</h4>${statsHtml(atk, hp, 'peek-stats')}${effectHtml(id, golden, [...kw])}`;
+    peek.hidden = false;
+    const b = el.getBoundingClientRect();
+    const w = peek.offsetWidth, h = peek.offsetHeight;
+    const x = Math.max(10, Math.min(window.innerWidth - w - 10, b.left + b.width / 2 - w / 2));
+    const below = b.top + b.height / 2 < window.innerHeight / 2;
+    const y = below ? Math.min(window.innerHeight - h - 10, b.bottom + 8) : Math.max(10, b.top - h - 8);
+    peek.style.left = x + 'px';
+    peek.style.top = y + 'px';
+    peek.classList.remove('in');
+    void peek.offsetWidth;
+    peek.classList.add('in');
+    SFX.tap();
+    // En combat, la fiche s'efface seule pour ne pas cacher la bataille.
+    clearTimeout(peek.timer);
+    if (document.body.classList.contains('in-combat')) peek.timer = setTimeout(hidePeek, 3500);
+  }
+  function hidePeek() { clearTimeout(peek.timer); peek.hidden = true; }
+  document.addEventListener('pointerdown', (e) => { if (!peek.hidden && !peek.contains(e.target)) hidePeek(); }, true);
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest('#enemy .unit, body.in-combat #board .unit, #endBoard .unit, .rival-board .unit');
+    if (el) showPeek(el);
+  });
 
   $('sheet').addEventListener('click', async (e) => {
     const b = e.target.closest('[data-act]');
@@ -1418,12 +1543,14 @@
   }
 
   // ─── Rivaux, familles, menu, aide ───────────────────────────
+  const staticUnit = (u) => `<div class="unit" data-id="${u.id}" data-golden="${u.golden ? 1 : 0}" data-kw="${u.kw.join(' ')}"><div class="orb" data-planet="${u.id}" data-golden="${u.golden ? 1 : 0}"></div><div class="stats"><b class="atk">${u.atk}</b><b class="hp">${u.hp}</b></div></div>`;
+
   function openRivals() {
     const s = ui.state;
     const list = s.players.slice().sort((a, b) => (b.alive - a.alive) || (a.alive ? b.hp - a.hp : a.rank - b.rank));
     const rows = list.map((p, i) => {
       const law = R.LAW[p.law];
-      const board = p.board.map((u) => `<div class="unit"><div class="orb" data-planet="${u.id}" data-golden="${u.golden ? 1 : 0}"></div><div class="stats"><b class="atk">${u.atk}</b><b class="hp">${u.hp}</b></div></div>`).join('');
+      const board = p.board.map(staticUnit).join('');
       return `<button class="rival-row ${p.alive ? '' : 'dead'}" data-act="rival">
           <span class="rk">${p.alive ? i + 1 : p.rank}</span>
           <span class="orb" data-planet="${law.starter}"></span>
@@ -1433,7 +1560,7 @@
         <div class="row rival-board" hidden>${board || '<span class="muted">Système vide</span>'}</div>`;
     }).join('');
     openSheet(`<h3>UNIVERS EN LICE · ${R.alivePlayers(s).length}</h3><div class="rival-list">${rows}</div>
-      <p class="muted">Touchez un univers pour voir son dernier système. Les dégâts sont plafonnés à ${R.DAMAGE_CAP} tant que plus de trois univers sont en vie.</p>`);
+      <p class="muted">Touchez un univers pour voir son dernier système, puis un astre pour lire ce qu’il fait. Les dégâts sont plafonnés à ${R.DAMAGE_CAP} tant que plus de trois univers sont en vie.</p>`);
   }
 
   function openFamilies() {
@@ -1462,6 +1589,7 @@
       <li><b>Acheter</b> coûte 3 énergies (glissez un astre vers votre main ou directement dans le système). <b>Vendre</b> rend 1 énergie (glissez un astre du système vers la taverne). <b>Actualiser</b> coûte 1.</li>
       <li><b>Geler</b> garde la vitrine pour le cycle suivant. <b>Monter de niveau</b> débloque des astres plus puissants ; le prix baisse à chaque cycle.</li>
       <li>Votre système compte <b>7 orbites</b>, votre main 10 astres. Les astres attaquent de gauche à droite : l’ordre compte.</li>
+      <li><b>Touchez un astre</b> pour lire ce qu’il fait, même en combat ou chez un rival. Sous chaque astre : ${icon('sword')} son <b>Attaque</b> et ${icon('heart')} ses <b>PV</b>. En haut à droite : ${icon('skull')} il a un effet d’<b>Effondrement</b> (quand il est détruit, comme laisser des Débris), ${icon('spark')} il a un autre effet.</li>
       <li><b>Trois copies</b> d’un même astre fusionnent en un <b>astre doré</b> (stats doublées). Le placer offre une <b>découverte</b> du niveau supérieur.</li>
       <li>Chaque partie active <b>5 familles</b> sur 8, plus les neutres. La réserve est <b>partagée</b> : si des rivaux jouent une famille, ses astres se font rares.</li>
       <li>Le perdant subit : niveau du gagnant + niveaux de ses astres survivants. <b>Maximum ${R.DAMAGE_CAP} dégâts</b> tant que plus de trois univers sont en vie.</li>
@@ -1560,6 +1688,7 @@
       if (last) buildCombatRows(last.boards);
     }
     ui.time = 1;
+    hidePeek();
     SFX.ambience('game');
     const won = b.winner === 0, lost = b.winner === 1;
     if (won) {
@@ -1736,6 +1865,7 @@
         const [x, y] = center(orb);
         const b = orb.getBoundingClientRect();
         SFX.death(panOf(el));
+        ui.lastDeath = { row: el.parentElement, x, y, t: performance.now(), colors: stage.colors(el.dataset.id) };
         stage.flash(orb, 1);
         stage.burst(x, y, { n: 46, colors: stage.colors(el.dataset.id), speed: 95, life: 0.85, size: 2, spread: b.width * 0.3 });
         stage.ring(x, y, b.width * 0.25, { n: 24, colors: [[255, 255, 255]], speed: 80, life: 0.35 });
@@ -1765,8 +1895,21 @@
         stage.setReveal(orb, 0);
         stage.reveal(orb, 0, 1, dur(360));
         const [x, y] = center(orb);
+        const from = ui.lastDeath && ui.lastDeath.row === row && performance.now() - ui.lastDeath.t < 4000 / ui.time ? ui.lastDeath : null;
+        if (from) {
+          // Né d'un effondrement : l'astre jaillit des restes, comme un fragment projeté.
+          const dx = from.x - x, dy = from.y - y;
+          el.animate([
+            { transform: `translate(${dx}px, ${dy}px) scale(0.35)` },
+            { transform: `translate(${dx * 0.4}px, ${dy * 0.4 - 18}px) scale(0.8)`, offset: 0.55 },
+            { transform: 'translate(0, 0) scale(1)' }
+          ], { duration: dur(460), easing: 'cubic-bezier(.2,.7,.3,1)' });
+          stage.burst(from.x, from.y, { n: 22, colors: from.colors, speed: 70, life: 0.6, size: 2 });
+          if (e.reborn) SFX.summon(panOf(el)); else SFX.debris(panOf(el));
+        } else {
+          SFX.summon(panOf(el));
+        }
         stage.burst(x, y, { n: 16, colors: e.reborn ? [[220, 190, 255], [255, 255, 255]] : [[255, 255, 255]], speed: 40, life: 0.5 });
-        SFX.summon(panOf(el));
         if (e.reborn) popOn(el, 'RENAISSANCE', 'info');
         await sleep(300);
         break;
@@ -1839,7 +1982,7 @@
     $('endText').textContent = rank === 1 ? 'Votre système domine l’univers.'
       : rank <= 3 ? 'Sur le podium : les poussières d’étoiles sont à vous.'
         : 'Votre univers s’est éteint. Seuls les trois premiers gagnent des poussières.';
-    $('endBoard').innerHTML = me().board.map((u) => `<div class="unit"><div class="orb" data-planet="${u.id}" data-golden="${u.golden ? 1 : 0}"></div><div class="stats"><b class="atk">${u.atk}</b><b class="hp">${u.hp}</b></div></div>`).join('');
+    $('endBoard').innerHTML = me().board.map(staticUnit).join('');
     $('endDust').textContent = '+0';
     $('endTotal').innerHTML = 'Total ' + icon('dust') + ' ' + (dust() - (s.reward || 0));
     await show('end');

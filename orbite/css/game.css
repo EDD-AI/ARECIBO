@@ -417,8 +417,8 @@ body.in-combat .game-foot { margin-top: auto; }
 .row.previewing .unit { transition: translate 0.18s ease; }
 .orb { display: block; }
 .unit .orb { position: relative; width: var(--u); height: var(--u); }
-.unit .stats { display: flex; gap: 7px; margin-top: -3px; font-size: 13px; line-height: 1; }
-.hand-row .unit .stats { font-size: 11px; gap: 5px; }
+.unit .stats { display: flex; gap: 5px; margin-top: -3px; font-size: 13px; line-height: 1; white-space: nowrap; }
+.hand-row .unit .stats { font-size: 11px; gap: 4px; }
 .unit .stats b { font-weight: 600; }
 .unit .atk { color: var(--atk); }
 .unit .hp { color: var(--hp); }
@@ -439,6 +439,28 @@ body.in-combat .game-foot { margin-top: auto; }
 .unit .fam { width: 10px; height: 2px; margin-top: 3px; background: var(--fam); opacity: 0.85; }
 .unit .kws { position: absolute; top: 0; right: -2px; display: flex; flex-direction: column; gap: 2px; font-size: 10px; color: var(--ink); }
 .unit .kws .pix { width: auto; height: 8px; }
+.unit .kws .mark { display: flex; padding: 1px; color: var(--ink); background: #000; border: 1px solid rgba(241, 236, 218, 0.4); }
+.unit .kws .mark .pix { height: 6px; }
+
+/* Épée et cœur devant l'Attaque et les PV, partout où ils s'affichent. */
+.stats .atk::before, .stats .hp::before,
+.sheet-stats .atk::before, .sheet-stats .hp::before,
+.peek-stats .atk::before, .peek-stats .hp::before,
+.discover-item .s .atk::before, .discover-item .s .hp::before {
+  content: '';
+  display: inline-block;
+  width: 0.6em;
+  height: 0.6em;
+  margin-right: 0.16em;
+  vertical-align: 0.04em;
+  background: currentColor;
+  -webkit-mask: var(--ico-atk) center / contain no-repeat;
+  mask: var(--ico-atk) center / contain no-repeat;
+}
+.stats .hp::before, .sheet-stats .hp::before, .peek-stats .hp::before, .discover-item .s .hp::before {
+  -webkit-mask-image: var(--ico-hp);
+  mask-image: var(--ico-hp);
+}
 .unit.wall .orb::after {
   content: '';
   position: absolute;
@@ -569,10 +591,31 @@ body.in-combat .banner { top: calc(50% - 34px); }
 .sheet p { line-height: 1.4; }
 .sheet-top { display: grid; grid-template-columns: 116px 1fr; gap: 14px; align-items: center; }
 .sheet-orb { width: 116px; height: 116px; }
-.sheet-stats { display: flex; gap: 14px; font-size: 20px; font-weight: 600; margin-top: 6px; }
+.sheet-stats, .peek-stats { display: flex; gap: 16px; font-size: 20px; font-weight: 600; margin-top: 6px; }
+.sheet-stats .stat, .peek-stats .stat { display: inline-flex; align-items: baseline; gap: 6px; }
+.sheet-stats small, .peek-stats small { font-size: 10px; font-weight: 400; letter-spacing: 0.16em; color: var(--dim); }
 .sheet-stats .atk { color: var(--atk); }
 .sheet-stats .hp { color: var(--hp); }
 .sheet-text { margin: 14px 0 8px; font-size: 15px; }
+.sheet-text b { font-weight: 600; color: var(--ink); }
+
+/* Fiche rapide d'un astre (combat, rivaux, fin de partie). */
+.peek {
+  position: fixed;
+  z-index: 45;
+  width: min(300px, calc(100vw - 20px));
+  padding: 12px 14px 10px;
+  background: rgba(3, 3, 5, 0.97);
+  border: 1px solid var(--line);
+  pointer-events: auto;
+}
+.peek.in { animation: sheetPop 0.18s ease-out both; }
+.peek h4 { margin: 4px 0 0; font-size: 18px; font-weight: 600; letter-spacing: 0.06em; }
+.peek .peek-stats { font-size: 16px; }
+.peek .sheet-text { margin: 10px 0 6px; font-size: 13px; line-height: 1.35; }
+.peek .kw-list { margin: 4px 0 0; gap: 4px; }
+.peek .kw-list div { font-size: 11px; }
+.rival-board .unit, #endBoard .unit, #enemy .unit, body.in-combat #board .unit { cursor: pointer; }
 .kw-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
 .kw-list div { font-size: 12px; color: var(--dim); }
 .kw-list b { color: var(--ink); font-weight: 400; letter-spacing: 0.08em; margin-right: 6px; }
@@ -611,6 +654,12 @@ body.in-combat .banner { top: calc(50% - 34px); }
 .fam-item small { color: var(--dim); }
 
 .menu-list-sheet { display: flex; flex-direction: column; gap: 8px; }
+.credits { display: flex; flex-direction: column; gap: 16px; margin: 4px 0 8px; }
+.credits section { display: flex; flex-direction: column; gap: 3px; }
+.credits b { font-size: 11px; font-weight: 400; letter-spacing: 0.2em; color: var(--dim); }
+.credits span { font-size: 16px; }
+.credits small { font-size: 12px; line-height: 1.4; color: var(--dim); }
+.credits .legal { font-size: 10px; line-height: 1.45; opacity: 0.8; }
 .help { font-size: 14px; }
 .help li { margin-bottom: 7px; line-height: 1.4; }
 .help b { color: var(--ink); font-weight: 600; }

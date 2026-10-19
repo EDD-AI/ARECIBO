@@ -291,6 +291,11 @@
     buff(pan) { play(['pluck1', 'pluck2'], { vol: 0.16, jit: 0.1, pan }) || tone(1046, 0.07, { vol: 0.04 }); },
     venom(pan) { play('scratch', { vol: 0.14, rate: 0.7, pan }); },
     summon(pan) { play('rise', { vol: 0.24, rate: 1.6, rev: 0.5, pan, jit: 0 }); },
+    // Un fragment projeté par un astre qui s'effondre (Débris, Sonde…).
+    debris(pan) {
+      if (!play(CRUMBLE, { vol: 0.3, rate: 1.3, pan })) { noise(0.12, { vol: 0.08, cut: 2000 }); return; }
+      play(PLACE, { vol: 0.35, rate: 1.2, pan, delay: 0.38 });
+    },
     coin() { play('coin', { vol: 0.1, jit: 0.12 }); },
     win() {
       if (!buffers.glass1) { [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, 0.18, { delay: i * 0.09, type: 'triangle', vol: 0.07 })); return; }

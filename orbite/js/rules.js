@@ -248,7 +248,7 @@
     { id: 'sonde', fam: 'machine', tier: 1, atk: 2, hp: 2, name: 'Sonde', kw: ['arrimage'], look: { type: 'mecha', seed: 6161 },
       text: 'Arrimage.' },
     { id: 'relais', fam: 'machine', tier: 1, atk: 2, hp: 3, name: 'Relais', look: { type: 'mecha', seed: 6262 },
-      text: 'Effondrement : invoque une Sonde {1}/{1}.',
+      text: 'Effondrement : invoque une Sonde {2}/{2} avec Arrimage.',
       death(c, u, m, i) { c.summon(u.side, 'sonde-t', i, m); } },
     { id: 'station', fam: 'machine', tier: 2, atk: 2, hp: 4, name: 'Station', kw: ['arrimage', 'bouclier'], look: { type: 'mecha', seed: 6363, ring: true },
       text: 'Arrimage. Bouclier.' },

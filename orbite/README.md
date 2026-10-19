@@ -24,6 +24,21 @@ Le **Marché stellaire** dépense les poussières d’étoiles : chaque achat d�
 **horizon** (la planète du menu). Les **Paramètres** gèrent le son, la vitesse des combats,
 l’atelier, et permettent de revoir l’introduction.
 
+## Lire un astre
+
+- Sous chaque astre : l’épée donne son **Attaque**, le cœur ses **PV**.
+- En haut à droite : le crâne signale un effet d’**Effondrement** (quand l’astre est détruit),
+  l’étincelle un autre effet ; les autres icônes sont ses mots-clés.
+- **Toucher un astre** ouvre sa fiche : effet expliqué, termes définis (Naissance, Fin de cycle,
+  Habitable…). En combat, chez un rival ou en fin de partie, une fiche rapide s’affiche à côté.
+- Les astres qui laissent des **Débris** en s’effondrant (Cendre, Nyx, Ossuaire, et Relais qui
+  laisse une Sonde) les projettent depuis leurs restes ; Linceul double ces effets.
+
+## Crédits
+
+Paramètres → **Crédits** : Studio Edda, les sons de Kenney (CC0 et MIT, avec l’avis de licence
+MIT), la police Chakra Petch (SIL Open Font License). Détail des sons dans `audio/README.md`.
+
 ## Sons
 
 Des sons naturels plutôt que des bips : impacts de pierre, éboulis, éclats de verre, gouttes,
