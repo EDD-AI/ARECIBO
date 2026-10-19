@@ -438,7 +438,7 @@
   }
 
   // Formes non sphériques (dessinées par marche de rayon dans le moteur de rendu).
-  const SHAPE_KEYS = ['double', 'brisee', 'amas', 'anneau', 'bloc', 'monolithe', 'diamant', 'foret'];
+  const SHAPE_KEYS = ['double', 'brisee', 'amas', 'anneau', 'bloc', 'monolithe', 'diamant', 'foret', 'antenne'];
   function makeShape(name, r, body) {
     const tumble = () => { body.roll = r.range(-1.2, 1.2); body.pitch = r.range(-0.9, 0.9); };
     switch (name) {
@@ -479,6 +479,12 @@
         body.roll = r.range(-0.3, 0.3);
         body.pitch = r.range(-0.35, 0.35);
         return { kind: 7, P: [0.74, 1, 0.74, 0], Q: [0, 1, 1.05, 0] };
+      }
+      // Radiotélescope : une parabole (calotte de sphère creuse), son récepteur et sa pile.
+      case 'antenne': {
+        body.roll = r.range(-0.15, 0.15);
+        body.pitch = r.range(0.45, 0.6);
+        return { kind: 8, P: [1.3, 0.42, 0.05, 0.1], Q: [0, 1, 1.3, 0] };
       }
       case 'foret': {
         body.roll = r.range(-0.6, 0.6);

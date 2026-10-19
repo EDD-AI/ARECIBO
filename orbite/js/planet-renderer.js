@@ -496,6 +496,23 @@ float shapeSDF(vec3 q, out float cut) {
     vec3 d = abs(b) - uSh.xyz;
     return length(max(d, 0.0)) + min(max(d.x, max(d.y, d.z)), 0.0) - uSh.w - lump;
   }
+  if (k == 8) {
+    // Radiotélescope : une parabole (coquille de sphère de rayon uSh.x, coupée à la hauteur uSh.y)
+    // tournée vers le ciel (+y), son récepteur au foyer et sa pile.
+    vec3 p = b + vec3(0.0, 0.22, 0.0);
+    vec3 c = vec3(0.0, uSh.x, 0.0);
+    float dish = max(abs(length(p - c) - uSh.x) - uSh.z, p.y - uSh.y);
+    float f = uSh.x * 0.5;
+    vec3 pa = vec3(0.0, 0.02, 0.0), pb = vec3(0.0, f, 0.0);
+    float t = clamp(dot(p - pa, pb - pa) / dot(pb - pa, pb - pa), 0.0, 1.0);
+    float feed = length(p - pa - (pb - pa) * t) - 0.035;
+    float horn = length(p - pb) - uSh.w;
+    vec3 qa = vec3(0.0, -0.02, 0.0), qb = vec3(0.0, -0.75, 0.0);
+    float s2 = clamp(dot(p - qa, qb - qa) / dot(qb - qa, qb - qa), 0.0, 1.0);
+    float mast = length(p - qa - (qb - qa) * s2) - 0.1;
+    float base = length(max(abs(p - vec3(0.0, -0.8, 0.0)) - vec3(0.32, 0.06, 0.32), 0.0)) - 0.02;
+    return min(min(min(dish, mast), base), min(feed, horn));
+  }
   if (k == 7) {
     vec3 a = abs(b);
     return (a.x / uSh.x + a.y / uSh.y + a.z / uSh.z - 1.0) * 0.45 * min(uSh.x, min(uSh.y, uSh.z)) - lump;

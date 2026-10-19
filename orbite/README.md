@@ -221,15 +221,62 @@ Les règles sont dans `js/forge.js` (testées par `tests/forge.test.mjs`) et l�
 
 ## Profil
 
-Bouton en haut à droite du menu :
+Bouton en haut à droite du menu, en trois onglets : **Profil**, **Amis** et **Classement**.
 
-- **Pseudo** modifiable et tag à quatre chiffres (`Créateur#4821`), niveau, barre d’XP, votre planète.
-- **Classé** (à venir avec le multijoueur) : 5 parties de placement puis un rang mondial, de la
-  Poussière à la Singularité : Poussière, Astéroïde, Lune, Planète, Géante, Étoile, Nébuleuse,
-  Pulsar (divisions I à III) et **Singularité** pour le top 500 mondial. Pour l’instant : « Non classé ».
+- **Profil** :
+  - la carte « En ligne » (voir plus bas) ;
+  - le pseudo modifiable et le tag à quatre chiffres (`Créateur#4821`), le niveau, la barre d’XP et
+    votre planète ;
+  - le classé, les statistiques et les 15 dernières parties.
+- **Classé** (`js/classement.js`, testé). Chaque partie d’Affrontement compte, et un abandon vaut
+  la 8e place.
+  - 5 parties de placement fixent le départ : un rang moyen de 1 donne Planète I, de 8 donne zéro.
+  - Ensuite, les points changent selon la place : +40, +28, +16, +6, −6, −14, −22, −30.
+  - 9 rangs : Poussière, Astéroïde, Lune, Planète, Géante, Étoile, Nébuleuse, Pulsar, chacun en
+    divisions III, II, I de 100 points, puis **Singularité** dès 2 400 points.
+  - L’écran de fin affiche le gain (« +28 points · Lune II », « RANG SUPÉRIEUR ! »).
 - **Statistiques** : parties, victoires, podiums, rang moyen, meilleur rang, combats gagnés, astres
   dorés, cycles joués, poussières gagnées, loi favorite.
-- **Dernières parties** : les 15 dernières (rang, loi, cycles, date).
+
+## Mode en ligne (Firebase)
+
+Le jeu reste entièrement jouable hors ligne. Le mode en ligne s’active quand `js/online-config.js`
+contient la configuration Firebase du projet ; sinon, le Profil annonce « bientôt ».
+
+- **Connexion avec Google**, dans le Profil. Le jeu passe par une fenêtre Google et, si elle est
+  bloquée, par une redirection.
+- **Sauvegarde en ligne** (`saves/{uid}`) : toutes les clés `orbite.*` sauf la partie et
+  l’expédition en cours.
+  - L’envoi se fait à la connexion, toutes les 20 s si quelque chose a changé, et au passage en
+    arrière-plan.
+  - Sur un nouvel appareil, la progression revient du nuage. Si les deux ont avancé, la plus avancée
+    l’emporte d’elle-même. On ne demande au joueur de choisir que si chacune est en avance sur un
+    point.
+- **Profil public** (`profiles/{uid}`) : pseudo, tag, code ami, niveau, classé, parties, victoires,
+  planète et système de la Forge.
+- **Amis** (`friends/{a_b}`). Chaque joueur a un **code ami** de 6 caractères.
+  - On ajoute un ami avec son code ; il accepte ou refuse, et une pastille signale les demandes.
+  - Depuis la liste, **Visiter** ouvre son système de la Forge en lecture seule.
+- **Classement** : le **monde** (les 50 meilleurs classés) ou **vos amis**. Toucher un joueur ouvre
+  sa fiche et permet de visiter son système.
+- **Sécurité** (`firebase/firestore.rules`) : chacun n’écrit que ses propres documents, avec des
+  champs vérifiés. Une amitié ne s’accepte que par celui qui l’a reçue.
+
+**Mise en service, une seule fois, par le propriétaire du jeu :**
+1. Sur console.firebase.google.com, **Ajouter un projet** (par exemple « orbite »). Google Analytics
+   n’est pas nécessaire.
+2. **Authentication** → Commencer → **Google** → Activer → choisir l’e-mail d’assistance →
+   Enregistrer.
+3. **Authentication** → Paramètres → **Domaines autorisés** → Ajouter `edd-ai.github.io`.
+4. **Firestore Database** → Créer une base → mode production, région `europe-west9` (Paris).
+5. **Firestore** → **Règles** : coller le contenu de `firebase/firestore.rules` → Publier.
+6. **Paramètres du projet** (roue dentée) → Vos applications → **Web** (`</>`) → nom « ORBITE »
+   (sans Hosting). Copier l’objet `firebaseConfig` dans `js/online-config.js`, à la place de
+   `null`.
+
+**Tests contre les émulateurs** : `firebase emulators:start --project demo-orbite` dans `firebase/`.
+Le module accepte `window.ORBITE_FIREBASE_EMULATOR = { auth, host, port }`, qui ouvre aussi une
+connexion Google simulée pour les tests.
 
 ## Niveau du créateur
 
@@ -267,14 +314,16 @@ fiche de chaque astre les choisit avec `look.shape` dans `js/rules.js`.
 | Forme | Astres |
 |---|---|
 | Comète (noyau de glace, queue soufflée à l’opposé de l’étoile) | Halley, Encke, Hale-Bopp, Hyakutake ; Météore et Ison en feu |
-| Planète brisée (morceaux écartés, cœur qui brûle dans les fissures) | Vestige (violet), Géode (vert) |
+| Planète brisée (morceaux écartés, cœur qui brûle dans les fissures) | Vestige (violet), Géode (vert), Forge stellaire (orange) |
 | Astéroïde double (deux lobes soudés) | Tchouri, Agate, Écho, Ossuaire |
 | Amas de cristaux (piquants) | Améthyste, Obsidienne (verre noir) |
-| Bipyramide | Diamant, Saphir, Émeraude, Foreuse |
+| Bipyramide | Diamant, Saphir, Émeraude, Foreuse, Sonde |
 | Bloc (cube arrondi) ou monolithe (dalle) | Basalte, Prisme, Sentinelle, Tesseract ; Monolithe, Quartz |
 | Anneau-monde (tore) | Station, Paradoxe |
 | Éclipse (disque noir et couronne) | Éclipse |
 | Croissant (éclairé par l’arrière) | Séléné, Luna, Nyx |
+| Radiotélescope (parabole tournée vers le ciel, récepteur, pile) | Arecibo |
+| Sphère et anneau, sphère dans une coque | Relais ; Dyson |
 
 Dans l’atelier, ces formes apparaissent aussi au hasard (une fois sur cinq pour les astéroïdes,
 lunes, cristaux, machines…), et « Comète » et « Éclipse » rejoignent la liste des natures.
@@ -286,8 +335,9 @@ MIT), la police Chakra Petch (SIL Open Font License, embarquée dans `fonts/` av
 
 ## Musique
 
-Thème du menu : **« Orbiting Wonder »** (Studio Edda, créé avec Suno), `audio/menu.mp3`, réencodé en
-MP3 128 kbit/s. Il démarre au toucher sur le titre, accompagne l’accueil, le marché, le profil et
+Deux thèmes (Studio Edda, créés avec Suno), réencodés en MP3 128 kbit/s, qui se suivent l’un
+après l’autre : **« Distant Earth »** (`audio/earth.mp3`), le thème principal, puis **« Orbiting
+Wonder »** (`audio/menu.mp3`). La musique démarre au toucher sur le titre, accompagne l’accueil, le marché, le profil et
 le choix de la loi, puis s’efface en fondu au début d’une partie (l’ambiance spatiale reprend). Il
 passe par le graphe WebAudio pour des fondus fiables, y compris sur iPhone. Paramètres → Musique
 le coupe sans couper les bruitages.
@@ -436,6 +486,9 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 |---|---|
 | `js/campagne.js`, `js/campagne-ui.js` | Campagne : règles (cartes, ennemis, carte, combat) et interface (récit, dialogues, carte, combat) |
 | `js/forge.js`, `js/forge-ui.js` | Forge des mondes : règles (paliers, prix, ajouts) et interface (onglet Création) |
+| `js/classement.js` | Mode classé : placements, points, rangs et divisions |
+| `js/online-config.js`, `js/online.js`, `js/online-ui.js` | Mode en ligne : configuration Firebase, connexion, sauvegarde, amis, classement, et leur interface |
+| `firebase/` | Règles de sécurité Firestore et configuration des émulateurs |
 | `js/rules.js` | Règles pures et déterministes : catalogue, lois, création, fusion, combat (journal d’événements), bots |
 | `js/energy.js` | Sphères d’énergie des lois : petites sphères pixel art animées selon la famille (souffle, vortex, bascule, flammes, facettes, bandes, roche, grille) |
 | `js/world.js` | Votre planète : les 24 améliorations, leurs ères, niveaux, prix et effets |
@@ -457,7 +510,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 ## Tests
 
 ```
-node --test orbite/tests/rules.test.mjs orbite/tests/campagne.test.mjs orbite/tests/forge.test.mjs
+node --test orbite/tests/rules.test.mjs orbite/tests/campagne.test.mjs orbite/tests/forge.test.mjs orbite/tests/classement.test.mjs
 ```
 
 Les tests vérifient la conservation de la réserve partagée à chaque action, les limites de main

@@ -253,9 +253,9 @@
       endTurn(x, u, m) { for (const v of x.board().filter((v) => v.kw.includes('rempart'))) x.buff(v, m, m); } },
 
     // MACHINE
-    { id: 'sonde', fam: 'machine', tier: 1, atk: 2, hp: 3, name: 'Sonde', kw: ['arrimage'], look: { type: 'mecha', seed: 6161 },
+    { id: 'sonde', fam: 'machine', tier: 1, atk: 2, hp: 3, name: 'Sonde', kw: ['arrimage'], look: { type: 'mecha', seed: 6161, shape: 'diamant' },
       text: 'Arrimage.' },
-    { id: 'relais', fam: 'machine', tier: 1, atk: 2, hp: 4, name: 'Relais', look: { type: 'mecha', seed: 6262 },
+    { id: 'relais', fam: 'machine', tier: 1, atk: 2, hp: 4, name: 'Relais', look: { type: 'mecha', seed: 6262, ring: true },
       text: 'Effondrement : invoque une Sonde {3}/{3} avec Arrimage.',
       death(c, u, m, i) { c.summon(u.side, 'sonde-t', i, m); } },
     { id: 'station', fam: 'machine', tier: 2, atk: 3, hp: 4, name: 'Station', kw: ['arrimage', 'bouclier'], look: { type: 'mecha', seed: 6363, shape: 'anneau' },
@@ -263,14 +263,14 @@
     { id: 'foreuse', fam: 'machine', tier: 2, atk: 3, hp: 4, name: 'Foreuse', look: { type: 'mecha', seed: 6464, shape: 'foret' },
       text: 'Naissance : vos autres Machines gagnent +{1}/+{2}.',
       play(x, u, m) { for (const v of x.fam('machine', u)) x.buff(v, m, 2 * m); } },
-    { id: 'dyson', fam: 'machine', tier: 3, atk: 4, hp: 6, name: 'Dyson', look: { type: 'mecha', seed: 6565, moons: 1 },
+    { id: 'dyson', fam: 'machine', tier: 3, atk: 4, hp: 6, name: 'Dyson', look: { type: 'mecha', seed: 6565, shell: true },
       text: 'Début de cycle : gagnez {1} énergie.',
       startTurn(x, u, m) { x.gold(m); } },
-    { id: 'arecibo', fam: 'machine', tier: 3, atk: 4, hp: 6, name: 'Arecibo', kw: ['arrimage', 'rempart'], look: { type: 'mecha', seed: 6666 },
+    { id: 'arecibo', fam: 'machine', tier: 3, atk: 4, hp: 6, name: 'Arecibo', kw: ['arrimage', 'rempart'], look: { type: 'mecha', seed: 6666, shape: 'antenne' },
       text: 'Arrimage. Rempart.' },
     { id: 'sentinelle', fam: 'machine', tier: 4, atk: 5, hp: 8, name: 'Sentinelle', kw: ['arrimage', 'bouclier', 'rempart'], look: { type: 'mecha', seed: 6767, ring: true, shape: 'bloc' },
       text: 'Arrimage. Bouclier. Rempart.' },
-    { id: 'forge', fam: 'machine', tier: 5, atk: 7, hp: 8, name: 'Forge stellaire', look: { type: 'mecha', seed: 6868, moons: 2 },
+    { id: 'forge', fam: 'machine', tier: 5, atk: 7, hp: 8, name: 'Forge stellaire', look: { type: 'mecha', seed: 6868, shape: 'brisee', coreHue: 30, moons: 1 },
       text: 'Début de combat : vos Machines gagnent Bouclier.',
       start(c, u) { for (const v of c.alliesFam(u.side, 'machine')) c.kw(v, 'bouclier'); } },
     { id: 'oeil', fam: 'machine', tier: 6, atk: 8, hp: 10, name: 'L’Œil', kw: ['arrimage', 'rafale', 'bouclier', 'venin'], look: { type: 'mecha', seed: 6969 },
@@ -418,7 +418,7 @@
     // JETONS (hors réserve)
     { id: 'debris', fam: 'neant', tier: 1, atk: 1, hp: 1, name: 'Débris', token: true, look: { type: 'asteroid', seed: 8181 },
       text: 'Fragment d’un monde effondré.' },
-    { id: 'sonde-t', fam: 'machine', tier: 1, atk: 3, hp: 3, name: 'Sonde', token: true, kw: ['arrimage'], look: { type: 'mecha', seed: 8282 },
+    { id: 'sonde-t', fam: 'machine', tier: 1, atk: 3, hp: 3, name: 'Sonde', token: true, kw: ['arrimage'], look: { type: 'mecha', seed: 6161, shape: 'diamant' },
       text: 'Arrimage.' }
   ];
   const CARD = Object.fromEntries(CARDS.map((c) => [c.id, c]));

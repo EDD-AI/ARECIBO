@@ -1,2 +1,4 @@
 tmp-*.png
 Thumbs.db
+orbite/firebase/*-debug.log
+orbite/firebase/.firebase/

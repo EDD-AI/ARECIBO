@@ -1,6 +1,6 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
 // Garder ce numéro égal à VERSION dans js/game.js et à version.json.
-const CACHE = 'orbite-v28';
+const CACHE = 'orbite-v29';
 const SHELL = [
   './',
   './index.html',
@@ -23,6 +23,10 @@ const SHELL = [
   './js/game.js',
   './js/campagne.js',
   './js/campagne-ui.js',
+  './js/classement.js',
+  './js/online-config.js',
+  './js/online.js',
+  './js/online-ui.js',
   './js/forge.js',
   './js/forge-ui.js',
   './js/atelier.js',
@@ -62,6 +66,7 @@ const SHELL = [
   './audio/tap.mp3',
   './audio/type.mp3',
   './audio/wind.mp3',
+  './audio/earth.mp3',
   './audio/menu.mp3',
   './audio/click1.mp3',
   './audio/click2.mp3',
@@ -106,6 +111,8 @@ async function fromCache(req) {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   const same = new URL(e.request.url).origin === location.origin;
+  // Les serveurs extérieurs (Firebase, connexion Google) passent sans le service worker.
+  if (!same) return;
   // Les navigations gardent la requête d'origine (redirections de GitHub Pages).
   const net = same && e.request.mode !== 'navigate'
     ? fetch(e.request.url, { cache: 'no-cache', headers: e.request.headers, credentials: 'same-origin' })
