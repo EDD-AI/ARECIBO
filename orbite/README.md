@@ -204,6 +204,17 @@ de fichier demandés par le lecteur audio, ce qu’exige Safari pour la musique.
 toujours la version du réseau, si bien que les mises à jour arrivent seules. La progression reste
 sur l’appareil.
 
+**Mises à jour.** Une appli installée qu’on rouvre est souvent juste réveillée par le téléphone,
+sans recharger la page. Le jeu compare donc sa version (`VERSION` dans `js/game.js`) à
+`version.json` en ligne, au démarrage, à chaque retour au premier plan et toutes les 15 minutes.
+Si la version en ligne est plus récente, la page se recharge. Si une partie est en cours, le
+rechargement attend le retour au menu, et la partie reste sauvegardée. Le service worker revalide
+chaque fichier auprès du serveur, pour que le cache du navigateur ne resserve jamais une ancienne
+version. La version s’affiche en bas des Paramètres.
+
+**À chaque mise en ligne**, augmenter ensemble `VERSION` (`js/game.js`), `version.json` et le nom
+du cache dans `sw.js`.
+
 En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 `http://localhost:8080/`.
 
