@@ -620,7 +620,7 @@ body.in-combat .game-foot { margin-top: auto; }
 .unit .hp { color: var(--hp); }
 .unit .hp.hurt { color: #fff; }
 .unit .stats b.up { animation: statUp 0.5s; }
-@keyframes statUp { 30% { transform: scale(1.6); color: var(--good); } }
+@keyframes statUp { 30% { transform: scale(1.8); color: var(--good); text-shadow: 0 0 8px rgba(159, 240, 154, 0.9); } }
 .unit.golden .stats b { text-shadow: 0 0 6px rgba(246, 196, 83, 0.8); }
 .unit.golden .fam { background: var(--gold); width: 16px; }
 .unit.golden .orb::before {
@@ -713,6 +713,15 @@ body.in-combat .game-foot { margin-top: auto; }
 .pop.gold { color: var(--gold); }
 .pop.info { color: var(--ink); font-size: 11px; letter-spacing: 0.14em; }
 .pop.energy { color: var(--energy); }
+.pop.buff { display: flex; flex-direction: column; align-items: center; gap: 0; font-size: 16px; line-height: 1.05; animation-name: popBuff; }
+.pop.buff span { display: inline-flex; align-items: center; gap: 2px; }
+.pop.buff .pix { height: 11px; width: auto; }
+@keyframes popBuff {
+  0% { opacity: 0; transform: translate(-50%, -20%) scale(0.6); }
+  18% { opacity: 1; transform: translate(-50%, -80%) scale(1.25); }
+  70% { opacity: 1; transform: translate(-50%, -150%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -200%) scale(1); }
+}
 @keyframes popUp {
   0% { opacity: 0; transform: translate(-50%, -30%) scale(0.7); }
   15% { opacity: 1; transform: translate(-50%, -70%) scale(1.15); }

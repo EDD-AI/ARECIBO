@@ -125,6 +125,13 @@ Le coach se trouve dans `js/game.js` (`coachStart`, étapes `MENU_STEPS`, `LAW_S
 
 ## Effets de fin de cycle
 
+**Bonus pendant la création.** Chaque bonus de statistiques (Naissance, fin de cycle, pouvoir…)
+se voit et s’entend, astre par astre :
+- les chiffres repartent de leur valeur d’avant l’effet, puis montent en grossissant en vert ;
+- « +1 ⚔ / +1 ♥ » s’élève au-dessus de l’astre, qui sautille dans un anneau de particules ;
+- un tintement cristallin monte d’un ton à chaque astre renforcé d’affilée : « tous vos astres
+  +1 » s’entend comme une gamme. Un malus s’affiche en rouge.
+
 - **Gel** : la glace prend les astres de la Création un à un, de gauche à droite, avec un craquement
   cristallin. Une coque pixel art facettée monte du bas (mode 6 du shader de halo) et les couleurs
   virent au bleu givré (`uFrost`). Au dégel, la glace éclate.

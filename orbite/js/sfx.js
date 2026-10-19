@@ -399,7 +399,14 @@
       play(CRUMBLE, { vol: 0.45, rate: 0.75, pan, delay: 0.03 });
       play('blast', { vol: 0.16, rate: 0.6, rev: 0.4, pan });
     },
-    buff(pan) { play(['pluck1', 'pluck2'], { vol: 0.16, jit: 0.1, pan }) || tone(1046, 0.07, { vol: 0.04 }); },
+    // Bonus de statistiques : un tintement cristallin qui monte d'un ton à chaque astre renforcé
+    // d'affilée (step), sur un petit pincement ; « tous vos astres +1 » s'entend comme une gamme.
+    buff(pan, step) {
+      const k = Math.min(step || 0, 7);
+      const rate = 1.1 * Math.pow(2, [0, 2, 4, 7, 9, 12, 14, 16][k] / 12);
+      if (!play('glass1', { vol: 0.26, rate, rev: 0.25, jit: 0.01, pan })) { tone(880 * rate, 0.09, { vol: 0.05, type: 'triangle' }); return; }
+      play(['pluck1', 'pluck2'], { vol: 0.12, jit: 0.05, pan });
+    },
     venom(pan) { play('scratch', { vol: 0.14, rate: 0.7, pan }); },
     summon(pan) { play('rise', { vol: 0.24, rate: 1.6, rev: 0.5, pan, jit: 0 }); },
     // Un fragment projeté par un astre qui s'effondre (Débris, Sonde…).
