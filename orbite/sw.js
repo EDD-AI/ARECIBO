@@ -1,5 +1,5 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
-const CACHE = 'orbite-v6';
+const CACHE = 'orbite-v7';
 const SHELL = [
   './',
   './index.html',
@@ -59,7 +59,12 @@ const SHELL = [
   './audio/type.mp3',
   './audio/wind.mp3',
   './audio/zap.mp3',
-  './audio/menu.mp3'
+  './audio/menu.mp3',
+  './audio/click1.mp3',
+  './audio/click2.mp3',
+  './audio/click3.mp3',
+  './audio/click4.mp3',
+  './audio/click5.mp3'
 ];
 
 self.addEventListener('install', (e) => {

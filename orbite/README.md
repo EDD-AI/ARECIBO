@@ -82,6 +82,27 @@ remplit en fin de partie. À chaque niveau franchi, une planète apparaît, trem
 - Les astres qui laissent des **Débris** en s’effondrant (Cendre, Nyx, Ossuaire, et Relais qui
   laisse une Sonde) les projettent depuis leurs restes ; Linceul double ces effets.
 
+## Formes des astres
+
+Toutes les familles ne sont pas des sphères, pour que chaque astre se reconnaisse d’un coup d’œil.
+Le moteur trace ces formes par marche de rayon (`shapeSDF` dans `js/planet-renderer.js`) ; la
+fiche de chaque astre les choisit avec `look.shape` dans `js/rules.js`.
+
+| Forme | Astres |
+|---|---|
+| Comète (noyau de glace, queue soufflée à l’opposé de l’étoile) | Halley, Encke, Hale-Bopp, Hyakutake ; Météore et Ison en feu |
+| Planète brisée (morceaux écartés, cœur qui brûle dans les fissures) | Vestige (violet), Géode (vert) |
+| Astéroïde double (deux lobes soudés) | Tchouri, Agate, Écho, Ossuaire |
+| Amas de cristaux (piquants) | Améthyste, Obsidienne (verre noir) |
+| Bipyramide | Diamant, Saphir, Émeraude, Foreuse |
+| Bloc (cube arrondi) ou monolithe (dalle) | Basalte, Prisme, Sentinelle, Tesseract ; Monolithe, Quartz |
+| Anneau-monde (tore) | Station, Paradoxe |
+| Éclipse (disque noir et couronne) | Éclipse |
+| Croissant (éclairé par l’arrière) | Séléné, Luna, Nyx |
+
+Dans l’atelier, ces formes apparaissent aussi au hasard (une fois sur cinq pour les astéroïdes,
+lunes, cristaux, machines…), et « Comète » et « Éclipse » rejoignent la liste des natures.
+
 ## Crédits
 
 Paramètres → **Crédits** : Studio Edda, les sons de Kenney (CC0 et MIT, avec l’avis de licence
@@ -107,7 +128,8 @@ déclics mécaniques, avec une touche sci-fi discrète. Tous viennent des packs 
 - **Combats** : souffle à chaque attaque, impacts de roche plus lourds selon les dégâts,
   bouclier de verre qui éclate, éboulis à la destruction, placés à gauche ou à droite selon la
   planète touchée.
-- **Interface** : déclics, survol à la souris, feuilles qui s’ouvrent, carillons de verre pour
+- **Interface** : un déclic tiré parmi cinq (jamais deux fois le même de suite, à hauteur variable,
+  parfois mêlé d’un petit caillou), survol à la souris, feuilles qui s’ouvrent, carillons de verre pour
   les niveaux et les astres dorés, petit refus quand une action est impossible.
 
 Les sons se chargent quand la page est servie en HTTP(S). Ouverte directement depuis un fichier,
