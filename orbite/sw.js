@@ -1,5 +1,5 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
-const CACHE = 'orbite-v1';
+const CACHE = 'orbite-v2';
 const SHELL = [
   './',
   './index.html',
@@ -15,7 +15,43 @@ const SHELL = [
   './js/game.js',
   './js/atelier.js',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './audio/back.mp3',
+  './audio/blast.mp3',
+  './audio/break.mp3',
+  './audio/close.mp3',
+  './audio/coin.mp3',
+  './audio/confirm.mp3',
+  './audio/crumble1.mp3',
+  './audio/crumble2.mp3',
+  './audio/crumble3.mp3',
+  './audio/crumble4.mp3',
+  './audio/down.mp3',
+  './audio/drop1.mp3',
+  './audio/drop2.mp3',
+  './audio/drop3.mp3',
+  './audio/error.mp3',
+  './audio/glass1.mp3',
+  './audio/glass2.mp3',
+  './audio/glass3.mp3',
+  './audio/glass4.mp3',
+  './audio/glass5.mp3',
+  './audio/glass6.mp3',
+  './audio/hover.mp3',
+  './audio/open.mp3',
+  './audio/place1.mp3',
+  './audio/place2.mp3',
+  './audio/place3.mp3',
+  './audio/place4.mp3',
+  './audio/pluck1.mp3',
+  './audio/pluck2.mp3',
+  './audio/rise.mp3',
+  './audio/roll.mp3',
+  './audio/scratch.mp3',
+  './audio/tap.mp3',
+  './audio/type.mp3',
+  './audio/wind.mp3',
+  './audio/zap.mp3'
 ];
 
 self.addEventListener('install', (e) => {

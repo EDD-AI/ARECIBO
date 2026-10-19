@@ -24,6 +24,24 @@ Le **Marché stellaire** dépense les poussières d’étoiles : chaque achat d�
 **horizon** (la planète du menu). Les **Paramètres** gèrent le son, la vitesse des combats,
 l’atelier, et permettent de revoir l’introduction.
 
+## Sons
+
+Des sons naturels plutôt que des bips : impacts de pierre, éboulis, éclats de verre, gouttes,
+déclics mécaniques, avec une touche sci-fi discrète. Tous viennent des packs gratuits de
+**Kenney** (CC0), voir `audio/README.md`.
+
+- **Ambiance** : un vent profond (l’ambiance extérieure de Kenney sans les oiseaux, descendue
+  d’une quarte) et, au menu et en partie, des cristaux lointains qui tintent dans une grotte.
+  Elle s’assombrit pendant les combats.
+- **Combats** : souffle à chaque attaque, impacts de roche plus lourds selon les dégâts,
+  bouclier de verre qui éclate, éboulis à la destruction, placés à gauche ou à droite selon la
+  planète touchée.
+- **Interface** : déclics, survol à la souris, feuilles qui s’ouvrent, carillons de verre pour
+  les niveaux et les astres dorés, petit refus quand une action est impossible.
+
+Les sons se chargent quand la page est servie en HTTP(S). Ouverte directement depuis un fichier,
+la page garde les anciens sons synthétisés.
+
 ## Lancer
 
 Les pages fonctionnent en ouvrant directement `index.html` ou `atelier.html` dans un navigateur
@@ -80,7 +98,8 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `js/planet-renderer.js` | Rendu WebGL2 pixel art (tramage, palettes à décalage de teinte) + encodeur GIF |
 | `js/stage.js` | Couche WebGL plein écran du jeu : dessine chaque planète à la position de son élément HTML, particules |
 | `js/game.js` | Interface du jeu : écrans, glisser-déposer, animations, lecture des combats |
-| `js/sfx.js` | Sons synthétisés (WebAudio), coupables dans le menu |
+| `js/sfx.js` | Moteur sonore WebAudio : échantillons, réverbération, ambiance par écran, coupable dans les paramètres |
+| `audio/` | Sons Kenney (CC0) préparés pour le jeu ; sources, traitements et licences dans `audio/README.md` |
 | `js/atelier.js` | Page générateur |
 | `css/` | Styles du jeu et de l’atelier |
 | `tests/rules.test.mjs` | Tests des règles |

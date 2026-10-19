@@ -70,6 +70,16 @@
     clearTimeout(toast.timer);
     toast.timer = setTimeout(() => t.classList.remove('show'), ms || 1900);
   }
+  function refuse(text) {
+    toast(text);
+    SFX.error();
+  }
+  // Position gauche/droite d'un élément pour placer le son dans l'espace stéréo.
+  const panOf = (el) => {
+    if (!el) return 0;
+    const b = el.getBoundingClientRect();
+    return ((b.left + b.width / 2) / window.innerWidth * 2 - 1) * 0.7;
+  };
 
   function popAt(x, y, text, cls) {
     const d = document.createElement('div');
@@ -250,6 +260,7 @@
     next.classList.add('active');
     ui.screen = name;
     stage.starsOn = !['splash', 'title', 'wake'].includes(name);
+    SFX.ambience({ splash: 'off', title: 'off', wake: 'wake', game: 'game', end: 'game' }[name] || 'menu');
     // Pendant la partie, le ciel s'efface derrière les planètes pour rester lisible.
     const busySky = ['laws', 'game', 'end'].includes(name);
     stage.starArea = busySky ? 3600 : 1800;
@@ -559,7 +570,7 @@
     const h = HORIZONS.find((x) => x.id === b.dataset.hz);
     const owned = ownedHorizons();
     if (!owned.includes(h.id)) {
-      if (dust() < h.price) { toast(`Il vous manque ${h.price - dust()} poussières d’étoiles.`); SFX.tap(); return; }
+      if (dust() < h.price) { refuse(`Il vous manque ${h.price - dust()} poussières d’étoiles.`); return; }
       addDust(-h.price);
       owned.push(h.id);
       store.set(HZ_OWNED, JSON.stringify(owned));
@@ -868,10 +879,10 @@
     const p = me();
     const id = p.shop[slot];
     const check = R.canBuy(ui.state, slot);
-    if (!check.ok) { toast(check.reason); return false; }
+    if (!check.ok) { refuse(check.reason); return false; }
     const before = copyRects(id);
     const res = R.buy(ui.state, slot);
-    if (!res.ok) { toast(res.reason); return false; }
+    if (!res.ok) { refuse(res.reason); return false; }
     SFX.buy();
     vibrate(8);
     renderEnergy(R.BUY_COST);
@@ -951,7 +962,7 @@
 
   async function doPlay(uid, index, fromRect, targetUid) {
     const res = R.play(ui.state, uid, index, targetUid);
-    if (!res.ok) { toast(res.reason); renderHand(); return false; }
+    if (!res.ok) { refuse(res.reason); renderHand(); return false; }
     SFX.place();
     vibrate(12);
     const before = rects($('board'));
@@ -986,7 +997,7 @@
     const id = el ? el.dataset.id : null;
     const golden = el ? el.classList.contains('golden') : false;
     const res = R.sell(ui.state, uid);
-    if (!res.ok) { toast(res.reason); return false; }
+    if (!res.ok) { refuse(res.reason); return false; }
     SFX.sell();
     vibrate(6);
     const before = rects($('board'));
@@ -1014,7 +1025,7 @@
 
   async function doRoll() {
     const res = R.roll(ui.state);
-    if (!res.ok) { toast(res.reason); return; }
+    if (!res.ok) { refuse(res.reason); return; }
     SFX.roll();
     const old = [...$('shop').children].map((el) => ({ id: el.dataset.id, r: el.querySelector('.orb').getBoundingClientRect() }));
     const temps = old.map((o) => tempOrb(o.id, o.r, false));
@@ -1031,7 +1042,7 @@
 
   async function doUpgrade() {
     const res = R.upgrade(ui.state);
-    if (!res.ok) { toast(res.reason); return; }
+    if (!res.ok) { refuse(res.reason); return; }
     SFX.level();
     vibrate([8, 30, 8]);
     renderEnergy(1);
@@ -1061,7 +1072,7 @@
     const res = R.usePower(ui.state, targetUid);
     ui.targeting = false;
     document.querySelectorAll('#board .unit.target').forEach((el) => el.classList.remove('target'));
-    if (!res.ok) { toast(res.reason); renderPower(); return; }
+    if (!res.ok) { refuse(res.reason); renderPower(); return; }
     SFX.level();
     renderEnergy(R.LAW[me().law].active.cost);
     renderHand();
@@ -1150,6 +1161,7 @@
     if (!drag.moved) {
       if (Math.hypot(dx, dy) < 9) return;
       drag.moved = true;
+      SFX.lift(panOf(drag.el));
       const b = drag.el.getBoundingClientRect();
       drag.w = b.width;
       drag.h = b.height;
@@ -1176,7 +1188,9 @@
       const m = drag.src === 'hand' ? magnetTargetAt(e.clientX, e.clientY, drag.unit) : null;
       if (m) { m.classList.add('magnet'); drag.magnet = m.dataset.uid; }
       else {
-        drag.index = boardIndexAt(e.clientX, drag.src === 'board' ? drag.key : null);
+        const index = boardIndexAt(e.clientX, drag.src === 'board' ? drag.key : null);
+        if (index !== drag.index && drag.index != null) SFX.slot();
+        drag.index = index;
         previewBoard(drag.index, drag.src === 'board' ? drag.key : null);
         $('systemZone').classList.add('drop');
       }
@@ -1246,6 +1260,7 @@
     const ov = $('overlay');
     $('sheet').innerHTML = html;
     ov.classList.toggle('center', !!o.center);
+    if (ov.hidden) SFX.open();
     ov.hidden = false;
     document.body.classList.add('modal');
     stage.modal = true;
@@ -1255,6 +1270,7 @@
     [...$('sheet').querySelectorAll('[data-planet]')].forEach((orb, i) => revealIn(orb, i * 60));
   }
   function closeSheet() {
+    if (!$('overlay').hidden) SFX.close();
     $('overlay').hidden = true;
     document.body.classList.remove('modal');
     stage.modal = false;
@@ -1385,7 +1401,7 @@
     const prior = copyRects(id);
     const res = R.choose(ui.state, i);
     closeSheet();
-    if (!res.ok) { toast(res.reason); return; }
+    if (!res.ok) { refuse(res.reason); return; }
     SFX.buy();
     renderHand();
     renderBoard();
@@ -1482,7 +1498,7 @@
     SFX.tap();
     ui.prevHp = Object.fromEntries(ui.state.players.map((x) => [x.id, x.hp]));
     const res = R.endTurn(ui.state);
-    if (!res.ok) { toast(res.reason); ui.busy = false; return; }
+    if (!res.ok) { refuse(res.reason); ui.busy = false; return; }
     try {
       await playShopEvents(res.endEvents);
       await sleep(250);
@@ -1519,6 +1535,7 @@
     $('oppName').textContent = opp.name + (opp.ghost ? ' · FANTÔME' : '');
     $('oppHp').innerHTML = opp.ghost ? '' : icon('heart') + ' ' + Math.max(0, b.before.opp);
     document.body.classList.add('in-combat');
+    SFX.ambience('battle');
     const evs = b.events;
     buildCombatRows(evs[0].boards);
     [...$('enemy').children].forEach((el, i) => revealIn(el, 60 + i * 70));
@@ -1543,6 +1560,7 @@
       if (last) buildCombatRows(last.boards);
     }
     ui.time = 1;
+    SFX.ambience('game');
     const won = b.winner === 0, lost = b.winner === 1;
     if (won) {
       SFX.win();
@@ -1586,13 +1604,14 @@
     const [ax, ay] = center(a), [tx, ty] = center(t);
     const dx = (tx - ax) * 0.8, dy = (ty - ay) * 0.8;
     a.style.zIndex = 5;
+    SFX.whoosh(panOf(a));
     const fwd = a.animate([
       { transform: 'translate(0, 0) scale(1)' },
       { transform: `translate(${-dx * 0.07}px, ${-dy * 0.07}px) scale(1.06)`, offset: 0.35 },
       { transform: `translate(${dx}px, ${dy}px) scale(1.1)` }
     ], { duration: dur(360), easing: 'cubic-bezier(.55,0,.8,.3)', fill: 'forwards' });
     await fwd.finished.catch(() => {});
-    SFX.hit();
+    SFX.hit(Math.max(1, ...group.filter((h) => h.t === 'hit').map((h) => h.n)), panOf(t));
     vibrate(6);
     const tOrb = t.querySelector('.orb');
     stage.flash(tOrb, 0.9);
@@ -1639,7 +1658,7 @@
           SFX.tap();
           await stage.beam(from, center(el), { ms: dur(300), color: [255, 160, 80] });
           stage.flash(el.querySelector('.orb'), 0.8);
-          SFX.hit();
+          SFX.hit(e.n, panOf(el));
         }
         el.querySelector('.hp').textContent = Math.max(0, e.hp);
         el.querySelector('.hp').classList.add('hurt');
@@ -1660,7 +1679,7 @@
         const [x, y] = center(orb);
         const b = orb.getBoundingClientRect();
         stage.ring(x, y, b.width * 0.5, { n: 30, colors: [[255, 255, 255], [190, 235, 255], [255, 190, 240]], speed: 70, life: 0.5 });
-        SFX.shield();
+        SFX.shield(panOf(el));
         popOn(el, 'BOUCLIER', 'info');
         if (!quick) await sleep(240);
         break;
@@ -1670,6 +1689,7 @@
         if (el) {
           const [x, y] = center(el.querySelector('.orb'));
           stage.burst(x, y, { n: 18, colors: [[140, 255, 120], [60, 200, 90]], speed: 50, life: 0.6 });
+          SFX.venom(panOf(el));
           popOn(el, 'VENIN', 'good');
         }
         break;
@@ -1681,7 +1701,7 @@
           const hp = Number(el.querySelector('.hp').textContent) + e.h;
           setStats(el, Math.max(0, atk), hp, true);
           popOn(el, `+${e.a}/+${e.h}`, 'good');
-          SFX.buff();
+          SFX.buff(panOf(el));
         }
         await sleep(160);
         break;
@@ -1715,7 +1735,7 @@
         const orb = el.querySelector('.orb');
         const [x, y] = center(orb);
         const b = orb.getBoundingClientRect();
-        SFX.death();
+        SFX.death(panOf(el));
         stage.flash(orb, 1);
         stage.burst(x, y, { n: 46, colors: stage.colors(el.dataset.id), speed: 95, life: 0.85, size: 2, spread: b.width * 0.3 });
         stage.ring(x, y, b.width * 0.25, { n: 24, colors: [[255, 255, 255]], speed: 80, life: 0.35 });
@@ -1746,6 +1766,7 @@
         stage.reveal(orb, 0, 1, dur(360));
         const [x, y] = center(orb);
         stage.burst(x, y, { n: 16, colors: e.reborn ? [[220, 190, 255], [255, 255, 255]] : [[255, 255, 255]], speed: 40, life: 0.5 });
+        SFX.summon(panOf(el));
         if (e.reborn) popOn(el, 'RENAISSANCE', 'info');
         await sleep(300);
         break;
@@ -1831,6 +1852,8 @@
         const tick = (now) => {
           const k = Math.min(1, (now - t0) / 1400);
           const v = Math.round(reward * k);
+          if (Math.floor(v / 10) !== Math.floor((tick.v || 0) / 10)) SFX.coin();
+          tick.v = v;
           $('endDust').textContent = '+' + v;
           $('endTotal').innerHTML = 'Total ' + icon('dust') + ' ' + (base + v);
           if (Math.random() < 0.5) {
@@ -1891,9 +1914,9 @@
     const p = me(), law = R.LAW[p.law];
     if (!law.active) { openFamilies(); return; }
     const can = R.canUsePower(ui.state);
-    if (!can.ok) { toast(can.reason); return; }
+    if (!can.ok) { refuse(can.reason); return; }
     if (law.active.target) {
-      if (!p.board.length) { toast('Placez d’abord un astre.'); return; }
+      if (!p.board.length) { refuse('Placez d’abord un astre.'); return; }
       ui.targeting = !ui.targeting;
       document.querySelectorAll('#board .unit').forEach((el) => el.classList.toggle('target', ui.targeting));
       if (ui.targeting) toast('Touchez un astre de votre système.');
@@ -1922,6 +1945,14 @@
   });
 
   // Hooks de test / débogage.
+  // Survol à la souris : un effleurement très discret (au doigt, le toucher suffit).
+  document.addEventListener('pointerover', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const t = e.target.closest('button:not(:disabled), a.btn, .unit');
+    if (!t || (e.relatedTarget && t.contains(e.relatedTarget))) return;
+    SFX.hover();
+  });
+
   window.__orbite = { ui, rules: R, stage, show, renderGame, fight, enterMenu, backToMenu };
 
   // ─── Démarrage ──────────────────────────────────────────────
