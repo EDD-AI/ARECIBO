@@ -7,7 +7,8 @@ grotte et un placement gauche/droite selon la planète concernée.
 
 | Fichier | Origine | Usage dans le jeu |
 |---|---|---|
-| `tap` | UI Audio · click3 | boutons |
+| `click1`–`click5` | Interface Sounds · click_002, click_003, click_005, select_001, select_002 | boutons : un déclic tiré au hasard, jamais deux fois le même de suite |
+| `tap` | UI Audio · click3 | boutons, si les déclics ne sont pas encore chargés |
 | `hover` | UI Audio · rollover2 | survol à la souris |
 | `type` | Interface Sounds · tick_004 | sous-titres tapés |
 | `open`, `close`, `back` | Interface Sounds · open_002, close_002, back_002 | feuilles, vente, souffle des attaques (`open` ralenti) |

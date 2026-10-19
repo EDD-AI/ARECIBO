@@ -155,6 +155,9 @@ uniform vec4 uRing;
 uniform float uRingA;
 uniform float uUnit;
 uniform int uShadeBias;
+uniform int uShape;
+uniform vec4 uSh;
+uniform vec4 uSh2;
 
 vec3 pal(int row, int sh) { return texelFetch(uPal, ivec2(clamp(sh, 0, 7), clamp(row, 0, 15)), 0).rgb; }
 
@@ -163,6 +166,9 @@ Surf surf(int row) { Surf s; s.row = row; s.bump = 0.0; s.emis = -1; s.spec = 0.
 
 vec3 bodyToView(vec3 b, float spin) { return transpose(uTilt) * rotY(b, spin); }
 
+// Biais de teinte : -1 assombrit tout (astres lointains) ; -2 (nuit) n'assombrit que la face cachée,
+// pour un croissant net.
+int biasSh(int sh) { return uShadeBias == -2 ? (sh <= 2 ? sh - 1 : sh) : sh + uShadeBias; }
 int shadeOf(float l, float d) {
   float v = l + (d - 0.5) * 0.16;
   if (v > 0.8) return 5;
@@ -422,17 +428,79 @@ float asteroidR(vec3 dir) {
   vec3 e = dir / uC.xyz;
   return (1.0 / length(e)) * (1.0 + uD.x * fbm(dir * uD.y + uSeed + 11.0, 4));
 }
-float asteroidSDF(vec3 q) {
-  float lq = length(q);
-  vec3 b = rotY(uTilt * (q / max(lq, 1e-4)), -uSpin);
-  return lq - asteroidR(b);
+
+// Silhouettes non sphériques, tracées par marche de rayon dans le repère de l'astre :
+// 1 astéroïde, 2 double (deux lobes soudés), 3 planète brisée, 4 amas de cristaux,
+// 5 anneau-monde, 6 bloc (cube, monolithe), 7 bipyramide (diamant, foret).
+int shapeKind() { return uShape > 0 ? uShape : (uType == 7 ? 1 : 0); }
+float smin(float a, float b, float k) { float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0); return mix(b, a, h) - k * h * (1.0 - h); }
+vec3 spikeDir(int i) { return normalize(hash33(uSeed + float(i) * 7.31) * 2.0 - 1.0); }
+vec3 cutDir(int i) { return normalize(hash33(uSeed * 1.7 + float(i) * 3.17 + 5.0) * 2.0 - 1.0); }
+// Planète brisée : chaque morceau est une part de sphère écartée du centre ; cut > 0.5 sur les faces de cassure.
+float brokenSDF(vec3 b, out float cut) {
+  vec3 o = vec3(0.0);
+  vec3 sg = vec3(1.0);
+  for (int i = 0; i < 3; i++) {
+    vec3 n = cutDir(i);
+    float sd = dot(b, n) >= 0.0 ? 1.0 : -1.0;
+    sg[i] = sd;
+    o += n * sd * uSh.x;
+  }
+  vec3 l = b - o;
+  float ds = length(l) - 1.0 + uSh2.x * fbm(normalize(b) * uSh2.y + uSeed + 3.0, 3);
+  float dp = -1e3;
+  for (int i = 0; i < 3; i++) dp = max(dp, -sg[i] * dot(l, cutDir(i)) - 0.012);
+  cut = dp > ds ? 1.0 : 0.0;
+  return max(ds, dp);
 }
-vec3 asteroidNormal(vec3 q) {
+float shapeSDF(vec3 q, out float cut) {
+  cut = 0.0;
+  int k = shapeKind();
+  if (k == 1) {
+    float lq = length(q);
+    return lq - asteroidR(rotY(uTilt * (q / max(lq, 1e-4)), -uSpin));
+  }
+  vec3 b = rotY(uTilt * q, -uSpin);
+  if (k == 3) return brokenSDF(b, cut);
+  float lump = uSh2.x > 0.0 ? uSh2.x * fbm(normalize(b) * uSh2.y + uSeed + 11.0, 3) : 0.0;
+  if (k == 2) {
+    float a = length(b - vec3(uSh.x, 0.0, 0.0)) - uSh.y;
+    float c = length(b + vec3(uSh.x, 0.0, 0.0)) - uSh.z;
+    return smin(a, c, uSh.w) - lump;
+  }
+  if (k == 4) {
+    float d = length(b) - uSh.x - lump;
+    for (int i = 0; i < 9; i++) {
+      if (float(i) >= uSh.y) break;
+      vec3 dir = spikeDir(i);
+      float len = uSh.z * (0.65 + 0.35 * fract(float(i) * 0.618 + uSeed.x));
+      float t = clamp(dot(b, dir), 0.0, len);
+      float rad = uSh.w * (1.0 - t / len * 0.92);
+      d = min(d, length(b - dir * t) - rad);
+    }
+    return d;
+  }
+  if (k == 5) {
+    vec2 t = vec2(length(b.xz) - uSh.x, b.y);
+    return length(t) - uSh.y - lump;
+  }
+  if (k == 6) {
+    vec3 d = abs(b) - uSh.xyz;
+    return length(max(d, 0.0)) + min(max(d.x, max(d.y, d.z)), 0.0) - uSh.w - lump;
+  }
+  if (k == 7) {
+    vec3 a = abs(b);
+    return (a.x / uSh.x + a.y / uSh.y + a.z / uSh.z - 1.0) * 0.45 * min(uSh.x, min(uSh.y, uSh.z)) - lump;
+  }
+  return length(q) - 1.0;
+}
+vec3 shapeNormal(vec3 q) {
   vec2 e = vec2(0.012, 0.0);
+  float c;
   return normalize(vec3(
-    asteroidSDF(q + e.xyy) - asteroidSDF(q - e.xyy),
-    asteroidSDF(q + e.yxy) - asteroidSDF(q - e.yxy),
-    asteroidSDF(q + e.yyx) - asteroidSDF(q - e.yyx)));
+    shapeSDF(q + e.xyy, c) - shapeSDF(q - e.xyy, c),
+    shapeSDF(q + e.yxy, c) - shapeSDF(q - e.yxy, c),
+    shapeSDF(q + e.yyx, c) - shapeSDF(q - e.yyx, c)));
 }
 
 vec3 portalColor(vec2 xy, float dth) {
@@ -510,16 +578,17 @@ void main() {
   xy.y *= uFlip;
   if (uType == 10) { outColor = fin(portalColor(xy, dth)); return; }
 
-  bool ast = (uType == 7 && uLayer == 0);
+  bool ast = (shapeKind() > 0 && uLayer == 0);
   vec3 pv;
+  float cut = 0.0;
   if (ast) {
-    float bound = uD.z;
+    float bound = uType == 7 && uShape == 0 ? uD.z : uSh2.z;
     float d2 = dot(xy, xy);
     if (d2 > bound * bound) discard;
     float z = sqrt(max(bound * bound - d2, 0.0));
     bool hit = false;
-    for (int i = 0; i < 56; i++) {
-      float d = asteroidSDF(vec3(xy, z));
+    for (int i = 0; i < 72; i++) {
+      float d = shapeSDF(vec3(xy, z), cut);
       if (d < 0.004) { hit = true; break; }
       z -= max(d * 0.6, 0.006);
       if (z < -bound) break;
@@ -532,8 +601,21 @@ void main() {
     pv = vec3(xy, sqrt(1.0 - r2));
   }
   if (uType == 11) { outColor = fin(vec3(0.0)); return; }
+  // Éclipse : l'étoile est masquée, seul un liseré brille autour du disque noir.
+  if (uType == 8 && uB.w > 0.5) {
+    float rr = length(xy);
+    outColor = fin(rr > 1.0 - 1.6 / uRadius ? pal(0, 7) : rr > 1.0 - 3.2 / uRadius && dth > 0.5 ? pal(0, 3) : vec3(0.0));
+    return;
+  }
 
-  vec3 nv = ast ? asteroidNormal(pv) : pv;
+  vec3 nv = ast ? shapeNormal(pv) : pv;
+  // Faces de cassure d'une planète brisée : le cœur brûle encore.
+  if (cut > 0.5) {
+    vec3 cq = rotY(uTilt * pv, -uSpin) * 4.0 + uSeed + vec3(0.0, uPhase * 2.0, 0.0);
+    float heat = fbm01(cq, 3) * 0.8 + (1.0 - length(pv) / max(uSh2.z, 1.0)) * 0.6;
+    outColor = fin(pal(14, clamp(int(heat * 8.0 + (dth - 0.5) * 1.4), 1, 7)));
+    return;
+  }
   vec3 pt = uTilt * normalize(pv);
   float spin = uSpin;
   if (uType == 5 && uLayer == 0 && uB.x > 0.0) spin += TAU * uPhase * floor(uB.x * (0.5 + 0.5 * sin(pt.y * 6.0 + uSeed.z)) + 0.5);
@@ -548,7 +630,7 @@ void main() {
     float l = dot(nv, uLight) + clamp((d - dl) * uB.z, -0.65, 0.35) + 0.1;
     if (d < 0.04) l -= 0.18;
     l -= shadowAt(P, dth) * 0.8;
-    outColor = fin(pal(8, clamp(shadeOf(l, dth) + uShadeBias, 0, 7)));
+    outColor = fin(pal(8, clamp(biasSh(shadeOf(l, dth)), 0, 7)));
     return;
   }
 
@@ -571,7 +653,7 @@ void main() {
   else if (uType == 5) s = gasSurf(p, dth);
   else if (uType == 6 || uType == 7) s = rockSurf(p, Lt, dth);
   else if (uType == 8) s = starSurf(p, nv, dth);
-  else if (uType == 9) s = crystalSurf(p, spin, dth, nl);
+  else if (uType == 9) { vec3 nc = nl; s = crystalSurf(p, spin, dth, nc); nl = ast ? normalize(nv * 0.6 + nc * 0.4) : nc; }
   else s = mechaSurf(p, Lt, dth);
 
   if (s.emis >= 0) { outColor = fin(pal(s.row, s.emis)); return; }
@@ -587,7 +669,9 @@ void main() {
   }
   int row = s.row;
   if (s.glow >= 0 && l < -0.02) { row = s.glowRow; sh = max(sh, s.glow); }
-  outColor = fin(pal(row, clamp(sh + uShadeBias, 0, 7)));
+  vec3 col = pal(row, clamp(biasSh(sh), 0, 7));
+  if (uShadeBias == -2 && sh <= 1) col *= 0.3;
+  outColor = fin(col);
 }
 `;
 
@@ -684,6 +768,29 @@ void main() {
       if (I < dth * 0.85) discard;
       col = pal(uRow, clamp(int(I * 7.0) + 1, 1, 7));
     }
+  } else if (uMode == 5) {
+    // Queue de comète, à l'opposé de l'étoile : poussière large et courbe, ions fins et droits.
+    vec2 d = normalize(uA.zw);
+    vec2 nrm = vec2(-d.y, d.x);
+    float along = dot(xy, d);
+    float across = dot(xy, nrm);
+    float t = along / uA.x;
+    if (t > 1.0 || along < -1.1) discard;
+    float coma = (1.0 - smoothstep(0.45, 1.25, r)) * 0.7;
+    float I = coma;
+    if (along > 0.0) {
+      float cd = across - along * along * 0.1;
+      float w = 0.42 + along * uA.y;
+      float dust = max(0.0, 1.0 - abs(cd) / w);
+      float st = fbm01(vec3(cd * 5.0, along * 1.3 - uPhase * 6.0, 0.0) + uSeed, 3);
+      float fade = 1.0 - pow(t, 1.6);
+      I = max(I, sqrt(dust) * fade * (0.7 + 0.7 * st));
+      float ion = max(0.0, 1.0 - abs(across - 0.05 * along) / (0.05 + along * 0.05));
+      float knot = fbm01(vec3(along * 2.5 - uPhase * 9.0, across * 9.0, 3.0) + uSeed, 2);
+      I = max(I, ion * fade * (0.55 + 0.8 * knot));
+    }
+    if (I < dth * 0.9) discard;
+    col = pal(uRow, clamp(int(I * 5.0) + 2, 1, 7));
   } else {
     if (r < 0.95 || r > uA.x) discard;
     float t = clamp((r - 1.0) / (uA.x - 1.0), 0.0, 1.0);
@@ -828,6 +935,7 @@ void main() {
 
   const SPRITE_CAP = 6000;
   const LAYERS = ['far', 'back', 'front', 'top'];
+  const ZERO4 = new Float32Array(4);
 
   class SpriteBatch {
     constructor() {
@@ -1020,6 +1128,10 @@ void main() {
       }
       gl.uniform1f(U('uUnit'), P.unit);
       gl.uniform1i(U('uShadeBias'), P.bias || 0);
+      const sh = layer === 0 && b.shape ? b.shape : null;
+      gl.uniform1i(U('uShape'), sh ? sh.kind : 0);
+      gl.uniform4fv(U('uSh'), sh ? sh.P : ZERO4);
+      gl.uniform4fv(U('uSh2'), sh ? sh.Q : ZERO4);
       this.bindPal(pr, b.pal);
       this.quad();
     }
@@ -1141,10 +1253,17 @@ void main() {
 
       if (o.golden) this.haloPass(4, cx, cy, R, 1.5, [1.5, 0.95, 0, 0], this.goldRows, 0, b.seed, light, st);
       if (o.ghost) this.haloPass(4, cx, cy, R, 1.45, [1.45, 0.8, 0, 0], this.ghostRows, 0, b.seed, light, st);
+      if (b.tail) {
+        const tl = b.tail;
+        const dx = -light[0], dy = -light[1];
+        const n = Math.hypot(dx, dy) || 1;
+        const dir = n < 0.25 ? [0.6, 0.8] : [dx / n, dy / n];
+        this.haloPass(5, cx, cy, R, tl.len + 0.3, [tl.len, tl.spread, dir[0], dir[1]], b.pal, 14, b.seed, light, st);
+      }
       if (b.corona) this.haloPass(2, cx, cy, R, 1 + b.corona.len * 1.6, [b.corona.len, b.corona.freq, b.corona.power, 0], b.pal, 0, b.seed, light, st);
       if (b.lens) this.haloPass(3, cx, cy, R, b.lens.outer, [b.lens.outer, b.lens.cycles, 0, 0], b.pal, 9, b.seed, light, st);
 
-      const base = { cx, cy, light, occ, occN, st, ring: bandRing, ringN: g.ringN, bias: 0 };
+      const base = { cx, cy, light, occ, occN, st, ring: bandRing, ringN: g.ringN, bias: g.night ? -2 : 0 };
       this.bodyPass(b, 0, Object.assign({}, base, { r: R, spin, unit: 1 }));
       if (b.clouds) {
         const cspin = TAU * (b.spinCycles + b.clouds.extraCycles) * phase + b.spinOffset;

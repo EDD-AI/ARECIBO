@@ -14,12 +14,16 @@
     'hover', 'tap', 'type', 'open', 'close', 'back', 'error', 'roll', 'confirm', 'down', 'scratch', 'coin',
     'drop1', 'drop2', 'drop3', 'pluck1', 'pluck2', 'break', 'blast', 'zap', 'rise', 'wind',
     'glass1', 'glass2', 'glass3', 'glass4', 'glass5', 'glass6',
-    'place1', 'place2', 'place3', 'place4', 'crumble1', 'crumble2', 'crumble3', 'crumble4'
+    'place1', 'place2', 'place3', 'place4', 'crumble1', 'crumble2', 'crumble3', 'crumble4',
+    'click1', 'click2', 'click3', 'click4', 'click5'
   ];
   const GLASS = ['glass1', 'glass2', 'glass3', 'glass5', 'glass6'];
   const DROPS = ['drop1', 'drop2', 'drop3'];
   const PLACE = ['place1', 'place2', 'place3', 'place4'];
   const CRUMBLE = ['crumble1', 'crumble2', 'crumble3', 'crumble4'];
+  // Déclics des boutons, avec leur volume (les plus secs sont joués plus bas).
+  const CLICKS = { click1: 0.3, click2: 0.28, click3: 0.3, click4: 0.17, click5: 0.16 };
+  let lastClick = '';
 
   // Ambiance par écran : niveau du vent, coupure du filtre, intervalle des cristaux (s).
   const MOODS = {
@@ -291,7 +295,16 @@
       lastHover = now;
       play('hover', { vol: 0.1, jit: 0.08 });
     },
-    tap() { play('tap', { vol: 0.32 }) || tone(880, 0.05, { vol: 0.03, type: 'square' }); },
+    // Un déclic tiré parmi cinq, jamais deux fois le même de suite, à hauteur variable ; de temps
+    // en temps, un petit caillou s'y mêle pour garder un grain naturel.
+    tap() {
+      const names = Object.keys(CLICKS).filter((n) => n !== lastClick && buffers[n]);
+      if (!names.length) { play('tap', { vol: 0.32 }) || tone(880, 0.05, { vol: 0.03, type: 'square' }); return; }
+      const n = pick(names);
+      lastClick = n;
+      play(n, { vol: CLICKS[n], jit: 0.1 });
+      if (Math.random() < 0.3) play(PLACE, { vol: 0.06, rate: 1.7, jit: 0.15, delay: 0.005 });
+    },
     type() { play('type', { vol: 0.07, jit: 0.12 }) || tone(1500 + Math.random() * 300, 0.018, { vol: 0.012, type: 'triangle' }); },
     open() { play('open', { vol: 0.13, rate: 0.85 }); },
     close() { play('close', { vol: 0.1, rate: 0.9 }); },
@@ -313,7 +326,7 @@
     // On soulève une planète pour la glisser.
     lift(pan) { play(['pluck1', 'pluck2'], { vol: 0.12, rate: 0.7, pan }); },
     // Petit déclic quand une planète glissée change d'orbite cible.
-    slot() { play('tap', { vol: 0.12, rate: 1.4, jit: 0.1 }); },
+    slot() { play(Object.keys(CLICKS), { vol: 0.1, rate: 1.3, jit: 0.12 }); },
     sell() { play(CRUMBLE, { vol: 0.32, rate: 1.1, rev: 0.15 }) ? play('back', { vol: 0.16 }) : tone(520, 0.12, { to: 260, type: 'square' }); },
     roll() { play('roll', { vol: 0.32 }) || [0, 1, 2, 3].forEach((i) => tone(400 + i * 120, 0.05, { delay: i * 0.04, vol: 0.035, type: 'square' })); },
     freeze() {

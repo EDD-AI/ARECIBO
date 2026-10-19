@@ -192,10 +192,12 @@
     { key: 'dead', label: 'Planète morte', w: 4 },
     { key: 'portal', label: 'Portail', w: 3 },
     { key: 'blackhole', label: 'Trou noir', w: 3 },
-    { key: 'mecha', label: 'Sphère artificielle', w: 2 }
+    { key: 'mecha', label: 'Sphère artificielle', w: 2 },
+    { key: 'comet', label: 'Comète', w: 3 },
+    { key: 'eclipse', label: 'Éclipse', w: 1 }
   ];
   const TYPE_BY_KEY = Object.fromEntries(TYPES.map((t) => [t.key, t]));
-  const NO_FACET = new Set(['star', 'portal', 'blackhole', 'crystal']);
+  const NO_FACET = new Set(['star', 'portal', 'blackhole', 'crystal', 'comet', 'eclipse']);
 
   // Identifiants des programmes de surface (doivent correspondre au shader).
   const SH = { TERRAN: 0, OCEAN: 1, ICE: 2, LAVA: 3, DESERT: 4, GAS: 5, ROCK: 6, ASTEROID: 7, STAR: 8, CRYSTAL: 9, PORTAL: 10, BLACKHOLE: 11, MECHA: 12 };
@@ -416,6 +418,77 @@
     return b;
   }
 
+  // Comète : petit noyau de glace sale et longue queue soufflée à l'opposé de l'étoile.
+  function bodyComet(r, warm) {
+    const b = bodyAsteroid(r);
+    const P = b.pal;
+    const h = warm ? r.range(25, 50) : r.range(190, 230);
+    P[5] = ramp(warm ? 0.6 : 0.82, warm ? 0.05 : 0.03, h);
+    P[6] = ramp(warm ? 0.48 : 0.68, warm ? 0.05 : 0.035, h);
+    P[11] = ramp(warm ? 0.34 : 0.5, 0.04, h + 10);
+    P[14] = warm
+      ? gradRamp([[0.35, 0.12, 25], [0.6, 0.18, 45], [0.82, 0.15, 75], [0.98, 0.05, 95]])
+      : gradRamp([[0.3, 0.07, h + 25], [0.55, 0.11, h], [0.8, 0.08, h - 20], [0.98, 0.02, h - 40]]);
+    const k = r.range(0.55, 0.65);
+    b.C = [b.C[0] * k, b.C[1] * k, b.C[2] * k, 0];
+    b.bound = Math.max(b.C[0], b.C[1], b.C[2]) * (1 + b.D[0]) + 0.03;
+    b.D[2] = b.bound;
+    b.tail = { len: r.range(2.5, 2.8), spread: r.range(0.16, 0.24) };
+    return b;
+  }
+
+  // Formes non sphériques (dessinées par marche de rayon dans le moteur de rendu).
+  const SHAPE_KEYS = ['double', 'brisee', 'amas', 'anneau', 'bloc', 'monolithe', 'diamant', 'foret'];
+  function makeShape(name, r, body) {
+    const tumble = () => { body.roll = r.range(-1.2, 1.2); body.pitch = r.range(-0.9, 0.9); };
+    switch (name) {
+      case 'double': {
+        const a = r.range(0.42, 0.5), r1 = r.range(0.52, 0.6), r2 = r.range(0.4, 0.48);
+        tumble();
+        body.pitch = r.range(-0.4, 0.4);
+        return { kind: 2, P: [a, r1, r2, r.range(0.14, 0.22)], Q: [r.range(0.06, 0.1), r.range(1.4, 2.2), a + r1 + 0.16, 0] };
+      }
+      case 'brisee': {
+        const sep = r.range(0.13, 0.17);
+        tumble();
+        return { kind: 3, P: [sep, 0, 0, 0], Q: [r.range(0.02, 0.045), 1.6, 1 + sep * 1.8 + 0.08, 0] };
+      }
+      case 'amas': {
+        const core = r.range(0.52, 0.6), len = r.range(1.15, 1.3);
+        tumble();
+        return { kind: 4, P: [core, r.int(6, 9), len, r.range(0.2, 0.26)], Q: [0, 1, len + 0.08, 0] };
+      }
+      case 'anneau': {
+        const R0 = r.range(0.64, 0.72), t = r.range(0.24, 0.3);
+        body.roll = r.range(-0.5, 0.5);
+        body.pitch = r.sign() * r.range(0.65, 0.95);
+        return { kind: 5, P: [R0, t, 0, 0], Q: [0, 1, R0 + t + 0.06, 0] };
+      }
+      case 'bloc': {
+        const e = r.range(0.5, 0.56), w = r.range(0.06, 0.1);
+        tumble();
+        return { kind: 6, P: [e, e, e, w], Q: [0, 1, e * 1.75 + w + 0.06, 0] };
+      }
+      case 'monolithe': {
+        const x = r.range(0.3, 0.36), y = r.range(0.9, 0.98), z = r.range(0.16, 0.2), w = 0.03;
+        body.roll = r.range(-0.25, 0.25);
+        body.pitch = r.range(-0.3, 0.3);
+        return { kind: 6, P: [x, y, z, w], Q: [0, 1, Math.hypot(x, y, z) + w + 0.05, 0] };
+      }
+      case 'diamant': {
+        body.roll = r.range(-0.3, 0.3);
+        body.pitch = r.range(-0.35, 0.35);
+        return { kind: 7, P: [0.74, 1, 0.74, 0], Q: [0, 1, 1.05, 0] };
+      }
+      case 'foret': {
+        body.roll = r.range(-0.6, 0.6);
+        body.pitch = r.range(-0.4, 0.4);
+        return { kind: 7, P: [0.5, 1.05, 0.5, 0], Q: [0, 1, 1.1, 0] };
+      }
+      default: return null;
+    }
+  }
+
   const STAR_CLASSES = [
     { label: 'naine rouge', w: 2, stops: [[0.32, 0.12, 25], [0.55, 0.19, 35], [0.75, 0.17, 55], [0.95, 0.08, 90]] },
     { label: 'étoile orange', w: 2, stops: [[0.42, 0.14, 40], [0.65, 0.18, 55], [0.84, 0.14, 75], [0.98, 0.05, 100]] },
@@ -525,6 +598,15 @@
       case 'portal': return bodyPortal(r);
       case 'blackhole': return bodyBlackHole(r);
       case 'mecha': return bodyMecha(r);
+      case 'comet': return bodyComet(r, opts && opts.warm);
+      case 'eclipse': {
+        const b = bodyStar(r, (opts && opts.starClass) || 'étoile blanche');
+        b.B = [0, 0, 0, 1];
+        b.corona.len = r.range(0.45, 0.6);
+        b.corona.power = 1.35;
+        b.size = 0.85;
+        return b;
+      }
       default: return bodyRock(r);
     }
   }
@@ -729,14 +811,15 @@
       facts: ['Structure entièrement artificielle.', 'Émission radio : une suite de nombres premiers.', 'Origine inconnue.']
     }
   };
-  const LORE_ALIAS = { earth: 'terran' };
+  const LORE_ALIAS = { earth: 'terran', comet: 'ice', eclipse: 'star' };
   const VERBS = [['abritent', 'abrite'], ['cachent', 'cache'], ['accueillent', 'accueille'], ['protègent', 'protège'], ['dissimulent', 'dissimule']];
 
   const STATS = {
     terran: [5200, 15800, -20, 38], earth: [9000, 14000, -5, 30], ocean: [6000, 21000, 2, 30], ice: [1800, 12000, -230, -60],
     lava: [2400, 11000, 350, 1400], dead: [3000, 9000, -190, -80], desert: [3000, 13000, 20, 85], gas: [38000, 170000, -210, -90],
     moon: [300, 4200, -180, 120], asteroid: [2, 950, -200, -40], star: [200000, 9000000, 2600, 32000], crystal: [900, 7000, -150, 20],
-    toxic: [4000, 14000, 30, 140], portal: [40, 900, null, null], blackhole: [8, 300, null, null], mecha: [90, 1200, -120, -20]
+    toxic: [4000, 14000, 30, 140], portal: [40, 900, null, null], blackhole: [8, 300, null, null], mecha: [90, 1200, -120, -20],
+    comet: [1, 60, -240, -80], eclipse: [200000, 2000000, 4000, 9000]
   };
 
   const fmtNum = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -751,6 +834,7 @@
     else if (roll < 0.85) name += ' ' + r.pick(['PRIME', 'MINOR', 'MAJOR']);
     if (g.type === 'blackhole') name = 'ABÎME ' + base.toUpperCase();
     if (g.type === 'portal') name = 'ANOMALIE ' + base.toUpperCase();
+    if (g.type === 'comet') name = 'COMÈTE ' + base.toUpperCase();
     const code = 'ARC-' + String(r.int(1000, 9999)) + '-' + 'abcdefgh'[r.int(0, 7)];
     const lore = LORE[LORE_ALIAS[g.type] || g.type] || LORE.terran;
     const place = r.pick(lore.places);
@@ -788,6 +872,7 @@
     if (b.disk) { const e = proj(b.disk.outer, g.ringN); grow(e[0], e[1]); }
     if (g.debris) { const e = proj(g.debris.outer + 0.05, g.debrisN); grow(e[0], e[1]); }
     if (g.fx.shards) grow(1.45, 1.45);
+    if (b.tail) grow(1.7, 1.7);
     g.coreExtent = { x: ex, y: ey };
     for (const m of g.moons) { const e = proj(m.a, m.N); grow(e[0] + m.size, e[1] + m.size); }
     for (const s of g.sats) { const e = proj(s.a, s.N); grow(e[0] + 0.05, e[1] + 0.05); }
@@ -804,6 +889,24 @@
 
     const body = buildBody(key, makeRng(hashSeed(seed, 2)), opts);
     g.body = body;
+
+    // Silhouette : imposée par le jeu, ou tirée au hasard pour certaines natures dans l'atelier.
+    const shr = makeRng(hashSeed(seed, 11));
+    let shapeName = opts.shape;
+    if (shapeName == null && !compact) {
+      const pool = { asteroid: ['double', 'brisee'], moon: ['double', 'brisee'], dead: ['brisee'], lava: ['brisee'], crystal: ['amas', 'diamant', 'bloc'], mecha: ['anneau', 'bloc', 'foret'], desert: ['monolithe', 'brisee'], toxic: ['anneau'] }[key];
+      if (pool && shr.chance(0.2)) shapeName = shr.pick(pool);
+    }
+    if (shapeName && SHAPE_KEYS.includes(shapeName)) {
+      body.shape = makeShape(shapeName, shr, body);
+      body.bound = body.shape.Q[2];
+      body.clouds = null;
+      body.atmo = null;
+      if (shapeName === 'brisee') {
+        const hot = opts.coreHue != null ? opts.coreHue : 30;
+        body.pal[14] = gradRamp([[0.3, 0.12, hot - 10], [0.55, 0.18, hot], [0.8, 0.15, hot + 25], [0.98, 0.05, hot + 50]]);
+      }
+    }
 
     const fr = makeRng(hashSeed(seed, 8));
     const facetOn = !NO_FACET.has(key) && (opts.facet === 'on' || (opts.facet !== 'off' && fr.chance(key === 'gas' ? 0.1 : 0.22)));
@@ -829,7 +932,7 @@
     const odds = RING_ODDS[key] || [0.1, 0.15];
     const hasRing = opts.ring != null ? !!opts.ring && odds[0] > 0 : rr.chance(odds[0]);
     const hasDebris = opts.debris != null ? !!opts.debris && odds[1] > 0 : rr.chance(odds[1]);
-    if ((hasRing || hasDebris) && body.shader !== SH.ASTEROID) body.pitch = rr.sign() * rr.range(0.18, 0.5);
+    if ((hasRing || hasDebris) && body.shader !== SH.ASTEROID && !body.shape) body.pitch = rr.sign() * rr.range(0.18, 0.5);
     const M = tiltMatrix(body.roll, body.pitch);
     body.M = M;
     g.ringN = column(M, 1); g.ringU = column(M, 0); g.ringV = column(M, 2);
@@ -923,6 +1026,8 @@
     // Transformations de palette demandées par le jeu.
     // L'Envers : ombres bleu ardoise, lumières rouges, comme un monde retourné.
     if (opts.mood === 'envers') applyMood(g, (L, C, h) => (L < 0.52 ? [L * 0.8, C * 0.45 + 0.025, hueToward(h, 250, 120)] : [L * 0.92, C * 0.7 + 0.06, hueToward(h, 18, 140)]));
+    // Obsidienne : verre volcanique presque noir, reflets violets.
+    if (opts.mood === 'obsidienne') applyMood(g, (L, C, h) => [L * 0.5 + 0.06, C * 0.6 + 0.02, hueToward(h, 285, 160)]);
     if (opts.hueShift) applyMood(g, (L, C, h) => [L, C, h + opts.hueShift]);
 
     // Options de décor : pas de calottes polaires, éclairage imposé.
@@ -930,6 +1035,7 @@
     if (opts.light) {
       const l = Math.hypot(opts.light[0], opts.light[1], opts.light[2]) || 1;
       g.light = opts.light.map((v) => v / l);
+      g.night = g.light[2] < 0;
     }
 
     computeExtent(g);
