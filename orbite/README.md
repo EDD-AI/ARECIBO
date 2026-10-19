@@ -79,7 +79,7 @@ anneau (`livingWorld` dans `js/planet-engine.js`). Au niveau 120 elle ressemble 
 Trois onglets :
 
 - **Ma planète** : les 24 améliorations décrites plus haut.
-- **Création** : vide pour l’instant (« Bientôt »), réservé à un futur atelier de création d’astres.
+- **Création** : l’**Atelier des planètes** (`atelier.html`), le générateur pixel art avec export PNG et GIF, présenté avec une planète d’aperçu différente à chaque visite. Il n’est plus dans les Paramètres.
 - **Cosmétiques** : des **fonds animés** qui remplacent le noir pendant les parties, à **650
   poussières d’étoiles** chacun. Toucher un fond l’essaie aussitôt derrière l’écran du marché. Une
   fois acheté, il s’équipe ; « Noir » remet le fond d’origine. Les fonds disponibles :
