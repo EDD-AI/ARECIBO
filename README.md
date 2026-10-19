@@ -34,6 +34,14 @@ Pages legacy conservees comme reference visuelle / technique :
 
 Ces fichiers legacy ne sont pas la base du nouveau jeu. On les garde seulement comme banque d'idees ou de composants.
 
+## ORBITE (projet séparé)
+
+Le dossier `orbite/` contient un autre jeu, autonome : un autobattler de planètes façon
+*Champs de bataille*, pensé pour le téléphone, et son générateur de planètes pixel art.
+- `orbite/index.html` : le jeu
+- `orbite/atelier.html` : le générateur de planètes (export PNG / GIF)
+- détails : [orbite/README.md](orbite/README.md)
+
 ## Structure utile
 
 ### Pages

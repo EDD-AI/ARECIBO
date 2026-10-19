@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>ORBITE — Atelier planétaire</title>
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/atelier.css">
+</head>
+<body>
+  <canvas id="scene" aria-label="Planète générée"></canvas>
+
+  <section class="info" aria-live="polite">
+    <a class="back" href="index.html">← ORBITE</a>
+    <h1 id="name">—</h1>
+    <p class="type" id="type"></p>
+    <p class="desc" id="desc"></p>
+    <dl class="stats" id="stats"></dl>
+  </section>
+
+  <p class="seed"><span>GRAINE</span> <b id="seed">--------</b></p>
+
+  <nav class="bar" aria-label="Commandes">
+    <div class="row">
+      <button class="icon" id="prev" title="Précédente (←)" aria-label="Planète précédente">◀</button>
+      <button class="main" id="generate">GÉNÉRER</button>
+      <button class="icon" id="next" title="Suivante (→)" aria-label="Planète suivante">▶</button>
+    </div>
+    <div class="row small">
+      <label><span>Nature</span><select id="typeSelect"></select></label>
+      <label><span>Rendu</span>
+        <select id="facetSelect">
+          <option value="auto">Auto</option>
+          <option value="off">Pixel</option>
+          <option value="on">Low-poly</option>
+        </select>
+      </label>
+      <label><span>Pixels</span>
+        <select id="pixelSelect">
+          <option value="fin">Fins</option>
+          <option value="normal" selected>Moyens</option>
+          <option value="gros">Gros</option>
+        </select>
+      </label>
+      <button id="pause">PAUSE</button>
+      <button id="png">PNG</button>
+      <button id="gif">GIF</button>
+      <button id="link">LIEN</button>
+    </div>
+  </nav>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="js/planet-engine.js"></script>
+  <script src="js/planet-renderer.js"></script>
+  <script src="js/atelier.js"></script>
+</body>
+</html>
