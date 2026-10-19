@@ -1255,6 +1255,7 @@ void main() { outColor = fin(texture(uTex, gl_FragCoord.xy / uRes).rgb); }
       this.gl = gl;
       this.canvas = canvas;
       this.transparent = !!o.transparent;
+      this.bound = null;
       this.W = canvas.width;
       this.H = canvas.height;
       this.progBody = this.program(VS_QUAD, FS_BODY, ['aPos']);
@@ -1355,11 +1356,13 @@ void main() { outColor = fin(texture(uTex, gl_FragCoord.xy / uRes).rgb); }
       gl.uniform1f(this.loc(prog, 'uFrost'), st.frost || 0);
     }
 
+    // bound : cadre optionnel [x0, y0, x1, y1] (une liste qui défile) que rien ne doit dépasser.
     clip(cx, cy, r) {
-      const x0 = Math.max(0, Math.floor(cx - r - 2));
-      const y0 = Math.max(0, Math.floor(cy - r - 2));
-      const x1 = Math.min(this.W, Math.ceil(cx + r + 2));
-      const y1 = Math.min(this.H, Math.ceil(cy + r + 2));
+      const B = this.bound;
+      const x0 = Math.max(B ? B[0] : 0, Math.floor(cx - r - 2));
+      const y0 = Math.max(B ? B[1] : 0, Math.floor(cy - r - 2));
+      const x1 = Math.min(B ? B[2] : this.W, Math.ceil(cx + r + 2));
+      const y1 = Math.min(B ? B[3] : this.H, Math.ceil(cy + r + 2));
       this.gl.scissor(x0, y0, Math.max(0, x1 - x0), Math.max(0, y1 - y0));
       return x1 > x0 && y1 > y0;
     }
@@ -1474,13 +1477,16 @@ void main() { outColor = fin(texture(uTex, gl_FragCoord.xy / uRes).rgb); }
       if (!n) return;
       const gl = this.gl, pr = this.progSprite;
       const scissor = gl.isEnabled(gl.SCISSOR_TEST);
-      gl.disable(gl.SCISSOR_TEST);
+      const B = this.bound;
+      if (B) { gl.enable(gl.SCISSOR_TEST); gl.scissor(B[0], B[1], Math.max(0, B[2] - B[0]), Math.max(0, B[3] - B[1])); }
+      else gl.disable(gl.SCISSOR_TEST);
       gl.useProgram(pr.p);
       this.common(pr, st);
       gl.uniform2f(this.loc(pr, 'uRes'), this.W, this.H);
       gl.bindVertexArray(this.spriteVao);
       gl.drawArrays(gl.POINTS, LAYERS.indexOf(layer) * SPRITE_CAP, n);
       if (scissor) gl.enable(gl.SCISSOR_TEST);
+      else gl.disable(gl.SCISSOR_TEST);
     }
 
     // ─── Système complet ──────────────────────────────────────

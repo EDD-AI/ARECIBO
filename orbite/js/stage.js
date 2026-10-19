@@ -221,6 +221,15 @@
       if (cover && b.right > cover.left && b.left < cover.right && b.bottom > cover.top && b.top < cover.bottom) return;
       if (b.bottom < -80 || b.top > window.innerHeight + 80) return;
       if (s.reveal <= 0.01) return;
+      // Dans une liste qui défile (data-clipbox), l'astre ne déborde pas sur l'en-tête ni le bas.
+      const boxEl = el.closest('[data-clipbox]');
+      let bound = null;
+      if (boxEl) {
+        const c = boxEl.getBoundingClientRect();
+        if (b.bottom <= c.top || b.top >= c.bottom) return;
+        const [x0, y1] = this.toArt(c.left, c.top), [x1, y0] = this.toArt(c.right, c.bottom);
+        bound = [Math.floor(x0), Math.floor(y0), Math.ceil(x1), Math.ceil(y1)];
+      }
       const id = el.dataset.planet;
       if (!id) return;
       const g = this.genome(id);
@@ -232,6 +241,7 @@
       const speed = el.dataset.speed ? parseFloat(el.dataset.speed) : 1;
       const p = speed === 1 ? phase : ((this.time * speed) / LOOP_SECONDS) % 1;
       const own = el.dataset.dim ? parseFloat(el.dataset.dim) : 1;
+      this.r.bound = bound;
       if (el.dataset.glow) {
         const k = parseFloat(el.dataset.glow);
         this.r.haloPass(4, Math.round(cx), Math.round(cy), R, 1 + k, [1 + k, 0.85, 0, 0], g.body.pal, 12, g.body.seed, g.light, { reveal: s.reveal, phase: p, flash: 0, dim: dim * own, flip: 1 });
@@ -242,6 +252,7 @@
         flip: g.flip, golden: el.dataset.golden === '1', shield: el.dataset.shield === '1', ghost: el.dataset.ghost === '1',
         frost: s.frost
       });
+      this.r.bound = null;
       // data-clip : rien n'est dessiné sous cette ligne (l'horizon du menu), quel que soit le décor HTML.
       if (el.dataset.clip) this.clearBelow(parseFloat(el.dataset.clip));
     }
