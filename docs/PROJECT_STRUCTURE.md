@@ -76,3 +76,11 @@ Quand on ajoute quelque chose :
 - les textes de jeu / UI FR doivent garder leurs accents
 
 Objectif : retrouver un systeme en moins de 10 secondes sans relire tout le repo.
+
+## 6. ORBITE (dossier autonome)
+
+`orbite/` est un jeu séparé d'ARECIBO, sans dépendance avec le reste du repo :
+- `orbite/index.html` + `orbite/js/game.js` + `orbite/css/game.css` : le jeu
+- `orbite/atelier.html` + `orbite/js/atelier.js` + `orbite/css/atelier.css` : le générateur de planètes
+- `orbite/js/rules.js` : les règles (testées par `node --test orbite/tests/rules.test.mjs`)
+- `orbite/js/planet-engine.js` + `orbite/js/planet-renderer.js` + `orbite/js/stage.js` : le rendu des planètes
