@@ -1,5 +1,5 @@
 /* ORBITE — règles du jeu (pures et déterministes, sans DOM).
- * Taverne à réserve partagée, fusion dorée + découverte, combat automatique
+ * Création à réserve partagée, fusion dorée + découverte, combat automatique
  * façon Champs de bataille, bots, dégâts plafonnés, classement et poussières.
  * Navigateur : window.OrbiteRules — Node : require('./rules.js'). */
 (function (root, factory) {
@@ -34,7 +34,7 @@
     mineral: { name: 'Minéral', color: '#dcbd8c', text: 'Remparts de roche qui accumulent les points de vie.' },
     machine: { name: 'Machine', color: '#b8c4d8', text: 'Sondes et stations qui s’arriment les unes aux autres.' },
     lune: { name: 'Lunes', color: '#f2e3a0', text: 'Satellites qui renforcent leurs voisins : l’ordre du système compte.' },
-    comete: { name: 'Comètes', color: '#5f86ff', text: 'Elles grandissent quand vous actualisez la taverne et récompensent la vente.' },
+    comete: { name: 'Comètes', color: '#5f86ff', text: 'Elles grandissent quand vous actualisez la Création et récompensent la vente.' },
     cristal: { name: 'Cristal', color: '#ff7ad9', text: 'Résonance : chaque Cristal joué renforce les autres.' },
     anomalie: { name: 'Anomalies', color: '#e6ff6e', text: 'Le chaos : astres aléatoires, découvertes et mots-clés imprévus.' },
     neutre: { name: 'Neutre', color: '#9aa3ad', text: 'Présents dans toutes les parties.' }
@@ -53,7 +53,7 @@
   };
 
   // ─── Catalogue ──────────────────────────────────────────────
-  // Hooks de taverne : play (Naissance), endTurn, startTurn, buy.
+  // Hooks de création : play (Naissance), endTurn, startTurn, buy.
   // Hooks de combat : start, attack, allyAttack, death (Effondrement), allyDeath,
   // shieldBreak, damaged, allyKill, reborn, allyReborn. m = 2 si doré.
   const CARDS = [
@@ -327,7 +327,7 @@
 
     // COMÈTES : elles grandissent quand vous actualisez et récompensent la vente.
     { id: 'meteore', fam: 'comete', tier: 1, atk: 2, hp: 3, name: 'Météore', look: { type: 'comet', seed: 9201, warm: true },
-      text: 'Quand vous actualisez la taverne, gagne +{1} Attaque.',
+      text: 'Quand vous actualisez la Création, gagne +{1} Attaque.',
       roll(x, u, m) { x.buff(u, m, 0); } },
     { id: 'halley', fam: 'comete', tier: 1, atk: 2, hp: 3, name: 'Halley', look: { type: 'comet', seed: 9202 },
       text: 'Vendu : un astre aléatoire de votre système gagne +{1}/+{1}.',
@@ -495,7 +495,7 @@
 
   function upgradeCost(p) { return p.tier >= 6 ? 0 : Math.max(0, UPGRADE[p.tier] - p.discount); }
 
-  // ─── Contexte de taverne ────────────────────────────────────
+  // ─── Contexte de création ────────────────────────────────────
   function shopCtx(state, p) {
     const rng = rngFor(state, 'shop:' + p.id);
     const x = {
@@ -556,7 +556,7 @@
     c[name](x, u, u.golden ? 2 : 1, ...args);
   }
 
-  // ─── Réserve et taverne ─────────────────────────────────────
+  // ─── Réserve et création ─────────────────────────────────────
   function drawFromPool(state, maxTier, rng, exactTier) {
     const ids = Object.keys(state.pool).filter((id) => {
       const t = CARD[id].tier;
@@ -648,7 +648,7 @@
 
   function alivePlayers(state) { return state.players.filter((p) => p.alive); }
 
-  // ─── Actions de taverne ─────────────────────────────────────
+  // ─── Actions de création ─────────────────────────────────────
   function ownedCopies(p, id) {
     return p.board.concat(p.hand).filter((u) => u.id === id && !u.golden);
   }

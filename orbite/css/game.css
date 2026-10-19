@@ -308,6 +308,25 @@ body.modal #gl { z-index: 35; }
 .mk-row.next { color: var(--gold); }
 .mk-row.next i { color: var(--gold); }
 .mk-row.locked { opacity: 0.45; }
+/* Onglets du Marché stellaire. */
+.mk-tabs { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 0 14px; border-bottom: 1px solid var(--line); }
+.mk-tabs button { padding: 12px 4px 10px; font-size: 11px; letter-spacing: 0.16em; color: var(--dim); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.mk-tabs button.on { color: var(--ink); border-bottom-color: var(--ink); }
+.mk-pane[hidden] { display: none; }
+.mk-soon { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 18vh; text-align: center; }
+.mk-soon b { font-size: 22px; font-weight: 600; letter-spacing: 0.1em; }
+.mk-soon p { margin: 0; max-width: 280px; color: var(--dim); font-size: 14px; line-height: 1.45; }
+.mk-intro { margin: 0 0 6px; color: var(--dim); font-size: 13px; line-height: 1.45; }
+.mk-note { margin: 14px 0 0; color: var(--dim); font-size: 12px; text-align: center; }
+.cos-list h4 { margin: 16px 0 6px; font-size: 11px; font-weight: 400; letter-spacing: 0.24em; }
+.cos-row { display: grid; grid-template-columns: 52px 1fr auto; gap: 12px; align-items: center; padding: 10px 8px; border: 1px solid transparent; border-bottom-color: rgba(241, 236, 218, 0.06); cursor: pointer; }
+.cos-row.sel { border-color: var(--line); background: rgba(0, 0, 0, 0.55); }
+.cos-sw { width: 52px; height: 52px; border: 1px solid var(--line); image-rendering: pixelated; }
+.cos-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cos-txt b { font-size: 15px; font-weight: 600; }
+.cos-txt small { font-size: 12px; color: var(--dim); line-height: 1.35; }
+.cos-row .btn { padding: 0 12px; min-height: 38px; font-size: 12px; letter-spacing: 0.1em; white-space: nowrap; }
+.cos-on { font-size: 11px; letter-spacing: 0.16em; color: var(--good); }
 
 /* Profil */
 .profile-btn {
@@ -536,7 +555,7 @@ body.in-combat .system::before { display: none; }
 @keyframes ready { 50% { box-shadow: 0 0 0 4px rgba(241, 236, 218, 0.16); } }
 .battle-ctl { display: none; gap: 8px; margin-left: auto; }
 
-/* Combat : la taverne laisse place au système adverse. */
+/* Combat : la Création laisse place au système adverse. */
 body.in-combat .tavern,
 body.in-combat .energy,
 body.in-combat .hand,

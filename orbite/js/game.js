@@ -1,5 +1,5 @@
 /* ORBITE — interface du jeu (téléphone d'abord).
- * Accueil → choix de la loi → cycles taverne / combat → classement.
+ * Accueil → choix de la loi → cycles création / combat → classement.
  * Les règles sont dans rules.js ; ce fichier ne fait que montrer et animer. */
 (function () {
   'use strict';
@@ -268,6 +268,7 @@
 
   // ─── Écrans ─────────────────────────────────────────────────
   async function show(name) {
+    stage.sky = name === 'game' ? equippedSky() : 0;
     if (coach.steps === GAME_STEPS && name !== 'game') coachStop(false);
     if (coach.steps === LAW_STEPS && name !== 'laws') coachStop(false);
     if (coach.steps === MENU_STEPS && name !== 'menu') coachStop(true);
@@ -683,6 +684,84 @@
     ui.busy = false;
   });
 
+
+  // ─── Cosmétiques : fonds animés de partie ────────────────────
+  const COS_KEY = 'orbite.cosmetiques';
+  const COS_PRICE = 650;
+  const SKIES = [
+    { id: 'nebuleuse', mode: 1, name: 'Nébuleuse pourpre', text: 'Des nuages violets et turquoise dérivent lentement.', c: ['#3a1248', '#0b2f38'] },
+    { id: 'aurore', mode: 2, name: 'Aurore boréale', text: 'Deux voiles verts et violets ondulent en haut de l’écran.', c: ['#1f8c52', '#4a1f70'] },
+    { id: 'galaxie', mode: 3, name: 'Galaxie spirale', text: 'Une galaxie tourne au loin, son cœur doré au milieu des bras bleus.', c: ['#8c6a42', '#1f2b61'] },
+    { id: 'filantes', mode: 4, name: 'Pluie d’étoiles filantes', text: 'Des étoiles filantes traversent le ciel de temps en temps.', c: ['#c7d6ff', '#0a0c1c'] },
+    { id: 'abysse', mode: 5, name: 'Trou noir lointain', text: 'Un disque d’accrétion doré tourne dans un coin du ciel.', c: ['#f2bf66', '#4a1c06'] }
+  ];
+  const SKY_BY_ID = Object.fromEntries(SKIES.map((k) => [k.id, k]));
+  function cosmetics() {
+    try { const c = JSON.parse(store.get(COS_KEY, '')); if (c && Array.isArray(c.owned)) return c; } catch (err) { /* aucun achat */ }
+    return { owned: [], on: '' };
+  }
+  function saveCosmetics(c) { store.set(COS_KEY, JSON.stringify(c)); }
+  const equippedSky = () => { const c = cosmetics(); return SKY_BY_ID[c.on] ? SKY_BY_ID[c.on].mode : 0; };
+
+  function renderCosmetics() {
+    const c = cosmetics();
+    const row = (k) => {
+      const owned = !k.id || c.owned.includes(k.id), on = (c.on || '') === (k.id || ''), sel = ui.cosPick === (k.id || '');
+      let btn;
+      if (on) btn = '<span class="cos-on">ÉQUIPÉ</span>';
+      else if (owned) btn = `<button class="btn" data-cos-equip="${k.id || ''}">ÉQUIPER</button>`;
+      else btn = `<button class="btn primary" data-cos-buy="${k.id}" ${dust() < COS_PRICE ? 'disabled' : ''}>${icon('dust')} ${COS_PRICE}</button>`;
+      const sw = k.id ? `background:radial-gradient(circle at 30% 35%, ${k.c[0]}, transparent 70%), radial-gradient(circle at 75% 70%, ${k.c[1]}, #000 80%)` : 'background:#000';
+      return `<div class="cos-row ${sel ? 'sel' : ''}" data-cos="${k.id || ''}">
+        <span class="cos-sw" style="${sw}"></span>
+        <span class="cos-txt"><b>${esc(k.name)}</b><small>${esc(k.text)}</small></span>${btn}</div>`;
+    };
+    $('cosList').innerHTML = `<h4>FONDS ANIMÉS</h4>` + row({ id: '', name: 'Noir', text: 'Le fond sobre d’origine.' }) + SKIES.map(row).join('') +
+      (dust() < COS_PRICE ? `<p class="mk-note">Vous avez ${dust()} poussières d’étoiles. Le podium d’une partie en rapporte.</p>` : '');
+  }
+  function marketTab(tab) {
+    ui.mkTab = tab;
+    for (const b of $('mkTabs').children) b.classList.toggle('on', b.dataset.tab === tab);
+    for (const p of document.querySelectorAll('#market .mk-pane')) p.hidden = p.dataset.pane !== tab;
+    if (tab === 'cosmetiques') { ui.cosPick = cosmetics().on || ''; renderCosmetics(); }
+    stage.sky = tab === 'cosmetiques' && SKY_BY_ID[ui.cosPick] ? SKY_BY_ID[ui.cosPick].mode : 0;
+  }
+  $('mkTabs').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-tab]');
+    if (!b || b.classList.contains('on')) return;
+    SFX.tap();
+    marketTab(b.dataset.tab);
+  });
+  $('cosList').addEventListener('click', (e) => {
+    const buy = e.target.closest('[data-cos-buy]'), eq = e.target.closest('[data-cos-equip]'), row = e.target.closest('[data-cos]');
+    const c = cosmetics();
+    if (buy) {
+      if (buy.disabled) return;
+      const k = SKY_BY_ID[buy.dataset.cosBuy];
+      if (!k || c.owned.includes(k.id)) return;
+      if (dust() < COS_PRICE) { refuse(`Il vous manque ${COS_PRICE - dust()} poussières d’étoiles.`); return; }
+      addDust(-COS_PRICE);
+      c.owned.push(k.id);
+      c.on = k.id;
+      saveCosmetics(c);
+      SFX.golden();
+      const [x, y] = center(buy);
+      stage.burst(x, y, { n: 40, colors: [[246, 196, 83], [255, 255, 255]], speed: 90, life: 0.8 });
+      $('marketDust').innerHTML = icon('dust') + ' ' + dust();
+      toast(`${k.name} : équipé pour vos parties.`, 2600);
+    } else if (eq) {
+      c.on = eq.dataset.cosEquip;
+      saveCosmetics(c);
+      SFX.place();
+      toast(c.on ? `${SKY_BY_ID[c.on].name} : équipé.` : 'Fond noir équipé.', 2000);
+    } else if (row) {
+      SFX.tap();
+    } else return;
+    ui.cosPick = row ? row.dataset.cos : ui.cosPick;
+    stage.sky = SKY_BY_ID[ui.cosPick] ? SKY_BY_ID[ui.cosPick].mode : 0;
+    renderCosmetics();
+  });
+
   // ─── Profil ─────────────────────────────────────────────────
   const PSEUDO_KEY = 'orbite.pseudo', TAG_KEY = 'orbite.tag', STATS_KEY = 'orbite.stats', HIST_KEY = 'orbite.historique';
   const pseudo = () => store.get(PSEUDO_KEY, '') || 'Créateur';
@@ -1073,24 +1152,24 @@
     { id: 'bienvenue', text: 'Bienvenue dans votre univers ! Vous affrontez <b>7 rivaux</b>. À chaque <b>cycle</b>, vous achetez des astres, puis votre système <b>combat tout seul</b> un rival. Le dernier debout gagne.', next: 'SUIVANT', delay: 0 },
     { id: 'pv', target: '#hudHp', text: 'Vos <b>points de vie</b>. Un combat perdu vous en retire. À 0, vous êtes éliminé.', next: 'SUIVANT' },
     { id: 'energie', target: '#energy', text: 'Votre <b>énergie</b> : 3 au premier cycle, une de plus à chaque cycle. Un astre coûte <b>3</b>.', next: 'SUIVANT' },
-    { id: 'taverne', target: '#tavern', text: 'Voici la <b>taverne</b> : elle vous propose des astres. <b>Touchez-en un</b> pour lire ce qu’il fait.', gesture: { tap: '#shop .unit', at: 0.35 }, wait: ['fiche'], jump: { achat: 'main', combat: 'regard' } },
-    { id: 'fiche', target: '#sheet [data-act="buy"]', dim: false, place: 'top', text: 'Sa fiche : ' + '<b>attaque</b>, <b>PV</b> et <b>pouvoir</b>. Touchez <b>ACHETER</b>.', gesture: { tap: '#sheet [data-act="buy"]', at: 0.5 }, wait: ['achat'], jump: { fermer: 'taverne' } },
+    { id: 'creation', target: '#tavern', text: 'Voici la <b>Création</b> : c’est là que naissent les astres qu’on vous propose. <b>Touchez-en un</b> pour lire ce qu’il fait.', gesture: { tap: '#shop .unit', at: 0.35 }, wait: ['fiche'], jump: { achat: 'main', combat: 'regard' } },
+    { id: 'fiche', target: '#sheet [data-act="buy"]', dim: false, place: 'top', text: 'Sa fiche : ' + '<b>attaque</b>, <b>PV</b> et <b>pouvoir</b>. Touchez <b>ACHETER</b>.', gesture: { tap: '#sheet [data-act="buy"]', at: 0.5 }, wait: ['achat'], jump: { fermer: 'creation' } },
     { id: 'main', target: '#handZone', text: 'L’astre attend dans votre <b>main</b>. <b>Glissez-le</b> vers votre système pour le placer en orbite.', gesture: { from: '#hand .unit', drag: '#systemZone', at: 0.35 }, wait: ['placer'], when: () => me().hand.length > 0, jump: { combat: 'regard' } },
     { id: 'systeme', target: '#systemZone', pad: -10, text: 'Il orbite votre étoile. En combat, vos astres attaquent <b>de gauche à droite</b> : l’ordre compte, glissez-les pour les réordonner.', next: 'SUIVANT' },
     { id: 'combat', target: '#fightBtn', text: 'Plus assez d’énergie ? Lancez le <b>combat</b> ! Il se joue tout seul.', gesture: { tap: '#fightBtn', at: 0.5 }, wait: ['combat'] },
     { id: 'regard', soft: true, dim: false, y: 0.76, extra: true, text: 'Vos astres (en bas) frappent ceux du rival (en haut), chacun son tour. Les survivants du gagnant infligent des dégâts au perdant.', wait: ['cycle'] },
-    { id: 'degats', text: 'Le perdant perd des PV : <b>niveau de taverne du gagnant + niveaux de ses astres survivants</b>. Nouveau cycle, nouvelle énergie !', next: 'SUIVANT', delay: 600 },
-    { id: 'actualiser', target: '#rollBtn', text: '<b>Actualiser</b> (1 énergie) : la taverne propose d’autres astres.', next: 'SUIVANT' },
-    { id: 'geler', target: '#freezeBtn', text: '<b>Geler</b> : la taverne reste la même au prochain cycle. Pratique pour garder un astre que vous ne pouvez pas encore payer.', next: 'SUIVANT' },
-    { id: 'niveau', target: '#upBtn', text: '<b>Monter de niveau</b> : la taverne propose des astres plus puissants. Le prix baisse à chaque cycle.', next: 'SUIVANT' },
-    { id: 'vendre', target: '#systemZone', pad: -10, text: 'Pour <b>vendre</b> un astre (+1 énergie), glissez-le de votre système vers la taverne.', next: 'SUIVANT' },
+    { id: 'degats', text: 'Le perdant perd des PV : <b>niveau de création du gagnant + niveaux de ses astres survivants</b>. Nouveau cycle, nouvelle énergie !', next: 'SUIVANT', delay: 600 },
+    { id: 'actualiser', target: '#rollBtn', text: '<b>Actualiser</b> (1 énergie) : la Création fait naître d’autres astres.', next: 'SUIVANT' },
+    { id: 'geler', target: '#freezeBtn', text: '<b>Geler</b> : les astres proposés restent les mêmes au prochain cycle. Pratique pour garder un astre que vous ne pouvez pas encore payer.', next: 'SUIVANT' },
+    { id: 'niveau', target: '#upBtn', text: '<b>Monter de niveau</b> : la Création fait naître des astres plus puissants. Le prix baisse à chaque cycle.', next: 'SUIVANT' },
+    { id: 'vendre', target: '#systemZone', pad: -10, text: 'Pour <b>vendre</b> un astre (+1 énergie), glissez-le de votre système vers la Création.', next: 'SUIVANT' },
     { id: 'pouvoir', target: '#powerBtn', text: 'Le <b>pouvoir</b> de votre loi : touchez-le pour l’utiliser. Il coûte de l’énergie.', next: 'SUIVANT' },
     { id: 'rivaux', target: '#rivals', text: 'Vos <b>rivaux</b> : touchez ici pour voir leurs PV et le dernier système qu’ils ont joué.', next: 'SUIVANT' },
     { id: 'fin', text: 'Dernier secret : <b>trois copies</b> du même astre fusionnent en un astre <b>doré</b>, deux fois plus fort. Visez le podium : les 3 premiers gagnent des poussières d’étoiles. À vous !', next: 'JOUER' }
   ];
   const MENU_STEPS = [
     { id: 'solo', target: '#soloBtn', text: '<b>Jouer solo</b> : une partie contre 7 rivaux. La première est guidée pas à pas.', next: 'SUIVANT', delay: 0 },
-    { id: 'marche', target: '#marketBtn', text: 'Le <b>Marché stellaire</b> : avec vos <b>poussières d’étoiles</b> (gagnées sur le podium), faites renaître votre planète, celle qui tourne derrière le menu. Chaque amélioration demande un niveau.', next: 'SUIVANT' },
+    { id: 'marche', target: '#marketBtn', text: 'Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.', next: 'SUIVANT' },
     { id: 'profil', target: '#profileBtn', text: 'Votre <b>profil</b> : pseudo, niveau, statistiques et historique. Chaque partie rapporte de l’expérience.', next: 'SUIVANT' },
     { id: 'reglages', target: '#settingsBtn', text: '<b>Paramètres</b> : son, musique, règles du jeu, et ce guide si vous voulez le revoir.', next: 'C’EST PARTI' }
   ];
@@ -1115,7 +1194,7 @@
   function renderTavernHead(pop) {
     const p = me();
     const pips = Array.from({ length: 6 }, (_, i) => `<i class="${i < p.tier ? 'on' : ''}"></i>`).join('');
-    $('tier').innerHTML = `NIVEAU <span class="pips">${pips}</span>`;
+    $('tier').innerHTML = `CRÉATION <span class="pips">${pips}</span>`;
     $('tier').classList.toggle('pop', !!pop);
     const cost = R.upgradeCost(p);
     $('upBtn').innerHTML = p.tier >= 6 ? 'MAX' : `${icon('up')} <i>${cost}</i>`;
@@ -1242,7 +1321,7 @@
     }
   }
 
-  // ─── Effets de taverne (buffs, mots-clés…) ──────────────────
+  // ─── Effets pendant la création (buffs, mots-clés…) ──────────────────
   async function playShopEvents(events, model) {
     const units = model || null;
     for (const e of events || []) {
@@ -1301,7 +1380,7 @@
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   }
 
-  // ─── Actions de taverne ─────────────────────────────────────
+  // ─── Actions de création ─────────────────────────────────────
   function copyRects(id) {
     return [...document.querySelectorAll(`#board .unit[data-id="${id}"], #hand .unit[data-id="${id}"]`)]
       .filter((el) => !el.classList.contains('golden'))
@@ -1820,8 +1899,8 @@
     'Débris': 'Petit astre de roche laissé par un monde effondré.',
     'pour le combat': 'Le bonus disparaît à la fin du combat.',
     'Vendu': 'Se déclenche quand vous vendez l’astre.',
-    'actualisez': 'Renouveler la taverne avec le bouton d’actualisation.',
-    'actualisation': 'Renouveler la taverne avec le bouton d’actualisation.',
+    'actualisez': 'Faire naître de nouveaux astres dans la Création avec le bouton d’actualisation.',
+    'actualisation': 'Faire naître de nouveaux astres dans la Création avec le bouton d’actualisation.',
     'découvrez': 'Choisissez un astre parmi trois.',
     'mot-clé aléatoire': 'Bouclier, Rafale, Venin, Renaissance ou Rempart.',
     'voisins': 'Les astres juste à sa gauche et à sa droite.',
@@ -2035,15 +2114,15 @@
   function helpHtml() {
     return `<h3>COMMENT JOUER</h3><ul class="help">
       <li>Vous affrontez <b>sept univers</b>. Chaque cycle : vous achetez, puis votre système combat seul un rival.</li>
-      <li><b>Acheter</b> coûte 3 énergies (glissez un astre vers votre main ou directement dans le système). <b>Vendre</b> rend 1 énergie (glissez un astre du système vers la taverne). <b>Actualiser</b> coûte 1.</li>
-      <li><b>Geler</b> garde la vitrine pour le cycle suivant. <b>Monter de niveau</b> débloque des astres plus puissants ; le prix baisse à chaque cycle.</li>
+      <li><b>Acheter</b> coûte 3 énergies (glissez un astre vers votre main ou directement dans le système). <b>Vendre</b> rend 1 énergie (glissez un astre du système vers la Création). <b>Actualiser</b> coûte 1.</li>
+      <li><b>Geler</b> garde les astres proposés pour le cycle suivant. <b>Monter de niveau</b> débloque des astres plus puissants ; le prix baisse à chaque cycle.</li>
       <li>Votre système compte <b>7 orbites</b>, votre main 10 astres. Les astres attaquent de gauche à droite : l’ordre compte.</li>
       <li><b>Touchez un astre</b> pour lire ce qu’il fait, même en combat ou chez un rival. Sous chaque astre : ${icon('sword')} son <b>Attaque</b> et ${icon('heart')} ses <b>PV</b>. En haut à droite : ${icon('skull')} il a un effet d’<b>Effondrement</b> (quand il est détruit, comme laisser des Débris), ${icon('spark')} il a un autre effet.</li>
       <li><b>Trois copies</b> d’un même astre fusionnent en un <b>astre doré</b> (stats doublées). Le placer offre une <b>découverte</b> du niveau supérieur.</li>
       <li>Chaque partie active <b>5 familles</b> sur 12, plus les neutres. La réserve est <b>partagée</b> : si des rivaux jouent une famille, ses astres se font rares.</li>
       <li>Le perdant subit : niveau du gagnant + niveaux de ses astres survivants. <b>Maximum ${R.DAMAGE_CAP} dégâts</b> tant que plus de trois univers sont en vie.</li>
       <li>Seuls les <b>trois premiers</b> gagnent des poussières d’étoiles : ${R.REWARDS[1]}, ${R.REWARDS[2]} et ${R.REWARDS[3]}.</li>
-      <li>Chaque partie rapporte de l’<b>expérience</b>. Les niveaux ouvrent des améliorations au <b>Marché stellaire</b> : avec vos poussières, faites renaître votre planète, celle qui tourne derrière le menu.</li>
+      <li>Chaque partie rapporte de l’<b>expérience</b>. Les niveaux ouvrent des améliorations au <b>Marché stellaire</b> : avec vos poussières, faites renaître votre planète, celle qui tourne derrière le menu, ou achetez des <b>fonds animés</b> (650) pour vos parties.</li>
     </ul><div class="sheet-actions"><button class="btn primary" data-act="close">COMPRIS</button></div>`;
   }
 
@@ -2201,9 +2280,9 @@
         stage.flash(s.el.querySelector('.orb'), 0.7);
         s.el.animate([{ transform: 'none' }, { transform: `translateY(${won ? -8 : 8}px) scale(1.08)` }, { transform: 'none' }], { duration: 260 });
       } else {
-        // Le niveau de taverne du vainqueur frappe en dernier, depuis le compteur.
+        // Le niveau de création du vainqueur frappe en dernier, depuis le compteur.
         from = center(box);
-        popOn(box, `+${s.n} NIVEAU DE TAVERNE`, 'info');
+        popOn(box, `+${s.n} NIVEAU DE CRÉATION`, 'info');
       }
       SFX.whoosh(0);
       await stage.beam(from, [tx, ty], { ms: dur(440), color: won ? [255, 214, 120] : [255, 110, 110], arc: 18 + i * 4, tail: 9, head: 3 });
@@ -2454,7 +2533,7 @@
   }
 
   async function afterBattle(res) {
-    // Retour à la taverne : on efface le combat, on montre les rivaux.
+    // Retour à la création : on efface le combat, on montre les rivaux.
     const out = [...$('enemy').children, ...$('board').children].map((el) => stage.reveal(el.querySelector('.orb'), 1, 0, 260));
     await Promise.all(out);
     clearBanner();
@@ -2719,7 +2798,7 @@
       <p>Les parties contre d’autres créateurs arriveront dans une prochaine version. En attendant, sept univers vous attendent en solo.</p>
       <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="new">JOUER SOLO</button><button class="btn" data-act="close">FERMER</button></div>`);
   });
-  $('marketBtn').addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderMarket(); await show('market'); });
+  $('marketBtn').addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderMarket(); marketTab('planete'); await show('market'); });
   $('marketBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
   $('profileBtn').addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderProfile(); await show('profile'); });
   $('profileBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });

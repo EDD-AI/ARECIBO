@@ -268,6 +268,10 @@
       }
       this.starFade = Math.max(0, Math.min(1, (this.starFade || 0) + (this.starsOn === false ? -dt : dt) * 0.7));
       // Densité fixée en pixels CSS (une étoile pour starArea px²), quelle que soit la résolution.
+      // Fond animé (cosmétique) : apparaît et disparaît en fondu.
+      this.skyFade = Math.max(0, Math.min(1, (this.skyFade || 0) + (this.sky ? dt : -dt) * 1.2));
+      if (this.sky) this.skyMode = this.sky;
+      if (this.skyFade > 0.01 && this.skyMode) r.drawSky(this.skyMode, this.time, { reveal: 1, phase, flash: 0, dim: dimBg * this.skyFade, flip: 1 });
       const starCount = Math.round((window.innerWidth * window.innerHeight) / this.starArea);
       if (this.starFade > 0.01) r.drawStars(this.stars, phase, { reveal: this.starFade, phase, flash: 0, dim: dimBg * (this.starDim || 0.85), flip: 1 }, starCount, skip);
       const els = document.querySelectorAll('[data-planet]');
