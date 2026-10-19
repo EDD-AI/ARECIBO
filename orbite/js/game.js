@@ -906,11 +906,10 @@
 
   function renderRivals() {
     const s = ui.state;
-    $('rivals').innerHTML = s.players.map((p) => {
-      const lost = ui.prevHp && ui.prevHp[p.id] != null && p.hp < ui.prevHp[p.id];
-      return `<span class="rival ${p.bot ? '' : 'me'} ${p.alive ? '' : 'dead'} ${lost ? 'lost' : ''}">
-        <span class="orb" data-planet="${R.LAW[p.law].starter}"></span><b>${p.alive ? Math.max(0, p.hp) : p.rank + 'e'}</b></span>`;
-    }).join('');
+    // Barre repliée : un menu qui se déroule, sans images.
+    const alive = R.alivePlayers(s).length;
+    const rank = s.players.filter((p) => p.alive).sort((a, b) => b.hp - a.hp).findIndex((p) => !p.bot) + 1;
+    $('rivals').innerHTML = `<span class="rv-label">RIVAUX</span><span class="rv-info">${alive} univers en lice${me().alive ? ` · vous êtes ${ordinal(rank)}` : ''}</span><span class="rv-open">${icon('back', 'down')}</span>`;
   }
 
   function renderTavernHead(pop) {
@@ -1493,6 +1492,7 @@
     const ov = $('overlay');
     $('sheet').innerHTML = html;
     ov.classList.toggle('center', !!o.center);
+    ov.classList.toggle('top', !!o.top);
     if (ov.hidden) SFX.open();
     ov.hidden = false;
     document.body.classList.add('modal');
@@ -1739,20 +1739,21 @@
   function openRivals() {
     const s = ui.state;
     const list = s.players.slice().sort((a, b) => (b.alive - a.alive) || (a.alive ? b.hp - a.hp : a.rank - b.rank));
+    const last = me().lastOpp;
     const rows = list.map((p, i) => {
-      const law = R.LAW[p.law];
       const board = p.board.map(staticUnit).join('');
-      return `<button class="rival-row ${p.alive ? '' : 'dead'}" data-act="rival">
+      const hp = Math.max(0, p.hp);
+      const lost = ui.prevHp && ui.prevHp[p.id] != null && p.hp < ui.prevHp[p.id] ? ui.prevHp[p.id] - p.hp : 0;
+      const tag = p.bot && p.id === last ? '<em>DERNIER ADVERSAIRE</em>' : '';
+      return `<button class="rival-row ${p.alive ? '' : 'dead'} ${p.bot ? '' : 'me'}" data-act="rival">
           <span class="rk">${p.alive ? i + 1 : p.rank}</span>
-          <canvas class="sphere" data-fam="${law.fam}" aria-hidden="true"></canvas>
-          <span><span class="n">${esc(p.name)}</span><br><span class="l" style="color:${famColor(law.fam)}">${esc(law.name)} · niveau ${p.tier}</span></span>
-          <span class="h">${p.alive ? Math.max(0, p.hp) : 'éliminé'}</span>
+          <span class="rv-who"><span class="n">${esc(p.name)}</span>${tag}<span class="l">niveau ${p.tier}${p.alive ? '' : ` · éliminé ${ordinal(p.rank)}`}</span></span>
+          <span class="rv-hp">${lost ? `<small>−${lost}</small>` : ''}<b>${p.alive ? hp : '–'}</b><i class="hp-bar"><i style="width:${p.alive ? Math.min(100, hp / R.START_HP * 100) : 0}%"></i></i></span>
         </button>
-        <div class="row rival-board" hidden>${board || '<span class="muted">Système vide</span>'}</div>`;
+        <div class="rival-board" hidden><p class="rv-last">${p.bot ? 'Dernier système joué' : 'Votre système'}</p><div class="row">${board || '<span class="muted">Système vide</span>'}</div></div>`;
     }).join('');
     openSheet(`<h3>UNIVERS EN LICE · ${R.alivePlayers(s).length}</h3><div class="rival-list">${rows}</div>
-      <p class="muted">Touchez un univers pour voir son dernier système, puis un astre pour lire ce qu’il fait. Les dégâts sont plafonnés à ${R.DAMAGE_CAP} tant que plus de trois univers sont en vie.</p>`);
-    mountEnergy($('sheet'));
+      <p class="muted">Touchez un univers pour voir le dernier système qu’il a joué, puis un astre pour lire ce qu’il fait. Dégâts plafonnés à ${R.DAMAGE_CAP} tant que plus de trois univers sont en vie.</p>`, { top: true });
   }
 
   function openFamilies() {
