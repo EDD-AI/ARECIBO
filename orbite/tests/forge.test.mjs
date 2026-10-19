@@ -60,3 +60,19 @@ test('le prix est refusé sans assez de poussières, et l’apparence suit les c
   assert.equal(F.seedCost(0), 0);
   assert.equal(F.seedCost(F.MAX_PLANETS), null);
 });
+
+test('Mon système : s’ouvre à la taille 5, l’étoile s’allume, les mondes prennent une orbite', () => {
+  const sys = { star: F.newStar(11), planets: [F.newPlanet(1, 0), F.newPlanet(2, 1)] };
+  assert.equal(F.sysCheck(sys, { t: 'light' }).ok, false, 'fermé avant la taille 5');
+  for (const p of sys.planets) { for (let i = 0; i < 5; i++) F.apply(p, { t: 'feed' }); F.apply(p, { t: 'nature', key: 'terran' }); }
+  assert.equal(F.sysCheck(sys, { t: 'orbit', i: 0, slot: 0 }).ok, false, 'étoile éteinte');
+  assert.equal(F.sysApply(sys, { t: 'light' }).cost, F.LIGHT_COST);
+  F.sysApply(sys, { t: 'orbit', i: 0, slot: 0 });
+  F.sysApply(sys, { t: 'orbit', i: 1, slot: 3 });
+  F.sysApply(sys, { t: 'orbit', i: 1, slot: 0 });
+  assert.equal(sys.planets[1].orbit, 0);
+  assert.equal(sys.planets[0].orbit, 3, 'les deux mondes échangent leurs orbites');
+  assert.equal(F.sysApply(sys, { t: 'starGrow' }).cost, F.STAR_GROW[0]);
+  assert.equal(F.sysCheck(sys, { t: 'starClass', cls: 'géante bleue' }).cost, 25);
+  assert.equal(F.starLook(sys.star).type, 'star');
+});

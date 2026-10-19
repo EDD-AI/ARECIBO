@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 26;
+  const VERSION = 27;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -289,8 +289,8 @@
     if (ui.updatePending && name === 'menu') { saveGame(); ui.updatePending = false; setTimeout(() => updateReady(true), 0); }
     // Fonds : le cosmétique équipé pendant les parties (atténué pour la lisibilité), le ciel de la
     // Nébuleuse natale derrière la carte de campagne.
-    stage.sky = name === 'game' || name === 'cFight' ? equippedSky() : name === 'cMap' ? 7 : 0;
-    stage.skyGain = name === 'cMap' ? 0.9 : 0.6;
+    stage.sky = name === 'game' || name === 'cFight' ? equippedSky() : name === 'cMap' ? 7 : name === 'system' ? 3 : 0;
+    stage.skyGain = name === 'cMap' ? 0.9 : name === 'system' ? 0.45 : 0.6;
     stage.skyOff = name === 'cMap' ? stage.skyOff : null;
     if (coach.steps === GAME_STEPS && name !== 'game') coachStop(false);
     if (coach.steps === LAW_STEPS && name !== 'laws') coachStop(false);
@@ -306,7 +306,7 @@
     ui.screen = name;
     stage.starsOn = !['splash', 'title', 'wake', 'cStory'].includes(name);
     SFX.ambience({ splash: 'off', title: 'off', wake: 'wake', game: 'game', end: 'game', cStory: 'wake', cFight: 'battle', cEnd: 'game' }[name] || 'menu');
-    SFX.music(['title', 'wake', 'menu', 'market', 'profile', 'laws', 'cMap'].includes(name));
+    SFX.music(['title', 'wake', 'menu', 'market', 'profile', 'laws', 'cMap', 'system'].includes(name));
     // Pendant la partie, le ciel s'efface derrière les planètes pour rester lisible.
     const busySky = ['laws', 'game', 'end', 'cFight'].includes(name);
     stage.starArea = busySky ? 3600 : 1800;
@@ -3004,7 +3004,7 @@
   window.__orbite.api = {
     show, openSheet, closeSheet, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
     pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient,
-    coachStart, coachStop, tuto, famColor, renderMenu
+    coachStart, coachStop, tuto, famColor, renderMenu, marketTab
   };
 
   // ─── Démarrage ──────────────────────────────────────────────
