@@ -268,6 +268,9 @@
 
   // ─── Écrans ─────────────────────────────────────────────────
   async function show(name) {
+    if (coach.steps === GAME_STEPS && name !== 'game') coachStop(false);
+    if (coach.steps === LAW_STEPS && name !== 'laws') coachStop(false);
+    if (coach.steps === MENU_STEPS && name !== 'menu') coachStop(true);
     const cur = document.querySelector('.screen.active');
     if (cur && cur.id !== name) {
       const orbs = [...cur.querySelectorAll('[data-planet]')];
@@ -593,6 +596,10 @@
     $('menuWord').parentElement.classList.remove('menu-fade');
     const items = [...document.querySelectorAll('.menu-item')];
     for (const b of items) { b.classList.add('show'); await wait(120); }
+    if (store.get(MENU_GUIDE_KEY, '') !== '1' && ui.screen === 'menu') {
+      await wait(500);
+      if (ui.screen === 'menu' && !coach.steps) coachStart(MENU_STEPS, () => store.set(MENU_GUIDE_KEY, '1'));
+    }
   }
 
   async function backToMenu() {
@@ -788,6 +795,8 @@
       <button class="btn" data-act="set" data-v="music">MUSIQUE : ${SFX.musicOn ? 'ACTIVÉE' : 'COUPÉE'}</button>
       <button class="btn" data-act="set" data-v="speed">VITESSE DES COMBATS : ×${ui.speed}</button>
       <button class="btn" data-act="set" data-v="help">COMMENT JOUER</button>
+      <button class="btn" data-act="set" data-v="guide">GUIDE DU MENU</button>
+      <button class="btn" data-act="set" data-v="tuto">${tutoDone() ? 'REFAIRE LE TUTORIEL' : 'TUTORIEL : PROCHAINE PARTIE'}</button>
       ${installed() ? '' : '<button class="btn" data-act="set" data-v="install">INSTALLER SUR LE TÉLÉPHONE</button>'}
       <a class="btn" href="atelier.html">ATELIER DES PLANÈTES</a>
       <button class="btn" data-act="set" data-v="intro">REVOIR L’INTRODUCTION</button>
@@ -848,6 +857,14 @@
     } else if (v === 'help') openSheet(helpHtml());
     else if (v === 'credits') openSheet(creditsHtml());
     else if (v === 'install') install();
+    else if (v === 'guide') {
+      closeSheet();
+      if (ui.screen === 'menu') setTimeout(() => coachStart(MENU_STEPS, () => store.set(MENU_GUIDE_KEY, '1')), 250);
+    } else if (v === 'tuto') {
+      store.set(TUTO_KEY, '');
+      closeSheet();
+      toast('Votre prochaine partie sera guidée pas à pas.', 3000);
+    }
     else if (v === 'settings') openSheet(settingsHtml());
     else if (v === 'intro') {
       closeSheet();
@@ -909,6 +926,7 @@
     for (const x of $('lawList').children) x.classList.toggle('on', x === b);
     $('lawGo').disabled = false;
     window.OrbiteEnergy.pulse(b.querySelector('canvas.sphere'));
+    tuto('loi');
   });
 
   $('lawGo').addEventListener('click', async () => {
@@ -920,11 +938,162 @@
     await show('game');
     renderGame(true);
     banner('CYCLE 1', 'Achetez des astres, puis lancez le combat.');
-    if (store.get(HINT_KEY, '') !== '1') {
+    if (!tutoDone()) {
+      store.set(HINT_KEY, '1');
+      coachStop(false);
+      setTimeout(() => coachStart(GAME_STEPS, () => store.set(TUTO_KEY, 'fini')), 1600);
+    } else if (store.get(HINT_KEY, '') !== '1') {
       store.set(HINT_KEY, '1');
       setTimeout(() => toast('Touchez un astre pour lire ce qu’il fait. Glissez-le pour l’acheter ou le placer.', 5200), 2200);
     }
   });
+
+
+  // ─── Tutoriel : un coach met en lumière ce qu'il faut toucher ──
+  // Chaque étape éclaire une cible, montre le geste (toucher ou glisser) et attend l'action du
+  // joueur, ou son « SUIVANT ». Le jeu signale ses actions par tuto('achat'), tuto('combat')…
+  const TUTO_KEY = 'orbite.tuto';
+  const MENU_GUIDE_KEY = 'orbite.guide';
+  const tutoDone = () => store.get(TUTO_KEY, '') === 'fini';
+  const coach = { steps: null, i: -1, raf: 0, onEnd: null };
+  const coachEl = document.createElement('div');
+  coachEl.className = 'coach';
+  coachEl.hidden = true;
+  coachEl.innerHTML = '<div class="coach-hole"></div><div class="coach-finger"></div><div class="coach-bubble" role="dialog"><span class="coach-count"></span><p></p><div class="coach-actions"></div></div>';
+  document.body.appendChild(coachEl);
+  const coachQ = (sel) => (typeof sel === 'function' ? sel() : sel ? document.querySelector(sel) : null);
+
+  function coachStart(steps, onEnd) {
+    coach.steps = steps;
+    coach.onEnd = onEnd || null;
+    coachGo(0);
+  }
+  function coachStop(finished) {
+    if (!coach.steps) return;
+    const cb = coach.onEnd;
+    coach.steps = null;
+    coach.i = -1;
+    clearTimeout(coach.timer);
+    cancelAnimationFrame(coach.raf);
+    coachEl.hidden = true;
+    document.body.classList.remove('coaching');
+    if (cb) cb(finished);
+  }
+  function coachGo(i) {
+    const steps = coach.steps;
+    if (!steps) return;
+    while (i < steps.length && steps[i].when && !steps[i].when()) i++;
+    if (i >= steps.length) { coachStop(true); return; }
+    coach.i = i;
+    const st = steps[i];
+    const total = steps.filter((x) => !x.extra).length;
+    const n = steps.slice(0, i + 1).filter((x) => !x.extra).length;
+    coachEl.hidden = false;
+    document.body.classList.add('coaching');
+    coachEl.className = 'coach' + (st.dim === false ? ' nodim' : '') + (st.target ? '' : ' nohole') + (st.soft ? ' soft' : '');
+    const bubble = coachEl.querySelector('.coach-bubble');
+    bubble.querySelector('p').innerHTML = st.text;
+    bubble.querySelector('.coach-count').textContent = st.extra ? '' : `${n} / ${total}`;
+    const last = i === steps.length - 1;
+    bubble.querySelector('.coach-actions').innerHTML =
+      (last ? '<span></span>' : '<button class="link" data-coach="skip">Passer le tutoriel</button>') +
+      (st.next ? `<button class="btn primary" data-coach="next">${st.next}</button>` : '');
+    bubble.classList.remove('in');
+    void bubble.offsetWidth;
+    bubble.classList.add('in');
+    const finger = coachEl.querySelector('.coach-finger');
+    finger.className = 'coach-finger' + (st.gesture ? ' ' + (st.gesture.drag ? 'drag' : 'tap') : '');
+    cancelAnimationFrame(coach.raf);
+    const follow = () => { coachPlace(st); coach.raf = requestAnimationFrame(follow); };
+    follow();
+    if (st.enter) st.enter();
+  }
+  function coachPlace(st) {
+    const hole = coachEl.querySelector('.coach-hole');
+    const bubble = coachEl.querySelector('.coach-bubble');
+    const finger = coachEl.querySelector('.coach-finger');
+    const t = coachQ(st.target);
+    const H = window.innerHeight;
+    if (t && t.getClientRects().length) {
+      const r = t.getBoundingClientRect();
+      const pad = st.pad == null ? 6 : st.pad;
+      Object.assign(hole.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px' });
+      const bh = bubble.offsetHeight;
+      const below = st.place ? st.place === 'below' : r.top + r.height / 2 < H * 0.5;
+      let y = st.place === 'top' ? 12 : below ? r.bottom + pad + 14 : r.top - pad - 14 - bh;
+      y = Math.max(10, Math.min(H - bh - 10, y));
+      bubble.style.top = y + 'px';
+    } else {
+      Object.assign(hole.style, { left: '50%', top: '50%', width: '0px', height: '0px' });
+      bubble.style.top = Math.round(H * (st.y || 0.36)) + 'px';
+    }
+    if (st.gesture) {
+      const a = coachQ(st.gesture.from || st.gesture.tap || st.target);
+      const b = st.gesture.drag ? coachQ(st.gesture.drag) : null;
+      if (a && a.getClientRects().length) {
+        const ra = a.getBoundingClientRect();
+        finger.style.setProperty('--x0', ra.left + ra.width / 2 + 'px');
+        finger.style.setProperty('--y0', ra.top + ra.height * (st.gesture.at || 0.45) + 'px');
+        if (b) {
+          const rb = b.getBoundingClientRect();
+          finger.style.setProperty('--x1', rb.left + rb.width / 2 + 'px');
+          finger.style.setProperty('--y1', rb.top + rb.height / 2 + 'px');
+        }
+        finger.hidden = false;
+      } else finger.hidden = true;
+    } else finger.hidden = true;
+  }
+  // Le jeu signale une action ; l'étape en cours avance si elle l'attendait, ou saute ailleurs.
+  function tuto(ev) {
+    const steps = coach.steps;
+    if (!steps || coach.i < 0) return;
+    const st = steps[coach.i];
+    let k = -1;
+    if (st.wait && st.wait.includes(ev)) k = coach.i + 1;
+    else if (st.jump && st.jump[ev]) k = steps.findIndex((x) => x.id === st.jump[ev]);
+    if (k < 0) return;
+    // La dernière action l'emporte : un achat qui ferme la fiche n'y renvoie pas.
+    clearTimeout(coach.timer);
+    coach.timer = setTimeout(() => { if (coach.steps === steps) coachGo(k); }, steps[Math.min(k, steps.length - 1)].delay == null ? 300 : steps[Math.min(k, steps.length - 1)].delay);
+  }
+  coachEl.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-coach]');
+    if (!b) return;
+    SFX.tap();
+    if (b.dataset.coach === 'skip') { coachStop(false); store.set(TUTO_KEY, 'fini'); toast('Tutoriel passé. Paramètres → Refaire le tutoriel pour le revoir.', 3600); }
+    else { clearTimeout(coach.timer); coachGo(coach.i + 1); }
+  });
+
+  // Étapes de la première partie.
+  const LAW_STEPS = [
+    { id: 'loi', target: '#lawList', place: 'below', pad: 4, text: 'Choisissez une <b>loi</b>. Elle régit votre univers : elle vous donne un <b>pouvoir</b> et votre <b>premier astre</b>. Touchez une sphère.', gesture: { tap: '#lawList .law' }, wait: ['loi'] },
+    { id: 'creer', target: '#lawGo', text: 'Parfait. Touchez <b>CRÉER MON UNIVERS</b> pour commencer la partie.', gesture: { tap: '#lawGo' }, wait: ['partie'] }
+  ];
+  const GAME_STEPS = [
+    { id: 'bienvenue', text: 'Bienvenue dans votre univers ! Vous affrontez <b>7 rivaux</b>. À chaque <b>cycle</b>, vous achetez des astres, puis votre système <b>combat tout seul</b> un rival. Le dernier debout gagne.', next: 'SUIVANT', delay: 0 },
+    { id: 'pv', target: '#hudHp', text: 'Vos <b>points de vie</b>. Un combat perdu vous en retire. À 0, vous êtes éliminé.', next: 'SUIVANT' },
+    { id: 'energie', target: '#energy', text: 'Votre <b>énergie</b> : 3 au premier cycle, une de plus à chaque cycle. Un astre coûte <b>3</b>.', next: 'SUIVANT' },
+    { id: 'taverne', target: '#tavern', text: 'Voici la <b>taverne</b> : elle vous propose des astres. <b>Touchez-en un</b> pour lire ce qu’il fait.', gesture: { tap: '#shop .unit', at: 0.35 }, wait: ['fiche'], jump: { achat: 'main', combat: 'regard' } },
+    { id: 'fiche', target: '#sheet [data-act="buy"]', dim: false, place: 'top', text: 'Sa fiche : ' + '<b>attaque</b>, <b>PV</b> et <b>pouvoir</b>. Touchez <b>ACHETER</b>.', gesture: { tap: '#sheet [data-act="buy"]', at: 0.5 }, wait: ['achat'], jump: { fermer: 'taverne' } },
+    { id: 'main', target: '#handZone', text: 'L’astre attend dans votre <b>main</b>. <b>Glissez-le</b> vers votre système pour le placer en orbite.', gesture: { from: '#hand .unit', drag: '#systemZone', at: 0.35 }, wait: ['placer'], when: () => me().hand.length > 0, jump: { combat: 'regard' } },
+    { id: 'systeme', target: '#systemZone', pad: -10, text: 'Il orbite votre étoile. En combat, vos astres attaquent <b>de gauche à droite</b> : l’ordre compte, glissez-les pour les réordonner.', next: 'SUIVANT' },
+    { id: 'combat', target: '#fightBtn', text: 'Plus assez d’énergie ? Lancez le <b>combat</b> ! Il se joue tout seul.', gesture: { tap: '#fightBtn', at: 0.5 }, wait: ['combat'] },
+    { id: 'regard', soft: true, dim: false, y: 0.76, extra: true, text: 'Vos astres (en bas) frappent ceux du rival (en haut), chacun son tour. Les survivants du gagnant infligent des dégâts au perdant.', wait: ['cycle'] },
+    { id: 'degats', text: 'Le perdant perd des PV : <b>niveau de taverne du gagnant + niveaux de ses astres survivants</b>. Nouveau cycle, nouvelle énergie !', next: 'SUIVANT', delay: 600 },
+    { id: 'actualiser', target: '#rollBtn', text: '<b>Actualiser</b> (1 énergie) : la taverne propose d’autres astres.', next: 'SUIVANT' },
+    { id: 'geler', target: '#freezeBtn', text: '<b>Geler</b> : la taverne reste la même au prochain cycle. Pratique pour garder un astre que vous ne pouvez pas encore payer.', next: 'SUIVANT' },
+    { id: 'niveau', target: '#upBtn', text: '<b>Monter de niveau</b> : la taverne propose des astres plus puissants. Le prix baisse à chaque cycle.', next: 'SUIVANT' },
+    { id: 'vendre', target: '#systemZone', pad: -10, text: 'Pour <b>vendre</b> un astre (+1 énergie), glissez-le de votre système vers la taverne.', next: 'SUIVANT' },
+    { id: 'pouvoir', target: '#powerBtn', text: 'Le <b>pouvoir</b> de votre loi : touchez-le pour l’utiliser. Il coûte de l’énergie.', next: 'SUIVANT' },
+    { id: 'rivaux', target: '#rivals', text: 'Vos <b>rivaux</b> : touchez ici pour voir leurs PV et le dernier système qu’ils ont joué.', next: 'SUIVANT' },
+    { id: 'fin', text: 'Dernier secret : <b>trois copies</b> du même astre fusionnent en un astre <b>doré</b>, deux fois plus fort. Visez le podium : les 3 premiers gagnent des poussières d’étoiles. À vous !', next: 'JOUER' }
+  ];
+  const MENU_STEPS = [
+    { id: 'solo', target: '#soloBtn', text: '<b>Jouer solo</b> : une partie contre 7 rivaux. La première est guidée pas à pas.', next: 'SUIVANT', delay: 0 },
+    { id: 'marche', target: '#marketBtn', text: 'Le <b>Marché stellaire</b> : avec vos <b>poussières d’étoiles</b> (gagnées sur le podium), faites renaître votre planète, celle qui tourne derrière le menu. Chaque amélioration demande un niveau.', next: 'SUIVANT' },
+    { id: 'profil', target: '#profileBtn', text: 'Votre <b>profil</b> : pseudo, niveau, statistiques et historique. Chaque partie rapporte de l’expérience.', next: 'SUIVANT' },
+    { id: 'reglages', target: '#settingsBtn', text: '<b>Paramètres</b> : son, musique, règles du jeu, et ce guide si vous voulez le revoir.', next: 'C’EST PARTI' }
+  ];
 
   // ─── Rendu de la partie ─────────────────────────────────────
   function renderHud() {
@@ -971,6 +1140,7 @@
     }, (el, it) => { el.dataset.slot = it.slot; });
     sizeRow($('shop'), 'shop', 92);
     $('shop').classList.toggle('frozen', p.frozen);
+    if (!ui.frostStagger) for (const orb of $('shop').querySelectorAll('.orb')) orb.dataset.frozen = p.frozen ? '1' : '0';
   }
 
   // Taille des astres selon leur nombre : peu d'astres = grandes planètes.
@@ -1146,6 +1316,7 @@
     const before = copyRects(id);
     const res = R.buy(ui.state, slot);
     if (!res.ok) { refuse(res.reason); return false; }
+    tuto('achat');
     SFX.buy();
     vibrate(8);
     renderEnergy(R.BUY_COST);
@@ -1227,6 +1398,7 @@
   async function doPlay(uid, index, fromRect, targetUid) {
     const res = R.play(ui.state, uid, index, targetUid);
     if (!res.ok) { refuse(res.reason); renderHand(); return false; }
+    tuto('placer');
     SFX.place();
     vibrate(12);
     const before = rects($('board'));
@@ -1331,13 +1503,36 @@
   function doFreeze() {
     const res = R.freeze(ui.state);
     if (!res.ok) return;
-    if (res.frozen) {
-      SFX.freeze();
-      const b = $('shop').getBoundingClientRect();
-      for (let i = 0; i < 4; i++) stage.burst(b.left + (b.width * (i + 0.5)) / 4, b.top + b.height * 0.4, { n: 8, colors: [[190, 235, 255], [255, 255, 255]], speed: 30, gravity: 20, life: 0.8 });
-    }
+    const orbs = [...$('shop').querySelectorAll('.orb')];
+    ui.frostStagger = true;
     renderShop();
     renderTavernHead();
+    ui.frostStagger = false;
+    if (res.frozen) {
+      // La glace prend une planète après l'autre, de gauche à droite, avec un craquement à chaque fois.
+      SFX.freeze();
+      orbs.forEach((orb, i) => setTimeout(() => {
+        if (!orb.isConnected || !me().frozen) return;
+        orb.dataset.frozen = '1';
+        SFX.frost(i);
+        const [x, y] = stage.center(orb);
+        const w = orb.getBoundingClientRect().width;
+        stage.burst(x, y + w * 0.45, { n: 14, colors: [[190, 235, 255], [255, 255, 255], [120, 190, 255]], speed: 34, up: 26, gravity: 18, life: 0.9, spread: w * 0.6 });
+      }, 90 + i * 140));
+      const b = $('shop').getBoundingClientRect();
+      for (let i = 0; i < 18; i++) {
+        setTimeout(() => stage.burst(b.left + Math.random() * b.width, b.top + Math.random() * 10, { n: 1, colors: [[230, 245, 255]], speed: 6, gravity: 14, drag: 0.4, life: 1.8, size: 1 }), i * 70);
+      }
+    } else {
+      // Dégel : la glace éclate en éclats bleus.
+      SFX.thaw();
+      orbs.forEach((orb) => {
+        orb.dataset.frozen = '0';
+        const [x, y] = stage.center(orb);
+        const w = orb.getBoundingClientRect().width;
+        stage.burst(x, y, { n: 22, colors: [[200, 240, 255], [255, 255, 255], [120, 190, 255]], speed: 90, gravity: 60, life: 0.7, spread: w * 0.5, shape: 3, size: 2 });
+      });
+    }
     saveGame();
   }
 
@@ -1560,6 +1755,7 @@
     const cb = ui.sheetClose;
     ui.sheetClose = null;
     if (cb) cb();
+    tuto('fermer');
   }
   $('overlay').addEventListener('click', (e) => {
     if (e.target === $('overlay') && !ui.sheetLocked) { SFX.tap(); closeSheet(); }
@@ -1594,6 +1790,7 @@
     if (!u) return;
     SFX.tap();
     openSheet(unitSheet(u) + `<div class="sheet-actions">${actions}</div>`);
+    tuto('fiche');
   }
 
   function unitSheet(u) {
@@ -1881,6 +2078,7 @@
     ui.prevHp = Object.fromEntries(ui.state.players.map((x) => [x.id, x.hp]));
     const res = R.endTurn(ui.state);
     if (!res.ok) { refuse(res.reason); ui.busy = false; return; }
+    tuto('combat');
     if (res.battle && res.battle.winner === 0) ui.state.fightsWon = (ui.state.fightsWon || 0) + 1;
     try {
       await playShopEvents(res.endEvents);
@@ -1948,38 +2146,97 @@
     const won = b.winner === 0, lost = b.winner === 1;
     if (won) {
       SFX.win();
-      banner('VICTOIRE', b.damage ? `${b.damage} dégâts infligés à ${esc(opp.name)}` : 'Le rival est un fantôme', 'win');
+      banner('VICTOIRE', b.damage ? '' : 'Le rival est un fantôme', 'win');
       for (const el of $('board').children) stage.flash(el.querySelector('.orb'), 0.4);
     } else if (lost) {
       SFX.lose();
-      banner('DÉFAITE', `−${b.damage} ${icon('heart')}`, 'lose');
+      banner('DÉFAITE', '', 'lose');
     } else {
       banner('ÉGALITÉ', 'Aucun dégât');
     }
-    await sleep(900);
-    if (lost && b.damage) {
-      const [x, y] = center($('banner').querySelector('p') || $('banner'));
-      const target = $('hudHp');
-      const d = document.createElement('div');
-      d.className = 'pop bad';
-      d.innerHTML = `−${b.damage}`;
-      d.style.cssText = `left:${x}px;top:${y}px;animation:none;opacity:1`;
-      document.body.appendChild(d);
-      const [tx, ty] = center(target);
-      await d.animate([{ left: x + 'px', top: y + 'px' }, { left: tx + 'px', top: ty + 'px', transform: 'translate(-50%,-50%) scale(.6)' }], { duration: 520, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'forwards' }).finished.catch(() => {});
-      d.remove();
-      renderHud();
-      target.classList.remove('hurt');
+    await sleep(700);
+    if ((won && !opp.ghost && b.damage) || (lost && b.damage)) await damageScene(b, won, opp);
+    await sleep(500);
+  }
+
+  // Dégâts de fin de combat : chaque astre survivant du vainqueur tire une comète sur le perdant ;
+  // un compteur grimpe à chaque impact, puis les PV de la cible descendent.
+  async function damageScene(b, won, opp) {
+    const side = won ? $('board') : $('enemy');
+    const target = won ? $('oppHp') : $('hudHp');
+    const winnerTier = won ? me().tier : opp.tier;
+    const shooters = [...side.children].filter((el) => el.dataset.id && R.CARD[el.dataset.id]);
+    const shots = shooters.map((el) => ({ el, n: R.CARD[el.dataset.id].tier }));
+    shots.push({ el: null, n: winnerTier });
+    const hpFrom = won ? Math.max(0, b.before.opp) : Math.max(0, b.before.me);
+    const hpTo = won ? Math.max(0, b.after.opp) : Math.max(0, b.after.me);
+
+    const box = document.createElement('div');
+    box.className = 'dmg-count ' + (won ? 'good' : 'bad low');
+    box.innerHTML = `<b>0</b><small>${won ? 'DÉGÂTS INFLIGÉS À ' + esc(opp.name).toUpperCase() : 'DÉGÂTS SUBIS'}</small>`;
+    $('game').appendChild(box);
+    const num = box.querySelector('b');
+    const [tx, ty] = center(target);
+    let total = 0;
+    const hit = (n) => {
+      const add = Math.min(n, b.damage - total);
+      if (add <= 0) return;
+      total += add;
+      num.textContent = total;
+      num.classList.remove('bump');
+      void num.offsetWidth;
+      num.classList.add('bump');
+      target.classList.remove('struck');
       void target.offsetWidth;
-      target.classList.add('hurt');
+      target.classList.add('struck');
+      stage.burst(tx, ty, { n: 10 + add * 3, colors: won ? [[255, 220, 140], [255, 255, 255]] : [[255, 90, 90], [255, 255, 255]], speed: 70, life: 0.5 });
+      SFX.hit(Math.min(6, add + 1), 0);
+      vibrate(won ? 12 : [20, 20]);
+    };
+    const step = ui.skip ? 60 : dur(260);
+    const flights = shots.map((s, i) => sleep(i * step).then(async () => {
+      let from;
+      if (s.el && s.el.isConnected) {
+        from = center(s.el.querySelector('.orb'));
+        stage.flash(s.el.querySelector('.orb'), 0.7);
+        s.el.animate([{ transform: 'none' }, { transform: `translateY(${won ? -8 : 8}px) scale(1.08)` }, { transform: 'none' }], { duration: 260 });
+      } else {
+        // Le niveau de taverne du vainqueur frappe en dernier, depuis le compteur.
+        from = center(box);
+        popOn(box, `+${s.n} NIVEAU DE TAVERNE`, 'info');
+      }
+      SFX.whoosh(0);
+      await stage.beam(from, [tx, ty], { ms: dur(440), color: won ? [255, 214, 120] : [255, 110, 110], arc: 18 + i * 4, tail: 9, head: 3 });
+      hit(s.n);
+    }));
+    await Promise.all(flights);
+    await sleep(dur(450));
+    // Les PV de la cible défilent jusqu'à leur nouvelle valeur.
+    const t0 = performance.now(), ms = dur(650);
+    await new Promise((res) => {
+      const tick = (now) => {
+        const k = Math.min(1, (now - t0) / ms);
+        const v = Math.round(hpFrom + (hpTo - hpFrom) * k);
+        if (won) target.innerHTML = icon('heart') + ' ' + v;
+        else target.innerHTML = icon('heart') + `<b>${v}</b>`;
+        if (k < 1) requestAnimationFrame(tick); else res();
+      };
+      requestAnimationFrame(tick);
+    });
+    if (!won) {
       const v = document.createElement('div');
       v.className = 'vignette';
       document.body.appendChild(v);
       setTimeout(() => v.remove(), 950);
+      $('hudHp').classList.remove('hurt');
+      void $('hudHp').offsetWidth;
+      $('hudHp').classList.add('hurt');
       vibrate([30, 40, 30]);
-      SFX.hit();
     }
-    await sleep(900);
+    box.classList.add('out');
+    await sleep(dur(500));
+    box.remove();
+    renderHud();
   }
 
   async function animateAttack(e, group) {
@@ -2221,6 +2478,7 @@
     await playShopEvents(res.startEvents);
     renderEnergy();
     saveGame();
+    tuto('cycle');
   }
 
   // ─── Fin de partie ──────────────────────────────────────────
@@ -2432,7 +2690,12 @@
     try { await fn(); } finally { ui.busy = false; }
   };
 
-  async function newGameFlow() { stopAmbient(); renderLaws(); await show('laws'); }
+  async function newGameFlow() {
+    stopAmbient();
+    renderLaws();
+    await show('laws');
+    if (!tutoDone()) coachStart(LAW_STEPS);
+  }
   async function resumeGame() {
     const s = loadGame();
     if (!s) return;

@@ -25,6 +25,37 @@ des **poussières d’étoiles**.
 Les **Paramètres** gèrent le son, la vitesse des combats, l’atelier, les crédits, et permettent de
 revoir l’introduction.
 
+## Tutoriel
+
+Pensé pour quelqu’un qui n’a jamais joué à un jeu de ce genre. Un « coach » assombrit l’écran,
+éclaire ce qu’il faut toucher, montre le geste avec un doigt animé (toucher ou glisser) et explique
+en une phrase. Il avance quand le joueur fait l’action demandée, ou sur « SUIVANT ».
+
+- **Guide du menu** (première visite) : Jouer solo, Marché stellaire et poussières d’étoiles,
+  Profil, Paramètres.
+- **Première partie guidée** :
+  - le choix de la loi ;
+  - les PV et l’énergie ;
+  - lire une fiche puis acheter, et glisser l’astre de la main au système ;
+  - l’ordre d’attaque et le combat ;
+  - le calcul des dégâts ;
+  - actualiser, geler, monter de niveau, vendre, le pouvoir et les rivaux ;
+  - enfin, les astres dorés et le podium.
+- « Passer le tutoriel » est proposé à chaque étape. Paramètres → **Guide du menu** et
+  **Refaire le tutoriel** les relancent. La prochaine partie est alors guidée.
+
+Le coach se trouve dans `js/game.js` (`coachStart`, étapes `MENU_STEPS`, `LAW_STEPS`,
+`GAME_STEPS`). Le jeu lui signale ses actions par `tuto('fiche' | 'achat' | 'placer' | 'combat' | 'cycle'…)`.
+
+## Effets de fin de cycle
+
+- **Gel** : la glace prend les astres de la taverne un à un, de gauche à droite, avec un craquement
+  cristallin. Une coque pixel art facettée monte du bas (mode 6 du shader de halo) et les couleurs
+  virent au bleu givré (`uFrost`). Au dégel, la glace éclate.
+- **Dégâts** : à la fin d’un combat, chaque astre survivant du vainqueur tire une comète vers les PV
+  du perdant, puis le niveau de taverne frappe en dernier. Un grand compteur grimpe à chaque impact.
+  Les PV de la cible défilent ensuite jusqu’à leur nouvelle valeur.
+
 ## Votre planète : le jeu dans le jeu
 
 La planète du menu est la vôtre. Au départ elle est **morte et noire**. Au **Marché stellaire**,

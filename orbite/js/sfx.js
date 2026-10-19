@@ -333,6 +333,16 @@
       if (!play('glass4', { vol: 0.3, rate: 1.15, rev: 0.6 })) { tone(1400, 0.2, { to: 1900, vol: 0.05 }); return; }
       play('glass2', { vol: 0.22, rate: 1.5, delay: 0.05 });
     },
+    // Une planète prise dans la glace : craquement cristallin, un peu plus aigu à chaque planète.
+    frost(i) {
+      play(GLASS, { vol: 0.2, rate: 1.25 + (i || 0) * 0.12, jit: 0.04, rev: 0.5 });
+      play(PLACE, { vol: 0.08, rate: 2.2, jit: 0.1 });
+    },
+    // Dégel : la glace se brise.
+    thaw() {
+      if (!play(['glass5', 'glass6'], { vol: 0.32, rate: 1.3, rev: 0.3 })) { tone(1600, 0.1, { to: 700, vol: 0.05 }); return; }
+      play(CRUMBLE, { vol: 0.14, rate: 1.8, delay: 0.03 });
+    },
     level() {
       if (!buffers.glass1) { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.12, { delay: i * 0.07, vol: 0.05, type: 'square' })); return; }
       chime([1, 1.26, 1.5], { vol: 0.3, rev: 0.45 });

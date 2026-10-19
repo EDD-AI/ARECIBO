@@ -24,6 +24,7 @@ uniform float uPhase;
 uniform float uFlash;
 uniform float uDim;
 uniform float uFlip;
+uniform float uFrost;
 out vec4 outColor;
 
 float bayer4(vec2 fc) {
@@ -32,7 +33,14 @@ float bayer4(vec2 fc) {
   int m[16] = int[16](0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5);
   return (float(m[i]) + 0.5) / 16.0;
 }
-vec4 fin(vec3 c) { return vec4(mix(c, vec3(1.0), uFlash) * uDim, 1.0); }
+// uFrost : l'astre est pris dans la glace (taverne gelée), ses couleurs virent au bleu givré.
+vec4 fin(vec3 c) {
+  if (uFrost > 0.0) {
+    float l = dot(c, vec3(0.3, 0.59, 0.11));
+    c = mix(c, mix(vec3(0.1, 0.2, 0.36), vec3(0.86, 0.97, 1.0), l), uFrost * 0.6);
+  }
+  return vec4(mix(c, vec3(1.0), uFlash) * uDim, 1.0);
+}
 vec3 rotY(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z); }
 vec3 rotAxis(vec3 p, vec3 ax, float a) { float c = cos(a), s = sin(a); return p * c + cross(ax, p) * s + ax * dot(ax, p) * (1.0 - c); }
 
@@ -768,6 +776,29 @@ void main() {
       if (I < dth * 0.85) discard;
       col = pal(uRow, clamp(int(I * 7.0) + 1, 1, 7));
     }
+  } else if (uMode == 6) {
+    // Coque de glace : facettes translucides qui montent du bas (uA.x = progression), arêtes vives, reflet qui passe.
+    float rs = uA.y;
+    if (r > rs + 0.03) discard;
+    float lvl = -rs + uA.x * rs * 2.3;
+    float front = lvl + 0.12 * snoise(vec3(xy.x * 3.0, 0.0, uSeed.x));
+    if (xy.y > front) discard;
+    float rr = r / rs;
+    Vor v = voronoi(vec3(xy * 2.8, 0.37) + uSeed);
+    float edge = v.f2 - v.f1;
+    vec2 cd = normalize(v.pt.xy - uSeed.xy + vec2(1e-4));
+    float face = 0.5 + 0.5 * dot(cd, normalize(vec2(-0.6, 0.8)));
+    float glint = fract((xy.x - xy.y) * 0.45 - uPhase * 2.0);
+    vec3 icy = vec3(0.55, 0.84, 1.0), pale = vec3(0.82, 0.95, 1.0), deep = vec3(0.3, 0.55, 0.85);
+    if (xy.y > front - 0.06) col = vec3(1.0);
+    else if (rr > 0.965) col = pale;
+    else if (glint < 0.035 && rr < 0.97) col = vec3(1.0);
+    else if (edge < 0.05) col = face > 0.55 ? pale : icy;
+    else {
+      float f = smoothstep(0.6, 1.0, rr) * 0.7 + v.id.x * 0.14 + face * 0.08;
+      if (f < dth) discard;
+      col = f > 0.6 ? icy : deep;
+    }
   } else if (uMode == 5) {
     // Queue de comète, à l'opposé de l'étoile : poussière large et courbe, ions fins et droits.
     vec2 d = normalize(uA.zw);
@@ -1067,6 +1098,7 @@ void main() {
       gl.uniform1f(this.loc(prog, 'uFlash'), st.flash);
       gl.uniform1f(this.loc(prog, 'uDim'), st.dim);
       gl.uniform1f(this.loc(prog, 'uFlip'), st.flip);
+      gl.uniform1f(this.loc(prog, 'uFrost'), st.frost || 0);
     }
 
     clip(cx, cy, r) {
@@ -1206,7 +1238,8 @@ void main() {
         phase: o.phase || 0,
         flash: o.flash || 0,
         dim: o.dim == null ? 1 : o.dim,
-        flip: o.flip ? -1 : 1
+        flip: o.flip ? -1 : 1,
+        frost: o.frost || 0
       };
       if (st.reveal <= 0.001) return;
       gl.viewport(0, 0, this.W, this.H);
@@ -1272,6 +1305,10 @@ void main() {
       if (b.atmo) this.haloPass(0, cx, cy, R, 1 + b.atmo.w, [b.atmo.w, b.atmo.inner, b.atmo.pow, b.atmo.outer], b.pal, 12, b.seed, light, st);
       if (b.shell) this.haloPass(1, cx, cy, R, b.shell.rs * (1 + b.shell.glow), [b.shell.rs, b.shell.rim, b.shell.glow, b.shell.cycles], b.pal, 13, b.seed, light, st);
       if (o.shield) this.haloPass(1, cx, cy, R, 1.3, [1.2, 1.1, 0.08, 1], b.pal, 13, b.seed, light, st);
+      if (o.frost > 0.01) {
+        const rs = Math.min(1.25, Math.max(1.12, (b.bound || 1) + 0.12));
+        this.haloPass(6, cx, cy, R, rs + 0.05, [o.frost, rs, 0, 0], b.pal, 0, b.seed, light, Object.assign({}, st, { frost: 0 }));
+      }
 
       if (g.ring) this.ringPass(g, 1, P);
       this.drawLayer('front', st);

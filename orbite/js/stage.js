@@ -80,7 +80,7 @@
 
     state(el) {
       let s = this.fx.get(el);
-      if (!s) { s = { flash: 0, reveal: 1, tween: null }; this.fx.set(el, s); }
+      if (!s) { s = { flash: 0, reveal: 1, tween: null, frost: el.dataset && el.dataset.frozen === '1' ? 1 : 0 }; this.fx.set(el, s); }
       return s;
     }
 
@@ -202,6 +202,13 @@
     drawEl(el, phase, dim, now, cover) {
       // Les fondus avancent même hors de l'écran (liste défilée) : sinon un changement d'écran attendrait pour rien.
       const s = this.stepTween(el, now);
+      // Gel : la glace pousse en 0,7 s et fond en 0,35 s.
+      const frostTo = el.dataset.frozen === '1' ? 1 : 0;
+      if (s.frost !== frostTo) {
+        const dtf = Math.min(0.05, (now - (s.frostT || now)) / 1000);
+        s.frost = frostTo > s.frost ? Math.min(1, s.frost + dtf / 0.7) : Math.max(0, s.frost - dtf / 0.35);
+      }
+      s.frostT = now;
       if (el.dataset.hide === '1') return;
       const b = el.getBoundingClientRect();
       if (b.width < 2 || b.height < 2) return;
@@ -226,7 +233,8 @@
       this.r.drawSystem(g, {
         cx, cy, R, phase: (p + (g.seed % 997) / 997) % 1,
         reveal: s.reveal, flash: s.flash, dim: dim * own,
-        flip: g.flip, golden: el.dataset.golden === '1', shield: el.dataset.shield === '1', ghost: el.dataset.ghost === '1'
+        flip: g.flip, golden: el.dataset.golden === '1', shield: el.dataset.shield === '1', ghost: el.dataset.ghost === '1',
+        frost: s.frost
       });
       // data-clip : rien n'est dessiné sous cette ligne (l'horizon du menu), quel que soit le décor HTML.
       if (el.dataset.clip) this.clearBelow(parseFloat(el.dataset.clip));
