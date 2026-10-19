@@ -22,6 +22,9 @@
   const SHOP_SIZE = [0, 3, 4, 4, 5, 5, 6];
   const UPGRADE = [0, 5, 7, 8, 9, 10, 0];
   const DAMAGE_CAP = 10;
+  // Alliance : un système qui réunit deux familles d'au moins ALLIANCE.min astres chacune renforce
+  // les astres de ces deux familles au début de chaque combat.
+  const ALLIANCE = { min: 3, atk: 1, hp: 1 };
   const REWARDS = { 1: 100, 2: 60, 3: 30 };
 
   const FAMILIES = {
@@ -232,8 +235,8 @@
       text: 'Rempart. Naissance : vos autres Remparts gagnent +{1}/+{1}.',
       play(x, u, m) { for (const v of x.board().filter((v) => v !== u && v.kw.includes('rempart'))) x.buff(v, m, m); } },
     { id: 'ocre', fam: 'mineral', tier: 2, atk: 3, hp: 3, name: 'Ocre', look: { type: 'desert', seed: 5454, moons: 1 },
-      text: 'Fin de cycle : un astre Minéral aléatoire gagne +{1}/+{2}.',
-      endTurn(x, u, m) { x.buff(x.rnd(x.fam('mineral')), m, 2 * m); } },
+      text: 'Fin de cycle : un autre allié aléatoire gagne +{1}/+{2}.',
+      endTurn(x, u, m) { x.buff(x.rnd(x.others(u)), m, 2 * m); } },
     { id: 'basalte', fam: 'mineral', tier: 3, atk: 3, hp: 6, name: 'Basalte', kw: ['rempart'], look: { type: 'moon', seed: 5555, shape: 'bloc' },
       text: 'Rempart. Quand il survit à des dégâts, gagne +{2} Attaque pour le combat.',
       damaged(c, u, m) { c.buff(u, 2 * m, 0); } },
@@ -641,6 +644,8 @@
       b.greed = Math.floor(rng() * 4) - 1;
       b.skill = 1;
       if (rng() < 0.3) b.pref = families[Math.floor(rng() * families.length)];
+      // Environ 40 % des bots visent une Alliance de deux familles.
+      if (rng() < 0.4) { const others = families.filter((f) => f !== b.pref); b.pref2 = others[Math.floor(rng() * others.length)]; }
       state.players.push(b);
     }
     for (const p of state.players) rollShop(state, p);
@@ -1108,6 +1113,12 @@
       if (p.law === 'chaos') { log({ t: 'law', side: s, law: p.law }); c.randomKw(c.rnd(alive(s))); }
       if (p.law === 'stase' && first) { log({ t: 'law', side: s, law: p.law }); for (const u of alive(s).slice(0, 2)) c.kw(u, 'bouclier'); }
     }
+    for (const s of [turn, 1 - turn]) {
+      const al = allianceOf(alive(s));
+      if (!al || (!ALLIANCE.atk && !ALLIANCE.hp)) continue;
+      log({ t: 'alliance', side: s, fams: al });
+      for (const u of alive(s)) if (al.includes(famOf(u))) c.buff(u, ALLIANCE.atk, ALLIANCE.hp);
+    }
     for (const s of [turn, 1 - turn]) for (const u of alive(s)) fire(u, 'start');
     flush();
     resolveDeaths();
@@ -1140,6 +1151,14 @@
     return { events: ev, winner, damage, survivors: surv.length };
   }
 
+  // Les deux familles d'une Alliance (les plus nombreuses), ou null.
+  function allianceOf(units) {
+    const n = {};
+    for (const u of units) { const f = famOf(u); if (f !== 'neutre') n[f] = (n[f] || 0) + 1; }
+    const top = Object.entries(n).filter(([, k]) => k >= ALLIANCE.min).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
+    return top.length >= 2 ? [top[0][0], top[1][0]] : null;
+  }
+
   // ─── Bots ───────────────────────────────────────────────────
   // Les bots des parties ont skill 1 (IA experte) ; skill 0 garde l'IA de base, utile pour
   // mesurer l'écart (orbite/tools/bots-duel.js).
@@ -1148,7 +1167,7 @@
   function cardValue(p, id) {
     const c = CARD[id];
     let v = c.atk + c.hp + c.tier * 3.2 + (c.kw ? c.kw.length * 1.5 : 0);
-    if (c.fam === p.pref) v += 6;
+    if (c.fam === p.pref || c.fam === p.pref2) v += 6;
     if (c.sun && p.board.concat(p.hand).some((u) => famOf(u) === 'vie')) v += 4;
     v += ownedCopies(p, id).length * 7;
     return v;
@@ -1156,7 +1175,7 @@
 
   function unitValue(p, u) {
     const c = cardOf(u);
-    return u.atk + u.hp + c.tier * 3.2 + (c.fam === p.pref ? 6 : 0) + (u.golden ? 8 : 0) + u.kw.length * 1.5;
+    return u.atk + u.hp + c.tier * 3.2 + (c.fam === p.pref || c.fam === p.pref2 ? 6 : 0) + (u.golden ? 8 : 0) + u.kw.length * 1.5;
   }
 
   function botDeploy(state, p) {
@@ -1186,7 +1205,7 @@
     // IA experte : suit la famille qui domine déjà son système.
     if (expert(p) && state.round >= 4) {
       const top = FAMILY_KEYS.map((f) => [f, famCount(p, f)]).sort((a, b) => b[1] - a[1])[0];
-      if (top && top[1] >= 3) p.pref = top[0];
+      if (top && top[1] >= 3 && !p.pref2) p.pref = top[0];
     }
     botDeploy(state, p);
     // L'IA experte monte de niveau plus tard : elle remplit d'abord son système, puis investit
@@ -1319,7 +1338,7 @@
   }
 
   return {
-    rollCost, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
+    rollCost, ALLIANCE, allianceOf, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
     FAMILIES, FAMILY_KEYS, KEYWORDS, CARDS, CARD, LAWS, LAW,
     cardOf, famOf, cardText, upgradeCost, lawChoices, newGame, alivePlayers,
     buy, canBuy, play, canMagnet, sell, roll, freeze, upgrade, reorder, usePower, canUsePower, choose, endTurn,

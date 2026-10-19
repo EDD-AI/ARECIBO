@@ -386,6 +386,31 @@ doublés). Le placer ouvre une **découverte** : un astre au choix parmi trois d
 Chaque choix est encadré de la couleur de sa famille, avec son nom. Il indique aussi « Famille de
 votre loi », ou combien d’astres de cette famille sont déjà dans votre système.
 
+## Alliance (compositions hybrides)
+
+Un système qui réunit **deux familles d’au moins 3 astres chacune** forme une **Alliance**. Au début
+de chaque combat, les astres de ces deux familles gagnent +1/+1 (`R.ALLIANCE`, `R.allianceOf`).
+- **Pendant la création**, une étiquette dorée « ALLIANCE … » s’affiche à côté de « Votre
+  système ». Une explication apparaît la première fois. Toucher l’étiquette ouvre la fiche des
+  familles.
+- **En combat**, « ALLIANCE · … » s’annonce au-dessus du système, puis chaque astre allié gagne son
+  +1/+1.
+- **Les bots** : environ 40 % d’entre eux visent une Alliance de deux familles, les autres une
+  famille seule.
+- **Ocre** (Minéral) renforce désormais un allié aléatoire de toute famille, et plus seulement un
+  Minéral. Le Minéral devient ainsi un bon partenaire.
+
+**Mesure** avec `node orbite/tools/hybrides.js 4000` : dans les mêmes parties, la moitié des univers
+vise une famille et l’autre moitié deux.
+
+| | Rang moyen avant | Rang moyen après |
+|---|---|---|
+| Une famille | 4,45 | 4,60 |
+| Deux familles | 4,55 | 4,40 |
+| Duos jouables (rang ≤ 4,75) | 50 / 66 | 62 / 66 |
+
+Les deux styles mènent à la victoire. L’écart entre les lois (`tools/equilibrage.js`) reste le même.
+
 ## Familles
 
 | Famille | Identité |
@@ -426,6 +451,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `tests/rules.test.mjs`, `tests/campagne.test.mjs`, `tests/forge.test.mjs` | Tests des règles, de la campagne et de la Forge |
 | `tools/equilibrage.js` | Simulation de parties entre bots : classement moyen par loi, famille et astre |
 | `tools/bots-duel.js` | Force des bots : IA experte contre IA de base dans les mêmes parties |
+| `tools/hybrides.js` | Compositions hybrides : bots à une famille contre bots à deux familles, rang de chaque duo |
 | `manifest.webmanifest`, `sw.js`, `icons/` | Installation sur téléphone et hors ligne |
 
 ## Tests
