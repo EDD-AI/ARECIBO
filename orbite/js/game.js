@@ -9,15 +9,13 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 21;
+  const VERSION = 22;
   const DUST_KEY = 'orbite.poussieres';
-  const SPEED_KEY = 'orbite.vitesse';
 
   const ui = {
     state: null, screen: null, lawPick: null, lawOptions: [], busy: false,
-    speed: 1, time: 1, skip: false, targeting: false, stamp: 1, prevHp: null
+    time: 1, skip: false, targeting: false, stamp: 1, prevHp: null
   };
-  try { ui.speed = [1, 2, 4].includes(Number(localStorage.getItem(SPEED_KEY))) ? Number(localStorage.getItem(SPEED_KEY)) : 1; } catch (err) { ui.speed = 1; }
 
   let stage;
   try {
@@ -963,16 +961,23 @@
     return `<h3>PARAMÈTRES</h3><div class="menu-list-sheet">
       <button class="btn" data-act="set" data-v="sound">SON : ${SFX.muted ? 'COUPÉ' : 'ACTIVÉ'}</button>
       <button class="btn" data-act="set" data-v="music">MUSIQUE : ${SFX.musicOn ? 'ACTIVÉE' : 'COUPÉE'}</button>
-      <button class="btn" data-act="set" data-v="speed">VITESSE DES COMBATS : ×${ui.speed}</button>
-      <button class="btn" data-act="set" data-v="help">COMMENT JOUER</button>
-      <button class="btn" data-act="set" data-v="guide">GUIDE DU MENU</button>
-      <button class="btn" data-act="set" data-v="tuto">${tutoDone() ? 'REFAIRE LE TUTORIEL' : 'TUTORIEL : PROCHAINE PARTIE'}</button>
+      <button class="btn" data-act="set" data-v="tutos">TUTORIELS ET AIDE</button>
       ${installed() ? '' : '<button class="btn" data-act="set" data-v="install">INSTALLER SUR LE TÉLÉPHONE</button>'}
-      <button class="btn" data-act="set" data-v="intro">REVOIR L’INTRODUCTION</button>
       <button class="btn" data-act="set" data-v="credits">CRÉDITS</button>
       <button class="btn ghost" data-act="set" data-v="reset">EFFACER LA PROGRESSION</button>
     </div><p class="muted">Poussières d’étoiles, niveau, planète et partie en cours restent sur cet appareil.</p>
     <p class="muted version">ORBITE · version ${VERSION}</p>`;
+  }
+
+  // Tous les tutoriels et l'aide sont rangés derrière un seul bouton des Paramètres.
+  function tutosHtml() {
+    return `<h3>TUTORIELS ET AIDE</h3><div class="menu-list-sheet">
+      <button class="btn" data-act="set" data-v="help">COMMENT JOUER</button>
+      <button class="btn" data-act="set" data-v="guide">GUIDE DU MENU</button>
+      <button class="btn" data-act="set" data-v="tuto">${tutoDone() ? 'REFAIRE LE TUTORIEL DE PARTIE' : 'TUTORIEL : PROCHAINE PARTIE'}</button>
+      <button class="btn" data-act="set" data-v="tutoCamp">TUTORIELS DE CAMPAGNE</button>
+      <button class="btn" data-act="set" data-v="intro">REVOIR L’INTRODUCTION</button>
+    </div><div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} PARAMÈTRES</button></div>`;
   }
 
   // Installation : le jeu s'ajoute à l'écran d'accueil et se joue ensuite hors ligne.
@@ -1020,11 +1025,8 @@
   async function settingsAction(v, btn) {
     if (v === 'sound') { SFX.setMuted(!SFX.muted); if (!SFX.muted) SFX.tap(); openSheet(settingsHtml()); }
     else if (v === 'music') { SFX.setMusicOn(!SFX.musicOn); SFX.tap(); openSheet(settingsHtml()); }
-    else if (v === 'speed') {
-      ui.speed = ui.speed === 1 ? 2 : ui.speed === 2 ? 4 : 1;
-      store.set(SPEED_KEY, String(ui.speed));
-      openSheet(settingsHtml());
-    } else if (v === 'help') openSheet(helpHtml());
+    else if (v === 'tutos') openSheet(tutosHtml());
+    else if (v === 'help') openSheet(helpHtml(true));
     else if (v === 'credits') openSheet(creditsHtml());
     else if (v === 'install') install();
     else if (v === 'guide') {
@@ -1034,6 +1036,10 @@
       store.set(TUTO_KEY, '');
       closeSheet();
       toast('Votre prochaine partie sera guidée pas à pas.', 3000);
+    } else if (v === 'tutoCamp') {
+      for (const k of ['orbite.campagne.tuto', 'orbite.campagne.carte', 'orbite.campagne.glisse']) store.set(k, '');
+      closeSheet();
+      toast('La campagne vous guidera de nouveau : premier combat et carte.', 3000);
     }
     else if (v === 'settings') openSheet(settingsHtml());
     else if (v === 'intro') {
@@ -1405,7 +1411,6 @@
     renderHand();
     renderPower();
     renderFight();
-    $('speedBtn').textContent = '×' + ui.speed;
     if (reveal) {
       [...$('board').children, ...$('hand').children].forEach((el, i) => revealIn(el, 40 + i * 40));
       [...$('rivals').querySelectorAll('.orb')].forEach((o, i) => revealIn(o, i * 30));
@@ -2207,7 +2212,7 @@
     </div>`);
   }
 
-  function helpHtml() {
+  function helpHtml(fromSettings) {
     return `<h3>COMMENT JOUER</h3><ul class="help">
       <li>Vous affrontez <b>sept univers</b>. Chaque cycle : vous achetez, puis votre système combat seul un rival.</li>
       <li><b>Acheter</b> coûte 3 énergies (glissez un astre vers votre main ou directement dans le système). <b>Vendre</b> rend 1 énergie (glissez un astre du système vers la Création). <b>Actualiser</b> coûte 1.</li>
@@ -2219,7 +2224,7 @@
       <li>Le perdant subit : niveau du gagnant + niveaux de ses astres survivants. <b>Maximum ${R.DAMAGE_CAP} dégâts</b> tant que plus de trois univers sont en vie.</li>
       <li>Seuls les <b>trois premiers</b> gagnent des poussières d’étoiles : ${R.REWARDS[1]}, ${R.REWARDS[2]} et ${R.REWARDS[3]}.</li>
       <li>Chaque partie rapporte de l’<b>expérience</b>. Les niveaux ouvrent des améliorations au <b>Marché stellaire</b> : avec vos poussières, faites renaître votre planète, celle qui tourne derrière le menu, ou achetez des <b>fonds animés</b> (650) pour vos parties.</li>
-    </ul><div class="sheet-actions"><button class="btn primary" data-act="close">COMPRIS</button></div>`;
+    </ul><div class="sheet-actions">${fromSettings ? `<button class="btn" data-act="set" data-v="tutos">${icon('back')} TUTORIELS</button>` : ''}<button class="btn primary" data-act="close">COMPRIS</button></div>`;
   }
 
   async function menuAction(v) {
@@ -2284,7 +2289,7 @@
   const unitByCid = (cid) => document.querySelector(`#board .unit[data-cid="${cid}"], #enemy .unit[data-cid="${cid}"]`);
 
   async function playBattle(b) {
-    ui.time = ui.speed;
+    ui.time = 1;
     ui.skip = false;
     const opp = b.opponent;
     ui.opp = opp;
@@ -2944,12 +2949,6 @@
     } else {
       guard(() => doPower(null))();
     }
-  });
-  $('speedBtn').addEventListener('click', () => {
-    ui.speed = ui.speed === 1 ? 2 : ui.speed === 2 ? 4 : 1;
-    ui.time = ui.speed;
-    $('speedBtn').textContent = '×' + ui.speed;
-    try { localStorage.setItem(SPEED_KEY, String(ui.speed)); } catch (err) { /* stockage indisponible */ }
   });
   $('skipBtn').addEventListener('click', () => { ui.skip = true; });
   $('againBtn').addEventListener('click', async () => { SFX.tap(); renderLaws(); await show('laws'); });

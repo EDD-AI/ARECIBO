@@ -297,7 +297,7 @@
       start(c, u, m) { for (const v of c.allies(u.side)) if (v !== u) c.buff(v, 2 * m, 2 * m); } },
 
     // LUNES : l'ordre compte, elles renforcent leurs voisins.
-    { id: 'phobos', fam: 'lune', tier: 1, atk: 2, hp: 2, name: 'Phobos', look: { type: 'asteroid', seed: 9101 },
+    { id: 'phobos', fam: 'lune', tier: 1, atk: 2, hp: 2, name: 'Phobos', look: { type: 'moon', seed: 9101, hueShift: 45 },
       text: 'Naissance : l’astre à sa droite gagne +{1}/+{1}.',
       play(x, u, m) { x.buff(x.right(u), m, m); } },
     { id: 'selene', fam: 'lune', tier: 1, atk: 1, hp: 3, name: 'Séléné', look: { type: 'moon', seed: 9102, hueShift: 40, light: [-0.8, 0.3, -0.42] },

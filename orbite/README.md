@@ -24,8 +24,16 @@ des **poussières d’étoiles**.
    en accordéon sur **Campagne** et **Affrontement** (contre 7 univers) ; Multijoueur se replie
    dessous. Le menu reste rangé.
 
-Les **Paramètres** gèrent le son, la vitesse des combats, l’atelier, les crédits, et permettent de
-revoir l’introduction.
+Les **Paramètres** restent courts : son, musique, **Tutoriels et aide**, installation, crédits et
+effacement de la progression. **Tutoriels et aide** regroupe en un seul bouton :
+- Comment jouer ;
+- le guide du menu ;
+- le tutoriel de partie ;
+- les tutoriels de campagne ;
+- l’introduction.
+
+La vitesse des combats n’est pas réglable : tout le monde voit les combats au même rythme. Le
+bouton « Passer » reste disponible pendant un combat.
 
 ## Campagne (démo · acte I)
 
@@ -108,8 +116,9 @@ en une phrase. Il avance quand le joueur fait l’action demandée, ou sur « SU
   - le calcul des dégâts ;
   - actualiser, geler, monter de niveau, vendre, le pouvoir et les rivaux ;
   - enfin, les astres dorés et le podium.
-- « Passer le tutoriel » est proposé à chaque étape. Paramètres → **Guide du menu** et
-  **Refaire le tutoriel** les relancent. La prochaine partie est alors guidée.
+- « Passer le tutoriel » est proposé à chaque étape. Paramètres → **Tutoriels et aide** les
+  relance : guide du menu, tutoriel de partie (la prochaine partie est alors guidée) et tutoriels
+  de campagne (premier combat et carte).
 
 Le coach se trouve dans `js/game.js` (`coachStart`, étapes `MENU_STEPS`, `LAW_STEPS`,
 `GAME_STEPS`). Le jeu lui signale ses actions par `tuto('fiche' | 'achat' | 'placer' | 'combat' | 'cycle'…)`.
