@@ -24,8 +24,8 @@ des **poussières d’étoiles**.
    en accordéon sur **Campagne** et **Affrontement** (contre 7 univers) ; Multijoueur se replie
    dessous. Le menu reste rangé.
 
-Les **Paramètres** restent courts : son, musique, **Tutoriels et aide**, installation, crédits et
-effacement de la progression. **Tutoriels et aide** regroupe en un seul bouton :
+Les **Paramètres** restent courts : son, musique, **Tutoriels et aide**, installation et crédits.
+La progression (niveau, poussières, planète, historique) ne peut pas être effacée depuis le jeu. **Tutoriels et aide** regroupe en un seul bouton :
 - Comment jouer ;
 - le guide du menu ;
 - le tutoriel de partie ;
