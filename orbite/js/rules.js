@@ -97,7 +97,7 @@
     { id: 'nyx', fam: 'neant', tier: 2, atk: 2, hp: 2, name: 'Nyx', look: { type: 'dead', seed: 444, moons: 1, light: [-0.75, -0.35, -0.5] },
       text: 'Effondrement : invoque deux Débris {1}/{1}.',
       death(c, u, m, i) { c.summon(u.side, 'debris', i, m); c.summon(u.side, 'debris', i, m); } },
-    { id: 'abysse', fam: 'neant', tier: 3, atk: 3, hp: 5, name: 'Abysse', look: { type: 'blackhole', seed: 555 },
+    { id: 'abysse', fam: 'neant', tier: 3, atk: 3, hp: 5, name: 'Abysse', look: { type: 'blackhole', seed: 555, disk: false },
       text: 'Quand un autre allié s’effondre, gagne +{2}/+{1} pour le combat.',
       allyDeath(c, u, m) { c.buff(u, 2 * m, m); } },
     { id: 'eclipse', fam: 'neant', tier: 3, atk: 4, hp: 3, name: 'Éclipse', look: { type: 'eclipse', seed: 666 },

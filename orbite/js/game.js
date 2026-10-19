@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 17;
+  const VERSION = 18;
   const DUST_KEY = 'orbite.poussieres';
   const SPEED_KEY = 'orbite.vitesse';
 
