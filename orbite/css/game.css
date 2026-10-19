@@ -785,6 +785,10 @@ body.in-combat .game-foot { margin-top: auto; }
 .pop.gold { color: var(--gold); }
 .pop.info { color: var(--ink); font-size: 11px; letter-spacing: 0.14em; }
 .pop.energy { color: var(--energy); }
+.alliance-tag { margin-left: 8px; padding: 2px 6px; border: 1px solid rgba(246, 196, 83, 0.6); color: var(--gold); font-size: 9px; letter-spacing: 0.16em; vertical-align: middle; }
+.alliance-tag b { font-weight: 600; }
+.alliance-tag[hidden] { display: none; }
+.pop.gold b { font-weight: 600; }
 .pop.buff { display: flex; flex-direction: column; align-items: center; gap: 0; font-size: 16px; line-height: 1.05; animation-name: popBuff; }
 .pop.buff span { display: inline-flex; align-items: center; gap: 2px; }
 .pop.buff .pix { height: 11px; width: auto; }

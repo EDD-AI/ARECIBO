@@ -233,3 +233,19 @@ test('textes : nombres doublés pour les dorés, pas de marqueur restant', () =>
   }
   assert.equal(R.cardText('gaia', true), 'Habitable : fin de cycle, avec un Soleil, gagne +2/+2.');
 });
+
+test('Alliance : deux familles de 3 astres gagnent +1/+1 au début du combat', () => {
+  const s = gameWith('envers', 'al1');
+  const mk = (id) => ({ uid: 'x' + Math.random(), id, golden: false, atk: R.CARD[id].atk, hp: R.CARD[id].hp, kw: (R.CARD[id].kw || []).slice(), att: [] });
+  const duo = [mk('silex'), mk('agate'), mk('basalte'), mk('nive'), mk('givre'), mk('boreale'), mk('errante')];
+  assert.deepEqual(R.allianceOf(duo).slice().sort(), ['glace', 'mineral']);
+  assert.equal(R.allianceOf(duo.slice(0, 5)), null, 'il faut 3 astres de chaque famille');
+  const A = { id: 'A', tier: 1, law: 'symbiose', board: duo };
+  const B = { id: 'B', tier: 1, law: 'symbiose', board: [mk('errante')] };
+  const r = R.fight(s, A, B, 'alliance', true);
+  const al = r.events.find((e) => e.t === 'alliance');
+  assert.ok(al && al.side === 0, 'Alliance annoncée pour le premier système');
+  const i = r.events.indexOf(al);
+  const buffs = r.events.slice(i + 1, i + 7).filter((e) => e.t === 'buff' && e.a === R.ALLIANCE.atk && e.h === R.ALLIANCE.hp);
+  assert.equal(buffs.length, 6, 'les six astres alliés sont renforcés, pas le neutre');
+});

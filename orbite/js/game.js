@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 27;
+  const VERSION = 28;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -1343,7 +1343,33 @@
     }, (el, u) => { updateUnit(el, u, 'board'); el.dataset.src = 'board'; });
     sizeRow($('board'), 'board', 88);
     arc($('board'));
+    renderAlliance();
   }
+
+  // Alliance : deux familles d'au moins 3 astres chacune → +1/+1 au début de chaque combat.
+  const ALLIANCE_KEY = 'orbite.alliance';
+  const famName = (f) => R.FAMILIES[f].name.toUpperCase();
+  function allianceHtml(al) {
+    return al.map((f) => `<b style="color:${famColor(f)}">${famName(f)}</b>`).join(' + ');
+  }
+  function renderAlliance() {
+    const tag = $('allianceTag');
+    if (!tag || !ui.state) return;
+    const al = R.allianceOf(me().board);
+    const key = al ? al.join('+') : '';
+    tag.hidden = !al;
+    if (al) tag.innerHTML = 'ALLIANCE ' + allianceHtml(al);
+    if (key && key !== ui.allianceKey && ui.allianceKey !== undefined) {
+      tag.animate([{ transform: 'scale(0.6)', opacity: 0 }, { transform: 'scale(1.15)', opacity: 1 }, { transform: 'scale(1)' }], { duration: 520, easing: 'ease-out' });
+      SFX.golden();
+      if (store.get(ALLIANCE_KEY, '') !== '1') {
+        store.set(ALLIANCE_KEY, '1');
+        toast(`Alliance ! Deux familles de ${R.ALLIANCE.min} astres : leurs astres gagnent +${R.ALLIANCE.atk}/+${R.ALLIANCE.hp} au début de chaque combat.`, 4200);
+      }
+    }
+    ui.allianceKey = key;
+  }
+  $('allianceTag').addEventListener('click', () => { SFX.tap(); openFamilies(); });
 
   function renderHand() {
     const p = me();
@@ -2227,6 +2253,7 @@
     }).join('');
     const law = R.LAW[p.law];
     openSheet(`<h3>FAMILLES DE CET UNIVERS</h3><div class="fam-list">${items}</div>
+      <h3 style="margin-top:18px">ALLIANCE</h3><div class="fam-item" style="--c:var(--gold)"><b>${(() => { const al = R.allianceOf(p.board); return al ? 'ACTIVE · ' + allianceHtml(al) : 'INACTIVE'; })()}</b><p>Réunissez deux familles d’au moins ${R.ALLIANCE.min} astres chacune : leurs astres gagnent +${R.ALLIANCE.atk}/+${R.ALLIANCE.hp} au début de chaque combat. Les mélanges deviennent aussi forts qu’une famille seule.</p></div>
       <h3 style="margin-top:18px">VOTRE LOI</h3><div class="fam-item" style="--c:${famColor(law.fam)}"><b>${esc(law.name).toUpperCase()}</b><p>${esc(law.text)}</p></div>`);
   }
 
@@ -2248,6 +2275,7 @@
       <li><b>Touchez un astre</b> pour lire ce qu’il fait, même en combat ou chez un rival. Sous chaque astre : ${icon('sword')} son <b>Attaque</b> et ${icon('heart')} ses <b>PV</b>. En haut à droite : ${icon('skull')} il a un effet d’<b>Effondrement</b> (quand il est détruit, comme laisser des Débris), ${icon('spark')} il a un autre effet.</li>
       <li><b>Trois copies</b> d’un même astre fusionnent en un <b>astre doré</b> (stats doublées). Le placer offre une <b>découverte</b> du niveau supérieur.</li>
       <li>Chaque partie active <b>5 familles</b> sur 12, plus les neutres. La réserve est <b>partagée</b> : si des rivaux jouent une famille, ses astres se font rares.</li>
+      <li><b>Alliance</b> : deux familles d’au moins ${R.ALLIANCE.min} astres chacune dans votre système, et leurs astres gagnent +${R.ALLIANCE.atk}/+${R.ALLIANCE.hp} au début de chaque combat. Une famille seule ou un mélange : les deux mènent à la victoire.</li>
       <li>Le perdant subit : niveau du gagnant + niveaux de ses astres survivants. <b>Maximum ${R.DAMAGE_CAP} dégâts</b> tant que plus de trois univers sont en vie.</li>
       <li>Seuls les <b>trois premiers</b> gagnent des poussières d’étoiles : ${R.REWARDS[1]}, ${R.REWARDS[2]} et ${R.REWARDS[3]}.</li>
       <li>Chaque partie rapporte de l’<b>expérience</b>. Les niveaux ouvrent des améliorations au <b>Marché stellaire</b> : avec vos poussières, faites renaître votre planète, celle qui tourne derrière le menu, ou achetez des <b>fonds animés</b> (650) pour vos parties.</li>
@@ -2479,6 +2507,19 @@
       case 'first': {
         banner(e.side === 0 ? 'VOUS ATTAQUEZ' : esc(ui.opp.name), e.side === 0 ? 'en premier' : 'attaque en premier');
         await sleep(900);
+        break;
+      }
+      case 'alliance': {
+        const row = combatRowEl(e.side);
+        popOn(row, 'ALLIANCE · ' + allianceHtml(e.fams), 'gold');
+        SFX.golden();
+        for (const el of row.querySelectorAll('.unit')) {
+          if (!e.fams.includes(R.CARD[el.dataset.id].fam)) continue;
+          const orb = el.querySelector('.orb');
+          const [x, y] = center(orb);
+          stage.ring(x, y, orb.getBoundingClientRect().width * 0.45, { n: 22, colors: [hexRgb(famColor(R.CARD[el.dataset.id].fam)), [246, 196, 83]], speed: 40, life: 0.6, flat: 0.5 });
+        }
+        await sleep(600);
         break;
       }
       case 'law': {
