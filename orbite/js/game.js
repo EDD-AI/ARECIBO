@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 22;
+  const VERSION = 23;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -964,7 +964,6 @@
       <button class="btn" data-act="set" data-v="tutos">TUTORIELS ET AIDE</button>
       ${installed() ? '' : '<button class="btn" data-act="set" data-v="install">INSTALLER SUR LE TÉLÉPHONE</button>'}
       <button class="btn" data-act="set" data-v="credits">CRÉDITS</button>
-      <button class="btn ghost" data-act="set" data-v="reset">EFFACER LA PROGRESSION</button>
     </div><p class="muted">Poussières d’étoiles, niveau, planète et partie en cours restent sur cet appareil.</p>
     <p class="muted version">ORBITE · version ${VERSION}</p>`;
   }
@@ -1047,14 +1046,6 @@
       stopAmbient();
       store.set(WAKE_KEY, '');
       boot(true);
-    } else if (v === 'reset') {
-      if (!btn.dataset.confirm) { btn.dataset.confirm = '1'; btn.textContent = 'TOUCHER ENCORE POUR CONFIRMER'; return; }
-      for (const k of [SAVE_KEY, DUST_KEY, WAKE_KEY, XP_KEY, WORLD_KEY, STATS_KEY, HIST_KEY]) store.set(k, '');
-      try { localStorage.removeItem(SAVE_KEY); } catch (err) { /* stockage indisponible */ }
-      closeSheet();
-      applyWorld();
-      renderMenu();
-      toast('Progression effacée.');
     }
   }
 
