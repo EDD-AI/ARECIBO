@@ -1208,5 +1208,5 @@
     { id: 'suite', text: 'Chaque victoire ajoute une carte à votre création, et votre monde change avec elle. Si votre monde tombe, recommencez : chaque expédition est différente.', next: 'C’EST PARTI', delay: 2600 }
   ];
 
-  O.campagne = { get run() { return run; }, newRun, resume, talk, C };
+  O.campagne = { get run() { return run; }, newRun, resume, talk, C, save, has: () => !!load() };
 })();

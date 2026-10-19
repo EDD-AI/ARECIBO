@@ -281,7 +281,19 @@ Si la version en ligne est plus récente, la page se recharge, mais seulement au
 partie, une campagne ou l’écran de fin (gain d’expérience, passage de niveau), le rechargement
 attend le retour au menu, et la partie reste sauvegardée. Les poussières du classement et le cadeau
 de chaque niveau franchi sont versés dès l’arrivée sur l’écran de fin : l’animation ne fait que les
-afficher. Le service worker revalide
+afficher.
+
+**Reprise rapide.** Sur iPhone, une appli web installée est souvent fermée par le système quand on
+passe à une autre appli. Le jeu enregistre donc l’écran ouvert (`orbite.session`) et sauvegarde la
+partie et la campagne dès qu’il passe en arrière-plan. S’il redémarre dans la demi-heure, il saute
+l’introduction et reprend directement :
+- la partie en cours ;
+- la campagne en cours ;
+- l’écran de fin d’une partie terminée pendant la fermeture, avec ses récompenses ;
+- ou le menu.
+
+Si iOS retire le contexte WebGL en arrière-plan, le moteur de rendu est recréé à son retour
+(`stage.restore`) au lieu de laisser un écran noir. Le service worker revalide
 chaque fichier auprès du serveur, pour que le cache du navigateur ne resserve jamais une ancienne
 version. La version s’affiche sur l’écran-titre, en bas du menu et en bas des Paramètres.
 

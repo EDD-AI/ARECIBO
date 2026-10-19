@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 20;
+  const VERSION = 21;
   const DUST_KEY = 'orbite.poussieres';
   const SPEED_KEY = 'orbite.vitesse';
 
@@ -131,7 +131,9 @@
   function saveGame() {
     if (!ui.state) return;
     try {
-      if (ui.state.over) localStorage.removeItem(SAVE_KEY);
+      // Une partie finie reste sauvegardée tant que ses récompenses n'ont pas été données :
+      // si l'appli est fermée pendant le dernier combat, l'écran de fin s'ouvre au retour.
+      if (ui.state.over && ui.state.xpGiven) localStorage.removeItem(SAVE_KEY);
       else localStorage.setItem(SAVE_KEY, JSON.stringify(ui.state));
     } catch (err) { /* stockage indisponible */ }
   }
@@ -139,6 +141,13 @@
     try {
       const s = JSON.parse(localStorage.getItem(SAVE_KEY));
       if (s && s.v === 1 && Array.isArray(s.players) && !s.over && s.phase === 'shop') return s;
+    } catch (err) { /* sauvegarde illisible */ }
+    return null;
+  }
+  function loadFinished() {
+    try {
+      const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+      if (s && s.v === 1 && Array.isArray(s.players) && s.over && !s.xpGiven) return s;
     } catch (err) { /* sauvegarde illisible */ }
     return null;
   }
@@ -274,6 +283,7 @@
 
   // ─── Écrans ─────────────────────────────────────────────────
   async function show(name) {
+    rememberScreen(name);
     if (name !== 'menu' && $('menuList')) $('menuList').classList.remove('solo-open');
     // Une mise à jour en attente ne recharge la page qu'au retour au menu : jamais pendant une partie,
     // une campagne ou l'écran de fin (gain d'expérience, passage de niveau).
@@ -649,13 +659,51 @@
   $('titleVersion').textContent = 'VERSION ' + VERSION;
   $('menuFoot').textContent = 'STUDIO EDDA · VERSION ' + VERSION;
 
-  async function boot() {
+  // ─── Reprise rapide ─────────────────────────────────────────
+  // Sur iPhone, une appli web installée est souvent fermée par le système quand on passe à une
+  // autre appli. On note l'écran ouvert et on sauvegarde tout en quittant ; si le jeu redémarre
+  // dans la demi-heure, il reprend directement là où l'on était, sans l'introduction.
+  const SESSION_KEY = 'orbite.session';
+  const RESUME_MS = 30 * 60 * 1000;
+  function rememberScreen(name) {
+    if (['splash', 'title', 'wake'].includes(name)) return;
+    store.set(SESSION_KEY, JSON.stringify({ s: name, t: Date.now() }));
+  }
+  function saveAll() {
+    if (ui.state && ui.screen === 'game') saveGame();
+    const camp = window.__orbite && window.__orbite.campagne;
+    if (camp && camp.run) camp.save();
+    if (ui.screen && !['splash', 'title', 'wake'].includes(ui.screen)) rememberScreen(ui.screen);
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) saveAll(); });
+  window.addEventListener('pagehide', saveAll);
+
+  async function quickResume() {
+    let ses = null;
+    try { ses = JSON.parse(store.get(SESSION_KEY, 'null')); } catch (err) { /* illisible */ }
+    if (!ses || Date.now() - ses.t > RESUME_MS || store.get(WAKE_KEY, '') !== '1') return false;
+    const fin = loadFinished();
+    if (fin) { ui.state = fin; await endScreen(); return true; }
+    if (ses.s === 'game' && loadGame()) { await resumeGame(); return true; }
+    const camp = window.__orbite && window.__orbite.campagne;
+    if (['cStory', 'cTalk', 'cMap', 'cFight'].includes(ses.s) && camp && camp.has()) { await camp.resume(); return true; }
+    await backToMenu();
+    return true;
+  }
+
+  async function boot(full) {
     try {
+      // Attend que tous les scripts (dont la Campagne) soient chargés avant de reprendre.
+      if (document.readyState === 'loading') await new Promise((r) => document.addEventListener('DOMContentLoaded', r, { once: true }));
+      if (!full && await quickResume()) return;
       await splash();
       await titleScreen();
       const first = store.get(WAKE_KEY, '') !== '1';
       if (first) await wakeScreen();
       await enterMenu(first);
+      // Une partie terminée pendant que l'appli était fermée : ses récompenses attendent.
+      const fin = loadFinished();
+      if (fin && ui.screen === 'menu') { ui.state = fin; await endScreen(); }
     } catch (err) {
       console.error(err);
       await enterMenu(false);
@@ -992,7 +1040,7 @@
       closeSheet();
       stopAmbient();
       store.set(WAKE_KEY, '');
-      boot();
+      boot(true);
     } else if (v === 'reset') {
       if (!btn.dataset.confirm) { btn.dataset.confirm = '1'; btn.textContent = 'TOUCHER ENCORE POUR CONFIRMER'; return; }
       for (const k of [SAVE_KEY, DUST_KEY, WAKE_KEY, XP_KEY, WORLD_KEY, STATS_KEY, HIST_KEY]) store.set(k, '');
