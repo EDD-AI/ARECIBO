@@ -34,6 +34,11 @@
       this.starArea = 1800;
       this.fit();
       window.addEventListener('resize', () => this.fit());
+      // iOS peut retirer le contexte WebGL d'une appli passée en arrière-plan : on attend qu'il
+      // revienne, puis on recrée le moteur de rendu (les apparences sont régénérées à la volée).
+      this.lost = false;
+      canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.lost = true; });
+      canvas.addEventListener('webglcontextrestored', () => this.restore());
       requestAnimationFrame((t) => this.loop(t));
     }
 
@@ -253,7 +258,21 @@
       if (!was) gl.disable(gl.SCISSOR_TEST);
     }
 
+    restore() {
+      try {
+        this.r = new OP.Renderer(this.canvas, { transparent: true });
+        this.fit();
+        this.lost = false;
+      } catch (err) { /* contexte encore indisponible : nouvel essai au prochain retour */ }
+    }
+
     loop(now) {
+      if (this.lost || (this.r.gl && this.r.gl.isContextLost())) {
+        this.lost = true;
+        this.last = now;
+        requestAnimationFrame((t) => this.loop(t));
+        return;
+      }
       const dt = Math.min(0.05, (now - this.last) / 1000);
       this.last = now;
       this.time += dt;
