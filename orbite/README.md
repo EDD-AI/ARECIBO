@@ -16,14 +16,44 @@ des **poussières d’étoiles**.
    ne laisser que la couronne, qui s’épanouit et scintille. « Touchez pour commencer » : la lune
    s’écarte d’un cheveu (anneau de diamant), un éclat jaillit, le titre éclate en pixels.
 3. **Première fois seulement** : écran noir, sous-titre en bas « Réveillez-vous. Bonjour, créateur. »
-4. **Menu** : une planète géante se lève sur l’horizon et tourne très lentement, des poussières
+4. **Menu** : **votre planète** se lève sur l’horizon et tourne très lentement, des poussières
    montent du sol, des étoiles filantes passent. La première fois, « Voilà votre terrain de jeu. »
    s’écrit au centre.
-5. Menu : **Jouer solo**, **Multijoueur** (bientôt), **Marché stellaire**, **Paramètres**.
+5. Menu : **Jouer solo**, **Multijoueur** (bientôt), **Marché stellaire**, **Paramètres**, et en
+   haut à droite le **profil** (pseudo, niveau, avatar = votre planète).
 
-Le **Marché stellaire** dépense les poussières d’étoiles : chaque achat débloque un nouvel
-**horizon** (la planète du menu). Les **Paramètres** gèrent le son, la vitesse des combats,
-l’atelier, et permettent de revoir l’introduction.
+Les **Paramètres** gèrent le son, la vitesse des combats, l’atelier, les crédits, et permettent de
+revoir l’introduction.
+
+## Votre planète : le jeu dans le jeu
+
+La planète du menu est la vôtre. Au départ elle est **morte et noire**. Au **Marché stellaire**,
+les poussières d’étoiles achètent des **améliorations** qui la font renaître ; chacune demande un
+**niveau de créateur**. Elles s’achètent dans l’ordre (`js/world.js`) :
+
+| Ère | Améliorations (niveau requis) |
+|---|---|
+| Réveil | Cœur rallumé (1), Volcans (3), Atmosphère primitive (6) |
+| Eau | Pluie de comètes (9), Premières pluies (12), Mers (16), Calottes polaires (20), Océans (25), Cycle de l’eau (30), Ciel bleu (35) |
+| Vie | Algues (40), Mousses et lichens (46), Forêts (53), Prairies (60), Faune (67), Lune capturée (74) |
+| Civilisation verte | Villages à éoliennes (80), Fermes solaires (86), Usines écologiques (92), Satellites solaires (98), Villes lumière (104), Station orbitale (110), Anneau solaire (115), Terre nouvelle (120) |
+
+24 améliorations, 10 110 poussières au total. Le moteur garde la même géographie (tirée du tag du
+joueur) et fait varier la roche, la lave sur la face de nuit, le niveau des mers, les calottes, les
+nuages, l’atmosphère, la végétation, les lumières des villes, puis ajoute lune, satellites et
+anneau (`livingWorld` dans `js/planet-engine.js`). Au niveau 120 elle ressemble à la Terre.
+
+## Profil
+
+Bouton en haut à droite du menu :
+
+- **Pseudo** modifiable et tag à quatre chiffres (`Créateur#4821`), niveau, barre d’XP, votre planète.
+- **Classé** (à venir avec le multijoueur) : 5 parties de placement puis un rang mondial, de la
+  Poussière à la Singularité : Poussière, Astéroïde, Lune, Planète, Géante, Étoile, Nébuleuse,
+  Pulsar (divisions I à III) et **Singularité** pour le top 500 mondial. Pour l’instant : « Non classé ».
+- **Statistiques** : parties, victoires, podiums, rang moyen, meilleur rang, combats gagnés, astres
+  dorés, cycles joués, poussières gagnées, loi favorite.
+- **Dernières parties** : les 15 dernières (rang, loi, cycles, date).
 
 ## Niveau du créateur
 
@@ -35,8 +65,9 @@ Chaque partie terminée rapporte de l’**expérience**, en plus des poussières
 | Cycles tenus | 5 par cycle |
 | Partie abandonnée | aucune |
 
-Il faut 100 XP pour passer au niveau 2, puis 40 de plus à chaque niveau (140, 180, 220…). Chaque
-niveau offre **25 poussières d’étoiles**. Le niveau et sa barre s’affichent au menu ; la barre se
+Il faut 80 XP pour passer au niveau 2, puis 5 de plus à chaque niveau (85, 90, 95…) : environ
+44 600 XP, soit près de 300 parties, pour le niveau 120. Chaque niveau offre **25 poussières
+d’étoiles** et peut ouvrir une amélioration de votre planète. Le niveau s’affiche au profil ; la barre se
 remplit en fin de partie. À chaque niveau franchi, une planète apparaît, tremble, se charge puis
 **explose** (éclair blanc, onde de choc, éclats de roche) et le nouveau niveau naît de ses débris.
 
@@ -125,6 +156,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | Fichier | Rôle |
 |---|---|
 | `js/rules.js` | Règles pures et déterministes : catalogue, lois, taverne, fusion, combat (journal d’événements), bots |
+| `js/world.js` | Votre planète : les 24 améliorations, leurs ères, niveaux, prix et effets |
 | `js/planet-engine.js` | Génome des planètes : une graine → astre, palette, nuages, anneaux, lunes, nom et fiche |
 | `js/planet-renderer.js` | Rendu WebGL2 pixel art (tramage, palettes à décalage de teinte) + encodeur GIF |
 | `js/stage.js` | Couche WebGL plein écran du jeu : dessine chaque planète à la position de son élément HTML, particules |

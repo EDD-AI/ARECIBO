@@ -50,8 +50,11 @@
       <div class="menu-top">
         <div class="pixel-word" id="menuWord" aria-label="ORBITE"></div>
         <span class="dust" id="menuDust"></span>
-        <span class="lvl" id="menuLvl"></span>
       </div>
+      <button class="profile-btn" id="profileBtn" aria-label="Profil">
+        <span class="pf-txt"><b id="pfName">Créateur</b><small id="pfLvl"></small></span>
+        <span class="orb pf-avatar" data-planet="world-mini"></span>
+      </button>
       <p class="subtitle center" id="menuLine"></p>
       <nav class="menu-list" id="menuList" aria-label="Menu principal">
         <button class="menu-item" id="soloBtn">JOUER SOLO</button>
@@ -69,8 +72,28 @@
         <h2>Marché stellaire</h2>
         <span class="dust" id="marketDust"></span>
       </header>
-      <p class="hint">Vos poussières d’étoiles changent l’horizon de votre univers.</p>
-      <div class="market-grid" id="marketGrid"></div>
+      <div class="mk-scroll">
+        <div class="mk-hero">
+          <div class="orb mk-planet" id="mkPlanet" data-planet="world-big" data-fit="body"></div>
+          <div class="mk-state">
+            <span class="mk-kicker">VOTRE PLANÈTE</span>
+            <b id="mkStage"></b>
+            <div class="xp-bar"><i id="mkProg"></i></div>
+            <small id="mkCount"></small>
+          </div>
+        </div>
+        <div class="mk-next" id="mkNext"></div>
+        <div class="mk-list" id="mkList"></div>
+      </div>
+    </section>
+
+    <!-- PROFIL -->
+    <section class="screen" id="profile" aria-label="Profil">
+      <header class="screen-head">
+        <button class="icon-btn" id="profileBack" aria-label="Retour"></button>
+        <h2>Profil</h2>
+      </header>
+      <div class="pf-scroll" id="profileBody"></div>
     </section>
 
     <!-- CHOIX DE LA LOI -->
@@ -176,6 +199,7 @@
   <script src="js/stage.js"></script>
   <script src="js/sfx.js"></script>
   <script src="js/rules.js"></script>
+  <script src="js/world.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>

@@ -58,7 +58,8 @@
       let g = this.genomes.get(id);
       if (!g) {
         const look = this.looks[id] || (this.catalog[id] && this.catalog[id].look) || { type: 'moon', seed: OP.hashString(id) };
-        g = OP.generate(look.seed, {
+        if (look.living) g = OP.livingWorld(look.seed, look.living, { light: look.light });
+        else g = OP.generate(look.seed, {
           type: look.type, compact: !look.full, facet: look.facet || 'off',
           ring: !!look.ring, debris: !!look.debris, moons: look.moons || 0, shell: !!look.shell,
           starClass: look.starClass, hueShift: look.hueShift, mood: look.mood,
@@ -188,18 +189,24 @@
     }
 
     // ─── Boucle ─────────────────────────────────────────────────
-    drawEl(el, phase, dim, now, cover) {
-      if (el.dataset.hide === '1') return;
-      const b = el.getBoundingClientRect();
-      if (b.width < 2 || b.height < 2) return;
-      if (cover && b.right > cover.left && b.left < cover.right && b.bottom > cover.top && b.top < cover.bottom) return;
-      if (b.bottom < -80 || b.top > window.innerHeight + 80) return;
+    stepTween(el, now) {
       const s = this.state(el);
       if (s.tween) {
         const k = clamp((now - s.tween.t0) / s.tween.ms, 0, 1);
         s.reveal = s.tween.from + (s.tween.to - s.tween.from) * k;
         if (k >= 1) { const t = s.tween; s.tween = null; t.resolve(); }
       }
+      return s;
+    }
+
+    drawEl(el, phase, dim, now, cover) {
+      // Les fondus avancent même hors de l'écran (liste défilée) : sinon un changement d'écran attendrait pour rien.
+      const s = this.stepTween(el, now);
+      if (el.dataset.hide === '1') return;
+      const b = el.getBoundingClientRect();
+      if (b.width < 2 || b.height < 2) return;
+      if (cover && b.right > cover.left && b.left < cover.right && b.bottom > cover.top && b.top < cover.bottom) return;
+      if (b.bottom < -80 || b.top > window.innerHeight + 80) return;
       if (s.reveal <= 0.01) return;
       const id = el.dataset.planet;
       if (!id) return;
@@ -260,7 +267,7 @@
       for (const el of els) {
         const s = this.fx.get(el);
         if (s && s.flash > 0) s.flash = Math.max(0, s.flash - dt * 4);
-        if (!el.getClientRects().length) continue;
+        if (!el.getClientRects().length) { this.stepTween(el, now); continue; }
         if (this.modal && el.closest('.overlay')) { top.push(el); continue; }
         this.drawEl(el, phase, this.modal ? 0.32 : 1, now, cover);
       }

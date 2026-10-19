@@ -960,11 +960,99 @@
     }
   }
 
+  // ─── Planète vivante (le monde du joueur) ─────────────────────
+  // Une seule géographie, tirée de la graine, qui renaît étape par étape :
+  // roche morte → volcans → eaux → vie → civilisation verte.
+  // p : { heat, air, water, ice, clouds, life, cities, moon, sats, ring, halo } entre 0 et 1 (sats : nombre).
+  const lerpRow = (a, b, t) => a.map((c, i) => [0, 1, 2].map((k) => Math.round(c[k] + (b[i][k] - c[k]) * t)));
+  const clamp01 = (v) => Math.max(0, Math.min(1, v || 0));
+  function livingWorld(seed, p, opts) {
+    opts = opts || {};
+    p = p || {};
+    const heat = clamp01(p.heat), air = clamp01(p.air), water = clamp01(p.water), ice = clamp01(p.ice);
+    const clouds = clamp01(p.clouds), life = clamp01(p.life), cities = clamp01(p.cities);
+    const g = generate(seed, { type: 'earth', facet: 'off', ring: !!p.ring, debris: false, moons: p.moon ? 1 : 0, shell: false, light: opts.light });
+    const b = g.body;
+    const E = b.pal.map((row) => row.slice());
+    const P = b.pal;
+    // Roche morte, presque noire.
+    // Rampe sombre qui ne blanchit pas dans la lumière : une roche presque noire.
+    const dead = (L) => gradRamp([[L * 0.45, 0.004, 260], [L * 0.75, 0.005, 260], [L, 0.006, 255], [L * 1.45, 0.008, 250]]);
+    const DEAD = { 3: dead(0.17), 4: dead(0.145), 5: dead(0.125), 6: dead(0.105), 11: dead(0.085) };
+    // Basalte réchauffé, teinté de rouille.
+    const VOLC = { 3: ramp(0.34, 0.04, 35), 4: ramp(0.29, 0.05, 30), 5: ramp(0.25, 0.045, 25), 6: ramp(0.21, 0.03, 30), 11: ramp(0.16, 0.03, 25) };
+    // Roche refroidie par les pluies : ocres et gris chauds.
+    const BARE = { 3: ramp(0.62, 0.05, 70), 4: ramp(0.5, 0.06, 55), 5: ramp(0.42, 0.05, 45), 6: ramp(0.38, 0.025, 50), 11: ramp(0.3, 0.03, 45) };
+    const cool = water;
+    for (const k of [3, 4, 5, 6, 11]) {
+      let row = DEAD[k];
+      row = lerpRow(row, VOLC[k], heat * (1 - 0.6 * cool));
+      row = lerpRow(row, BARE[k], cool * 0.85);
+      const lifeK = k === 6 ? life * 0.6 : k === 3 ? Math.max(life, water * 0.7) : life;
+      row = lerpRow(row, E[k], lifeK);
+      P[k] = row;
+    }
+    // Neige des sommets et calottes : seulement avec la glace.
+    P[7] = lerpRow(P[6], E[7], ice);
+    // Eaux : troubles au début, bleues avec un ciel clair et la vie.
+    const MURK = [ramp(0.3, 0.03, 60), ramp(0.38, 0.035, 70), ramp(0.46, 0.035, 80)];
+    const blue = Math.max(air * 0.7, life);
+    for (let k = 0; k < 3; k++) P[k] = lerpRow(MURK[k], E[k], blue);
+    // Nuages : soufrés à l'air primitif, blancs ensuite.
+    P[8] = lerpRow(cloudRampLike(E[8], 75), E[8], air);
+    // Lueurs nocturnes : lave d'abord, puis lumières des villes.
+    P[10] = cities > 0 ? E[10] : ramp(0.7, 0.2, 35);
+    // Halo d'atmosphère : poussière orangée, puis bleu.
+    P[12] = air < 0.35
+      ? lerpRow(ramp(0.32, 0.01, 260), ramp(0.62, 0.08, 50), air / 0.35)
+      : lerpRow(ramp(0.62, 0.08, 50), E[12], (air - 0.35) / 0.65);
+    const seaEarth = Math.max(0.45, b.A[2]);
+    b.A[2] = seaEarth * water;
+    b.A[3] = ice > 0 ? 0.985 - (0.985 - Math.min(b.A[3], 0.9)) * ice : 3;
+    b.C[0] = cities > 0 ? 0.12 + 0.38 * cities : heat * 0.32 * (1 - cool);
+    b.C[1] = cities > 0 ? b.C[1] : 60;
+    b.C[2] = 0;
+    b.C[3] = 0;
+    const r = makeRng(hashSeed(seed, 61));
+    if (clouds > 0) {
+      b.clouds = b.clouds || makeClouds(r, { storms: 0.3 });
+      b.clouds.A[1] += (1 - clouds) * 0.28;
+    } else b.clouds = null;
+    if (air > 0) {
+      b.atmo = b.atmo || makeAtmo(r);
+      b.atmo.w *= 0.35 + 0.65 * air;
+    } else b.atmo = null;
+    g.sats = [];
+    const nSats = Math.round(p.sats || 0);
+    for (let i = 0; i < nSats; i++) {
+      const SM = tiltMatrix(r.range(-0.6, 0.6), r.range(-0.7, 0.7));
+      g.sats.push({ a: Math.max(1.15, b.bound + 0.12) + r.range(0, 0.35), U: column(SM, 0), V: column(SM, 2), N: column(SM, 1), cyc: r.int(2, 4), ph: r.next(), panel: oklch(0.7, 0.13, r.pick([85, 250])) });
+    }
+    if (g.ring) {
+      // Anneau de panneaux solaires : or et bleu.
+      g.ring.pal[0] = ramp(0.78, 0.09, 85);
+      g.ring.pal[1] = ramp(0.6, 0.1, 250);
+      g.ring.pal[2] = ramp(0.86, 0.05, 90);
+    }
+    g.comets = p.halo ? g.comets : [];
+    g.sparkles = p.halo ? g.sparkles : [];
+    g.far = null;
+    computeExtent(g);
+    return g;
+  }
+  // Nuages jaunis (air volcanique) à partir d'une rampe de nuages blancs.
+  function cloudRampLike(row, hue) {
+    return row.map((c) => {
+      const lch = rgbToOklch(c);
+      return oklch(lch[0] * 0.92, Math.max(lch[1], 0.04), hue);
+    });
+  }
+
   root.OrbitePlanets = Object.assign(root.OrbitePlanets || {}, {
     TAU, TYPES, TYPE_BY_KEY, SH, STAR_CLASSES,
     hashSeed, hashString, makeRng,
     oklch, ramp, gradRamp, rgbToOklch, mapPalette, basePalette,
     tiltMatrix, column, mul3, rotX, rotZ,
-    generate, makeStarfield, accentOf
+    generate, makeStarfield, accentOf, livingWorld
   });
 })(typeof window !== 'undefined' ? window : globalThis);

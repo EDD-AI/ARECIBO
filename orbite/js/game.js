@@ -480,22 +480,30 @@
     await wait(400);
   }
 
-  // ─── Menu : horizon, planète géante, silhouette ─────────────
+  // ─── Votre planète ──────────────────────────────────────────
+  // Le monde du joueur : mort au départ, il renaît avec les améliorations du Marché stellaire.
   // Lumière rasante venue du haut à gauche : le dôme s'éclaire comme dans un plan d'anime.
+  const W = window.OrbiteWorld;
   const HZ_LIGHT = [-0.55, 0.62, 0.55];
-  const hz = (look) => Object.assign({ full: true, moons: 0, caps: false, light: HZ_LIGHT }, look);
-  const HORIZONS = [
-    { id: 'aube', name: 'Aube bleue', price: 0, look: hz({ type: 'ocean', seed: 5002 }) },
-    { id: 'lune', name: 'Lune pâle', price: 60, look: hz({ type: 'moon', seed: 5202 }) },
-    { id: 'pourpre', name: 'Géante pourpre', price: 120, look: hz({ type: 'gas', seed: 5037 }) },
-    { id: 'givre', name: 'Monde de givre', price: 180, look: hz({ type: 'ice', seed: 5006 }) },
-    { id: 'braise', name: 'Cœur de braise', price: 240, look: hz({ type: 'lava', seed: 5002 }) },
-    { id: 'envers', name: 'L’Envers', price: 320, look: hz({ type: 'terran', seed: 5606, mood: 'envers', flip: true }) }
-  ];
-  HORIZONS.forEach((h) => stage.register('hz-' + h.id, h.look));
-  const ownedHorizons = () => { try { return JSON.parse(store.get(HZ_OWNED, '["aube"]')); } catch (err) { return ['aube']; } };
-  const currentHorizon = () => HORIZONS.find((h) => h.id === store.get(HZ_ON, 'aube')) || HORIZONS[0];
-  function applyHorizon() { stage.register('horizon', currentHorizon().look); }
+  const WORLD_KEY = 'orbite.monde';
+  const WORLD_SEEDS = [5002, 5008, 5016, 5045];
+  const worldList = () => { try { const v = JSON.parse(store.get(WORLD_KEY, '[]')); return Array.isArray(v) ? v : []; } catch (err) { return []; } };
+  const worldSeed = () => WORLD_SEEDS[Number(playerTag()) % WORLD_SEEDS.length];
+  function applyWorld() {
+    const look = { seed: worldSeed(), living: W.channels(worldList()), full: true, light: HZ_LIGHT };
+    for (const id of ['horizon', 'world-big', 'world-mini']) stage.register(id, look);
+  }
+
+  // Les anciens horizons achetés sont remboursés une fois.
+  (function migrateHorizons() {
+    const raw = store.get(HZ_OWNED, '');
+    if (!raw) return;
+    const PRICES = { lune: 60, pourpre: 120, givre: 180, braise: 240, envers: 320 };
+    let back = 0;
+    try { for (const id of JSON.parse(raw)) back += PRICES[id] || 0; } catch (err) { back = 0; }
+    try { localStorage.removeItem(HZ_OWNED); localStorage.removeItem(HZ_ON); } catch (err) { /* stockage indisponible */ }
+    if (back) { addDust(back); setTimeout(() => toast(`Horizons remboursés : +${back} poussières d’étoiles.`, 3600), 9000); }
+  })();
 
   function layoutMenu() {
     const W = window.innerWidth, H = window.innerHeight;
@@ -537,7 +545,8 @@
   function renderMenu() {
     $('menuDust').innerHTML = icon('dust') + ' ' + dust();
     const lv = levelInfo(xpTotal());
-    $('menuLvl').innerHTML = `NIVEAU ${lv.lvl}<i class="xp-mini"><i style="width:${(lv.rest / lv.need * 100).toFixed(1)}%"></i></i>`;
+    $('pfName').textContent = pseudo();
+    $('pfLvl').innerHTML = `NIV. ${lv.lvl}<i class="xp-mini"><i style="width:${(lv.rest / lv.need * 100).toFixed(1)}%"></i></i>`;
     pixelWord($('menuWord'), 'ORBITE', pixelSize(4));
     $('menuWord').classList.add('shown');
   }
@@ -561,7 +570,7 @@
   function stopAmbient() { if (ambient) clearInterval(ambient); ambient = null; }
 
   async function enterMenu(first) {
-    applyHorizon();
+    applyWorld();
     renderMenu();
     layoutMenu();
     $('menuLine').innerHTML = '';
@@ -587,7 +596,7 @@
 
   async function backToMenu() {
     renderMenu();
-    applyHorizon();
+    applyWorld();
     layoutMenu();
     await show('menu');
     $('menuWord').parentElement.classList.remove('menu-fade');
@@ -611,37 +620,165 @@
 
   // ─── Marché stellaire ───────────────────────────────────────
   function renderMarket() {
-    const owned = ownedHorizons(), on = currentHorizon().id;
+    const list = worldList(), lvl = levelInfo(xpTotal()).lvl;
+    const nxt = W.next(list);
     $('marketBack').innerHTML = icon('back');
     $('marketDust').innerHTML = icon('dust') + ' ' + dust();
-    $('marketGrid').innerHTML = HORIZONS.map((h) => {
-      const has = owned.includes(h.id);
-      const state = h.id === on ? 'ÉQUIPÉ' : has ? 'ÉQUIPER' : `${icon('dust')} ${h.price}`;
-      return `<button class="market-item ${has ? 'owned' : ''} ${h.id === on ? 'on' : ''} ${!has && dust() < h.price ? 'locked' : ''}" data-hz="${h.id}">
-        <div class="orb" data-planet="hz-${h.id}"></div><b>${esc(h.name)}</b><span>${state}</span></button>`;
-    }).join('');
+    $('mkStage').textContent = W.stageName(list).toUpperCase();
+    $('mkProg').style.width = (list.length / W.UPGRADES.length * 100) + '%';
+    $('mkCount').textContent = `${list.length} / ${W.UPGRADES.length} améliorations · niveau ${lvl}`;
+    if (!nxt) {
+      $('mkNext').innerHTML = '<b>Votre planète est pleinement vivante.</b><p>Elle tourne désormais au-dessus du menu comme une nouvelle Terre.</p>';
+    } else {
+      const st = W.STAGES[nxt.stage];
+      const why = lvl < nxt.lvl ? `Atteignez le niveau ${nxt.lvl}.` : dust() < nxt.price ? `Il vous manque ${nxt.price - dust()} poussières d’étoiles.` : '';
+      $('mkNext').innerHTML = `<span class="mk-kicker">PROCHAINE ÉTAPE · ${st.name.toUpperCase()}</span>
+        <b>${esc(nxt.name)}</b><p>${esc(nxt.text)}</p>
+        <div class="mk-req"><span>NIVEAU ${nxt.lvl}</span><span>${icon('dust')} ${nxt.price}</span></div>
+        <button class="btn primary" data-up="${nxt.id}" ${why ? 'disabled' : ''}>FAIRE RENAÎTRE · ${icon('dust')} ${nxt.price}</button>
+        ${why ? `<small>${why}</small>` : ''}`;
+    }
+    $('mkList').innerHTML = W.STAGES.map((st, i) => `<h4>${st.name.toUpperCase()}<small>${esc(st.text)}</small></h4>` +
+      W.UPGRADES.filter((u) => u.stage === i).map((u) => {
+        const has = list.includes(u.id), isNext = nxt && nxt.id === u.id;
+        return `<div class="mk-row ${has ? 'owned' : isNext ? 'next' : lvl < u.lvl ? 'locked' : ''}">
+          <i>${has ? '✓' : isNext ? '›' : ''}</i><span>${esc(u.name)}</span><small>${has ? 'FAIT' : `NIV. ${u.lvl} · ${u.price}`}</small></div>`;
+      }).join('')).join('');
   }
 
-  $('marketGrid').addEventListener('click', (e) => {
-    const b = e.target.closest('.market-item');
-    if (!b) return;
-    const h = HORIZONS.find((x) => x.id === b.dataset.hz);
-    const owned = ownedHorizons();
-    if (!owned.includes(h.id)) {
-      if (dust() < h.price) { refuse(`Il vous manque ${h.price - dust()} poussières d’étoiles.`); return; }
-      addDust(-h.price);
-      owned.push(h.id);
-      store.set(HZ_OWNED, JSON.stringify(owned));
-      SFX.golden();
-      const [x, y] = center(b.querySelector('.orb'));
-      stage.burst(x, y, { n: 40, colors: [[246, 196, 83], [255, 255, 255]], speed: 80, life: 0.8 });
-      toast(`${h.name} rejoint votre univers.`);
-    } else SFX.tap();
-    store.set(HZ_ON, h.id);
-    applyHorizon();
+  $('mkNext').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-up]');
+    if (!b || b.disabled || ui.busy) return;
+    const u = W.BY_ID[b.dataset.up], list = worldList();
+    if (list.includes(u.id) || W.next(list) !== u) return;
+    if (levelInfo(xpTotal()).lvl < u.lvl) { refuse(`Atteignez le niveau ${u.lvl}.`); return; }
+    if (dust() < u.price) { refuse(`Il vous manque ${u.price - dust()} poussières d’étoiles.`); return; }
+    ui.busy = true;
+    addDust(-u.price);
+    list.push(u.id);
+    store.set(WORLD_KEY, JSON.stringify(list));
+    // La planète se transforme dans un éclair : charge, flash, puis le monde nouveau.
+    const pl = $('mkPlanet');
+    const [x, y] = center(pl);
+    const R = pl.getBoundingClientRect().width / 2;
+    SFX.charge();
+    pl.animate([{ transform: 'scale(1)' }, { transform: 'scale(0.94)' }, { transform: 'scale(1.03)' }], { duration: 900, easing: 'ease-in' });
+    await wait(850);
+    stage.flash(pl, 1);
+    applyWorld();
+    SFX.golden();
+    stage.burst(x, y, { n: 70, colors: stage.colors('world-big').concat([[255, 255, 255]]), speed: 120, life: 1, spread: R * 0.6 });
+    stage.ring(x, y, R * 0.95, { n: 50, colors: [[255, 255, 255], [246, 196, 83]], speed: 90, life: 0.7 });
+    pl.animate([{ transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 600, easing: 'cubic-bezier(.2,.8,.2,1)' });
     renderMarket();
-    [...$('marketGrid').querySelectorAll('[data-planet]')].forEach((o) => stage.setReveal(o, 1));
+    toast(`${u.name} : ${u.text}`, 3200);
+    ui.busy = false;
   });
+
+  // ─── Profil ─────────────────────────────────────────────────
+  const PSEUDO_KEY = 'orbite.pseudo', TAG_KEY = 'orbite.tag', STATS_KEY = 'orbite.stats', HIST_KEY = 'orbite.historique';
+  const pseudo = () => store.get(PSEUDO_KEY, '') || 'Créateur';
+  function playerTag() {
+    let t = store.get(TAG_KEY, '');
+    if (!/^\d{4}$/.test(t)) {
+      t = String(1000 + Math.floor(Math.random() * 9000));
+      store.set(TAG_KEY, t);
+    }
+    return t;
+  }
+  const readJson = (k, d) => { try { return JSON.parse(store.get(k, '')) || d; } catch (err) { return d; } };
+  const stats = () => Object.assign({ games: 0, wins: 0, top3: 0, rankSum: 0, best: 0, cycles: 0, fights: 0, goldens: 0, dust: 0, laws: {} }, readJson(STATS_KEY, {}));
+
+  // Classé : les rangs, de la Poussière à la Singularité (top 500 mondial).
+  const RANKS = [
+    { id: 'poussiere', name: 'Poussière', look: { type: 'asteroid', seed: 8101 } },
+    { id: 'asteroide', name: 'Astéroïde', look: { type: 'asteroid', seed: 8133 } },
+    { id: 'lune', name: 'Lune', look: { type: 'moon', seed: 8105 } },
+    { id: 'planete', name: 'Planète', look: { type: 'terran', seed: 8107 } },
+    { id: 'geante', name: 'Géante', look: { type: 'gas', seed: 8109, ring: true } },
+    { id: 'etoile', name: 'Étoile', look: { type: 'star', seed: 8111, starClass: 'naine jaune' } },
+    { id: 'nebuleuse', name: 'Nébuleuse', look: { type: 'crystal', seed: 8113 } },
+    { id: 'pulsar', name: 'Pulsar', look: { type: 'star', seed: 8115, starClass: 'géante bleue' } },
+    { id: 'singularite', name: 'Singularité', look: { type: 'blackhole', seed: 8117 } }
+  ];
+  RANKS.forEach((r) => stage.register('rank-' + r.id, r.look));
+
+  function renderProfile() {
+    const st = stats(), lv = levelInfo(xpTotal()), list = worldList();
+    const hist = readJson(HIST_KEY, []);
+    const pct = (n) => (st.games ? Math.round(n / st.games * 100) : 0) + ' %';
+    const fav = Object.entries(st.laws).sort((a, b) => b[1] - a[1])[0];
+    const tiles = [
+      ['PARTIES', st.games], ['VICTOIRES', st.wins], ['PODIUMS', pct(st.top3)],
+      ['RANG MOYEN', st.games ? (st.rankSum / st.games).toFixed(1) : '–'], ['MEILLEUR RANG', st.best ? ordinal(st.best) : '–'], ['COMBATS GAGNÉS', st.fights],
+      ['ASTRES DORÉS', st.goldens], ['CYCLES JOUÉS', st.cycles], ['POUSSIÈRES GAGNÉES', st.dust]
+    ];
+    $('profileBack').innerHTML = icon('back');
+    $('profileBody').innerHTML = `
+      <div class="pf-id">
+        <div class="orb pf-planet" data-planet="world-mini"></div>
+        <div class="pf-who">
+          <div class="pf-name-row" id="pfNameRow"><button class="pf-name" data-pf="rename">${esc(pseudo())}<span>#${playerTag()}</span></button></div>
+          <span class="pf-lvl">NIVEAU ${lv.lvl} · ${esc(W.stageName(list))}</span>
+          <div class="xp-bar"><i style="width:${(lv.rest / lv.need * 100).toFixed(1)}%"></i></div>
+          <small>${lv.rest} / ${lv.need} XP vers le niveau ${lv.lvl + 1}</small>
+        </div>
+      </div>
+      <h3 class="pf-h">CLASSÉ</h3>
+      <div class="pf-rank">
+        <div class="pf-unranked">?</div>
+        <div><b>NON CLASSÉ</b><small>Le mode classé arrive avec le multijoueur : 5 parties de placement, puis un rang mondial qui monte et descend à chaque partie.</small></div>
+      </div>
+      <div class="pf-ladder">${RANKS.map((r, i) => `<div class="pf-tier"><div class="orb" data-planet="rank-${r.id}"></div><b>${r.name}</b><small>${i === RANKS.length - 1 ? 'Top 500 mondial' : 'I · II · III'}</small></div>`).join('')}</div>
+      <p class="muted">Classement mondial : bientôt, avec les serveurs du mode en ligne.</p>
+      <h3 class="pf-h">STATISTIQUES</h3>
+      <div class="pf-stats">${tiles.map(([k, v]) => `<div><b>${v}</b><small>${k}</small></div>`).join('')}</div>
+      ${fav ? `<p class="muted">Loi favorite : <span style="color:${famColor(R.LAW[fav[0]].fam)}">${esc(R.LAW[fav[0]].name)}</span> · ${fav[1]} partie${fav[1] > 1 ? 's' : ''}</p>` : ''}
+      <h3 class="pf-h">DERNIÈRES PARTIES</h3>
+      <div class="pf-hist">${hist.length ? hist.map((h) => `<div class="${h.rank <= 3 ? 'podium' : ''}"><b>${h.quit ? '–' : ordinal(h.rank)}</b><span style="color:${famColor(R.LAW[h.law] ? R.LAW[h.law].fam : 'neutre')}">${esc(R.LAW[h.law] ? R.LAW[h.law].name : '')}</span><small>${h.quit ? 'abandon' : h.cycles + ' cycles'} · ${new Date(h.t).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</small></div>`).join('') : '<p class="muted">Aucune partie terminée pour l’instant.</p>'}</div>`;
+  }
+
+  $('profileBody').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-pf]');
+    if (!b) return;
+    if (b.dataset.pf === 'rename') {
+      SFX.tap();
+      $('pfNameRow').innerHTML = `<input class="pf-input" id="pfInput" maxlength="16" value="${esc(pseudo())}" aria-label="Pseudo" autocomplete="off"><button class="btn" data-pf="save">OK</button>`;
+      const inp = $('pfInput');
+      inp.focus();
+      inp.select();
+      inp.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') savePseudo(); });
+    } else if (b.dataset.pf === 'save') savePseudo();
+  });
+  function savePseudo() {
+    const v = ($('pfInput').value || '').replace(/[^\p{L}\p{N} _.-]/gu, '').trim().slice(0, 16);
+    store.set(PSEUDO_KEY, v);
+    SFX.buff();
+    renderProfile();
+    [...$('profileBody').querySelectorAll('[data-planet]')].forEach((o) => stage.setReveal(o, 1));
+  }
+
+  // Une partie terminée s'ajoute aux statistiques et à l'historique.
+  function recordGame(s, rank, quit) {
+    const st = stats();
+    const p = s.players[0];
+    st.games++;
+    if (!quit) {
+      st.rankSum += rank;
+      if (rank === 1) st.wins++;
+      if (rank <= 3) st.top3++;
+      if (!st.best || rank < st.best) st.best = rank;
+    } else st.rankSum += 8;
+    st.cycles += Math.max(1, p.deadRound || s.round || 1);
+    st.fights += s.fightsWon || 0;
+    st.goldens += s.goldens || 0;
+    st.dust += s.reward || 0;
+    st.laws[p.law] = (st.laws[p.law] || 0) + 1;
+    store.set(STATS_KEY, JSON.stringify(st));
+    const hist = readJson(HIST_KEY, []);
+    hist.unshift({ rank, law: p.law, cycles: Math.max(1, p.deadRound || s.round || 1), t: Date.now(), quit: !!quit });
+    store.set(HIST_KEY, JSON.stringify(hist.slice(0, 15)));
+  }
 
   // ─── Paramètres ─────────────────────────────────────────────
   function settingsHtml() {
@@ -653,7 +790,7 @@
       <button class="btn" data-act="set" data-v="intro">REVOIR L’INTRODUCTION</button>
       <button class="btn" data-act="set" data-v="credits">CRÉDITS</button>
       <button class="btn ghost" data-act="set" data-v="reset">EFFACER LA PROGRESSION</button>
-    </div><p class="muted">Poussières d’étoiles, horizons et partie en cours restent sur cet appareil.</p>`;
+    </div><p class="muted">Poussières d’étoiles, niveau, planète et partie en cours restent sur cet appareil.</p>`;
   }
 
   // Crédits : qui a fait quoi, et les licences des ressources libres utilisées.
@@ -688,10 +825,10 @@
       boot();
     } else if (v === 'reset') {
       if (!btn.dataset.confirm) { btn.dataset.confirm = '1'; btn.textContent = 'TOUCHER ENCORE POUR CONFIRMER'; return; }
-      for (const k of [SAVE_KEY, DUST_KEY, HZ_OWNED, HZ_ON, WAKE_KEY]) store.set(k, '');
+      for (const k of [SAVE_KEY, DUST_KEY, WAKE_KEY, XP_KEY, WORLD_KEY, STATS_KEY, HIST_KEY]) store.set(k, '');
       try { localStorage.removeItem(SAVE_KEY); } catch (err) { /* stockage indisponible */ }
       closeSheet();
-      applyHorizon();
+      applyWorld();
       renderMenu();
       toast('Progression effacée.');
     }
@@ -996,6 +1133,7 @@
   }
 
   async function fusion(id, sources, goldUid) {
+    ui.state.goldens = (ui.state.goldens || 0) + 1;
     SFX.golden();
     vibrate([12, 40, 12]);
     const goldEl = elByUid(goldUid);
@@ -1633,6 +1771,7 @@
       <li>Chaque partie active <b>5 familles</b> sur 8, plus les neutres. La réserve est <b>partagée</b> : si des rivaux jouent une famille, ses astres se font rares.</li>
       <li>Le perdant subit : niveau du gagnant + niveaux de ses astres survivants. <b>Maximum ${R.DAMAGE_CAP} dégâts</b> tant que plus de trois univers sont en vie.</li>
       <li>Seuls les <b>trois premiers</b> gagnent des poussières d’étoiles : ${R.REWARDS[1]}, ${R.REWARDS[2]} et ${R.REWARDS[3]}.</li>
+      <li>Chaque partie rapporte de l’<b>expérience</b>. Les niveaux ouvrent des améliorations au <b>Marché stellaire</b> : avec vos poussières, faites renaître votre planète, celle qui tourne derrière le menu.</li>
     </ul><div class="sheet-actions"><button class="btn primary" data-act="close">COMPRIS</button></div>`;
   }
 
@@ -1667,6 +1806,7 @@
     ui.prevHp = Object.fromEntries(ui.state.players.map((x) => [x.id, x.hp]));
     const res = R.endTurn(ui.state);
     if (!res.ok) { refuse(res.reason); ui.busy = false; return; }
+    if (res.battle && res.battle.winner === 0) ui.state.fightsWon = (ui.state.fightsWon || 0) + 1;
     try {
       await playShopEvents(res.endEvents);
       await sleep(250);
@@ -2020,6 +2160,10 @@
       s.rewarded = true;
       addDust(s.reward || 0);
     }
+    if (!s.recorded) {
+      s.recorded = true;
+      recordGame(s, rank, quit);
+    }
     if (!s.xpGiven) {
       s.xpGiven = true;
       xpTo = xpFrom + gain.total;
@@ -2073,7 +2217,8 @@
   const XP_KEY = 'orbite.xp';
   const RANK_XP = [0, 120, 90, 70, 55, 40, 30, 20, 10];
   const LEVEL_GIFT = 25;
-  const xpNeed = (lvl) => 100 + 40 * (lvl - 1);
+  // Environ 300 parties pour atteindre le niveau 120 et une planète pleinement vivante.
+  const xpNeed = (lvl) => 80 + 5 * (lvl - 1);
   const xpTotal = () => Math.max(0, Number(store.get(XP_KEY, '0')) || 0);
   function levelInfo(xp) {
     let lvl = 1, rest = xp;
@@ -2129,7 +2274,8 @@
     pixelWord($('lvlNum'), String(lvl), pixelSize(11));
     $('lvlNum').classList.add('gold');
     for (const r of ov.querySelectorAll('.pixel-word rect')) r.style.opacity = '0';
-    $('lvlGift').innerHTML = `${icon('dust')} +${LEVEL_GIFT} poussières d’étoiles`;
+    const unlock = W.UPGRADES.find((u) => u.lvl === lvl);
+    $('lvlGift').innerHTML = `${icon('dust')} +${LEVEL_GIFT} poussières d’étoiles` + (unlock ? `<br><span>Nouvelle amélioration au Marché : ${esc(unlock.name)}</span>` : '');
     $('lvlGift').classList.remove('show');
     $('lvlHint').classList.remove('show');
     ov.classList.remove('charging', 'boom');
@@ -2237,6 +2383,8 @@
   });
   $('marketBtn').addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderMarket(); await show('market'); });
   $('marketBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
+  $('profileBtn').addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderProfile(); await show('profile'); });
+  $('profileBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
   $('settingsBtn').addEventListener('click', () => { SFX.tap(); openSheet(settingsHtml()); });
   $('lawsBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
   $('upBtn').addEventListener('click', guard(doUpgrade));
