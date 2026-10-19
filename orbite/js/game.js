@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 11;
+  const VERSION = 12;
   const DUST_KEY = 'orbite.poussieres';
   const SPEED_KEY = 'orbite.vitesse';
 
@@ -654,11 +654,14 @@
         <button class="btn primary" data-up="${nxt.id}" ${why ? 'disabled' : ''}>FAIRE RENAÎTRE · ${icon('dust')} ${nxt.price}</button>
         ${why ? `<small>${why}</small>` : ''}`;
     }
-    $('mkList').innerHTML = W.STAGES.map((st, i) => `<h4>${st.name.toUpperCase()}<small>${esc(st.text)}</small></h4>` +
+    // Chaque ère a sa couleur : lave, eau, vie, lumière des villes. Un carré pixel plein marque ce
+    // qui est fait, un carré qui clignote la prochaine étape, un carré vide le reste.
+    const ERA = ['#ff8a3d', '#5fb8ff', '#8fdc6e', '#f6c453'];
+    $('mkList').innerHTML = W.STAGES.map((st, i) => `<h4 style="--era:${ERA[i]}">${st.name.toUpperCase()}<small>${esc(st.text)}</small></h4>` +
       W.UPGRADES.filter((u) => u.stage === i).map((u) => {
         const has = list.includes(u.id), isNext = nxt && nxt.id === u.id;
-        return `<div class="mk-row ${has ? 'owned' : isNext ? 'next' : lvl < u.lvl ? 'locked' : ''}">
-          <i>${has ? '✓' : isNext ? '›' : ''}</i><span>${esc(u.name)}</span><small>${has ? 'FAIT' : `NIV. ${u.lvl} · ${u.price}`}</small></div>`;
+        return `<div class="mk-row ${has ? 'owned' : isNext ? 'next' : lvl < u.lvl ? 'locked' : ''}" style="--era:${ERA[u.stage]}">
+          <i class="mk-pip"></i><span>${esc(u.name)}</span><small>${has ? 'FAIT' : `NIV. ${u.lvl} · ${u.price}`}</small></div>`;
       }).join('')).join('');
   }
 

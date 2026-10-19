@@ -313,11 +313,16 @@ body.modal #gl { z-index: 35; }
 .mk-req span:last-child { color: var(--gold); }
 .mk-list h4 { margin: 16px 0 6px; font-size: 11px; font-weight: 400; letter-spacing: 0.24em; color: var(--ink); display: flex; flex-direction: column; gap: 2px; }
 .mk-list h4 small { letter-spacing: 0.02em; color: var(--dim); font-size: 11px; }
-.mk-row { display: grid; grid-template-columns: 16px 1fr auto; gap: 8px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid rgba(241, 236, 218, 0.06); font-size: 14px; }
-.mk-row i { font-style: normal; color: var(--good); }
+.mk-row { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(241, 236, 218, 0.06); font-size: 14px; }
+.mk-pip { width: 8px; height: 8px; border: 1px solid rgba(241, 236, 218, 0.28); }
+.mk-row.owned .mk-pip { background: var(--era); border-color: var(--era); box-shadow: 0 0 6px var(--era); }
+.mk-row.owned small { color: var(--era); opacity: 0.8; }
+.mk-row.next .mk-pip { border-color: var(--gold); animation: pipBlink 1.4s steps(2, jump-none) infinite; }
+@keyframes pipBlink { 50% { background: var(--gold); } }
+.mk-list h4 { border-left: 2px solid var(--era, var(--ink)); padding-left: 8px; }
 .mk-row small { font-size: 11px; color: var(--dim); letter-spacing: 0.06em; }
 .mk-row.next { color: var(--gold); }
-.mk-row.next i { color: var(--gold); }
+
 .mk-row.locked { opacity: 0.45; }
 /* Onglets du Marché stellaire. */
 .mk-tabs { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 0 14px; border-bottom: 1px solid var(--line); }
