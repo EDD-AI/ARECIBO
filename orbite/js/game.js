@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 28;
+  const VERSION = 29;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -864,6 +864,17 @@
     }
     return t;
   }
+  // ─── Classé ─────────────────────────────────────────────────
+  const K = window.OrbiteClassement;
+  const CLASSE_KEY = 'orbite.classe';
+  const classe = () => K.sanitize(readJson(CLASSE_KEY, null));
+  function rankedLine(r) {
+    if (!r) return '';
+    if (r.placement && !r.done) return `CLASSÉ · placement ${K.PLACEMENTS - r.left} / ${K.PLACEMENTS}`;
+    if (r.placement) return `CLASSÉ · placé en <b>${esc(r.tier.label)}</b>`;
+    const sign = r.delta >= 0 ? '+' : '';
+    return `CLASSÉ · <b class="${r.delta >= 0 ? 'up' : 'down'}">${sign}${r.delta} points</b> · ${esc(r.tier.label)}${r.up ? ' · <b class="up">RANG SUPÉRIEUR !</b>' : r.down ? ' · rang inférieur' : ''}`;
+  }
   const readJson = (k, d) => { try { return JSON.parse(store.get(k, '')) || d; } catch (err) { return d; } };
   const stats = () => Object.assign({ games: 0, wins: 0, top3: 0, rankSum: 0, best: 0, cycles: 0, fights: 0, goldens: 0, dust: 0, laws: {} }, readJson(STATS_KEY, {}));
 
@@ -892,7 +903,13 @@
       ['ASTRES DORÉS', st.goldens], ['CYCLES JOUÉS', st.cycles], ['POUSSIÈRES GAGNÉES', st.dust]
     ];
     $('profileBack').innerHTML = icon('back');
+    const tab = ui.pfTab || 'profil';
     $('profileBody').innerHTML = `
+      <nav class="mk-tabs pf-tabs" role="tablist">${[['profil', 'PROFIL'], ['amis', 'AMIS'], ['classement', 'CLASSEMENT']].map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-pf="tab" data-tab="${k}" role="tab">${n}${k === 'amis' ? '<i class="pf-badge" id="pfBadge" hidden></i>' : ''}</button>`).join('')}</nav>
+      <div class="pf-pane" data-pfpane="amis" id="pfFriends" ${tab === 'amis' ? '' : 'hidden'}></div>
+      <div class="pf-pane" data-pfpane="classement" id="pfLeader" ${tab === 'classement' ? '' : 'hidden'}></div>
+      <div class="pf-pane" data-pfpane="profil" ${tab === 'profil' ? '' : 'hidden'}>
+      <div id="pfOnline"></div>
       <div class="pf-id">
         <div class="orb pf-planet" data-planet="world-mini"></div>
         <div class="pf-who">
@@ -903,22 +920,27 @@
         </div>
       </div>
       <h3 class="pf-h">CLASSÉ</h3>
-      <div class="pf-rank">
-        <div class="pf-unranked">?</div>
-        <div><b>NON CLASSÉ</b><small>Le mode classé arrive avec le multijoueur : 5 parties de placement, puis un rang mondial qui monte et descend à chaque partie.</small></div>
-      </div>
-      <div class="pf-ladder">${RANKS.map((r, i) => `<div class="pf-tier"><div class="orb" data-planet="rank-${r.id}"></div><b>${r.name}</b><small>${i === RANKS.length - 1 ? 'Top 500 mondial' : 'I · II · III'}</small></div>`).join('')}</div>
-      <p class="muted">Classement mondial : bientôt, avec les serveurs du mode en ligne.</p>
+      ${(() => {
+        const c = classe();
+        if (!K.placed(c)) return `<div class="pf-rank"><div class="pf-unranked">?</div><div><b>PLACEMENT · ${c.placements.length} / ${K.PLACEMENTS}</b><small>Chaque partie contre les univers rivaux compte. Après ${K.PLACEMENTS} parties de placement, votre rang monte à chaque podium et descend dans les dernières places.</small></div></div>`;
+        const t = K.tierOf(c.points);
+        return `<div class="pf-rank"><div class="orb pf-rank-orb" data-planet="rank-${RANKS[t.idx].id}"></div><div><b>${esc(t.label).toUpperCase()}</b><small>${c.points} points${t.span ? ` · ${t.into} / ${t.span} vers la division suivante` : ''} · record ${c.best}</small><div class="xp-bar"><i style="width:${t.span ? t.into : 100}%"></i></div></div></div>`;
+      })()}
+      <div class="pf-ladder">${RANKS.map((r, i) => `<div class="pf-tier ${K.placed(classe()) && K.tierOf(classe().points).idx === i ? 'on' : ''}"><div class="orb" data-planet="rank-${r.id}"></div><b>${r.name}</b><small>${i === RANKS.length - 1 ? `dès ${K.TIER_SPAN * (RANKS.length - 1)} points` : 'III · II · I'}</small></div>`).join('')}</div>
+      <p class="muted">Points par place : ${K.DELTA.map((d) => (d > 0 ? '+' : '') + d).join(' · ')}.</p>
       <h3 class="pf-h">STATISTIQUES</h3>
       <div class="pf-stats">${tiles.map(([k, v]) => `<div><b>${v}</b><small>${k}</small></div>`).join('')}</div>
       ${fav ? `<p class="muted">Loi favorite : <span style="color:${famColor(R.LAW[fav[0]].fam)}">${esc(R.LAW[fav[0]].name)}</span> · ${fav[1]} partie${fav[1] > 1 ? 's' : ''}</p>` : ''}
       <h3 class="pf-h">DERNIÈRES PARTIES</h3>
-      <div class="pf-hist">${hist.length ? hist.map((h) => `<div class="${h.rank <= 3 ? 'podium' : ''}"><b>${h.quit ? '–' : ordinal(h.rank)}</b><span style="color:${famColor(R.LAW[h.law] ? R.LAW[h.law].fam : 'neutre')}">${esc(R.LAW[h.law] ? R.LAW[h.law].name : '')}</span><small>${h.quit ? 'abandon' : h.cycles + ' cycles'} · ${new Date(h.t).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</small></div>`).join('') : '<p class="muted">Aucune partie terminée pour l’instant.</p>'}</div>`;
+      <div class="pf-hist">${hist.length ? hist.map((h) => `<div class="${h.rank <= 3 ? 'podium' : ''}"><b>${h.quit ? '–' : ordinal(h.rank)}</b><span style="color:${famColor(R.LAW[h.law] ? R.LAW[h.law].fam : 'neutre')}">${esc(R.LAW[h.law] ? R.LAW[h.law].name : '')}</span><small>${h.quit ? 'abandon' : h.cycles + ' cycles'} · ${new Date(h.t).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</small></div>`).join('') : '<p class="muted">Aucune partie terminée pour l’instant.</p>'}</div>
+      </div>`;
+    if (window.__orbite.onlineUI) window.__orbite.onlineUI.renderProfile(tab);
   }
 
   $('profileBody').addEventListener('click', (e) => {
     const b = e.target.closest('[data-pf]');
     if (!b) return;
+    if (b.dataset.pf === 'tab') { SFX.tap(); ui.pfTab = b.dataset.tab; renderProfile(); return; }
     if (b.dataset.pf === 'rename') {
       SFX.tap();
       $('pfNameRow').innerHTML = `<input class="pf-input" id="pfInput" maxlength="16" value="${esc(pseudo())}" aria-label="Pseudo" autocomplete="off"><button class="btn" data-pf="save">OK</button>`;
@@ -2745,6 +2767,14 @@
       s.recorded = true;
       recordGame(s, rank, quit);
     }
+    // Mode classé : chaque partie contre les univers rivaux compte (un abandon vaut la 8e place).
+    if (!s.rankedDone) {
+      s.rankedDone = true;
+      const c = K.sanitize(readJson(CLASSE_KEY, null));
+      s.rankedRes = K.record(c, quit ? 8 : rank);
+      store.set(CLASSE_KEY, JSON.stringify(c));
+    }
+    $('endRanked').innerHTML = rankedLine(s.rankedRes);
     if (!s.xpGiven) {
       s.xpGiven = true;
       xpTo = xpFrom + gain.total;
@@ -3045,7 +3075,7 @@
   window.__orbite.api = {
     show, openSheet, closeSheet, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
     pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient,
-    coachStart, coachStop, tuto, famColor, renderMenu, marketTab
+    coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson
   };
 
   // ─── Démarrage ──────────────────────────────────────────────

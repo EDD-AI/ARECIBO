@@ -112,11 +112,19 @@
 
   // En HTTP(S), la musique passe par le graphe WebAudio (fondus fiables, même sur iPhone) ;
   // ouverte depuis un fichier, elle est lue directement (le navigateur refuserait le graphe).
+  // Deux thèmes qui se suivent : « Distant Earth » (thème principal), puis « Orbiting Wonder ».
+  const TRACKS = ['earth.mp3', 'menu.mp3'];
+  let track = 0;
   function musicNode() {
     if (musicEl || !ctx) return musicEl;
-    musicEl = new Audio(BASE + 'menu.mp3');
-    musicEl.loop = true;
+    musicEl = new Audio(BASE + TRACKS[track]);
+    musicEl.loop = false;
     musicEl.preload = 'auto';
+    musicEl.addEventListener('ended', () => {
+      track = (track + 1) % TRACKS.length;
+      musicEl.src = BASE + TRACKS[track];
+      if (musicWant && musicOn && !muted && !document.hidden) musicEl.play().catch(() => { /* reprendra au prochain toucher */ });
+    });
     if (location.protocol !== 'file:') {
       try {
         const src = ctx.createMediaElementSource(musicEl);

@@ -39,14 +39,15 @@
     { key: 'bloc', name: 'Bloc' },
     { key: 'monolithe', name: 'Monolithe' },
     { key: 'diamant', name: 'Diamant' },
-    { key: 'anneau', name: 'Tore' }
+    { key: 'anneau', name: 'Tore' },
+    { key: 'antenne', name: 'Antenne' }
   ];
 
   // Ajouts : chacun occupe un emplacement. Les lunes s'ajoutent une à une, de plus en plus cher.
   const PARTS = [
     { key: 'debris', name: 'Ceinture de débris', text: 'Des cailloux tournent autour de votre monde.', price: [10], min: [2] },
     { key: 'facet', name: 'Facettes', text: 'La surface se taille en facettes de cristal.', price: [10], min: [2] },
-    { key: 'shape', name: 'Silhouette', text: 'Changez la forme du monde : double, brisée, bloc, diamant…', price: [12], min: [2] },
+    { key: 'shape', name: 'Silhouette', text: 'Changez la forme du monde : double, brisée, bloc, diamant, antenne…', price: [12], min: [2] },
     { key: 'ring', name: 'Anneau', text: 'Un anneau de glace et de poussière.', price: [15], min: [3] },
     { key: 'moons', name: 'Lune', text: 'Une lune en orbite, jusqu’à trois.', price: [12, 20, 30], min: [4, 7, 10] },
     { key: 'shell', name: 'Coque de lumière', text: 'Une bulle irisée enveloppe la planète.', price: [25], min: [8] }

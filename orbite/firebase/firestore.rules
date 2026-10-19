@@ -1,0 +1,55 @@
+rules_version = '2';
+// ORBITE — règles de sécurité Firestore.
+// - saves/{uid}    : la progression complète, lisible et modifiable par son seul propriétaire.
+// - profiles/{uid} : le profil public (pseudo, niveau, classement, système), lisible par tout joueur
+//                    connecté, modifiable par son seul propriétaire, avec des champs vérifiés.
+// - friends/{a_b}  : une amitié entre deux joueurs (demande puis acceptation).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isMe(uid) { return signedIn() && request.auth.uid == uid; }
+
+    match /saves/{uid} {
+      allow read, delete: if isMe(uid);
+      allow write: if isMe(uid)
+        && request.resource.data.keys().hasOnly(['data', 'updatedAt', 'v'])
+        && request.resource.data.data is map;
+    }
+
+    match /profiles/{uid} {
+      allow read: if signedIn();
+      allow delete: if isMe(uid);
+      allow write: if isMe(uid)
+        && request.resource.data.keys().hasOnly(['pseudo', 'tag', 'code', 'level', 'points', 'placed', 'games', 'wins', 'world', 'forge', 'updatedAt'])
+        && request.resource.data.pseudo is string && request.resource.data.pseudo.size() <= 16
+        && request.resource.data.tag is string && request.resource.data.tag.size() <= 6
+        && request.resource.data.code is string && request.resource.data.code.size() == 6
+        && request.resource.data.level is int && request.resource.data.level >= 1 && request.resource.data.level <= 1000
+        && request.resource.data.points is int && request.resource.data.points >= 0 && request.resource.data.points <= 100000
+        && request.resource.data.placed is bool
+        && request.resource.data.games is int && request.resource.data.wins is int
+        && request.resource.data.world is list && request.resource.data.world.size() <= 30
+        && request.resource.data.forge is map;
+    }
+
+    match /friends/{pair} {
+      function members() { return request.resource.data.members; }
+      allow read: if signedIn() && (resource == null || request.auth.uid in resource.data.members);
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['members', 'from', 'status', 'at'])
+        && members() is list && members().size() == 2
+        && request.auth.uid in members()
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && pair == members()[0] + '_' + members()[1]
+        && members()[0] < members()[1];
+      // Seul celui qui a reçu la demande peut l'accepter, et rien d'autre ne change.
+      allow update: if signedIn()
+        && request.auth.uid in resource.data.members
+        && request.auth.uid != resource.data.from
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status == 'accepted';
+      allow delete: if signedIn() && request.auth.uid in resource.data.members;
+    }
+  }
+}
