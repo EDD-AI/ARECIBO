@@ -315,7 +315,7 @@
     { id: 'europe', fam: 'lune', tier: 3, atk: 4, hp: 4, name: 'Europe', look: { type: 'ice', seed: 9106, hueShift: 20 },
       text: 'Fin de cycle : vos autres Lunes gagnent +{1}/+{1}.',
       endTurn(x, u, m) { for (const v of x.fam('lune', u)) x.buff(v, m, m); } },
-    { id: 'ganymede', fam: 'lune', tier: 4, atk: 5, hp: 6, name: 'Ganymède', look: { type: 'moon', seed: 9107, ring: true },
+    { id: 'ganymede', fam: 'lune', tier: 4, atk: 5, hp: 6, name: 'Ganymède', look: { type: 'moon', seed: 9107, hueShift: 200, moons: 1 },
       text: 'Début de combat : chaque Lune donne +{1}/+{1} à ses voisins pour le combat.',
       start(c, u, m) { for (const l of c.alliesFam(u.side, 'lune')) for (const v of c.neighbors(l)) c.buff(v, m, m); } },
     { id: 'maree', fam: 'lune', tier: 5, atk: 6, hp: 7, name: 'Grande Marée', look: { type: 'ocean', seed: 9108, moons: 2 },
