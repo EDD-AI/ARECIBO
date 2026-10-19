@@ -189,6 +189,18 @@ planète ».
 - **Remodeler le relief** (3) redessine les continents.
 - **Renommer** est gratuit.
 
+**Mon système.** Il s’ouvre quand un monde atteint la taille 5.
+- **L’étoile** : on l’allume (40 poussières). On change ensuite sa lumière, de 15 à 30 poussières :
+  naine rouge, étoile orange, naine jaune, étoile blanche, géante bleue ou étoile exotique. On peut
+  la faire grandir 4 fois (25, 50, 90 et 150).
+- **Les orbites** : chaque monde forgé (une fois sa nature choisie) prend une des 6 orbites,
+  gratuitement. Choisir une orbite occupée échange les deux mondes.
+- **L’écran** : les mondes tournent sur des orbites inclinées, les plus proches plus vite, et
+  passent devant ou derrière l’étoile. Toucher l’étoile change sa lumière ou la fait grandir.
+  Toucher un monde permet de le déplacer ou de revenir le façonner.
+- Les données (étoile + mondes) tiennent dans `orbite.forge`, prêtes à être partagées quand les
+  visites entre amis arriveront.
+
 Les règles sont dans `js/forge.js` (testées par `tests/forge.test.mjs`) et l’interface dans
 `js/forge-ui.js`. La collection est enregistrée dans `orbite.forge`. Une liste qui défile et porte
 `data-clipbox` empêche ses astres de déborder sur l’en-tête : le moteur reçoit un cadre (`bound`).

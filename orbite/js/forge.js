@@ -53,12 +53,89 @@
   ];
   const PART = Object.fromEntries(PARTS.map((p) => [p.key, p]));
 
+  // ─── Mon système : une étoile et ses mondes en orbite ─────────
+  // Il s'ouvre quand un monde atteint la taille 5. L'étoile s'allume, change de classe, grandit ;
+  // chaque monde forgé peut prendre une des six orbites.
+  const SYSTEM_MASS = 5;
+  const ORBITS = 6;
+  const LIGHT_COST = 40;
+  const STAR_CLASSES = [
+    { key: 'naine rouge', name: 'Naine rouge', price: 15 },
+    { key: 'étoile orange', name: 'Étoile orange', price: 15 },
+    { key: 'naine jaune', name: 'Naine jaune', price: 15 },
+    { key: 'étoile blanche', name: 'Étoile blanche', price: 15 },
+    { key: 'géante bleue', name: 'Géante bleue', price: 25 },
+    { key: 'étoile exotique', name: 'Étoile exotique', price: 30 }
+  ];
+  const STAR_GROW = [25, 50, 90, 150];
+
+  function newStar(seed) { return { seed: seed >>> 0, lit: false, cls: 'naine jaune', size: 0, name: 'Soleil' }; }
+  const systemOpen = (planets) => planets.some((p) => p.mass >= SYSTEM_MASS);
+
+  // Actions sur le système : { t: 'light' | 'starClass' | 'starGrow' | 'orbit', … }.
+  function sysCheck(sys, a, dust) {
+    const r = sysQuote(sys, a);
+    if (r.ok && dust != null && dust < r.cost) return { ok: false, cost: r.cost, reason: `Il vous manque ${r.cost - dust} poussières d’étoiles.`, short: true };
+    return r;
+  }
+  function sysQuote(sys, a) {
+    const no = (reason) => ({ ok: false, reason });
+    if (!systemOpen(sys.planets)) return no(`Un de vos mondes doit atteindre la taille ${SYSTEM_MASS}.`);
+    const st = sys.star;
+    switch (a.t) {
+      case 'light':
+        if (st.lit) return no('Votre étoile brille déjà.');
+        return { ok: true, cost: LIGHT_COST };
+      case 'starClass': {
+        const c = STAR_CLASSES.find((k) => k.key === a.cls);
+        if (!st.lit) return no('Allumez d’abord votre étoile.');
+        if (!c || c.key === st.cls) return no('Votre étoile a déjà cette lumière.');
+        return { ok: true, cost: c.price };
+      }
+      case 'starGrow':
+        if (!st.lit) return no('Allumez d’abord votre étoile.');
+        if (st.size >= STAR_GROW.length) return no('Votre étoile a atteint sa taille maximale.');
+        return { ok: true, cost: STAR_GROW[st.size] };
+      case 'orbit': {
+        const p = sys.planets[a.i];
+        if (!st.lit) return no('Allumez d’abord votre étoile.');
+        if (!p) return no('Monde introuvable.');
+        if (a.slot == null) return p.orbit == null ? no('Ce monde n’est pas en orbite.') : { ok: true, cost: 0 };
+        if (!p.type) return no('Ce monde n’est encore qu’une graine : nourrissez-le.');
+        if (a.slot < 0 || a.slot >= ORBITS) return no('Orbite inconnue.');
+        if (p.orbit === a.slot) return no('Ce monde y tourne déjà.');
+        return { ok: true, cost: 0 };
+      }
+      default:
+        return no('Action inconnue.');
+    }
+  }
+  function sysApply(sys, a) {
+    const r = sysQuote(sys, a);
+    if (!r.ok) return r;
+    const st = sys.star;
+    if (a.t === 'light') st.lit = true;
+    else if (a.t === 'starClass') st.cls = a.cls;
+    else if (a.t === 'starGrow') st.size++;
+    else if (a.t === 'orbit') {
+      const p = sys.planets[a.i];
+      if (a.slot != null) {
+        // L'orbite visée est libérée : son monde prend l'ancienne place de celui qu'on déplace.
+        const other = sys.planets.find((q) => q !== p && q.orbit === a.slot);
+        if (other) other.orbit = p.orbit == null ? null : p.orbit;
+      }
+      p.orbit = a.slot;
+    }
+    return r;
+  }
+  const starLook = (st) => ({ type: 'star', seed: st.seed, starClass: st.cls, full: true, moons: 0, ring: false, debris: false });
+
   const NAMES = ['Aster', 'Lumen', 'Velia', 'Orphée', 'Nadir', 'Solenne', 'Kaïros', 'Isilde', 'Mirage', 'Ondine', 'Céleste', 'Écho'];
 
   function newPlanet(seed, index) {
     return {
       id: 'f' + (seed >>> 0).toString(36), name: NAMES[index % NAMES.length], seed: seed >>> 0,
-      mass: 0, type: null, hue: 0, debris: false, facet: false, shape: null, ring: false, moons: 0, shell: false
+      mass: 0, type: null, hue: 0, debris: false, facet: false, shape: null, ring: false, moons: 0, shell: false, orbit: null
     };
   }
   const seedCost = (count) => (count < MAX_PLANETS ? SEED_COST[count] : null);
@@ -164,11 +241,20 @@
     if (q.type && !NATURE[q.type]) q.type = 'terran';
     if (!HUES.includes(q.hue)) q.hue = 0;
     if (q.shape && !SHAPES.some((s) => s.key === q.shape)) q.shape = null;
+    if (!(q.orbit >= 0 && q.orbit < ORBITS) || !q.type) q.orbit = null;
+    return q;
+  }
+  function sanitizeStar(st, seed) {
+    const q = Object.assign(newStar(seed), st || {});
+    if (!STAR_CLASSES.some((k) => k.key === q.cls)) q.cls = 'naine jaune';
+    q.size = Math.max(0, Math.min(STAR_GROW.length, q.size | 0));
+    q.lit = !!q.lit;
     return q;
   }
 
   return {
     FEED, MAX_MASS, SEED_COST, MAX_PLANETS, HUE_COST, RELIEF_COST, HUES, NATURES, NATURE, SHAPES, PARTS, PART,
-    newPlanet, seedCost, slotsUsed, slotsFree, check, apply, look, scale, sanitize
+    newPlanet, seedCost, slotsUsed, slotsFree, check, apply, look, scale, sanitize,
+    SYSTEM_MASS, ORBITS, LIGHT_COST, STAR_CLASSES, STAR_GROW, newStar, systemOpen, sysCheck, sysApply, starLook, sanitizeStar
   };
 });
