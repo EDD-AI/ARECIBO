@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 12;
+  const VERSION = 13;
   const DUST_KEY = 'orbite.poussieres';
   const SPEED_KEY = 'orbite.vitesse';
 
@@ -729,6 +729,8 @@
     $('cosList').innerHTML = `<h4>FONDS ANIMÉS</h4>` + row({ id: '', name: 'Noir', text: 'Le fond sobre d’origine.' }) + SKIES.map(row).join('') +
       (dust() < COS_PRICE ? `<p class="mk-note">Vous avez ${dust()} poussières d’étoiles. Le podium d’une partie en rapporte.</p>` : '');
   }
+  // Aperçu de l'onglet Création : une planète détaillée qui change à chaque visite.
+  stage.register('atelier-apercu', { type: 'terran', seed: (Date.now() % 100000) + 1, full: true, ring: true, moons: 1 });
   function marketTab(tab) {
     ui.mkTab = tab;
     for (const b of $('mkTabs').children) b.classList.toggle('on', b.dataset.tab === tab);
@@ -887,7 +889,6 @@
       <button class="btn" data-act="set" data-v="guide">GUIDE DU MENU</button>
       <button class="btn" data-act="set" data-v="tuto">${tutoDone() ? 'REFAIRE LE TUTORIEL' : 'TUTORIEL : PROCHAINE PARTIE'}</button>
       ${installed() ? '' : '<button class="btn" data-act="set" data-v="install">INSTALLER SUR LE TÉLÉPHONE</button>'}
-      <a class="btn" href="atelier.html">ATELIER DES PLANÈTES</a>
       <button class="btn" data-act="set" data-v="intro">REVOIR L’INTRODUCTION</button>
       <button class="btn" data-act="set" data-v="credits">CRÉDITS</button>
       <button class="btn ghost" data-act="set" data-v="reset">EFFACER LA PROGRESSION</button>
