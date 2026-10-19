@@ -279,6 +279,7 @@
     ui.screen = name;
     stage.starsOn = !['splash', 'title', 'wake'].includes(name);
     SFX.ambience({ splash: 'off', title: 'off', wake: 'wake', game: 'game', end: 'game' }[name] || 'menu');
+    SFX.music(['title', 'wake', 'menu', 'market', 'profile', 'laws'].includes(name));
     // Pendant la partie, le ciel s'efface derrière les planètes pour rester lisible.
     const busySky = ['laws', 'game', 'end'].includes(name);
     stage.starArea = busySky ? 3600 : 1800;
@@ -784,6 +785,7 @@
   function settingsHtml() {
     return `<h3>PARAMÈTRES</h3><div class="menu-list-sheet">
       <button class="btn" data-act="set" data-v="sound">SON : ${SFX.muted ? 'COUPÉ' : 'ACTIVÉ'}</button>
+      <button class="btn" data-act="set" data-v="music">MUSIQUE : ${SFX.musicOn ? 'ACTIVÉE' : 'COUPÉE'}</button>
       <button class="btn" data-act="set" data-v="speed">VITESSE DES COMBATS : ×${ui.speed}</button>
       <button class="btn" data-act="set" data-v="help">COMMENT JOUER</button>
       <a class="btn" href="atelier.html">ATELIER DES PLANÈTES</a>
@@ -799,6 +801,8 @@
       <section><b>ORBITE</b><span>Un jeu Studio Edda</span></section>
       <section><b>PLANÈTES</b><span>Moteur de planètes d’ORBITE</span>
         <small>Pixel art calculé en direct (WebGL2) : chaque graine donne un astre unique.</small></section>
+      <section><b>MUSIQUE</b><span>« Orbiting Wonder » · Studio Edda</span>
+        <small>Thème du menu, créé avec Suno.</small></section>
       <section><b>SONS</b><span>Kenney · kenney.nl</span>
         <small>Interface Sounds et UI Audio (CC0), sons des Starter Kits FPS et 3D Platformer (CC0) et du Starter Kit City Builder (licence MIT). Copies issues des portages de Hugo Locurcio.</small></section>
       <section><b>POLICE</b><span>Chakra Petch · Cadson Demak</span>
@@ -811,6 +815,7 @@
 
   async function settingsAction(v, btn) {
     if (v === 'sound') { SFX.setMuted(!SFX.muted); if (!SFX.muted) SFX.tap(); openSheet(settingsHtml()); }
+    else if (v === 'music') { SFX.setMusicOn(!SFX.musicOn); SFX.tap(); openSheet(settingsHtml()); }
     else if (v === 'speed') {
       ui.speed = ui.speed === 1 ? 2 : ui.speed === 2 ? 4 : 1;
       store.set(SPEED_KEY, String(ui.speed));

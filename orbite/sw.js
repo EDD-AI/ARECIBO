@@ -1,5 +1,5 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
-const CACHE = 'orbite-v4';
+const CACHE = 'orbite-v5';
 const SHELL = [
   './',
   './index.html',
@@ -70,7 +70,7 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     fetch(e.request)
       .then((res) => {
-        if (res.ok && new URL(e.request.url).origin === location.origin) {
+        if (res.status === 200 && new URL(e.request.url).origin === location.origin) {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(e.request, copy));
         }

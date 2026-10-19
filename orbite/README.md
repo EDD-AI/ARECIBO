@@ -86,6 +86,14 @@ remplit en fin de partie. À chaque niveau franchi, une planète apparaît, trem
 Paramètres → **Crédits** : Studio Edda, les sons de Kenney (CC0 et MIT, avec l’avis de licence
 MIT), la police Chakra Petch (SIL Open Font License). Détail des sons dans `audio/README.md`.
 
+## Musique
+
+Thème du menu : **« Orbiting Wonder »** (Studio Edda, créé avec Suno), `audio/menu.mp3`, réencodé en
+MP3 128 kbit/s. Il démarre au toucher sur le titre, accompagne l’accueil, le marché, le profil et
+le choix de la loi, puis s’efface en fondu au début d’une partie (l’ambiance spatiale reprend). Il
+passe par le graphe WebAudio pour des fondus fiables, y compris sur iPhone. Paramètres → Musique
+le coupe sans couper les bruitages.
+
 ## Sons
 
 Des sons naturels plutôt que des bips : impacts de pierre, éboulis, éclats de verre, gouttes,

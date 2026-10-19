@@ -7,6 +7,8 @@
   'use strict';
 
   const KEY = 'orbite.mute';
+  const MUSIC_KEY = 'orbite.musique';
+  const MUSIC_VOL = 0.42;
   const BASE = 'audio/';
   const NAMES = [
     'hover', 'tap', 'type', 'open', 'close', 'back', 'error', 'roll', 'confirm', 'down', 'scratch', 'coin',
@@ -36,6 +38,10 @@
   let mood = 'off';
   let windNext = 0, windTimer = 0, dripTimer = 0;
   let lastHover = 0;
+  // Musique du menu (« Orbiting Wonder ») : lue en continu par un élément audio, sans tout décoder.
+  let musicOn = true;
+  try { musicOn = localStorage.getItem(MUSIC_KEY) !== '0'; } catch (err) { musicOn = true; }
+  let musicEl = null, musicGain = null, musicWant = false, musicPause = 0;
 
   // Les fichiers sont téléchargés dès le chargement ; ils seront décodés au premier toucher.
   if (typeof fetch === 'function' && location.protocol !== 'file:') {
@@ -93,10 +99,57 @@
     }
     document.addEventListener('visibilitychange', () => {
       if (!ctx) return;
-      if (document.hidden) ctx.suspend();
-      else if (!muted) ctx.resume();
+      if (document.hidden) { ctx.suspend(); if (musicEl) musicEl.pause(); }
+      else if (!muted) { ctx.resume(); if (musicWant) setMusic(true); }
     });
+    if (musicWant) setMusic(true);
     return true;
+  }
+
+  // En HTTP(S), la musique passe par le graphe WebAudio (fondus fiables, même sur iPhone) ;
+  // ouverte depuis un fichier, elle est lue directement (le navigateur refuserait le graphe).
+  function musicNode() {
+    if (musicEl || !ctx) return musicEl;
+    musicEl = new Audio(BASE + 'menu.mp3');
+    musicEl.loop = true;
+    musicEl.preload = 'auto';
+    if (location.protocol !== 'file:') {
+      try {
+        const src = ctx.createMediaElementSource(musicEl);
+        musicGain = ctx.createGain();
+        musicGain.gain.value = 0;
+        src.connect(musicGain).connect(master);
+      } catch (err) { musicGain = null; }
+    }
+    if (!musicGain) musicEl.volume = 0;
+    return musicEl;
+  }
+
+  function setMusic(want) {
+    musicWant = !!want;
+    if (!ctx) return;
+    const el = musicNode();
+    const play = musicWant && musicOn && !muted && !document.hidden;
+    clearTimeout(musicPause);
+    if (play) {
+      if (el.paused) el.play().catch(() => { /* lecture refusée : elle reprendra au prochain toucher */ });
+      if (musicGain) { musicGain.gain.cancelScheduledValues(ctx.currentTime); musicGain.gain.setTargetAtTime(MUSIC_VOL, ctx.currentTime, 1.1); }
+      else fadeElement(el, MUSIC_VOL);
+    } else {
+      if (musicGain) { musicGain.gain.cancelScheduledValues(ctx.currentTime); musicGain.gain.setTargetAtTime(0, ctx.currentTime, 0.5); }
+      else fadeElement(el, 0);
+      musicPause = setTimeout(() => { if (!musicWant || !musicOn || muted) el.pause(); }, 2600);
+    }
+    if (ambBus) setMood(mood, false);
+  }
+  function fadeElement(el, to) {
+    const from = el.volume, t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / 1500);
+      el.volume = from + (to - from) * k;
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }
 
   function audio() {
@@ -184,7 +237,8 @@
     const m = MOODS[name];
     const t = ctx.currentTime;
     ambBus.gain.cancelScheduledValues(t);
-    ambBus.gain.setTargetAtTime(m.wind, t, 0.9);
+    const under = musicWant && musicOn && !muted ? 0.35 : 1;
+    ambBus.gain.setTargetAtTime(m.wind * under, t, 0.9);
     windFilter.frequency.setTargetAtTime(m.cut, t, 0.8);
     if (m.wind > 0 && (windNext < t + 1 || force)) scheduleWind();
     if (changed || force) scheduleDrip();
@@ -321,6 +375,15 @@
     },
     // Ambiance : 'off', 'wake', 'menu', 'game', 'battle'.
     ambience(name) { setMood(name); },
+    // Musique du menu : true sur les écrans hors partie.
+    music(on) { if (on !== musicWant) setMusic(on); },
+    get musicOn() { return musicOn; },
+    setMusicOn(v) {
+      musicOn = !!v;
+      try { localStorage.setItem(MUSIC_KEY, musicOn ? '1' : '0'); } catch (err) { /* stockage indisponible */ }
+      if (!ctx && musicOn) audio();
+      setMusic(musicWant);
+    },
     // Nombre d'échantillons prêts (0 tant que le premier toucher n'a pas eu lieu).
     get loaded() { return Object.keys(buffers).length; },
     get muted() { return muted; },
@@ -328,8 +391,8 @@
       muted = !!v;
       try { localStorage.setItem(KEY, muted ? '1' : '0'); } catch (err) { /* stockage indisponible */ }
       if (!ctx) { if (!muted) audio(); return; }
-      if (muted) ctx.suspend();
-      else { ctx.resume(); setMood(mood, true); }
+      if (muted) { ctx.suspend(); if (musicEl) musicEl.pause(); }
+      else { ctx.resume(); setMood(mood, true); setMusic(musicWant); }
     }
   };
 
