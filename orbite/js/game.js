@@ -788,11 +788,36 @@
       <button class="btn" data-act="set" data-v="music">MUSIQUE : ${SFX.musicOn ? 'ACTIVÉE' : 'COUPÉE'}</button>
       <button class="btn" data-act="set" data-v="speed">VITESSE DES COMBATS : ×${ui.speed}</button>
       <button class="btn" data-act="set" data-v="help">COMMENT JOUER</button>
+      ${installed() ? '' : '<button class="btn" data-act="set" data-v="install">INSTALLER SUR LE TÉLÉPHONE</button>'}
       <a class="btn" href="atelier.html">ATELIER DES PLANÈTES</a>
       <button class="btn" data-act="set" data-v="intro">REVOIR L’INTRODUCTION</button>
       <button class="btn" data-act="set" data-v="credits">CRÉDITS</button>
       <button class="btn ghost" data-act="set" data-v="reset">EFFACER LA PROGRESSION</button>
     </div><p class="muted">Poussières d’étoiles, niveau, planète et partie en cours restent sur cet appareil.</p>`;
+  }
+
+  // Installation : le jeu s'ajoute à l'écran d'accueil et se joue ensuite hors ligne.
+  let installPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; });
+  window.addEventListener('appinstalled', () => { installPrompt = null; toast('ORBITE est installé'); });
+  function installed() {
+    return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  }
+  async function install() {
+    if (installPrompt) {
+      const p = installPrompt;
+      installPrompt = null;
+      closeSheet();
+      p.prompt();
+      return;
+    }
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const steps = ios
+      ? ['Ouvrez cette page dans <b>Safari</b>.', 'Touchez le bouton <b>Partager</b> (le carré avec une flèche).', 'Choisissez <b>Sur l’écran d’accueil</b>, puis <b>Ajouter</b>.']
+      : ['Ouvrez cette page dans <b>Chrome</b>.', 'Touchez le menu <b>⋮</b> en haut à droite.', 'Choisissez <b>Installer l’application</b> (ou <b>Ajouter à l’écran d’accueil</b>).'];
+    openSheet(`<h3>INSTALLER ORBITE</h3><ol class="install-steps">${steps.map((t) => `<li>${t}</li>`).join('')}</ol>
+      <p class="muted">Lancez ensuite ORBITE depuis son icône : le jeu, la musique et les sons restent disponibles sans réseau, en mode avion compris.</p>
+      <div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} PARAMÈTRES</button></div>`);
   }
 
   // Crédits : qui a fait quoi, et les licences des ressources libres utilisées.
@@ -806,7 +831,7 @@
       <section><b>SONS</b><span>Kenney · kenney.nl</span>
         <small>Interface Sounds et UI Audio (CC0), sons des Starter Kits FPS et 3D Platformer (CC0) et du Starter Kit City Builder (licence MIT). Copies issues des portages de Hugo Locurcio.</small></section>
       <section><b>POLICE</b><span>Chakra Petch · Cadson Demak</span>
-        <small>SIL Open Font License, servie par Google Fonts.</small></section>
+        <small>SIL Open Font License, embarquée dans le jeu.</small></section>
       <section><b>LICENCE MIT · STARTER KIT CITY BUILDER</b>
         <small class="legal">Copyright (c) 2025 Kenney. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</small></section>
     </div>
@@ -822,6 +847,7 @@
       openSheet(settingsHtml());
     } else if (v === 'help') openSheet(helpHtml());
     else if (v === 'credits') openSheet(creditsHtml());
+    else if (v === 'install') install();
     else if (v === 'settings') openSheet(settingsHtml());
     else if (v === 'intro') {
       closeSheet();

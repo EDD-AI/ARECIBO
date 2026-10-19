@@ -76,15 +76,16 @@ remplit en fin de partie. À chaque niveau franchi, une planète apparaît, trem
 - Sous chaque astre : l’épée donne son **Attaque**, le cœur ses **PV**.
 - En haut à droite : le crâne signale un effet d’**Effondrement** (quand l’astre est détruit),
   l’étincelle un autre effet ; les autres icônes sont ses mots-clés.
-- **Toucher un astre** ouvre sa fiche : effet expliqué, termes définis (Naissance, Fin de cycle,
-  Habitable…). En combat, chez un rival ou en fin de partie, une fiche rapide s’affiche à côté.
+- **Toucher un astre** ouvre sa fiche : pouvoir encadré à la couleur de sa famille, termes définis
+  (Naissance, Fin de cycle, Habitable…). La fiche s’ouvre sur le « click » qui suit le toucher, pour
+  que ce click ne la referme pas aussitôt. En combat, chez un rival ou en fin de partie, une fiche rapide s’affiche à côté.
 - Les astres qui laissent des **Débris** en s’effondrant (Cendre, Nyx, Ossuaire, et Relais qui
   laisse une Sonde) les projettent depuis leurs restes ; Linceul double ces effets.
 
 ## Crédits
 
 Paramètres → **Crédits** : Studio Edda, les sons de Kenney (CC0 et MIT, avec l’avis de licence
-MIT), la police Chakra Petch (SIL Open Font License). Détail des sons dans `audio/README.md`.
+MIT), la police Chakra Petch (SIL Open Font License, embarquée dans `fonts/` avec sa licence). Détail des sons dans `audio/README.md`.
 
 ## Musique
 
@@ -115,8 +116,22 @@ la page garde les anciens sons synthétisés.
 ## Lancer
 
 Les pages fonctionnent en ouvrant directement `index.html` ou `atelier.html` dans un navigateur
-récent (WebGL2 requis). Pour l’installer sur un téléphone (mode hors ligne, plein écran), il faut
-la servir en HTTPS, par exemple via GitHub Pages, puis « Ajouter à l’écran d’accueil ».
+récent (WebGL2 requis).
+
+### Sur téléphone, hors ligne
+
+ORBITE est une application web installable. Servie en HTTPS (GitHub Pages par exemple), elle
+s’installe depuis le navigateur, puis se lance depuis son icône, en plein écran et sans réseau :
+
+- **iPhone** : Safari → Partager → *Sur l’écran d’accueil* → Ajouter.
+- **Android** : Chrome → menu ⋮ → *Installer l’application*.
+
+Paramètres → **Installer sur le téléphone** propose l’installation (Android) ou rappelle ces
+étapes (iPhone). Au premier lancement, `sw.js` met en cache tout le jeu : pages, scripts, police,
+icônes, sons et musique. Ensuite, tout marche en mode avion. Le service worker sert les morceaux
+de fichier demandés par le lecteur audio, ce qu’exige Safari pour la musique. En ligne, il prend
+toujours la version du réseau, si bien que les mises à jour arrivent seules. La progression reste
+sur l’appareil.
 
 En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 `http://localhost:8080/`.
@@ -178,7 +193,8 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `js/sfx.js` | Moteur sonore WebAudio : échantillons, réverbération, ambiance par écran, coupable dans les paramètres |
 | `audio/` | Sons Kenney (CC0) préparés pour le jeu ; sources, traitements et licences dans `audio/README.md` |
 | `js/atelier.js` | Page générateur |
-| `css/` | Styles du jeu et de l’atelier |
+| `css/` | Styles du jeu et de l’atelier ; `css/fonts.css` déclare la police embarquée |
+| `fonts/` | Chakra Petch (woff2, latin) et sa licence SIL OFL |
 | `tests/rules.test.mjs` | Tests des règles |
 | `tools/equilibrage.js` | Simulation de parties entre bots : classement moyen par loi, famille et astre |
 | `manifest.webmanifest`, `sw.js`, `icons/` | Installation sur téléphone et hors ligne |

@@ -749,6 +749,9 @@ body.in-combat .banner { top: calc(50% - 34px); }
 .kw-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
 .kw-list div { font-size: 14px; line-height: 1.4; color: rgba(241, 236, 218, 0.74); }
 .kw-list b { display: block; color: var(--ink); font-weight: 600; font-size: 12px; letter-spacing: 0.12em; }
+.install-steps { margin: 4px 0 12px; padding-left: 22px; font-size: 16px; line-height: 1.5; }
+.install-steps li { margin-bottom: 8px; }
+.install-steps b { font-weight: 600; }
 .sheet-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .sheet-actions .btn { flex: 1; min-width: 0; padding: 0 12px; font-size: 13px; letter-spacing: 0.1em; white-space: nowrap; }
 .sheet-actions .btn[data-act="left"], .sheet-actions .btn[data-act="right"] { flex: 0 0 52px; }

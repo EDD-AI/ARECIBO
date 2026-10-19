@@ -1,11 +1,15 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
-const CACHE = 'orbite-v5';
+const CACHE = 'orbite-v6';
 const SHELL = [
   './',
   './index.html',
   './atelier.html',
   './manifest.webmanifest',
+  './css/fonts.css',
   './css/game.css',
+  './fonts/chakra-petch-400.woff2',
+  './fonts/chakra-petch-500.woff2',
+  './fonts/chakra-petch-600.woff2',
   './css/atelier.css',
   './js/planet-engine.js',
   './js/planet-renderer.js',
@@ -18,6 +22,7 @@ const SHELL = [
   './js/atelier.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/icon-maskable-512.png',
   './audio/back.mp3',
   './audio/blast.mp3',
   './audio/break.mp3',
@@ -53,7 +58,8 @@ const SHELL = [
   './audio/tap.mp3',
   './audio/type.mp3',
   './audio/wind.mp3',
-  './audio/zap.mp3'
+  './audio/zap.mp3',
+  './audio/menu.mp3'
 ];
 
 self.addEventListener('install', (e) => {
@@ -63,6 +69,28 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
+
+// Les lecteurs audio demandent des morceaux de fichier (en-tête Range) : hors ligne, on découpe
+// la copie complète du cache, sinon Safari refuse de jouer la musique.
+async function fromCache(req) {
+  const hit = await caches.match(req, { ignoreSearch: true });
+  if (!hit) return (await caches.match('./index.html')) || Response.error();
+  const range = req.headers.get('range');
+  const m = range && /bytes=(\d*)-(\d*)/.exec(range);
+  if (!m) return hit;
+  const buf = await hit.arrayBuffer();
+  const start = m[1] ? Number(m[1]) : Math.max(0, buf.byteLength - Number(m[2]));
+  const end = m[1] && m[2] ? Math.min(Number(m[2]), buf.byteLength - 1) : buf.byteLength - 1;
+  return new Response(buf.slice(start, end + 1), {
+    status: 206,
+    headers: {
+      'Content-Type': hit.headers.get('Content-Type') || 'audio/mpeg',
+      'Content-Range': `bytes ${start}-${end}/${buf.byteLength}`,
+      'Content-Length': String(end - start + 1),
+      'Accept-Ranges': 'bytes'
+    }
+  });
+}
 
 // Réseau d'abord (pour recevoir les mises à jour), cache en secours.
 self.addEventListener('fetch', (e) => {
@@ -76,6 +104,6 @@ self.addEventListener('fetch', (e) => {
         }
         return res;
       })
-      .catch(() => caches.match(e.request).then((hit) => hit || caches.match('./index.html')))
+      .catch(() => fromCache(e.request))
   );
 });
