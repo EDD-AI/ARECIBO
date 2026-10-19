@@ -338,11 +338,69 @@
     await openMap();
   }
 
-  // ─── Carte des chemins ──────────────────────────────────────
-  const ROW_H = 92;
-  function nodeXY(n, W, H) {
-    if (n.type === 'boss') return [W / 2, 96];
-    return [W * (0.2 + n.col * 0.3), H - 64 - n.row * ROW_H];
+  // ─── Carte des chemins : un ciel en perspective ──────────────
+  // Les étapes sont posées dans un espace 3D : chaque rangée s'éloigne vers l'horizon où attend
+  // Kronos, chaque astre flotte à sa propre hauteur, des galaxies et des planètes peuplent les
+  // côtés. La caméra avance d'astre en astre ; on glisse pour regarder plus loin.
+  const MAP = { cam: -0.6, camX: 0, target: null, vel: 0, raf: 0, run: null, pos: null, decor: null, me: null, moving: false, drag: null };
+  const LABEL = { combat: 'AFFRONTEMENT', elite: 'ASTRE PUISSANT', event: 'MYSTÈRE', rest: 'SANCTUAIRE', boss: 'KRONOS' };
+  const DECOR_LOOKS = {
+    'map-gal-0': { type: 'portal', seed: 41001 },
+    'map-gal-1': { type: 'portal', seed: 41007 },
+    'map-giant': { type: 'gas', seed: 41013, ring: true, full: true },
+    'map-ice': { type: 'ice', seed: 41021 },
+    'map-moon': { type: 'moon', seed: 41027 },
+    'map-ast': { type: 'asteroid', seed: 41033 },
+    'map-ast2': { type: 'asteroid', seed: 41039, shape: 'double' },
+    'map-lava': { type: 'lava', seed: 41045 },
+    'map-star': { type: 'star', seed: 41051, starClass: 'géante bleue' }
+  };
+  for (const [id, look] of Object.entries(DECOR_LOOKS)) stage.register(id, look);
+  stage.register('cn-rest', { type: 'star', seed: 41061, starClass: 'étoile orange' });
+  for (let k = 0; k < 4; k++) stage.register('cn-event-' + k, { type: 'portal', seed: 41071 + k * 13 });
+
+  function seededRand(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = Math.imul(a ^ (a >>> 15), a | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function worldLayout() {
+    if (MAP.run === run && MAP.pos) return;
+    const rnd = seededRand(run.seed ^ 0x9e3779b9);
+    MAP.pos = {};
+    for (const n of C.allNodes(run)) {
+      MAP.pos[n.id] = n.type === 'boss'
+        ? { X: 0, Y: C.ROWS + 1.6, Z: 2.6, size: 5.5 }
+        : { X: (n.col - 1) * 1.15 + (rnd() - 0.5) * 0.45, Y: n.row + (rnd() - 0.5) * 0.3, Z: (rnd() - 0.5) * 0.9, size: n.type === 'elite' ? 1.15 : n.type === 'rest' ? 0.7 : n.type === 'event' ? 0.85 : 0.92 };
+    }
+    const side = ['map-moon', 'map-ast', 'map-ice', 'map-ast2', 'map-lava', 'map-moon', 'map-ast', 'map-star'];
+    MAP.decor = [
+      { id: 'map-gal-0', X: -3.4, Y: C.ROWS + 7, Z: 4.2, size: 4.5 },
+      { id: 'map-gal-1', X: 3.8, Y: C.ROWS + 11, Z: 6.5, size: 5.5 },
+      { id: 'map-giant', X: 3.6, Y: C.ROWS + 4.5, Z: 2.4, size: 4.2 }
+    ];
+    for (let k = 0; k < 9; k++) {
+      MAP.decor.push({ id: side[k % side.length], X: (k % 2 ? 1 : -1) * (2.3 + rnd() * 1.4), Y: k * 1.15 + rnd() * 0.8 - 0.3, Z: rnd() * 1.8 - 0.5, size: 0.35 + rnd() * 0.65 });
+    }
+    MAP.run = run;
+  }
+  const curPos = () => (run.node ? MAP.pos[run.node] : { X: 0, Y: -0.75, Z: -0.1 });
+  const camFor = (p) => p.Y + 0.15;
+  const camXFor = (p) => p.X * 0.55;
+  // Notre monde se pose juste devant l'astre visité, un peu plus bas.
+  const mePos = (p) => ({ X: p.X + 0.12, Y: p.Y - 0.05, Z: p.Z - 0.1, size: 0.62 });
+
+  function view() { const v = $('cmView'); return { W: v.clientWidth || 390, H: v.clientHeight || 700 }; }
+  function project(p, V) {
+    const camY = MAP.cam - 1.6;
+    const d = p.Y - camY;
+    if (d < 0.32) return null;
+    const F = V.H * 0.7, s = 1 / d;
+    return { x: V.W / 2 + (p.X - MAP.camX) * F * s * 0.5, y: V.H * 0.12 + (2.4 - p.Z) * F * s * 0.45, s, d, px: (p.size || 1) * F * s * 0.3 };
   }
   function renderTop() {
     $('cmBack').innerHTML = icon('back');
@@ -352,49 +410,102 @@
     $('cmRelics').innerHTML = rel;
     $('cfRelics').innerHTML = rel;
   }
-  function renderMap() {
+  function buildMap() {
+    worldLayout();
     renderTop();
-    const box = $('cmMap');
-    const W = Math.min(box.parentElement.clientWidth || 360, 520);
-    const H = C.ROWS * ROW_H + 190;
-    box.style.height = H + 'px';
     const nodes = C.allNodes(run);
     const open = new Set(C.choices(run));
     const done = new Set(run.path);
+    const body = (n) => {
+      if (n.type === 'event') return `<span class="orb cn-orb" data-planet="cn-event-${(n.row + n.col) % 4}"></span><span class="cn-badge">${icon('ask')}</span>`;
+      if (n.type === 'rest') return `<span class="orb cn-orb" data-planet="cn-rest"></span><span class="cn-badge rest">${icon('flame')}</span>`;
+      const pool = n.type === 'boss' ? C.GROUPS.boss : n.type === 'elite' ? C.GROUPS.elite : n.row <= 1 ? C.GROUPS.faible : C.GROUPS.moyen;
+      return `<span class="orb cn-orb" data-planet="foe-${pool[n.group || 0][0]}"></span>`;
+    };
+    $('cmMap').innerHTML =
+      MAP.decor.map((d, k) => `<span class="cdecor" data-decor="${k}"><span class="orb cn-orb" data-planet="${d.id}"></span></span>`).join('') +
+      nodes.map((n) => {
+        const st = done.has(n.id) ? 'done' : open.has(n.id) ? 'open' : 'far';
+        return `<button class="cnode t-${n.type} ${st}" data-node="${n.id}" aria-label="${LABEL[n.type]}">${body(n)}<b class="cn-label">${LABEL[n.type]}</b></button>`;
+      }).join('') + '<span class="cnode cm-me" id="cmMe"><span class="orb cn-orb" data-planet="camp-world"></span></span>';
+    MAP.me = mePos(curPos());
+  }
+  function placeMap() {
+    if (!run || !MAP.pos) return;
+    const V = view();
+    const open = new Set(C.choices(run));
+    const done = new Set(run.path);
+    const put = (el, p, extraDim) => {
+      const q = project(p, V);
+      if (!q || q.y - q.px > V.H + 40 || q.px < 3) { el.style.display = 'none'; return null; }
+      el.style.display = '';
+      el.style.transform = `translate(${(q.x - q.px / 2).toFixed(1)}px, ${(q.y - q.px / 2).toFixed(1)}px)`;
+      el.style.width = el.style.height = q.px.toFixed(1) + 'px';
+      el.style.zIndex = String(Math.max(1, Math.round(2000 - q.d * 100)));
+      el.classList.toggle('tiny', q.px < 30);
+      const fog = Math.min(1, Math.max(0.3, Math.min(1, 1.25 - q.d * 0.075)) * (extraDim || 1));
+      const orb = el.querySelector('.orb');
+      if (orb) orb.dataset.dim = fog.toFixed(2);
+      el.style.setProperty('--fog', fog.toFixed(2));
+      return q;
+    };
+    MAP.decor.forEach((d, k) => put($('cmMap').querySelector(`[data-decor="${k}"]`), d, 0.75));
+    const pts = {};
+    for (const el of $('cmMap').querySelectorAll('.cnode[data-node]')) {
+      const id = el.dataset.node;
+      pts[id] = put(el, MAP.pos[id], done.has(id) && id !== run.node ? 0.45 : id === 'boss' ? 3 : 1);
+    }
+    put($('cmMe'), MAP.me, 1);
+    // Routes : lignes en pointillés, épaisses près de nous, fines au loin ; les routes ouvertes brillent.
     let lines = '';
-    for (const n of nodes) {
-      const [x, y] = nodeXY(n, W, H);
+    for (const n of C.allNodes(run)) {
       for (const id of n.next) {
-        const m = nodes.find((k) => k.id === id);
-        const [x2, y2] = nodeXY(m, W, H);
-        const walked = done.has(n.id) && done.has(m.id);
-        lines += `<line x1="${x}" y1="${y}" x2="${x2}" y2="${y2}" class="${walked ? 'walked' : ''}"/>`;
+        const a = MAP.pos[n.id], b = MAP.pos[id];
+        const pa = project(a, V), pb = project(b, V);
+        if (!pa || !pb) continue;
+        const walked = done.has(n.id) && done.has(id);
+        const live = (n.id === run.node || (!run.node && false)) && open.has(id);
+        const w = Math.max(0.6, Math.min(3.5, (pa.s + pb.s) * 1.6));
+        lines += `<line x1="${pa.x.toFixed(1)}" y1="${pa.y.toFixed(1)}" x2="${pb.x.toFixed(1)}" y2="${pb.y.toFixed(1)}" stroke-width="${w.toFixed(2)}" class="${walked ? 'walked' : live ? 'live' : ''}" style="opacity:${Math.max(0.15, Math.min(1, 1.2 - Math.max(pa.d, pb.d) * 0.07)).toFixed(2)}"/>`;
       }
     }
-    const inner = (n) => {
-      if (n.type === 'event') return `<span class="cn-glyph">${icon('ask')}</span>`;
-      if (n.type === 'rest') return `<span class="cn-glyph rest">${icon('flame')}</span>`;
-      const pool = n.type === 'boss' ? C.GROUPS.boss : n.type === 'elite' ? C.GROUPS.elite : n.row <= 1 ? C.GROUPS.faible : C.GROUPS.moyen;
-      const id = pool[n.group || 0][0];
-      return `<span class="orb cn-orb" data-planet="foe-${id}"></span>` + (n.type === 'boss' ? '<b class="cn-name">KRONOS</b>' : '');
-    };
-    const LABEL = { combat: 'Affrontement', elite: 'Astre puissant', event: 'Mystère', rest: 'Sanctuaire', boss: 'Kronos' };
-    box.innerHTML = `<svg class="cm-lines" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${lines}</svg>` +
-      nodes.map((n) => {
-        const [x, y] = nodeXY(n, W, H);
-        const st = done.has(n.id) ? 'done' : open.has(n.id) ? 'open' : 'far';
-        return `<button class="cnode t-${n.type} ${st}" data-node="${n.id}" style="left:${x}px;top:${y}px" aria-label="${LABEL[n.type]}">${inner(n)}</button>`;
-      }).join('') + '<span class="orb cm-me" id="cmMe" data-planet="camp-world"></span>';
-    const cur = run.node ? nodes.find((k) => k.id === run.node) : null;
-    const [mx, my] = cur ? nodeXY(cur, W, H) : [W / 2, H - 6];
-    Object.assign($('cmMe').style, { left: mx + 'px', top: my + 'px' });
-    const sc = $('cmScroll');
-    requestAnimationFrame(() => { sc.scrollTop = Math.max(0, my - sc.clientHeight * 0.62); });
+    if (!run.node) {
+      const pm = project(MAP.me, V);
+      for (const id of open) { const pb = project(MAP.pos[id], V); if (pm && pb) lines += `<line x1="${pm.x.toFixed(1)}" y1="${pm.y.toFixed(1)}" x2="${pb.x.toFixed(1)}" y2="${pb.y.toFixed(1)}" stroke-width="2.2" class="live"/>`; }
+    }
+    $('cmLines').setAttribute('viewBox', `0 0 ${V.W} ${V.H}`);
+    $('cmLines').innerHTML = lines;
+    stage.skyOff = [0, MAP.cam * 0.06];
   }
+  function mapLoop() {
+    cancelAnimationFrame(MAP.raf);
+    const step = () => {
+      if (MAP.target != null && !MAP.drag && !MAP.moving) {
+        MAP.cam += (MAP.target - MAP.cam) * 0.1;
+        if (Math.abs(MAP.target - MAP.cam) < 0.002) MAP.target = null;
+      } else if (!MAP.drag && !MAP.moving && Math.abs(MAP.vel) > 0.0005) {
+        MAP.cam = clampCam(MAP.cam + MAP.vel);
+        MAP.vel *= 0.92;
+      }
+      placeMap();
+      if (A && document.getElementById('cMap').classList.contains('active')) MAP.raf = requestAnimationFrame(step);
+    };
+    MAP.raf = requestAnimationFrame(step);
+  }
+  const clampCam = (c) => Math.max(camFor(curPos()) - 0.4, Math.min(C.ROWS + 0.6, c));
+
   async function openMap() {
-    renderMap();
+    worldLayout();
+    MAP.cam = camFor(curPos());
+    MAP.camX = camXFor(curPos());
+    MAP.vel = 0;
+    buildMap();
+    $('cmHint').classList.toggle('gone', A.store.get(GLIDE_KEY, '') === '1');
     await A.show('cMap');
-    renderMap();
+    buildMap();
+    placeMap();
+    mapLoop();
+    if (A.store.get(MAP_TUTO_KEY, '') !== 'fini') setTimeout(() => A.coachStart(MAP_STEPS, () => A.store.set(MAP_TUTO_KEY, 'fini')), 700);
   }
   $('cmBack').addEventListener('click', async () => { SFX.tap(); save(); await A.backToMenu(); });
   $('cmDeck').addEventListener('click', () => { SFX.tap(); deckSheet('VOTRE CRÉATION', run.deck, null); });
@@ -405,28 +516,95 @@
     A.toast(`${k.name} : ${k.text}`, 3200);
   });
 
-  $('cmMap').addEventListener('click', async (e) => {
-    const b = e.target.closest('.cnode');
-    if (!b || ui.busy || !run) return;
-    const id = b.dataset.node;
+  // Glisser vers le haut : la caméra avance pour regarder plus loin ; un toucher choisit un astre.
+  $('cmView').addEventListener('pointerdown', (e) => {
+    if (!run || MAP.moving) return;
+    MAP.drag = { y0: e.clientY, cam0: MAP.cam, t: performance.now(), last: e.clientY, moved: false, id: e.pointerId };
+    MAP.vel = 0;
+    MAP.target = null;
+  });
+  $('cmView').addEventListener('pointermove', (e) => {
+    const d = MAP.drag;
+    if (!d || e.pointerId !== d.id) return;
+    const dy = e.clientY - d.y0;
+    if (Math.abs(dy) > 8) d.moved = true;
+    if (!d.moved) return;
+    const k = 1 / (view().H * 0.16);
+    MAP.cam = clampCam(d.cam0 - dy * k);
+    MAP.vel = -(e.clientY - d.last) * k * 0.9;
+    d.last = e.clientY;
+    if (dy < -40) { $('cmHint').classList.add('gone'); A.store.set(GLIDE_KEY, '1'); }
+  });
+  const endDrag = async (e) => {
+    const d = MAP.drag;
+    if (!d || e.pointerId !== d.id) return;
+    MAP.drag = null;
+    if (d.moved) { A.tuto('campRegarde'); return; }
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const b = el && el.closest('.cnode[data-node]');
+    if (b) await goNode(b.dataset.node);
+  };
+  $('cmView').addEventListener('pointerup', endDrag);
+  $('cmView').addEventListener('pointercancel', () => { MAP.drag = null; });
+
+  async function goNode(id) {
+    if (ui.busy || !run) return;
     if (!C.choices(run).includes(id)) {
       const n = C.nodeById(run, id);
-      A.toast(n && n.type === 'boss' ? 'Kronos vous attend au bout du chemin.' : 'Suivez un chemin relié à votre position.', 1800);
+      SFX.error();
+      A.toast(n && n.type === 'boss' ? 'Kronos vous attend au bout du chemin.' : 'Suivez une route reliée à votre monde.', 1800);
       return;
     }
     ui.busy = true;
+    A.tuto('campVoyage');
     SFX.place();
-    const me = $('cmMe');
-    me.style.left = b.style.left;
-    me.style.top = b.style.top;
-    await wait(560);
+    // Voyage : notre monde file le long de la route, la caméra le suit.
+    const from = Object.assign({}, MAP.me), to = mePos(MAP.pos[id]);
+    const c0 = MAP.cam, c1 = camFor(MAP.pos[id]), x0 = MAP.camX, x1 = camXFor(MAP.pos[id]);
+    MAP.moving = true;
+    SFX.whoosh(0);
+    const t0 = performance.now(), ms = 1150;
+    await new Promise((res) => {
+      const tick = (now) => {
+        const k = Math.min(1, (now - t0) / ms);
+        const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        MAP.me.X = from.X + (to.X - from.X) * e;
+        MAP.me.Y = from.Y + (to.Y - from.Y) * e;
+        MAP.me.Z = from.Z + (to.Z - from.Z) * e + Math.sin(k * Math.PI) * 0.35;
+        MAP.cam = c0 + (c1 - c0) * e;
+        MAP.camX = x0 + (x1 - x0) * e;
+        const el = $('cmMe');
+        if (el && Math.random() < 0.6) {
+          const [x, y] = center(el);
+          stage.burst(x, y, { n: 2, colors: [[200, 220, 255], [255, 255, 255]], speed: 14, life: 0.5, drag: 3 });
+        }
+        if (k < 1) requestAnimationFrame(tick); else res();
+      };
+      requestAnimationFrame(tick);
+    });
+    MAP.moving = false;
     const res = C.enter(run, id);
     save();
+    const el = $('cmMap').querySelector(`[data-node="${id}"] .orb`);
+    if (el) stage.flash(el, 0.8);
+    await wait(250);
     ui.busy = false;
     if (res.kind === 'combat') await startFight(res.node);
     else if (res.kind === 'event') showEvent();
     else showRest();
-  });
+  }
+
+  // Tutoriel de la carte (première visite).
+  const MAP_TUTO_KEY = 'orbite.campagne.carte';
+  const GLIDE_KEY = 'orbite.campagne.glisse';
+  const MAP_STEPS = [
+    { id: 'carte', text: 'Voici la <b>Nébuleuse natale</b>. Chaque astre est une étape : votre monde voyage d’astre en astre, jusqu’à <b>Kronos</b>, tout au fond du ciel.', next: 'SUIVANT', delay: 0, y: 0.08 },
+    { id: 'routes', target: () => document.querySelector('#cmMap .cnode.open'), text: 'Les routes lumineuses partent de votre monde. Les astres entourés d’un cercle sont vos <b>prochaines étapes possibles</b>.', next: 'SUIVANT' },
+    { id: 'types', text: '<b>Planète ennemie</b> : un affrontement. <b>Cercle rouge</b> : un astre puissant, plus dur, mais il donne un vestige. <b>Tourbillon</b> : un mystère. <b>Petite étoile</b> : un sanctuaire pour soigner ou améliorer une carte.', next: 'SUIVANT', y: 0.08 },
+    { id: 'regarder', target: '#cmView', pad: -30, dim: false, text: '<b>Glissez vers le haut</b> pour regarder plus loin et choisir votre route. Les routes se séparent et se rejoignent : à vous de tracer la vôtre.', gesture: { from: '#cmView', drag: '#cmHp', at: 0.75 }, wait: ['campRegarde'], y: 0.08 },
+    { id: 'creation', target: '#cmDeck', text: 'Ici, <b>votre création</b> : toutes vos cartes.', next: 'SUIVANT' },
+    { id: 'partir', enter: () => { MAP.target = camFor(curPos()); }, delay: 700, target: () => document.querySelector('#cmMap .cnode.open'), text: 'À vous. <b>Touchez un astre entouré</b> pour y voyager.', gesture: { tap: () => document.querySelector('#cmMap .cnode.open'), at: 0.5 }, wait: ['campVoyage'] }
+  ];
 
   // ─── Cartes ─────────────────────────────────────────────────
   function cardHtml(card, o) {

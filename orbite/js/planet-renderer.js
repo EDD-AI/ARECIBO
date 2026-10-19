@@ -952,92 +952,256 @@ void main() {
 `;
 
 
-  // Fonds animés (cosmétiques) : dessinés derrière les étoiles pendant une partie.
-  // 1 nébuleuse, 2 aurore, 3 galaxie, 4 étoiles filantes, 5 trou noir lointain.
+  // Fonds animés (cosmétiques) façon splash art, dessinés derrière les étoiles pendant une partie.
+  // Rendus à demi-résolution dans une texture, rafraîchie une vingtaine de fois par seconde.
+  // 1 nébuleuse, 2 aurore sur un lac de montagne, 3 galaxie spirale, 4 voie lactée et étoiles
+  // filantes, 5 trou noir, 6 piliers de la création, 7 ciel de la carte de campagne.
   const FS_SKY = HEAD + COMMON + `
 uniform vec2 uRes;
 uniform float uT;
 uniform int uSky;
 uniform vec3 uSeed;
-float post(float v, float n, float dth) { return floor(clamp(v, 0.0, 1.0) * n + dth) / n; }
+uniform vec2 uOff;
+float h21(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+vec2 h22(vec2 p) { return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453); }
+float n2(vec2 p, float z, int o) { return fbm01(vec3(p, z), o); }
+// Étoiles : une par cellule au plus ; les plus brillantes ont des aigrettes en croix.
+vec3 stars(vec2 uv, float scale, float dens, float boost) {
+  vec2 g = uv * scale;
+  vec2 id = floor(g);
+  vec2 f = fract(g) - 0.5;
+  float r = h21(id + uSeed.xy);
+  if (r > dens) return vec3(0.0);
+  vec2 o = (h22(id + 3.1) - 0.5) * 0.6;
+  vec2 d = (f - o) * uRes.y / scale;
+  float br = pow(h21(id * 1.7 + 0.3), 4.0) * boost;
+  float tw = 0.75 + 0.25 * sin(uT * (1.0 + 3.0 * h21(id * 3.1)) + r * 40.0);
+  float core = max(0.0, 1.0 - length(d) / (0.75 + br * 1.4));
+  float sp = 0.0;
+  if (br > 0.45) {
+    float L = 2.0 + br * 7.0;
+    sp = max(0.0, 1.0 - abs(d.x) * 1.4) * max(0.0, 1.0 - abs(d.y) / L) + max(0.0, 1.0 - abs(d.y) * 1.4) * max(0.0, 1.0 - abs(d.x) / L);
+  }
+  vec3 tint = mix(vec3(0.7, 0.82, 1.0), vec3(1.0, 0.86, 0.7), h21(id * 2.3));
+  return tint * (core + sp * 0.55) * (0.35 + br) * tw;
+}
+vec3 starfield(vec2 uv, float k) {
+  return stars(uv, 110.0, 0.3 * k, 0.6) * 0.6 + stars(uv + 7.3, 42.0, 0.16 * k, 1.1) + stars(uv + 2.1, 12.0, 0.07 * k, 1.9);
+}
+// Nébuleuse en domaine déformé : renvoie densité, et deux champs de déformation pour les couleurs.
+vec3 warp(vec2 p, float t) {
+  vec2 q = vec2(n2(p, 1.0 + t, 4), n2(p + 5.2, 2.0 - t, 4));
+  vec2 r = vec2(n2(p + 1.1 * q + vec2(1.7, 9.2), 3.0 + t, 4), n2(p + 1.1 * q + vec2(8.3, 2.8), 4.0, 4));
+  float n = n2(p + 0.9 * r, 5.0 + t * 0.5, 6);
+  return vec3(n, length(q), r.x);
+}
+// Scène de l'aurore (ciel, voiles, montagnes) ; q.y = 0.15 est la rive du lac.
+vec3 aurora(vec2 q, float t) {
+  vec3 c = mix(vec3(0.02, 0.1, 0.13), vec3(0.0, 0.01, 0.04), smoothstep(0.25, 1.0, q.y));
+  vec3 ac = vec3(0.0);
+  float I = 0.0;
+  for (int k = 0; k < 3; k++) {
+    float fk = float(k);
+    float base = 0.5 + fk * 0.1 + 0.08 * sin(q.x * (2.2 + fk * 0.8) + t * (0.1 + fk * 0.04) + fk * 2.1)
+      + 0.1 * (n2(vec2(q.x * 1.3, fk), t * 0.03, 3) - 0.5);
+    float d = q.y - base;
+    float rays = n2(vec2(q.x * 30.0 + fk * 13.0, 0.0), t * 0.22 + fk, 3);
+    float fold = 0.55 + 0.45 * sin(q.x * 7.0 + t * 0.35 + fk * 1.7);
+    float v = (d > 0.0 ? exp(-d * (4.5 + fk * 2.0)) : exp(-d * d * 1400.0)) * (0.3 + 1.2 * rays * rays) * fold * (1.0 - fk * 0.22);
+    vec3 tint = mix(vec3(0.2, 1.0, 0.55), vec3(0.25, 0.85, 1.0), clamp(d * 3.0, 0.0, 1.0));
+    tint = mix(tint, vec3(0.95, 0.35, 0.85), clamp(d * 4.0 - 0.7, 0.0, 1.0));
+    ac += tint * v;
+    I = max(I, v);
+  }
+  c += ac * 0.85 + starfield(q, 1.0) * (1.0 - min(1.0, I * 1.5));
+  // Chaîne lointaine bleutée éclairée par l'aurore, puis chaîne proche noire aux sommets enneigés.
+  float r1 = 1.0 - abs(fbm(vec3(q.x * 5.0, 3.0, 0.5), 4));
+  float r2 = 1.0 - abs(fbm(vec3(q.x * 8.0, 6.0, 1.5), 4));
+  float m1 = 0.27 + 0.2 * fbm(vec3(q.x * 2.0, 9.0, 0.0), 5) + 0.09 * r1 * r1;
+  float m2 = 0.19 + 0.12 * fbm(vec3(q.x * 3.6, 12.0, 0.0), 5) + 0.06 * r2 * r2;
+  if (q.y < m1) {
+    float snow = smoothstep(m1 - 0.05, m1, q.y);
+    c = mix(vec3(0.02, 0.07, 0.09), vec3(0.07, 0.2, 0.2), (q.y - 0.15) / 0.25) + vec3(0.35, 0.8, 0.65) * snow * 0.35;
+  }
+  if (q.y < m2) {
+    float snow = smoothstep(m2 - 0.025, m2, q.y);
+    c = vec3(0.004, 0.012, 0.018) + vec3(0.5, 0.9, 0.8) * snow * 0.28;
+  }
+  return c;
+}
+
 void main() {
   vec2 fc = gl_FragCoord.xy;
   float dth = bayer4(fc);
   vec2 uv = fc / uRes.y;
   float ax = uRes.x / uRes.y;
   float y = fc.y / uRes.y;
+  float t = uT;
   vec3 col = vec3(0.0);
+
   if (uSky == 1) {
-    vec3 p = vec3(uv * 2.2 + vec2(uT * 0.012, uT * 0.005), uT * 0.018);
-    float a = fbm01(p + uSeed, 5);
-    float b = fbm01(p * 1.6 + vec3(7.0, 3.0, -uT * 0.012) + uSeed.zyx, 4);
-    float va = post(smoothstep(0.5, 0.8, a), 4.0, dth * 0.9);
-    float vb = post(smoothstep(0.56, 0.82, b), 3.0, dth * 0.9);
-    col = vec3(0.22, 0.07, 0.3) * va + vec3(0.03, 0.17, 0.21) * vb * (1.0 - va * 0.6);
+    // Nébuleuse pourpre : nuages roses et violets, voiles bleus, cœur d'émission, filaments sombres.
+    vec2 p = uv * 1.4 + uOff + vec2(t * 0.003, t * 0.001);
+    vec3 w = warp(p, t * 0.004);
+    float dens = smoothstep(0.36, 0.72, w.x);
+    float hi = smoothstep(0.55, 0.78, w.x);
+    float fil = smoothstep(0.56, 0.64, n2(p * 3.4 + w.yz * 0.8, 7.0, 5));
+    vec3 c = mix(vec3(0.0, 0.0, 0.03), vec3(0.12, 0.06, 0.32), dens);
+    c = mix(c, vec3(0.55, 0.12, 0.5), smoothstep(0.45, 0.75, w.x) * 0.9);
+    c = mix(c, vec3(1.0, 0.45, 0.62), hi * smoothstep(0.4, 0.75, w.y));
+    c = mix(c, vec3(0.2, 0.55, 0.9), smoothstep(0.55, 0.8, w.z) * (1.0 - hi) * dens * 0.6);
+    vec2 cc = (uv - vec2(ax * 0.62, 0.62)) * vec2(1.0, 1.3);
+    float core = exp(-dot(cc, cc) * 14.0);
+    c += vec3(1.0, 0.85, 0.9) * core * (0.4 + dens) * 0.7;
+    c *= 1.0 - fil * 0.7 * dens;
+    col = c + starfield(uv, 1.0) * (1.0 - dens * 0.6) + vec3(1.0, 0.9, 0.95) * stars(uv + 4.0, 60.0, 0.5 * core, 1.4);
   } else if (uSky == 2) {
-    float I = 0.0;
-    vec3 tint = vec3(0.0);
-    for (int k = 0; k < 2; k++) {
-      float fk = float(k);
-      float c = 0.78 - fk * 0.16 + 0.05 * sin(uv.x * (2.4 + fk) + uT * (0.22 + fk * 0.07) + fk * 2.0)
-        + 0.06 * (fbm01(vec3(uv.x * 1.4, uT * 0.05, fk * 5.0) + uSeed, 3) - 0.5);
-      float d = y - c;
-      float rays = fbm01(vec3(uv.x * 16.0 + fk * 9.0, uT * 0.3, 2.0 + fk) + uSeed, 3);
-      float band = d > 0.0 ? exp(-d * (8.0 + fk * 4.0)) : exp(-d * d * 2600.0);
-      float v = band * (0.3 + 0.9 * rays) * (1.0 - fk * 0.45);
-      if (v > I) { I = v; tint = mix(vec3(0.12, 0.55, 0.32), vec3(0.3, 0.12, 0.45), clamp(d * 4.0 + 0.1, 0.0, 1.0)); }
-    }
-    col = tint * post(I * 0.75, 5.0, dth);
+    // Aurore boréale au-dessus de montagnes enneigées, reflétée (étirée) dans un lac immobile.
+    float lake = 0.15;
+    bool refl = y < lake;
+    vec2 q = refl ? vec2(uv.x + 0.004 * sin(y * 320.0 + t * 1.4), lake + (lake - y) * 2.6) : vec2(uv.x, y);
+    col = aurora(q, t);
+    if (refl) col = col * 0.55 + vec3(0.0, 0.02, 0.03);
+    if (refl && y > lake - 0.004) col += vec3(0.15, 0.4, 0.3);
   } else if (uSky == 3) {
-    vec2 v = uv - vec2(ax * 0.5, 0.56);
-    v = mat2(0.94, -0.34, 0.34, 0.94) * v;
-    v.y /= 0.42;
+    // Galaxie spirale inclinée : cœur doré, bras bleus semés de nébuleuses roses, bandes de poussière.
+    col = vec3(0.01, 0.005, 0.03) + vec3(0.04, 0.02, 0.08) * n2(uv * 2.0, 3.0, 4);
+    vec2 v = (uv - vec2(ax * 0.5, 0.55)) / 1.2;
+    v = mat2(0.9, -0.44, 0.44, 0.9) * v;
+    v.y /= 0.38;
     float r = length(v);
-    float ang = atan(v.y, v.x) - uT * 0.025;
-    float arms = 0.5 + 0.5 * cos(2.0 * ang - log(r + 0.015) * 5.5);
-    float n = fbm01(vec3(v * 9.0, uT * 0.02) + uSeed, 3);
-    float dens = pow(arms, 3.0) * exp(-r * 4.2) * (0.6 + 0.6 * n) + exp(-r * 22.0) * 1.3;
-    float lv = post(dens * 0.75, 6.0, dth);
-    col = mix(vec3(0.12, 0.17, 0.38), vec3(0.55, 0.42, 0.26), clamp(exp(-r * 9.0) * 1.4, 0.0, 1.0)) * lv;
+    float ang = atan(v.y, v.x) - t * 0.02;
+    float sw = ang - log(r + 0.02) * 2.4;
+    float arms = pow(0.5 + 0.5 * cos(2.0 * sw), 2.5);
+    float clump = n2(vec2(cos(sw), sin(sw)) * 2.0 + r * 9.0, 6.0, 4);
+    float disk = exp(-r * 3.6);
+    float dens = arms * disk * (0.55 + 0.9 * clump) + exp(-r * 16.0) * 1.6 + disk * 0.12;
+    float lanes = smoothstep(0.5, 0.75, pow(0.5 + 0.5 * cos(2.0 * sw + 0.9), 3.0)) * disk * 0.8;
+    vec3 c = mix(vec3(0.25, 0.4, 0.95), vec3(1.0, 0.82, 0.55), clamp(exp(-r * 7.0) * 1.6, 0.0, 1.0));
+    c = mix(c, vec3(1.0, 0.35, 0.6), smoothstep(0.62, 0.8, clump) * arms * 0.7);
+    col += c * dens * 0.9;
+    col *= 1.0 - lanes * 0.6;
+    col += starfield(uv, 1.1) * (1.0 - min(1.0, dens));
+    // Petites galaxies lointaines.
+    for (int i = 0; i < 3; i++) {
+      vec2 gp = vec2(h21(vec2(float(i), 4.0)) * ax, 0.15 + 0.75 * h21(vec2(float(i), 9.0)));
+      vec2 gd = (uv - gp) * vec2(1.0, 2.6);
+      col += vec3(0.8, 0.75, 1.0) * exp(-dot(gd, gd) * 9000.0) * 0.8;
+    }
   } else if (uSky == 4) {
-    col = vec3(0.02, 0.03, 0.07) * post(y, 4.0, dth);
-    for (int i = 0; i < 6; i++) {
+    // Voie lactée en diagonale et pluie d'étoiles filantes depuis un radiant.
+    vec2 c0 = vec2(ax * 0.5, 0.5);
+    vec2 nrm = normalize(vec2(0.55, 1.0));
+    float v = dot(uv - c0, nrm);
+    float along = dot(uv - c0, vec2(nrm.y, -nrm.x));
+    float band = exp(-v * v * 40.0);
+    float cloud = n2(vec2(along * 4.0, v * 9.0), 1.0, 6);
+    float lane = smoothstep(0.52, 0.64, n2(vec2(along * 7.0, v * 22.0), 2.0, 5)) * exp(-v * v * 260.0);
+    vec3 c = mix(vec3(0.0, 0.01, 0.04), vec3(0.03, 0.05, 0.12), 1.0 - y);
+    c += mix(vec3(0.16, 0.2, 0.42), vec3(0.95, 0.75, 0.5), smoothstep(0.5, 0.85, cloud) * exp(-along * along * 3.0)) * band * (0.3 + cloud);
+    c += vec3(0.85, 0.3, 0.45) * smoothstep(0.66, 0.8, cloud) * band * 0.35;
+    c *= 1.0 - lane * 0.9;
+    col = c + stars(uv, 160.0, band * 0.9, 0.4) * 0.8 + starfield(uv, 1.0 + band);
+    vec2 rad = vec2(ax * 0.82, 0.92);
+    for (int i = 0; i < 7; i++) {
       float fi = float(i);
-      float P = 4.5 + fi * 1.3;
-      float tt = uT + fi * 2.37;
-      float cyc = floor(tt / P);
+      float P = 3.8 + fi * 1.1;
+      float tt = t + fi * 2.37;
       float k = fract(tt / P);
-      if (k > 0.2) continue;
-      vec3 h = hash33(vec3(fi, cyc, 3.0) + uSeed);
-      vec2 dir = normalize(vec2(-0.7 - h.z * 0.4, -0.42));
-      vec2 head = vec2(0.2 + h.x * ax, 0.62 + h.y * 0.42) + dir * (k / 0.2) * 0.85;
+      if (k > 0.18) continue;
+      vec3 h = hash33(vec3(fi, floor(tt / P), 3.0) + uSeed);
+      vec2 dir = normalize(vec2(-0.5 - h.x, -0.75 - h.y * 0.5));
+      vec2 head = rad + dir * (0.1 + (k / 0.18) * (0.5 + h.z * 0.4));
       vec2 rel = uv - head;
-      float along = dot(rel, -dir);
-      float across = abs(dot(rel, vec2(-dir.y, dir.x))) * uRes.y;
-      float len = 0.16;
-      if (along > -0.004 && along < len && across < 0.9) {
-        float I = (1.0 - along / len) * (1.0 - k / 0.2 * 0.6);
-        if (I > dth * 0.8) col = max(col, mix(vec3(0.3, 0.45, 0.8), vec3(1.0), I) * (0.35 + 0.6 * I));
+      float a = dot(rel, -dir);
+      float w = abs(dot(rel, vec2(-dir.y, dir.x))) * uRes.y;
+      float len = 0.12 + h.z * 0.1;
+      if (a > -0.003 && a < len && w < 1.0) {
+        float I2 = pow(1.0 - a / len, 1.5) * (1.0 - k / 0.18 * 0.5);
+        col += mix(vec3(0.4, 0.6, 1.0), vec3(1.0, 0.95, 0.85), I2) * I2 * 1.3;
       }
     }
   } else if (uSky == 5) {
-    vec2 c = vec2(ax * 0.82, 0.17);
-    vec2 v = (uv - c) / 0.72;
+    // Trou noir : ombre noire, disque mince devant, image du disque courbée au-dessus et en dessous.
+    vec2 c0 = vec2(ax * 0.5, 0.58);
+    vec2 v = uv - c0;
     float rr = length(v);
-    vec2 w = mat2(0.96, -0.28, 0.28, 0.96) * v;
-    w.y /= 0.3;
-    float r = length(w);
-    float ang = atan(w.y, w.x);
-    float swirl = fbm01(vec3(cos(ang - uT * 0.35) * 2.0, sin(ang - uT * 0.35) * 2.0, r * 7.0) + uSeed, 3);
-    float disk = smoothstep(0.05, 0.08, r) * (1.0 - smoothstep(0.1, 0.3, r)) * (0.4 + 0.9 * swirl);
-    float ring = exp(-abs(rr - 0.062) * 160.0);
-    float glow = exp(-rr * 6.0) * 0.25;
-    float I = max(max(disk, ring * 0.9), glow);
-    if (rr < 0.055) I = 0.0;
-    col = mix(vec3(0.45, 0.18, 0.05), vec3(0.95, 0.75, 0.4), clamp(I * 1.2 - 0.2, 0.0, 1.0)) * post(I * 0.45, 6.0, dth);
+    float rs = 0.07;
+    vec2 lens = uv - v / max(rr, 1e-3) * rs * rs * 1.6 / max(rr, rs);
+    col = vec3(0.005, 0.0, 0.015) + vec3(0.05, 0.02, 0.05) * n2(lens * 2.5, 1.0, 4) + starfield(lens, 1.0);
+    float ang = atan(v.y, v.x);
+    float swirl = n2(vec2(cos(ang - t * 0.5), sin(ang - t * 0.5)) * 2.0 + rr * 30.0, 3.0, 4);
+    float dop = 0.5 + 0.5 * cos(ang + 3.14159);
+    vec3 hot = mix(vec3(0.95, 0.38, 0.08), vec3(1.0, 0.95, 0.82), dop);
+    // Image courbée : un anneau autour de l'ombre, plus épais en haut.
+    float up = smoothstep(-0.3, 1.0, v.y / max(rr, 1e-3));
+    float halo = smoothstep(rs * 1.02, rs * 1.15, rr) * (1.0 - smoothstep(rs * 1.3, rs * (1.6 + 0.9 * up), rr));
+    col += hot * halo * (0.35 + 0.8 * swirl) * (0.55 + 0.6 * up);
+    col += vec3(0.6, 0.3, 0.12) * exp(-max(rr - rs, 0.0) * 18.0) * 0.25;
+    if (rr < rs) col = vec3(0.0);
+    // Disque mince vu presque par la tranche, au premier plan.
+    float dy = abs(v.y + v.x * 0.06);
+    float th = 0.006 + 0.012 * smoothstep(rs * 6.0, rs, abs(v.x));
+    float disk = (1.0 - smoothstep(th * 0.4, th, dy)) * smoothstep(rs * 7.5, rs * 2.0, abs(v.x)) * smoothstep(rs * 0.6, rs * 1.3, abs(v.x) + (v.y > 0.0 ? 0.0 : rs));
+    float dturb = n2(vec2(v.x * 40.0 - t * 0.6 * sign(v.x), dy * 80.0), 5.0, 3);
+    vec3 dcol = mix(vec3(0.9, 0.35, 0.08), vec3(1.0, 0.95, 0.85), v.x < 0.0 ? 0.85 : 0.35);
+    col = mix(col, dcol * (0.6 + 0.6 * dturb), clamp(disk, 0.0, 1.0));
+    col += vec3(1.0, 0.9, 0.7) * exp(-abs(rr - rs * 1.03) * 1200.0) * 0.9;
+  } else if (uSky == 6) {
+    // Piliers de la création : colonnes de gaz sombre, bords embrasés, ciel d'émission doré et turquoise.
+    vec2 p = uv * 1.3 + vec2(t * 0.002, 0.0);
+    vec3 w = warp(p, t * 0.003);
+    vec3 c = mix(vec3(0.01, 0.05, 0.07), vec3(0.08, 0.38, 0.42), smoothstep(0.35, 0.75, w.x));
+    c = mix(c, vec3(0.95, 0.68, 0.32), smoothstep(0.58, 0.82, w.x) * smoothstep(0.35, 0.8, w.y) * 0.75);
+    c += vec3(1.0, 0.9, 0.7) * exp(-pow(y - 0.85, 2.0) * 20.0) * 0.25;
+    float sdU = 1.0;
+    float topY = 0.0;
+    for (int i = 0; i < 3; i++) {
+      float fi = float(i);
+      float cx = ax * (0.2 + 0.31 * fi);
+      float top = fi == 1.0 ? 0.74 : fi == 0.0 ? 0.56 : 0.47;
+      float wid = 0.045 + 0.05 * clamp((top - y) / top, 0.0, 1.0) + 0.006 * fi;
+      float edge = (n2(vec2(uv.x * 14.0, y * 9.0 + fi * 3.0), 9.0, 4) - 0.5) * 0.045;
+      float px = uv.x - cx - 0.02 * sin(y * 7.0 + fi);
+      float sd = y < top ? abs(px + edge) - wid : length(vec2(px + edge, (y - top) * 1.4)) - wid;
+      if (sd < sdU) { sdU = sd; topY = top; }
+    }
+    float inside = smoothstep(0.003, -0.003, sdU);
+    float glow = exp(min(sdU, 0.0) * 70.0) * inside;
+    float crown = smoothstep(topY - 0.18, topY, y);
+    vec3 pc = vec3(0.04, 0.025, 0.02) + vec3(0.14, 0.08, 0.04) * n2(uv * 10.0, 4.0, 4) * (0.4 + crown);
+    col = mix(c + starfield(uv, 0.8), pc, inside);
+    col += vec3(1.0, 0.72, 0.38) * glow * (0.35 + 0.8 * crown);
+    col += vec3(0.9, 0.95, 0.8) * exp(-max(sdU, 0.0) * 90.0) * (1.0 - inside) * crown * 0.25;
+  } else if (uSky == 7) {
+    // Ciel de la carte : nébuleuse calme bleu nuit et violette, galaxies au loin ; défile avec la caméra.
+    vec2 p = uv * 1.2 + uOff;
+    vec3 w = warp(p * 0.8, t * 0.002);
+    float dens = smoothstep(0.36, 0.74, w.x);
+    vec3 c = mix(vec3(0.0, 0.005, 0.025), vec3(0.06, 0.1, 0.28), dens);
+    c = mix(c, vec3(0.45, 0.2, 0.6), smoothstep(0.52, 0.8, w.x) * smoothstep(0.35, 0.85, w.y) * 0.85);
+    c = mix(c, vec3(0.1, 0.42, 0.55), smoothstep(0.6, 0.9, w.z) * dens * 0.4);
+    c *= 1.0 - smoothstep(0.55, 0.7, n2(p * 3.0 + w.yz, 7.0, 3)) * 0.6 * dens;
+    col = c + starfield(uv + uOff * 0.5, 1.0) * (1.0 - dens * 0.4);
+    for (int i = 0; i < 4; i++) {
+      vec2 gp = vec2(h21(vec2(float(i), 1.0)) * ax, fract(h21(vec2(float(i), 5.0)) + uOff.y * 0.4));
+      vec2 gd = mat2(0.8, -0.6, 0.6, 0.8) * (uv - gp);
+      gd.y *= 3.0;
+      float gr = length(gd);
+      float garm = 0.5 + 0.5 * cos(2.0 * (atan(gd.y, gd.x) - log(gr + 0.01) * 3.0));
+      col += mix(vec3(0.5, 0.6, 1.0), vec3(1.0, 0.85, 0.6), exp(-gr * 120.0)) * (exp(-gr * 60.0) * (0.3 + garm * 0.7) + exp(-gr * 300.0)) * 0.7;
+    }
   }
+  // Pixel art : couleurs ramenées à des paliers, transitions tramées.
+  col = floor(clamp(col, 0.0, 1.0) * 12.0 + dth) / 12.0;
   outColor = fin(col);
 }
+`;
+
+  const FS_BLIT = HEAD + COMMON + `
+uniform sampler2D uTex;
+uniform vec2 uRes;
+void main() { outColor = fin(texture(uTex, gl_FragCoord.xy / uRes).rgb); }
 `;
 
   // ─── Utilitaires GL ──────────────────────────────────────────
@@ -1552,19 +1716,57 @@ void main() {
     }
 
     // ─── Décor (atelier) ──────────────────────────────────────
-    // Fond animé d'une partie (cosmétique) ; le programme n'est compilé qu'au premier usage.
-    drawSky(mode, t, st) {
+    // Fond animé : calculé à demi-résolution dans une texture (rafraîchie ~20 fois par seconde),
+    // puis agrandi sans lissage. off : décalage du ciel (la carte de campagne le fait défiler).
+    drawSky(mode, t, st, off) {
       const gl = this.gl;
-      if (!this.progSky) this.progSky = this.program(VS_QUAD, FS_SKY, ['aPos']);
-      const pr = this.progSky;
+      if (!this.progSky) {
+        this.progSky = this.program(VS_QUAD, FS_SKY, ['aPos']);
+        this.progBlit = this.program(VS_QUAD, FS_BLIT, ['aPos']);
+      }
+      const w = Math.max(1, Math.ceil(this.W / 2)), h = Math.max(1, Math.ceil(this.H / 2));
+      if (!this.skyTex || this.skyW !== w || this.skyH !== h) {
+        if (this.skyTex) { gl.deleteTexture(this.skyTex); gl.deleteFramebuffer(this.skyFbo); }
+        this.skyTex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.skyTex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        this.skyFbo = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.skyFbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.skyTex, 0);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        this.skyW = w; this.skyH = h; this.skyKey = '';
+      }
+      const o = off || [0, 0];
+      const key = mode + ':' + o[0].toFixed(4) + ':' + o[1].toFixed(4);
       gl.disable(gl.SCISSOR_TEST);
+      if (key !== this.skyKey || t - (this.skyT || -9) > 0.05) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.skyFbo);
+        gl.viewport(0, 0, w, h);
+        const pr = this.progSky;
+        gl.useProgram(pr.p);
+        this.common(pr, { reveal: 1, phase: 0, flash: 0, dim: 1, flip: 1 });
+        gl.uniform2f(this.loc(pr, 'uRes'), w, h);
+        gl.uniform1f(this.loc(pr, 'uT'), t % 3600);
+        gl.uniform1i(this.loc(pr, 'uSky'), mode);
+        gl.uniform3f(this.loc(pr, 'uSeed'), 3.1, -7.4, 11.2);
+        gl.uniform2f(this.loc(pr, 'uOff'), o[0], o[1]);
+        this.quad();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        this.skyKey = key;
+        this.skyT = t;
+      }
       gl.viewport(0, 0, this.W, this.H);
-      gl.useProgram(pr.p);
-      this.common(pr, st);
-      gl.uniform2f(this.loc(pr, 'uRes'), this.W, this.H);
-      gl.uniform1f(this.loc(pr, 'uT'), t % 3600);
-      gl.uniform1i(this.loc(pr, 'uSky'), mode);
-      gl.uniform3f(this.loc(pr, 'uSeed'), 3.1, -7.4, 11.2);
+      const pb = this.progBlit;
+      gl.useProgram(pb.p);
+      this.common(pb, st);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.skyTex);
+      gl.uniform1i(this.loc(pb, 'uTex'), 0);
+      gl.uniform2f(this.loc(pb, 'uRes'), this.W, this.H);
       this.quad();
     }
 

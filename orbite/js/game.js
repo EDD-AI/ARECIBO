@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 14;
+  const VERSION = 15;
   const DUST_KEY = 'orbite.poussieres';
   const SPEED_KEY = 'orbite.vitesse';
 
@@ -274,8 +274,13 @@
 
   // ─── Écrans ─────────────────────────────────────────────────
   async function show(name) {
+    if (name !== 'menu' && $('menuList')) $('menuList').classList.remove('solo-open');
     if (ui.updatePending && name !== 'game') { saveGame(); ui.updatePending = false; updateReady(true); }
-    stage.sky = name === 'game' || name === 'cFight' ? equippedSky() : 0;
+    // Fonds : le cosmétique équipé pendant les parties (atténué pour la lisibilité), le ciel de la
+    // Nébuleuse natale derrière la carte de campagne.
+    stage.sky = name === 'game' || name === 'cFight' ? equippedSky() : name === 'cMap' ? 7 : 0;
+    stage.skyGain = name === 'cMap' ? 0.9 : 0.6;
+    stage.skyOff = name === 'cMap' ? stage.skyOff : null;
     if (coach.steps === GAME_STEPS && name !== 'game') coachStop(false);
     if (coach.steps === LAW_STEPS && name !== 'laws') coachStop(false);
     if (coach.steps === MENU_STEPS && name !== 'menu') coachStop(true);
@@ -520,7 +525,8 @@
   function layoutMenu() {
     const W = window.innerWidth, H = window.innerHeight;
     // L'horizon remonte si besoin pour que tous les boutons du menu tiennent sous lui.
-    const listH = $('menuList').offsetHeight || 260;
+    // Place réservée au dépliage de « Jouer solo » (une ligne de plus).
+    const listH = ($('menuList').offsetHeight || 260) + 52;
     const horizon = Math.round(Math.min(H * (W > H ? 0.66 : 0.6), H - listH - 64));
     const R = Math.round(Math.min(W * 0.82, H * 0.6));
     const cy = horizon + R * 0.3;
@@ -705,11 +711,12 @@
   const COS_KEY = 'orbite.cosmetiques';
   const COS_PRICE = 650;
   const SKIES = [
-    { id: 'nebuleuse', mode: 1, name: 'Nébuleuse pourpre', text: 'Des nuages violets et turquoise dérivent lentement.', c: ['#3a1248', '#0b2f38'] },
-    { id: 'aurore', mode: 2, name: 'Aurore boréale', text: 'Deux voiles verts et violets ondulent en haut de l’écran.', c: ['#1f8c52', '#4a1f70'] },
-    { id: 'galaxie', mode: 3, name: 'Galaxie spirale', text: 'Une galaxie tourne au loin, son cœur doré au milieu des bras bleus.', c: ['#8c6a42', '#1f2b61'] },
-    { id: 'filantes', mode: 4, name: 'Pluie d’étoiles filantes', text: 'Des étoiles filantes traversent le ciel de temps en temps.', c: ['#c7d6ff', '#0a0c1c'] },
-    { id: 'abysse', mode: 5, name: 'Trou noir lointain', text: 'Un disque d’accrétion doré tourne dans un coin du ciel.', c: ['#f2bf66', '#4a1c06'] }
+    { id: 'nebuleuse', mode: 1, name: 'Nébuleuse pourpre', text: 'Des nuages roses et violets traversés de filaments sombres, autour d’un cœur brûlant.', c: ['#c2457f', '#2a0a3c'] },
+    { id: 'aurore', mode: 2, name: 'Aurore boréale', text: 'Des voiles verts et roses dansent au-dessus des montagnes et se reflètent dans un lac.', c: ['#2fd18a', '#071a22'] },
+    { id: 'galaxie', mode: 3, name: 'Galaxie spirale', text: 'Une galaxie tourne lentement, son cœur doré au milieu de bras bleus et roses.', c: ['#e8c48a', '#2a3e9e'] },
+    { id: 'filantes', mode: 4, name: 'Voie lactée', text: 'La voie lactée traverse le ciel ; des étoiles filantes jaillissent d’un même point.', c: ['#c9b08a', '#0b1030'] },
+    { id: 'abysse', mode: 5, name: 'Trou noir', text: 'Un disque d’accrétion brûlant s’enroule autour de l’horizon, la lumière se courbe.', c: ['#ffd38a', '#2a0c02'] },
+    { id: 'piliers', mode: 6, name: 'Piliers de la création', text: 'Des colonnes de gaz sombre aux bords embrasés, dans un ciel d’or et de turquoise.', c: ['#e8a44a', '#0f4a50'] }
   ];
   const SKY_BY_ID = Object.fromEntries(SKIES.map((k) => [k.id, k]));
   function cosmetics() {
@@ -743,6 +750,7 @@
     for (const p of document.querySelectorAll('#market .mk-pane')) p.hidden = p.dataset.pane !== tab;
     if (tab === 'cosmetiques') { ui.cosPick = cosmetics().on || ''; renderCosmetics(); }
     stage.sky = tab === 'cosmetiques' && SKY_BY_ID[ui.cosPick] ? SKY_BY_ID[ui.cosPick].mode : 0;
+    stage.skyGain = 1;
   }
   $('mkTabs').addEventListener('click', (e) => {
     const b = e.target.closest('[data-tab]');
@@ -777,6 +785,7 @@
     } else return;
     ui.cosPick = row ? row.dataset.cos : ui.cosPick;
     stage.sky = SKY_BY_ID[ui.cosPick] ? SKY_BY_ID[ui.cosPick].mode : 0;
+    stage.skyGain = 1;
     renderCosmetics();
   });
 
@@ -1186,8 +1195,7 @@
     { id: 'fin', text: 'Dernier secret : <b>trois copies</b> du même astre fusionnent en un astre <b>doré</b>, deux fois plus fort. Visez le podium : les 3 premiers gagnent des poussières d’étoiles. À vous !', next: 'JOUER' }
   ];
   const MENU_STEPS = [
-    { id: 'campagne', target: '#campBtn', text: 'La <b>Campagne</b> : éveillez-vous en Créateur, façonnez votre monde carte après carte et affrontez des astres de plus en plus puissants, jusqu’à Kronos.', next: 'SUIVANT', delay: 0 },
-    { id: 'solo', target: '#soloBtn', text: '<b>Jouer solo</b> : une partie contre 7 rivaux. La première est guidée pas à pas.', next: 'SUIVANT' },
+    { id: 'solo', target: '#menuList', text: '<b>Jouer solo</b> s’ouvre sur deux modes. La <b>Campagne</b> : éveillez-vous en Créateur et façonnez votre monde carte après carte jusqu’à Kronos. L’<b>Affrontement</b> : une partie contre 7 univers rivaux.', next: 'SUIVANT', delay: 0, enter: () => soloMenu(true) },
     { id: 'marche', target: '#marketBtn', text: 'Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.', next: 'SUIVANT' },
     { id: 'profil', target: '#profileBtn', text: 'Votre <b>profil</b> : pseudo, niveau, statistiques et historique. Chaque partie rapporte de l’expérience.', next: 'SUIVANT' },
     { id: 'reglages', target: '#settingsBtn', text: '<b>Paramètres</b> : son, musique, règles du jeu, et ce guide si vous voulez le revoir.', next: 'C’EST PARTI' }
@@ -2812,7 +2820,15 @@
     await show('game');
     renderGame(true);
   }
-  $('soloBtn').addEventListener('click', () => {
+  // Jouer solo se déplie sur ses deux modes ; Multijoueur se range pendant ce temps.
+  function soloMenu(open) {
+    const m = $('menuList');
+    open = open == null ? !m.classList.contains('solo-open') : open;
+    m.classList.toggle('solo-open', open);
+    $('soloBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  $('soloBtn').addEventListener('click', () => { SFX.tap(); soloMenu(); });
+  $('quickBtn').addEventListener('click', () => {
     SFX.tap();
     const s = loadGame();
     if (!s) { newGameFlow(); return; }
