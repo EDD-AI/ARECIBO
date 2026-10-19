@@ -309,6 +309,18 @@
     S: ['01111', '10000', '10000', '01110', '00001', '00001', '11110'],
     T: ['11111', '00100', '00100', '00100', '00100', '00100', '00100'],
     U: ['10001', '10001', '10001', '10001', '10001', '10001', '01110'],
+    N: ['10001', '11001', '10101', '10011', '10001', '10001', '10001'],
+    V: ['10001', '10001', '10001', '10001', '10001', '01010', '00100'],
+    0: ['01110', '10001', '10011', '10101', '11001', '10001', '01110'],
+    1: ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
+    2: ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
+    3: ['11110', '00001', '00001', '01110', '00001', '00001', '11110'],
+    4: ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
+    5: ['11111', '10000', '11110', '00001', '00001', '10001', '01110'],
+    6: ['00110', '01000', '10000', '11110', '10001', '10001', '01110'],
+    7: ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
+    8: ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
+    9: ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
     ' ': ['000', '000', '000', '000', '000', '000', '000']
   };
 
@@ -387,53 +399,78 @@
   }
 
   // Astéroïde en orbite autour du titre : plus gros quand il passe devant.
-  let rock = null;
-  function startRock() {
-    const el = $('titleRock');
-    rock = { a: -1.2, leaving: 0, raf: 0 };
-    let last = performance.now();
+  // Éclipse du titre : la lune glisse devant l'étoile, la couronne s'épanouit et scintille.
+  let ecl = null;
+  function startEclipse() {
+    stopEclipse();
+    const star = $('eclStar'), moon = $('eclMoon');
+    ecl = { raf: 0, t0: performance.now(), glow: 0.08, sparks: 0 };
+    star.dataset.glow = '0.08';
+    ecl.slide = moon.animate([{ transform: 'translate(-104px, -54px)' }, { transform: 'translate(0, 0)' }], { duration: 4300, easing: 'cubic-bezier(.3,.05,.15,1)', fill: 'forwards' });
     const tick = (now) => {
-      if (!rock) return;
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      rock.a += dt * (rock.leaving ? 5 : 0.85);
-      const wrap = $('titleWrap').getBoundingClientRect();
-      const rx = wrap.width * 0.66 + 18, ry = Math.max(52, wrap.height * 1.35);
-      const depth = Math.sin(rock.a);
-      const tilt = -0.12;
-      const ox = Math.cos(rock.a) * rx, oy = Math.sin(rock.a) * ry;
-      const x = wrap.width / 2 + ox * Math.cos(tilt) - oy * Math.sin(tilt);
-      const y = wrap.height / 2 + ox * Math.sin(tilt) + oy * Math.cos(tilt);
-      let s = 0.62 + 0.5 * (depth + 1) / 2;
-      if (rock.leaving) s *= 1 + Math.pow((now - rock.leaving) / 900, 2) * 7;
-      el.style.transform = `translate(${x - 23}px, ${y - 23}px) scale(${s.toFixed(3)})`;
-      el.dataset.dim = (0.45 + 0.55 * (depth + 1) / 2).toFixed(2);
-      rock.raf = requestAnimationFrame(tick);
+      if (!ecl) return;
+      const t = (now - ecl.t0) / 1000;
+      // La couronne grandit pendant la totalité, puis respire doucement.
+      const total = Math.max(0, Math.min(1, (t - 3.4) / 1.6));
+      ecl.glow = 0.08 + total * (0.34 + 0.05 * Math.sin(t * 1.3));
+      star.dataset.glow = ecl.glow.toFixed(3);
+      if (total > 0.5 && now - ecl.sparks > 260) {
+        ecl.sparks = now;
+        const b = star.getBoundingClientRect();
+        const a = Math.random() * Math.PI * 2, r = b.width * (0.52 + Math.random() * 0.25);
+        stage.burst(b.left + b.width / 2 + Math.cos(a) * r, b.top + b.height / 2 + Math.sin(a) * r, { n: 1, colors: [[255, 255, 255], [220, 232, 255]], speed: 6, life: 1.4, size: 1 });
+      }
+      ecl.raf = requestAnimationFrame(tick);
     };
-    rock.raf = requestAnimationFrame(tick);
+    ecl.raf = requestAnimationFrame(tick);
   }
-  function stopRock() { if (rock) cancelAnimationFrame(rock.raf); rock = null; }
+  function stopEclipse() {
+    if (!ecl) return;
+    cancelAnimationFrame(ecl.raf);
+    if (ecl.slide) ecl.slide.cancel();
+    ecl = null;
+  }
 
   async function titleScreen() {
     const w = $('titleWord');
     pixelWord(w, 'ORBITE', pixelSize(8));
-    stage.register('title-rock', { type: 'asteroid', seed: 7171 });
+    stage.register('title-star', { type: 'star', seed: 4242, starClass: 'étoile blanche', full: true, moons: 0, ring: false, debris: false });
+    stage.register('title-moon', { type: 'moon', seed: 31, full: true, moons: 0, ring: false, debris: false });
+    for (const el of [$('eclipse'), $('eclMoon')]) el.getAnimations().forEach((a) => a.cancel());
+    $('eclMoon').style.transform = 'translate(-104px, -54px)';
     await show('title');
-    startRock();
-    pixelsIn(w);
+    startEclipse();
+    setTimeout(() => pixelsIn(w), 900);
     const tapped = waitTap(null, $('title'));
-    setTimeout(() => $('tapHint').classList.add('show'), 1100);
+    setTimeout(() => $('tapHint').classList.add('show'), 2600);
     await tapped;
     SFX.start();
     vibrate(15);
     $('tapHint').classList.remove('show');
+    // Anneau de diamant : la lune s'écarte d'un cheveu, un éclat jaillit au bord de l'étoile.
+    const moon = $('eclMoon'), star = $('eclStar');
+    if (ecl && ecl.slide) { ecl.slide.finish(); ecl.slide = null; }
+    moon.animate([{ transform: 'translate(0, 0)' }, { transform: 'translate(7px, 4px)' }], { duration: 500, easing: 'ease-out', fill: 'forwards' });
+    const sb = star.getBoundingClientRect(), eb = $('eclipse').getBoundingClientRect();
+    const bx = sb.left + sb.width / 2 - sb.width * 0.43, by = sb.top + sb.height / 2 - sb.height * 0.26;
+    const flare = $('flare');
+    flare.style.left = bx - eb.left + 'px';
+    flare.style.top = by - eb.top + 'px';
+    flare.classList.remove('go');
+    void flare.offsetWidth;
+    flare.classList.add('go');
+    stage.flash(star, 1);
+    stage.burst(bx, by, { n: 40, colors: [[255, 255, 255], [255, 246, 226]], speed: 120, life: 0.9 });
+    await wait(450);
     const [cx, cy] = center(w);
     stage.burst(cx, cy, { n: 60, colors: [[255, 255, 255], [200, 220, 255]], speed: 110, life: 1.1, spread: 40 });
     pixelsShatter(w);
-    rock.leaving = performance.now();
-    stage.reveal($('titleRock'), 1, 0, 1100);
-    await wait(1500);
-    stopRock();
+    $('eclipse').animate([{ transform: 'scale(1)' }, { transform: 'scale(2.4)' }], { duration: 1200, easing: 'cubic-bezier(.5,0,.8,.4)', fill: 'forwards' });
+    stage.reveal(star, 1, 0, 1100);
+    stage.reveal(moon, 1, 0, 1100);
+    await wait(1250);
+    stopEclipse();
+    flare.classList.remove('go');
   }
 
   async function wakeScreen() {
@@ -499,6 +536,8 @@
 
   function renderMenu() {
     $('menuDust').innerHTML = icon('dust') + ' ' + dust();
+    const lv = levelInfo(xpTotal());
+    $('menuLvl').innerHTML = `NIVEAU ${lv.lvl}<i class="xp-mini"><i style="width:${(lv.rest / lv.need * 100).toFixed(1)}%"></i></i>`;
     pixelWord($('menuWord'), 'ORBITE', pixelSize(4));
     $('menuWord').classList.add('shown');
   }
@@ -1612,6 +1651,7 @@
       s.rank = p.rank;
       s.reward = 0;
       s.rewarded = true;
+      s.xpGiven = 'abandon';
       saveGame();
       await endScreen();
     }
@@ -1972,10 +2012,25 @@
   async function endScreen() {
     const s = ui.state;
     const rank = s.rank || me().rank || 8;
+    const quit = s.xpGiven === 'abandon';
+    const gain = quit ? { rank: 0, cycles: 0, total: 0 } : xpFor(s, rank);
+    const xpFrom = xpTotal();
+    let xpTo = xpFrom;
     if (!s.rewarded) {
       s.rewarded = true;
       addDust(s.reward || 0);
     }
+    if (!s.xpGiven) {
+      s.xpGiven = true;
+      xpTo = xpFrom + gain.total;
+      store.set(XP_KEY, String(xpTo));
+    }
+    $('end').classList.add('pending');
+    const lv0 = levelInfo(xpFrom);
+    $('xpLvl').textContent = lv0.lvl;
+    $('xpFill').style.width = (lv0.rest / lv0.need * 100) + '%';
+    $('xpGain').textContent = '+0 XP';
+    $('xpDetail').textContent = quit ? 'Partie abandonnée : pas d’expérience.' : `Classement +${gain.rank} · ${gain.cycles / 5} cycles +${gain.cycles}`;
     try { localStorage.removeItem(SAVE_KEY); } catch (err) { /* stockage indisponible */ }
     $('endRank').innerHTML = ordinal(rank);
     $('endRank').classList.toggle('podium', rank <= 3);
@@ -2008,6 +2063,145 @@
         requestAnimationFrame(tick);
       });
     }
+    await wait(250);
+    await fillXp(xpFrom, xpTo);
+    $('end').classList.remove('pending');
+  }
+
+  // ─── Niveau du créateur ─────────────────────────────────────
+  // Chaque partie rapporte de l'expérience : selon le classement et les cycles tenus.
+  const XP_KEY = 'orbite.xp';
+  const RANK_XP = [0, 120, 90, 70, 55, 40, 30, 20, 10];
+  const LEVEL_GIFT = 25;
+  const xpNeed = (lvl) => 100 + 40 * (lvl - 1);
+  const xpTotal = () => Math.max(0, Number(store.get(XP_KEY, '0')) || 0);
+  function levelInfo(xp) {
+    let lvl = 1, rest = xp;
+    while (rest >= xpNeed(lvl)) { rest -= xpNeed(lvl); lvl++; }
+    return { lvl, rest, need: xpNeed(lvl) };
+  }
+  function xpFor(s, rank) {
+    const p = s.players[0];
+    const cycles = Math.max(1, p.deadRound || s.round || 1);
+    const r = RANK_XP[rank] || 10;
+    return { rank: r, cycles: cycles * 5, total: r + cycles * 5 };
+  }
+
+  // La barre se remplit ; chaque niveau franchi déclenche l'explosion d'une planète.
+  async function fillXp(from, to) {
+    let cur = from;
+    while (cur < to) {
+      const lv = levelInfo(cur);
+      const next = cur - lv.rest + lv.need;
+      const target = Math.min(to, next);
+      const a = lv.rest / lv.need, b = (target - (cur - lv.rest)) / lv.need;
+      const ms = 300 + 900 * (b - a);
+      const t0 = performance.now();
+      await new Promise((resolve) => {
+        const step = (now) => {
+          const k = Math.min(1, (now - t0) / ms);
+          const e = 1 - Math.pow(1 - k, 2);
+          $('xpFill').style.width = ((a + (b - a) * e) * 100) + '%';
+          $('xpGain').textContent = '+' + Math.round(cur - from + (target - cur) * e) + ' XP';
+          if (k < 1) requestAnimationFrame(step); else resolve();
+        };
+        requestAnimationFrame(step);
+      });
+      cur = target;
+      if (cur >= next) {
+        addDust(LEVEL_GIFT);
+        $('endTotal').innerHTML = 'Total ' + icon('dust') + ' ' + dust();
+        await levelUpScene(lv.lvl + 1);
+        $('xpLvl').textContent = lv.lvl + 1;
+        $('xpFill').style.width = '0%';
+      }
+    }
+    SFX.buff();
+  }
+
+  // Passage de niveau : la planète du niveau tremble, se charge, puis explose ;
+  // le nouveau niveau naît de ses débris.
+  const LVL_TYPES = ['lava', 'ocean', 'gas', 'ice', 'crystal', 'terran', 'toxic', 'desert', 'earth', 'mecha'];
+  async function levelUpScene(lvl) {
+    const ov = $('lvlup'), planet = $('lvlPlanet');
+    stage.register('lvl-planet', { type: LVL_TYPES[(lvl - 2) % LVL_TYPES.length], seed: 9100 + lvl, full: true, moons: 0, ring: false, debris: false });
+    pixelWord($('lvlWord'), 'NIVEAU', pixelSize(4));
+    pixelWord($('lvlNum'), String(lvl), pixelSize(11));
+    $('lvlNum').classList.add('gold');
+    for (const r of ov.querySelectorAll('.pixel-word rect')) r.style.opacity = '0';
+    $('lvlGift').innerHTML = `${icon('dust')} +${LEVEL_GIFT} poussières d’étoiles`;
+    $('lvlGift').classList.remove('show');
+    $('lvlHint').classList.remove('show');
+    ov.classList.remove('charging', 'boom');
+    ov.hidden = false;
+    const hadModal = stage.modal;
+    document.body.classList.add('modal');
+    stage.modal = true;
+    stage.modalEl = ov;
+    stage.setReveal(planet, 0);
+    stage.reveal(planet, 0, 1, 600);
+    planet.animate([{ transform: 'scale(0.6)' }, { transform: 'scale(1)' }], { duration: 700, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    await wait(700);
+    // Charge : la planète tremble, s'illumine par à-coups, un anneau se resserre.
+    ov.classList.add('charging');
+    SFX.charge();
+    for (const [t, k] of [[250, 0.3], [650, 0.5], [950, 0.7], [1200, 0.9], [1400, 1]]) setTimeout(() => stage.flash(planet, k), t);
+    const [cx, cy] = center(planet);
+    const R = planet.getBoundingClientRect().width / 2;
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => {
+        const a = Math.random() * Math.PI * 2;
+        stage.burst(cx + Math.cos(a) * R * 1.4, cy + Math.sin(a) * R * 1.4, { n: 4, colors: [[255, 255, 255]], speed: 12, life: 0.6, size: 1 });
+      }, 200 + i * 260);
+    }
+    await wait(1600);
+    // Explosion.
+    const colors = stage.colors('lvl-planet');
+    ov.classList.remove('charging');
+    ov.classList.add('boom');
+    SFX.explode();
+    vibrate([40, 30, 70]);
+    stage.flash(planet, 1);
+    stage.reveal(planet, 1, 0, 160);
+    stage.burst(cx, cy, { n: 150, colors: colors.concat([[255, 255, 255], [255, 220, 150]]), speed: 230, life: 1.4, size: 2, spread: R * 0.5 });
+    stage.ring(cx, cy, R * 0.9, { n: 70, colors: [[255, 255, 255]], speed: 260, life: 0.7 });
+    setTimeout(() => stage.ring(cx, cy, R * 0.6, { n: 50, colors: colors, speed: 160, life: 0.9 }), 120);
+    for (let i = 0; i < 9; i++) {
+      const c = document.createElement('div');
+      c.className = 'orb lvl-chunk';
+      c.dataset.planet = 'debris';
+      c.dataset.fit = 'body';
+      const size = 12 + Math.round(Math.random() * 16);
+      c.style.cssText = `width:${size}px;height:${size}px;left:${cx - size / 2}px;top:${cy - size / 2}px`;
+      ov.appendChild(c);
+      const a = (i / 9) * Math.PI * 2 + Math.random() * 0.5, d = 130 + Math.random() * 170;
+      c.animate([
+        { transform: 'translate(0, 0) rotate(0deg) scale(0.4)' },
+        { transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d}px) rotate(${(Math.random() - 0.5) * 540}deg) scale(1)` }
+      ], { duration: 1500, easing: 'cubic-bezier(.1,.8,.3,1)', fill: 'forwards' });
+      setTimeout(() => stage.reveal(c, 1, 0, 500), 1000);
+      setTimeout(() => c.remove(), 1600);
+    }
+    await wait(420);
+    // Le nouveau niveau naît des débris.
+    pixelsIn($('lvlWord'));
+    pixelsIn($('lvlNum'));
+    SFX.golden();
+    const [nx, ny] = center($('lvlNum'));
+    stage.burst(nx, ny, { n: 40, colors: [[246, 196, 83], [255, 255, 255]], speed: 70, life: 1.2, spread: 30 });
+    await wait(900);
+    $('lvlGift').classList.add('show');
+    SFX.coin();
+    await wait(500);
+    $('lvlHint').classList.add('show');
+    await waitTap(6000, ov);
+    SFX.tap();
+    await ov.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 350, easing: 'ease-in' }).finished.catch(() => {});
+    ov.hidden = true;
+    ov.classList.remove('boom');
+    stage.modal = hadModal && !$('overlay').hidden;
+    stage.modalEl = stage.modal ? $('sheet') : null;
+    if (!stage.modal) document.body.classList.remove('modal');
   }
 
   // ─── Commandes ──────────────────────────────────────────────
@@ -2096,7 +2290,7 @@
     SFX.hover();
   });
 
-  window.__orbite = { ui, rules: R, stage, show, renderGame, fight, enterMenu, backToMenu };
+  window.__orbite = { ui, rules: R, stage, show, renderGame, fight, enterMenu, backToMenu, endScreen };
 
   // ─── Démarrage ──────────────────────────────────────────────
   boot();

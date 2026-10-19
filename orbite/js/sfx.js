@@ -297,6 +297,19 @@
       play(PLACE, { vol: 0.35, rate: 1.2, pan, delay: 0.38 });
     },
     coin() { play('coin', { vol: 0.1, jit: 0.12 }); },
+    // Passage de niveau : la planète se charge (souffle inversé, grondement)…
+    charge() {
+      if (!play('rise', { vol: 0.55, rate: 0.9, rev: 0.5, jit: 0 })) { tone(80, 1.5, { to: 240, type: 'triangle', vol: 0.06 }); return; }
+      play('blast', { vol: 0.18, rate: 0.35, rev: 0.6, jit: 0 });
+      play(CRUMBLE, { vol: 0.2, rate: 0.5, delay: 0.6 });
+    },
+    // … puis explose.
+    explode() {
+      if (!play('blast', { vol: 0.75, rate: 0.75, rev: 0.7, jit: 0 })) { noise(0.8, { vol: 0.25, cut: 900 }); return; }
+      play('break', { vol: 0.5, rate: 0.7 });
+      play(CRUMBLE, { vol: 0.5, rate: 0.6, delay: 0.05 });
+      play('glass4', { vol: 0.3, rate: 0.6, rev: 1, delay: 0.1, jit: 0 });
+    },
     win() {
       if (!buffers.glass1) { [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, 0.18, { delay: i * 0.09, type: 'triangle', vol: 0.07 })); return; }
       chime([1, 1.26, 1.5, 2], { vol: 0.28, rev: 0.6, step: 0.09 });

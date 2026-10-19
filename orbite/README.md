@@ -12,8 +12,9 @@ des **poussières d’étoiles**.
 ## Ouverture du jeu
 
 1. Écran noir, **STUDIO EDDA** s’allume pixel par pixel.
-2. Titre **ORBITE**, un astéroïde gravite autour ; « Touchez pour commencer ». Au toucher, le titre
-   éclate en pixels.
+2. Titre **ORBITE** sous une **éclipse** : une lune sombre glisse devant une étoile blanche jusqu’à
+   ne laisser que la couronne, qui s’épanouit et scintille. « Touchez pour commencer » : la lune
+   s’écarte d’un cheveu (anneau de diamant), un éclat jaillit, le titre éclate en pixels.
 3. **Première fois seulement** : écran noir, sous-titre en bas « Réveillez-vous. Bonjour, créateur. »
 4. **Menu** : une planète géante se lève sur l’horizon et tourne très lentement, des poussières
    montent du sol, des étoiles filantes passent. La première fois, « Voilà votre terrain de jeu. »
@@ -23,6 +24,21 @@ des **poussières d’étoiles**.
 Le **Marché stellaire** dépense les poussières d’étoiles : chaque achat débloque un nouvel
 **horizon** (la planète du menu). Les **Paramètres** gèrent le son, la vitesse des combats,
 l’atelier, et permettent de revoir l’introduction.
+
+## Niveau du créateur
+
+Chaque partie terminée rapporte de l’**expérience**, en plus des poussières d’étoiles :
+
+| Source | XP |
+|---|---|
+| Classement | 1er 120 · 2e 90 · 3e 70 · 4e 55 · 5e 40 · 6e 30 · 7e 20 · 8e 10 |
+| Cycles tenus | 5 par cycle |
+| Partie abandonnée | aucune |
+
+Il faut 100 XP pour passer au niveau 2, puis 40 de plus à chaque niveau (140, 180, 220…). Chaque
+niveau offre **25 poussières d’étoiles**. Le niveau et sa barre s’affichent au menu ; la barre se
+remplit en fin de partie. À chaque niveau franchi, une planète apparaît, tremble, se charge puis
+**explose** (éclair blanc, onde de choc, éclats de roche) et le nouveau niveau naît de ses débris.
 
 ## Lire un astre
 

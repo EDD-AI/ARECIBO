@@ -117,8 +117,32 @@ body.modal #gl { z-index: 35; }
 }
 .pixel-word.shatter.go rect { opacity: 0; transform: translate(var(--dx), var(--dy)); }
 
-.title-wrap { position: relative; display: grid; place-items: center; }
-.title-rock { position: absolute; left: 0; top: 0; width: 46px; height: 46px; will-change: transform; }
+/* Titre : une lune passe devant une étoile, il ne reste que la couronne. */
+#title { gap: 40px; }
+.eclipse { position: relative; width: 150px; height: 150px; margin-top: -8vh; }
+.ecl-star { position: absolute; inset: 14px; }
+.ecl-moon { position: absolute; inset: 11px; will-change: transform; }
+.flare {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 2px;
+  pointer-events: none;
+  opacity: 0;
+}
+.flare::before, .flare::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background: linear-gradient(90deg, transparent, #fff 45%, #fff 55%, transparent);
+  transform: translate(-50%, -50%);
+}
+.flare::before { width: 120px; height: 2px; }
+.flare::after { width: 2px; height: 70px; background: linear-gradient(180deg, transparent, #fff 45%, #fff 55%, transparent); }
+.flare.go { animation: flare 0.9s ease-out both; }
+@keyframes flare { 0% { opacity: 0; transform: scale(0.2); } 18% { opacity: 1; transform: scale(1.15); } 100% { opacity: 0; transform: scale(0.6); } }
 .tap-hint.show { color: rgba(241, 236, 218, 0.7); }
 .tap-hint {
   position: absolute;
@@ -172,6 +196,46 @@ body.modal #gl { z-index: 35; }
   transition: opacity 1.2s ease;
 }
 .menu-top .dust { font-size: 12px; letter-spacing: 0.16em; }
+.menu-top .lvl { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: 0.24em; color: var(--dim); }
+.xp-mini { display: block; width: 56px; height: 2px; background: rgba(241, 236, 218, 0.14); }
+.xp-mini i { display: block; height: 100%; background: var(--ink); }
+
+/* Expérience en fin de partie. */
+.end-xp { display: flex; flex-direction: column; gap: 6px; width: min(280px, 80vw); margin: -4px 0 16px; }
+.xp-head { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: 0.22em; color: var(--dim); }
+.xp-head b { color: var(--ink); font-weight: 600; }
+.xp-bar { height: 4px; background: rgba(241, 236, 218, 0.12); }
+.xp-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--ink), #fff); box-shadow: 0 0 8px rgba(255, 255, 255, 0.5); }
+.end-xp small { font-size: 11px; color: var(--dim); text-align: left; }
+#end.pending .btn, #end.pending .link { opacity: 0.25; pointer-events: none; }
+
+/* Passage de niveau. */
+.overlay.lvlup { z-index: 33; flex-direction: column; align-items: center; justify-content: center; gap: 22px; background: rgba(0, 0, 0, 0.97); }
+.lvl-stage { position: relative; width: 170px; height: 170px; display: grid; place-items: center; }
+.lvl-planet { width: 140px; height: 140px; grid-area: 1 / 1; }
+.lvl-chunk { position: fixed; z-index: 1; pointer-events: none; }
+.lvl-ring { grid-area: 1 / 1; width: 140px; height: 140px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.8); opacity: 0; }
+.lvl-title { grid-area: 1 / 1; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.pixel-word.gold rect { fill: var(--gold); }
+.lvl-flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.lvl-gift { margin: 0; font-size: 14px; letter-spacing: 0.1em; color: var(--gold); opacity: 0; transform: translateY(6px); transition: opacity 0.6s, transform 0.6s; }
+.lvl-gift.show { opacity: 1; transform: none; }
+.lvlup.charging .lvl-stage { animation: lvlShake 1.6s ease-in both; }
+.lvlup.charging .lvl-ring { animation: lvlImplode 1.6s ease-in both; }
+.lvlup.boom .lvl-flash { animation: lvlFlash 0.7s ease-out both; }
+.lvlup.boom .lvl-stage { animation: lvlBoom 0.5s ease-out; }
+@keyframes lvlShake {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-1px, 1px); }
+  40% { transform: translate(2px, -1px); }
+  60% { transform: translate(-3px, 2px); }
+  75% { transform: translate(4px, -3px); }
+  90% { transform: translate(-5px, 3px); }
+  100% { transform: translate(0, 0) scale(1.06); }
+}
+@keyframes lvlImplode { 0% { opacity: 0; transform: scale(2.6); } 40% { opacity: 0.5; } 100% { opacity: 0.9; transform: scale(1.02); } }
+@keyframes lvlFlash { 0% { opacity: 0.95; } 100% { opacity: 0; } }
+@keyframes lvlBoom { 0% { transform: translate(6px, -4px); } 30% { transform: translate(-6px, 5px); } 60% { transform: translate(4px, -2px); } 100% { transform: none; } }
 .menu-list {
   position: absolute;
   left: 50%;

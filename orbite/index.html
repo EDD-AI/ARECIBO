@@ -29,10 +29,12 @@
 
     <!-- TITRE -->
     <section class="screen intro" id="title" aria-label="ORBITE">
-      <div class="title-wrap" id="titleWrap">
-        <div class="orb title-rock" id="titleRock" data-planet="title-rock"></div>
-        <div class="pixel-word" id="titleWord" aria-label="ORBITE"></div>
+      <div class="eclipse" id="eclipse">
+        <div class="orb ecl-star" id="eclStar" data-planet="title-star" data-fit="body"></div>
+        <div class="orb ecl-moon" id="eclMoon" data-planet="title-moon" data-fit="body" data-dim="0.06"></div>
+        <div class="flare" id="flare"></div>
       </div>
+      <div class="pixel-word" id="titleWord" aria-label="ORBITE"></div>
       <p class="tap-hint" id="tapHint">TOUCHEZ POUR COMMENCER</p>
     </section>
 
@@ -48,6 +50,7 @@
       <div class="menu-top">
         <div class="pixel-word" id="menuWord" aria-label="ORBITE"></div>
         <span class="dust" id="menuDust"></span>
+        <span class="lvl" id="menuLvl"></span>
       </div>
       <p class="subtitle center" id="menuLine"></p>
       <nav class="menu-list" id="menuList" aria-label="Menu principal">
@@ -141,11 +144,26 @@
         <b id="endDust">+0</b>
         <small id="endTotal"></small>
       </div>
+      <div class="end-xp">
+        <div class="xp-head"><span>NIVEAU <b id="xpLvl">1</b></span><span id="xpGain">+0 XP</span></div>
+        <div class="xp-bar"><i id="xpFill"></i></div>
+        <small id="xpDetail"></small>
+      </div>
       <button class="btn primary" id="againBtn">REJOUER</button>
       <button class="link" id="endHome">Accueil</button>
     </section>
   </main>
 
+  <div class="overlay lvlup" id="lvlup" hidden>
+    <div class="lvl-flash"></div>
+    <div class="lvl-stage">
+      <div class="lvl-ring"></div>
+      <div class="orb lvl-planet" id="lvlPlanet" data-planet="lvl-planet" data-fit="body"></div>
+      <div class="lvl-title"><div class="pixel-word" id="lvlWord"></div><div class="pixel-word" id="lvlNum"></div></div>
+    </div>
+    <p class="lvl-gift" id="lvlGift"></p>
+    <p class="tap-hint" id="lvlHint">TOUCHEZ POUR CONTINUER</p>
+  </div>
   <div class="overlay" id="overlay" hidden>
     <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
   </div>
