@@ -2,7 +2,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-const E = createRequire(import.meta.url)('../js/building-engine.js');
+const require = createRequire(import.meta.url);
+const E = require('../js/building-engine.js');
+for (const f of ['habitat', 'vie-energie', 'industrie-logistique', 'science-defense']) require('../js/batiments/' + f + '.js');
 
 test('chaque type de bâtiment se génère, non vide et déterministe', () => {
   for (const t of E.TYPES) {
