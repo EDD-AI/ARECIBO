@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 54;
+  const VERSION = 55;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -889,22 +889,84 @@
     stage.sky = tab === 'cosmetiques' && SKY_BY_ID[ui.cosPick] ? SKY_BY_ID[ui.cosPick].mode : 0;
     stage.skyGain = 1;
   }
-  // Boutique des graines de vie : comment en gagner, à quoi elles servent, et les paquets.
-  const SEED_PACKS = [{ n: 10, price: '0,99 €' }, { n: 55, price: '4,99 €', tag: tr('+10 %') }, { n: 120, price: '9,99 €', tag: tr('+20 %') }, { n: 260, price: '19,99 €', tag: tr('+30 %') }];
+  // Boutique des graines de vie : vitrine, offre de bienvenue, quatre paquets illustrés (de la graine
+  // à l'arbre), ce qu'elles permettent et comment en gagner.
+  const SEED_ART_PAL = { d: '#2f7a3a', g: '#4fbf5f', l: '#9df0a8', w: '#e6ffe9', b: '#4a3220', B: '#7a5634', t: '#6b4426', y: '#ffe08a' };
+  const SEED_STAMP = ['....ll', '...ll.', '.lgg..', 'lgwgd.', 'gggdd.', '.gdd..'];
+  // Petites scènes 16 × 16 : chaque lettre est une couleur de SEED_ART_PAL.
+  const SEED_ART = {
+    graine: ['..........llll..', '.........lllll..', '........llwl....', '.......lll......', '.....llggg......', '...lggwwggg.....', '..lgwwgggggd....', '.lggwggggggdd...', '.lgggggggggddd..', '.ggggggggggddd..', '.gggggggggdddd..', '..gggggggdddd...', '...ggggdddddd...', '....dddddddd....', '......dddd......', ''],
+    poignee: (() => {
+      const g = Array.from({ length: 16 }, () => Array(16).fill('.'));
+      for (const [ox, oy] of [[5, 3], [1, 9], [9, 9]]) SEED_STAMP.forEach((r, y) => [...r].forEach((c, x) => { if (c !== '.') g[oy + y][ox + x] = c; }));
+      return g.map((r) => r.join(''));
+    })(),
+    bourgeon: ['', '', '', '..ll........ll..', '.lggl......lggl.', '.lgwgl....lgwgl.', '..lgggl..lgggl..', '...ddggllggdd...', '.....ddggdd.....', '.......gg.......', '.......gd.......', '.......gd.......', '....bBBgdBBb....', '..bBBBBBBBBBBb..', '.bbbbbbbbbbbbbb.', ''],
+    jardin: ['', '.......l........', '......lgl.......', '.....lgwgl......', '..l...lgl...l...', '.lgl...g...lgl..', 'lgwgl..g..lgwgl.', '.lgl...g...lgl..', '..g....gd...g...', '..g....gd...g...', '..gd...gd...gd..', '..gd...gd...gd..', 'bBgdBBBgdBBBgdBb', 'bBBBBBBBBBBBBBBb', 'bbbbbbbbbbbbbbbb', ''],
+    foret: ['.....y..........', '......lllll...y.', '....llgwgggll...', '...lggggggggdl..', '..lgggglggggddl.', '..lggglllgggddl.', '.lggggggggggdddl', '.lgggggggggdddd.', '..dggggggggddd..', 'y..dddgttdddd...', '......ttt.....y.', '......ttt.......', '.....tttt.......', '...bBBtttBBb....', '.bBBBBBBBBBBBBb.', 'bbbbbbbbbbbbbbbb']
+  };
+  function seedArt(name, cls) {
+    let rects = '';
+    SEED_ART[name].forEach((row, y) => [...row].forEach((c, x) => { if (SEED_ART_PAL[c]) rects += `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${SEED_ART_PAL[c]}"/>`; }));
+    return `<svg class="seed-art ${cls || ''}" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
+  }
+  const SEED_BASE = 0.099; // prix d'une graine dans le plus petit paquet, pour afficher la valeur des offres
+  const SEED_STARTER = { n: 40, price: 1.99 };
+  const SEED_PACKS = [
+    { n: 10, price: 0.99, name: 'Poignée', art: 'poignee' },
+    { n: 55, price: 4.99, name: 'Bourgeon', art: 'bourgeon', bonus: 10, badge: 'POPULAIRE' },
+    { n: 120, price: 9.99, name: 'Jardin', art: 'jardin', bonus: 20 },
+    { n: 260, price: 19.99, name: 'Forêt sacrée', art: 'foret', bonus: 30, badge: 'MEILLEURE OFFRE', best: true }
+  ];
+  const SEED_USES = [
+    ['Booster un bâtiment', 'production ×2 pendant 24 h', 1],
+    ['Avancer la colonie de 6 h', 'touchez « SOL » à la surface', 1],
+    ['Avancer la colonie de 24 h', 'une journée de production d’un coup', 3],
+    ['Faire grandir une planète', 'une taille de plus dans la Forge', 1],
+    ['Arroser l’arbre d’étoiles', 'cinq arrosages d’un coup', 1],
+    ['Recharger le rover', 'repartir aussitôt en expédition', 1],
+    ['Un fond animé', 'derrière toutes vos parties', 6]
+  ];
+  const euro = (v) => v.toLocaleString(I18N.lang, { style: 'currency', currency: 'EUR' });
   function renderSeedShop() {
-    $('seedShop').innerHTML = `<div class="seed-hero">${icon('seed', 'seed big')}<b>${seeds()}</b><small>${tr('graines de vie')}</small></div>
-      <h4 class="fg-h">${tr('EN GAGNER')}</h4>
-      <ul class="seed-list"><li>${tr('Une victoire (1re place), en solo ou en ligne : +1')}</li><li>${tr('Tous les 5 niveaux : +2')}</li><li>${tr('Des ruines anciennes trouvées en expédition : +1')}</li><li>${tr('Les succès')}</li></ul>
-      <h4 class="fg-h">${tr('À QUOI ELLES SERVENT')}</h4>
-      <ul class="seed-list"><li>${tr('Booster un bâtiment de la colonie (production ×2 pendant 24 h)')}</li><li>${tr('Accélérer le temps de la colonie')}</li><li>${tr('Faire grandir une planète de la Forge')}</li><li>${tr('Arroser l’arbre d’étoiles d’un coup')}</li><li>${tr('Recharger le rover d’expédition')}</li><li>${tr('Les fonds animés')}</li></ul>
-      <p class="mk-note">${tr('Jamais pour être plus fort en partie : l’Affrontement reste équitable.')}</p>
-      <h4 class="fg-h">${tr('BOUTIQUE')}</h4>
-      <div class="seed-packs">${SEED_PACKS.map((p, i) => `<button class="seed-pack" data-pack="${i}">${icon('seed', 'seed')}<b>${p.n}</b>${p.tag ? `<em>${p.tag}</em>` : ''}<span>${p.price}</span></button>`).join('')}</div>`;
+    const n = seeds();
+    const starterValue = SEED_STARTER.n * SEED_BASE;
+    $('seedShop').innerHTML = `
+      <div class="seed-hero">
+        <div class="seed-orb"><i class="seed-halo"></i>${[0, 1, 2, 3, 4, 5].map((i) => `<i class="seed-spark" style="--i:${i}"></i>`).join('')}${seedArt('graine', 'seed-hero-art')}</div>
+        <b>${n}</b><small>${tr('graines de vie')}</small>
+        <p>${tr('La sève de vos mondes : elle fait pousser, construire et voyager plus vite.')}</p>
+      </div>
+      <button class="seed-starter" data-pack="starter">
+        <span class="seed-starter-tag">${tr('OFFRE DE BIENVENUE')} · ${tr('UNE SEULE FOIS')}</span>
+        <span class="seed-starter-body">${seedArt('graine', 'seed-starter-ico')}
+          <span class="seed-starter-txt"><b>${tr('{n} graines', { n: SEED_STARTER.n })}</b><small>${tr('Le double d’un paquet classique, pour bien démarrer.')}</small></span>
+          <span class="seed-price"><s>${euro(starterValue)}</s>${euro(SEED_STARTER.price)}</span></span>
+      </button>
+      <div class="seed-packs">${SEED_PACKS.map((p, i) => `
+        <button class="seed-pack ${p.best ? 'best' : ''}" data-pack="${i}" style="--d:${i * 70}ms">
+          ${p.badge ? `<span class="seed-badge">${tr(p.badge)}</span>` : ''}
+          ${p.bonus ? `<span class="seed-bonus">+${p.bonus} %</span>` : ''}
+          <span class="seed-pack-art">${seedArt(p.art)}</span>
+          <span class="seed-pack-name">${tr(p.name)}</span>
+          <b>${icon('seed', 'seed')}${p.n}</b>
+          <span class="seed-price">${euro(p.price)}</span>
+        </button>`).join('')}</div>
+      <h4 class="fg-h">${tr('CE QU’ELLES FONT POUSSER')}</h4>
+      <div class="seed-uses">${SEED_USES.map(([a, b, c]) => `<div class="seed-use"><span><b>${tr(a)}</b><small>${tr(b)}</small></span><em>${c} ${icon('seed', 'seed')}</em></div>`).join('')}</div>
+      <h4 class="fg-h">${tr('EN GAGNER EN JOUANT')}</h4>
+      <div class="seed-earn">
+        <span><b>+1</b>${tr('par victoire')}</span><span><b>+2</b>${tr('tous les 5 niveaux')}</span>
+        <span><b>+1</b>${tr('ruines anciennes')}</span><span><b>${window.OrbiteSucces ? window.OrbiteSucces.LIST.reduce((t, a) => t + a.seeds, 0) : 200}</b>${tr('dans les succès')}</span>
+      </div>
+      <p class="mk-note">${tr('Jamais pour être plus fort en partie : l’Affrontement reste équitable.')}</p>`;
   }
   $('seedShop').addEventListener('click', (e) => {
     const b = e.target.closest('[data-pack]');
     if (!b) return;
     SFX.tap();
+    const r = b.getBoundingClientRect();
+    stage.burst(r.left + r.width / 2, r.top + r.height / 2, { n: 34, colors: [[126, 224, 138], [190, 255, 200], [255, 236, 160]], speed: 70, up: 30, life: 0.9 });
     // Le paiement réel demande un prestataire (Stripe, Google Play) et un serveur qui crédite les
     // graines : tant qu'il n'est pas branché, la boutique l'annonce honnêtement.
     openSheet(`<h3>${tr('BOUTIQUE')}</h3><h2>${tr('Bientôt disponible')}</h2>

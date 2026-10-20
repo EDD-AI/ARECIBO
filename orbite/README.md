@@ -186,8 +186,12 @@ reste équitable.
   | Recharger le rover quand sa batterie est vide | 1 |
   | Un fond animé (ou 1 200 poussières au lieu de 650 avant) | 6 |
 
-- **Boutique** (Marché stellaire → GRAINES) : paquets de 10 (0,99 €), 55 (4,99 €), 120 (9,99 €)
-  et 260 (19,99 €). Le paiement réel n’est pas encore branché : il faut un prestataire (Stripe,
+- **Boutique** (Marché stellaire → GRAINES) : une vitrine animée (la graine flotte dans son halo),
+  une **offre de bienvenue** unique (40 graines pour 1,99 €, le double du tarif de base), puis
+  quatre paquets illustrés en pixel art, de la graine à l’arbre : Poignée 10 (0,99 €), Bourgeon
+  55 (4,99 €, +10 %, « populaire »), Jardin 120 (9,99 €, +20 %) et Forêt sacrée 260 (19,99 €,
+  +30 %, « meilleure offre », cadre doré animé). Suivent ce qu’elles permettent, avec leur prix, et
+  comment en gagner en jouant. Le paiement réel n’est pas encore branché : il faut un prestataire (Stripe,
   Google Play) et un serveur qui crédite les graines. En attendant, le bouton l’annonce.
 - Stockées dans `orbite.graines` (synchronisées avec la sauvegarde en ligne).
 
