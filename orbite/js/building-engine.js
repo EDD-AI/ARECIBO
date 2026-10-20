@@ -556,17 +556,17 @@
     { key: 'serre', cat: 'vie', name: 'Serre', desc: 'Dôme de verre et ses cultures : la nourriture de la colonie.', eco: { jobs: 3, power: -2, water: -2, food: 12, oxygen: 2 }, build: B.serre },
     { key: 'reservoir', cat: 'vie', name: 'Réservoirs', desc: 'Cuves cerclées pour l’eau, l’oxygène et le carburant.', role: 'storage', eco: {}, build: B.reservoir },
     { key: 'solaire', cat: 'energie', name: 'Champ solaire', desc: 'Rangées de panneaux inclinés vers l’étoile.', eco: { power: 6 }, build: B.solaire },
-    { key: 'eolienne', cat: 'energie', name: 'Éolienne', desc: 'Mât et trois pales dans le vent fin de la planète.', eco: { power: 3 }, build: B.eolienne },
-    { key: 'reacteur', cat: 'energie', name: 'Réacteur', desc: 'Tour de refroidissement en sablier et cœur du réacteur.', eco: { jobs: 4, power: 30, water: -2 }, build: B.reacteur },
-    { key: 'forage', cat: 'industrie', name: 'Forage', desc: 'Derrick en treillis, tige de forage et réservoirs.', role: 'ore', eco: { jobs: 3, power: -3, materials: 6 }, build: B.forage },
-    { key: 'usine', cat: 'industrie', name: 'Raffinerie', desc: 'Halls, toits solaires, cheminées et conduites.', eco: { jobs: 5, power: -5, materials: 8 }, build: B.usine },
-    { key: 'piste', cat: 'logistique', name: 'Aire de lancement', desc: 'Piste circulaire balisée, parfois avec sa fusée.', role: 'spaceport', eco: { jobs: 2, power: -1, materials: 2 }, build: B.piste },
-    { key: 'fusee', cat: 'logistique', name: 'Fusée', desc: 'Lanceur dressé sur ses ailerons, prêt au départ.', role: 'vehicle', eco: {}, build: B.fusee },
+    { key: 'eolienne', anim: true, cat: 'energie', name: 'Éolienne', desc: 'Mât et trois pales dans le vent fin de la planète.', eco: { power: 3 }, build: B.eolienne },
+    { key: 'reacteur', anim: true, cat: 'energie', name: 'Réacteur', desc: 'Tour de refroidissement en sablier et cœur du réacteur.', eco: { jobs: 4, power: 30, water: -2 }, build: B.reacteur },
+    { key: 'forage', anim: true, cat: 'industrie', name: 'Forage', desc: 'Derrick en treillis, tige de forage et réservoirs.', role: 'ore', eco: { jobs: 3, power: -3, materials: 6 }, build: B.forage },
+    { key: 'usine', anim: true, cat: 'industrie', name: 'Raffinerie', desc: 'Halls, toits solaires, cheminées et conduites.', eco: { jobs: 5, power: -5, materials: 8 }, build: B.usine },
+    { key: 'piste', anim: true, cat: 'logistique', name: 'Aire de lancement', desc: 'Piste circulaire balisée, parfois avec sa fusée.', role: 'spaceport', eco: { jobs: 2, power: -1, materials: 2 }, build: B.piste },
+    { key: 'fusee', anim: true, cat: 'logistique', name: 'Fusée', desc: 'Lanceur dressé sur ses ailerons, prêt au départ.', role: 'vehicle', eco: {}, build: B.fusee },
     { key: 'hangar', cat: 'logistique', name: 'Hangar', desc: 'Voûte nervurée et grande porte pour les engins.', eco: { jobs: 2, power: -1 }, build: B.hangar },
     { key: 'rover', cat: 'logistique', name: 'Rover', desc: 'Engin à six roues, cabine vitrée et panneau solaire.', role: 'vehicle', eco: {}, build: B.rover },
-    { key: 'tour', cat: 'services', name: 'Tour de contrôle', desc: 'Fût élancé et salle vitrée qui surveille la colonie.', role: 'hq', eco: { jobs: 3, power: -1 }, build: B.tour },
+    { key: 'tour', anim: true, cat: 'services', name: 'Tour de contrôle', desc: 'Fût élancé et salle vitrée qui surveille la colonie.', role: 'hq', eco: { jobs: 3, power: -1 }, build: B.tour },
     { key: 'labo', cat: 'science', name: 'Laboratoire', desc: 'Bloc de recherche, coupole d’observation et capteurs.', eco: { jobs: 4, power: -3, research: 6 }, build: B.labo },
-    { key: 'antenne', cat: 'science', name: 'Antenne parabolique', desc: 'Parabole tournée vers le ciel pour parler aux autres mondes.', role: 'comms', eco: { jobs: 1, power: -1, research: 1 }, build: B.antenne }
+    { key: 'antenne', anim: true, cat: 'science', name: 'Antenne parabolique', desc: 'Parabole tournée vers le ciel pour parler aux autres mondes.', role: 'comms', eco: { jobs: 1, power: -1, research: 1 }, build: B.antenne }
   ]);
   TYPES.push({ key: 'colonie', cat: 'colonie', name: 'Colonie', desc: 'Une colonie autonome planifiée : logements, support vital, énergie, industrie et réseaux.', eco: {} });
   TYPE_BY_KEY.colonie = TYPES[TYPES.length - 1];
@@ -644,7 +644,7 @@
     // Services : un exemplaire par tranche complète d'habitants.
     for (const t of byCat('services', (x) => x.per)) for (let n = Math.floor(pop() / t.per); (used[t.key] || 0) < n;) if (!add(t)) break;
     supply();
-    if (lvl >= 0.5) add(pick(byCat('industrie', (t) => t.eco.materials > 0)));
+    add(pick(byCat('industrie', (t) => t.eco.materials > 0)));
     if (lvl >= 0.6) add(pick(byCat('science', (t) => t.eco.research > 0)));
     if (lvl >= 0.8) add(pick(byCat('defense')));
     if (S >= 112 && lvl >= 0.9) { add(pick(byCat('industrie', (t) => t.eco.materials > 0))); add(pick(byCat('science', (t) => t.eco.research > 0))); add(pick(byCat('logistique', (t) => !t.role))); }

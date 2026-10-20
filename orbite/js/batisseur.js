@@ -165,7 +165,6 @@
   });
   window.addEventListener('resize', () => { sky(); draw(); });
   // Animation : pales, parabole, forage, fumées (boucle de 3 s) ; les balises clignotent.
-  const ANIMATED = new Set(['eolienne', 'antenne', 'forage', 'usine', 'reacteur', 'fusee', 'piste', 'tour', 'colonie']);
   let last = 0;
   function tick(now) {
     requestAnimationFrame(tick);
@@ -175,7 +174,7 @@
     if (now - last < every) return;
     last = now;
     const blink = now % 1300 < 650;
-    if (ANIMATED.has(g.key)) {
+    if (g.key === 'colonie' || (E.TYPE_BY_KEY[g.key] && E.TYPE_BY_KEY[g.key].anim)) {
       const entry = state.history[state.at];
       const next = build(entry, (now / 3000) % 1);
       next.accent = g.accent;

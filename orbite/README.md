@@ -471,26 +471,37 @@ votre loi », ou combien d’astres de cette famille sont déjà dans votre syst
 Surviving Mars ou StarCraft, une graine à la fois (la même graine donne toujours le même bâtiment).
 On y accède depuis l’écran **Création** du menu principal.
 
-| Bâtiment | Ce qu’on y voit |
+**67 bâtiments en 8 catégories**, chacun avec son **économie** (logements, emplois, énergie, eau,
+oxygène, nourriture, recherche, matériaux ; chaque colon consomme 1 d’eau, 1 d’oxygène et 1 de nourriture) :
+
+| Catégorie | Bâtiments |
 |---|---|
-| Dôme d’habitat | coque géodésique (treillis) opaque ou vitrée, intérieur visible, sas et hublots |
-| Serre | dôme de verre, rangées de cultures |
-| Quartier résidentiel | grappe de petits dômes reliés par des couloirs |
-| Modules d’habitation | cylindres couchés sur pieds, hublots, bandes, toit solaire |
-| Forage | derrick en treillis, entretoises, tige de forage, réservoirs, balise |
-| Réservoirs | cuves cerclées reliées par des conduites |
-| Champ solaire | rangées de panneaux inclinés |
-| Antenne parabolique | mât, parabole orientée, récepteur |
-| Aire de lancement | piste circulaire balisée, parfois avec sa fusée |
-| Fusée | lanceur sur ailerons, hublots |
-| Raffinerie | halls, toits solaires, cheminées, conduites |
-| Tour de contrôle | fût cerclé, salle vitrée, antennes |
-| Réacteur | tour de refroidissement en sablier, bâtiment du cœur |
-| Hangar | voûte nervurée, grande porte |
-| Laboratoire | bloc de recherche, coupole d’observation, capteurs |
-| Éolienne | mât et trois pales |
-| Rover | six roues, cabine vitrée, panneau solaire |
-| **Colonie** | une douzaine de ces bâtiments sur une dalle de terrain (relief, cratères, cailloux, strates), reliés par des chemins |
+| Habitat | dôme d’habitat, quartier résidentiel, modules, immeuble modulaire, capsules, habitat semi-enterré, arcologie, dortoir, villas sous dôme |
+| Services | tour de contrôle (commandement), hôpital, académie, cantine, parc sous dôme, arène, marché (un pour tant d’habitants) |
+| Support vital | serre, ferme verticale, aquaculture, électrolyseur d’oxygène, extracteur de glace, recycleur d’eau, MOXIE, champignonnière, condenseur atmosphérique, réservoirs |
+| Énergie | champ solaire, éolienne, réacteur, géothermie, tokamak, tour solaire à héliostats, batteries, RTG, centrale au méthane |
+| Industrie | forage, raffinerie, mine à ciel ouvert, fonderie, imprimante 3D géante, usine robotique, briqueterie de régolithe, usine chimique, concasseur |
+| Logistique | aire de lancement, fusée, hangar, rover, spatioport, entrepôt, garage, dépôt de carburant, gare maglev, camion minier, drone de livraison |
+| Science | laboratoire, antenne parabolique, observatoire, station radar, station météo, relais de communication, laboratoire de biologie, centre de données |
+| Défense | tourelle, générateur de bouclier, blockhaus, poste de garde |
+
+Une trentaine sont **animés** (pales, paraboles, radars, forages, fumées, vapeur, bras robots, rame maglev,
+plasma du tokamak, héliostats…). Les bâtiments sont répartis dans `js/batiments/*.js` et s’enregistrent
+auprès du moteur (`OrbiteBuildings.register`).
+
+**Colonie** (petite 80, moyenne 112, grande 144 cases) : une colonie **autonome** planifiée.
+- Le commandement, le port spatial et les communications d’abord, puis des logements par étapes ; à chaque
+  étape le planificateur comble les déficits (énergie, oxygène, eau, nourriture) avec les producteurs les
+  plus rentables pour leur taille, ajoute les services selon la population, de l’industrie, de la science,
+  de la défense, des stockages et des véhicules.
+- Chaque bâtiment est posé dès qu’il est choisi, près de l’ancre de sa zone (habitat et services au
+  centre, support vital autour, énergie à l’est, industrie à l’ouest sur les gisements, port au sud,
+  science au nord-est, défense aux angles) ; s’il ne rentre pas, le plan change. Plusieurs plans, du plus
+  ambitieux au plus modeste, sont essayés : on garde le premier où tout le monde vit.
+- Réseaux : routes de régolithe tassé, tubes pressurisés entre habitats et services, lignes électriques
+  sur pylônes depuis les centrales, conduites d’eau et d’oxygène vers les réservoirs ; gisements de glace
+  et de minerai peints sous les extracteurs et les mines.
+- La page affiche le bilan : colons, emplois, énergie, eau, oxygène, nourriture, recherche, matériaux.
 
 - **Rendu** (`js/building-renderer.js`) : chaque voxel est un cube de 4 × 4 pixels ; dessus clair, flanc
   droit éclairé, flanc gauche dans l’ombre, ombres portées vers l’avant gauche (soleil à l’arrière droit),

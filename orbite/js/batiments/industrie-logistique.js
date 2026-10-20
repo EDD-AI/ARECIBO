@@ -27,6 +27,8 @@
         if (pz != null && z - pz > 1) m.box(lx, ly, pz, lx, ly, z - 1, MAT.METAL);
         m.set(lx, ly, z, mod(i - shift, 3) === 0 ? MAT.METAL : MAT.DARK);
       }
+      // Longeron clair côté visible : le tapis se lit mieux sur le sol.
+      if (o.rail) m.set(alongX ? x : x + 2, alongX ? y + 2 : y, z, o.rail);
       if (o.lumps && i < n && mod(i - shift, 4) === 0) {
         const lane = lanes[mod(Math.floor((i - shift) / 4), 2)];
         m.set(lane[0], lane[1], z + 1, o.lumpMat || MAT.ROCK);
@@ -409,13 +411,13 @@
         for (let z = 0; z <= top; z++) m.set(x, y, z, ORE(x, y, z));
       }
     };
-    const h1 = r.int(5, 6), p1x = X - 4, p1y = cy + 0.5;
+    const h1 = r.int(5, 6), p1x = X - 3.5, p1y = cy + 0.5;
     pile(p1x, p1y, 3.3, h1);
-    belt(m, cx + 3, cy, 2, p1x - 1, cy, h1 + 2, shift, { lumps: true, legs: 3, lumpMat: MAT.HULL2 });
+    belt(m, cx + 3, cy, 2, p1x - 1, cy, h1 + 2, shift, { lumps: true, legs: 3, lumpMat: MAT.COPPER, rail: MAT.HULL2 });
     if (two) {
       const h2 = r.int(4, 6), p2x = cx + 0.5, p2y = Y - 4;
       pile(p2x, p2y, 3.3, h2);
-      belt(m, cx, cy + 3, 2, cx, p2y - 1, h2 + 2, shift, { lumps: true, legs: 3, lumpMat: MAT.HULL2 });
+      belt(m, cx, cy + 3, 2, cx, p2y - 1, h2 + 2, shift, { lumps: true, legs: 3, lumpMat: MAT.COPPER, rail: MAT.HULL2 });
     }
     m.set(cx - 2, cy - 2, 11, MAT.BEACON);
     return m;
