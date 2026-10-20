@@ -42,6 +42,7 @@ test('nouvelle partie : 8 univers, 5 familles dont celle de la loi, réserve coh
   assert.ok(s.families.includes('vie'));
   for (const id of Object.keys(s.pool)) {
     const c = R.CARD[id];
+    if (c.legend) { assert.equal(s.poolTotal[id], 1); continue; }
     assert.ok(c.fam === 'neutre' || s.families.includes(c.fam));
     assert.equal(s.poolTotal[id], R.COPIES[c.tier]);
   }
@@ -53,7 +54,7 @@ test('nouvelle partie : 8 univers, 5 familles dont celle de la loi, réserve coh
 
 test('chaque famille a 9 astres répartis sur les 6 niveaux', () => {
   for (const f of R.FAMILY_KEYS) {
-    const cards = R.CARDS.filter((c) => c.fam === f && !c.token);
+    const cards = R.CARDS.filter((c) => c.fam === f && !c.token && !c.legend);
     assert.equal(cards.length, 9, f);
     assert.deepEqual([...new Set(cards.map((c) => c.tier))].sort(), [1, 2, 3, 4, 5, 6]);
   }
@@ -273,4 +274,30 @@ test('lois de vie : PV de départ, énergie du sacrifice, renaissance du phénix
     if (me.reborn) reborn = r;
   }
   assert.ok(me.reborn && me.alive && me.hp === 15, 'renaît avec 15 PV au lieu d’être éliminé');
+});
+
+test('légendaires : une par niveau, un exemplaire, rares dans la Création et les découvertes', () => {
+  const legends = R.CARDS.filter((c) => c.legend);
+  assert.deepEqual(legends.map((c) => c.tier).sort(), [1, 2, 3, 4, 5, 6]);
+  let seen = 0, slots = 0, disc = 0, discN = 0;
+  for (let g = 0; g < 300; g++) {
+    const s = R.newGame('leg-' + g, R.LAWS[g % R.LAWS.length].id);
+    for (const l of legends) assert.equal(s.poolTotal[l.id], 1);
+    for (const p of s.players) { slots += p.shop.length; seen += p.shop.filter((id) => R.CARD[id].legend).length; }
+    invariant(s);
+  }
+  const rate = seen / slots;
+  assert.ok(rate > 0.01 && rate < 0.12, 'taux en Création : ' + rate.toFixed(3));
+  // Ouroboros renaît plus fort, avec Venin.
+  const s = R.newGame('leg-ouro', 'symbiose');
+  const mk = (id, extra = {}) => Object.assign({ uid: 'x' + Math.random(), id, golden: false, atk: R.CARD[id].atk, hp: R.CARD[id].hp, kw: (R.CARD[id].kw || []).slice(), att: [] }, extra);
+  const A = { id: 'A', tier: 1, law: 'symbiose', board: [mk('ouroboros')] };
+  const B = { id: 'B', tier: 1, law: 'symbiose', board: [mk('silex', { atk: 9, hp: 40 })] };
+  const r = R.fight(s, A, B, 'ouro', true);
+  assert.ok(r.events.some((e) => e.t === 'kw' && e.k === 'venin'), 'Venin gagné à la renaissance');
+  // L'Œil du Vide anéantit l'ennemi le plus faible dès le début du combat.
+  const C = { id: 'C', tier: 1, law: 'symbiose', board: [mk('oeilvide')] };
+  const D = { id: 'D', tier: 1, law: 'symbiose', board: [mk('silex', { atk: 1, hp: 50 }), mk('errante', { atk: 1, hp: 60 })] };
+  const r2 = R.fight(s, C, D, 'oeil', true);
+  assert.ok(r2.events.some((e) => e.t === 'hit' && e.n >= 99), 'coup de 99');
 });

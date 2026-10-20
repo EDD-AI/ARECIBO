@@ -249,7 +249,7 @@
       this.r.drawSystem(g, {
         cx, cy, R, phase: (p + (g.seed % 997) / 997) % 1,
         reveal: s.reveal, flash: s.flash, dim: dim * own,
-        flip: g.flip, golden: el.dataset.golden === '1', shield: el.dataset.shield === '1', ghost: el.dataset.ghost === '1',
+        flip: g.flip, golden: el.dataset.golden === '1', legend: !!(this.catalog && this.catalog[id] && this.catalog[id].legend), shield: el.dataset.shield === '1', ghost: el.dataset.ghost === '1',
         frost: s.frost
       });
       this.r.bound = null;

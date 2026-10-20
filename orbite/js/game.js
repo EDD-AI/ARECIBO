@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 33;
+  const VERSION = 34;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -137,6 +137,41 @@
     popAt(b.left + b.width / 2, b.top + b.height * 0.25, text, cls);
   }
 
+  // ─── Légendaires ────────────────────────────────────────────
+  const RAINBOW = [[255, 90, 120], [255, 190, 80], [250, 240, 120], [110, 240, 160], [100, 210, 255], [170, 130, 255], [255, 120, 230]];
+  // Une légendaire apparaît dans la Création : éclat prismatique, carillon, « LÉGENDAIRE ! ».
+  function legendArrive(el, delay) {
+    setTimeout(() => {
+      const orb = el.querySelector('.orb');
+      if (!orb || !orb.isConnected) return;
+      const [x, y] = center(orb);
+      const r = orb.getBoundingClientRect().width / 2;
+      stage.ring(x, y, r * 1.1, { n: 60, colors: RAINBOW, speed: 80, life: 0.9 });
+      stage.burst(x, y, { n: 40, colors: RAINBOW, speed: 70, life: 0.8 });
+      stage.flash(orb, 0.9);
+      SFX.legend();
+      vibrate([15, 30, 15]);
+      popOn(orb, tr('LÉGENDAIRE !'), 'legend');
+      el.classList.remove('legend-in');
+      void el.offsetWidth;
+      el.classList.add('legend-in');
+    }, delay || 0);
+  }
+  // Acheter une légendaire : l'écran s'illumine, la bannière annonce son nom.
+  function legendClaim(id, fromRect) {
+    const fl = document.createElement('div');
+    fl.className = 'legend-flash';
+    document.body.appendChild(fl);
+    setTimeout(() => fl.remove(), 1200);
+    const x = fromRect ? fromRect.left + fromRect.width / 2 : window.innerWidth / 2;
+    const y = fromRect ? fromRect.top + fromRect.height / 2 : window.innerHeight / 3;
+    for (let i = 0; i < 3; i++) setTimeout(() => stage.ring(x, y, 20 + i * 30, { n: 70, colors: RAINBOW, speed: 120 + i * 30, life: 1 }), i * 140);
+    stage.burst(x, y, { n: 80, colors: RAINBOW, speed: 130, life: 1.1 });
+    SFX.legend(true);
+    vibrate([30, 40, 30, 40, 60]);
+    banner(tr('LÉGENDAIRE'), esc(R.CARD[id].name), 'legend');
+  }
+
   function banner(title, sub, cls, hold) {
     const b = $('banner');
     b.className = 'banner';
@@ -198,6 +233,8 @@
     orb.dataset.shield = u.kw.includes('bouclier') ? '1' : '0';
     orb.dataset.ghost = u.kw.includes('renaissance') ? '1' : '0';
     el.classList.toggle('golden', !!u.golden);
+    el.classList.toggle('legend', !!c.legend);
+    if (c.legend && !orb.querySelector('.legend-ring')) orb.insertAdjacentHTML('beforeend', '<i class="legend-ring"></i>');
     el.classList.toggle('wall', u.kw.includes('rempart'));
     el.querySelector('.atk').textContent = u.atk;
     el.querySelector('.hp').textContent = u.hp;
@@ -1359,6 +1396,7 @@
       el.dataset.src = 'shop';
       el.dataset.slot = it.slot;
       if (reveal) revealIn(el, 80 + n++ * 70);
+      if (R.CARD[it.id].legend) legendArrive(el, reveal ? 80 + n * 70 + 350 : 200);
       return el;
     }, (el, it) => { el.dataset.slot = it.slot; });
     sizeRow($('shop'), 'shop', 92);
@@ -1623,6 +1661,7 @@
     tuto('achat');
     SFX.buy();
     vibrate(8);
+    if (R.CARD[id].legend) legendClaim(id, fromRect);
     renderEnergy(R.BUY_COST);
     renderTavernHead();
     renderShop();
@@ -2103,7 +2142,7 @@
     return `<div class="sheet-top">
         <div class="orb sheet-orb" data-planet="${u.id}" data-golden="${u.golden ? 1 : 0}" data-shield="${u.kw.includes('bouclier') ? 1 : 0}" data-ghost="${u.kw.includes('renaissance') ? 1 : 0}"></div>
         <div>
-          <span class="fam-chip" style="--c:${f.color}">${f.name.toUpperCase()} · ${tr('NIVEAU {n}', { n: c.tier })}${u.golden ? ' · ' + tr('DORÉ') : ''}</span>
+          <span class="fam-chip" style="--c:${f.color}">${c.legend ? tr('LÉGENDAIRE') + ' · ' : ''}${f.name.toUpperCase()} · ${tr('NIVEAU {n}', { n: c.tier })}${u.golden ? ' · ' + tr('DORÉ') : ''}</span>
           <h2>${esc(c.name)}</h2>
           ${statsHtml(u.atk, u.hp, 'sheet-stats')}
         </div>
@@ -2180,7 +2219,7 @@
     if (orb && orb.dataset.ghost === '1') kw.add('renaissance'); else if (orb && orb.dataset.ghost === '0') kw.delete('renaissance');
     const atk = el.querySelector('.atk') ? el.querySelector('.atk').textContent : c.atk;
     const hp = el.querySelector('.hp') ? el.querySelector('.hp').textContent : c.hp;
-    peek.innerHTML = `<span class="fam-chip" style="--c:${f.color}">${f.name.toUpperCase()} · ${tr('NIVEAU {n}', { n: c.tier })}${golden ? ' · ' + tr('DORÉ') : ''}</span>
+    peek.innerHTML = `<span class="fam-chip" style="--c:${f.color}">${c.legend ? tr('LÉGENDAIRE') + ' · ' : ''}${f.name.toUpperCase()} · ${tr('NIVEAU {n}', { n: c.tier })}${golden ? ' · ' + tr('DORÉ') : ''}</span>
       <h4>${esc(c.name)}</h4>${statsHtml(atk, hp, 'peek-stats')}${effectHtml(id, golden, [...kw])}`;
     peek.hidden = false;
     const b = el.getBoundingClientRect();
@@ -2264,8 +2303,8 @@
         // La couleur de la famille encadre l'astre ; on rappelle combien de ses cousins sont déjà là.
         const kin = c.fam === 'neutre' ? 0 : p.board.concat(p.hand).filter((u) => R.famOf(u) === c.fam).length;
         const mine = R.LAW[p.law].fam === c.fam;
-        return `<button class="discover-item${mine ? ' mine' : ''}" data-act="choose" data-i="${i}" style="--c:${f.color}">
-          <span class="fam-chip">${c.fam === 'neutre' ? tr('POINTS DE VIE') : f.name.toUpperCase()}</span>
+        return `<button class="discover-item${mine ? ' mine' : ''}${c.legend ? ' legend' : ''}" data-act="choose" data-i="${i}" style="--c:${f.color}">
+          <span class="fam-chip">${c.legend ? tr('LÉGENDAIRE') + ' · ' : ''}${f.name.toUpperCase()}</span>
           <div class="orb" data-planet="${id}"></div>
           <b>${esc(c.name)}</b>
           <em class="kin">${mine ? tr('Famille de votre loi') : kin ? tr('{n} dans votre système', { n: kin }) : '&nbsp;'}</em>

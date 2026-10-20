@@ -1835,3 +1835,43 @@ window.OrbiteI18n.add({
     "Rien à retirer.": "Nada para remover."
   }
 });
+
+// Légendaires.
+window.OrbiteI18n.add({
+  en: {
+    'Œil du Vide': 'Eye of the Void', 'Maelström': 'Maelstrom', 'Grand Attracteur': 'Great Attractor', 'Oméga': 'Omega',
+    'Fin de cycle : tous vos autres astres gagnent +{1} PV.': 'End of cycle: all your other orbs gain +{1} HP.',
+    'Renaissance. Quand il revient, il gagne +{3}/+{3} et Venin.': 'Rebirth. When it returns, it gains +{3}/+{3} and Venom.',
+    'Début de combat et Effondrement : anéantit l’ennemi qui a le moins de PV (99 dégâts).': 'Start of combat and Collapse: annihilates the enemy with the lowest HP (99 damage).',
+    'Rafale. Après chacune de ses attaques, tous vos astres gagnent +{1}/+{1}.': 'Flurry. After each of its attacks, all your orbs gain +{1}/+{1}.',
+    'Début de combat : chaque ennemi perd 1/1 ; le Grand Attracteur gagne tout ce qu’il a volé.': 'Start of combat: each enemy loses 1/1; the Great Attractor gains everything it stole.',
+    'Début de combat : vos autres astres gagnent +2/+2, et les deux premiers Bouclier.': 'Start of combat: your other orbs gain +2/+2, and the first two gain Shield.'
+  },
+  es: {
+    'Œil du Vide': 'Ojo del Vacío', 'Maelström': 'Maelstrom', 'Grand Attracteur': 'Gran Atractor', 'Oméga': 'Omega',
+    'Fin de cycle : tous vos autres astres gagnent +{1} PV.': 'Fin de ciclo: todos tus otros astros ganan +{1} PV.',
+    'Renaissance. Quand il revient, il gagne +{3}/+{3} et Venin.': 'Renacer. Cuando vuelve, gana +{3}/+{3} y Veneno.',
+    'Début de combat et Effondrement : anéantit l’ennemi qui a le moins de PV (99 dégâts).': 'Inicio del combate y Colapso: aniquila al enemigo con menos PV (99 de daño).',
+    'Rafale. Après chacune de ses attaques, tous vos astres gagnent +{1}/+{1}.': 'Ráfaga. Tras cada uno de sus ataques, todos tus astros ganan +{1}/+{1}.',
+    'Début de combat : chaque ennemi perd 1/1 ; le Grand Attracteur gagne tout ce qu’il a volé.': 'Inicio del combate: cada enemigo pierde 1/1; el Gran Atractor gana todo lo que ha robado.',
+    'Début de combat : vos autres astres gagnent +2/+2, et les deux premiers Bouclier.': 'Inicio del combate: tus otros astros ganan +2/+2, y los dos primeros Escudo.'
+  },
+  de: {
+    'Œil du Vide': 'Auge der Leere', 'Maelström': 'Mahlstrom', 'Grand Attracteur': 'Großer Attraktor', 'Oméga': 'Omega',
+    'Fin de cycle : tous vos autres astres gagnent +{1} PV.': 'Zyklusende: Alle deine anderen Gestirne erhalten +{1} LP.',
+    'Renaissance. Quand il revient, il gagne +{3}/+{3} et Venin.': 'Wiedergeburt. Wenn es zurückkehrt, erhält es +{3}/+{3} und Gift.',
+    'Début de combat et Effondrement : anéantit l’ennemi qui a le moins de PV (99 dégâts).': 'Kampfbeginn und Kollaps: Vernichtet den Gegner mit den wenigsten LP (99 Schaden).',
+    'Rafale. Après chacune de ses attaques, tous vos astres gagnent +{1}/+{1}.': 'Salve. Nach jedem seiner Angriffe erhalten alle deine Gestirne +{1}/+{1}.',
+    'Début de combat : chaque ennemi perd 1/1 ; le Grand Attracteur gagne tout ce qu’il a volé.': 'Kampfbeginn: Jeder Gegner verliert 1/1; der Große Attraktor erhält alles Gestohlene.',
+    'Début de combat : vos autres astres gagnent +2/+2, et les deux premiers Bouclier.': 'Kampfbeginn: Deine anderen Gestirne erhalten +2/+2, die ersten beiden Schild.'
+  },
+  pt: {
+    'Œil du Vide': 'Olho do Vazio', 'Maelström': 'Maelstrom', 'Grand Attracteur': 'Grande Atrator', 'Oméga': 'Ômega',
+    'Fin de cycle : tous vos autres astres gagnent +{1} PV.': 'Fim do ciclo: todos os seus outros astros ganham +{1} PV.',
+    'Renaissance. Quand il revient, il gagne +{3}/+{3} et Venin.': 'Renascer. Quando volta, ganha +{3}/+{3} e Veneno.',
+    'Début de combat et Effondrement : anéantit l’ennemi qui a le moins de PV (99 dégâts).': 'Início do combate e Colapso: aniquila o inimigo com menos PV (99 de dano).',
+    'Rafale. Après chacune de ses attaques, tous vos astres gagnent +{1}/+{1}.': 'Rajada. Após cada um de seus ataques, todos os seus astros ganham +{1}/+{1}.',
+    'Début de combat : chaque ennemi perd 1/1 ; le Grand Attracteur gagne tout ce qu’il a volé.': 'Início do combate: cada inimigo perde 1/1; o Grande Atrator ganha tudo o que roubou.',
+    'Début de combat : vos autres astres gagnent +2/+2, et les deux premiers Bouclier.': 'Início do combate: seus outros astros ganham +2/+2, e os dois primeiros Escudo.'
+  }
+});
