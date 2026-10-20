@@ -287,7 +287,7 @@ test('légendaires : une par niveau, un exemplaire, rares dans la Création et l
     invariant(s);
   }
   const rate = seen / slots;
-  assert.ok(rate > 0.01 && rate < 0.12, 'taux en Création : ' + rate.toFixed(3));
+  assert.ok(rate > 0.003 && rate < 0.06, 'taux en Création : ' + rate.toFixed(3));
   // Ouroboros renaît plus fort, avec Venin.
   const s = R.newGame('leg-ouro', 'symbiose');
   const mk = (id, extra = {}) => Object.assign({ uid: 'x' + Math.random(), id, golden: false, atk: R.CARD[id].atk, hp: R.CARD[id].hp, kw: (R.CARD[id].kw || []).slice(), att: [] }, extra);
