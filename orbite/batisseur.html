@@ -20,6 +20,7 @@
     <p class="type" id="type"></p>
     <p class="desc" id="desc"></p>
     <dl class="stats" id="stats"></dl>
+    <div class="eco" id="eco"></div>
   </section>
 
   <p class="seed"><span>GRAINE</span> <b id="seed">--------</b></p>
@@ -36,6 +37,13 @@
       <label><span>Bâtiment</span><select id="typeSelect"></select></label>
       <label><span>Sol</span><select id="themeSelect"></select></label>
       <label><span>Couleur</span><select id="accentSelect"></select></label>
+      <label id="sizeLabel" hidden><span>Taille</span>
+        <select id="sizeSelect">
+          <option value="80">Petite</option>
+          <option value="112" selected>Moyenne</option>
+          <option value="144">Grande</option>
+        </select>
+      </label>
       <button id="rotate" title="Tourner (R)">TOURNER</button>
       <button id="galleryBtn">GALERIE</button>
       <button id="png">PNG</button>
