@@ -16,8 +16,8 @@ test('5 parties de placement, puis un rang de départ selon la place moyenne', (
 
 test('les points montent ou descendent selon la place, jamais sous zéro', () => {
   const c = K.sanitize({ placements: [4, 4, 4, 4, 4], points: 10 });
-  assert.equal(K.record(c, 1).delta, 40);
-  assert.equal(c.points, 50);
+  assert.equal(K.record(c, 1).delta, 32);
+  assert.equal(c.points, 42);
   K.record(c, 8);
   K.record(c, 8);
   assert.equal(c.points, 0);
@@ -30,4 +30,13 @@ test('rangs et divisions : III, II, I, puis la Singularité sans division', () =
   assert.equal(K.tierOf(2400).label, 'Singularité');
   const c = K.sanitize({ placements: [1, 1, 1, 1, 1], points: 290 });
   assert.ok(K.record(c, 1).up, 'passage au rang supérieur signalé');
+});
+
+test('le barème dépend du niveau de la partie : le 3e gagne peu ou rien, les derniers perdent', () => {
+  assert.equal(K.deltaFor(3, 1000, 1000), 4);
+  assert.equal(K.deltaFor(3, 1000, 700), 0, 'partie plus faible : rien pour le 3e');
+  assert.ok(K.deltaFor(1, 1000, 1200) > K.deltaFor(1, 1000, 1000), 'battre plus fort rapporte plus');
+  assert.ok(K.deltaFor(8, 1000, 1200) > K.deltaFor(8, 1000, 1000), 'perdre contre plus fort coûte moins');
+  for (let r = 4; r <= 8; r++) assert.ok(K.deltaFor(r, 0, 3000) < 0, 'les places 4 à 8 perdent toujours');
+  assert.ok(K.deltaFor(1, 3000, 0) > 0 && K.deltaFor(2, 3000, 0) > 0, 'les deux premiers gagnent toujours');
 });

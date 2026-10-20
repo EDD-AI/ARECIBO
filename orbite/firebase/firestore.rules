@@ -1,7 +1,7 @@
 rules_version = '2';
 // ORBITE — règles de sécurité Firestore.
 // - saves/{uid}    : la progression complète, lisible et modifiable par son seul propriétaire.
-// - profiles/{uid} : le profil public (pseudo, niveau, classement, système), lisible par tout joueur
+// - profiles/{uid} : le profil public (pseudo, niveau, classement, système, présence), lisible par tout joueur
 //                    connecté, modifiable par son seul propriétaire, avec des champs vérifiés.
 // - friends/{a_b}  : une amitié entre deux joueurs (demande puis acceptation).
 // - matches/{id}   : une partie en ligne (salon, puis manches) ; posts/{uid} le plateau publié
@@ -22,7 +22,9 @@ service cloud.firestore {
       allow read: if signedIn();
       allow delete: if isMe(uid);
       allow write: if isMe(uid)
-        && request.resource.data.keys().hasOnly(['pseudo', 'tag', 'code', 'level', 'points', 'placed', 'games', 'wins', 'world', 'forge', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['pseudo', 'tag', 'code', 'level', 'points', 'placed', 'games', 'wins', 'world', 'forge', 'updatedAt', 'seen', 'where'])
+        && (!('seen' in request.resource.data) || request.resource.data.seen is int)
+        && (!('where' in request.resource.data) || (request.resource.data.where is string && request.resource.data.where.size() <= 12))
         && request.resource.data.pseudo is string && request.resource.data.pseudo.size() <= 16
         && request.resource.data.tag is string && request.resource.data.tag.size() <= 6
         && request.resource.data.code is string && request.resource.data.code.size() == 6

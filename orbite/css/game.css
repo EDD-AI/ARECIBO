@@ -1512,3 +1512,10 @@ button.pf-rank { grid-template-columns: 56px 1fr auto; width: 100%; font: inheri
 .mp-timer[hidden] { display: none; }
 body.mp-game #skipBtn { display: none; }
 body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgba(241, 236, 218, 0.08); border-color: var(--line); font-variant-numeric: tabular-nums; }
+/* Présence des amis */
+.on-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; background: rgba(241, 236, 218, 0.25); }
+.on-dot.on { background: #6ee07a; box-shadow: 0 0 6px rgba(110, 224, 122, 0.8); }
+.on-dot.play { background: var(--gold); box-shadow: 0 0 6px rgba(246, 196, 83, 0.8); }
+.on-pres { font-style: normal; }
+.on-pres.on { color: #6ee07a; }
+.on-pres.play { color: var(--gold); }

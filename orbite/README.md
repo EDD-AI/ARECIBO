@@ -36,7 +36,10 @@ La progression (niveau, poussières, planète, historique) ne peut pas être eff
 La vitesse des combats n’est pas réglable : tout le monde voit les combats au même rythme. Le
 bouton « Passer » reste disponible pendant un combat.
 
-## Campagne (démo · acte I)
+## Campagne (démo · acte I) — bloquée, en refonte
+
+Le bouton du menu affiche « BIENTÔT » : la campagne reviendra sous la forme d’un jeu de création
+d’univers. Le code ci-dessous reste en place.
 
 Un mode solo raconté, en *deck builder* à la Slay the Spire, où l’on meurt et recommence.
 
@@ -291,6 +294,8 @@ bouton **DESCENDRE À LA SURFACE** dans la Forge.
     +13 à pleine étendue).
   - **Fiche** : toucher la pépinière montre les cases verdies, le nombre d’arbres et le temps restant.
 
+- **Couleur du sol** : la teinte choisie dans la Forge s’applique aussi au sol de la colonie et de
+  l’expédition (rotation de teinte, saturation un peu adoucie).
 - **Expédition** : avec un **rover** (ou un garage) construit, le bouton **EXPÉDITION** lance le
   rover explorateur hors de la base.
   - **Un monde infini** : il se génère par tronçons de 32 × 32 cases à partir de la graine de la
@@ -334,7 +339,11 @@ Bouton en haut à droite du menu, en trois onglets : **Profil**, **Amis** et **C
   comptent, et un abandon vaut la 8e place. Le solo contre les univers rivaux, la campagne et les
   parties privées ne changent pas les points.
   - 5 parties de placement fixent le départ : un rang moyen de 1 donne Planète I, de 8 donne zéro.
-  - Ensuite, les points changent selon la place : +40, +28, +16, +6, −6, −14, −22, −30.
+  - Ensuite, les points changent selon la place : +32, +18, +4, −6, −12, −18, −24, −30, ajustés
+    selon le niveau de la partie (écart avec la moyenne des points des autres créateurs, 1 point
+    par tranche de 25, ±8 au plus). Battre des créateurs mieux classés rapporte plus, et perdre
+    contre eux coûte moins. Le 1er gagne toujours (10 au moins), le 2e aussi (4 au moins). Le 3e
+    gagne un peu, ou rien dans une partie plus faible que lui. Les places 4 à 8 perdent toujours.
   - 9 rangs : Poussière, Astéroïde, Lune, Planète, Géante, Étoile, Nébuleuse, Pulsar, chacun en
     divisions III, II, I de 100 points, puis **Singularité** dès 2 400 points.
   - L’écran de fin affiche le gain (« +28 points · Lune II », « RANG SUPÉRIEUR ! »).
@@ -414,6 +423,9 @@ contient la configuration Firebase du projet ; sinon, le Profil annonce « bient
 - **Amis** (`friends/{a_b}`). Chaque joueur a un **code ami** de 6 caractères.
   - On ajoute un ami avec son code ; il accepte ou refuse, et une pastille signale les demandes.
   - Depuis la liste, **Visiter** ouvre son système de la Forge en lecture seule.
+- **Présence** : connecté, chaque joueur signale où il est (menu, partie, partie en ligne), à chaque
+  changement et au moins une fois par minute (`seen`, `where`). Dans Amis : point vert « En ligne »,
+  point doré « En partie » ou « En partie en ligne », sinon « Vu il y a… ».
 - **Classement** : le **monde** (les 50 meilleurs classés) ou **vos amis**. Toucher un joueur ouvre
   sa fiche et permet de visiter son système.
 - **Sécurité** (`firebase/firestore.rules`) : chacun n’écrit que ses propres documents, avec des

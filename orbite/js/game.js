@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 51;
+  const VERSION = 52;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -748,8 +748,7 @@
     const fin = loadFinished();
     if (fin) { ui.state = fin; await endScreen(); return true; }
     if (ses.s === 'game' && loadGame()) { await resumeGame(); return true; }
-    const camp = window.__orbite && window.__orbite.campagne;
-    if (['cStory', 'cTalk', 'cMap', 'cFight'].includes(ses.s) && camp && camp.has()) { await camp.resume(); return true; }
+    // Campagne bloquée pendant sa refonte : on ne la reprend plus au lancement.
     await backToMenu();
     return true;
   }
@@ -993,7 +992,7 @@
         return `<button class="pf-rank" data-pf="ranks" aria-expanded="${!!ui.pfRanks}"><div class="orb pf-rank-orb" data-planet="rank-${RANKS[t.idx].id}"></div><div><b>${esc(tierLabel(t)).toUpperCase()}</b><small>${tr('{n} points', { n: c.points })}${t.span ? ' · ' + tr('{a} / {b} vers la division suivante', { a: t.into, b: t.span }) : ''} · ${tr('record {n}', { n: c.best })}</small><div class="xp-bar"><i style="width:${t.span ? t.into : 100}%"></i></div></div>${fold}</button>`;
       })()}
       ${ui.pfRanks ? `<div class="pf-ladder">${RANKS.map((r, i) => `<div class="pf-tier ${K.placed(classe()) && K.tierOf(classe().points).idx === i ? 'on' : ''}"><div class="orb" data-planet="rank-${r.id}"></div><b>${tr(r.name)}</b><small>${i === RANKS.length - 1 ? tr('dès {n} points', { n: K.TIER_SPAN * (RANKS.length - 1) }) : 'III · II · I'}</small></div>`).join('')}</div>
-      <p class="muted">${tr('Points par place : {list}.', { list: K.DELTA.map((d) => (d > 0 ? '+' : '') + d).join(' · ') })}</p>` : ''}
+      <p class="muted">${tr('Points par place : {list}, ajustés selon le niveau de la partie (plus de points en battant des créateurs mieux classés, moins de pertes contre eux).', { list: K.DELTA.map((d) => (d > 0 ? '+' : '') + d).join(' · ') })}</p>` : ''}
       <h3 class="pf-h">${tr('STATISTIQUES')}</h3>
       <div class="pf-stats">${tiles.map(([k, v]) => `<div><b>${v}</b><small>${k}</small></div>`).join('')}</div>
       ${fav ? `<p class="muted">${tr('Loi favorite :')} <span style="color:${famColor(R.LAW[fav[0]].fam)}">${esc(R.LAW[fav[0]].name)}</span> · ${fav[1] > 1 ? tr('{n} parties', { n: fav[1] }) : tr('{n} partie', { n: fav[1] })}</p>` : ''}
@@ -2937,7 +2936,7 @@
       s.rankedDone = true;
       const c = K.sanitize(readJson(CLASSE_KEY, null));
       if (!s.mp || s.mp.mode !== 'ranked') s.rankedRes = null;
-      else { s.rankedRes = K.record(c, quit ? 8 : rank); store.set(CLASSE_KEY, JSON.stringify(c)); }
+      else { s.rankedRes = K.record(c, quit ? 8 : rank, s.mp.lobby); store.set(CLASSE_KEY, JSON.stringify(c)); }
     }
     $('endRanked').innerHTML = rankedLine(s.rankedRes);
     if (!s.xpGiven) {

@@ -223,9 +223,32 @@
       games: st.games | 0,
       wins: st.wins | 0,
       world: (read('orbite.monde', []) || []).slice(0, 30),
-      forge: { star, planets }
+      forge: { star, planets },
+      seen: Date.now(),
+      where: whereNow()
     };
   }
+  // Présence pour les amis : où l'on est (menu, partie solo, partie en ligne), mise à jour à
+  // chaque changement et au moins une fois par minute tant que l'appli est ouverte.
+  function whereNow() {
+    const O = window.__orbite;
+    const scr = O && O.ui ? O.ui.screen : '';
+    const st = O && O.ui ? O.ui.state : null;
+    if ((scr === 'game' || scr === 'end') && st && st.mp && !st.over) return 'multi';
+    if (scr === 'game') return 'game';
+    if (scr === 'multi') return 'lobby';
+    return 'menu';
+  }
+  let presence = { at: 0, where: '' };
+  async function beat() {
+    if (!fb || state.status !== 'signedIn' || document.hidden) return;
+    const w = whereNow();
+    if (w === presence.where && Date.now() - presence.at < 60000) return;
+    presence = { at: Date.now(), where: w };
+    try { await fb.fs.updateDoc(fb.fs.doc(db, 'profiles', state.user.uid), { seen: Date.now(), where: w }); } catch (err) { /* hors ligne */ }
+  }
+  setInterval(beat, 15000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) beat(); });
   async function writeProfile() {
     const { fs } = fb;
     await fs.setDoc(fs.doc(db, 'profiles', state.user.uid), Object.assign(publicProfile(), { updatedAt: fs.serverTimestamp() }));

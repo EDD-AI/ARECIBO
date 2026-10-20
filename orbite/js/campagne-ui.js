@@ -310,8 +310,16 @@
   }
 
   // ─── Entrée depuis le menu ──────────────────────────────────
+  // La campagne est bloquée le temps de sa refonte (un jeu de création d'univers se prépare).
+  const LOCKED = true;
   $('campBtn').addEventListener('click', () => {
     SFX.tap();
+    if (LOCKED) {
+      A.openSheet(`<h3>${tr('CAMPAGNE')}</h3><h2>${tr('En cours de refonte')}</h2>
+        <p class="sheet-text">${tr('La campagne revient bientôt sous une nouvelle forme : un vrai jeu de création d’univers, à la hauteur de votre rôle de Créateur.')}</p>
+        <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
+      return;
+    }
     const saved = load();
     if (!saved) { newRun(); return; }
     A.openSheet(`<h3>${tr('CAMPAGNE')}</h3><h2>${tr('Une expédition vous attend')}</h2>
