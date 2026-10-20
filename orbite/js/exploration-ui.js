@@ -137,6 +137,7 @@
   function hud() {
     const r = ex.rover;
     const dist = Math.round(Math.hypot(r.x - 64, r.y - 64));
+    ex.col.explore.maxDist = Math.max(ex.col.explore.maxDist || 0, dist);
     $('exBatBar').style.width = (ex.bat / ex.max * 100).toFixed(1) + '%';
     $('exBatBar').classList.toggle('low', ex.bat < ex.max * 0.2);
     $('exBatTxt').textContent = tr('Batterie {n} %', { n: Math.round(ex.bat / ex.max * 100) });

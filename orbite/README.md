@@ -191,6 +191,30 @@ reste équitable.
   Google Play) et un serveur qui crédite les graines. En attendant, le bouton l’annonce.
 - Stockées dans `orbite.graines` (synchronisées avec la sauvegarde en ligne).
 
+## Succès
+
+Profil → **SUCCÈS** : 100 objectifs en 10 catégories, chacun rapporte de 1 à 5 graines de vie
+(202 en tout). Une annonce animée s’affiche au déblocage.
+
+| Catégorie | Nombre | Exemples |
+|---|---|---|
+| Affrontement | 22 | parties jouées (1 → 500), victoires (1 → 100), podiums, combats gagnés, astres dorés |
+| Familles | 24 | « Champion » (gagner avec une majorité de la famille) et « Fidèle » (10 parties avec elle), pour les 12 familles |
+| Lois | 5 | jouer les 15 lois, gagner avec 5 lois, gagner avec la Loi du sacrifice, de l’endurance, du phénix après renaissance |
+| Légendaires | 7 | en posséder un, puis chacun des 6 en fin de partie |
+| Exploits | 7 | gagner sans perdre un combat, avec 3 PV ou moins, en 12 cycles ; 7 astres, 3 dorés, une Alliance |
+| En ligne | 10 | première partie, victoire, 10 parties, partie privée, placement, rangs Lune → Singularité |
+| Création | 5 | débloquer, semer 3 graines, taille 15, allumer l’étoile, 6 mondes en orbite |
+| Colonie | 9 | tour de contrôle, 10 / 25 bâtiments, 10 / 25 / 50 colons, 400 de recherche, tout le terrain, 20 arbres |
+| Expédition | 6 | partir, 5 / 25 découvertes, ruines, 200 cases de la base, 100 tronçons |
+| Divers | 5 | planter l’arbre d’étoiles, le chêne massif, niveaux 10 / 25 / 50 |
+
+La plupart se lisent dans les données déjà enregistrées (statistiques, Forge, colonies, arbre,
+classement) : un joueur existant débloque d’un coup ce qu’il a déjà accompli. Ce que le jeu ne
+gardait pas (famille majoritaire, exploits d’une partie) est compté en fin de partie, dans
+`orbite.succes.c` ; les succès obtenus sont dans `orbite.succes`. Code : `js/succes.js`,
+traductions : `js/lang/succes.js`, tests : `tests/succes.test.mjs`.
+
 ## Marché stellaire
 
 Deux onglets : **Ma planète** (les 24 améliorations décrites plus haut) et **Cosmétiques**.
@@ -788,6 +812,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `js/forge.js`, `js/forge-ui.js` | Forge des mondes : règles (paliers, prix, ajouts) et interface (écran Création) |
 | `js/colonie-jeu.js`, `js/colonie-ui.js` | Colonie : règles et simulation en temps réel, écran de la surface (construction, réserves, tutoriel) |
 | `js/classement.js` | Mode classé : placements, points, rangs et divisions |
+| `js/succes.js` | Les 100 succès : catalogue, progression, déblocage, onglet du Profil |
 | `js/multi.js`, `js/multi-ui.js` | Multijoueur : salons, recherche classée, codes de session, manches en ligne, et leur écran |
 | `js/exploration.js`, `js/exploration-ui.js` | Expédition : monde infini généré par tronçons autour du rover, découvertes |
 | `js/online-config.js`, `js/online.js`, `js/online-ui.js` | Mode en ligne : configuration Firebase, connexion, sauvegarde, amis, classement, et leur interface |
