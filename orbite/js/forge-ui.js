@@ -46,7 +46,7 @@
       for (const h of F.HUES) stage.register('forge-sw-' + h, Object.assign(F.look(p), { hueShift: h, ring: false, debris: false, moons: 0, shell: false, shape: 'aucune', full: false }));
     }
   }
-  const dustHud = () => { $('marketDust').innerHTML = icon('dust') + ' ' + A.dust(); };
+  const dustHud = () => { for (const id of ['marketDust', 'creationDust']) if ($(id)) $(id).innerHTML = icon('dust') + ' ' + A.dust(); };
 
   // ─── Affichage ──────────────────────────────────────────────
   function render() {
@@ -406,8 +406,7 @@
       data.sel = i;
       shownSize = 0;
       save();
-      await A.show('market');
-      A.marketTab('creation');
+      await A.openCreation();
     }
   }
   $('sysBack').addEventListener('click', async () => {
@@ -418,8 +417,7 @@
       A.renderProfile();
       return;
     }
-    await A.show('market');
-    A.marketTab('creation');
+    await A.openCreation();
   });
 
   // Visite du système d'un autre Créateur (profil public venu du serveur).

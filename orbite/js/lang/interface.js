@@ -854,3 +854,11 @@ window.OrbiteI18n.add({
   de: { 'Bâtisseur de colonies': 'Kolonie-Baumeister', 'Dômes, serres, forages, fusées : générez des bâtiments en pixel art, ou une colonie entière.': 'Kuppeln, Gewächshäuser, Bohrtürme, Raketen: erzeuge Pixel-Art-Gebäude oder eine ganze Kolonie.', 'OUVRIR LE BÂTISSEUR': 'BAUMEISTER ÖFFNEN' },
   pt: { 'Bâtisseur de colonies': 'Construtor de colônias', 'Dômes, serres, forages, fusées : générez des bâtiments en pixel art, ou une colonie entière.': 'Cúpulas, estufas, perfuratrizes, foguetes: gere construções em pixel art, ou uma colônia inteira.', 'OUVRIR LE BÂTISSEUR': 'ABRIR O CONSTRUTOR' }
 });
+
+// Écran Création (menu principal).
+window.OrbiteI18n.add({
+  en: { 'Création': 'Creation', 'La <b>Création</b> : forgez vos propres planètes avec vos <b>poussières d’étoiles</b>, et ouvrez l’<b>Atelier des planètes</b> et le <b>Bâtisseur de colonies</b>.': '<b>Creation</b>: forge your own planets with your <b>stardust</b>, and open the <b>Planet Workshop</b> and the <b>Colony Builder</b>.' },
+  es: { 'Création': 'Creación', 'La <b>Création</b> : forgez vos propres planètes avec vos <b>poussières d’étoiles</b>, et ouvrez l’<b>Atelier des planètes</b> et le <b>Bâtisseur de colonies</b>.': 'La <b>Creación</b>: forja tus propios planetas con tu <b>polvo de estrellas</b>, y abre el <b>Taller de planetas</b> y el <b>Constructor de colonias</b>.' },
+  de: { 'Création': 'Schöpfung', 'La <b>Création</b> : forgez vos propres planètes avec vos <b>poussières d’étoiles</b>, et ouvrez l’<b>Atelier des planètes</b> et le <b>Bâtisseur de colonies</b>.': 'Die <b>Schöpfung</b>: Schmiede eigene Planeten mit deinem <b>Sternenstaub</b> und öffne die <b>Planetenwerkstatt</b> und den <b>Kolonie-Baumeister</b>.' },
+  pt: { 'Création': 'Criação', 'La <b>Création</b> : forgez vos propres planètes avec vos <b>poussières d’étoiles</b>, et ouvrez l’<b>Atelier des planètes</b> et le <b>Bâtisseur de colonies</b>.': 'A <b>Criação</b>: forje seus próprios planetas com sua <b>poeira estelar</b> e abra a <b>Oficina de planetas</b> e o <b>Construtor de colônias</b>.' }
+});

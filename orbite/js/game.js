@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 38;
+  const VERSION = 39;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -367,7 +367,7 @@
     ui.screen = name;
     stage.starsOn = !['splash', 'title', 'wake', 'cStory'].includes(name);
     SFX.ambience({ splash: 'off', title: 'off', wake: 'wake', game: 'game', end: 'game', cStory: 'wake', cFight: 'battle', cEnd: 'game' }[name] || 'menu');
-    SFX.music(['title', 'wake', 'menu', 'market', 'profile', 'laws', 'cMap', 'system'].includes(name));
+    SFX.music(['title', 'wake', 'menu', 'market', 'creation', 'profile', 'laws', 'cMap', 'system'].includes(name));
     // Pendant la partie, le ciel s'efface derrière les planètes pour rester lisible.
     const busySky = ['laws', 'game', 'end', 'cFight'].includes(name);
     stage.starArea = busySky ? 3600 : 1800;
@@ -1355,6 +1355,7 @@
   ];
   const MENU_STEPS = [
     { id: 'solo', target: '#menuList', text: tr('<b>Jouer solo</b> s’ouvre sur deux modes. La <b>Campagne</b> : éveillez-vous en Créateur et façonnez votre monde carte après carte jusqu’à Kronos. L’<b>Affrontement</b> : une partie contre 7 univers rivaux.'), next: tr('SUIVANT'), delay: 0, enter: () => soloMenu(true) },
+    { id: 'creation', target: '#creationBtn', text: tr('La <b>Création</b> : forgez vos propres planètes avec vos <b>poussières d’étoiles</b>, et ouvrez l’<b>Atelier des planètes</b> et le <b>Bâtisseur de colonies</b>.'), next: tr('SUIVANT') },
     { id: 'marche', target: '#marketBtn', text: tr('Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.'), next: tr('SUIVANT') },
     { id: 'profil', target: '#profileBtn', text: tr('Votre <b>profil</b> : pseudo, niveau, statistiques et historique. Chaque partie rapporte de l’expérience.'), next: tr('SUIVANT') },
     { id: 'reglages', target: '#settingsBtn', text: tr('<b>Paramètres</b> : son, musique, règles du jeu, et ce guide si vous voulez le revoir.'), next: tr('C’EST PARTI') }
@@ -3130,6 +3131,18 @@
       <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="new">${tr('JOUER SOLO')}</button><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
   });
   $('marketBtn').addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderMarket(); marketTab('planete'); await show('market'); });
+  // Création : Forge des mondes, Atelier des planètes, Bâtisseur de colonies.
+  async function openCreation() {
+    stopAmbient();
+    $('creationDust').innerHTML = icon('dust') + ' ' + dust();
+    stage.sky = 0;
+    stage.skyGain = 1;
+    await show('creation');
+    if (window.__orbite.forge) window.__orbite.forge.render();
+  }
+  $('creationBtn').addEventListener('click', async () => { SFX.tap(); await openCreation(); });
+  $('creationBack').innerHTML = icon('back');
+  $('creationBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
   $('marketBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
   $('profileBtn').addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderProfile(); await show('profile'); });
   $('profileBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
@@ -3185,7 +3198,7 @@
   window.__orbite.api = {
     show, openSheet, closeSheet, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
     pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient,
-    coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson
+    coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation
   };
 
   // ─── Démarrage ──────────────────────────────────────────────

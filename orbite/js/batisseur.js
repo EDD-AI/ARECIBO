@@ -30,8 +30,8 @@
     return { seed, type };
   }
 
-  function build(entry) {
-    const g = E.generate(entry.type, entry.seed, { theme: state.theme === 'auto' ? null : state.theme });
+  function build(entry, t) {
+    const g = E.generate(entry.type, entry.seed, { theme: state.theme === 'auto' ? null : state.theme, t: t || 0 });
     const pick = E.makeRng('couleur:' + entry.seed);
     g.accent = state.accent === 'auto' ? R.ACCENTS[pick.int(0, R.ACCENTS.length - 1)] : state.accent;
     g.scene = g.key === 'colonie' ? g.model : R.withGround(g.model, entry.seed);
@@ -127,8 +127,28 @@
     else if (e.key === 'r' || e.key === 'R') { state.view = (state.view + 1) % 4; draw(); }
   });
   window.addEventListener('resize', () => { sky(); draw(); });
-  // Les balises clignotent.
-  setInterval(() => { state.blink = !state.blink; draw(); }, 650);
+  // Animation : pales, parabole, forage, fumées (boucle de 3 s) ; les balises clignotent.
+  const ANIMATED = new Set(['eolienne', 'antenne', 'forage', 'usine', 'reacteur', 'fusee', 'piste', 'tour', 'colonie']);
+  let last = 0;
+  function tick(now) {
+    requestAnimationFrame(tick);
+    const g = state.cur;
+    if (!g || state.paused) return;
+    const every = g.key === 'colonie' ? 160 : 100;
+    if (now - last < every) return;
+    last = now;
+    const blink = now % 1300 < 650;
+    if (ANIMATED.has(g.key)) {
+      const entry = state.history[state.at];
+      const next = build(entry, (now / 3000) % 1);
+      next.accent = g.accent;
+      state.cur = next;
+      state.blink = blink;
+      draw();
+    } else if (blink !== state.blink) { state.blink = blink; draw(); }
+  }
+  requestAnimationFrame(tick);
+  document.addEventListener('visibilitychange', () => { state.paused = document.hidden; });
 
   sky();
   const params = new URLSearchParams(location.hash.slice(1));

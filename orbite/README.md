@@ -162,10 +162,13 @@ anneau (`livingWorld` dans `js/planet-engine.js`). Au niveau 120 elle ressemble 
 
 ## Marché stellaire
 
-Trois onglets :
+Deux onglets : **Ma planète** (les 24 améliorations décrites plus haut) et **Cosmétiques**.
 
-- **Ma planète** : les 24 améliorations décrites plus haut.
-- **Création** : la **Forge des mondes**, puis l’**Atelier des planètes** (`atelier.html`), le générateur pixel art avec export PNG et GIF.
+## Création
+
+Bouton du menu principal, juste au-dessus du Marché stellaire. On y trouve la **Forge des mondes**,
+puis l’**Atelier des planètes** (`atelier.html`, générateur de planètes avec export PNG et GIF) et le
+**Bâtisseur de colonies** (`batisseur.html`).
 
 ### Forge des mondes
 
@@ -466,7 +469,7 @@ votre loi », ou combien d’astres de cette famille sont déjà dans votre syst
 
 `batisseur.html` génère des bâtiments de colonie en **voxels pixel art isométriques**, dans l’esprit de
 Surviving Mars ou StarCraft, une graine à la fois (la même graine donne toujours le même bâtiment).
-On y accède depuis le Marché stellaire, onglet Création.
+On y accède depuis l’écran **Création** du menu principal.
 
 | Bâtiment | Ce qu’on y voit |
 |---|---|
@@ -493,6 +496,11 @@ On y accède depuis le Marché stellaire, onglet Création.
   droit éclairé, flanc gauche dans l’ombre, ombres portées vers l’avant gauche (soleil à l’arrière droit),
   occlusion ambiante, texture tramée du sol, verre translucide avec reflets, balises et feux qui clignotent,
   vue tournable d’un quart de tour (bouton TOURNER ou touche R).
+- **Animations** (boucle de 3 s) : les pales des éoliennes tournent, la parabole pivote sur son mât, la tête
+  du forage monte et descend, le bras radar de la tour balaie, la fumée sort des cheminées de la
+  raffinerie, la vapeur monte du réacteur et s’échappe au pied des fusées ; dans une colonie, tout bouge
+  ensemble. Le temps est un paramètre du moteur (`generate(type, graine, { t })`), la disposition ne
+  change pas d’une image à l’autre.
 - **Sols** : Mars, Lune, Glace, Soufre, Volcan ; **couleurs d’accent** : orange, rouge, sarcelle, jaune, bleu.
 - **Moteur** (`js/building-engine.js`) : pur et déterministe, testé sous Node (`tests/batiments.test.mjs`) ;
   `OrbiteBuildings.generate(type, graine)` renvoie le modèle en voxels, réutilisable plus tard dans le jeu.
@@ -596,7 +604,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | Fichier | Rôle |
 |---|---|
 | `js/campagne.js`, `js/campagne-ui.js` | Campagne : règles (cartes, ennemis, carte, combat) et interface (récit, dialogues, carte, combat) |
-| `js/forge.js`, `js/forge-ui.js` | Forge des mondes : règles (paliers, prix, ajouts) et interface (onglet Création) |
+| `js/forge.js`, `js/forge-ui.js` | Forge des mondes : règles (paliers, prix, ajouts) et interface (écran Création) |
 | `js/classement.js` | Mode classé : placements, points, rangs et divisions |
 | `js/online-config.js`, `js/online.js`, `js/online-ui.js` | Mode en ligne : configuration Firebase, connexion, sauvegarde, amis, classement, et leur interface |
 | `firebase/` | Règles de sécurité Firestore et configuration des émulateurs |

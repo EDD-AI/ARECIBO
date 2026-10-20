@@ -62,38 +62,21 @@
           <button class="menu-item sub" id="quickBtn" data-t>AFFRONTEMENT <small>CONTRE 7 UNIVERS</small></button>
         </div>
         <button class="menu-item soon" id="multiBtn" data-t>MULTIJOUEUR <small>BIENTÔT</small></button>
+        <button class="menu-item" id="creationBtn" data-t>CRÉATION</button>
         <button class="menu-item" id="marketBtn" data-t>MARCHÉ STELLAIRE</button>
         <button class="menu-item" id="settingsBtn" data-t>PARAMÈTRES</button>
       </nav>
       <p class="menu-foot" id="menuFoot">STUDIO EDDA</p>
     </section>
 
-    <!-- MARCHÉ STELLAIRE -->
-    <section class="screen" id="market" aria-label="Marché stellaire" data-t-attr="aria-label">
+    <!-- CRÉATION : Forge des mondes, Atelier des planètes, Bâtisseur de colonies -->
+    <section class="screen" id="creation" aria-label="Création" data-t-attr="aria-label">
       <header class="screen-head">
-        <button class="icon-btn" id="marketBack" aria-label="Retour" data-t-attr="aria-label"></button>
-        <h2 data-t>Marché stellaire</h2>
-        <span class="dust" id="marketDust"></span>
+        <button class="icon-btn" id="creationBack" aria-label="Retour" data-t-attr="aria-label"></button>
+        <h2 data-t>Création</h2>
+        <span class="dust" id="creationDust"></span>
       </header>
-      <nav class="mk-tabs" id="mkTabs" role="tablist">
-        <button class="on" data-tab="planete" role="tab" data-t>MA PLANÈTE</button>
-        <button data-tab="creation" role="tab" data-t>CRÉATION</button>
-        <button data-tab="cosmetiques" role="tab" data-t>COSMÉTIQUES</button>
-      </nav>
-      <div class="mk-scroll mk-pane" data-pane="planete" data-clipbox>
-        <div class="mk-hero">
-          <div class="orb mk-planet" id="mkPlanet" data-planet="world-big" data-fit="body"></div>
-          <div class="mk-state">
-            <span class="mk-kicker" data-t>VOTRE PLANÈTE</span>
-            <b id="mkStage"></b>
-            <div class="xp-bar"><i id="mkProg"></i></div>
-            <small id="mkCount"></small>
-          </div>
-        </div>
-        <div class="mk-next" id="mkNext"></div>
-        <div class="mk-list" id="mkList"></div>
-      </div>
-      <div class="mk-scroll mk-pane" data-pane="creation" data-clipbox hidden>
+      <div class="mk-scroll" data-clipbox>
         <div class="forge" id="forge"></div>
         <a class="mk-atelier" href="atelier.html">
           <span class="orb mk-atelier-orb" data-planet="atelier-apercu"></span>
@@ -108,6 +91,32 @@
           <p data-t>Dômes, serres, forages, fusées : générez des bâtiments en pixel art, ou une colonie entière.</p>
           <span class="btn primary" data-t>OUVRIR LE BÂTISSEUR</span>
         </a>
+      </div>
+    </section>
+
+    <!-- MARCHÉ STELLAIRE -->
+    <section class="screen" id="market" aria-label="Marché stellaire" data-t-attr="aria-label">
+      <header class="screen-head">
+        <button class="icon-btn" id="marketBack" aria-label="Retour" data-t-attr="aria-label"></button>
+        <h2 data-t>Marché stellaire</h2>
+        <span class="dust" id="marketDust"></span>
+      </header>
+      <nav class="mk-tabs" id="mkTabs" role="tablist">
+        <button class="on" data-tab="planete" role="tab" data-t>MA PLANÈTE</button>
+        <button data-tab="cosmetiques" role="tab" data-t>COSMÉTIQUES</button>
+      </nav>
+      <div class="mk-scroll mk-pane" data-pane="planete" data-clipbox>
+        <div class="mk-hero">
+          <div class="orb mk-planet" id="mkPlanet" data-planet="world-big" data-fit="body"></div>
+          <div class="mk-state">
+            <span class="mk-kicker" data-t>VOTRE PLANÈTE</span>
+            <b id="mkStage"></b>
+            <div class="xp-bar"><i id="mkProg"></i></div>
+            <small id="mkCount"></small>
+          </div>
+        </div>
+        <div class="mk-next" id="mkNext"></div>
+        <div class="mk-list" id="mkList"></div>
       </div>
       <div class="mk-scroll mk-pane" data-pane="cosmetiques" hidden>
         <p class="mk-intro" data-t>Des fonds animés qui remplacent le noir pendant vos parties. Touchez-en un pour l’essayer derrière cet écran.</p>

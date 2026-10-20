@@ -25,3 +25,14 @@ test('une colonie réunit plusieurs bâtiments sur un terrain', () => {
   assert.ok(count(M.GROUND) > 1000, 'terrain');
   assert.ok(count(M.HULL) + count(M.HULL2) > 150, 'bâtiments');
 });
+
+test('animation : le temps change le bâtiment, pas sa taille ni la colonie', () => {
+  for (const k of ['eolienne', 'antenne', 'forage', 'usine', 'reacteur', 'tour']) {
+    const a = E.generate(k, 'anim', { t: 0 }), b = E.generate(k, 'anim', { t: 0.37 });
+    assert.deepEqual(a.stats.size, b.stats.size, k);
+    assert.ok(a.model.v.some((v, i) => v !== b.model.v[i]), k + ' immobile');
+  }
+  const c0 = E.generate('colonie', 'anim', { t: 0 }), c1 = E.generate('colonie', 'anim', { t: 0.5 });
+  const ground = (g) => g.model.v.filter((v) => v === E.MAT.GROUND).length;
+  assert.equal(ground(c0), ground(c1), 'la colonie garde sa disposition');
+});
