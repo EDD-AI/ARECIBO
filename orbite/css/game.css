@@ -1470,3 +1470,4 @@ body.in-combat .banner { top: calc(50% - 34px); }
 .col-card.locked small { color: var(--dim); }
 .col-dive { position: fixed; inset: 0; z-index: 60; pointer-events: none; background: radial-gradient(circle at 50% 50%, #e8c9a0 0%, #a3633e 45%, #2a160e 100%); opacity: 0; }
 .cine-art { position: absolute; left: 50%; top: 32%; translate: -50% -50%; image-rendering: pixelated; transition: opacity 0.4s; }
+.col-res [data-col-supply] { cursor: pointer; border-style: dashed; }

@@ -94,14 +94,14 @@
   const fmt = (n) => (n > 0 ? '+' : '') + (Math.abs(n) < 10 ? n.toFixed(1).replace('.0', '') : Math.round(n));
   function renderRes() {
     const col = ui.col, r = C.rates(col);
-    const cell = (label, val, sub, bad) => `<span class="${bad ? 'bad' : ''}"><small>${label}</small><b>${val}</b>${sub != null ? `<i>${sub}</i>` : ''}</span>`;
+    const cell = (label, val, sub, bad, attr) => `<span class="${bad ? 'bad' : ''}" ${attr || ''}><small>${label}</small><b>${val}</b>${sub != null ? `<i>${sub}</i>` : ''}</span>`;
     $('colRes').innerHTML =
       cell(tr('COLONS'), `${col.colonists}/${r.pop}`, `${tr('emplois')} ${Math.round(r.workers)}/${r.jobs}`, r.pop === 0) +
       cell(tr('ÉNERGIE'), fmt(r.power), `${Math.round(r.powerProd)}/${Math.round(r.powerUse)}`, r.power < 0) +
       cell(tr('EAU'), Math.round(col.stock.water), fmt(r.water), r.water < 0) +
       cell(tr('OXYGÈNE'), Math.round(col.stock.oxygen), fmt(r.oxygen), r.oxygen < 0) +
       cell(tr('NOURRITURE'), Math.round(col.stock.food), fmt(r.food), r.food < 0) +
-      cell(tr('MATÉRIAUX'), Math.round(col.stock.materials), fmt(r.materials)) +
+      cell(tr('MATÉRIAUX') + ' +', Math.round(col.stock.materials), fmt(r.materials), col.stock.materials < 20, 'data-col-supply role="button"') +
       cell(tr('RECHERCHE'), Math.round(col.stock.research), fmt(r.research)) +
       cell(icon('dust'), A.dust(), null);
     $('colSol').textContent = tr('SOL {n}', { n: col.sol }) + (col.storm > 0 ? ' · ' + tr('TEMPÊTE') : '');
@@ -156,7 +156,8 @@
     if (!ui.sel) { box.hidden = true; return; }
     box.hidden = false;
     const gh = ui.ghost;
-    $('colPlaceTxt').innerHTML = gh ? (gh.ok ? `${esc(bname(ui.sel))} · ${C.price(ui.sel).materials} ${tr('mat.')}` : `<span class="bad">${esc(tr(gh.reason))}</span>`) : tr('Touchez le terrain pour placer : {nom}', { nom: esc(bname(ui.sel)) });
+    const short = gh && gh.reason === 'Pas assez de matériaux.' ? ' ' + tr('Touchez MATÉRIAUX pour un ravitaillement.') : '';
+    $('colPlaceTxt').innerHTML = gh ? (gh.ok ? `${esc(bname(ui.sel))} · ${C.price(ui.sel).materials} ${tr('mat.')}` : `<span class="bad">${esc(tr(gh.reason) + short)}</span>`) : tr('Touchez le terrain pour placer : {nom}', { nom: esc(bname(ui.sel)) });
     $('colBuild').disabled = !(gh && gh.ok);
   }
   function aim(tx, ty) {
@@ -221,6 +222,27 @@
       <button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
     const d = $('colDemolish');
     if (d) d.addEventListener('click', () => { C.demolish(col, b.uid); save(); A.closeSheet(); SFX.sell(); draw(); renderRes(); });
+  }
+
+  // Matériaux : d'où ils viennent, et la navette de ravitaillement.
+  function supplySheet() {
+    const col = ui.col, r = C.rates(col), S = C.SUPPLY;
+    const room = Math.max(0, Math.floor(r.caps.materials - col.stock.materials));
+    A.openSheet(`<h3>${tr('MATÉRIAUX')}</h3><h2>${Math.round(col.stock.materials)} / ${Math.round(r.caps.materials)}</h2>
+      <p class="sheet-text">${tr('Les rovers de la tour de contrôle récupèrent {n} matériau par sol. Un <b>forage</b> ou une <b>mine</b> sur le minerai en produit bien plus ; démolir rend la moitié du prix.', { n: C.SALVAGE })}</p>
+      <p class="muted">${tr('Navette de ravitaillement : {n} matériaux pour {d} poussières d’étoiles.', { n: S.materials, d: S.dust })}</p>
+      <div class="sheet-actions"><button class="btn primary" id="colSupplyBuy" ${room > 0 && A.dust() >= S.dust ? '' : 'disabled'}>${tr('COMMANDER')} · ${S.dust} ${icon('dust')}</button>
+      <button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
+    $('colSupplyBuy').addEventListener('click', () => {
+      const res = C.supply(ui.col, A.dust());
+      if (!res.ok) { A.refuse(tr(res.reason)); return; }
+      A.addDust(-res.dust);
+      save();
+      A.closeSheet();
+      SFX.coin();
+      A.toast(tr('La navette a livré {n} matériaux.', { n: res.n }), 2200);
+      renderRes(); renderCards(); if (ui.ghost && ui.sel) aim(ui.ghost.x + Math.floor(ui.ghost.fp.X / 2), ui.ghost.y + Math.floor(ui.ghost.fp.Y / 2));
+    });
   }
 
   // ─── Temps réel ─────────────────────────────────────────────
@@ -352,6 +374,7 @@
   $('colCats').addEventListener('click', (e) => { const b = e.target.closest('[data-col-cat]'); if (!b) return; SFX.tap(); ui.cat = b.dataset.colCat; renderCats(); renderCards(); });
   $('colCards').addEventListener('click', (e) => { const b = e.target.closest('[data-col-card]'); if (!b) return; select(b.dataset.colCard); });
   $('colBuild').addEventListener('click', confirmBuild);
+  $('colRes').addEventListener('click', (e) => { if (e.target.closest('[data-col-supply]')) { SFX.tap(); supplySheet(); } });
   $('colCancel').addEventListener('click', () => { ui.sel = null; ui.ghost = null; SFX.tap(); renderCards(); hint(); draw(); });
   $('colZoomIn').addEventListener('click', () => zoom(1.25));
   $('colZoomOut').addEventListener('click', () => zoom(0.8));

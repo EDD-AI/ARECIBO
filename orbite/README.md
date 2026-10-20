@@ -251,6 +251,10 @@ bouton **DESCENDRE À LA SURFACE** dans la Forge.
   un bâtiment ouvre sa fiche : rendement, et démolition (la moitié des matériaux revient).
 - **Prix** : des matériaux selon l’importance du bâtiment ; les paliers avancés coûtent en plus des
   poussières d’étoiles (40 au palier 3, 150 au palier 4).
+- **Matériaux** : les rovers de la tour de contrôle en récupèrent 1 par sol, donc la colonie n’est
+  jamais bloquée. Toucher la case **MATÉRIAUX** ouvre la **navette de ravitaillement** : 100 matériaux
+  pour 25 poussières d’étoiles, dans la limite du stockage. Forages et mines sur le minerai en
+  produisent bien plus, et démolir rend la moitié du prix.
 - **Recherche** : 19 bâtiments au départ, puis des paliers à 40, 150 et 400 de recherche.
 - **Temps réel** : 1 sol = 1 minute, même appli fermée (rattrapé au retour, trois jours au plus).
   Chaque colon consomme 1 d’eau, d’oxygène et de nourriture par sol. Les bâtiments produisent
