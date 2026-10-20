@@ -677,9 +677,9 @@ sauvegarde en ligne. Ceux qui avaient déjà vaincu Kronos reçoivent la graine 
 
 Six astres **légendaires**, un par niveau, existent en **un seul exemplaire** par partie et sont présents
 dans toutes les parties, quelles que soient les familles tirées. Ils ne se montrent que rarement : chaque
-emplacement de la Création a 1 chance sur 40 d’en proposer un (de votre niveau ou moins), et une
-découverte en glisse un parmi ses choix une fois sur sept environ (15 %). En moyenne, on en voit un par
-partie, et on en possède un dans environ 3 parties sur 10. Ils ne fusionnent pas (un seul exemplaire).
+emplacement de la Création a 1 chance sur 100 d’en proposer un (de votre niveau ou moins), et une
+découverte en glisse un parmi ses choix dans 7 % des cas. On en croise un dans environ 3 parties sur
+10, et on en possède un dans 1 partie sur 10 seulement. Ils ne fusionnent pas (un seul exemplaire).
 
 | Niveau | Légendaire | Famille | Stats | Pouvoir |
 |---|---|---|---|---|
@@ -767,6 +767,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `tests/*.test.mjs` | Tests des règles, de la campagne, de la Forge, du classement, des bâtiments et de la colonie |
 | `tools/equilibrage.js` | Simulation de parties entre bots : classement moyen par loi, famille et astre |
 | `tools/bots-duel.js` | Force des bots : IA experte contre IA de base dans les mêmes parties |
+| `tools/bots-mono.js` | Le joueur « tout dans une famille » contre les bots : sa part de victoires par famille |
 | `tools/hybrides.js` | Compositions hybrides : bots à une famille contre bots à deux familles, rang de chaque duo |
 | `manifest.webmanifest`, `sw.js`, `icons/` | Installation sur téléphone et hors ligne |
 
@@ -814,5 +815,21 @@ Mesuré avec `node orbite/tools/bots-duel.js 3000`, dans les mêmes parties, IA 
 base : rang moyen 3,67 contre 5,33, et 18 % de victoires contre 7 %. Un joueur qui joue comme
 l’ancienne IA passe d’un rang moyen de 4,03 à 5,46 face aux nouveaux bots.
 
+**IA experte (v51).** Mesuré avec `node orbite/tools/bots-mono.js 150` : un joueur « naïf » qui
+joue une seule famille et achète tout ce qui en est battait trop facilement les bots (Vie 39 % de
+victoires, Cristal 28 %, Lune 28 %). Les bots (réglages `BOT` dans `js/rules.js`) :
+- **choisissent plutôt les familles fortes en solo** (`FAM_POWER`, mesuré par le même outil). Une
+  famille faible seule (Brasier, Machine, Comètes, Envers, Anomalies) s’allie à la plus forte de la
+  partie ;
+- **s’engagent dans leur famille** : sa valeur grandit avec le nombre de ses astres déjà possédés ;
+- **réfléchissent à leurs achats** : leurs 4 meilleures options sont jouées sur une copie de la
+  partie (effets à l’achat, triplés et découvertes compris). Le plateau obtenu affronte ensuite en
+  combats simulés celui de 3 rivaux.
+
+Résultat : le joueur naïf gagne 13 % des parties en Cristal (12,5 % = autant que chaque bot), 19 % en
+Vie, 11 % en Lune, et 6 % en moyenne sur les 12 familles. Avec `node orbite/tools/bots-duel.js 600`,
+l’IA experte fait 1re dans 19 % des parties, contre 6 % pour l’IA de base. Un tour de bots coûte
+environ 40 ms.
+
 Pistes essayées puis écartées, car neutres ou nuisibles : monter de niveau plus tôt (nettement
-plus faible), pondérer la synergie de famille et réordonner le système.
+plus faible) et réordonner le système.

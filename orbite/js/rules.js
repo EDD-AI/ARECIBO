@@ -23,8 +23,8 @@
   const ACTIVE_FAMILIES = 5;
   const COPIES = [0, 16, 15, 13, 11, 9, 7];
   // Légendaires : chance qu'un emplacement de la Création en montre une, et qu'une découverte en propose une.
-  const LEGEND_SHOP = 1 / 40;
-  const LEGEND_DISCOVER = 0.15;
+  const LEGEND_SHOP = 1 / 100;
+  const LEGEND_DISCOVER = 0.07;
   const SHOP_SIZE = [0, 3, 4, 4, 5, 5, 6];
   const UPGRADE = [0, 5, 7, 8, 9, 10, 0];
   const DAMAGE_CAP = 10;
@@ -698,13 +698,24 @@
       state.players.push(h);
     }
     for (let i = state.players.length - 1; i < PLAYERS - 1; i++) {
-      const bl = botLaws.length ? botLaws[Math.floor(rng() * botLaws.length)] : LAWS[0];
+      // Les bots préfèrent les familles fortes en solo (FAM_POWER), sans s'y limiter.
+      let bl = LAWS[0];
+      if (botLaws.length) {
+        const ws = botLaws.map((l) => Math.pow(FAM_POWER[l.fam] || 0.5, BOT.famWeight));
+        let x = rng() * ws.reduce((a, b) => a + b, 0);
+        bl = botLaws[botLaws.length - 1];
+        for (let k = 0; k < botLaws.length; k++) { if (x < ws[k]) { bl = botLaws[k]; break; } x -= ws[k]; }
+      }
       const b = newPlayer(state, 'bot' + i, names[i], bl.id, true);
       b.greed = Math.floor(rng() * 4) - 1;
       b.skill = 1;
-      if (rng() < 0.3) b.pref = families[Math.floor(rng() * families.length)];
-      // Environ 40 % des bots visent une Alliance de deux familles.
-      if (rng() < 0.4) { const others = families.filter((f) => f !== b.pref); b.pref2 = others[Math.floor(rng() * others.length)]; }
+      if (rng() < BOT.randPref) b.pref = families[Math.floor(rng() * families.length)];
+      // Un bot sur dix vise une Alliance de deux familles.
+      const pairUp = rng() < BOT.pref2;
+      const others = families.filter((f) => f !== b.pref);
+      // Une famille faible seule s'allie à la plus forte de la partie.
+      if ((FAM_POWER[b.pref] || 0.5) < BOT.weak) b.pref2 = others.slice().sort((x, y) => (FAM_POWER[y] || 0) - (FAM_POWER[x] || 0))[0];
+      else if (pairUp) b.pref2 = others[Math.floor(rng() * others.length)];
       state.players.push(b);
     }
     for (const p of state.players) if (!p.remote) rollShop(state, p);
@@ -1225,11 +1236,21 @@
   // Les bots des parties ont skill 1 (IA experte) ; skill 0 garde l'IA de base, utile pour
   // mesurer l'écart (orbite/tools/bots-duel.js).
   const expert = (p) => p.skill > 0;
+  // Réglages de l'IA experte (choisis par simulation : orbite/tools/bots-mono.js).
+  const BOT = { randPref: 0, pref2: 0.1, famBase: 6, famPer: 2, levelLag: 3, sim: 2, simOpp: 3, simCand: 4, famWeight: 6, weak: 0.5 };
+  // Force d'une famille jouée seule (part de victoires d'un joueur « tout dans une famille »
+  // contre les bots, orbite/tools/bots-mono.js), ramenée entre 0 et 1.
+  const FAM_POWER = { vie: 1, cristal: 0.8, lune: 0.8, tempete: 0.75, glace: 0.7, mineral: 0.55, neant: 0.5, brasier: 0.3, machine: 0.3, comete: 0.25, envers: 0.25, anomalie: 0.2 };
+  const famBonus = (p, fam) => {
+    if (fam === p.pref) return BOT.famBase + (expert(p) ? BOT.famPer * famCount(p, fam) : 0);
+    if (fam === p.pref2) return BOT.famBase + (expert(p) ? BOT.famPer * 0.5 * famCount(p, fam) : 0);
+    return 0;
+  };
   function famCount(p, fam) { return fam === 'neutre' ? 0 : p.board.concat(p.hand).filter((u) => famOf(u) === fam).length; }
   function cardValue(p, id) {
     const c = CARD[id];
     let v = c.atk + c.hp + c.tier * 3.2 + (c.kw ? c.kw.length * 1.5 : 0);
-    if (c.fam === p.pref || c.fam === p.pref2) v += 6;
+    v += famBonus(p, c.fam);
     if (c.sun && p.board.concat(p.hand).some((u) => famOf(u) === 'vie')) v += 4;
     v += ownedCopies(p, id).length * 7;
     return v;
@@ -1237,7 +1258,7 @@
 
   function unitValue(p, u) {
     const c = cardOf(u);
-    return u.atk + u.hp + c.tier * 3.2 + (c.fam === p.pref || c.fam === p.pref2 ? 6 : 0) + (u.golden ? 8 : 0) + u.kw.length * 1.5;
+    return u.atk + u.hp + c.tier * 3.2 + famBonus(p, c.fam) + (u.golden ? 8 : 0) + u.kw.length * 1.5;
   }
 
   function botDeploy(state, p) {
@@ -1262,6 +1283,41 @@
     }
   }
 
+  // Force d'un plateau : quelques combats simulés contre les plateaux actuels des rivaux.
+  function simScore(state, p, board) {
+    const opps = alivePlayers(state).filter((q) => q.id !== p.id && q.board.length);
+    if (!opps.length || !board.length) return 0;
+    let score = 0;
+    for (let k = 0; k < Math.min(BOT.simOpp, opps.length); k++) {
+      const op = opps[(k + state.round) % opps.length];
+      for (let t = 0; t < 2; t++) {
+        const fs = { seed: state.seed, rc: 0, families: state.families, uidc: 1000000, pool: {} };
+        const me = { id: 'sim', law: p.law, tier: p.tier, board: JSON.parse(JSON.stringify(board)) };
+        const them = { id: 'opp', law: op.law, tier: op.tier, board: JSON.parse(JSON.stringify(op.board)) };
+        const r = fight(fs, me, them, 'sim:' + p.id + ':' + state.round + ':' + k + ':' + t, false);
+        score += r.winner === 0 ? 1 + r.damage * 0.05 : r.winner === 1 ? -1 - r.damage * 0.05 : 0;
+      }
+    }
+    return score;
+  }
+  // Achat réfléchi : chaque option est jouée sur une copie de la partie (effets à l'achat,
+  // triplés, découvertes compris), puis le plateau obtenu est mis à l'épreuve.
+  function simPick(state, p, opts) {
+    const base = simScore(state, p, p.board);
+    let best = null;
+    for (const o of opts.slice(0, BOT.simCand)) {
+      if (!canBuy(state, o.i, p).ok) continue;
+      const sc = JSON.parse(JSON.stringify(state));
+      const pc = findPlayer(sc, p.id);
+      buy(sc, o.i, pc);
+      botDeploy(sc, pc);
+      const gain = simScore(sc, pc, pc.board) - base;
+      const total = o.v + BOT.sim * gain;
+      if (!best || total > best.total) best = Object.assign({}, o, { total, gain });
+    }
+    return best;
+  }
+
   function botTurn(state, p) {
     const rng = rngFor(state, 'bot:' + p.id);
     // IA experte : suit la famille qui domine déjà son système.
@@ -1272,7 +1328,7 @@
     botDeploy(state, p);
     // L'IA experte monte de niveau plus tard : elle remplit d'abord son système, puis investit
     // l'énergie restante. C'est ce qui la rend nettement plus solide en début de partie.
-    const want = Math.min(6, 1 + Math.floor((state.round + p.greed - (expert(p) ? 3 : 0)) / 2));
+    const want = Math.min(6, 1 + Math.floor((state.round + p.greed - (expert(p) ? BOT.levelLag : 0)) / 2));
     if (p.tier < want && p.gold >= upgradeCost(p) && (state.round >= 3 || upgradeCost(p) <= p.gold - BUY_COST || p.gold >= 5)) upgrade(state, p);
     if (p.law === 'ingenierie' && p.gold >= 1 && p.gold % 3 === 1) usePower(state, null, p);
     if (p.law === 'renversement') {
@@ -1287,11 +1343,12 @@
       botDeploy(state, p);
       if (p.gold < BUY_COST) break;
       const opts = p.shop.map((id, i) => (id ? { i, id, v: cardValue(p, id) + rng() * 2 } : null)).filter(Boolean).sort((a, b) => b.v - a.v);
-      const best = opts[0];
+      const thinking = expert(p) && BOT.sim > 0 && state.round >= 2 && opts.length > 1;
+      const best = thinking ? simPick(state, p, opts) || opts[0] : opts[0];
       const full = p.board.length >= BOARD_MAX;
       const weak = full ? p.board.slice().sort((a, b) => unitValue(p, a) - unitValue(p, b))[0] : null;
       const bar = full ? unitValue(p, weak) + 3 : 0;
-      if (!best || best.v < bar || !canBuy(state, best.i, p).ok) {
+      if (!best || (best.v < bar && !(best.gain > 0.5)) || !canBuy(state, best.i, p).ok) {
         if (p.gold >= BUY_COST + ROLL_COST && rolls < maxRolls) { roll(state, p); rolls++; continue; }
         break;
       }
