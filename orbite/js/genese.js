@@ -107,7 +107,9 @@
   const levelOf = (m) => LEVELS.reduce((cur, l, i) => (m >= l.at ? i : cur), 0);
   const has = (g, k) => g.parts.includes(k);
   const maxHp = (g) => HP + (has(g, 'croute') ? 50 : 0);
-  const viewWidth = (g) => 22 * radius(g.me.m) * (has(g, 'oeil') ? 1.3 : 1);
+  // La caméra reste fixe pendant un palier (on voit le grain grossir à l'écran), puis recule d'un
+  // coup au palier suivant. Largeur de la vue, en unités du monde.
+  const viewWidth = (g) => 30 * radius(LEVELS[levelOf(g.me.m)].at) * (has(g, 'oeil') ? 1.3 : 1);
 
   // Un corps céleste, mesuré par rapport au rayon du joueur.
   function spawnBody(g, x, y) {
@@ -139,21 +141,23 @@
   const POP = 62;
   // Au départ (et après une renaissance), la nébuleuse est peuplée tout autour.
   function fill(g) {
-    const r = radius(g.me.m);
+    const r = radius(g.me.m), V = viewWidth(g);
     while (g.bodies.length < POP) {
-      const [x, y] = ringPoint(g, 5 * r, 42 * r);
+      const [x, y] = ringPoint(g, Math.max(5 * r, 0.2 * V), 1.65 * V);
       spawnBody(g, x, y);
     }
   }
   function spawnFragment(g) {
     const r = radius(g.me.m);
-    const [x, y] = ringPoint(g, 30 * r, 40 * r);
+    const V = viewWidth(g);
+    const [x, y] = ringPoint(g, 1.3 * V, 1.6 * V);
     g.bodies.push({ id: g.uid++, k: 'fragment', x, y, vx: 0, vy: 0, r: 0.6 * r, m: 0, spin: 0, shape: 0 });
   }
   function spawnComet(g) {
     const r = radius(g.me.m);
     const a = rand(g) * Math.PI * 2;
-    const x = g.me.x + Math.cos(a) * 34 * r, y = g.me.y + Math.sin(a) * 34 * r;
+    const d = 1.3 * viewWidth(g);
+    const x = g.me.x + Math.cos(a) * d, y = g.me.y + Math.sin(a) * d;
     // Elle traverse en visant à peu près le joueur.
     const aim = Math.atan2(g.me.y - y, g.me.x - x) + between(g, -0.25, 0.25), sp = 13 * r;
     const s = between(g, 0.7, 1.5);
@@ -259,10 +263,11 @@
       hit(g, b, dx, dy, d);
     }
     // Ménage : ce qui est trop loin disparaît ; de nouveaux corps arrivent par les bords.
-    const far = 52 * r;
+    // Le décor se renouvelle hors de la vue (anneau autour de l'écran).
+    const V = viewWidth(g), far = 2 * V;
     g.bodies = g.bodies.filter((b) => (b.life == null || b.life > 0) && Math.hypot(b.x - me.x, b.y - me.y) < (b.k === 'fragment' ? far * 1.5 : far));
     let n = 0;
-    while (g.bodies.length < POP && n++ < 6) { const [x, y] = ringPoint(g, 31 * r, 44 * r); spawnBody(g, x, y); }
+    while (g.bodies.length < POP && n++ < 6) { const [x, y] = ringPoint(g, 1.25 * V, 1.65 * V); spawnBody(g, x, y); }
     g.fragAt -= dt;
     if (g.fragAt <= 0) {
       g.fragAt = between(g, 55, 85);

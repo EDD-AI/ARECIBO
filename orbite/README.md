@@ -69,8 +69,17 @@ système solaire vivant.
   - Des comètes traversent : on les absorbe si on est plus gros qu’elles, sinon elles font mal.
 - **Paliers de masse.**
   - Grain → Gravier → Caillou → Rocher → Bloc → planétésimal (fin de l’ère).
-  - La caméra recule à mesure qu’on grossit, donc l’ancien danger devient de la nourriture.
+  - **On se voit grossir.** La caméra reste fixe pendant un palier : le grain grossit à l’écran
+    (jusqu’à deux fois sa taille). Au palier suivant, elle recule lentement : on redevient petit
+    dans un monde plus vaste, et l’ancien danger devient de la nourriture.
   - Le grain s’arrondit en grossissant, comme les vrais astres.
+- **Le fond se dévoile avec la croissance.** Au départ, c’est presque le noir, avec quelques
+  étoiles. Ensuite :
+  - les étoiles se multiplient et la nébuleuse s’allume ;
+  - des plans flous en parallaxe apparaissent : la matière des tailles qu’on a dépassées dérive
+    derrière, plus floue et plus lente à mesure qu’elle est loin ;
+  - très loin surgissent, palier après palier, des amas d’étoiles, des galaxies, des planètes
+    géantes et des étoiles.
 - **Façonnage** (l’éditeur de Spore) :
   - Il s’ouvre à chaque palier, et à tout moment avec le bouton ✦.
   - On y dépense les **étincelles ✦** gagnées en absorbant. Un emplacement de plus par palier.

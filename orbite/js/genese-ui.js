@@ -14,7 +14,7 @@
   const PX = 3; // pixels d'écran par pixel du jeu
   const STEP = 1 / 60;
 
-  const ui = { g: null, raf: 0, last: 0, acc: 0, cam: null, scale: 0, input: { x: 0, y: 0 }, touch: null, dest: null, keys: {}, dash: false, pulse: false,
+  const ui = { g: null, raf: 0, last: 0, acc: 0, cam: null, scale: 0, input: { x: 0, y: 0 }, par: { x: 0, y: 0 }, touch: null, dest: null, keys: {}, dash: false, pulse: false,
     parts: [], motes: [], shake: 0, flash: 0, paused: false, editor: false, hudAt: 0, saveAt: 0, sprites: new Map(), rings: [], ended: false };
 
   // ─── Couleurs ───────────────────────────────────────────────
@@ -115,6 +115,77 @@
   }
   const starHash = (x, y, l) => { let v = (Math.imul(x, 73856093) ^ Math.imul(y, 19349663) ^ Math.imul(l + 1, 83492791)) >>> 0; v = Math.imul(v ^ (v >>> 13), 1274126177); return ((v ^ (v >>> 16)) >>> 0) / 4294967296; };
 
+  // ─── Plans du fond ──────────────────────────────────────────
+  // Flou de boîte (3 × 3) sur un petit canevas, répété `n` fois ; il s'élargit d'un pixel par passe.
+  function blur(src, n) {
+    let cv = src;
+    for (let p = 0; p < n; p++) {
+      const S = cv.width + 2, T = cv.height + 2;
+      const out = document.createElement('canvas');
+      out.width = S; out.height = T;
+      const octx = out.getContext('2d');
+      octx.drawImage(cv, 1, 1);
+      const a = octx.getImageData(0, 0, S, T), b = octx.createImageData(S, T);
+      for (let y = 0; y < T; y++) for (let x = 0; x < S; x++) {
+        let r = 0, g = 0, bl = 0, al = 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const xx = x + dx, yy = y + dy;
+          if (xx < 0 || yy < 0 || xx >= S || yy >= T) continue;
+          const i = (yy * S + xx) * 4, w = a.data[i + 3];
+          r += a.data[i] * w; g += a.data[i + 1] * w; bl += a.data[i + 2] * w; al += w;
+        }
+        const i = (y * S + x) * 4;
+        if (al) { b.data[i] = r / al; b.data[i + 1] = g / al; b.data[i + 2] = bl / al; b.data[i + 3] = al / 9; }
+      }
+      octx.putImageData(b, 0, 0);
+      cv = out;
+    }
+    return cv;
+  }
+  const blurCache = new Map();
+  function blurSprite(mat, R, seed) {
+    const k = mat + R + ':' + seed;
+    if (!blurCache.has(k)) blurCache.set(k, blur(makeSprite(R, RAMP[mat], seed * 97 + 13, mat === 'gaz' ? 0.12 : 0.3, { gas: mat === 'gaz' }), R > 2 ? 2 : 1));
+    return blurCache.get(k);
+  }
+  // Repères lointains : 1 amas d'étoiles, 2 galaxie, 3 planète géante, 4 étoile.
+  const landCache = new Map();
+  function landmark(kind, seed) {
+    const key = kind + ':' + (seed % 64);
+    if (landCache.has(key)) return landCache.get(key);
+    let st = (seed % 64) * 2654435761 >>> 0;
+    const rnd = () => { st = (st + 0x6D2B79F5) >>> 0; let t = Math.imul(st ^ (st >>> 15), st | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const S = kind === 2 ? 64 : kind === 3 ? 52 : 40;
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = S;
+    const ctx = cv.getContext('2d'), c = S / 2;
+    const dot = (x, y, col) => { ctx.fillStyle = col; ctx.fillRect(Math.round(x), Math.round(y), 1, 1); };
+    if (kind === 1) {
+      for (let i = 0; i < 46; i++) { const a = rnd() * 6.28, d = Math.pow(rnd(), 1.6) * 13; dot(c + Math.cos(a) * d, c + Math.sin(a) * d, rnd() < 0.3 ? '#ffffff' : rnd() < 0.5 ? '#bcd4ff' : '#ffe6c0'); }
+    } else if (kind === 2) {
+      const rot = rnd() * 6.28, tilt = 0.35 + rnd() * 0.3, warm = rnd() < 0.5;
+      for (let i = 0; i < 520; i++) {
+        const arm = i % 2, t = rnd() * 3.2, a = t * 1.9 + arm * Math.PI + rot, d = 2 + t * 8 + (rnd() - 0.5) * 3;
+        const x = Math.cos(a) * d, y = Math.sin(a) * d * tilt;
+        dot(c + x * Math.cos(rot) - y * Math.sin(rot), c + x * Math.sin(rot) + y * Math.cos(rot), t < 0.6 ? '#fff0d0' : warm ? '#e8b0ff' : '#9ec8ff');
+      }
+      for (let i = 0; i < 30; i++) dot(c + (rnd() - 0.5) * 6, c + (rnd() - 0.5) * 3, '#fff8e8');
+    } else if (kind === 3) {
+      const mat = G.MATTERS[Math.floor(rnd() * 3)], R = 11 + Math.floor(rnd() * 6);
+      ctx.drawImage(makeSprite(R, RAMP[mat], Math.floor(rnd() * 1e6), 0.02, {}), c - R - 2, c - R - 2);
+      if (rnd() < 0.6) { ctx.fillStyle = 'rgba(230,220,200,0.7)'; for (let i = 0; i < 90; i++) { const a = i / 90 * 6.28; const y = Math.sin(a) * R * 0.32; if (Math.cos(a) < 0 && Math.hypot(Math.cos(a) * R * 1.7, y) < R) continue; dot(c + Math.cos(a) * R * 1.7, c + y, 'rgba(230,220,200,0.8)'); } }
+    } else {
+      const col = ['#fff1c8', '#bcd8ff', '#ffc8a0'][Math.floor(rnd() * 3)];
+      const gr = ctx.createRadialGradient(c, c, 0, c, c, c);
+      gr.addColorStop(0, col); gr.addColorStop(0.18, col + 'aa'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = gr; ctx.fillRect(0, 0, S, S);
+      for (let i = 2; i < c; i++) { const al = 1 - i / c; ctx.fillStyle = `rgba(255,255,255,${al * 0.8})`; ctx.fillRect(c + i, c, 1, 1); ctx.fillRect(c - i, c, 1, 1); ctx.fillRect(c, c + i * 0.7, 1, 1); ctx.fillRect(c, c - i * 0.7, 1, 1); }
+    }
+    const out = kind === 4 ? cv : blur(cv, kind === 3 ? 1 : 1);
+    landCache.set(key, out);
+    return out;
+  }
+
   // ─── Dessin d'une image ─────────────────────────────────────
   function draw(now) {
     const g = ui.g, cv = $('gnCanvas'), v = $('gnView');
@@ -123,40 +194,82 @@
     const ctx = cv.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     const me = g.me, r = G.radius(me.m);
-    // Échelle : la largeur de l'écran couvre viewWidth rayons ; elle suit la croissance en douceur.
+    // Échelle : fixe pendant un palier (le grain grossit à l'écran), puis la caméra recule
+    // lentement au palier suivant et l'on redevient petit dans un monde plus vaste.
     const want = W / G.viewWidth(g);
-    ui.scale = ui.scale ? ui.scale + (want - ui.scale) * 0.06 : want;
+    ui.scale = ui.scale ? ui.scale + (want - ui.scale) * 0.035 : want;
     const s = ui.scale;
     if (!ui.cam) ui.cam = { x: me.x, y: me.y };
+    const ocx = ui.cam.x, ocy = ui.cam.y;
     ui.cam.x += (me.x + me.vx * 0.25 - ui.cam.x) * 0.12;
     ui.cam.y += (me.y + me.vy * 0.25 - ui.cam.y) * 0.12;
+    // Trajet cumulé en pixels d'écran : les plans du fond glissent sans à-coups pendant les zooms.
+    ui.par.x += (ui.cam.x - ocx) * s;
+    ui.par.y += (ui.cam.y - ocy) * s;
     let shx = 0, shy = 0;
     if (ui.shake > 0) { shx = (Math.random() - 0.5) * ui.shake; shy = (Math.random() - 0.5) * ui.shake; }
     const sx = (x) => Math.round((x - ui.cam.x) * s + W / 2 + shx), sy = (y) => Math.round((y - ui.cam.y) * s + H / 2 + shy);
+    // Croissance de 0 (grain) à 5 (planétésimal) : le fond se dévoile avec elle.
+    const gl = Math.min(5, G.levelOf(me.m) + G.progress(g));
+    const clamp = (v) => Math.max(0, Math.min(1, v));
 
-    // Fond.
-    ctx.fillStyle = '#05040a';
+    // Fond : noir au départ.
+    ctx.fillStyle = '#04030a';
     ctx.fillRect(0, 0, W, H);
-    const z = G.zoneAt(g.seed, me.x, me.y, r), neb = nebulaTiles();
-    const px = ui.cam.x * s * 0.12, py = ui.cam.y * s * 0.12;
-    for (const k of G.MATTERS) {
-      ctx.globalAlpha = Math.min(1, 0.25 + z[k] * 1.1);
-      const ox = -((px + (k === 'roche' ? 40 : k === 'gaz' ? 70 : 0)) % NEB + NEB) % NEB, oy = -((py + (k === 'gaz' ? 30 : 0)) % NEB + NEB) % NEB;
-      for (let y = oy; y < H; y += NEB) for (let x = ox; x < W; x += NEB) ctx.drawImage(neb[k], x, y);
-    }
-    ctx.globalAlpha = 1;
-    for (const [l, par, cell] of [[0, 0.03, 14], [1, 0.09, 22], [2, 0.2, 34]]) {
-      const ox = ui.cam.x * s * par, oy = ui.cam.y * s * par;
+    // Étoiles lointaines : de plus en plus nombreuses.
+    const keep = 0.1 + 0.09 * gl;
+    for (const [l, par, cell] of [[0, 0.02, 14], [1, 0.06, 22], [2, 0.12, 34]]) {
+      const ox = ui.par.x * par, oy = ui.par.y * par;
       const c0 = Math.floor(ox / cell), r0 = Math.floor(oy / cell);
       for (let cy = r0; cy <= r0 + Math.ceil(H / cell) + 1; cy++) for (let cx = c0; cx <= c0 + Math.ceil(W / cell) + 1; cx++) {
         const h = starHash(cx, cy, l);
-        if (h > 0.55) continue;
+        if (h > keep) continue;
         const x = Math.round(cx * cell - ox + h * cell * 1.7), y = Math.round(cy * cell - oy + starHash(cy, cx, l) * cell);
         const tw = l === 2 && Math.sin(now / 300 + h * 40) > 0.6;
         ctx.fillStyle = l === 0 ? '#3c3850' : l === 1 ? '#7a7690' : tw ? '#ffffff' : '#c8c4dc';
         ctx.fillRect(x, y, 1, 1);
       }
     }
+    // Très loin : amas, galaxies, géantes et étoiles apparaissent à mesure qu'on grandit.
+    const LC = 150, lp = 0.03, lox = ui.par.x * lp, loy = ui.par.y * lp;
+    for (let cy = Math.floor(loy / LC) - 1; cy <= Math.floor((loy + H) / LC) + 1; cy++) for (let cx = Math.floor(lox / LC) - 1; cx <= Math.floor((lox + W) / LC) + 1; cx++) {
+      const h = starHash(cx, cy, 7);
+      if (h > 0.55) continue;
+      const kind = 1 + Math.floor(starHash(cy, cx, 8) * 4);
+      const a = clamp((gl - kind + 0.4) * 0.9) * 0.85;
+      if (a <= 0) continue;
+      const lm = landmark(kind, Math.floor(h * 1e6));
+      ctx.globalAlpha = a;
+      ctx.drawImage(lm, Math.round(cx * LC - lox + starHash(cx, cy, 9) * LC * 0.6 - lm.width / 2), Math.round(cy * LC - loy + starHash(cy, cx, 9) * LC * 0.6 - lm.height / 2));
+    }
+    ctx.globalAlpha = 1;
+    // La nébuleuse s'allume.
+    const z = G.zoneAt(g.seed, me.x, me.y, r), neb = nebulaTiles(), nebA = clamp(0.1 + gl * 0.2);
+    const px = ui.par.x * 0.08, py = ui.par.y * 0.08;
+    for (const k of G.MATTERS) {
+      ctx.globalAlpha = Math.min(1, 0.25 + z[k] * 1.1) * nebA;
+      const ox = -((px + (k === 'roche' ? 40 : k === 'gaz' ? 70 : 0)) % NEB + NEB) % NEB, oy = -((py + (k === 'gaz' ? 30 : 0)) % NEB + NEB) % NEB;
+      for (let y = oy; y < H; y += NEB) for (let x = ox; x < W; x += NEB) ctx.drawImage(neb[k], x, y);
+    }
+    ctx.globalAlpha = 1;
+    // Plans flous : la matière des tailles qu'on a dépassées dérive derrière, en parallaxe.
+    for (const [k, par, cell, rmin, rmax] of [[3, 0.18, 15, 1, 2], [2, 0.32, 20, 1, 3], [1, 0.55, 27, 2, 4]]) {
+      const w = clamp((gl - (k - 1)) * 0.8);
+      if (w <= 0) continue;
+      const ox = ui.par.x * par + now * 0.004 * par * 10, oy = ui.par.y * par + now * 0.0015 * par * 10;
+      const c0 = Math.floor(ox / cell), r0 = Math.floor(oy / cell);
+      for (let cy = r0 - 1; cy <= r0 + Math.ceil(H / cell) + 1; cy++) for (let cx = c0 - 1; cx <= c0 + Math.ceil(W / cell) + 1; cx++) {
+        const h = starHash(cx, cy, 20 + k);
+        if (h > (k === 1 ? 0.13 : 0.17)) continue;
+        const h2 = starHash(cy, cx, 30 + k);
+        const mat = G.MATTERS[Math.floor(h2 * 3)];
+        const R = rmin + Math.floor(starHash(cx + 7, cy, 40 + k) * (rmax - rmin + 1));
+        const spr = blurSprite(mat, R, Math.floor(h2 * 50));
+        ctx.globalAlpha = w * (k === 1 ? 0.4 : k === 2 ? 0.28 : 0.2);
+        ctx.drawImage(spr, Math.round(cx * cell - ox + h * cell * 2.4 - spr.width / 2), Math.round(cy * cell - oy + h2 * cell - spr.height / 2));
+      }
+    }
+    ctx.globalAlpha = 1;
     // Poussières fines : elles filent à contresens, on sent la vitesse.
     if (!ui.motes.length) for (let i = 0; i < 46; i++) ui.motes.push({ x: Math.random() * W, y: Math.random() * H, d: 0.3 + Math.random() * 0.7 });
     ctx.fillStyle = 'rgba(220,210,190,0.45)';
