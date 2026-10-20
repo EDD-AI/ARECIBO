@@ -20,6 +20,11 @@
   const LIFE = ['water', 'oxygen', 'food'];
   // Récupération par les rovers de la tour (par sol) ; navette de ravitaillement (matériaux, prix).
   const SALVAGE = 1;
+  // Zone constructible : demi-côté autour du centre, agrandie par paliers (64 × 64 → 128 × 128).
+  const ZONES = [32, 40, 48, 56, 64];
+  const ZONE_COST = [null, { materials: 150, dust: 0 }, { materials: 250, dust: 30 }, { materials: 350, dust: 60 }, { materials: 500, dust: 120 }];
+  // Rovers : vitesse en cases par seconde (temps réel), durée d'une tournée de récupération, pause au quai.
+  const ROVER = { speed: 1.4, cycle: 40, wait: 3, max: 8 };
   const SUPPLY = { materials: 100, dust: 25 };
   // Verdure des pépinières : le front de la prairie avance d'une case toutes les 4 heures (240 sols)
   // jusqu'à 30 cases, soit 5 jours ; les arbres sortent 1 à 3 jours après l'herbe et mûrissent en 2 jours.
@@ -66,7 +71,7 @@
   // Le colonisateur pose 4 colons, des matériaux et des réserves ; la tour de contrôle vient en premier.
   function create(id, seed, theme, now) {
     return {
-      v: 1, id: String(id), seed: seed >>> 0, theme: theme || 'mars', S: SIZE,
+      v: 2, id: String(id), seed: seed >>> 0, theme: theme || 'mars', S: SIZE, zone: 0,
       sol: 0, last: now || 0, uid: 1,
       built: [],
       colonists: 4,
@@ -79,21 +84,25 @@
   // Gisements de glace et de minerai : des taches fixes, tirées de la graine de la colonie.
   const depCache = new Map();
   function deposits(col) {
-    const key = col.seed + ':' + col.S;
+    const key = col.seed + ':' + col.S + ':' + (col.v || 1);
     if (depCache.has(key)) return depCache.get(key);
     const S = col.S, ice = new Uint8Array(S * S), ore = new Uint8Array(S * S);
     const r = E.makeRng('gisements:' + col.seed);
-    const blobs = (arr, n) => {
+    // Depuis la v2, la première tache de glace et de minerai tombe dans la zone de départ.
+    const near = (col.v || 1) >= 2 ? r.range(0, Math.PI * 2) : null;
+    const blobs = (arr, n, turn) => {
       for (let i = 0; i < n; i++) {
-        const cx = r.range(8, S - 8), cy = r.range(8, S - 8), rad = r.range(6, 12);
+        let cx, cy, rad;
+        if (i === 0 && near != null) { const a = near + turn, d = r.range(19, 22); cx = S / 2 + Math.cos(a) * d; cy = S / 2 + Math.sin(a) * d; rad = r.range(7.5, 9); }
+        else { cx = r.range(8, S - 8); cy = r.range(8, S - 8); rad = r.range(6, 12); }
         for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
           const d = Math.hypot(x - cx, y - cy) / rad;
           if (d < 1 - 0.35 * hashTile(col.seed + i, x, y)) arr[y * S + x] = 1;
         }
       }
     };
-    blobs(ice, 6);
-    blobs(ore, 6);
+    blobs(ice, 6, 0);
+    blobs(ore, 6, Math.PI * 0.9);
     // Le centre reste libre pour le commandement.
     for (let y = S / 2 - 12; y < S / 2 + 12; y++) for (let x = S / 2 - 12; x < S / 2 + 12; x++) { ice[y * S + x] = 0; ore[y * S + x] = 0; }
     const d = { ice, ore };
@@ -113,6 +122,53 @@
   const unlocked = (col, key) => (TIER_OF[key] != null) && col.stock.research >= TIERS[TIER_OF[key]].research;
   const hasHq = (col) => col.built.some((b) => b.key === 'tour');
 
+  // ─── Zone de la colonie ─────────────────────────────────────
+  // Palier de zone ; une colonie d'avant les zones reçoit le plus petit palier qui contient tout.
+  function zoneIndex(col) {
+    if (col.zone == null) {
+      const c = col.S / 2;
+      let need = 0;
+      for (const b of col.built) {
+        const f = footprint(b.key, b.seed);
+        need = Math.max(need, c - b.x, c - b.y, b.x + f.X - c, b.y + f.Y - c);
+      }
+      const i = ZONES.findIndex((h) => h >= need + 1);
+      col.zone = i < 0 ? ZONES.length - 1 : i;
+    }
+    return Math.max(0, Math.min(ZONES.length - 1, col.zone | 0));
+  }
+  const zoneHalf = (col) => Math.min(col.S / 2, ZONES[zoneIndex(col)]);
+  // Bornes de la zone en cases : [x0, x1) × [y0, y1).
+  function zoneBox(col) {
+    const c = col.S / 2, h = zoneHalf(col);
+    return { x0: Math.max(0, c - h), y0: Math.max(0, c - h), x1: Math.min(col.S, c + h), y1: Math.min(col.S, c + h), size: Math.min(col.S, h * 2) };
+  }
+  function nextZone(col) {
+    const i = zoneIndex(col);
+    if (i >= ZONES.length - 1) return null;
+    return { size: Math.min(col.S, ZONES[i + 1] * 2), cost: ZONE_COST[i + 1] };
+  }
+  function expand(col, dust) {
+    const n = nextZone(col);
+    if (!n) return { ok: false, reason: 'La colonie occupe déjà tout le terrain.' };
+    if (col.stock.materials < n.cost.materials) return { ok: false, reason: 'Pas assez de matériaux.' };
+    if ((dust || 0) < n.cost.dust) return { ok: false, reason: 'Pas assez de poussières d’étoiles.' };
+    col.stock.materials -= n.cost.materials;
+    col.zone = zoneIndex(col) + 1;
+    return { ok: true, size: n.size, dust: n.cost.dust };
+  }
+  // Masque des cases hors zone (1), pour assombrir le terrain au rendu.
+  const maskCache = new Map();
+  function zoneMask(col) {
+    const z = zoneBox(col), key = col.S + ':' + z.x0 + ':' + z.x1;
+    if (!maskCache.has(key)) {
+      const m = new Uint8Array(col.S * col.S);
+      for (let y = 0; y < col.S; y++) for (let x = 0; x < col.S; x++) m[y * col.S + x] = x < z.x0 || y < z.y0 || x >= z.x1 || y >= z.y1 ? 1 : 0;
+      maskCache.set(key, m);
+    }
+    return maskCache.get(key);
+  }
+
   // Peut-on poser ce bâtiment ici (coin x, y) ? Renvoie { ok, reason, fp }.
   function canPlace(col, key, x, y, dust) {
     const t = E.TYPE_BY_KEY[key];
@@ -122,6 +178,8 @@
     if (!unlocked(col, key)) return { ok: false, reason: 'Recherche insuffisante.' };
     const fp = footprint(key, buildSeed(col, col.uid));
     if (x < 1 || y < 1 || x + fp.X > col.S - 1 || y + fp.Y > col.S - 1) return { ok: false, reason: 'Hors du terrain.', fp };
+    const zb = zoneBox(col);
+    if (x < zb.x0 + 1 || y < zb.y0 + 1 || x + fp.X > zb.x1 - 1 || y + fp.Y > zb.y1 - 1) return { ok: false, reason: 'Hors de la zone de la colonie : agrandissez-la.', fp };
     for (const b of col.built) {
       const f = footprint(b.key, b.seed);
       if (x < b.x + f.X + 1 && x + fp.X + 1 > b.x && y < b.y + f.Y + 1 && y + fp.Y + 1 > b.y) return { ok: false, reason: 'La place est déjà prise.', fp };
@@ -322,6 +380,170 @@
   // Rayon atteint par le front d'une pépinière (en cases).
   const greenRadius = (b) => Math.min(GREEN.radius, (b.g || 0) / GREEN.perTile);
 
+  // ─── Rovers ─────────────────────────────────────────────────
+  // Le rover de la tour part récupérer des matériaux dans la zone ; chaque forage, mine ou
+  // extracteur a son transporteur qui fait la navette avec la tour. Ils contournent les bâtiments.
+  const routeCache = new Map();
+  function blockedGrid(col) {
+    const S = col.S, g = new Uint8Array(S * S), z = zoneBox(col);
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) if (x < z.x0 || y < z.y0 || x >= z.x1 || y >= z.y1) g[y * S + x] = 1;
+    for (const b of col.built) {
+      const f = footprint(b.key, b.seed);
+      // Abords (3 cases) : praticables mais évités, pour que les rovers roulent au large des murs.
+      for (let y = b.y - 3; y < b.y + f.Y + 3; y++) for (let x = b.x - 3; x < b.x + f.X + 3; x++) if (x >= 0 && y >= 0 && x < S && y < S && !g[y * S + x]) g[y * S + x] = 2;
+    }
+    for (const b of col.built) {
+      const f = footprint(b.key, b.seed);
+      for (let y = b.y; y < b.y + f.Y; y++) for (let x = b.x; x < b.x + f.X; x++) if (x >= 0 && y >= 0 && x < S && y < S) g[y * S + x] = 1;
+    }
+    return g;
+  }
+  // Case libre au bord d'un bâtiment, du côté de (tx, ty).
+  function dock(col, grid, b, tx, ty) {
+    const f = footprint(b.key, b.seed), S = col.S;
+    let best = null, bd = Infinity;
+    for (let y = b.y - 1; y <= b.y + f.Y; y++) for (let x = b.x - 1; x <= b.x + f.X; x++) {
+      if (x >= b.x && x < b.x + f.X && y >= b.y && y < b.y + f.Y) continue;
+      if (x < 0 || y < 0 || x >= S || y >= S || grid[y * S + x] === 1) continue;
+      const d = Math.abs(x - tx) + Math.abs(y - ty);
+      if (d < bd) { bd = d; best = [x, y]; }
+    }
+    return best;
+  }
+  // Plus court chemin sur la grille, en pénalisant les virages (trajets en lignes droites).
+  const DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+  function findPath(col, grid, a, b) {
+    const S = col.S, N = S * S * 4, cost = new Float32Array(N).fill(Infinity), from = new Int32Array(N).fill(-1);
+    const heap = [];
+    const push = (st, c, g0) => { heap.push([c, st, g0]); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+    const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = i * 2 + 1, r = l + 1; let m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
+    const start = a[1] * S + a[0], goal = b[1] * S + b[0];
+    for (let d = 0; d < 4; d++) { cost[start * 4 + d] = 0; push(start * 4 + d, 0, 0); }
+    let end = -1;
+    while (heap.length) {
+      const [, st, c] = pop();
+      if (c > cost[st]) continue;
+      const t = st >> 2, d = st & 3;
+      if (t === goal) { end = st; break; }
+      const x = t % S, y = (t / S) | 0;
+      for (let nd = 0; nd < 4; nd++) {
+        const nx = x + DIRS[nd][0], ny = y + DIRS[nd][1];
+        if (nx < 0 || ny < 0 || nx >= S || ny >= S || grid[ny * S + nx] === 1) continue;
+        const ns = (ny * S + nx) * 4 + nd, nc = c + 1 + (nd === d ? 0 : 2.5) + (grid[ny * S + nx] === 2 ? 1.5 : 0);
+        if (nc < cost[ns]) { cost[ns] = nc; from[ns] = st; push(ns, nc + Math.abs(nx - b[0]) + Math.abs(ny - b[1]), nc); }
+      }
+    }
+    if (end < 0) return null;
+    const pts = [];
+    for (let st = end; st >= 0; st = from[st]) { const t = st >> 2; pts.push([t % S, (t / S) | 0]); }
+    pts.reverse();
+    // Ne garder que les coins.
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length - 1; i++) {
+      const p = pts[i - 1], q = pts[i], r = pts[i + 1];
+      if ((q[0] - p[0]) !== (r[0] - q[0]) || (q[1] - p[1]) !== (r[1] - q[1])) out.push(q);
+    }
+    if (pts.length > 1) out.push(pts[pts.length - 1]);
+    let len = 0;
+    for (let i = 1; i < out.length; i++) len += Math.abs(out[i][0] - out[i - 1][0]) + Math.abs(out[i][1] - out[i - 1][1]);
+    return { pts: out, len };
+  }
+  // Position le long d'un chemin (distance d depuis le départ) : x, y et direction.
+  function along(path, d) {
+    let rest = Math.max(0, Math.min(path.len, d));
+    for (let i = 1; i < path.pts.length; i++) {
+      const p = path.pts[i - 1], q = path.pts[i], L = Math.abs(q[0] - p[0]) + Math.abs(q[1] - p[1]);
+      const dir = q[0] > p[0] ? 0 : q[1] > p[1] ? 1 : q[0] < p[0] ? 2 : 3;
+      if (rest <= L || i === path.pts.length - 1) {
+        const k = L ? Math.min(1, rest / L) : 0;
+        return { x: p[0] + (q[0] - p[0]) * k, y: p[1] + (q[1] - p[1]) * k, dir };
+      }
+      rest -= L;
+    }
+    const p = path.pts[0];
+    return { x: p[0], y: p[1], dir: 0 };
+  }
+  const sigOf = (col) => col.uid + ':' + col.built.length + ':' + zoneIndex(col);
+  function cachedPath(col, key, make) {
+    const k = col.id + ':' + sigOf(col) + ':' + key;
+    if (!routeCache.has(k)) {
+      if (routeCache.size > 80) routeCache.delete(routeCache.keys().next().value);
+      routeCache.set(k, make());
+    }
+    return routeCache.get(k);
+  }
+  function rovers(col, clock) {
+    const hq = col.built.find((b) => b.key === 'tour');
+    if (!hq) return [];
+    const grid = cachedPath(col, 'grille', () => blockedGrid(col));
+    const fh = footprint(hq.key, hq.seed), hx = hq.x + fh.X / 2, hy = hq.y + fh.Y / 2;
+    const out = [];
+    const run = (path, phase, speed, cargo) => {
+      const go = path.len / speed, T = 2 * go + 2 * ROVER.wait, t = ((phase % T) + T) % T;
+      if (t < ROVER.wait) { const p = along(path, 0); return Object.assign(p, { cargo: null, dir: along(path, 0.5).dir }); }
+      if (t < ROVER.wait + go) return Object.assign(along(path, (t - ROVER.wait) * speed), { cargo: null, moving: true });
+      if (t < 2 * ROVER.wait + go) { const p = along(path, path.len); return Object.assign(p, { cargo, dir: (along(path, path.len - 0.5).dir + 2) % 4 }); }
+      const p = along(path, path.len - (t - 2 * ROVER.wait - go) * speed);
+      return Object.assign(p, { cargo, dir: (p.dir + 2) % 4, moving: true });
+    };
+    // Transporteurs : un par forage, mine ou extracteur (les plus proches d'abord).
+    const prod = col.built.filter((b) => { const t = E.TYPE_BY_KEY[b.key]; return t && (t.role === 'ore' || t.role === 'ice'); })
+      .sort((a, b) => Math.hypot(a.x - hx, a.y - hy) - Math.hypot(b.x - hx, b.y - hy)).slice(0, ROVER.max - 1);
+    for (const b of prod) {
+      const path = cachedPath(col, 'n' + b.uid, () => {
+        const f = footprint(b.key, b.seed);
+        const a0 = dock(col, grid, hq, b.x + f.X / 2, b.y + f.Y / 2), b0 = dock(col, grid, b, hx, hy);
+        return a0 && b0 ? findPath(col, grid, a0, b0) : null;
+      });
+      if (!path || path.len < 2) continue;
+      const r = run(path, clock + hashTile(col.seed, b.uid, 7) * 60, ROVER.speed, E.TYPE_BY_KEY[b.key].role === 'ice' ? 'ice' : 'ore');
+      out.push(r);
+    }
+    // Rover de récupération : une destination tirée au sort à chaque tournée.
+    const n = Math.floor(clock / ROVER.cycle), z = zoneBox(col);
+    const path = cachedPath(col, 't' + n, () => {
+      const rr = E.makeRng('recup:' + col.seed + ':' + n);
+      for (let k = 0; k < 30; k++) {
+        const tx = rr.int(z.x0 + 2, z.x1 - 3), ty = rr.int(z.y0 + 2, z.y1 - 3);
+        if (grid[ty * col.S + tx] || Math.abs(tx - hx) + Math.abs(ty - hy) < 14) continue;
+        const a0 = dock(col, grid, hq, tx, ty);
+        const p = a0 && findPath(col, grid, a0, [tx, ty]);
+        if (p && p.len >= 6) return p;
+      }
+      return null;
+    });
+    if (path) {
+      const speed = Math.max(0.8, (2 * path.len) / (ROVER.cycle - 2 * ROVER.wait));
+      out.push(run(path, clock - n * ROVER.cycle, speed, 'sand'));
+    }
+    return out;
+  }
+  // Voxels d'un rover (6 × 4, jaune chantier) tourné selon sa direction, posé à la hauteur z ;
+  // en route, un peu de poussière soulevée derrière lui.
+  function roverVoxels(r, z, blink) {
+    const M = E.MAT, out = [];
+    const cargo = r.cargo === 'ice' ? M.ICE : r.cargo === 'ore' ? M.ROCK : r.cargo === 'sand' ? M.SAND : 0;
+    const add = (lx, ly, dz, k) => {
+      const fx = lx - 2.5, fy = ly - 1.5;
+      const [ox, oy] = r.dir === 0 ? [fx, fy] : r.dir === 1 ? [-fy, fx] : r.dir === 2 ? [-fx, -fy] : [fy, -fx];
+      out.push({ x: r.x + 0.5 + ox, y: r.y + 0.5 + oy, z: z + dz, k });
+    };
+    // Roues, châssis et caisse.
+    for (const lx of [0, 1, 4, 5]) for (const ly of [0, 3]) add(lx, ly, 0, M.DARK);
+    for (let lx = 1; lx < 5; lx++) for (const ly of [1, 2]) add(lx, ly, 0, M.METAL);
+    for (let lx = 0; lx < 6; lx++) for (let ly = 0; ly < 4; ly++) add(lx, ly, 1, lx >= 4 ? M.HULL : M.STRIPE);
+    // Cabine vitrée à l'avant, benne à l'arrière (chargée au retour), gyrophare.
+    for (const ly of [0, 3]) { add(4, ly, 2, M.HULL); add(5, ly, 2, M.HULL); }
+    add(5, 1, 2, M.GLASS); add(5, 2, 2, M.GLASS); add(4, 1, 2, M.HULL); add(4, 2, 2, M.HULL);
+    add(4, 1, 3, M.HULL2); add(4, 2, 3, M.HULL2); add(5, 1, 3, M.HULL2); add(5, 2, 3, M.HULL2);
+    for (let lx = 0; lx < 4; lx++) { add(lx, 0, 2, M.STRIPE); add(lx, 3, 2, M.STRIPE); }
+    add(0, 1, 2, M.STRIPE); add(0, 2, 2, M.STRIPE);
+    if (cargo) for (let lx = 1; lx < 4; lx++) for (const ly of [1, 2]) add(lx, ly, 2, cargo);
+    add(4, 1, 4, blink ? M.BEACON : M.DARK);
+    if (r.moving) { const k = (Date.now() / 120) | 0; add(-1, 1 + (k & 1), 0, M.SAND); add(-2, 2 - (k & 1), 1, M.SAND); }
+    return out;
+  }
+
   // Modèle en voxels de la colonie (sol, gisements, bâtiments posés) pour le rendu.
   function scene(col, t) {
     const S = col.S;
@@ -329,6 +551,9 @@
     const r = E.makeRng('terrain:' + col.seed);
     r.seedA = r.range(0, 10); r.seedB = r.range(0, 10);
     const g = E.slab(m, r, { height: 3 });
+    // Hauteur du sol nu par case, pour poser les rovers.
+    const top = new Uint8Array(S * S);
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { let z = g + 1; while (z > 0 && !m.get(x, y, z)) z--; top[y * S + x] = z; }
     const dep = deposits(col);
     for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
       if (dep.ice[y * S + x]) m.set(x, y, g - 1, E.MAT.ICE);
@@ -361,6 +586,14 @@
         }
       }
     }
+    // Bornes lumineuses le long de la limite de la zone (juste à l'extérieur).
+    const zb = zoneBox(col);
+    if (zb.size < S) {
+      const post = (x, y, corner) => { if (x < 0 || y < 0 || x >= S || y >= S) return; m.set(x, y, g, E.MAT.METAL); m.set(x, y, g + 1, E.MAT.METAL); m.set(x, y, g + 2, corner ? E.MAT.BEACON : E.MAT.LIGHT); };
+      for (let k = zb.x0; k <= zb.x1; k += 6) { post(k, zb.y0 - 1); post(k, zb.y1); }
+      for (let k = zb.y0; k <= zb.y1; k += 6) { post(zb.x0 - 1, k); post(zb.x1, k); }
+      for (const [x, y] of [[zb.x0 - 1, zb.y0 - 1], [zb.x1, zb.y0 - 1], [zb.x0 - 1, zb.y1], [zb.x1, zb.y1]]) post(x, y, true);
+    }
     for (const b of col.built) {
       const t0 = E.TYPE_BY_KEY[b.key];
       if (!t0) continue;
@@ -371,8 +604,8 @@
       }
       m.blit(model, b.x, b.y, g);
     }
-    return { m, g };
+    return { m, g, top };
   }
 
-  return { SOL_MS, MAX_CATCHUP, SALVAGE, SUPPLY, supply, SIZE, TIERS, TIER_OF, LIFE, GREEN, vegetation, greenRadius, greenEstimate, create, deposits, footprint, buildSeed, price, unlocked, hasHq, canPlace, build, demolish, rates, step, catchUp, scene };
+  return { SOL_MS, MAX_CATCHUP, SALVAGE, SUPPLY, supply, ZONES, ZONE_COST, zoneIndex, zoneBox, nextZone, expand, zoneMask, ROVER, rovers, roverVoxels, findPath, SIZE, TIERS, TIER_OF, LIFE, GREEN, vegetation, greenRadius, greenEstimate, create, deposits, footprint, buildSeed, price, unlocked, hasHq, canPlace, build, demolish, rates, step, catchUp, scene };
 });

@@ -200,6 +200,8 @@ planète ».
   sans remboursement.
 - **Nature** : la première est offerte au premier repas, la changer coûte 6 + 2 × taille. Le cristal
   demande une taille 3, la géante gazeuse une taille 6.
+- **Personnaliser la planète** : nature, teinte, ajouts et relief sont regroupés dans un volet
+  repliable, fermé par défaut ; il reste ouvert tant que la nature n’est pas choisie.
 - **Teinte** : 12 teintes à 2 poussières, montrées par de vraies mini-planètes.
 - **Remodeler le relief** (3) redessine les continents.
 - **Renommer** est gratuit.
@@ -251,6 +253,17 @@ bouton **DESCENDRE À LA SURFACE** dans la Forge.
   un bâtiment ouvre sa fiche : rendement, et démolition (la moitié des matériaux revient).
 - **Prix** : des matériaux selon l’importance du bâtiment ; les paliers avancés coûtent en plus des
   poussières d’étoiles (40 au palier 3, 150 au palier 4).
+- **Zone de la colonie** : on construit dans une zone de 64 × 64 cases au départ, balisée par des
+  bornes lumineuses ; le terrain au-delà est assombri. Le bouton **⤢** l’agrandit par paliers :
+  80 (150 matériaux), 96 (250 + 30 poussières), 112 (350 + 60), puis tout le terrain, 128 × 128
+  (500 + 120). La première tache de glace et de minerai tombe toujours dans la zone de départ.
+- **Rovers** : on les voit rouler en temps réel, jaunes, avec un nuage de poussière derrière eux.
+  - Le rover de la tour part récupérer des matériaux dans la zone et revient chargé de sable.
+  - Chaque forage, mine ou extracteur a son transporteur, qui fait la navette avec la tour et
+    revient chargé de minerai ou de glace.
+  - Ils contournent les bâtiments et préfèrent l’espace dégagé.
+  - Ils sont dessinés par-dessus le terrain plusieurs fois par seconde, avec un tampon de
+    profondeur, sans recalculer la scène.
 - **Matériaux** : les rovers de la tour de contrôle en récupèrent 1 par sol, donc la colonie n’est
   jamais bloquée. Toucher la case **MATÉRIAUX** ouvre la **navette de ravitaillement** : 100 matériaux
   pour 25 poussières d’étoiles, dans la limite du stockage. Forages et mines sur le minerai en

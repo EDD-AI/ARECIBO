@@ -18,6 +18,7 @@
   }
   let data = load();
   let shownSize = 0;
+  let customOpen = false;
   function load() {
     try {
       const d = JSON.parse(A.store.get(KEY, 'null'));
@@ -76,20 +77,32 @@
       ${!full && !feed.ok && feed.short ? `<small class="fg-why">${esc(feed.reason)}</small>` : ''}
       <div class="fg-slots"><span>${tr('EMPLACEMENTS')}</span><span class="fg-pips">${pips}</span><span>${free > 1 ? tr('{n} libres', { n: free }) : tr('{n} libre', { n: free })}</span></div>
       ${surfaceRow(p)}`;
+    // Personnalisation (nature, teinte, ajouts, relief) dans un volet repliable : fermé par défaut,
+    // ouvert tant que la nature n'est pas choisie.
     if (p.mass >= 1) {
-      const natCost = p.type ? 6 + 2 * p.mass : 0;
-      html += `<h4 class="fg-h">${tr('NATURE')} <small>${p.type ? tr('changer · {prix}', { prix: price(natCost) }) : tr('choisissez-la : offert')}</small></h4>
-        <div class="fg-chips">${F.NATURES.map((n) => {
-          const lock = p.mass < n.min;
-          return `<button class="fg-chip ${p.type === n.key ? 'on' : ''}" data-forge="nature" data-k="${n.key}" ${lock ? 'disabled' : ''}>${esc(n.name)}${lock ? `<small>${tr('taille {n}', { n: n.min })}</small>` : ''}</button>`;
-        }).join('')}</div>`;
-    }
-    if (p.type) {
-      html += `<h4 class="fg-h">${tr('TEINTE')} <small>${price(F.HUE_COST)}</small></h4>
-        <div class="fg-hues">${F.HUES.map((h) => `<button class="fg-hue ${p.hue === h ? 'on' : ''}" data-forge="hue" data-v="${h}" aria-label="${tr('Teinte {n}', { n: h })}"><span class="orb" data-planet="forge-sw-${h}"></span></button>`).join('')}</div>
-        <h4 class="fg-h">${tr('AJOUTS')} <small>${tr('un emplacement chacun')}</small></h4>
-        <div class="fg-parts">${F.PARTS.map((part) => partRow(p, part, dust)).join('')}</div>
-        <button class="btn fg-relief" data-forge="relief">${tr('REMODELER LE RELIEF · {prix}', { prix: price(F.RELIEF_COST) })}</button>`;
+      const open = customOpen || !p.type;
+      const parts = F.PARTS.filter((part) => (part.key === 'moons' ? p.moons > 0 : !!p[part.key])).length;
+      const sum = p.type ? `${F.NATURE[p.type].name} · ${parts > 1 ? tr('{n} ajouts', { n: parts }) : tr('{n} ajout', { n: parts })}` : tr('nature à choisir');
+      html += `<button class="fg-fold ${open ? 'on' : ''}" data-forge="fold" aria-expanded="${open}"><span>${tr('PERSONNALISER LA PLANÈTE')}</span><small>${esc(sum)}</small><i>${open ? '▴' : '▾'}</i></button>`;
+      if (open) {
+        html += '<div class="fg-custom">';
+        {
+          const natCost = p.type ? 6 + 2 * p.mass : 0;
+          html += `<h4 class="fg-h">${tr('NATURE')} <small>${p.type ? tr('changer · {prix}', { prix: price(natCost) }) : tr('choisissez-la : offert')}</small></h4>
+            <div class="fg-chips">${F.NATURES.map((n) => {
+              const lock = p.mass < n.min;
+              return `<button class="fg-chip ${p.type === n.key ? 'on' : ''}" data-forge="nature" data-k="${n.key}" ${lock ? 'disabled' : ''}>${esc(n.name)}${lock ? `<small>${tr('taille {n}', { n: n.min })}</small>` : ''}</button>`;
+            }).join('')}</div>`;
+        }
+        if (p.type) {
+          html += `<h4 class="fg-h">${tr('TEINTE')} <small>${price(F.HUE_COST)}</small></h4>
+            <div class="fg-hues">${F.HUES.map((h) => `<button class="fg-hue ${p.hue === h ? 'on' : ''}" data-forge="hue" data-v="${h}" aria-label="${tr('Teinte {n}', { n: h })}"><span class="orb" data-planet="forge-sw-${h}"></span></button>`).join('')}</div>
+            <h4 class="fg-h">${tr('AJOUTS')} <small>${tr('un emplacement chacun')}</small></h4>
+            <div class="fg-parts">${F.PARTS.map((part) => partRow(p, part, dust)).join('')}</div>
+            <button class="btn fg-relief" data-forge="relief">${tr('REMODELER LE RELIEF · {prix}', { prix: price(F.RELIEF_COST) })}</button>`;
+        }
+        html += '</div>';
+      }
     }
     html += `<h4 class="fg-h">${tr('VOTRE COLLECTION')} <small>${data.planets.length} / ${F.MAX_PLANETS}</small></h4>
       <div class="fg-coll">${data.planets.map((q, i) => `<button class="fg-thumb ${i === data.sel ? 'on' : ''}" data-forge="sel" data-i="${i}">
@@ -223,6 +236,7 @@
     else if (k === 'sel') { data.sel = Number(b.dataset.i); shownSize = 0; save(); render(); }
     else if (k === 'rename') renameSheet();
     else if (k === 'system') openSystem();
+    else if (k === 'fold') { customOpen = !(customOpen || !cur().type); render(); }
     else if (k === 'surface' && window.OrbiteColonieUI) window.OrbiteColonieUI.open(cur(), $('fgOrb'));
     else if (k.startsWith('sys')) sysAction(k, b);
     else if (k === 'name-ok') {

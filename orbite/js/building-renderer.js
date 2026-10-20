@@ -94,8 +94,15 @@
     const ctx = cv.getContext('2d');
     const img = ctx.createImageData(W, H), D = img.data;
     const ox = Y * 2, oy = Z * 2 + 2;
+    // Profondeur (option depth) : ordre de peinture du voxel visible à chaque pixel, pour dessiner
+    // ensuite des objets mobiles (rovers) au bon plan sans tout redessiner.
+    const depth = o.depth ? new Int32Array(W * H).fill(-1) : null;
+    let key = 0;
+    // Zone assombrie (option dim : masque X × Y du modèle, 1 = hors zone).
+    const PD = o.dim ? P.map((r) => (r ? r.map((c) => [c[0] * 0.42 + 6, c[1] * 0.42 + 6, c[2] * 0.46 + 12]) : null)) : null;
     const put = (x, y, c, a) => {
       if (x < 0 || y < 0 || x >= W || y >= H) return;
+      if (depth) depth[y * W + x] = key;
       const i = (y * W + x) * 4;
       if (a == null || a >= 1 || !D[i + 3]) { D[i] = c[0]; D[i + 1] = c[1]; D[i + 2] = c[2]; D[i + 3] = 255; return; }
       D[i] = D[i] + (c[0] - D[i]) * a; D[i + 1] = D[i + 1] + (c[1] - D[i + 1]) * a; D[i + 2] = D[i + 2] + (c[2] - D[i + 2]) * a;
@@ -116,8 +123,10 @@
           const y = s - x;
           const k = get(x, y, z);
           if (!k) continue;
-          const ramp = P[k];
+          let ramp = P[k];
           if (!ramp) continue;
+          if (PD) { const [sx, sy] = src(x, y); if (o.dim[sy * mod.X + sx]) ramp = PD[k]; }
+          key = s * 256 + z;
           const up = !get(x, y, z + 1), right = !get(x + 1, y, z), left = !get(x, y + 1, z);
           if (!up && !right && !left) continue;
           const px = ox + (x - y) * 2, py = oy + (x + y) - z * 2;
@@ -162,8 +171,39 @@
       }
     }
     ctx.putImageData(img, 0, 0);
+    if (depth) cv.__base = { data: new Uint8ClampedArray(D), depth, W, H, ox, oy, P };
     return cv;
   }
 
-  window.OrbiteBuildingRenderer = { render, withGround, palette, ACCENTS: Object.keys(ACCENTS), GROUNDS: Object.keys(GROUNDS) };
+  // Dessine des voxels mobiles ({ x, y, z, k }, x et y peuvent être fractionnaires) par-dessus une
+  // toile rendue avec { depth: true } : chaque pixel n'apparaît que devant ce qui est déjà peint.
+  function overlay(cv, vox) {
+    const b = cv.__base;
+    if (!b) return;
+    const D = new Uint8ClampedArray(b.data), W = b.W, H = b.H;
+    const has = new Set(vox.map((v) => Math.round(v.x) + ',' + Math.round(v.y) + ',' + v.z));
+    const filled = (x, y, z) => has.has(x + ',' + y + ',' + z);
+    const order = vox.slice().sort((a, c) => (Math.round(a.x + a.y) - Math.round(c.x + c.y)) || (a.z - c.z));
+    for (const v of order) {
+      const ramp = b.P[v.k];
+      if (!ramp) continue;
+      const rx = Math.round(v.x), ry = Math.round(v.y);
+      const k = Math.round(v.x + v.y) * 256 + v.z + 1;
+      const px = Math.round(b.ox + (v.x - v.y) * 2), py = Math.round(b.oy + (v.x + v.y) - v.z * 2);
+      const put = (x, y, c) => {
+        if (x < 0 || y < 0 || x >= W || y >= H) return;
+        const p = y * W + x;
+        if (b.depth[p] > k) return;
+        const i = p * 4;
+        D[i] = c[0]; D[i + 1] = c[1]; D[i + 2] = c[2]; D[i + 3] = 255;
+      };
+      const em = E.EMISSIVE.has(v.k);
+      if (!filled(rx, ry, v.z + 1)) { const c = ramp[em ? 5 : 4]; put(px + 1, py, c); put(px + 2, py, c); for (let i = 0; i < 4; i++) put(px + i, py + 1, c); }
+      if (!filled(rx, ry + 1, v.z)) { const c = ramp[em ? 4 : 2]; for (let r = 2; r < 4; r++) { put(px, py + r, c); put(px + 1, py + r, c); } }
+      if (!filled(rx + 1, ry, v.z)) { const c = ramp[em ? 4 : 3]; for (let r = 2; r < 4; r++) { put(px + 2, py + r, c); put(px + 3, py + r, c); } }
+    }
+    cv.getContext('2d').putImageData(new ImageData(D, W, H), 0, 0);
+  }
+
+  window.OrbiteBuildingRenderer = { render, overlay, withGround, palette, ACCENTS: Object.keys(ACCENTS), GROUNDS: Object.keys(GROUNDS) };
 })();
