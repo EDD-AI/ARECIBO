@@ -309,23 +309,91 @@
     await wait(500);
   }
 
-  // ─── Entrée depuis le menu ──────────────────────────────────
-  // La campagne est bloquée le temps de sa refonte (un jeu de création d'univers se prépare).
-  const LOCKED = true;
+  // ─── Entrée depuis le menu : la Genèse ──────────────────────
+  // La campagne de cartes laisse la place à la Genèse, façon Spore : un grain de poussière qui
+  // deviendra un astre, puis un système vivant (js/genese.js, js/genese-ui.js).
+  const GRAIN = [
+    tr('Voici votre premier grain de poussière. Minuscule. Fragile.'),
+    tr('Il dérivera dans la nébuleuse et attirera la matière.'),
+    tr('Glace, roche ou gaz : ce qu’il absorbe décidera de ce qu’il deviendra.'),
+    tr('Aidez-le à grandir. Faites-en un astre.')
+  ];
+  stage.register('genese-grain', { type: 'asteroid', seed: 9091 });
+  // La poussière converge, mais ne forme qu'un grain : le monde viendra plus tard.
+  async function gatherGrain() {
+    const orb = $('csOrb');
+    orb.classList.add('grain');
+    const [cx, cy] = center(orb);
+    const W = window.innerWidth, H = window.innerHeight;
+    SFX.charge();
+    for (let i = 0; i < 28 && !story.skip; i++) {
+      const a = Math.random() * Math.PI * 2, r = Math.max(W, H) * 0.6;
+      stage.beam([cx + Math.cos(a) * r, cy + Math.sin(a) * r], [cx, cy], { ms: 700 + Math.random() * 400, color: [200, 190, 170], arc: (Math.random() - 0.5) * 60, tail: 8, head: 2 });
+      await wait(45);
+    }
+    await wait(story.skip ? 0 : 900);
+    orb.dataset.planet = 'genese-grain';
+    stage.setReveal(orb, 0);
+    stage.flash(orb, 1);
+    SFX.golden();
+    stage.burst(cx, cy, { n: 26, colors: [[255, 255, 255], [220, 200, 160]], speed: 50, life: 0.8 });
+    await stage.reveal(orb, 0, 1, 700);
+  }
+  async function newGenese() {
+    const GU = window.OrbiteGeneseUI;
+    A.closeSheet();
+    A.stopAmbient();
+    try { localStorage.removeItem('orbite.genese'); } catch (err) { /* stockage indisponible */ }
+    await openStory();
+    await wait(900);
+    await tell(INTRO);
+    await gatherGrain();
+    await wait(400);
+    await tell(GRAIN);
+    if (!story.skip) { storyTitle(tr('ÈRE I'), tr('LA POUSSIÈRE')); SFX.level(); await wait(2400); }
+    $('csOrb').classList.remove('grain');
+    await GU.open(window.OrbiteGenese.newGame((Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0));
+  }
   $('campBtn').addEventListener('click', () => {
     SFX.tap();
-    if (LOCKED) {
-      A.openSheet(`<h3>${tr('CAMPAGNE')}</h3><h2>${tr('En cours de refonte')}</h2>
-        <p class="sheet-text">${tr('La campagne revient bientôt sous une nouvelle forme : un vrai jeu de création d’univers, à la hauteur de votre rôle de Créateur.')}</p>
-        <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
+    const GU = window.OrbiteGeneseUI, G = window.OrbiteGenese;
+    const g = GU && GU.load();
+    if (!g) { newGenese(); return; }
+    if (g.done) {
+      const res = g.result || { nature: G.nature(g), trait: G.trait(g) };
+      A.openSheet(`<h3>${tr('LA GENÈSE')}</h3><h2>${tr('Ère I accomplie')}</h2>
+        <p class="sheet-text">${tr('Votre planétésimal attend la suite : {n}, trait {t}.', { n: tr(G.NATURES[res.nature].name), t: tr(G.TRAITS[res.trait].name) })}</p>
+        <p class="muted">${tr('L’ère II, l’Astéroïde, arrive dans une prochaine version.')}</p>
+        <div class="sheet-actions"><button class="btn" data-gen="new">${tr('REJOUER L’ÈRE I')}</button><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
       return;
     }
-    const saved = load();
-    if (!saved) { newRun(); return; }
-    A.openSheet(`<h3>${tr('CAMPAGNE')}</h3><h2>${tr('Une expédition vous attend')}</h2>
-      <p class="muted">${tr('Étage {n} · {hp} / {max} PV · {cards} cartes', { n: saved.floor, hp: saved.hp, max: saved.maxHp, cards: saved.deck.length })}</p>
-      <div class="sheet-actions"><button class="btn primary" data-camp="resume">${tr('REPRENDRE')}</button><button class="btn" data-camp="new">${tr('NOUVELLE')}</button></div>`);
+    A.openSheet(`<h3>${tr('LA GENÈSE')}</h3><h2>${tr('Votre grain vous attend')}</h2>
+      <p class="muted">${tr('Ère I · {l} · ✦ {s}', { l: tr(G.LEVELS[G.levelOf(g.me.m)].name), s: g.sparks })}</p>
+      <div class="sheet-actions"><button class="btn primary" data-gen="resume">${tr('REPRENDRE')}</button><button class="btn" data-gen="new">${tr('RECOMMENCER')}</button></div>`);
   });
+
+  $('sheet').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-gen]');
+    if (!b) return;
+    SFX.tap();
+    if (b.dataset.gen === 'resume') { A.closeSheet(); A.stopAmbient(); window.OrbiteGeneseUI.open(); } else newGenese();
+  });
+
+  // Les outils du récit, pour les cinématiques de la Genèse.
+  window.OrbiteRecit = {
+    openStory, tell, wait,
+    title: (w, sub) => { if (!story.skip) { storyTitle(w, sub); SFX.level(); } },
+    async reveal(look) {
+      const orb = $('csOrb');
+      const [cx, cy] = center(orb);
+      orb.dataset.planet = look;
+      stage.setReveal(orb, 0);
+      stage.flash(orb, 1);
+      SFX.golden();
+      stage.burst(cx, cy, { n: 60, colors: [[255, 255, 255], [220, 200, 160]], speed: 110, life: 0.9 });
+      await stage.reveal(orb, 0, 1, 900);
+    }
+  };
 
   async function newRun() {
     A.closeSheet();

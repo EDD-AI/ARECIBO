@@ -36,10 +36,85 @@ La progression (niveau, poussières, planète, historique) ne peut pas être eff
 La vitesse des combats n’est pas réglable : tout le monde voit les combats au même rythme. Le
 bouton « Passer » reste disponible pendant un combat.
 
-## Campagne (démo · acte I) — bloquée, en refonte
+## Campagne : la Genèse (façon Spore)
 
-Le bouton du menu affiche « BIENTÔT » : la campagne reviendra sous la forme d’un jeu de création
-d’univers. Le code ci-dessous reste en place.
+Bouton **CAMPAGNE · LA GENÈSE**. Comme dans Spore, on commence minuscule et on grandit d’étape en
+étape. Chaque ère a son propre gameplay, et ce qu’on fait dans l’une change la suivante. Ici, on
+ne passe pas d’une cellule à une créature : on passe d’une poussière à un astre, puis à un
+système solaire vivant.
+
+| Ère | Équivalent Spore | Gameplay | État |
+|---|---|---|---|
+| I · La Poussière | Cellule | Le grain dérive vu du dessus, absorbe plus petit que lui, fuit plus gros, se façonne | **jouable** |
+| II · L’Astéroïde | Créature | Planétésimal en orbite : percuter les rivaux (prédateur) ou les capturer en lunes (paisible) | à venir |
+| III · La Planète | Tribu | Modeler la surface : océans, volcans, atmosphère ; parer les bombardements | à venir |
+| IV · Le Système | Civilisation | Allumer ou capturer un soleil, placer lunes et planètes en orbite | à venir |
+| V · La Vie | Espace | Rendre le monde vivable (température, air, eau), faire naître la vie, puis la Colonie | à venir |
+
+**Récit d’ouverture.**
+- Les phrases du réveil (« Vous êtes un Créateur. Et un Créateur doit créer. ») restent, puis la
+  poussière converge.
+- Elle ne forme plus une planète, seulement **un petit grain de roche**.
+- Titre : « ÈRE I · LA POUSSIÈRE ».
+
+**Ère I, la Poussière** (`js/genese.js` pour les règles, `js/genese-ui.js` pour l’écran) :
+- **Déplacement.** On guide le grain avec un joystick virtuel : on pose le doigt n’importe où et
+  on glisse (au clavier : flèches ou ZQSD).
+- **Absorber.**
+  - Tout ce qui est plus petit que le grain s’absorbe : glace (bleue), roche (orange), gaz
+    (violet, mou : il s’absorbe jusqu’à 1,4 fois sa taille).
+  - Les astres plus gros sont cerclés de rouge et vous heurtent. Certains rocs sombres, les
+    *chasseurs*, vous poursuivent, plus lentement que vous ne fuyez.
+  - Des comètes traversent : on les absorbe si on est plus gros qu’elles, sinon elles font mal.
+- **Paliers de masse.**
+  - Grain → Gravier → Caillou → Rocher → Bloc → planétésimal (fin de l’ère).
+  - La caméra recule à mesure qu’on grossit, donc l’ancien danger devient de la nourriture.
+  - Le grain s’arrondit en grossissant, comme les vrais astres.
+- **Façonnage** (l’éditeur de Spore) :
+  - Il s’ouvre à chaque palier, et à tout moment avec le bouton ✦.
+  - On y dépense les **étincelles ✦** gagnées en absorbant. Un emplacement de plus par palier.
+  - Retirer une pièce rend tout son prix.
+  - 10 pièces en 5 familles. 4 sont connues dès le départ ; les 6 autres se découvrent en
+    touchant des **fragments d’astres** dorés (une flèche les signale au bord de l’écran) :
+
+  | Famille | Pièces |
+  |---|---|
+  | Mouvement | Jets de gaz, Éruption (bouton de poussée), Voile solaire |
+  | Capture | Champ magnétique, Noyau dense |
+  | Défense | Croûte épaisse, Bouclier de givre |
+  | Attaque | Pointes de roche (briser plus gros pendant une Éruption), Décharge (bouton) |
+  | Sens | Œil stellaire |
+- **Régime → nature** (comme le régime alimentaire de Spore). Les régions de la nébuleuse sont
+  teintées par leur matière dominante. Ce qu’on absorbe décide de la nature future, affichée en
+  bas à gauche (« Vers… ») :
+
+  | Ce qui domine (≥ 50 %) | Nature |
+  |---|---|
+  | Glace | Monde d’eau |
+  | Roche | Monde de feu |
+  | Gaz | Géante puis étoile |
+  | Équilibre | **Monde vivant** |
+- **Style → trait** (les cartes de conséquence de Spore), gardé pour l’ère suivante :
+
+  | Style de jeu | Trait |
+  |---|---|
+  | 12 astres brisés ou plus | Prédateur |
+  | 2 au plus | Paisible |
+  | Entre les deux | Adaptable |
+- **Mort.** Le grain se disperse puis se reforme, 15 % plus petit.
+- **Fin de l’ère.**
+  - Cinématique : l’astre apparaît selon sa nature, puis le trait est annoncé.
+  - +3 graines de vie.
+  - Le menu propose ensuite de rejouer l’ère I en attendant l’ère II.
+- **Durée et sauvegarde.**
+  - Une ère I dure environ 5 à 10 minutes (simulée par un joueur automatique dans
+    `tests/genese.test.mjs`).
+  - Sauvegarde dans `orbite.genese` : le grain est gardé, la nébuleuse se régénère autour.
+
+### Ancienne campagne de cartes (désactivée)
+
+Le code de la démo en *deck builder* (ci-dessous) reste dans `js/campagne.js` et
+`js/campagne-ui.js`, mais n’est plus accessible depuis le menu.
 
 Un mode solo raconté, en *deck builder* à la Slay the Spire, où l’on meurt et recommence.
 
@@ -816,6 +891,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `js/forge.js`, `js/forge-ui.js` | Forge des mondes : règles (paliers, prix, ajouts) et interface (écran Création) |
 | `js/colonie-jeu.js`, `js/colonie-ui.js` | Colonie : règles et simulation en temps réel, écran de la surface (construction, réserves, tutoriel) |
 | `js/classement.js` | Mode classé : placements, points, rangs et divisions |
+| `js/genese.js`, `js/genese-ui.js` | La Genèse (campagne façon Spore) : règles de l’ère I et son écran pixel art, Façonnage, récits |
 | `js/succes.js` | Les 100 succès : catalogue, progression, déblocage, onglet du Profil |
 | `js/multi.js`, `js/multi-ui.js` | Multijoueur : salons, recherche classée, codes de session, manches en ligne, et leur écran |
 | `js/exploration.js`, `js/exploration-ui.js` | Expédition : monde infini généré par tronçons autour du rover, découvertes |
