@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 31;
+  const VERSION = 32;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -1091,7 +1091,7 @@
       return `<button class="law" data-law="${id}" style="--c:${f.color}">
         <canvas class="sphere" data-fam="${l.fam}" aria-hidden="true"></canvas>
         <div>
-          <span class="fam-chip">${f.name.toUpperCase()}</span>
+          <span class="fam-chip">${l.fam === 'neutre' ? 'POINTS DE VIE' : f.name.toUpperCase()}</span>
           <h3>${esc(l.name)}</h3>
           <p class="tag">${esc(l.tagline)}</p>
           <p class="txt">${esc(l.text)}</p>
@@ -1332,6 +1332,25 @@
     sizeRow($('shop'), 'shop', 92);
     $('shop').classList.toggle('frozen', p.frozen);
     if (!ui.frostStagger) for (const orb of $('shop').querySelectorAll('.orb')) orb.dataset.frozen = p.frozen ? '1' : '0';
+    markTriples();
+  }
+
+  // Petites étoiles sur les astres de la Création qui feraient une fusion : on en possède déjà deux.
+  function markTriples() {
+    const p = me();
+    if (!p) return;
+    for (const el of $('shop').children) {
+      const id = el.dataset.id;
+      const ready = !!id && !R.CARD[id].token && p.board.concat(p.hand).filter((u) => u.id === id && !u.golden).length >= 2;
+      let sp = el.querySelector('.triple-spark');
+      if (ready && !sp) {
+        sp = document.createElement('span');
+        sp.className = 'triple-spark';
+        sp.setAttribute('aria-label', 'Fusion possible');
+        sp.innerHTML = '<i>✦</i><i>✦</i><i>✦</i>';
+        el.appendChild(sp);
+      } else if (!ready && sp) sp.remove();
+    }
   }
 
   // Taille des astres selon leur nombre : peu d'astres = grandes planètes.
@@ -1358,6 +1377,7 @@
 
   function renderBoard() {
     const p = me();
+    markTriples();
     syncList($('board'), p.board, (u) => u.uid, (u) => {
       const el = makeUnit(u, 'board');
       el.dataset.src = 'board';
@@ -1395,6 +1415,7 @@
 
   function renderHand() {
     const p = me();
+    markTriples();
     syncList($('hand'), p.hand, (u) => u.uid, (u) => {
       const el = makeUnit(u, 'hand');
       el.dataset.src = 'hand';
@@ -2210,7 +2231,7 @@
         const kin = c.fam === 'neutre' ? 0 : p.board.concat(p.hand).filter((u) => R.famOf(u) === c.fam).length;
         const mine = R.LAW[p.law].fam === c.fam;
         return `<button class="discover-item${mine ? ' mine' : ''}" data-act="choose" data-i="${i}" style="--c:${f.color}">
-          <span class="fam-chip">${f.name.toUpperCase()}</span>
+          <span class="fam-chip">${l.fam === 'neutre' ? 'POINTS DE VIE' : f.name.toUpperCase()}</span>
           <div class="orb" data-planet="${id}"></div>
           <b>${esc(c.name)}</b>
           <em class="kin">${mine ? 'Famille de votre loi' : kin ? `${kin} dans votre système` : '&nbsp;'}</em>
@@ -2259,7 +2280,7 @@
       return `<button class="rival-row ${p.alive ? '' : 'dead'} ${p.bot ? '' : 'me'}" data-act="rival">
           <span class="rk">${p.alive ? i + 1 : p.rank}</span>
           <span class="rv-who"><span class="n">${esc(p.name)}</span>${tag}<span class="l">niveau ${p.tier}${p.alive ? '' : ` · éliminé ${ordinal(p.rank)}`}</span></span>
-          <span class="rv-hp">${lost ? `<small>−${lost}</small>` : ''}<b>${p.alive ? hp : '–'}</b><i class="hp-bar"><i style="width:${p.alive ? Math.min(100, hp / R.START_HP * 100) : 0}%"></i></i></span>
+          <span class="rv-hp">${lost ? `<small>−${lost}</small>` : ''}<b>${p.alive ? hp : '–'}</b><i class="hp-bar"><i style="width:${p.alive ? Math.min(100, hp / (p.maxHp || R.START_HP) * 100) : 0}%"></i></i></span>
         </button>
         <div class="rival-board" hidden><p class="rv-last">${p.bot ? 'Dernier système joué' : 'Votre système'}</p><div class="row">${board || '<span class="muted">Système vide</span>'}</div></div>`;
     }).join('');
@@ -2426,7 +2447,8 @@
     const shots = shooters.map((el) => ({ el, n: R.CARD[el.dataset.id].tier }));
     shots.push({ el: null, n: winnerTier });
     const hpFrom = won ? Math.max(0, b.before.opp) : Math.max(0, b.before.me);
-    const hpTo = won ? Math.max(0, b.after.opp) : Math.max(0, b.after.me);
+    // Loi du phénix : les PV tombent d'abord à zéro, la renaissance vient après.
+    const hpTo = won ? Math.max(0, b.after.opp) : b.reborn ? 0 : Math.max(0, b.after.me);
 
     const box = document.createElement('div');
     box.className = 'dmg-count ' + (won ? 'good' : 'bad low');
@@ -2489,6 +2511,16 @@
       void $('hudHp').offsetWidth;
       $('hudHp').classList.add('hurt');
       vibrate([30, 40, 30]);
+    }
+    if (!won && b.reborn) {
+      await sleep(dur(500));
+      const [hx, hy] = center($('hudHp'));
+      stage.burst(hx, hy, { n: 40, colors: [[255, 170, 60], [255, 230, 140], [255, 255, 255]], speed: 110, life: 0.9 });
+      SFX.buff(0, 4);
+      $('hudHp').innerHTML = icon('heart') + `<b>${b.after.me}</b>`;
+      popOn($('hudHp'), `+${b.after.me} PV`, 'buff');
+      toast('Loi du phénix : votre univers renaît de ses cendres.', 3200);
+      await sleep(dur(900));
     }
     box.classList.add('out');
     await sleep(dur(500));

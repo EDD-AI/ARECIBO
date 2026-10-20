@@ -249,3 +249,28 @@ test('Alliance : deux familles de 3 astres gagnent +1/+1 au début du combat', (
   const buffs = r.events.slice(i + 1, i + 7).filter((e) => e.t === 'buff' && e.a === R.ALLIANCE.atk && e.h === R.ALLIANCE.hp);
   assert.equal(buffs.length, 6, 'les six astres alliés sont renforcés, pas le neutre');
 });
+
+test('lois de vie : PV de départ, énergie du sacrifice, renaissance du phénix', () => {
+  const e = R.newGame('vie-1', 'endurance');
+  assert.equal(e.players[0].hp, 45);
+  assert.ok(!e.families.includes('neutre') && e.families.length === new Set(e.families).size);
+  assert.ok(e.players.slice(1).every((p) => R.LAW[p.law].fam !== 'neutre'), 'les bots gardent les lois de famille');
+
+  const s = R.newGame('vie-2', 'sacrifice');
+  assert.equal(s.players[0].hp, 22);
+  assert.equal(s.players[0].gold, 3);
+  R.endTurn(s);
+  assert.equal(s.players[0].gold, Math.min(R.MAX_GOLD, s.round + 3));
+
+  const f = R.newGame('vie-3', 'phenix');
+  const me = f.players[0];
+  assert.equal(me.hp, 25);
+  me.board = [];
+  me.hp = 1;
+  let reborn = null;
+  for (let i = 0; i < 5 && !reborn; i++) {
+    const r = R.endTurn(f);
+    if (me.reborn) reborn = r;
+  }
+  assert.ok(me.reborn && me.alive && me.hp === 15, 'renaît avec 15 PV au lieu d’être éliminé');
+});
