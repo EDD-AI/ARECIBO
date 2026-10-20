@@ -121,6 +121,7 @@
     if (e.pop) parts.push(tr('{n} places', { n: e.pop }));
     for (const [f, label] of [['power', tr('énergie')], ['water', tr('eau')], ['oxygen', tr('oxygène')], ['food', tr('nourriture')], ['materials', tr('matériaux')], ['research', tr('recherche')]]) if (e[f] > 0) parts.push(`+${e[f]} ${label}`);
     if (E.TYPE_BY_KEY[key].role === 'storage') parts.push(tr('stockage'));
+    if (E.TYPE_BY_KEY[key].role === 'green') parts.push(tr('prairie et arbres'));
     return parts.join(' · ');
   }
   function renderCats() {
@@ -202,9 +203,18 @@
     if (e.jobs) lines.push(tr('{n} emplois', { n: e.jobs }));
     for (const [f, label] of [['power', tr('Énergie')], ['water', tr('Eau')], ['oxygen', tr('Oxygène')], ['food', tr('Nourriture')], ['materials', tr('Matériaux')], ['research', tr('Recherche')]]) if (e[f]) lines.push(`${label} ${e[f] > 0 ? '+' : ''}${e[f]}`);
     const eff = Math.round(100 * (e.jobs ? r.workRatio : 1) * (e.power < 0 ? r.powerRatio : 1));
+    // Pépinière : ce qui a poussé, et où en est le front de verdure.
+    let green = '';
+    if (t.role === 'green') {
+      const v = C.vegetation(col), rad = C.greenRadius(b), max = C.GREEN.radius;
+      const left = Math.max(0, max * C.GREEN.perTile - (b.g || 0));
+      green = `<p class="muted">${tr('Prairie : {n} cases · {a} arbres', { n: v.grass, a: v.trees.length })}</p>
+        <p class="muted">${tr('Front de verdure : {r} / {max} cases', { r: Math.floor(rad), max })}${left > 0 ? ' · ' + tr('pleine étendue dans {j} j environ', { j: Math.max(1, Math.round(left / 1440 / Math.max(0.3, eff / 100))) }) : ''}</p>`;
+    }
     A.openSheet(`<h3>${esc(tr(E.CATS[t.cat]))}</h3><h2>${esc(bname(b.key))}</h2>
       <p class="sheet-text">${esc(tr(t.desc))}</p>
       <p class="muted">${lines.map(esc).join(' · ')}</p>
+      ${green}
       ${e.jobs || e.power < 0 ? `<p class="muted">${tr('Rendement : {n} %', { n: eff })}${eff < 100 ? ' · ' + (r.workRatio < 1 && e.jobs ? tr('manque d’ouvriers') : tr('manque d’énergie')) : ''}</p>` : ''}
       <div class="sheet-actions">${b.key === 'tour' ? '' : `<button class="btn" id="colDemolish">${tr('DÉMOLIR')} (+${Math.floor(C.price(b.key).materials / 2)} ${tr('mat.')})</button>`}
       <button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
@@ -327,6 +337,7 @@
     ], () => A.store.set(TUTO_KEY, 'fini'));
   }
   function tutoAfterBuild(key) {
+    if (E.TYPE_BY_KEY[key].role === 'green') A.toast(tr('Les premières pousses sortiront dans quelques heures ; la prairie et les arbres mettront plusieurs jours à s’étendre.'), 4200);
     if (key === 'tour' && A.store.get('orbite.colonie.tuto2', '') !== '1') {
       A.store.set('orbite.colonie.tuto2', '1');
       ui.cat = 'energie'; renderCats(); renderCards();

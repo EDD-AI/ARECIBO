@@ -887,3 +887,43 @@ window.OrbiteI18n.add({
     "Dézoomer": "Afastar"
   }
 });
+
+// Pépinière : prairie et arbres qui gagnent le sol de la colonie.
+window.OrbiteI18n.add({
+  en: {
+    "Pépinière": "Plant Nursery",
+    "Tunnel de semis, silo à graines et rampe d’arrosage tournante : la prairie et les arbres gagnent le sol autour, jour après jour.": "Seedling tunnel, seed silo and rotating sprinkler: meadow and trees spread over the ground around it, day after day.",
+    "prairie et arbres": "meadow and trees",
+    "Prairie : {n} cases · {a} arbres": "Meadow: {n} tiles · {a} trees",
+    "Front de verdure : {r} / {max} cases": "Green front: {r} / {max} tiles",
+    "pleine étendue dans {j} j environ": "full extent in about {j} d",
+    "Les premières pousses sortiront dans quelques heures ; la prairie et les arbres mettront plusieurs jours à s’étendre.": "The first shoots will come up in a few hours; the meadow and trees will take several days to spread."
+  },
+  es: {
+    "Pépinière": "Vivero",
+    "Tunnel de semis, silo à graines et rampe d’arrosage tournante : la prairie et les arbres gagnent le sol autour, jour après jour.": "Túnel de semilleros, silo de semillas y brazo de riego giratorio: la pradera y los árboles ganan terreno a su alrededor, día tras día.",
+    "prairie et arbres": "pradera y árboles",
+    "Prairie : {n} cases · {a} arbres": "Pradera: {n} casillas · {a} árboles",
+    "Front de verdure : {r} / {max} cases": "Frente verde: {r} / {max} casillas",
+    "pleine étendue dans {j} j environ": "extensión completa en unos {j} d",
+    "Les premières pousses sortiront dans quelques heures ; la prairie et les arbres mettront plusieurs jours à s’étendre.": "Los primeros brotes saldrán en unas horas; la pradera y los árboles tardarán varios días en extenderse."
+  },
+  de: {
+    "Pépinière": "Baumschule",
+    "Tunnel de semis, silo à graines et rampe d’arrosage tournante : la prairie et les arbres gagnent le sol autour, jour après jour.": "Anzuchttunnel, Saatgutsilo und rotierender Sprinklerarm: Wiese und Bäume erobern Tag für Tag den Boden ringsum.",
+    "prairie et arbres": "Wiese und Bäume",
+    "Prairie : {n} cases · {a} arbres": "Wiese: {n} Felder · {a} Bäume",
+    "Front de verdure : {r} / {max} cases": "Grünfront: {r} / {max} Felder",
+    "pleine étendue dans {j} j environ": "volle Ausdehnung in etwa {j} T",
+    "Les premières pousses sortiront dans quelques heures ; la prairie et les arbres mettront plusieurs jours à s’étendre.": "Die ersten Triebe sprießen in ein paar Stunden; Wiese und Bäume brauchen mehrere Tage, um sich auszubreiten."
+  },
+  pt: {
+    "Pépinière": "Viveiro",
+    "Tunnel de semis, silo à graines et rampe d’arrosage tournante : la prairie et les arbres gagnent le sol autour, jour après jour.": "Túnel de mudas, silo de sementes e braço de irrigação giratório: o campo e as árvores tomam o solo ao redor, dia após dia.",
+    "prairie et arbres": "campo e árvores",
+    "Prairie : {n} cases · {a} arbres": "Campo: {n} casas · {a} árvores",
+    "Front de verdure : {r} / {max} cases": "Frente verde: {r} / {max} casas",
+    "pleine étendue dans {j} j environ": "extensão total em cerca de {j} d",
+    "Les premières pousses sortiront dans quelques heures ; la prairie et les arbres mettront plusieurs jours à s’étendre.": "Os primeiros brotos sairão em algumas horas; o campo e as árvores levarão vários dias para se espalhar."
+  }
+});
