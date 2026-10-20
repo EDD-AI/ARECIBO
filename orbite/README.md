@@ -461,6 +461,32 @@ petites étoiles dorées : l’acheter déclenche la fusion. Le placer ouvre une
 Chaque choix est encadré de la couleur de sa famille, avec son nom. Il indique aussi « Famille de
 votre loi », ou combien d’astres de cette famille sont déjà dans votre système.
 
+## Arbre d’étoiles
+
+Vaincre Kronos (fin de la démo de campagne) donne une **graine d’étoile**. Au premier retour au menu, elle
+tombe du ciel et se plante dans le sol noir, au premier plan devant la planète : la terre jaillit, une
+lumière sort du sol, puis de petites étincelles en montent. La toucher ouvre sa fiche : **arroser coûte
+100 poussières d’étoiles**, et chaque arrosage la fait grandir. Après **59 arrosages**, c’est un chêne
+massif qui occupe le premier plan.
+
+| Arrosages | Stade |
+|---|---|
+| 0 | Graine d’étoile (noyau doré qui palpite) |
+| 1 à 5 | Petite pousse |
+| 6 à 12 | Pousse |
+| 13 à 20 | Buisson |
+| 21 à 29 | Arbrisseau |
+| 30 à 39 | Petit arbre (des étoiles commencent à scintiller dans le feuillage) |
+| 40 à 49 | Arbre |
+| 50 à 58 | Grand arbre |
+| 59 | Chêne massif |
+
+`js/arbre.js` dessine l’arbre en pixel art : chaque branche dépend de son chemin dans l’arbre (pas d’un
+tirage au hasard), si bien qu’il garde sa forme en grandissant ; le dessin de chaque stade est mis en cache
+et seules les étoiles scintillent à chaque image. À l’arrosage, une pluie de poussières tombe sur l’arbre,
+qui grandit en douceur ; un nouveau stade s’annonce par une bannière. L’état (`orbite.arbre`) suit la
+sauvegarde en ligne. Ceux qui avaient déjà vaincu Kronos reçoivent la graine à leur prochain passage au menu.
+
 ## Légendaires
 
 Six astres **légendaires**, un par niveau, existent en **un seul exemplaire** par partie et sont présents
