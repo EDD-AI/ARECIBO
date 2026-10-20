@@ -133,6 +133,22 @@
     return a || b;
   }
 
+  // Bouffées de fumée ou de vapeur qui montent et se dispersent en boucle (t de 0 à 1).
+  function puffs(m, key, x, y, z, t, o) {
+    o = o || {};
+    const pr = makeRng('fumee:' + key);
+    const n = o.n || 5, rise = o.rise || 7;
+    for (let i = 0; i < n; i++) {
+      const ph = (t + i / n) % 1;
+      const h = ph * rise, spread = 0.4 + ph * (o.spread || 2);
+      const dx = (pr.next() - 0.5) * spread * 2 + ph * (o.wind || 1.5), dy = (pr.next() - 0.5) * spread;
+      const size = ph < 0.3 ? 0 : ph < 0.75 ? 1 : 0;
+      const k = o.mat || MAT.HULL2;
+      if (ph > 0.92) continue;
+      m.box(Math.round(x + dx), Math.round(y + dy), Math.round(z + h), Math.round(x + dx + size), Math.round(y + dy), Math.round(z + h + size), k);
+    }
+  }
+
   const B = {};
 
   B.dome = function (r, o) {
@@ -198,7 +214,7 @@
     return m;
   };
 
-  B.forage = function (r) {
+  B.forage = function (r, o) {
     const H = r.int(16, 26), S = 15;
     const m = model(S, S, H + 4);
     const c = 7;
@@ -215,9 +231,12 @@
     }
     m.box(c - 1, c - 1, top, c + 1, c + 1, top + 1, MAT.HULL2);
     m.set(c, c, top + 2, MAT.BEACON);
-    // Tige de forage, treuil et réservoirs.
+    // Tige de forage, tête qui pompe de haut en bas, treuil et réservoirs.
+    const T = (o && o.t) || 0;
     m.box(c, c, 2, c, c, top - 1, MAT.COPPER);
     m.box(c - 1, c - 1, 2, c + 1, c + 1, 3, MAT.DARK);
+    const head = Math.round(5 + (top - 9) * (0.5 + 0.5 * Math.sin(T * 6.283)));
+    m.box(c - 1, c - 1, head, c + 1, c + 1, head + 1, MAT.ACCENT);
     m.cyl(2.5, S - 3.5, 2, 6, 1.6, MAT.HULL);
     m.cyl(S - 3.5, S - 3.5, 2, 5, 1.6, MAT.HULL);
     m.line(4, S - 4, 3, c, c, 3, MAT.COPPER);
@@ -255,7 +274,7 @@
     return m;
   };
 
-  B.antenne = function (r) {
+  B.antenne = function (r, o) {
     const R = r.int(5, 8), H = r.int(6, 10), S = R * 2 + 5;
     const m = model(S, S, H + R + 6);
     const c = Math.floor(S / 2);
@@ -263,20 +282,28 @@
     m.box(c - 1, c - 1, 3, c + 1, c + 1, H, MAT.METAL);
     // Parabole : calotte tournée vers le ciel et un peu de côté.
     const tilt = r.range(0.25, 0.6);
-    for (let y = -R; y <= R; y++) for (let x = -R; x <= R; x++) {
-      const d = Math.hypot(x, y);
-      if (d > R) continue;
-      const z = H + 2 + Math.round((d * d) / (R * 1.6) + y * tilt);
-      m.set(c + x, c + y, z, d > R - 1 ? MAT.HULL2 : MAT.HULL);
+    const yaw = ((o && o.t) || 0) * 6.283, cs = Math.cos(yaw), sn = Math.sin(yaw);
+    // Chaque case de la grille est ramenée dans le repère de la parabole (rotation inverse) : pas de trou.
+    const zAt = (gx, gy) => {
+      const x = gx * cs + gy * sn, y = -gx * sn + gy * cs, d = Math.hypot(x, y);
+      return d > R ? null : { z: H + 2 + Math.round((d * d) / (R * 1.6) + y * tilt), d };
+    };
+    for (let gy = -R; gy <= R; gy++) for (let gx = -R; gx <= R; gx++) {
+      const p = zAt(gx, gy);
+      if (!p) continue;
+      // La coque est remplie jusqu'à ses voisines : une pente raide ne laisse pas de trou.
+      let lo = p.z;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const q = zAt(gx + dx, gy + dy); if (q) lo = Math.min(lo, q.z + 1); }
+      for (let z = Math.min(lo, p.z); z <= p.z; z++) m.set(c + gx, c + gy, z, p.d > R - 1 ? MAT.HULL2 : MAT.HULL);
     }
-    m.line(c, c, H + 2, c, c - 1, H + R + 2, MAT.METAL);
-    m.set(c, c - 1, H + R + 3, MAT.BEACON);
+    m.line(c, c, H + 2, c + sn, c - cs, H + R + 2, MAT.METAL);
+    m.set(c + sn, c - cs, H + R + 3, MAT.BEACON);
     m.box(c + 3, c - 2, 0, c + 5, c + 2, 3, MAT.HULL);
     m.set(c + 5, c, 2, MAT.WINDOW);
     return m;
   };
 
-  B.fusee = function (r) {
+  B.fusee = function (r, o) {
     const H = r.int(20, 30), R = r.range(2.3, 3.2), S = Math.ceil(R * 2) + 9;
     const m = model(S, S, H + 4);
     const c = S / 2 - 0.5;
@@ -293,13 +320,17 @@
     for (let z = Math.floor(H * 0.7); z < H * 0.78; z += 2) m.set(Math.round(c), Math.round(c + R), z, MAT.WINDOW);
     m.box(Math.round(c) - 1, Math.round(c) - 1, 0, Math.round(c) + 1, Math.round(c) + 1, 1, MAT.DARK);
     m.set(Math.round(c), Math.round(c), H + 2, MAT.BEACON);
+    // Vapeur des réservoirs qui s'échappe au pied du lanceur.
+    const T = (o && o.t) || 0;
+    puffs(m, 'fusee-a', c - R - 1, c, 1, T, { n: 4, rise: 3, spread: 2, wind: -2 });
+    puffs(m, 'fusee-b', c + R + 1, c, 1, (T + 0.5) % 1, { n: 4, rise: 3, spread: 2, wind: 2 });
     return m;
   };
 
-  B.piste = function (r) {
+  B.piste = function (r, o) {
     const R = r.int(9, 12), S = R * 2 + 3;
     const withRocket = r.chance(0.6);
-    const rocket = withRocket ? B.fusee(r) : null;
+    const rocket = withRocket ? B.fusee(r, o) : null;
     const m = model(S, S, rocket ? rocket.Z + 2 : 6);
     const c = S / 2 - 0.5;
     m.cyl(c, c, 0, 0, R, MAT.PAD);
@@ -312,9 +343,9 @@
     return m;
   };
 
-  B.usine = function (r) {
+  B.usine = function (r, o) {
     const W = r.int(16, 24), D = r.int(12, 18);
-    const m = model(W, D, 22);
+    const m = model(W, D, 30);
     m.box(0, 0, 0, W - 1, D - 1, 0, MAT.PAD);
     // Halls, toits en dents de scie, cheminées, tuyaux.
     const h1 = r.int(5, 7);
@@ -328,13 +359,14 @@
       m.cyl(x, y, 1, h, 1.2, MAT.METAL);
       m.cyl(x, y, h - 2, h - 2, 1.2, MAT.ACCENT);
       m.set(x, y, h + 1, MAT.BEACON);
+      puffs(m, 'usine' + i, x, y, h + 2, (((o && o.t) || 0) + i * 0.33) % 1, { n: 5, rise: 8, mat: MAT.METAL });
     }
     m.tube('x', 1, W - 2, D - 2, 3, 0.8, MAT.COPPER);
     m.line(W - 3, 3, 5, W - 3, 3, 9, MAT.METAL);
     return m;
   };
 
-  B.tour = function (r) {
+  B.tour = function (r, o) {
     const H = r.int(14, 22), S = 13;
     const m = model(S, S, H + 8);
     const c = 6;
@@ -347,7 +379,8 @@
     m.cyl(c, c, H + 4, H + 4, 3.6, MAT.HULL);
     m.line(c, c, H + 5, c, c, H + 7, MAT.METAL);
     m.set(c, c, H + 8, MAT.BEACON);
-    m.line(c + 2, c, H + 5, c + 3, c, H + 6, MAT.METAL);
+    const a = ((o && o.t) || 0) * 6.283;
+    m.line(c, c, H + 6, c + Math.cos(a) * 3, c + Math.sin(a) * 3, H + 6, MAT.HULL2);
     return m;
   };
 
@@ -363,7 +396,7 @@
     return m;
   };
 
-  B.eolienne = function (r) {
+  B.eolienne = function (r, o) {
     const H = r.int(14, 22), L = r.int(5, 8), S = L * 2 + 3;
     const m = model(S, 5, H + L + 3);
     const c = Math.floor(S / 2);
@@ -371,7 +404,7 @@
     m.box(c, 2, 2, c, 2, H, MAT.HULL);
     m.box(c - 1, 1, H, c + 1, 3, H + 1, MAT.HULL2);
     // Trois pales dans le plan face à nous.
-    const a0 = r.range(0, 2.1);
+    const a0 = r.range(0, 2.1) + ((o && o.t) || 0) * 2.094;
     for (let k = 0; k < 3; k++) {
       const a = a0 + k * 2.094;
       m.line(c, 0, H + 1, c + Math.cos(a) * L, 0, H + 1 + Math.sin(a) * L, MAT.HULL);
@@ -381,9 +414,9 @@
     return m;
   };
 
-  B.reacteur = function (r) {
+  B.reacteur = function (r, o) {
     const R = r.int(5, 7), H = r.int(14, 20), S = R * 2 + 9;
-    const m = model(S, S, H + 4);
+    const m = model(S, S, H + 12);
     const c = S / 2 - 0.5;
     m.box(0, 0, 0, S - 1, S - 1, 0, MAT.PAD);
     // Tour de refroidissement : profil en sablier (hyperboloïde).
@@ -394,6 +427,7 @@
     }
     // Vapeur légère au sommet et bâtiment du réacteur.
     for (let i = 0; i < 6; i++) m.set(c + r.range(-2, 2), c + r.range(-2, 2), H + 1 + r.int(0, 2), MAT.HULL);
+    for (let k = 0; k < 3; k++) puffs(m, 'reacteur' + k, c + k - 1, c, H + 2, (((o && o.t) || 0) + k / 3) % 1, { n: 4, rise: 5, spread: 3, mat: MAT.HULL });
     m.box(S - 6, 1, 1, S - 2, 6, 5, MAT.HULL);
     m.dome(S - 4, 3.5, 6, 2, () => MAT.HULL2, 2);
     m.set(S - 2, 3, 3, MAT.WINDOW);
@@ -488,7 +522,7 @@
   const THEMES = ['mars', 'lune', 'glace', 'soufre', 'volcan'];
 
   // Colonie : bâtiments rangés sur une dalle de terrain, reliés par des chemins et des tubes.
-  function colony(r, size) {
+  function colony(r, size, t) {
     const S = size || 64;
     const m = model(S, S, 40);
     r.seedA = r.range(0, 10); r.seedB = r.range(0, 10);
@@ -506,7 +540,7 @@
       const key = i === 0 ? 'dome' : r.pick(pool);
       // Variété : pas plus de deux bâtiments du même type.
       if (centers.filter((c) => c[2] === key).length >= 2) continue;
-      const b = B[key](makeRng(r.int(0, 1e9)), {});
+      const b = B[key](makeRng(r.int(0, 1e9)), { t });
       if (b.X > S - 4 || b.Y > S - 4) continue;
       const x0 = r.int(1, S - b.X - 2), y0 = r.int(1, S - b.Y - 2);
       if (!free(x0, y0, b.X, b.Y)) continue;
@@ -540,7 +574,7 @@
     opts = opts || {};
     const key = TYPE_BY_KEY[type] ? type : 'dome';
     const r = makeRng(key + ':' + seed);
-    const mod = key === 'colonie' ? colony(r, opts.size) : B[key](r, {});
+    const mod = key === 'colonie' ? colony(r, opts.size, opts.t || 0) : B[key](r, { t: opts.t || 0 });
     const t = TYPE_BY_KEY[key];
     const rn = makeRng('nom:' + seed);
     const name = `${t.name} ${rn.pick(PREFIX)}-${rn.int(1, 99)}`;
