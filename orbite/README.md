@@ -476,14 +476,16 @@ massif qui occupe le premier plan.
 | 6 à 12 | Pousse |
 | 13 à 20 | Buisson |
 | 21 à 29 | Arbrisseau |
-| 30 à 39 | Petit arbre (des étoiles commencent à scintiller dans le feuillage) |
+| 30 à 39 | Petit arbre |
 | 40 à 49 | Arbre |
 | 50 à 58 | Grand arbre |
 | 59 | Chêne massif |
 
-`js/arbre.js` dessine l’arbre en pixel art : chaque branche dépend de son chemin dans l’arbre (pas d’un
-tirage au hasard), si bien qu’il garde sa forme en grandissant ; le dessin de chaque stade est mis en cache
-et seules les étoiles scintillent à chaque image. À l’arrosage, une pluie de poussières tombe sur l’arbre,
+`js/arbre.js` dessine l’arbre en **silhouette noire comme le sol**, à contre-jour devant la planète : tronc
+noueux évasé avec ses racines, branches qui se tordent segment par segment, feuillage au contour déchiqueté
+(bruit), quelques trouées dans la couronne, un liseré et un halo de lumière seulement sur le contour
+extérieur. Chaque branche dépend de son chemin dans l’arbre (pas d’un tirage au hasard), si bien qu’il garde
+sa forme en grandissant ; le dessin de chaque stade est mis en cache. À l’arrosage, une pluie de poussières tombe sur l’arbre,
 qui grandit en douceur ; un nouveau stade s’annonce par une bannière. L’état (`orbite.arbre`) suit la
 sauvegarde en ligne. Ceux qui avaient déjà vaincu Kronos reçoivent la graine à leur prochain passage au menu.
 
