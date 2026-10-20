@@ -25,8 +25,8 @@
     for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
     return h >>> 0;
   }
-  function makeRng(seed) {
-    let a = (typeof seed === 'number' ? seed : hashString(String(seed))) >>> 0;
+  function makeRng(seed, state) {
+    let a = state != null ? state : (typeof seed === 'number' ? seed : hashString(String(seed))) >>> 0;
     const next = () => {
       a = (a + 0x6d2b79f5) >>> 0;
       let t = a;
@@ -39,7 +39,9 @@
       range: (a0, b0) => a0 + (b0 - a0) * next(),
       int: (a0, b0) => Math.floor(a0 + (b0 - a0 + 1) * next()),
       pick: (list) => list[Math.floor(next() * list.length)],
-      chance: (p) => next() < p
+      chance: (p) => next() < p,
+      // Copie qui reprend exactement la suite des tirages à partir d'ici.
+      clone: () => makeRng(0, a)
     };
   }
 
@@ -95,13 +97,19 @@
   }
 
   // Recadre un modèle sur son contenu (les générateurs prévoient large) ; le sol (z = 0) est conservé.
-  function trim(m) {
-    let x0 = m.X, y0 = m.Y, x1 = -1, y1 = -1, z1 = 0;
+  function bbox(m) {
+    let x0 = m.X, y0 = m.Y, x1 = -1, y1 = -1;
     for (let z = 0; z < m.Z; z++) for (let y = 0; y < m.Y; y++) for (let x = 0; x < m.X; x++) {
       if (!m.v[m.idx(x, y, z)]) continue;
-      if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; if (z > z1) z1 = z;
+      if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y;
     }
-    if (x1 < 0) return m;
+    return x1 < 0 ? null : [x0, y0, x1, y1];
+  }
+  // box : cadre imposé (celui de l'image t = 0 pour un bâtiment animé, pour garder la même taille).
+  function trim(m, box) {
+    const b = box || bbox(m);
+    if (!b) return m;
+    const [x0, y0, x1, y1] = b, z1 = m.Z - 1;
     const o = model(x1 - x0 + 1, y1 - y0 + 1, z1 + 1);
     for (let z = 0; z <= z1; z++) for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) o.v[o.idx(x - x0, y - y0, z)] = m.v[m.idx(x, y, z)];
     return o;
@@ -528,7 +536,12 @@
       if (TYPE_BY_KEY[t.key]) continue;
       t.eco = Object.assign({ pop: 0, jobs: 0, power: 0, water: 0, oxygen: 0, food: 0, research: 0, materials: 0 }, t.eco || {});
       const raw = t.build;
-      t.build = (r, o) => trim(raw(r, o));
+      t.build = (r, o) => {
+        if (!o || !o.t) return trim(raw(r, o));
+        // Animé : même cadre qu'à t = 0, calculé avec la même suite de tirages.
+        const ref = raw(r.clone(), Object.assign({}, o, { t: 0 }));
+        return trim(raw(r, o), bbox(ref));
+      };
       B[t.key] = t.build;
       TYPE_BY_KEY[t.key] = t;
       // La colonie reste en dernier dans la liste.
