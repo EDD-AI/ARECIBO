@@ -38,10 +38,30 @@
     const cand = ui.ghost && ui.ghost.ok ? Object.assign({}, col, { built: col.built.concat([ui.ghost.b]) }) : col;
     const sc = C.scene(cand, t || 0);
     const cv = $('colCanvas');
-    R.render(sc.m, { theme: col.theme, accent: 'orange', canvas: cv, blink: (performance.now() % 1300) < 650 });
-    geo = { W: cv.width, H: cv.height, ox: sc.m.Y * 2, oy: sc.m.Z * 2 + 2, g: sc.g };
+    R.render(sc.m, { theme: col.theme, accent: 'orange', canvas: cv, blink: (performance.now() % 1300) < 650, depth: true, dim: C.zoneMask(col) });
+    geo = { W: cv.width, H: cv.height, ox: sc.m.Y * 2, oy: sc.m.Z * 2 + 2, g: sc.g, top: sc.top };
     place();
     drawGhost();
+    drawRovers();
+  }
+  // Rovers : redessinés seuls, plusieurs fois par seconde, par-dessus le terrain (sans le recalculer).
+  function drawRovers() {
+    const col = ui.col;
+    if (!col || !geo || !geo.top) return;
+    const list = C.rovers(col, Date.now() / 1000);
+    ui.roverCount = list.length;
+    if (!list.length) return;
+    const blink = (performance.now() % 900) < 450, S = col.S, vox = [];
+    for (const r of list) {
+      let z = geo.g;
+      const cx = Math.round(r.x), cy = Math.round(r.y);
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+        const x = cx + dx, y = cy + dy;
+        if (x >= 0 && y >= 0 && x < S && y < S) z = Math.max(z, geo.top[y * S + x] + 1);
+      }
+      for (const v of C.roverVoxels(r, z, blink)) vox.push(v);
+    }
+    R.overlay($('colCanvas'), vox);
   }
   // Position et taille de la toile dans la vue (glisser pour se déplacer, + et − pour zoomer).
   function place() {
@@ -156,7 +176,7 @@
     if (!ui.sel) { box.hidden = true; return; }
     box.hidden = false;
     const gh = ui.ghost;
-    const short = gh && gh.reason === 'Pas assez de matériaux.' ? ' ' + tr('Touchez MATÉRIAUX pour un ravitaillement.') : '';
+    const short = gh && gh.reason === 'Pas assez de matériaux.' ? ' ' + tr('Touchez MATÉRIAUX pour un ravitaillement.') : gh && gh.reason && gh.reason.startsWith('Hors de la zone') ? ' ⤢' : '';
     $('colPlaceTxt').innerHTML = gh ? (gh.ok ? `${esc(bname(ui.sel))} · ${C.price(ui.sel).materials} ${tr('mat.')}` : `<span class="bad">${esc(tr(gh.reason) + short)}</span>`) : tr('Touchez le terrain pour placer : {nom}', { nom: esc(bname(ui.sel)) });
     $('colBuild').disabled = !(gh && gh.ok);
   }
@@ -245,6 +265,32 @@
     });
   }
 
+  // Zone de la colonie : sa taille, et l'agrandissement par paliers.
+  function zoneSheet() {
+    const col = ui.col, z = C.zoneBox(col), n = C.nextZone(col);
+    const cost = n ? `${n.cost.materials} ${tr('mat.')}${n.cost.dust ? ` · ${n.cost.dust} ${icon('dust')}` : ''}` : '';
+    const ok = n && col.stock.materials >= n.cost.materials && A.dust() >= n.cost.dust;
+    A.openSheet(`<h3>${tr('ZONE DE LA COLONIE')}</h3><h2>${tr('{n} × {n} cases', { n: z.size })}</h2>
+      <p class="sheet-text">${n ? tr('Les bornes lumineuses marquent la limite. Agrandir la zone à {m} × {m} cases ouvre de nouveaux gisements et de la place pour bâtir.', { m: n.size }) : tr('La colonie occupe déjà tout le terrain.')}</p>
+      <div class="sheet-actions">${n ? `<button class="btn primary" id="colZoneBuy" ${ok ? '' : 'disabled'}>${tr('AGRANDIR')} · ${cost}</button>` : ''}
+      <button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
+    const b = $('colZoneBuy');
+    if (b) b.addEventListener('click', () => {
+      const res = C.expand(ui.col, A.dust());
+      if (!res.ok) { A.refuse(tr(res.reason)); return; }
+      if (res.dust) A.addDust(-res.dust);
+      save();
+      A.closeSheet();
+      SFX.level();
+      A.vibrate(20);
+      draw();
+      const v = $('colView').getBoundingClientRect();
+      stage.ring(v.left + v.width / 2, v.top + v.height / 2, v.width * 0.4, { n: 60, colors: [[255, 226, 140], [140, 220, 255]], speed: 50, life: 0.9, flat: 0.5 });
+      A.toast(tr('La zone de la colonie s’étend : {n} × {n} cases.', { n: res.size }), 2600);
+      renderRes(); renderCards();
+    });
+  }
+
   // ─── Temps réel ─────────────────────────────────────────────
   function tick() {
     const col = ui.col;
@@ -291,10 +337,12 @@
     clearInterval(ui.anim);
     // Animation des bâtiments (pales, fumées…) et clignotement des balises.
     ui.anim = setInterval(() => { if (document.getElementById('colony').classList.contains('active') && !ui.drag && !document.hidden) draw((performance.now() / 3000) % 1); }, 450);
+    clearInterval(ui.rov);
+    ui.rov = setInterval(() => { if (ui.roverCount && document.getElementById('colony').classList.contains('active') && !document.hidden) drawRovers(); }, 90);
     if (A.store.get(TUTO_KEY, '') !== 'fini') setTimeout(tutoStart, 600);
   }
   function close() {
-    clearInterval(ui.timer); clearInterval(ui.anim);
+    clearInterval(ui.timer); clearInterval(ui.anim); clearInterval(ui.rov);
     save();
   }
 
@@ -378,6 +426,7 @@
   $('colCancel').addEventListener('click', () => { ui.sel = null; ui.ghost = null; SFX.tap(); renderCards(); hint(); draw(); });
   $('colZoomIn').addEventListener('click', () => zoom(1.25));
   $('colZoomOut').addEventListener('click', () => zoom(0.8));
+  $('colZone').addEventListener('click', () => { SFX.tap(); zoneSheet(); });
   function zoom(k) {
     const v = $('colView').getBoundingClientRect();
     const cx = v.width / 2, cy = v.height / 2;

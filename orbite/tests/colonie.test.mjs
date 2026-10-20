@@ -94,6 +94,7 @@ test('sans support vital, les colons repartent ; avec, la colonie grandit', () =
   assert.ok(ev.some((e) => e.t === 'depart'));
 
   const col = C.create('g', 11, 'mars', 1);
+  col.zone = C.ZONES.length - 1;
   for (const k of ['tour', 'solaire', 'solaire', 'solaire', 'solaire', 'rtg', 'moxie', 'serre', 'serre', 'condenseur', 'condenseur', 'module', 'module', 'labo']) assert.ok(placeNear(col, k), k + ' posé');
   C.step(col, 120);
   assert.ok(col.colonists > 4, 'des colons sont arrivés : ' + col.colonists);
@@ -173,4 +174,42 @@ test('sans matériaux, la colonie n’est jamais bloquée : récupération et na
   assert.equal(col.stock.materials, 100);
   col.stock.materials = C.rates(col).caps.materials;
   assert.equal(C.supply(col, 100).reason, 'Le stockage de matériaux est plein.');
+});
+
+test('la zone de la colonie : 64 × 64 au départ, agrandie par paliers, bâtir dehors est refusé', () => {
+  const col = C.create('z', 31, 'mars', 1);
+  assert.equal(C.zoneBox(col).size, 64);
+  placeNear(col, 'tour');
+  const z = C.zoneBox(col);
+  assert.equal(C.canPlace(col, 'solaire', z.x1 + 2, 60, 0).reason, 'Hors de la zone de la colonie : agrandissez-la.');
+  col.stock.materials = 0;
+  assert.equal(C.expand(col, 1000).ok, false);
+  col.stock.materials = 5000;
+  const sizes = [];
+  for (let r = C.expand(col, 1000); r.ok; r = C.expand(col, 1000)) sizes.push(r.size);
+  assert.deepEqual(sizes, [80, 96, 112, 128]);
+  assert.equal(C.nextZone(col), null);
+  // Une colonie d'avant les zones reçoit le palier qui contient déjà tous ses bâtiments.
+  const old = C.create('o', 31, 'mars', 1);
+  delete old.zone;
+  old.built.push({ uid: 1, key: 'tour', x: 20, y: 20, seed: 3 });
+  assert.ok(C.zoneBox(old).x0 <= 20);
+});
+
+test('les rovers roulent : récupération, transporteurs, chemins qui évitent les bâtiments', () => {
+  const col = C.create('rv', 1234, 'mars', 1);
+  col.stock.materials = 5000; col.stock.research = 100;
+  assert.deepEqual(C.rovers(col, 0), [], 'pas de rover sans tour');
+  for (const k of ['tour', 'solaire', 'forage', 'extracteur', 'moxie']) assert.ok(placeNear(col, k), k);
+  const a = C.rovers(col, 100), b = C.rovers(col, 104);
+  assert.equal(a.length, 3, 'un rover de récupération et deux transporteurs');
+  assert.ok(a.some((r, i) => Math.abs(r.x - b[i].x) + Math.abs(r.y - b[i].y) > 0.5), 'ils se déplacent');
+  // Sur des milliers d'instants, jamais à l'intérieur d'un bâtiment.
+  for (let t = 0; t < 400; t += 0.7) for (const r of C.rovers(col, t)) {
+    for (const q of col.built) {
+      const f = C.footprint(q.key, q.seed), x = Math.round(r.x), y = Math.round(r.y);
+      assert.ok(!(x >= q.x && x < q.x + f.X && y >= q.y && y < q.y + f.Y), 'rover dans ' + q.key);
+    }
+  }
+  assert.ok(C.roverVoxels(a[0], 5, true).length > 15);
 });

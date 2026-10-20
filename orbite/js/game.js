@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 47;
+  const VERSION = 48;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -987,12 +987,14 @@
       <h3 class="pf-h">${tr('CLASSÉ')}</h3>
       ${(() => {
         const c = classe();
-        if (!K.placed(c)) return `<div class="pf-rank"><div class="pf-unranked">?</div><div><b>${tr('PLACEMENT · {a} / {b}', { a: c.placements.length, b: K.PLACEMENTS })}</b><small>${tr('Chaque partie contre les univers rivaux compte. Après {n} parties de placement, votre rang monte à chaque podium et descend dans les dernières places.', { n: K.PLACEMENTS })}</small></div></div>`;
+        // Toucher la carte de rang déplie ou replie l'échelle des rangs et le barème.
+        const fold = `<i class="pf-fold">${ui.pfRanks ? '▴' : '▾'}</i>`;
+        if (!K.placed(c)) return `<button class="pf-rank" data-pf="ranks" aria-expanded="${!!ui.pfRanks}"><div class="pf-unranked">?</div><div><b>${tr('PLACEMENT · {a} / {b}', { a: c.placements.length, b: K.PLACEMENTS })}</b><small>${tr('Chaque partie contre les univers rivaux compte. Après {n} parties de placement, votre rang monte à chaque podium et descend dans les dernières places.', { n: K.PLACEMENTS })}</small></div>${fold}</button>`;
         const t = K.tierOf(c.points);
-        return `<div class="pf-rank"><div class="orb pf-rank-orb" data-planet="rank-${RANKS[t.idx].id}"></div><div><b>${esc(tierLabel(t)).toUpperCase()}</b><small>${tr('{n} points', { n: c.points })}${t.span ? ' · ' + tr('{a} / {b} vers la division suivante', { a: t.into, b: t.span }) : ''} · ${tr('record {n}', { n: c.best })}</small><div class="xp-bar"><i style="width:${t.span ? t.into : 100}%"></i></div></div></div>`;
+        return `<button class="pf-rank" data-pf="ranks" aria-expanded="${!!ui.pfRanks}"><div class="orb pf-rank-orb" data-planet="rank-${RANKS[t.idx].id}"></div><div><b>${esc(tierLabel(t)).toUpperCase()}</b><small>${tr('{n} points', { n: c.points })}${t.span ? ' · ' + tr('{a} / {b} vers la division suivante', { a: t.into, b: t.span }) : ''} · ${tr('record {n}', { n: c.best })}</small><div class="xp-bar"><i style="width:${t.span ? t.into : 100}%"></i></div></div>${fold}</button>`;
       })()}
-      <div class="pf-ladder">${RANKS.map((r, i) => `<div class="pf-tier ${K.placed(classe()) && K.tierOf(classe().points).idx === i ? 'on' : ''}"><div class="orb" data-planet="rank-${r.id}"></div><b>${tr(r.name)}</b><small>${i === RANKS.length - 1 ? tr('dès {n} points', { n: K.TIER_SPAN * (RANKS.length - 1) }) : 'III · II · I'}</small></div>`).join('')}</div>
-      <p class="muted">${tr('Points par place : {list}.', { list: K.DELTA.map((d) => (d > 0 ? '+' : '') + d).join(' · ') })}</p>
+      ${ui.pfRanks ? `<div class="pf-ladder">${RANKS.map((r, i) => `<div class="pf-tier ${K.placed(classe()) && K.tierOf(classe().points).idx === i ? 'on' : ''}"><div class="orb" data-planet="rank-${r.id}"></div><b>${tr(r.name)}</b><small>${i === RANKS.length - 1 ? tr('dès {n} points', { n: K.TIER_SPAN * (RANKS.length - 1) }) : 'III · II · I'}</small></div>`).join('')}</div>
+      <p class="muted">${tr('Points par place : {list}.', { list: K.DELTA.map((d) => (d > 0 ? '+' : '') + d).join(' · ') })}</p>` : ''}
       <h3 class="pf-h">${tr('STATISTIQUES')}</h3>
       <div class="pf-stats">${tiles.map(([k, v]) => `<div><b>${v}</b><small>${k}</small></div>`).join('')}</div>
       ${fav ? `<p class="muted">${tr('Loi favorite :')} <span style="color:${famColor(R.LAW[fav[0]].fam)}">${esc(R.LAW[fav[0]].name)}</span> · ${fav[1] > 1 ? tr('{n} parties', { n: fav[1] }) : tr('{n} partie', { n: fav[1] })}</p>` : ''}
@@ -1006,6 +1008,7 @@
     const b = e.target.closest('[data-pf]');
     if (!b) return;
     if (b.dataset.pf === 'tab') { SFX.tap(); ui.pfTab = b.dataset.tab; renderProfile(); return; }
+    if (b.dataset.pf === 'ranks') { SFX.tap(); ui.pfRanks = !ui.pfRanks; renderProfile(); return; }
     if (b.dataset.pf === 'rename') {
       SFX.tap();
       $('pfNameRow').innerHTML = `<input class="pf-input" id="pfInput" maxlength="16" value="${esc(pseudo())}" aria-label="${tr('Pseudo')}" autocomplete="off"><button class="btn" data-pf="save">OK</button>`;

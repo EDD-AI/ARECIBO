@@ -963,3 +963,63 @@ window.OrbiteI18n.add({
     "Le stockage de matériaux est plein.": "O armazenamento de materiais está cheio."
   }
 });
+
+// Zone de la colonie et volet de personnalisation de la Forge.
+window.OrbiteI18n.add({
+  en: {
+    "ZONE DE LA COLONIE": "COLONY ZONE",
+    "Zone de la colonie": "Colony zone",
+    "{n} × {n} cases": "{n} × {n} tiles",
+    "Les bornes lumineuses marquent la limite. Agrandir la zone à {m} × {m} cases ouvre de nouveaux gisements et de la place pour bâtir.": "The lit markers show the boundary. Expanding the zone to {m} × {m} tiles opens new deposits and room to build.",
+    "La colonie occupe déjà tout le terrain.": "The colony already covers the whole terrain.",
+    "AGRANDIR": "EXPAND",
+    "La zone de la colonie s’étend : {n} × {n} cases.": "The colony zone expands: {n} × {n} tiles.",
+    "Hors de la zone de la colonie : agrandissez-la.": "Outside the colony zone: expand it.",
+    "{n} ajouts": "{n} add-ons",
+    "{n} ajout": "{n} add-on",
+    "nature à choisir": "choose its nature",
+    "PERSONNALISER LA PLANÈTE": "CUSTOMIZE THE PLANET"
+  },
+  es: {
+    "ZONE DE LA COLONIE": "ZONA DE LA COLONIA",
+    "Zone de la colonie": "Zona de la colonia",
+    "{n} × {n} cases": "{n} × {n} casillas",
+    "Les bornes lumineuses marquent la limite. Agrandir la zone à {m} × {m} cases ouvre de nouveaux gisements et de la place pour bâtir.": "Las balizas luminosas marcan el límite. Ampliar la zona a {m} × {m} casillas abre nuevos yacimientos y espacio para construir.",
+    "La colonie occupe déjà tout le terrain.": "La colonia ya ocupa todo el terreno.",
+    "AGRANDIR": "AMPLIAR",
+    "La zone de la colonie s’étend : {n} × {n} cases.": "La zona de la colonia se amplía: {n} × {n} casillas.",
+    "Hors de la zone de la colonie : agrandissez-la.": "Fuera de la zona de la colonia: amplíala.",
+    "{n} ajouts": "{n} añadidos",
+    "{n} ajout": "{n} añadido",
+    "nature à choisir": "elige su naturaleza",
+    "PERSONNALISER LA PLANÈTE": "PERSONALIZAR EL PLANETA"
+  },
+  de: {
+    "ZONE DE LA COLONIE": "KOLONIEZONE",
+    "Zone de la colonie": "Koloniezone",
+    "{n} × {n} cases": "{n} × {n} Felder",
+    "Les bornes lumineuses marquent la limite. Agrandir la zone à {m} × {m} cases ouvre de nouveaux gisements et de la place pour bâtir.": "Die Leuchtbaken markieren die Grenze. Die Zone auf {m} × {m} Felder zu erweitern, erschließt neue Vorkommen und Bauplatz.",
+    "La colonie occupe déjà tout le terrain.": "Die Kolonie nimmt bereits das ganze Gelände ein.",
+    "AGRANDIR": "ERWEITERN",
+    "La zone de la colonie s’étend : {n} × {n} cases.": "Die Koloniezone wächst: {n} × {n} Felder.",
+    "Hors de la zone de la colonie : agrandissez-la.": "Außerhalb der Koloniezone: erweitere sie.",
+    "{n} ajouts": "{n} Extras",
+    "{n} ajout": "{n} Extra",
+    "nature à choisir": "Art wählen",
+    "PERSONNALISER LA PLANÈTE": "PLANET ANPASSEN"
+  },
+  pt: {
+    "ZONE DE LA COLONIE": "ZONA DA COLÔNIA",
+    "Zone de la colonie": "Zona da colônia",
+    "{n} × {n} cases": "{n} × {n} casas",
+    "Les bornes lumineuses marquent la limite. Agrandir la zone à {m} × {m} cases ouvre de nouveaux gisements et de la place pour bâtir.": "Os marcos luminosos indicam o limite. Ampliar a zona para {m} × {m} casas abre novas jazidas e espaço para construir.",
+    "La colonie occupe déjà tout le terrain.": "A colônia já ocupa todo o terreno.",
+    "AGRANDIR": "AMPLIAR",
+    "La zone de la colonie s’étend : {n} × {n} cases.": "A zona da colônia se amplia: {n} × {n} casas.",
+    "Hors de la zone de la colonie : agrandissez-la.": "Fora da zona da colônia: amplie-a.",
+    "{n} ajouts": "{n} adições",
+    "{n} ajout": "{n} adição",
+    "nature à choisir": "escolha a natureza",
+    "PERSONNALISER LA PLANÈTE": "PERSONALIZAR O PLANETA"
+  }
+});
