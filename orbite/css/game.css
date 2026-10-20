@@ -1671,9 +1671,6 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .gn-edit { width: 56px; height: 56px; color: #ffe08a; border-color: rgba(255, 224, 138, 0.6); }
 .gn-edit.new { animation: gnCall 1s ease-in-out infinite; }
 @keyframes gnCall { 50% { box-shadow: 0 0 18px rgba(255, 224, 138, 0.8); } }
-.gn-stick { position: fixed; width: 92px; height: 92px; margin: -46px 0 0 -46px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.04); opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 5; }
-.gn-stick.on { opacity: 1; }
-.gn-stick i { position: absolute; left: 50%; top: 50%; width: 34px; height: 34px; border-radius: 50%; background: rgba(255, 255, 255, 0.28); transform: translate(-50%, -50%); }
 .gn-hint { position: absolute; left: 16px; right: 16px; top: calc(var(--safe-t) + 74px); margin: 0; padding: 9px 12px; font-size: 13px; line-height: 1.4; text-align: center; color: var(--ink); background: rgba(5, 4, 10, 0.82); border: 1px solid var(--line); opacity: 0; transform: translateY(-6px); transition: opacity 0.3s, transform 0.3s; pointer-events: none; }
 .gn-hint.show { opacity: 1; transform: none; }
 /* Façonnage */
