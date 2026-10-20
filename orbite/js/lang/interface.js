@@ -846,3 +846,11 @@ window.OrbiteI18n.add({
     'Graine d’étoile : elle vous attend au menu.': 'Semente estelar: ela espera por você no menu.'
   }
 });
+
+// Bâtisseur de colonies.
+window.OrbiteI18n.add({
+  en: { 'Bâtisseur de colonies': 'Colony Builder', 'Dômes, serres, forages, fusées : générez des bâtiments en pixel art, ou une colonie entière.': 'Domes, greenhouses, drills, rockets: generate pixel-art buildings, or a whole colony.', 'OUVRIR LE BÂTISSEUR': 'OPEN THE BUILDER' },
+  es: { 'Bâtisseur de colonies': 'Constructor de colonias', 'Dômes, serres, forages, fusées : générez des bâtiments en pixel art, ou une colonie entière.': 'Cúpulas, invernaderos, perforadoras, cohetes: genera edificios en pixel art, o una colonia entera.', 'OUVRIR LE BÂTISSEUR': 'ABRIR EL CONSTRUCTOR' },
+  de: { 'Bâtisseur de colonies': 'Kolonie-Baumeister', 'Dômes, serres, forages, fusées : générez des bâtiments en pixel art, ou une colonie entière.': 'Kuppeln, Gewächshäuser, Bohrtürme, Raketen: erzeuge Pixel-Art-Gebäude oder eine ganze Kolonie.', 'OUVRIR LE BÂTISSEUR': 'BAUMEISTER ÖFFNEN' },
+  pt: { 'Bâtisseur de colonies': 'Construtor de colônias', 'Dômes, serres, forages, fusées : générez des bâtiments en pixel art, ou une colonie entière.': 'Cúpulas, estufas, perfuratrizes, foguetes: gere construções em pixel art, ou uma colônia inteira.', 'OUVRIR LE BÂTISSEUR': 'ABRIR O CONSTRUTOR' }
+});

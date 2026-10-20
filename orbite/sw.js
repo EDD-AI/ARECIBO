@@ -1,10 +1,11 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
 // Garder ce numéro égal à VERSION dans js/game.js et à version.json.
-const CACHE = 'orbite-v37';
+const CACHE = 'orbite-v38';
 const SHELL = [
   './',
   './index.html',
   './atelier.html',
+  './batisseur.html',
   './manifest.webmanifest',
   './version.json',
   './css/fonts.css',
@@ -13,6 +14,7 @@ const SHELL = [
   './fonts/chakra-petch-500.woff2',
   './fonts/chakra-petch-600.woff2',
   './css/atelier.css',
+  './css/batisseur.css',
   './js/i18n.js',
   './js/lang/regles.js',
   './js/lang/jeu.js',
@@ -36,6 +38,9 @@ const SHELL = [
   './js/forge.js',
   './js/forge-ui.js',
   './js/atelier.js',
+  './js/building-engine.js',
+  './js/building-renderer.js',
+  './js/batisseur.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',

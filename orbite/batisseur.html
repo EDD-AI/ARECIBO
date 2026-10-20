@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>ORBITE — Bâtisseur</title>
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/atelier.css">
+<link rel="stylesheet" href="css/batisseur.css">
+</head>
+<body>
+  <canvas id="sky" aria-hidden="true"></canvas>
+  <canvas id="scene" aria-label="Bâtiment généré"></canvas>
+
+  <section class="info" aria-live="polite">
+    <a class="back" href="index.html">← ORBITE</a>
+    <h1 id="name">—</h1>
+    <p class="type" id="type"></p>
+    <p class="desc" id="desc"></p>
+    <dl class="stats" id="stats"></dl>
+  </section>
+
+  <p class="seed"><span>GRAINE</span> <b id="seed">--------</b></p>
+
+  <div class="gallery" id="gallery" hidden></div>
+
+  <nav class="bar" aria-label="Commandes">
+    <div class="row">
+      <button class="icon" id="prev" title="Précédent (←)" aria-label="Bâtiment précédent">◀</button>
+      <button class="main" id="generate">GÉNÉRER</button>
+      <button class="icon" id="next" title="Suivant (→)" aria-label="Bâtiment suivant">▶</button>
+    </div>
+    <div class="row small">
+      <label><span>Bâtiment</span><select id="typeSelect"></select></label>
+      <label><span>Sol</span><select id="themeSelect"></select></label>
+      <label><span>Couleur</span><select id="accentSelect"></select></label>
+      <button id="rotate" title="Tourner (R)">TOURNER</button>
+      <button id="galleryBtn">GALERIE</button>
+      <button id="png">PNG</button>
+      <button id="link">LIEN</button>
+    </div>
+  </nav>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="js/building-engine.js"></script>
+  <script src="js/building-renderer.js"></script>
+  <script src="js/batisseur.js"></script>
+</body>
+</html>
