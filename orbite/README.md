@@ -113,7 +113,18 @@ système solaire vivant.
   | Entre les deux | Adaptable |
 - **Mort.** Le grain se disperse puis se reforme, 15 % plus petit.
 - **Fin de l’ère.**
-  - Cinématique : l’astre apparaît selon sa nature, puis le trait est annoncé.
+  - Cinématique : le **planétésimal** apparaît, puis le trait est annoncé.
+  - Ce n’est pas encore une planète, mais un gros rocher irrégulier dont la matière dépend du
+    régime :
+
+    | Régime | Planétésimal |
+    |---|---|
+    | Glace | bloc de glace bleu-blanc |
+    | Roche | bloc de pierre sombre aux reflets rougeâtres |
+    | Gaz | roc violacé nimbé de débris |
+    | Équilibre | deux blocs soudés, mêlés de roche et de glace |
+  - Les ambiances de couleur `p-glace`, `p-roche`, `p-gaz` et `p-mixte` sont dans
+    `js/planet-engine.js`.
   - +3 graines de vie.
   - Le menu propose ensuite de rejouer l’ère I en attendant l’ère II.
 - **Durée et sauvegarde.**

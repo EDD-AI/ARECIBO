@@ -656,7 +656,15 @@
     A.addSeeds(3);
     const R = window.OrbiteRecit;
     if (R) {
-      const look = { eau: { type: 'ice', seed: 5101 }, feu: { type: 'lava', seed: 5103 }, etoile: { type: 'gas', seed: 5107 }, vie: { type: 'terran', seed: 5109 } }[nat];
+      // Pas encore une planète : un gros rocher irrégulier, de glace, de pierre sombre et chaude,
+      // nimbé de gaz et de débris, ou mêlé de roche et de glace.
+      const seed = 5100 + (g.seed % 9000);
+      const look = {
+        eau: { type: 'asteroid', seed, full: true, mood: 'p-glace' },
+        feu: { type: 'asteroid', seed, full: true, mood: 'p-roche' },
+        etoile: { type: 'asteroid', seed, full: true, mood: 'p-gaz', debris: true },
+        vie: { type: 'asteroid', seed, full: true, mood: 'p-mixte', shape: 'double' }
+      }[nat];
       stage.register('genese-end', look);
       await R.openStory();
       await R.wait(700);
