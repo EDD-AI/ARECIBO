@@ -927,3 +927,39 @@ window.OrbiteI18n.add({
     "Les premières pousses sortiront dans quelques heures ; la prairie et les arbres mettront plusieurs jours à s’étendre.": "Os primeiros brotos sairão em algumas horas; o campo e as árvores levarão vários dias para se espalhar."
   }
 });
+
+// Matériaux de la colonie : récupération par la tour et navette de ravitaillement.
+window.OrbiteI18n.add({
+  en: {
+    "Touchez MATÉRIAUX pour un ravitaillement.": "Tap MATERIALS for a supply run.",
+    "Les rovers de la tour de contrôle récupèrent {n} matériau par sol. Un <b>forage</b> ou une <b>mine</b> sur le minerai en produit bien plus ; démolir rend la moitié du prix.": "The control tower's rovers salvage {n} material per sol. A <b>drill</b> or a <b>mine</b> on ore produces much more; demolishing refunds half the price.",
+    "Navette de ravitaillement : {n} matériaux pour {d} poussières d’étoiles.": "Supply shuttle: {n} materials for {d} stardust.",
+    "COMMANDER": "ORDER",
+    "La navette a livré {n} matériaux.": "The shuttle delivered {n} materials.",
+    "Le stockage de matériaux est plein.": "Material storage is full."
+  },
+  es: {
+    "Touchez MATÉRIAUX pour un ravitaillement.": "Toca MATERIALES para un reabastecimiento.",
+    "Les rovers de la tour de contrôle récupèrent {n} matériau par sol. Un <b>forage</b> ou une <b>mine</b> sur le minerai en produit bien plus ; démolir rend la moitié du prix.": "Los rovers de la torre de control recuperan {n} material por sol. Una <b>perforadora</b> o una <b>mina</b> sobre el mineral produce mucho más; demoler devuelve la mitad del precio.",
+    "Navette de ravitaillement : {n} matériaux pour {d} poussières d’étoiles.": "Lanzadera de suministros: {n} materiales por {d} de polvo de estrellas.",
+    "COMMANDER": "PEDIR",
+    "La navette a livré {n} matériaux.": "La lanzadera entregó {n} materiales.",
+    "Le stockage de matériaux est plein.": "El almacén de materiales está lleno."
+  },
+  de: {
+    "Touchez MATÉRIAUX pour un ravitaillement.": "Tippe auf MATERIAL für eine Versorgungslieferung.",
+    "Les rovers de la tour de contrôle récupèrent {n} matériau par sol. Un <b>forage</b> ou une <b>mine</b> sur le minerai en produit bien plus ; démolir rend la moitié du prix.": "Die Rover des Kontrollturms bergen {n} Material pro Sol. Ein <b>Bohrer</b> oder eine <b>Mine</b> auf Erz liefert viel mehr; Abreißen erstattet den halben Preis.",
+    "Navette de ravitaillement : {n} matériaux pour {d} poussières d’étoiles.": "Versorgungsshuttle: {n} Material für {d} Sternenstaub.",
+    "COMMANDER": "BESTELLEN",
+    "La navette a livré {n} matériaux.": "Das Shuttle hat {n} Material geliefert.",
+    "Le stockage de matériaux est plein.": "Das Materiallager ist voll."
+  },
+  pt: {
+    "Touchez MATÉRIAUX pour un ravitaillement.": "Toque em MATERIAIS para um reabastecimento.",
+    "Les rovers de la tour de contrôle récupèrent {n} matériau par sol. Un <b>forage</b> ou une <b>mine</b> sur le minerai en produit bien plus ; démolir rend la moitié du prix.": "Os rovers da torre de controle recuperam {n} material por sol. Uma <b>perfuratriz</b> ou uma <b>mina</b> sobre o minério produz muito mais; demolir devolve metade do preço.",
+    "Navette de ravitaillement : {n} matériaux pour {d} poussières d’étoiles.": "Nave de suprimentos: {n} materiais por {d} de poeira estelar.",
+    "COMMANDER": "PEDIR",
+    "La navette a livré {n} matériaux.": "A nave entregou {n} materiais.",
+    "Le stockage de matériaux est plein.": "O armazenamento de materiais está cheio."
+  }
+});

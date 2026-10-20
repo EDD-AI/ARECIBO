@@ -156,3 +156,21 @@ test('la pépinière ne pousse qu’avec de l’eau et de l’énergie, et donne
   p.b.g = 7 * 1440;
   assert.ok(C.rates(col).oxygen > before + 5, 'une prairie mûre produit de l’oxygène');
 });
+
+test('sans matériaux, la colonie n’est jamais bloquée : récupération et navette', () => {
+  const col = C.create('m', 21, 'mars', 1);
+  placeNear(col, 'tour');
+  col.stock.materials = 0;
+  assert.equal(placeNear(col, 'forage'), null, 'plus de quoi construire');
+  // Les rovers de la tour récupèrent 1 matériau par sol : un forage redevient possible.
+  C.step(col, C.price('forage').materials);
+  assert.ok(col.stock.materials >= C.price('forage').materials);
+  // La navette : 100 matériaux contre 25 poussières, dans la limite du stockage.
+  col.stock.materials = 0;
+  assert.equal(C.supply(col, 10).ok, false);
+  const s = C.supply(col, 100);
+  assert.ok(s.ok && s.n === 100 && s.dust === 25);
+  assert.equal(col.stock.materials, 100);
+  col.stock.materials = C.rates(col).caps.materials;
+  assert.equal(C.supply(col, 100).reason, 'Le stockage de matériaux est plein.');
+});

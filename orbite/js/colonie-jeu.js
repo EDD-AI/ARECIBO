@@ -18,6 +18,9 @@
   const BASE_CAP = 120;
   const STORE_CAP = 250;
   const LIFE = ['water', 'oxygen', 'food'];
+  // Récupération par les rovers de la tour (par sol) ; navette de ravitaillement (matériaux, prix).
+  const SALVAGE = 1;
+  const SUPPLY = { materials: 100, dust: 25 };
   // Verdure des pépinières : le front de la prairie avance d'une case toutes les 4 heures (240 sols)
   // jusqu'à 30 cases, soit 5 jours ; les arbres sortent 1 à 3 jours après l'herbe et mûrissent en 2 jours.
   const GREEN = { perTile: 240, radius: 30, sparse: 720, lush: 2160, treeDelay: 1440, treeSpread: 2880, treeStage: 1440 };
@@ -157,6 +160,16 @@
     return { ok: true, back };
   }
 
+  // Navette de ravitaillement : 100 matériaux contre des poussières d'étoiles, dans la limite du stockage.
+  function supply(col, dust) {
+    const room = Math.floor(rates(col).caps.materials - col.stock.materials);
+    if (room <= 0) return { ok: false, reason: 'Le stockage de matériaux est plein.' };
+    if ((dust || 0) < SUPPLY.dust) return { ok: false, reason: 'Pas assez de poussières d’étoiles.' };
+    const n = Math.min(SUPPLY.materials, room);
+    col.stock.materials += n;
+    return { ok: true, n, dust: SUPPLY.dust };
+  }
+
   // ─── Bilan d'un sol ─────────────────────────────────────────
   // Énergie et ouvriers limitent la production. Les tempêtes de poussière voilent le solaire.
   function rates(col) {
@@ -189,6 +202,8 @@
     R.green = gs;
     R.oxygen += gs.grass / 200 + gs.trees / 10;
     for (const f of LIFE) R[f] -= col.colonists;
+    // Les rovers de la tour récupèrent toujours un peu de matériaux : une colonie n'est jamais bloquée.
+    if (list.some((t) => t.role === 'hq')) R.materials += SALVAGE;
     R.power = R.powerProd - R.powerUse;
     return R;
   }
@@ -359,5 +374,5 @@
     return { m, g };
   }
 
-  return { SOL_MS, MAX_CATCHUP, SIZE, TIERS, TIER_OF, LIFE, GREEN, vegetation, greenRadius, greenEstimate, create, deposits, footprint, buildSeed, price, unlocked, hasHq, canPlace, build, demolish, rates, step, catchUp, scene };
+  return { SOL_MS, MAX_CATCHUP, SALVAGE, SUPPLY, supply, SIZE, TIERS, TIER_OF, LIFE, GREEN, vegetation, greenRadius, greenEstimate, create, deposits, footprint, buildSeed, price, unlocked, hasHq, canPlace, build, demolish, rates, step, catchUp, scene };
 });
