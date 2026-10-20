@@ -81,6 +81,33 @@
       </div>
     </section>
 
+    <!-- COLONIE : la surface d'un monde forgé -->
+    <section class="screen colony" id="colony" aria-label="Colonie" data-t-attr="aria-label">
+      <header class="screen-head">
+        <button class="icon-btn" id="colBack" aria-label="Retour" data-t-attr="aria-label"></button>
+        <h2 id="colName">Colonie</h2>
+        <span class="col-sol" id="colSol"></span>
+      </header>
+      <div class="col-res" id="colRes"></div>
+      <div class="col-view" id="colView">
+        <canvas id="colCanvas"></canvas>
+        <canvas id="colGhost"></canvas>
+        <div class="col-zoom">
+          <button class="icon-btn" id="colZoomIn" aria-label="Zoomer" data-t-attr="aria-label">+</button>
+          <button class="icon-btn" id="colZoomOut" aria-label="Dézoomer" data-t-attr="aria-label">−</button>
+        </div>
+        <div class="col-place" id="colPlace" hidden>
+          <span id="colPlaceTxt"></span>
+          <div class="col-place-act">
+            <button class="btn" id="colCancel" data-t>ANNULER</button>
+            <button class="btn primary" id="colBuild" data-t>CONSTRUIRE</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-cats" id="colCats"></div>
+      <div class="col-cards" id="colCards"></div>
+    </section>
+
     <!-- CINÉMATIQUE D'OUVERTURE DE LA CRÉATION -->
     <section class="screen cine" id="cine" aria-live="polite">
       <div class="orb cine-orb" id="cineOrb" data-planet="cine-graine"></div>
@@ -299,6 +326,7 @@
   <script src="js/lang/jeu.js"></script>
   <script src="js/lang/campagne.js"></script>
   <script src="js/lang/interface.js"></script>
+  <script src="js/lang/batiments.js"></script>
   <script src="js/planet-engine.js"></script>
   <script src="js/planet-renderer.js"></script>
   <script src="js/stage.js"></script>
@@ -314,6 +342,14 @@
   <script src="js/online-config.js"></script>
   <script src="js/online.js"></script>
   <script src="js/forge.js"></script>
+  <script src="js/building-engine.js"></script>
+  <script src="js/batiments/habitat.js"></script>
+  <script src="js/batiments/vie-energie.js"></script>
+  <script src="js/batiments/industrie-logistique.js"></script>
+  <script src="js/batiments/science-defense.js"></script>
+  <script src="js/building-renderer.js"></script>
+  <script src="js/colonie-jeu.js"></script>
+  <script src="js/colonie-ui.js"></script>
   <script src="js/forge-ui.js"></script>
   <script src="js/online-ui.js"></script>
 </body>

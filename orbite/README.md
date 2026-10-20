@@ -171,8 +171,8 @@ contre 1 000 poussières d’étoiles** : une cinématique s’ouvre alors (le v
 une étoile, « Créateur, des mondes n’attendent que vous »), puis l’écran Création, où l’on sème sa graine
 dans la **Forge des mondes**.
 
-C’est le début d’un jeu en plusieurs étapes : faire grandir sa planète, descendre à sa surface, voir la
-vie y apparaître (« un colonisateur »), puis bâtir une colonie autonome en temps réel, avec un tutoriel.
+C’est un jeu en plusieurs étapes : faire grandir sa planète, descendre à sa surface, voir la vie y
+apparaître (« un colonisateur »), puis bâtir une colonie autonome en temps réel (voir **Colonie**).
 L’**Atelier des planètes** (`atelier.html`) et le **Bâtisseur de colonies** (`batisseur.html`) ne sont
 plus dans le menu, mais leurs moteurs servent à ce jeu et les pages restent accessibles par leur adresse.
 
@@ -233,6 +233,35 @@ Les règles sont dans `js/forge.js` (testées par `tests/forge.test.mjs`) et l�
   calculés à mi-résolution dans une texture, rafraîchie toutes les 50 ms, puis agrandie : c’est
   léger pour le téléphone. Ils sont tramés en paliers de couleur pour le rendu pixel, et assombris
   en partie pour garder les astres lisibles. Ils sont enregistrés dans `orbite.cosmetiques`.
+
+### Colonie
+
+Un monde forgé de **taille 8** ou plus (sauf une géante gazeuse, qui n’a pas de sol) affiche le
+bouton **DESCENDRE À LA SURFACE** dans la Forge.
+- **La descente** : la planète grossit jusqu’à remplir l’écran, puis le sol apparaît.
+- **Le colonisateur** : la première fois, une cinématique (« Créateur… On dirait qu’il y a de la vie
+  sur l’une de vos créations. ») fait atterrir une fusée avec 4 colons, 400 matériaux et 100 d’eau,
+  d’oxygène et de nourriture.
+- **Le terrain** : 128 × 128 cases en vue isométrique, avec des gisements de **glace** (taches
+  claires) et de **minerai** (taches sombres). Glisser pour se déplacer, + et − pour zoomer.
+- **Construire** : choisir un bâtiment dans les onglets (habitat, services, support vital, énergie,
+  industrie, logistique, science, défense), toucher le terrain, puis **CONSTRUIRE**. Le calque est
+  vert si la place convient, rouge sinon, avec la raison. La **tour de contrôle**, offerte, vient en
+  premier. Les extracteurs d’eau se posent sur la glace, les forages et mines sur le minerai. Toucher
+  un bâtiment ouvre sa fiche : rendement, et démolition (la moitié des matériaux revient).
+- **Prix** : des matériaux selon l’importance du bâtiment ; les paliers avancés coûtent en plus des
+  poussières d’étoiles (40 au palier 3, 150 au palier 4).
+- **Recherche** : 19 bâtiments au départ, puis des paliers à 40, 150 et 400 de recherche.
+- **Temps réel** : 1 sol = 1 minute, même appli fermée (rattrapé au retour, trois jours au plus).
+  Chaque colon consomme 1 d’eau, d’oxygène et de nourriture par sol. Les bâtiments produisent
+  selon leurs ouvriers (des drones assurent 30 % sans eux) et l’énergie disponible. Des colons
+  arrivent s’il y a des logements libres et des réserves (tous les 3 sols, ou 2 par sol avec un
+  spatioport). En cas de pénurie, ils repartent un par sol. Les tempêtes de poussière (rares,
+  12 sols) réduisent le solaire à 35 %.
+- **Tutoriel** en 6 étapes à la première visite, puis un conseil après la tour de contrôle.
+
+Les règles sont dans `js/colonie-jeu.js` (testées par `tests/colonie.test.mjs`), l’écran dans
+`js/colonie-ui.js`. Les colonies sont enregistrées dans `orbite.colonies`.
 
 ## Profil
 
@@ -626,6 +655,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 |---|---|
 | `js/campagne.js`, `js/campagne-ui.js` | Campagne : règles (cartes, ennemis, carte, combat) et interface (récit, dialogues, carte, combat) |
 | `js/forge.js`, `js/forge-ui.js` | Forge des mondes : règles (paliers, prix, ajouts) et interface (écran Création) |
+| `js/colonie-jeu.js`, `js/colonie-ui.js` | Colonie : règles et simulation en temps réel, écran de la surface (construction, réserves, tutoriel) |
 | `js/classement.js` | Mode classé : placements, points, rangs et divisions |
 | `js/online-config.js`, `js/online.js`, `js/online-ui.js` | Mode en ligne : configuration Firebase, connexion, sauvegarde, amis, classement, et leur interface |
 | `firebase/` | Règles de sécurité Firestore et configuration des émulateurs |
@@ -641,7 +671,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `js/atelier.js` | Page générateur |
 | `css/` | Styles du jeu et de l’atelier ; `css/fonts.css` déclare la police embarquée |
 | `fonts/` | Chakra Petch (woff2, latin) et sa licence SIL OFL |
-| `tests/rules.test.mjs`, `tests/campagne.test.mjs`, `tests/forge.test.mjs` | Tests des règles, de la campagne et de la Forge |
+| `tests/*.test.mjs` | Tests des règles, de la campagne, de la Forge, du classement, des bâtiments et de la colonie |
 | `tools/equilibrage.js` | Simulation de parties entre bots : classement moyen par loi, famille et astre |
 | `tools/bots-duel.js` | Force des bots : IA experte contre IA de base dans les mêmes parties |
 | `tools/hybrides.js` | Compositions hybrides : bots à une famille contre bots à deux familles, rang de chaque duo |
@@ -650,7 +680,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 ## Tests
 
 ```
-node --test orbite/tests/rules.test.mjs orbite/tests/campagne.test.mjs orbite/tests/forge.test.mjs orbite/tests/classement.test.mjs
+node --test orbite/tests/*.test.mjs
 ```
 
 Les tests vérifient la conservation de la réserve partagée à chaque action, les limites de main

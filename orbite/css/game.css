@@ -1433,3 +1433,40 @@ body.in-combat .banner { top: calc(50% - 34px); }
 .cine-line { position: absolute; left: 24px; right: 24px; bottom: 22%; min-height: 2.6em; text-align: center; font-size: 17px; letter-spacing: 0.04em; color: var(--ink); }
 .cine-line.fade { opacity: 0; transition: opacity 0.9s; }
 .cine-skip { position: absolute; right: 16px; bottom: max(20px, env(safe-area-inset-bottom)); padding: 8px 12px; font: inherit; font-size: 11px; letter-spacing: 0.2em; color: var(--dim); background: none; border: 1px solid var(--faint); }
+
+/* ─── Colonie : la surface d'un monde forgé ───────────────── */
+.fg-surface { width: 100%; margin: 4px 0 6px; }
+.fg-surface-lock { margin: 4px 0 8px; text-align: center; }
+.screen.colony { padding-left: 10px; padding-right: 10px; gap: 6px; }
+.colony .screen-head h2 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.col-sol { margin-left: auto; font-size: 11px; letter-spacing: 0.16em; color: var(--dim); white-space: nowrap; }
+.col-res { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+.col-res span { display: flex; flex-direction: column; min-width: 0; padding: 4px 5px; background: rgba(241, 236, 218, 0.05); border: 1px solid var(--faint); }
+.col-res small { font-size: 8px; letter-spacing: 0.14em; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.col-res b { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.col-res i { font-style: normal; font-size: 9px; color: #9fdc8c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.col-res span.bad { border-color: rgba(255, 106, 90, 0.5); }
+.col-res span.bad i, .col-res span.bad b { color: #ff8a7a; }
+.col-view { position: relative; flex: 1; min-height: 180px; overflow: hidden; background: #07060a; border: 1px solid var(--faint); touch-action: none; }
+.col-view canvas { position: absolute; left: 0; top: 0; transform-origin: 0 0; image-rendering: pixelated; pointer-events: none; }
+.col-zoom { position: absolute; right: 6px; top: 6px; display: flex; flex-direction: column; gap: 4px; }
+.col-zoom .icon-btn { width: 34px; height: 34px; background: rgba(7, 6, 10, 0.7); border: 1px solid var(--line); color: var(--ink); font-size: 20px; }
+.col-place { position: absolute; left: 6px; right: 6px; bottom: 6px; display: flex; flex-direction: column; gap: 6px; padding: 8px; background: rgba(7, 6, 10, 0.86); border: 1px solid var(--line); font-size: 12px; }
+.col-place[hidden] { display: none; }
+.col-place .bad { color: #ff8a7a; }
+.col-place-act { display: flex; gap: 6px; }
+.col-place-act .btn { flex: 1; min-height: 38px; padding: 0 10px; }
+.col-cats { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; flex: none; }
+.col-cats button { flex: none; padding: 6px 10px; font: inherit; font-size: 10px; letter-spacing: 0.14em; color: var(--dim); background: none; border: 1px solid var(--faint); text-transform: uppercase; }
+.col-cats button.on { color: var(--ink); border-color: var(--ink); }
+.col-cards { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; flex: none; padding-bottom: 2px; }
+.col-card { flex: none; width: 104px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 5px; font: inherit; color: var(--ink); background: rgba(241, 236, 218, 0.04); border: 1px solid var(--faint); text-align: center; }
+.col-card img { width: 64px; height: 52px; object-fit: contain; image-rendering: pixelated; }
+.col-card b { font-size: 10px; font-weight: 600; line-height: 1.15; min-height: 2.3em; display: flex; align-items: center; }
+.col-card small { font-size: 9px; color: var(--gold); }
+.col-card em { font-style: normal; font-size: 8px; color: var(--dim); line-height: 1.2; }
+.col-card.on { border-color: var(--gold); background: rgba(246, 196, 83, 0.1); }
+.col-card.locked { opacity: 0.45; }
+.col-card.locked small { color: var(--dim); }
+.col-dive { position: fixed; inset: 0; z-index: 60; pointer-events: none; background: radial-gradient(circle at 50% 50%, #e8c9a0 0%, #a3633e 45%, #2a160e 100%); opacity: 0; }
+.cine-art { position: absolute; left: 50%; top: 32%; translate: -50% -50%; image-rendering: pixelated; transition: opacity 0.4s; }

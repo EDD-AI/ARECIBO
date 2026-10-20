@@ -1,6 +1,6 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
 // Garder ce numéro égal à VERSION dans js/game.js et à version.json.
-const CACHE = 'orbite-v43';
+const CACHE = 'orbite-v44';
 const SHELL = [
   './',
   './index.html',
@@ -45,6 +45,9 @@ const SHELL = [
   './js/batiments/science-defense.js',
   './js/building-renderer.js',
   './js/batisseur.js',
+  './js/colonie-jeu.js',
+  './js/colonie-ui.js',
+  './js/lang/batiments.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',

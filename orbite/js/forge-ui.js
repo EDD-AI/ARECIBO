@@ -74,7 +74,8 @@
       <div class="xp-bar fg-bar"><i style="width:${p.mass / F.MAX_MASS * 100}%"></i></div>
       <button class="btn primary fg-feed" data-forge="feed" ${full || !feed.ok ? 'disabled' : ''}>${full ? tr('TAILLE MAXIMALE') : tr('NOURRIR · {prix}', { prix: price(F.FEED[p.mass]) })}</button>
       ${!full && !feed.ok && feed.short ? `<small class="fg-why">${esc(feed.reason)}</small>` : ''}
-      <div class="fg-slots"><span>${tr('EMPLACEMENTS')}</span><span class="fg-pips">${pips}</span><span>${free > 1 ? tr('{n} libres', { n: free }) : tr('{n} libre', { n: free })}</span></div>`;
+      <div class="fg-slots"><span>${tr('EMPLACEMENTS')}</span><span class="fg-pips">${pips}</span><span>${free > 1 ? tr('{n} libres', { n: free }) : tr('{n} libre', { n: free })}</span></div>
+      ${surfaceRow(p)}`;
     if (p.mass >= 1) {
       const natCost = p.type ? 6 + 2 * p.mass : 0;
       html += `<h4 class="fg-h">${tr('NATURE')} <small>${p.type ? tr('changer · {prix}', { prix: price(natCost) }) : tr('choisissez-la : offert')}</small></h4>
@@ -104,6 +105,15 @@
     const target = sizeOf(p);
     if (orb && shownSize && shownSize !== target) requestAnimationFrame(() => requestAnimationFrame(() => orb.style.setProperty('--s', target + 'px')));
     shownSize = target;
+  }
+
+  // Descente à la surface : un monde assez grand (et pas gazeux) peut accueillir une colonie.
+  function surfaceRow(p) {
+    const CU = window.OrbiteColonieUI;
+    if (!CU || !p.type) return '';
+    if (p.type === 'gas') return `<p class="fg-why fg-surface-lock">${tr('Une géante gazeuse n’a pas de sol : aucune colonie ne peut s’y poser.')}</p>`;
+    if (p.mass < CU.SURFACE_MASS) return `<p class="fg-why fg-surface-lock">${tr('À la taille {n}, la vie pourrait apparaître à sa surface.', { n: CU.SURFACE_MASS })}</p>`;
+    return `<button class="btn primary fg-surface" data-forge="surface">${CU.has(p.id) ? tr('MA COLONIE') : tr('DESCENDRE À LA SURFACE')}</button>`;
   }
 
   function partRow(p, part, dust) {
@@ -213,6 +223,7 @@
     else if (k === 'sel') { data.sel = Number(b.dataset.i); shownSize = 0; save(); render(); }
     else if (k === 'rename') renameSheet();
     else if (k === 'system') openSystem();
+    else if (k === 'surface' && window.OrbiteColonieUI) window.OrbiteColonieUI.open(cur(), $('fgOrb'));
     else if (k.startsWith('sys')) sysAction(k, b);
     else if (k === 'name-ok') {
       const v = ($('fgNameIn').value || '').trim().slice(0, 18);
