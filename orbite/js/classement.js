@@ -6,6 +6,8 @@
   else root.OrbiteClassement = factory();
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
+  // Traduction (js/i18n.js dans le navigateur) ; sous Node, le français avec ses {variables} remplies.
+  const tr = (typeof window !== 'undefined' && window.tr) || ((s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s);
 
   const PLACEMENTS = 5;
   // Points gagnés ou perdus selon la place (1re → 8e).
@@ -54,11 +56,11 @@
 
   function tierOf(points) {
     const p = Math.max(0, points | 0);
-    if (p >= TOP) return { idx: TIERS.length - 1, name: TIERS[TIERS.length - 1], div: '', into: p - TOP, span: 0, label: TIERS[TIERS.length - 1] };
+    if (p >= TOP) return { idx: TIERS.length - 1, name: tr(TIERS[TIERS.length - 1]), div: '', into: p - TOP, span: 0, label: tr(TIERS[TIERS.length - 1]) };
     const idx = Math.floor(p / TIER_SPAN);
     const d = Math.floor((p % TIER_SPAN) / 100);
     const into = p % 100;
-    return { idx, name: TIERS[idx], div: DIVS[d], into, span: 100, label: `${TIERS[idx]} ${DIVS[d]}` };
+    return { idx, name: tr(TIERS[idx]), div: DIVS[d], into, span: 100, label: `${tr(TIERS[idx])} ${DIVS[d]}` };
   }
 
   return { PLACEMENTS, DELTA, TIERS, TIER_SPAN, fresh, sanitize, placed, seed, record, tierOf };

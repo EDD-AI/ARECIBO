@@ -55,11 +55,11 @@
     dustHud();
     const p = cur();
     if (!p) {
-      box.innerHTML = `<span class="mk-kicker">FORGE DES MONDES</span>
+      box.innerHTML = `<span class="mk-kicker">${tr('FORGE DES MONDES')}</span>
         <div class="fg-stage"><span class="orb fg-orb" data-planet="forge-graine" style="--s:90px"></span></div>
-        <b class="fg-title">Votre propre monde</b>
-        <p class="fg-intro">Semez une graine de poussière d’étoiles, nourrissez-la pour la faire grandir, puis façonnez-la comme vous le voulez : nature, teinte, anneau, lunes, silhouette… Chaque palier ouvre un emplacement de plus.</p>
-        <button class="btn primary" data-forge="seed">SEMER UNE GRAINE · OFFERTE</button>`;
+        <b class="fg-title">${tr('Votre propre monde')}</b>
+        <p class="fg-intro">${tr('Semez une graine de poussière d’étoiles, nourrissez-la pour la faire grandir, puis façonnez-la comme vous le voulez : nature, teinte, anneau, lunes, silhouette… Chaque palier ouvre un emplacement de plus.')}</p>
+        <button class="btn primary" data-forge="seed">${tr('SEMER UNE GRAINE · OFFERTE')}</button>`;
       return;
     }
     const dust = A.dust();
@@ -67,36 +67,36 @@
     const full = p.mass >= F.MAX_MASS;
     const free = F.slotsFree(p);
     const pips = Array.from({ length: F.MAX_MASS }, (_, i) => `<i class="${i < F.slotsUsed(p) ? 'used' : i < p.mass ? 'open' : ''}"></i>`).join('');
-    let html = `<span class="mk-kicker">FORGE DES MONDES</span>
+    let html = `<span class="mk-kicker">${tr('FORGE DES MONDES')}</span>
       <div class="fg-stage"><span class="orb fg-orb" id="fgOrb" data-planet="${lookId(p)}" style="--s:${shownSize || sizeOf(p)}px"></span></div>
-      <button class="fg-name" data-forge="rename">${esc(p.name)} <small>RENOMMER</small></button>
-      <small class="fg-sub">${p.type ? F.NATURE[p.type].name : 'Graine'} · taille ${p.mass} / ${F.MAX_MASS}</small>
+      <button class="fg-name" data-forge="rename">${esc(p.name)} <small>${tr('RENOMMER')}</small></button>
+      <small class="fg-sub">${p.type ? F.NATURE[p.type].name : tr('Graine')} · ${tr('taille {n} / {max}', { n: p.mass, max: F.MAX_MASS })}</small>
       <div class="xp-bar fg-bar"><i style="width:${p.mass / F.MAX_MASS * 100}%"></i></div>
-      <button class="btn primary fg-feed" data-forge="feed" ${full || !feed.ok ? 'disabled' : ''}>${full ? 'TAILLE MAXIMALE' : `NOURRIR · ${price(F.FEED[p.mass])}`}</button>
+      <button class="btn primary fg-feed" data-forge="feed" ${full || !feed.ok ? 'disabled' : ''}>${full ? tr('TAILLE MAXIMALE') : tr('NOURRIR · {prix}', { prix: price(F.FEED[p.mass]) })}</button>
       ${!full && !feed.ok && feed.short ? `<small class="fg-why">${esc(feed.reason)}</small>` : ''}
-      <div class="fg-slots"><span>EMPLACEMENTS</span><span class="fg-pips">${pips}</span><span>${free} libre${free > 1 ? 's' : ''}</span></div>`;
+      <div class="fg-slots"><span>${tr('EMPLACEMENTS')}</span><span class="fg-pips">${pips}</span><span>${free > 1 ? tr('{n} libres', { n: free }) : tr('{n} libre', { n: free })}</span></div>`;
     if (p.mass >= 1) {
       const natCost = p.type ? 6 + 2 * p.mass : 0;
-      html += `<h4 class="fg-h">NATURE <small>${p.type ? `changer · ${price(natCost)}` : 'choisissez-la : offert'}</small></h4>
+      html += `<h4 class="fg-h">${tr('NATURE')} <small>${p.type ? tr('changer · {prix}', { prix: price(natCost) }) : tr('choisissez-la : offert')}</small></h4>
         <div class="fg-chips">${F.NATURES.map((n) => {
           const lock = p.mass < n.min;
-          return `<button class="fg-chip ${p.type === n.key ? 'on' : ''}" data-forge="nature" data-k="${n.key}" ${lock ? 'disabled' : ''}>${esc(n.name)}${lock ? `<small>taille ${n.min}</small>` : ''}</button>`;
+          return `<button class="fg-chip ${p.type === n.key ? 'on' : ''}" data-forge="nature" data-k="${n.key}" ${lock ? 'disabled' : ''}>${esc(n.name)}${lock ? `<small>${tr('taille {n}', { n: n.min })}</small>` : ''}</button>`;
         }).join('')}</div>`;
     }
     if (p.type) {
-      html += `<h4 class="fg-h">TEINTE <small>${price(F.HUE_COST)}</small></h4>
-        <div class="fg-hues">${F.HUES.map((h) => `<button class="fg-hue ${p.hue === h ? 'on' : ''}" data-forge="hue" data-v="${h}" aria-label="Teinte ${h}"><span class="orb" data-planet="forge-sw-${h}"></span></button>`).join('')}</div>
-        <h4 class="fg-h">AJOUTS <small>un emplacement chacun</small></h4>
+      html += `<h4 class="fg-h">${tr('TEINTE')} <small>${price(F.HUE_COST)}</small></h4>
+        <div class="fg-hues">${F.HUES.map((h) => `<button class="fg-hue ${p.hue === h ? 'on' : ''}" data-forge="hue" data-v="${h}" aria-label="${tr('Teinte {n}', { n: h })}"><span class="orb" data-planet="forge-sw-${h}"></span></button>`).join('')}</div>
+        <h4 class="fg-h">${tr('AJOUTS')} <small>${tr('un emplacement chacun')}</small></h4>
         <div class="fg-parts">${F.PARTS.map((part) => partRow(p, part, dust)).join('')}</div>
-        <button class="btn fg-relief" data-forge="relief">REMODELER LE RELIEF · ${price(F.RELIEF_COST)}</button>`;
+        <button class="btn fg-relief" data-forge="relief">${tr('REMODELER LE RELIEF · {prix}', { prix: price(F.RELIEF_COST) })}</button>`;
     }
-    html += `<h4 class="fg-h">VOTRE COLLECTION <small>${data.planets.length} / ${F.MAX_PLANETS}</small></h4>
+    html += `<h4 class="fg-h">${tr('VOTRE COLLECTION')} <small>${data.planets.length} / ${F.MAX_PLANETS}</small></h4>
       <div class="fg-coll">${data.planets.map((q, i) => `<button class="fg-thumb ${i === data.sel ? 'on' : ''}" data-forge="sel" data-i="${i}">
         <span class="orb" data-planet="${lookId(q)}"></span><small>${esc(q.name)}</small></button>`).join('')}
-        ${data.planets.length < F.MAX_PLANETS ? `<button class="fg-thumb fg-new" data-forge="seed"><b>+</b><small>Graine · ${price(F.seedCost(data.planets.length))}</small></button>` : ''}</div>
+        ${data.planets.length < F.MAX_PLANETS ? `<button class="fg-thumb fg-new" data-forge="seed"><b>+</b><small>${tr('Graine · {prix}', { prix: price(F.seedCost(data.planets.length)) })}</small></button>` : ''}</div>
       ${F.systemOpen(data.planets)
-        ? `<button class="btn primary fg-sys" data-forge="system">${data.star.lit ? 'MON SYSTÈME' : 'ALLUMER MON SYSTÈME'}</button>`
-        : `<p class="fg-why fg-sys-lock">Mon système s’ouvrira quand un de vos mondes atteindra la taille ${F.SYSTEM_MASS} : une étoile à allumer, et vos mondes en orbite autour d’elle.</p>`}`;
+        ? `<button class="btn primary fg-sys" data-forge="system">${data.star.lit ? tr('MON SYSTÈME') : tr('ALLUMER MON SYSTÈME')}</button>`
+        : `<p class="fg-why fg-sys-lock">${tr('Mon système s’ouvrira quand un de vos mondes atteindra la taille {n} : une étoile à allumer, et vos mondes en orbite autour d’elle.', { n: F.SYSTEM_MASS })}</p>`}`;
     if (p.type) swatches(p);
     box.innerHTML = html;
     // Le monde grossit en douceur jusqu'à sa nouvelle taille.
@@ -111,14 +111,14 @@
     const owned = part.key === 'moons' ? p.moons > 0 : !!p[part.key];
     const label = part.key === 'moons' ? `${part.name} <small>${p.moons} / 3</small>` : part.key === 'shape' && p.shape ? `${part.name} <small>${esc(F.SHAPES.find((s) => s.key === p.shape).name)}</small>` : part.name;
     let btns = '';
-    if (owned) btns += `<button class="btn ghost" data-forge="remove" data-k="${part.key}">RETIRER</button>`;
+    if (owned) btns += `<button class="btn ghost" data-forge="remove" data-k="${part.key}">${tr('RETIRER')}</button>`;
     const more = part.key === 'moons' ? n < part.price.length : part.key === 'shape' || !owned;
     if (more) {
       // Pour la silhouette, on teste une forme différente de l'actuelle.
       const probe = part.key === 'shape' ? { t: 'add', part: 'shape', v: F.SHAPES.find((sh) => sh.key !== p.shape).key } : { t: 'add', part: part.key };
       const r = F.check(p, probe, dust);
       const cost = part.price[Math.min(n, part.price.length - 1)];
-      const word = part.key === 'shape' ? (p.shape ? 'CHANGER' : 'CHOISIR') : 'AJOUTER';
+      const word = part.key === 'shape' ? (p.shape ? tr('CHANGER') : tr('CHOISIR')) : tr('AJOUTER');
       btns += `<button class="btn primary" data-forge="${part.key === 'shape' ? 'shapes' : 'add'}" data-k="${part.key}" ${r.ok || r.short ? '' : 'disabled'}>${word} · ${price(cost)}</button>`;
       if (!r.ok && r.reason && !r.short) btns += `<small class="fg-why">${esc(r.reason)}</small>`;
     }
@@ -153,9 +153,9 @@
       SFX.coin();
       SFX.buff(0, Math.min(7, Math.floor(p.mass / 2)));
       burstOnOrb([[246, 196, 83], [255, 255, 255]], 30);
-      A.popOn($('fgOrb'), `TAILLE ${p.mass}`, 'gold');
-      if (p.mass === 1) A.toast('Votre graine prend forme : choisissez sa nature.', 2600);
-      else if (F.slotsFree(p) > slotsBefore) A.toast('Un emplacement s’ouvre.', 1600);
+      A.popOn($('fgOrb'), tr('TAILLE {n}', { n: p.mass }), 'gold');
+      if (p.mass === 1) A.toast(tr('Votre graine prend forme : choisissez sa nature.'), 2600);
+      else if (F.slotsFree(p) > slotsBefore) A.toast(tr('Un emplacement s’ouvre.'), 1600);
     } else if (a.t === 'remove') {
       SFX.tap();
     } else {
@@ -166,8 +166,8 @@
 
   function seed() {
     const cost = F.seedCost(data.planets.length);
-    if (cost == null) { A.refuse('Votre collection est complète.'); return; }
-    if (A.dust() < cost) { A.refuse(`Il vous manque ${cost - A.dust()} poussières d’étoiles.`); return; }
+    if (cost == null) { A.refuse(tr('Votre collection est complète.')); return; }
+    if (A.dust() < cost) { A.refuse(tr('Il vous manque {n} poussières d’étoiles.', { n: cost - A.dust() })); return; }
     if (cost) A.addDust(-cost);
     const p = F.newPlanet(randomSeed(), data.planets.length);
     data.planets.push(p);
@@ -183,17 +183,17 @@
 
   function renameSheet() {
     const p = cur();
-    A.openSheet(`<h3>NOMMER VOTRE MONDE</h3>
+    A.openSheet(`<h3>${tr('NOMMER VOTRE MONDE')}</h3>
       <input class="fg-input" id="fgNameIn" maxlength="18" value="${esc(p.name)}" autocomplete="off">
-      <div class="sheet-actions"><button class="btn" data-act="close">ANNULER</button><button class="btn primary" data-forge="name-ok">VALIDER</button></div>`);
+      <div class="sheet-actions"><button class="btn" data-act="close">${tr('ANNULER')}</button><button class="btn primary" data-forge="name-ok">${tr('VALIDER')}</button></div>`);
     setTimeout(() => { const i = $('fgNameIn'); if (i) { i.focus(); i.select(); } }, 80);
   }
   function shapesSheet() {
     const p = cur();
     const cost = F.PART.shape.price[0];
-    A.openSheet(`<h3>SILHOUETTE · ${price(cost)}</h3><div class="fg-chips">${F.SHAPES.map((s) =>
+    A.openSheet(`<h3>${tr('SILHOUETTE · {prix}', { prix: price(cost) })}</h3><div class="fg-chips">${F.SHAPES.map((s) =>
       `<button class="fg-chip ${p.shape === s.key ? 'on' : ''}" data-forge="shape" data-k="${s.key}">${esc(s.name)}</button>`).join('')}</div>
-      <div class="sheet-actions"><button class="btn" data-act="close">FERMER</button></div>`);
+      <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
   }
 
   document.addEventListener('click', (e) => {
@@ -247,7 +247,7 @@
 
   function renderSystem() {
     const S = src(), st = S.star;
-    const starName = st.lit ? F.STAR_CLASSES.find((c) => c.key === st.cls).name : 'étoile éteinte';
+    const starName = st.lit ? F.STAR_CLASSES.find((c) => c.key === st.cls).name : tr('étoile éteinte');
     $('sysBack').innerHTML = icon('back');
     $('sysSub').textContent = VIEW ? `${VIEW.owner} · ${starName}` : starName;
     sysDust();
@@ -257,28 +257,28 @@
       inOrbit.map((o) => `<button class="sys-pl" data-forge="sysPlanet" data-i="${o.i}" style="--s:${plPx(o.p)}px"><span class="orb" data-planet="${plId(o.p, o.i)}"></span><small>${esc(o.p.name)}</small></button>`).join('');
     const panel = [];
     if (VIEW) {
-      panel.push(`<h4 class="fg-h">MONDES DE ${esc(VIEW.owner.toUpperCase())} <small>${inOrbit.length} / ${F.ORBITS} orbites</small></h4>`);
+      panel.push(`<h4 class="fg-h">${tr('MONDES DE {nom}', { nom: esc(VIEW.owner.toUpperCase()) })} <small>${tr('{n} / {max} orbites', { n: inOrbit.length, max: F.ORBITS })}</small></h4>`);
       panel.push(S.planets.map((p, i) => `<div class="sys-row sys-row-visit">
         <span class="orb" data-planet="${plId(p, i)}"></span>
-        <span class="sys-row-txt"><b>${esc(p.name)}</b><small>${p.type ? `${F.NATURE[p.type].name} · taille ${p.mass}` : 'graine'} · ${p.orbit == null ? 'hors orbite' : `orbite ${p.orbit + 1}`}</small></span>
-      </div>`).join('') || '<p class="muted">Aucun monde forgé pour l’instant.</p>');
+        <span class="sys-row-txt"><b>${esc(p.name)}</b><small>${p.type ? `${F.NATURE[p.type].name} · ${tr('taille {n}', { n: p.mass })}` : tr('graine')} · ${p.orbit == null ? tr('hors orbite') : tr('orbite {n}', { n: p.orbit + 1 })}</small></span>
+      </div>`).join('') || `<p class="muted">${tr('Aucun monde forgé pour l’instant.')}</p>`);
       $('sysPanel').innerHTML = panel.join('');
       drawOrbits();
       return;
     }
     if (!st.lit) {
       const r = F.sysCheck(data, { t: 'light' }, A.dust());
-      panel.push(`<p class="sys-intro">Au centre de votre système, une étoile attend sa première lumière. Allumez-la, puis placez vos mondes en orbite autour d’elle.</p>
-        <button class="btn primary" data-forge="sysLight" ${r.ok || r.short ? '' : 'disabled'}>ALLUMER L’ÉTOILE · ${price(F.LIGHT_COST)}</button>`);
+      panel.push(`<p class="sys-intro">${tr('Au centre de votre système, une étoile attend sa première lumière. Allumez-la, puis placez vos mondes en orbite autour d’elle.')}</p>
+        <button class="btn primary" data-forge="sysLight" ${r.ok || r.short ? '' : 'disabled'}>${tr('ALLUMER L’ÉTOILE · {prix}', { prix: price(F.LIGHT_COST) })}</button>`);
     } else {
-      panel.push(`<h4 class="fg-h">VOS MONDES <small>${inOrbit.length} / ${F.ORBITS} orbites</small></h4>`);
+      panel.push(`<h4 class="fg-h">${tr('VOS MONDES')} <small>${tr('{n} / {max} orbites', { n: inOrbit.length, max: F.ORBITS })}</small></h4>`);
       panel.push(data.planets.map((p, i) => `<div class="sys-row">
         <span class="orb" data-planet="${lookId(p)}"></span>
-        <span class="sys-row-txt"><b>${esc(p.name)}</b><small>${p.type ? `${F.NATURE[p.type].name} · taille ${p.mass}` : 'graine'} · ${p.orbit == null ? 'hors orbite' : `orbite ${p.orbit + 1}`}</small></span>
-        ${p.type ? `<button class="btn ${p.orbit == null ? 'primary' : ''}" data-forge="sysPlace" data-i="${i}">${p.orbit == null ? 'PLACER' : 'DÉPLACER'}</button>` : '<small class="fg-why">à nourrir</small>'}
+        <span class="sys-row-txt"><b>${esc(p.name)}</b><small>${p.type ? `${F.NATURE[p.type].name} · ${tr('taille {n}', { n: p.mass })}` : tr('graine')} · ${p.orbit == null ? tr('hors orbite') : tr('orbite {n}', { n: p.orbit + 1 })}</small></span>
+        ${p.type ? `<button class="btn ${p.orbit == null ? 'primary' : ''}" data-forge="sysPlace" data-i="${i}">${p.orbit == null ? tr('PLACER') : tr('DÉPLACER')}</button>` : `<small class="fg-why">${tr('à nourrir')}</small>`}
       </div>`).join(''));
     }
-    panel.push(`<p class="sys-soon">${window.OrbiteOnline && window.OrbiteOnline.configured ? 'Vos amis peuvent visiter votre système depuis leur profil, onglet Amis.' : 'Bientôt : visitez les systèmes de vos amis, et faites visiter le vôtre.'}</p>`);
+    panel.push(`<p class="sys-soon">${window.OrbiteOnline && window.OrbiteOnline.configured ? tr('Vos amis peuvent visiter votre système depuis leur profil, onglet Amis.') : tr('Bientôt : visitez les systèmes de vos amis, et faites visiter le vôtre.')}</p>`);
     $('sysPanel').innerHTML = panel.join('');
     drawOrbits();
   }
@@ -352,42 +352,42 @@
   function starSheet() {
     if (VIEW) {
       const st = VIEW.star;
-      A.openSheet(`<h3>L’ÉTOILE DE ${esc(VIEW.owner.toUpperCase())}</h3><h2>${st.lit ? esc(F.STAR_CLASSES.find((c) => c.key === st.cls).name) : 'Étoile éteinte'}</h2>
-        <p class="muted">Taille ${st.size + 1} / ${F.STAR_GROW.length + 1}</p><div class="sheet-actions"><button class="btn" data-act="close">FERMER</button></div>`);
+      A.openSheet(`<h3>${tr('L’ÉTOILE DE {nom}', { nom: esc(VIEW.owner.toUpperCase()) })}</h3><h2>${st.lit ? esc(F.STAR_CLASSES.find((c) => c.key === st.cls).name) : tr('Étoile éteinte')}</h2>
+        <p class="muted">${tr('Taille {n} / {max}', { n: st.size + 1, max: F.STAR_GROW.length + 1 })}</p><div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
       return;
     }
     const st = data.star;
-    if (!st.lit) { A.refuse('Allumez d’abord votre étoile.'); return; }
+    if (!st.lit) { A.refuse(tr('Allumez d’abord votre étoile.')); return; }
     const grow = st.size < F.STAR_GROW.length;
-    A.openSheet(`<h3>VOTRE ÉTOILE</h3><h2>${esc(F.STAR_CLASSES.find((c) => c.key === st.cls).name)}</h2>
-      <p class="muted">Changez sa lumière ou faites-la grandir.</p>
-      <div class="fg-chips">${F.STAR_CLASSES.map((c) => `<button class="fg-chip ${c.key === st.cls ? 'on' : ''}" data-forge="sysClass" data-k="${c.key}">${esc(c.name)}<small>${c.key === st.cls ? 'actuelle' : price(c.price)}</small></button>`).join('')}</div>
-      <div class="sheet-actions"><button class="btn" data-act="close">FERMER</button>${grow ? `<button class="btn primary" data-forge="sysGrow">GRANDIR · ${price(F.STAR_GROW[st.size])}</button>` : ''}</div>`);
+    A.openSheet(`<h3>${tr('VOTRE ÉTOILE')}</h3><h2>${esc(F.STAR_CLASSES.find((c) => c.key === st.cls).name)}</h2>
+      <p class="muted">${tr('Changez sa lumière ou faites-la grandir.')}</p>
+      <div class="fg-chips">${F.STAR_CLASSES.map((c) => `<button class="fg-chip ${c.key === st.cls ? 'on' : ''}" data-forge="sysClass" data-k="${c.key}">${esc(c.name)}<small>${c.key === st.cls ? tr('actuelle') : price(c.price)}</small></button>`).join('')}</div>
+      <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button>${grow ? `<button class="btn primary" data-forge="sysGrow">${tr('GRANDIR · {prix}', { prix: price(F.STAR_GROW[st.size]) })}</button>` : ''}</div>`);
   }
   function planetSheet(i) {
     if (VIEW) {
       const q = VIEW.planets[i];
       A.openSheet(`<div class="sheet-top"><div class="orb sheet-orb" data-planet="${plId(q, i)}"></div><div>
-        <span class="fam-chip" style="--c:var(--gold)">ORBITE ${q.orbit + 1}</span>
-        <h2>${esc(q.name)}</h2><p class="muted">${F.NATURE[q.type].name} · taille ${q.mass} / ${F.MAX_MASS} · forgé par ${esc(VIEW.owner)}</p></div></div>
-        <div class="sheet-actions"><button class="btn" data-act="close">FERMER</button></div>`);
+        <span class="fam-chip" style="--c:var(--gold)">${tr('ORBITE {n}', { n: q.orbit + 1 })}</span>
+        <h2>${esc(q.name)}</h2><p class="muted">${F.NATURE[q.type].name} · ${tr('taille {n} / {max}', { n: q.mass, max: F.MAX_MASS })} · ${tr('forgé par {nom}', { nom: esc(VIEW.owner) })}</p></div></div>
+        <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
       return;
     }
     const p = data.planets[i];
     A.openSheet(`<div class="sheet-top"><div class="orb sheet-orb" data-planet="${lookId(p)}"></div><div>
-      <span class="fam-chip" style="--c:var(--gold)">${p.orbit == null ? 'HORS ORBITE' : 'ORBITE ' + (p.orbit + 1)}</span>
-      <h2>${esc(p.name)}</h2><p class="muted">${F.NATURE[p.type].name} · taille ${p.mass} / ${F.MAX_MASS}</p></div></div>
-      <div class="sheet-actions"><button class="btn" data-forge="sysForge" data-i="${i}">FAÇONNER</button><button class="btn primary" data-forge="sysPlace" data-i="${i}">CHANGER D’ORBITE</button></div>`);
+      <span class="fam-chip" style="--c:var(--gold)">${p.orbit == null ? tr('HORS ORBITE') : tr('ORBITE {n}', { n: p.orbit + 1 })}</span>
+      <h2>${esc(p.name)}</h2><p class="muted">${F.NATURE[p.type].name} · ${tr('taille {n} / {max}', { n: p.mass, max: F.MAX_MASS })}</p></div></div>
+      <div class="sheet-actions"><button class="btn" data-forge="sysForge" data-i="${i}">${tr('FAÇONNER')}</button><button class="btn primary" data-forge="sysPlace" data-i="${i}">${tr('CHANGER D’ORBITE')}</button></div>`);
   }
   function placeSheet(i) {
     const p = data.planets[i];
     const owner = (k) => data.planets.find((q) => q.orbit === k);
-    A.openSheet(`<h3>ORBITE DE ${esc(p.name.toUpperCase())}</h3><p class="muted">Les orbites proches tournent plus vite. Choisir une orbite occupée échange les deux mondes.</p>
+    A.openSheet(`<h3>${tr('ORBITE DE {nom}', { nom: esc(p.name.toUpperCase()) })}</h3><p class="muted">${tr('Les orbites proches tournent plus vite. Choisir une orbite occupée échange les deux mondes.')}</p>
       <div class="sys-slots">${Array.from({ length: F.ORBITS }, (_, k) => {
         const o = owner(k);
-        return `<button class="fg-chip ${p.orbit === k ? 'on' : ''}" data-forge="sysSlot" data-i="${i}" data-k="${k}">Orbite ${k + 1}<small>${o ? esc(o.name) : 'libre'}</small></button>`;
+        return `<button class="fg-chip ${p.orbit === k ? 'on' : ''}" data-forge="sysSlot" data-i="${i}" data-k="${k}">${tr('Orbite {n}', { n: k + 1 })}<small>${o ? esc(o.name) : tr('libre')}</small></button>`;
       }).join('')}</div>
-      <div class="sheet-actions">${p.orbit != null ? `<button class="btn ghost" data-forge="sysOut" data-i="${i}">RETIRER DE L’ORBITE</button>` : ''}<button class="btn" data-act="close">FERMER</button></div>`);
+      <div class="sheet-actions">${p.orbit != null ? `<button class="btn ghost" data-forge="sysOut" data-i="${i}">${tr('RETIRER DE L’ORBITE')}</button>` : ''}<button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
   }
 
   async function sysAction(k, b) {
@@ -427,7 +427,7 @@
     const f = (profile && profile.forge) || {};
     const star = F.sanitizeStar(f.star, 1);
     const planets = (Array.isArray(f.planets) ? f.planets : []).slice(0, F.MAX_PLANETS).map((p, i) => F.sanitize(Object.assign({}, p, { id: 'v' + i }), i));
-    VIEW = { star, planets, owner: String(profile.pseudo || 'Créateur') };
+    VIEW = { star, planets, owner: String(profile.pseudo || tr('Créateur')) };
     stage.register('visit-star', F.starLook(star));
     planets.forEach((p, i) => stage.register('visit-' + i, F.look(p)));
     await A.show('system');

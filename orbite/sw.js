@@ -1,6 +1,6 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
 // Garder ce numéro égal à VERSION dans js/game.js et à version.json.
-const CACHE = 'orbite-v32';
+const CACHE = 'orbite-v33';
 const SHELL = [
   './',
   './index.html',
@@ -13,6 +13,11 @@ const SHELL = [
   './fonts/chakra-petch-500.woff2',
   './fonts/chakra-petch-600.woff2',
   './css/atelier.css',
+  './js/i18n.js',
+  './js/lang/regles.js',
+  './js/lang/jeu.js',
+  './js/lang/campagne.js',
+  './js/lang/interface.js',
   './js/planet-engine.js',
   './js/planet-renderer.js',
   './js/stage.js',

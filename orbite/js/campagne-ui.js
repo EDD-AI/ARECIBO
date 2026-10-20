@@ -10,6 +10,20 @@
   const $ = (id) => document.getElementById(id);
   const { icon, esc, wait, center } = A;
 
+  // Données de la campagne : js/campagne.js reste en français (il est aussi testé sous Node) ;
+  // on traduit ici sur place les textes affichés. Les sauvegardes ne gardent que des identifiants.
+  const I18N = window.OrbiteI18n;
+  if (I18N) {
+    I18N.localize(C.CARDS, ['name', 'text']);
+    I18N.localize(C.STATUS, ['name', 'text']);
+    I18N.localize(C.POWERS, ['name', 'text']);
+    I18N.localize(C.RELICS, ['name', 'text']);
+    I18N.localize(C.ENEMIES, ['name']);
+    for (const e of Object.values(C.ENEMIES)) I18N.localize(e.moves, ['n']);
+    for (const ev of Object.values(C.EVENTS)) { I18N.localize([ev], ['title', 'text']); I18N.localize(ev.choices, ['label', 'text']); }
+    for (const k of Object.keys(C.TYPE_NAME)) C.TYPE_NAME[k] = tr(C.TYPE_NAME[k]);
+  }
+
   const RUN_KEY = 'orbite.campagne';
   const STATS_KEY = 'orbite.campagne.stats';
   const INTRO_KEY = 'orbite.campagne.intro';
@@ -114,40 +128,40 @@
 
   const INTRO = [
     '…',
-    'Une pensée. La toute première.',
-    'Vous ouvrez les yeux sur le vide.',
-    'Rien n’existe encore. Il y a tout à faire.',
-    'Vous êtes un Créateur. Et un Créateur doit créer.',
-    'Rassemblez la poussière.'
+    tr('Une pensée. La toute première.'),
+    tr('Vous ouvrez les yeux sur le vide.'),
+    tr('Rien n’existe encore. Il y a tout à faire.'),
+    tr('Vous êtes un Créateur. Et un Créateur doit créer.'),
+    tr('Rassemblez la poussière.')
   ];
   const INTRO_AFTER = [
-    'Voici votre premier monde. Petit. Fragile.',
-    'D’autres astres errent dans cette nébuleuse. Ils ne vous laisseront pas grandir.',
-    'Façonnez votre monde. Faites-le survivre.',
-    'Puis, faites-y naître la vie.'
+    tr('Voici votre premier monde. Petit. Fragile.'),
+    tr('D’autres astres errent dans cette nébuleuse. Ils ne vous laisseront pas grandir.'),
+    tr('Façonnez votre monde. Faites-le survivre.'),
+    tr('Puis, faites-y naître la vie.')
   ];
-  const AGAIN = ['Vous rouvrez les yeux. Le vide vous attendait.', 'Rassemblez la poussière.'];
+  const AGAIN = [tr('Vous rouvrez les yeux. Le vide vous attendait.'), tr('Rassemblez la poussière.')];
   const BOSS = [
-    'Une ombre immense masque les étoiles.',
-    'Kronos. La géante qui dévore ses propres lunes.',
-    'Elle règne sur cette nébuleuse depuis le commencement.',
-    'Votre monde est prêt. Il doit l’être.'
+    tr('Une ombre immense masque les étoiles.'),
+    tr('Kronos. La géante qui dévore ses propres lunes.'),
+    tr('Elle règne sur cette nébuleuse depuis le commencement.'),
+    tr('Votre monde est prêt. Il doit l’être.')
   ];
   const WIN = [
-    'Kronos s’effondre sur lui-même.',
-    'Ses lunes, libérées, se mettent à tourner autour de votre monde.',
-    'Et à sa surface, pour la première fois…',
-    '…quelque chose bouge. La vie.'
+    tr('Kronos s’effondre sur lui-même.'),
+    tr('Ses lunes, libérées, se mettent à tourner autour de votre monde.'),
+    tr('Et à sa surface, pour la première fois…'),
+    tr('…quelque chose bouge. La vie.')
   ];
   const LOSE = [
-    'Votre monde se fissure, puis se disloque.',
-    'Sa poussière retourne au vide.',
-    'Mais un Créateur ne disparaît jamais vraiment.',
-    'Il recommence.'
+    tr('Votre monde se fissure, puis se disloque.'),
+    tr('Sa poussière retourne au vide.'),
+    tr('Mais un Créateur ne disparaît jamais vraiment.'),
+    tr('Il recommence.')
   ];
   const ELITE_LINE = {
-    geante: 'Une étoile mourante gonfle devant vous. Sa chaleur fait fondre la roche.',
-    jumeau: 'Deux astéroïdes tournent l’un autour de l’autre. Frappez l’un, et l’autre enrage.'
+    geante: tr('Une étoile mourante gonfle devant vous. Sa chaleur fait fondre la roche.'),
+    jumeau: tr('Deux astéroïdes tournent l’un autour de l’autre. Frappez l’un, et l’autre enrage.')
   };
 
 
@@ -204,44 +218,44 @@
   const CAST = {
     moi: { name: '???', color: '#f1ecda', fig: { dir: 1, hood: 6, peak: true, shoulder: 10, flare: 15, rim: 'rgba(241,236,218,0.75)', rimA: 0.7, seed: 1 } },
     vela: { name: 'VELA', color: '#c9a8ff', fig: { dir: -1, hood: 5, hair: 26, shoulder: 8, flare: 13, rim: '#b48cff', eyes: true, crown: true, eye: '#f0e4ff', seed: 3, lean: -2 } },
-    ancien: { name: 'L’ANCIEN', color: '#f6c453', fig: { dir: -1, hood: 6, peak: true, hunch: 4, bow: 3, shoulder: 12, flare: 16, staff: true, rim: '#f6c453', eyes: true, eye: '#ffe6a0', seed: 5, lean: 2 } }
+    ancien: { name: tr('L’ANCIEN'), color: '#f6c453', fig: { dir: -1, hood: 6, peak: true, hunch: 4, bow: 3, shoulder: 12, flare: 16, staff: true, rim: '#f6c453', eyes: true, eye: '#ffe6a0', seed: 5, lean: 2 } }
   };
   const SCENES = {
     vela1: [
-      ['vela', 'Tiens. Un nouveau.'],
-      ['vela', 'Ça faisait des éons qu’aucune étincelle ne s’était allumée dans cette nébuleuse.'],
+      ['vela', tr('Tiens. Un nouveau.')],
+      ['vela', tr('Ça faisait des éons qu’aucune étincelle ne s’était allumée dans cette nébuleuse.')],
       ['moi', '…'],
-      ['vela', 'Tu ne sais pas qui tu es. Aucun de nous ne le savait, au début.'],
-      ['vela', 'Moi, c’est Vela. Je tisse des étoiles, là-bas, vers le bord.'],
-      ['vela', 'Chaque astre que tu vaincs t’apprend une forme nouvelle. Garde celles qui te ressemblent.'],
-      ['moi', 'Et après ?'],
-      ['vela', 'Après, il y a Kronos. Elle a déjà dévoré plus de Créateurs que tu ne peux l’imaginer.'],
-      ['vela', 'Grandis vite, petit monde.']
+      ['vela', tr('Tu ne sais pas qui tu es. Aucun de nous ne le savait, au début.')],
+      ['vela', tr('Moi, c’est Vela. Je tisse des étoiles, là-bas, vers le bord.')],
+      ['vela', tr('Chaque astre que tu vaincs t’apprend une forme nouvelle. Garde celles qui te ressemblent.')],
+      ['moi', tr('Et après ?')],
+      ['vela', tr('Après, il y a Kronos. Elle a déjà dévoré plus de Créateurs que tu ne peux l’imaginer.')],
+      ['vela', tr('Grandis vite, petit monde.')]
     ],
     ancien: [
-      ['ancien', 'Approche… N’aie pas peur d’un vieux monde éteint.'],
-      ['ancien', 'J’ai été un Créateur, moi aussi. J’avais des océans. Des forêts.'],
-      ['moi', 'Que s’est-il passé ?'],
-      ['ancien', 'Kronos. Elle a mangé mes lunes, une à une. Puis elle m’a mangé, moi.'],
-      ['ancien', 'Écoute bien : quand elle s’apprête à dévorer, frappe ses lunes d’abord.'],
-      ['ancien', 'Il ne me reste presque rien. Prends-le.']
+      ['ancien', tr('Approche… N’aie pas peur d’un vieux monde éteint.')],
+      ['ancien', tr('J’ai été un Créateur, moi aussi. J’avais des océans. Des forêts.')],
+      ['moi', tr('Que s’est-il passé ?')],
+      ['ancien', tr('Kronos. Elle a mangé mes lunes, une à une. Puis elle m’a mangé, moi.')],
+      ['ancien', tr('Écoute bien : quand elle s’apprête à dévorer, frappe ses lunes d’abord.')],
+      ['ancien', tr('Il ne me reste presque rien. Prends-le.')]
     ],
     avantKronos: [
-      ['vela', 'Te voilà donc. Je n’y croyais pas.'],
-      ['vela', 'Kronos t’a senti venir. Elle a faim.'],
-      ['moi', 'Moi aussi.'],
-      ['vela', '… Alors va. Et reviens entier.']
+      ['vela', tr('Te voilà donc. Je n’y croyais pas.')],
+      ['vela', tr('Kronos t’a senti venir. Elle a faim.')],
+      ['moi', tr('Moi aussi.')],
+      ['vela', tr('… Alors va. Et reviens entier.')]
     ],
     avantKronosCourt: [
-      ['vela', 'Encore toi. Tu apprends vite.'],
-      ['moi', 'Cette fois, je sais où frapper.']
+      ['vela', tr('Encore toi. Tu apprends vite.')],
+      ['moi', tr('Cette fois, je sais où frapper.')]
     ],
     apresKronos: [
-      ['vela', 'Kronos… tombée. Toute la nébuleuse l’a senti.'],
-      ['vela', 'Les autres Créateurs vont venir te voir. Certains pour t’aider.'],
-      ['vela', 'D’autres pour te prendre ce que tu as fait naître.'],
-      ['moi', 'Qu’ils viennent.'],
-      ['vela', 'Bienvenue parmi nous, Créateur.']
+      ['vela', tr('Kronos… tombée. Toute la nébuleuse l’a senti.')],
+      ['vela', tr('Les autres Créateurs vont venir te voir. Certains pour t’aider.')],
+      ['vela', tr('D’autres pour te prendre ce que tu as fait naître.')],
+      ['moi', tr('Qu’ils viennent.')],
+      ['vela', tr('Bienvenue parmi nous, Créateur.')]
     ]
   };
   const talkState = { skip: false, fast: false, typing: false, next: null };
@@ -300,9 +314,9 @@
     SFX.tap();
     const saved = load();
     if (!saved) { newRun(); return; }
-    A.openSheet(`<h3>CAMPAGNE</h3><h2>Une expédition vous attend</h2>
-      <p class="muted">Étage ${saved.floor} · ${saved.hp} / ${saved.maxHp} PV · ${saved.deck.length} cartes</p>
-      <div class="sheet-actions"><button class="btn primary" data-camp="resume">REPRENDRE</button><button class="btn" data-camp="new">NOUVELLE</button></div>`);
+    A.openSheet(`<h3>${tr('CAMPAGNE')}</h3><h2>${tr('Une expédition vous attend')}</h2>
+      <p class="muted">${tr('Étage {n} · {hp} / {max} PV · {cards} cartes', { n: saved.floor, hp: saved.hp, max: saved.maxHp, cards: saved.deck.length })}</p>
+      <div class="sheet-actions"><button class="btn primary" data-camp="resume">${tr('REPRENDRE')}</button><button class="btn" data-camp="new">${tr('NOUVELLE')}</button></div>`);
   });
 
   async function newRun() {
@@ -316,14 +330,14 @@
     st.runs++;
     A.store.set(STATS_KEY, JSON.stringify(st));
     await openStory();
-    const first = A.store.get(INTRO_KEY, '') !== '1';
+    // Le récit complet revient à chaque nouvelle campagne (on peut toujours le passer).
     await wait(900);
-    await tell(first ? INTRO : AGAIN);
+    await tell(INTRO);
     await gatherWorld();
     await wait(400);
-    if (first) await tell(INTRO_AFTER);
+    await tell(INTRO_AFTER);
     A.store.set(INTRO_KEY, '1');
-    if (!story.skip) { storyTitle('ACTE I', 'LA NÉBULEUSE NATALE'); SFX.level(); await wait(2600); }
+    if (!story.skip) { storyTitle(tr('ACTE I'), tr('LA NÉBULEUSE NATALE')); SFX.level(); await wait(2600); }
     await openMap();
   }
   async function resume() {
@@ -343,7 +357,7 @@
   // Kronos, chaque astre flotte à sa propre hauteur, des galaxies et des planètes peuplent les
   // côtés. La caméra avance d'astre en astre ; on glisse pour regarder plus loin.
   const MAP = { cam: -0.6, camX: 0, target: null, vel: 0, raf: 0, run: null, pos: null, decor: null, me: null, moving: false, drag: null };
-  const LABEL = { combat: 'AFFRONTEMENT', elite: 'ASTRE PUISSANT', event: 'MYSTÈRE', rest: 'SANCTUAIRE', boss: 'KRONOS' };
+  const LABEL = { combat: tr('AFFRONTEMENT'), elite: tr('ASTRE PUISSANT'), event: tr('MYSTÈRE'), rest: tr('SANCTUAIRE'), boss: 'KRONOS' };
   const DECOR_LOOKS = {
     'map-gal-0': { type: 'portal', seed: 41001 },
     'map-gal-1': { type: 'portal', seed: 41007 },
@@ -405,7 +419,7 @@
   function renderTop() {
     $('cmBack').innerHTML = icon('back');
     $('cmHp').innerHTML = `${icon('heart')} ${run.hp}<small>/${run.maxHp}</small>`;
-    $('cmDeck').innerHTML = `CRÉATION · ${run.deck.length} cartes`;
+    $('cmDeck').innerHTML = tr('CRÉATION · {n} cartes', { n: run.deck.length });
     const rel = run.relics.map((k) => `<button class="relic" data-relic="${k}" aria-label="${esc(C.RELICS[k].name)}">${icon('spark')}</button>`).join('');
     $('cmRelics').innerHTML = rel;
     $('cfRelics').innerHTML = rel;
@@ -495,6 +509,10 @@
   const clampCam = (c) => Math.max(camFor(curPos()) - 0.4, Math.min(C.ROWS + 0.6, c));
 
   async function openMap() {
+    // Sur la carte, plus rien d'un combat ne doit bloquer le voyage.
+    ui.busy = false;
+    ui.sel = null;
+    MAP.moving = false;
     worldLayout();
     MAP.cam = camFor(curPos());
     MAP.camX = camXFor(curPos());
@@ -508,12 +526,12 @@
     if (A.store.get(MAP_TUTO_KEY, '') !== 'fini') setTimeout(() => A.coachStart(MAP_STEPS, () => A.store.set(MAP_TUTO_KEY, 'fini')), 700);
   }
   $('cmBack').addEventListener('click', async () => { SFX.tap(); save(); await A.backToMenu(); });
-  $('cmDeck').addEventListener('click', () => { SFX.tap(); deckSheet('VOTRE CRÉATION', run.deck, null); });
+  $('cmDeck').addEventListener('click', () => { SFX.tap(); deckSheet(tr('VOTRE CRÉATION'), run.deck, null); });
   document.addEventListener('click', (e) => {
     const r = e.target.closest('[data-relic]');
     if (!r || !run) return;
     const k = C.RELICS[r.dataset.relic];
-    A.toast(`${k.name} : ${k.text}`, 3200);
+    A.toast(tr('{a} : {b}', { a: k.name, b: k.text }), 3200);
   });
 
   // Glisser vers le haut : la caméra avance pour regarder plus loin ; un toucher choisit un astre.
@@ -552,7 +570,7 @@
     if (!C.choices(run).includes(id)) {
       const n = C.nodeById(run, id);
       SFX.error();
-      A.toast(n && n.type === 'boss' ? 'Kronos vous attend au bout du chemin.' : 'Suivez une route reliée à votre monde.', 1800);
+      A.toast(n && n.type === 'boss' ? tr('Kronos vous attend au bout du chemin.') : tr('Suivez une route reliée à votre monde.'), 1800);
       return;
     }
     ui.busy = true;
@@ -598,12 +616,12 @@
   const MAP_TUTO_KEY = 'orbite.campagne.carte';
   const GLIDE_KEY = 'orbite.campagne.glisse';
   const MAP_STEPS = [
-    { id: 'carte', text: 'Voici la <b>Nébuleuse natale</b>. Chaque astre est une étape : votre monde voyage d’astre en astre, jusqu’à <b>Kronos</b>, tout au fond du ciel.', next: 'SUIVANT', delay: 0, y: 0.08 },
-    { id: 'routes', target: () => document.querySelector('#cmMap .cnode.open'), text: 'Les routes lumineuses partent de votre monde. Les astres entourés d’un cercle sont vos <b>prochaines étapes possibles</b>.', next: 'SUIVANT' },
-    { id: 'types', text: '<b>Planète ennemie</b> : un affrontement. <b>Cercle rouge</b> : un astre puissant, plus dur, mais il donne un vestige. <b>Tourbillon</b> : un mystère. <b>Petite étoile</b> : un sanctuaire pour soigner ou améliorer une carte.', next: 'SUIVANT', y: 0.08 },
-    { id: 'regarder', target: '#cmView', pad: -30, dim: false, text: '<b>Glissez vers le haut</b> pour regarder plus loin et choisir votre route. Les routes se séparent et se rejoignent : à vous de tracer la vôtre.', gesture: { from: '#cmView', drag: '#cmHp', at: 0.75 }, wait: ['campRegarde'], y: 0.08 },
-    { id: 'creation', target: '#cmDeck', text: 'Ici, <b>votre création</b> : toutes vos cartes.', next: 'SUIVANT' },
-    { id: 'partir', enter: () => { MAP.target = camFor(curPos()); }, delay: 700, target: () => document.querySelector('#cmMap .cnode.open'), text: 'À vous. <b>Touchez un astre entouré</b> pour y voyager.', gesture: { tap: () => document.querySelector('#cmMap .cnode.open'), at: 0.5 }, wait: ['campVoyage'] }
+    { id: 'carte', text: tr('Voici la <b>Nébuleuse natale</b>. Chaque astre est une étape : votre monde voyage d’astre en astre, jusqu’à <b>Kronos</b>, tout au fond du ciel.'), next: tr('SUIVANT'), delay: 0, y: 0.08 },
+    { id: 'routes', target: () => document.querySelector('#cmMap .cnode.open'), text: tr('Les routes lumineuses partent de votre monde. Les astres entourés d’un cercle sont vos <b>prochaines étapes possibles</b>.'), next: tr('SUIVANT') },
+    { id: 'types', text: tr('<b>Planète ennemie</b> : un affrontement. <b>Cercle rouge</b> : un astre puissant, plus dur, mais il donne un vestige. <b>Tourbillon</b> : un mystère. <b>Petite étoile</b> : un sanctuaire pour soigner ou améliorer une carte.'), next: tr('SUIVANT'), y: 0.08 },
+    { id: 'regarder', target: '#cmView', pad: -30, dim: false, text: tr('<b>Glissez vers le haut</b> pour regarder plus loin et choisir votre route. Les routes se séparent et se rejoignent : à vous de tracer la vôtre.'), gesture: { from: '#cmView', drag: '#cmHp', at: 0.75 }, wait: ['campRegarde'], y: 0.08 },
+    { id: 'creation', target: '#cmDeck', text: tr('Ici, <b>votre création</b> : toutes vos cartes.'), next: tr('SUIVANT') },
+    { id: 'partir', enter: () => { MAP.target = camFor(curPos()); }, delay: 700, target: () => document.querySelector('#cmMap .cnode.open'), text: tr('À vous. <b>Touchez un astre entouré</b> pour y voyager.'), gesture: { tap: () => document.querySelector('#cmMap .cnode.open'), at: 0.5 }, wait: ['campVoyage'] }
   ];
 
   // ─── Cartes ─────────────────────────────────────────────────
@@ -624,16 +642,15 @@
     A.openSheet(`<h3>${title}</h3><div class="cc-grid">${sorted.map((k) => {
       const shown = preview ? Object.assign({}, k, { up: true }) : k;
       return cardHtml(shown, { attrs: pickAttr ? `data-camp="${pickAttr}" data-card="${k.uid}"` : 'data-camp="noop"', cls: 'mini' });
-    }).join('')}</div>` + (pickAttr ? '' : '<div class="sheet-actions"><button class="btn" data-act="close">FERMER</button></div>'), { locked: !!pickAttr });
+    }).join('')}</div>` + (pickAttr ? '' : `<div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button></div>`), { locked: !!pickAttr });
     A.mountEnergy($('sheet'));
   }
 
   // ─── Combat ─────────────────────────────────────────────────
   async function startFight(node) {
     if (node.type === 'boss') {
-      const seen = A.store.get(BOSS_KEY, '') === '1';
       A.store.set(BOSS_KEY, '1');
-      await talk(seen ? 'avantKronosCourt' : 'avantKronos');
+      await talk('avantKronos');
       await openStory();
       $('csOrb').dataset.planet = 'foe-kronos';
       stage.setReveal($('csOrb'), 0);
@@ -644,9 +661,9 @@
     await enterFight();
     if (node.type === 'elite') {
       const id = run.combat.enemies[0].id;
-      hint(ELITE_LINE[id] || 'Un astre puissant se dresse devant vous.', 3600);
-      A.banner('ASTRE PUISSANT', esc(C.ENEMIES[id].name), 'lose');
-    } else if (node.type === 'boss') A.banner('KRONOS', 'la géante dévoreuse', 'lose');
+      hint(ELITE_LINE[id] || tr('Un astre puissant se dresse devant vous.'), 3600);
+      A.banner(tr('ASTRE PUISSANT'), esc(C.ENEMIES[id].name), 'lose');
+    } else if (node.type === 'boss') A.banner('KRONOS', tr('la géante dévoreuse'), 'lose');
   }
   async function enterFight() {
     ui.sel = null;
@@ -672,7 +689,7 @@
 
   function renderFight(fresh) {
     if (!run || !run.combat) return;
-    $('cfFloor').textContent = `ÉTAGE ${run.floor} · ACTE I`;
+    $('cfFloor').textContent = tr('ÉTAGE {n} · ACTE I', { n: run.floor });
     renderTop();
     renderFoes(fresh);
     renderMe();
@@ -680,10 +697,12 @@
     renderBar();
   }
   function renderBar() {
+    // Le combat peut déjà être terminé (récompense en cours) quand une animation tardive arrive ici.
+    if (!run || !run.combat) return;
     const c = run.combat;
     $('cfEnergy').innerHTML = `<b>${c.energy}</b><small>/${c.maxEnergy + (c.powers.genese || 0)}</small>`;
-    $('cfDraw').innerHTML = `<b>${c.draw.length}</b><small>PIOCHE</small>`;
-    $('cfDisc').innerHTML = `<b>${c.discard.length}</b><small>DÉFAUSSE</small>`;
+    $('cfDraw').innerHTML = `<b>${c.draw.length}</b><small>${tr('PIOCHE')}</small>`;
+    $('cfDisc').innerHTML = `<b>${c.discard.length}</b><small>${tr('DÉFAUSSE')}</small>`;
     $('cfEnd').disabled = ui.busy;
   }
   function hpBar(hp, max, block) {
@@ -782,7 +801,7 @@
     if (!el || ui.busy || !run || !run.combat) return;
     const card = run.combat.hand.find((k) => k.uid === el.dataset.uid);
     if (!card) return;
-    if (C.costOf(card) > run.combat.energy) { A.refuse('Pas assez d’énergie.'); el.animate([{ transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'none' }], { duration: 220 }); return; }
+    if (C.costOf(card) > run.combat.energy) { A.refuse(tr('Pas assez d’énergie.')); el.animate([{ transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'none' }], { duration: 220 }); return; }
     const d = C.CARDS[card.id];
     const foes = C.alive(run.combat);
     if (ui.sel === card.uid) {
@@ -790,7 +809,7 @@
     }
     ui.sel = card.uid;
     SFX.lift();
-    hint(d.target && foes.length > 1 ? 'Touchez l’astre à viser.' : 'Touchez de nouveau la carte pour la jouer.');
+    hint(d.target && foes.length > 1 ? tr('Touchez l’astre à viser.') : tr('Touchez de nouveau la carte pour la jouer.'));
     renderHand();
     renderFoes();
   });
@@ -809,28 +828,29 @@
     const c = run.combat;
     const st = Object.entries(c.st).filter(([, n]) => n > 0).map(([k, n]) => `<div><b>${esc(C.STATUS[k].name.toUpperCase())} ${n}</b>${esc(C.STATUS[k].text)}</div>`).join('');
     const pw = Object.entries(c.powers).filter(([, n]) => n > 0).map(([k, n]) => `<div><b>${esc(C.POWERS[k].name.toUpperCase())}</b>${esc(C.POWERS[k].text.replace('{n}', n))}</div>`).join('');
-    A.openSheet(`<h3>VOTRE MONDE</h3><h2>${run.hp} / ${run.maxHp} PV</h2><p class="muted">Bouclier : ${c.block}. Il absorbe les dégâts jusqu’à votre prochain tour.</p><div class="kw-list">${st}${pw}</div>`);
+    A.openSheet(`<h3>${tr('VOTRE MONDE')}</h3><h2>${tr('{hp} / {max} PV', { hp: run.hp, max: run.maxHp })}</h2><p class="muted">${tr('Bouclier : {n}. Il absorbe les dégâts jusqu’à votre prochain tour.', { n: c.block })}</p><div class="kw-list">${st}${pw}</div>`);
   });
   function foeSheet(u) {
     const e = C.ENEMIES[u.id], i = C.intentOf(run, u), m = e.moves[u.intent];
     const parts = [];
-    if (i.kinds.includes('atk')) parts.push(`attaque ${i.atk}${i.hits > 1 ? ' × ' + i.hits : ''}`);
-    if (i.kinds.includes('def')) parts.push(`se protège (${m.def || 12} Bouclier)`);
-    if (m.buff) parts.push('se renforce : ' + Object.entries(m.buff).map(([k, n]) => `${C.STATUS[k].name} +${n}`).join(', '));
-    if (m.debuff) parts.push('vous affaiblit : ' + Object.entries(m.debuff).map(([k, n]) => `${C.STATUS[k].name} ${n}`).join(', '));
-    if (m.summon) parts.push('appelle des lunes');
-    if (i.kinds.includes('devour')) parts.push('dévore une lune : soigne 12 PV et gagne 2 Masse');
+    if (i.kinds.includes('atk')) parts.push(tr('attaque {n}', { n: i.atk + (i.hits > 1 ? ' × ' + i.hits : '') }));
+    if (i.kinds.includes('def')) parts.push(tr('se protège ({n} Bouclier)', { n: m.def || 12 }));
+    if (m.buff) parts.push(tr('se renforce : {list}', { list: Object.entries(m.buff).map(([k, n]) => `${C.STATUS[k].name} +${n}`).join(', ') }));
+    if (m.debuff) parts.push(tr('vous affaiblit : {list}', { list: Object.entries(m.debuff).map(([k, n]) => `${C.STATUS[k].name} ${n}`).join(', ') }));
+    if (m.summon) parts.push(tr('appelle des lunes'));
+    if (i.kinds.includes('devour')) parts.push(tr('dévore une lune : soigne 12 PV et gagne 2 Masse'));
     const st = Object.entries(u.st).filter(([, n]) => n > 0).map(([k, n]) => `<div><b>${esc(C.STATUS[k].name.toUpperCase())} ${n}</b>${esc(C.STATUS[k].text)}</div>`).join('');
-    A.openSheet(`<div class="sheet-top"><div class="orb sheet-orb" data-planet="foe-${u.id}"></div><div><span class="fam-chip" style="--c:${e.boss ? '#ff6b6b' : e.elite ? '#f6c453' : '#9aa3ad'}">${e.boss ? 'BOSS' : e.elite ? 'ASTRE PUISSANT' : 'ASTRE ERRANT'}</span><h2>${esc(e.name)}</h2><p class="muted">${u.hp} / ${u.maxHp} PV${u.block ? ' · Bouclier ' + u.block : ''}</p></div></div>
-      <div class="power-box" style="--c:#ff7a59"><span class="power-label">PROCHAINE ACTION · ${esc(m.n.toUpperCase())}</span><p class="sheet-text">${esc(parts.join(' · ') || '…')}</p></div><div class="kw-list">${st}</div>`);
+    A.openSheet(`<div class="sheet-top"><div class="orb sheet-orb" data-planet="foe-${u.id}"></div><div><span class="fam-chip" style="--c:${e.boss ? '#ff6b6b' : e.elite ? '#f6c453' : '#9aa3ad'}">${e.boss ? tr('BOSS') : e.elite ? tr('ASTRE PUISSANT') : tr('ASTRE ERRANT')}</span><h2>${esc(e.name)}</h2><p class="muted">${tr('{hp} / {max} PV', { hp: u.hp, max: u.maxHp })}${u.block ? ' · ' + tr('Bouclier {n}', { n: u.block }) : ''}</p></div></div>
+      <div class="power-box" style="--c:#ff7a59"><span class="power-label">${tr('PROCHAINE ACTION · {name}', { name: esc(m.n.toUpperCase()) })}</span><p class="sheet-text">${esc(parts.join(' · ') || '…')}</p></div><div class="kw-list">${st}</div>`);
   }
 
   async function playCard(uid, target) {
     const c = run.combat;
+    if (!c || c.done) return;
     const el = $('cfHand').querySelector(`.ccard[data-uid="${uid}"]`);
     const card = c.hand.find((k) => k.uid === uid);
     const r = C.play(run, uid, target);
-    if (!r.ok) { A.refuse(r.reason); return; }
+    if (!r.ok) { A.refuse(tr(r.reason)); return; }
     ui.busy = true;
     ui.sel = null;
     hint('');
@@ -857,7 +877,7 @@
   }
 
   $('cfEnd').addEventListener('click', async () => {
-    if (ui.busy || !run || !run.combat || run.over) return;
+    if (ui.busy || !run || !run.combat || run.combat.done || run.over) return;
     SFX.tap();
     A.tuto('campFinTour');
     ui.busy = true;
@@ -905,14 +925,14 @@
         case 'status': {
           const o = orbOf(e.who);
           const good = C.STATUS[e.st].good;
-          A.popOn(o, `${e.why ? e.why.toUpperCase() + ' · ' : ''}${C.STATUS[e.st].name.toUpperCase()} ${e.n > 0 ? '+' : ''}${e.n}`, good ? 'gold' : 'bad');
+          A.popOn(o, `${e.why ? tr(e.why).toUpperCase() + ' · ' : ''}${C.STATUS[e.st].name.toUpperCase()} ${e.n > 0 ? '+' : ''}${e.n}`, good ? 'gold' : 'bad');
           if (e.st === 'brulure') SFX.venom(); else SFX.buff();
           if (e.who === 'p') renderMe(); else renderFoes();
           await wait(260);
           break;
         }
-        case 'heal': { A.popOn($('cfMeOrb'), `+${e.n} PV`, 'good'); SFX.buff(); renderMe(); await wait(200); break; }
-        case 'foeHeal': { A.popOn(orbOf(e.uid), `+${e.n} PV`, 'good'); renderFoes(); await wait(200); break; }
+        case 'heal': { A.popOn($('cfMeOrb'), tr('+{n} PV', { n: e.n }), 'good'); SFX.buff(); renderMe(); await wait(200); break; }
+        case 'foeHeal': { A.popOn(orbOf(e.uid), tr('+{n} PV', { n: e.n }), 'good'); renderFoes(); await wait(200); break; }
         case 'energy': { A.popOn($('cfEnergy'), `+${e.n}`, 'energy'); renderBar(); await wait(160); break; }
         case 'power': { A.popOn($('cfMeOrb'), C.POWERS[e.key].name.toUpperCase(), 'gold'); SFX.level(); renderMe(); await wait(300); break; }
         case 'die': await dieAnim(e.uid); break;
@@ -932,7 +952,7 @@
         case 'devour': {
           const moon = orbOf(e.moon), k = orbOf(e.uid);
           if (moon && k) {
-            A.popOn(k, 'DÉVORE UNE LUNE', 'bad');
+            A.popOn(k, tr('DÉVORE UNE LUNE'), 'bad');
             SFX.death(0);
             stage.beam(center(moon), center(k), { ms: 420, color: [200, 200, 220], arc: 20, head: 4 });
             await stage.reveal(moon, 1, 0, 400);
@@ -953,10 +973,10 @@
           break;
         }
         case 'discardHand': await discardAnim(); break;
-        case 'foes': setBanner('TOUR ADVERSE'); await wait(500); break;
-        case 'turn': if (e.n > 1) { setBanner('VOTRE TOUR'); } break;
+        case 'foes': setBanner(tr('TOUR ADVERSE')); await wait(500); break;
+        case 'turn': if (e.n > 1) { setBanner(tr('VOTRE TOUR')); } break;
         case 'intents': renderFoes(); break;
-        case 'reshuffle': A.popOn($('cfDraw'), 'MÉLANGE', 'info'); break;
+        case 'reshuffle': A.popOn($('cfDraw'), tr('MÉLANGE'), 'info'); break;
         case 'draw': {
           // Les cartes piochées arrivent ensemble à la fin.
           while (i + 1 < events.length && events[i + 1].t === 'draw') i++;
@@ -1046,17 +1066,17 @@
     const kind = run.combat.kind;
     if (kind === 'boss') { await bossWin(); return; }
     SFX.win();
-    A.banner('VICTOIRE', kind === 'elite' ? 'Un astre puissant est tombé' : '', 'win');
+    A.banner(tr('VICTOIRE'), kind === 'elite' ? tr('Un astre puissant est tombé') : '', 'win');
     await wait(1200);
     const r = C.rewards(run);
     save();
     showReward(r);
   }
   function showReward(r) {
-    const rel = r.relic ? `<div class="power-box" style="--c:#f6c453"><span class="power-label">VESTIGE OBTENU</span><p class="sheet-text"><b>${esc(C.RELICS[r.relic].name)}</b> : ${esc(C.RELICS[r.relic].text)}</p></div>` : '';
-    A.openSheet(`<h3>VICTOIRE</h3>${rel}<h2>Choisissez une carte</h2><p class="muted">Elle rejoint votre création. Votre monde change avec elle.</p>
+    const rel = r.relic ? `<div class="power-box" style="--c:#f6c453"><span class="power-label">${tr('VESTIGE OBTENU')}</span><p class="sheet-text">${tr('<b>{name}</b> : {text}', { name: esc(C.RELICS[r.relic].name), text: esc(C.RELICS[r.relic].text) })}</p></div>` : '';
+    A.openSheet(`<h3>${tr('VICTOIRE')}</h3>${rel}<h2>${tr('Choisissez une carte')}</h2><p class="muted">${tr('Elle rejoint votre création. Votre monde change avec elle.')}</p>
       <div class="cc-row">${r.cards.map((id) => cardHtml({ id, up: false }, { attrs: `data-camp="take" data-card="${id}"` })).join('')}</div>
-      <div class="sheet-actions"><button class="btn" data-camp="take" data-card="">PASSER</button></div>`, { locked: true, center: true });
+      <div class="sheet-actions"><button class="btn" data-camp="take" data-card="">${tr('PASSER')}</button></div>`, { locked: true, center: true });
     A.mountEnergy($('sheet'));
   }
   async function afterReward(id) {
@@ -1066,8 +1086,8 @@
     save();
     A.closeSheet();
     // Première victoire : Vela vient voir le nouveau Créateur.
-    if (A.store.get(VELA_KEY, '') !== '1') { A.store.set(VELA_KEY, '1'); await talk('vela1'); }
-    if (id && JSON.stringify(C.worldChannels(run)) !== before) setTimeout(() => A.toast('Votre monde se transforme.', 2200), 900);
+    if (!run.vela) { run.vela = true; A.store.set(VELA_KEY, '1'); save(); await talk('vela1'); }
+    if (id && JSON.stringify(C.worldChannels(run)) !== before) setTimeout(() => A.toast(tr('Votre monde se transforme.'), 2200), 900);
     await openMap();
   }
 
@@ -1076,28 +1096,28 @@
     const ev = C.EVENTS[run.event];
     if (ev.scene && !run.talked) { run.talked = true; save(); await talk(ev.scene); await A.show('cMap'); }
     run.talked = false;
-    A.openSheet(`<h3>MYSTÈRE</h3><h2>${esc(ev.title)}</h2><p class="cs-story">${esc(ev.text)}</p>
+    A.openSheet(`<h3>${tr('MYSTÈRE')}</h3><h2>${esc(ev.title)}</h2><p class="cs-story">${esc(ev.text)}</p>
       <div class="ce-choices">${ev.choices.map((ch, k) => `<button class="btn ce-choice" data-camp="choice" data-k="${k}"><b>${esc(ch.label)}</b><small>${esc(ch.text)}</small></button>`).join('')}</div>`, { locked: true, center: true });
   }
   async function resolveChoice(k) {
     const out = C.resolveEvent(run, k);
     lookWorld();
     save();
-    if (out.pending === 'remove') { deckSheet('RETIREZ UNE CARTE', run.deck, 'remove'); return; }
+    if (out.pending === 'remove') { deckSheet(tr('RETIREZ UNE CARTE'), run.deck, 'remove'); return; }
     const lines = [];
-    for (const c of out.cards) lines.push(`Nouvelle carte : <b>${esc(C.cardName(c))}</b>.`);
-    if (out.relic) lines.push(`Vestige : <b>${esc(C.RELICS[out.relic].name)}</b>, ${esc(C.RELICS[out.relic].text)}`);
-    for (const c of out.upgraded) lines.push(`Améliorée : <b>${esc(C.cardName(c))}</b>.`);
-    lines.push(`${run.hp} / ${run.maxHp} PV.`);
+    for (const c of out.cards) lines.push(tr('Nouvelle carte : <b>{name}</b>.', { name: esc(C.cardName(c)) }));
+    if (out.relic) lines.push(tr('Vestige : <b>{name}</b>, {text}', { name: esc(C.RELICS[out.relic].name), text: esc(C.RELICS[out.relic].text) }));
+    for (const c of out.upgraded) lines.push(tr('Améliorée : <b>{name}</b>.', { name: esc(C.cardName(c)) }));
+    lines.push(tr('{hp} / {max} PV.', { hp: run.hp, max: run.maxHp }));
     SFX.golden();
-    A.openSheet(`<h3>MYSTÈRE</h3><p class="cs-story">${lines.join('<br>')}</p><div class="sheet-actions"><button class="btn primary" data-camp="tomap">CONTINUER</button></div>`, { locked: true, center: true });
+    A.openSheet(`<h3>${tr('MYSTÈRE')}</h3><p class="cs-story">${lines.join('<br>')}</p><div class="sheet-actions"><button class="btn primary" data-camp="tomap">${tr('CONTINUER')}</button></div>`, { locked: true, center: true });
   }
   function showRest() {
     const heal = Math.min(Math.round(run.maxHp * 0.3), run.maxHp - run.hp);
-    A.openSheet(`<h3>SANCTUAIRE</h3><h2>Le silence</h2><p class="cs-story">Votre monde tourne doucement sur lui-même. Ici, rien ne vous menace.</p>
+    A.openSheet(`<h3>${tr('SANCTUAIRE')}</h3><h2>${tr('Le silence')}</h2><p class="cs-story">${tr('Votre monde tourne doucement sur lui-même. Ici, rien ne vous menace.')}</p>
       <div class="ce-choices">
-        <button class="btn ce-choice" data-camp="rest" data-k="repos"><b>Se reposer</b><small>Soignez ${heal} PV (${run.hp} / ${run.maxHp}).</small></button>
-        <button class="btn ce-choice" data-camp="rest" data-k="faconner" ${C.upgradable(run).length ? '' : 'disabled'}><b>Façonner</b><small>Améliorez une carte de votre création.</small></button>
+        <button class="btn ce-choice" data-camp="rest" data-k="repos"><b>${tr('Se reposer')}</b><small>${tr('Soignez {n} PV ({hp} / {max}).', { n: heal, hp: run.hp, max: run.maxHp })}</small></button>
+        <button class="btn ce-choice" data-camp="rest" data-k="faconner" ${C.upgradable(run).length ? '' : 'disabled'}><b>${tr('Façonner')}</b><small>${tr('Améliorez une carte de votre création.')}</small></button>
       </div>`, { locked: true, center: true });
   }
 
@@ -1118,22 +1138,22 @@
         save();
         A.closeSheet();
         SFX.buff();
-        A.toast(`Votre monde se repose : +${r.heal} PV.`, 2200);
+        A.toast(tr('Votre monde se repose : +{n} PV.', { n: r.heal }), 2200);
         await openMap();
-      } else deckSheet('FAÇONNEZ UNE CARTE', C.upgradable(run), 'up', true);
+      } else deckSheet(tr('FAÇONNEZ UNE CARTE'), C.upgradable(run), 'up', true);
     } else if (act === 'up') {
       const d = C.upgrade(run, b.dataset.card);
       save();
       A.closeSheet();
       SFX.golden();
-      if (d) A.toast(`${C.cardName(d)} : ${C.cardText(d)}`, 3000);
+      if (d) A.toast(tr('{a} : {b}', { a: C.cardName(d), b: C.cardText(d) }), 3000);
       await openMap();
     } else if (act === 'remove') {
       const d = C.removeCard(run, b.dataset.card);
       lookWorld();
       save();
       A.closeSheet();
-      if (d) A.toast(`${C.CARDS[d.id].name} retourne au vide.`, 2400);
+      if (d) A.toast(tr('{name} retourne au vide.', { name: C.CARDS[d.id].name }), 2400);
       await openMap();
     }
   });
@@ -1157,7 +1177,7 @@
     await talk('apresKronos');
     await openStory();
     $('csOrb').dataset.planet = 'camp-world';
-    if (!story.skip) { storyTitle('FIN', 'DE L’ACTE I'); SFX.win(); await wait(2600); }
+    if (!story.skip) { storyTitle(tr('FIN'), tr('DE L’ACTE I')); SFX.win(); await wait(2600); }
     await endScreen(true);
   }
   async function defeat() {
@@ -1180,10 +1200,10 @@
     const r = run;
     run.over = true;
     save();
-    $('ceKicker').textContent = won ? 'ACTE I · TERMINÉ' : 'EXPÉDITION TERMINÉE';
-    $('ceTitle').textContent = won ? 'Kronos est tombé' : `Étage ${r.floor}`;
-    $('ceText').textContent = won ? 'Ses lunes tournent désormais autour de votre monde, et la vie y est apparue. La suite de l’aventure arrive bientôt.' : 'Votre monde s’est disloqué. Chaque expédition est différente : recommencez, avec d’autres cartes et d’autres chemins.';
-    $('ceStats').innerHTML = `<span><b>${r.floor}</b>étages</span><span><b>${r.stats.fights}</b>combats gagnés</span><span><b>${r.stats.elites}</b>astres puissants</span><span><b>${r.deck.length}</b>cartes</span>`;
+    $('ceKicker').textContent = won ? tr('ACTE I · TERMINÉ') : tr('EXPÉDITION TERMINÉE');
+    $('ceTitle').textContent = won ? tr('Kronos est tombé') : tr('Étage {n}', { n: r.floor });
+    $('ceText').textContent = won ? tr('Ses lunes tournent désormais autour de votre monde, et la vie y est apparue. La suite de l’aventure arrive bientôt.') : tr('Votre monde s’est disloqué. Chaque expédition est différente : recommencez, avec d’autres cartes et d’autres chemins.');
+    $('ceStats').innerHTML = `<span><b>${r.floor}</b>${tr('étages')}</span><span><b>${r.stats.fights}</b>${tr('combats gagnés')}</span><span><b>${r.stats.elites}</b>${tr('astres puissants')}</span><span><b>${r.deck.length}</b>${tr('cartes')}</span>`;
     $('ceGain').innerHTML = `<b>+${pay.xp} XP</b>${pay.dust ? ` · ${icon('dust')} +${pay.dust}` : ''}`;
     $('cEnd').classList.toggle('won', won);
     await A.show('cEnd');
@@ -1200,12 +1220,12 @@
 
   // ─── Tutoriel du premier combat ─────────────────────────────
   const CAMP_STEPS = [
-    { id: 'ennemi', target: '.cfoe', text: 'Un astre errant. Au-dessus de lui, son <b>intention</b> : ce qu’il fera à la fin de votre tour. L’épée annonce une attaque et ses dégâts.', next: 'SUIVANT', delay: 0 },
-    { id: 'energie', target: '#cfEnergy', text: 'Votre <b>énergie</b> : 3 à chaque tour. Le chiffre en haut à gauche d’une carte est son coût.', next: 'SUIVANT' },
-    { id: 'jouer', target: '#cfHand', place: 'top', text: 'Votre main. <b>Touchez une carte</b>, puis <b>touchez-la de nouveau</b> pour la jouer (ou touchez l’astre à viser).', gesture: { tap: '#cfHand .ccard', at: 0.4 }, wait: ['campJouer'] },
-    { id: 'bouclier', target: '#cfMe', text: 'Les cartes de <b>défense</b> donnent du <b>Bouclier</b> à votre monde : il absorbe les dégâts jusqu’à votre prochain tour.', next: 'SUIVANT' },
-    { id: 'fin', target: '#cfEnd', text: 'Plus d’énergie ? <b>Terminez votre tour</b>. Les astres agissent, puis vous piochez 5 nouvelles cartes.', gesture: { tap: '#cfEnd', at: 0.5 }, wait: ['campFinTour'] },
-    { id: 'suite', text: 'Chaque victoire ajoute une carte à votre création, et votre monde change avec elle. Si votre monde tombe, recommencez : chaque expédition est différente.', next: 'C’EST PARTI', delay: 2600 }
+    { id: 'ennemi', target: '.cfoe', text: tr('Un astre errant. Au-dessus de lui, son <b>intention</b> : ce qu’il fera à la fin de votre tour. L’épée annonce une attaque et ses dégâts.'), next: tr('SUIVANT'), delay: 0 },
+    { id: 'energie', target: '#cfEnergy', text: tr('Votre <b>énergie</b> : 3 à chaque tour. Le chiffre en haut à gauche d’une carte est son coût.'), next: tr('SUIVANT') },
+    { id: 'jouer', target: '#cfHand', place: 'top', text: tr('Votre main. <b>Touchez une carte</b>, puis <b>touchez-la de nouveau</b> pour la jouer (ou touchez l’astre à viser).'), gesture: { tap: '#cfHand .ccard', at: 0.4 }, wait: ['campJouer'] },
+    { id: 'bouclier', target: '#cfMe', text: tr('Les cartes de <b>défense</b> donnent du <b>Bouclier</b> à votre monde : il absorbe les dégâts jusqu’à votre prochain tour.'), next: tr('SUIVANT') },
+    { id: 'fin', target: '#cfEnd', text: tr('Plus d’énergie ? <b>Terminez votre tour</b>. Les astres agissent, puis vous piochez 5 nouvelles cartes.'), gesture: { tap: '#cfEnd', at: 0.5 }, wait: ['campFinTour'] },
+    { id: 'suite', text: tr('Chaque victoire ajoute une carte à votre création, et votre monde change avec elle. Si votre monde tombe, recommencez : chaque expédition est différente.'), next: tr('C’EST PARTI'), delay: 2600 }
   ];
 
   O.campagne = { get run() { return run; }, newRun, resume, talk, C, save, has: () => !!load() };

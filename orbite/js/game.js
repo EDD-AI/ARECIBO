@@ -6,10 +6,18 @@
 
   const R = window.OrbiteRules;
   const SFX = window.OrbiteSfx;
+  const I18N = window.OrbiteI18n;
+  // Astres dont le texte parle de « Vos effets » : repérés en français, avant la traduction.
+  const FX_TEXT = new Set(R.CARDS.filter((c) => /Vos effets/.test(c.text || '')).map((c) => c.id));
+  // Les données des règles (astres, lois, familles, mots-clés) passent dans la langue choisie.
+  I18N.localize(R.CARDS, ['name', 'text', 'textGold']);
+  I18N.localize(R.LAWS, ['name', 'tagline', 'text']);
+  I18N.localize(R.FAMILIES, ['name', 'text']);
+  I18N.localize(R.KEYWORDS, ['name', 'text']);
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 32;
+  const VERSION = 33;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -78,7 +86,21 @@
   const vibrate = (p) => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (err) { /* pas de vibreur */ } };
   const famColor = (f) => R.FAMILIES[f].color;
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const ordinal = (n) => n + '<sup>' + (n === 1 ? 'er' : 'e') + '</sup>';
+  // Nombres ordinaux (1er, 2e…) selon la langue ; plain = sans balise (pour un toast).
+  function ordinal(n, plain) {
+    const L = I18N.lang;
+    let suf;
+    if (L === 'en') {
+      const t = n % 100, u = n % 10;
+      suf = t >= 11 && t <= 13 ? 'th' : u === 1 ? 'st' : u === 2 ? 'nd' : u === 3 ? 'rd' : 'th';
+    } else if (L === 'es') suf = '.º';
+    else if (L === 'de') return n + '.';
+    else if (L === 'pt') suf = 'º';
+    else suf = n === 1 ? 'er' : 'e';
+    return plain ? n + suf : n + '<sup>' + suf + '</sup>';
+  }
+  // Rang classé traduit : « Poussière III ».
+  const tierLabel = (t) => tr(t.name) + (t.div ? ' ' + t.div : '');
 
   function toast(text, ms) {
     const t = $('toast');
@@ -186,8 +208,8 @@
     if (u.kw.includes('venin')) k += `<span style="color:${famColor('envers')}">${icon('drop')}</span>`;
     if (u.kw.includes('arrimage') && (where === 'shop' || where === 'hand')) k += icon('magnet');
     const marks = cardMarks(u.id);
-    if (marks.death) k = `<span class="mark" title="Effondrement">${icon('skull')}</span>` + k;
-    if (marks.effect) k = `<span class="mark" title="Effet">${icon('spark')}</span>` + k;
+    if (marks.death) k = `<span class="mark" title="${tr('Effondrement')}">${icon('skull')}</span>` + k;
+    if (marks.effect) k = `<span class="mark" title="${tr('Effet')}">${icon('spark')}</span>` + k;
     el.querySelector('.kws').innerHTML = k;
     el.dataset.kw = u.kw.join(' ');
     el.dataset.golden = u.golden ? '1' : '0';
@@ -518,7 +540,7 @@
   async function wakeScreen() {
     await show('wake');
     await wait(1100);
-    await typeLine($('wakeLine'), 'Réveillez-vous. Bonjour, créateur.', { hold: 2000, speed: 70 });
+    await typeLine($('wakeLine'), tr('Réveillez-vous. Bonjour, créateur.'), { hold: 2000, speed: 70 });
     await wait(400);
   }
 
@@ -544,7 +566,7 @@
     let back = 0;
     try { for (const id of JSON.parse(raw)) back += PRICES[id] || 0; } catch (err) { back = 0; }
     try { localStorage.removeItem(HZ_OWNED); localStorage.removeItem(HZ_ON); } catch (err) { /* stockage indisponible */ }
-    if (back) { addDust(back); setTimeout(() => toast(`Horizons remboursés : +${back} poussières d’étoiles.`, 3600), 9000); }
+    if (back) { addDust(back); setTimeout(() => toast(tr('Horizons remboursés : +{n} poussières d’étoiles.', { n: back }), 3600), 9000); }
   })();
 
   function layoutMenu() {
@@ -591,7 +613,7 @@
     $('menuDust').innerHTML = icon('dust') + ' ' + dust();
     const lv = levelInfo(xpTotal());
     $('pfName').textContent = pseudo();
-    $('pfLvl').innerHTML = `NIV. ${lv.lvl}<i class="xp-mini"><i style="width:${(lv.rest / lv.need * 100).toFixed(1)}%"></i></i>`;
+    $('pfLvl').innerHTML = `${tr('NIV. {n}', { n: lv.lvl })}<i class="xp-mini"><i style="width:${(lv.rest / lv.need * 100).toFixed(1)}%"></i></i>`;
     pixelWord($('menuWord'), 'ORBITE', pixelSize(4));
     $('menuWord').classList.add('shown');
   }
@@ -629,7 +651,7 @@
     startAmbient();
     if (first) {
       await wait(3000);
-      await typeLine($('menuLine'), 'Voilà votre terrain de jeu.', { hold: 1700, speed: 65 });
+      await typeLine($('menuLine'), tr('Voilà votre terrain de jeu.'), { hold: 1700, speed: 65 });
       store.set(WAKE_KEY, '1');
     } else {
       await wait(900);
@@ -655,8 +677,8 @@
   }
 
   // Numéro de version visible au lancement (écran-titre) et en bas du menu.
-  $('titleVersion').textContent = 'VERSION ' + VERSION;
-  $('menuFoot').textContent = 'STUDIO EDDA · VERSION ' + VERSION;
+  $('titleVersion').textContent = tr('VERSION {n}', { n: VERSION });
+  $('menuFoot').textContent = 'STUDIO EDDA · ' + tr('VERSION {n}', { n: VERSION });
 
   // ─── Reprise rapide ─────────────────────────────────────────
   // Sur iPhone, une appli web installée est souvent fermée par le système quand on passe à une
@@ -717,16 +739,16 @@
     $('marketDust').innerHTML = icon('dust') + ' ' + dust();
     $('mkStage').textContent = W.stageName(list).toUpperCase();
     $('mkProg').style.width = (list.length / W.UPGRADES.length * 100) + '%';
-    $('mkCount').textContent = `${list.length} / ${W.UPGRADES.length} améliorations · niveau ${lvl}`;
+    $('mkCount').textContent = tr('{a} / {b} améliorations · niveau {n}', { a: list.length, b: W.UPGRADES.length, n: lvl });
     if (!nxt) {
-      $('mkNext').innerHTML = '<b>Votre planète est pleinement vivante.</b><p>Elle tourne désormais au-dessus du menu comme une nouvelle Terre.</p>';
+      $('mkNext').innerHTML = tr('<b>Votre planète est pleinement vivante.</b><p>Elle tourne désormais au-dessus du menu comme une nouvelle Terre.</p>');
     } else {
       const st = W.STAGES[nxt.stage];
-      const why = lvl < nxt.lvl ? `Atteignez le niveau ${nxt.lvl}.` : dust() < nxt.price ? `Il vous manque ${nxt.price - dust()} poussières d’étoiles.` : '';
-      $('mkNext').innerHTML = `<span class="mk-kicker">PROCHAINE ÉTAPE · ${st.name.toUpperCase()}</span>
+      const why = lvl < nxt.lvl ? tr('Atteignez le niveau {n}.', { n: nxt.lvl }) : dust() < nxt.price ? tr('Il vous manque {n} poussières d’étoiles.', { n: nxt.price - dust() }) : '';
+      $('mkNext').innerHTML = `<span class="mk-kicker">${tr('PROCHAINE ÉTAPE')} · ${st.name.toUpperCase()}</span>
         <b>${esc(nxt.name)}</b><p>${esc(nxt.text)}</p>
-        <div class="mk-req"><span>NIVEAU ${nxt.lvl}</span><span>${icon('dust')} ${nxt.price}</span></div>
-        <button class="btn primary" data-up="${nxt.id}" ${why ? 'disabled' : ''}>FAIRE RENAÎTRE · ${icon('dust')} ${nxt.price}</button>
+        <div class="mk-req"><span>${tr('NIVEAU {n}', { n: nxt.lvl })}</span><span>${icon('dust')} ${nxt.price}</span></div>
+        <button class="btn primary" data-up="${nxt.id}" ${why ? 'disabled' : ''}>${tr('FAIRE RENAÎTRE')} · ${icon('dust')} ${nxt.price}</button>
         ${why ? `<small>${why}</small>` : ''}`;
     }
     // Chaque ère a sa couleur : lave, eau, vie, lumière des villes. Un carré pixel plein marque ce
@@ -736,7 +758,7 @@
       W.UPGRADES.filter((u) => u.stage === i).map((u) => {
         const has = list.includes(u.id), isNext = nxt && nxt.id === u.id;
         return `<div class="mk-row ${has ? 'owned' : isNext ? 'next' : lvl < u.lvl ? 'locked' : ''}" style="--era:${ERA[u.stage]}">
-          <i class="mk-pip"></i><span>${esc(u.name)}</span><small>${has ? 'FAIT' : `NIV. ${u.lvl} · ${u.price}`}</small></div>`;
+          <i class="mk-pip"></i><span>${esc(u.name)}</span><small>${has ? tr('FAIT') : `${tr('NIV. {n}', { n: u.lvl })} · ${u.price}`}</small></div>`;
       }).join('')).join('');
   }
 
@@ -745,8 +767,8 @@
     if (!b || b.disabled || ui.busy) return;
     const u = W.BY_ID[b.dataset.up], list = worldList();
     if (list.includes(u.id) || W.next(list) !== u) return;
-    if (levelInfo(xpTotal()).lvl < u.lvl) { refuse(`Atteignez le niveau ${u.lvl}.`); return; }
-    if (dust() < u.price) { refuse(`Il vous manque ${u.price - dust()} poussières d’étoiles.`); return; }
+    if (levelInfo(xpTotal()).lvl < u.lvl) { refuse(tr('Atteignez le niveau {n}.', { n: u.lvl })); return; }
+    if (dust() < u.price) { refuse(tr('Il vous manque {n} poussières d’étoiles.', { n: u.price - dust() })); return; }
     ui.busy = true;
     addDust(-u.price);
     list.push(u.id);
@@ -765,7 +787,7 @@
     stage.ring(x, y, R * 0.95, { n: 50, colors: [[255, 255, 255], [246, 196, 83]], speed: 90, life: 0.7 });
     pl.animate([{ transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 600, easing: 'cubic-bezier(.2,.8,.2,1)' });
     renderMarket();
-    toast(`${u.name} : ${u.text}`, 3200);
+    toast(tr('{name} : {text}', { name: u.name, text: u.text }), 3200);
     ui.busy = false;
   });
 
@@ -774,12 +796,12 @@
   const COS_KEY = 'orbite.cosmetiques';
   const COS_PRICE = 650;
   const SKIES = [
-    { id: 'nebuleuse', mode: 1, name: 'Nébuleuse pourpre', text: 'Des nuages roses et violets traversés de filaments sombres, autour d’un cœur brûlant.', c: ['#c2457f', '#2a0a3c'] },
-    { id: 'aurore', mode: 2, name: 'Aurore boréale', text: 'Des voiles verts et roses dansent au-dessus des montagnes et se reflètent dans un lac.', c: ['#2fd18a', '#071a22'] },
-    { id: 'galaxie', mode: 3, name: 'Galaxie spirale', text: 'Une galaxie tourne lentement, son cœur doré au milieu de bras bleus et roses.', c: ['#e8c48a', '#2a3e9e'] },
-    { id: 'filantes', mode: 4, name: 'Voie lactée', text: 'La voie lactée traverse le ciel ; des étoiles filantes jaillissent d’un même point.', c: ['#c9b08a', '#0b1030'] },
-    { id: 'abysse', mode: 5, name: 'Trou noir', text: 'Un disque d’accrétion brûlant s’enroule autour de l’horizon, la lumière se courbe.', c: ['#ffd38a', '#2a0c02'] },
-    { id: 'piliers', mode: 6, name: 'Piliers de la création', text: 'Des colonnes de gaz sombre aux bords embrasés, dans un ciel d’or et de turquoise.', c: ['#e8a44a', '#0f4a50'] }
+    { id: 'nebuleuse', mode: 1, name: tr('Nébuleuse pourpre'), text: tr('Des nuages roses et violets traversés de filaments sombres, autour d’un cœur brûlant.'), c: ['#c2457f', '#2a0a3c'] },
+    { id: 'aurore', mode: 2, name: tr('Aurore boréale'), text: tr('Des voiles verts et roses dansent au-dessus des montagnes et se reflètent dans un lac.'), c: ['#2fd18a', '#071a22'] },
+    { id: 'galaxie', mode: 3, name: tr('Galaxie spirale'), text: tr('Une galaxie tourne lentement, son cœur doré au milieu de bras bleus et roses.'), c: ['#e8c48a', '#2a3e9e'] },
+    { id: 'filantes', mode: 4, name: tr('Voie lactée'), text: tr('La voie lactée traverse le ciel ; des étoiles filantes jaillissent d’un même point.'), c: ['#c9b08a', '#0b1030'] },
+    { id: 'abysse', mode: 5, name: tr('Trou noir'), text: tr('Un disque d’accrétion brûlant s’enroule autour de l’horizon, la lumière se courbe.'), c: ['#ffd38a', '#2a0c02'] },
+    { id: 'piliers', mode: 6, name: tr('Piliers de la création'), text: tr('Des colonnes de gaz sombre aux bords embrasés, dans un ciel d’or et de turquoise.'), c: ['#e8a44a', '#0f4a50'] }
   ];
   const SKY_BY_ID = Object.fromEntries(SKIES.map((k) => [k.id, k]));
   function cosmetics() {
@@ -794,16 +816,16 @@
     const row = (k) => {
       const owned = !k.id || c.owned.includes(k.id), on = (c.on || '') === (k.id || ''), sel = ui.cosPick === (k.id || '');
       let btn;
-      if (on) btn = '<span class="cos-on">ÉQUIPÉ</span>';
-      else if (owned) btn = `<button class="btn" data-cos-equip="${k.id || ''}">ÉQUIPER</button>`;
+      if (on) btn = `<span class="cos-on">${tr('ÉQUIPÉ')}</span>`;
+      else if (owned) btn = `<button class="btn" data-cos-equip="${k.id || ''}">${tr('ÉQUIPER')}</button>`;
       else btn = `<button class="btn primary" data-cos-buy="${k.id}" ${dust() < COS_PRICE ? 'disabled' : ''}>${icon('dust')} ${COS_PRICE}</button>`;
       const sw = k.id ? `background:radial-gradient(circle at 30% 35%, ${k.c[0]}, transparent 70%), radial-gradient(circle at 75% 70%, ${k.c[1]}, #000 80%)` : 'background:#000';
       return `<div class="cos-row ${sel ? 'sel' : ''}" data-cos="${k.id || ''}">
         <span class="cos-sw" style="${sw}"></span>
         <span class="cos-txt"><b>${esc(k.name)}</b><small>${esc(k.text)}</small></span>${btn}</div>`;
     };
-    $('cosList').innerHTML = `<h4>FONDS ANIMÉS</h4>` + row({ id: '', name: 'Noir', text: 'Le fond sobre d’origine.' }) + SKIES.map(row).join('') +
-      (dust() < COS_PRICE ? `<p class="mk-note">Vous avez ${dust()} poussières d’étoiles. Le podium d’une partie en rapporte.</p>` : '');
+    $('cosList').innerHTML = `<h4>${tr('FONDS ANIMÉS')}</h4>` + row({ id: '', name: tr('Noir'), text: tr('Le fond sobre d’origine.') }) + SKIES.map(row).join('') +
+      (dust() < COS_PRICE ? `<p class="mk-note">${tr('Vous avez {n} poussières d’étoiles. Le podium d’une partie en rapporte.', { n: dust() })}</p>` : '');
   }
   // Aperçu de l'onglet Création : une planète détaillée qui change à chaque visite.
   stage.register('atelier-apercu', { type: 'terran', seed: (Date.now() % 100000) + 1, full: true, ring: true, moons: 1 });
@@ -829,7 +851,7 @@
       if (buy.disabled) return;
       const k = SKY_BY_ID[buy.dataset.cosBuy];
       if (!k || c.owned.includes(k.id)) return;
-      if (dust() < COS_PRICE) { refuse(`Il vous manque ${COS_PRICE - dust()} poussières d’étoiles.`); return; }
+      if (dust() < COS_PRICE) { refuse(tr('Il vous manque {n} poussières d’étoiles.', { n: COS_PRICE - dust() })); return; }
       addDust(-COS_PRICE);
       c.owned.push(k.id);
       c.on = k.id;
@@ -838,12 +860,12 @@
       const [x, y] = center(buy);
       stage.burst(x, y, { n: 40, colors: [[246, 196, 83], [255, 255, 255]], speed: 90, life: 0.8 });
       $('marketDust').innerHTML = icon('dust') + ' ' + dust();
-      toast(`${k.name} : équipé pour vos parties.`, 2600);
+      toast(tr('{name} : équipé pour vos parties.', { name: k.name }), 2600);
     } else if (eq) {
       c.on = eq.dataset.cosEquip;
       saveCosmetics(c);
       SFX.place();
-      toast(c.on ? `${SKY_BY_ID[c.on].name} : équipé.` : 'Fond noir équipé.', 2000);
+      toast(c.on ? tr('{name} : équipé.', { name: SKY_BY_ID[c.on].name }) : tr('Fond noir équipé.'), 2000);
     } else if (row) {
       SFX.tap();
     } else return;
@@ -855,7 +877,7 @@
 
   // ─── Profil ─────────────────────────────────────────────────
   const PSEUDO_KEY = 'orbite.pseudo', TAG_KEY = 'orbite.tag', STATS_KEY = 'orbite.stats', HIST_KEY = 'orbite.historique';
-  const pseudo = () => store.get(PSEUDO_KEY, '') || 'Créateur';
+  const pseudo = () => store.get(PSEUDO_KEY, '') || tr('Créateur');
   function playerTag() {
     let t = store.get(TAG_KEY, '');
     if (!/^\d{4}$/.test(t)) {
@@ -870,10 +892,10 @@
   const classe = () => K.sanitize(readJson(CLASSE_KEY, null));
   function rankedLine(r) {
     if (!r) return '';
-    if (r.placement && !r.done) return `CLASSÉ · placement ${K.PLACEMENTS - r.left} / ${K.PLACEMENTS}`;
-    if (r.placement) return `CLASSÉ · placé en <b>${esc(r.tier.label)}</b>`;
+    if (r.placement && !r.done) return tr('CLASSÉ · placement {a} / {b}', { a: K.PLACEMENTS - r.left, b: K.PLACEMENTS });
+    if (r.placement) return tr('CLASSÉ · placé en <b>{rank}</b>', { rank: esc(tierLabel(r.tier)) });
     const sign = r.delta >= 0 ? '+' : '';
-    return `CLASSÉ · <b class="${r.delta >= 0 ? 'up' : 'down'}">${sign}${r.delta} points</b> · ${esc(r.tier.label)}${r.up ? ' · <b class="up">RANG SUPÉRIEUR !</b>' : r.down ? ' · rang inférieur' : ''}`;
+    return `${tr('CLASSÉ')} · <b class="${r.delta >= 0 ? 'up' : 'down'}">${tr('{n} points', { n: sign + r.delta })}</b> · ${esc(tierLabel(r.tier))}${r.up ? ` · <b class="up">${tr('RANG SUPÉRIEUR !')}</b>` : r.down ? ' · ' + tr('rang inférieur') : ''}`;
   }
   const readJson = (k, d) => { try { return JSON.parse(store.get(k, '')) || d; } catch (err) { return d; } };
   const stats = () => Object.assign({ games: 0, wins: 0, top3: 0, rankSum: 0, best: 0, cycles: 0, fights: 0, goldens: 0, dust: 0, laws: {} }, readJson(STATS_KEY, {}));
@@ -895,17 +917,17 @@
   function renderProfile() {
     const st = stats(), lv = levelInfo(xpTotal()), list = worldList();
     const hist = readJson(HIST_KEY, []);
-    const pct = (n) => (st.games ? Math.round(n / st.games * 100) : 0) + ' %';
+    const pct = (n) => tr('{n} %', { n: st.games ? Math.round(n / st.games * 100) : 0 });
     const fav = Object.entries(st.laws).sort((a, b) => b[1] - a[1])[0];
     const tiles = [
-      ['PARTIES', st.games], ['VICTOIRES', st.wins], ['PODIUMS', pct(st.top3)],
-      ['RANG MOYEN', st.games ? (st.rankSum / st.games).toFixed(1) : '–'], ['MEILLEUR RANG', st.best ? ordinal(st.best) : '–'], ['COMBATS GAGNÉS', st.fights],
-      ['ASTRES DORÉS', st.goldens], ['CYCLES JOUÉS', st.cycles], ['POUSSIÈRES GAGNÉES', st.dust]
+      [tr('PARTIES'), st.games], [tr('VICTOIRES'), st.wins], [tr('PODIUMS'), pct(st.top3)],
+      [tr('RANG MOYEN'), st.games ? (st.rankSum / st.games).toFixed(1) : '–'], [tr('MEILLEUR RANG'), st.best ? ordinal(st.best) : '–'], [tr('COMBATS GAGNÉS'), st.fights],
+      [tr('ASTRES DORÉS'), st.goldens], [tr('CYCLES JOUÉS'), st.cycles], [tr('POUSSIÈRES GAGNÉES'), st.dust]
     ];
     $('profileBack').innerHTML = icon('back');
     const tab = ui.pfTab || 'profil';
     $('profileBody').innerHTML = `
-      <nav class="mk-tabs pf-tabs" role="tablist">${[['profil', 'PROFIL'], ['amis', 'AMIS'], ['classement', 'CLASSEMENT']].map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-pf="tab" data-tab="${k}" role="tab">${n}${k === 'amis' ? '<i class="pf-badge" id="pfBadge" hidden></i>' : ''}</button>`).join('')}</nav>
+      <nav class="mk-tabs pf-tabs" role="tablist">${[['profil', tr('PROFIL')], ['amis', tr('AMIS')], ['classement', tr('CLASSEMENT')]].map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-pf="tab" data-tab="${k}" role="tab">${n}${k === 'amis' ? '<i class="pf-badge" id="pfBadge" hidden></i>' : ''}</button>`).join('')}</nav>
       <div class="pf-pane" data-pfpane="amis" id="pfFriends" ${tab === 'amis' ? '' : 'hidden'}></div>
       <div class="pf-pane" data-pfpane="classement" id="pfLeader" ${tab === 'classement' ? '' : 'hidden'}></div>
       <div class="pf-pane" data-pfpane="profil" ${tab === 'profil' ? '' : 'hidden'}>
@@ -914,25 +936,25 @@
         <div class="orb pf-planet" data-planet="world-mini"></div>
         <div class="pf-who">
           <div class="pf-name-row" id="pfNameRow"><button class="pf-name" data-pf="rename">${esc(pseudo())}<span>#${playerTag()}</span></button></div>
-          <span class="pf-lvl">NIVEAU ${lv.lvl} · ${esc(W.stageName(list))}</span>
+          <span class="pf-lvl">${tr('NIVEAU {n}', { n: lv.lvl })} · ${esc(W.stageName(list))}</span>
           <div class="xp-bar"><i style="width:${(lv.rest / lv.need * 100).toFixed(1)}%"></i></div>
-          <small>${lv.rest} / ${lv.need} XP vers le niveau ${lv.lvl + 1}</small>
+          <small>${tr('{a} / {b} XP vers le niveau {n}', { a: lv.rest, b: lv.need, n: lv.lvl + 1 })}</small>
         </div>
       </div>
-      <h3 class="pf-h">CLASSÉ</h3>
+      <h3 class="pf-h">${tr('CLASSÉ')}</h3>
       ${(() => {
         const c = classe();
-        if (!K.placed(c)) return `<div class="pf-rank"><div class="pf-unranked">?</div><div><b>PLACEMENT · ${c.placements.length} / ${K.PLACEMENTS}</b><small>Chaque partie contre les univers rivaux compte. Après ${K.PLACEMENTS} parties de placement, votre rang monte à chaque podium et descend dans les dernières places.</small></div></div>`;
+        if (!K.placed(c)) return `<div class="pf-rank"><div class="pf-unranked">?</div><div><b>${tr('PLACEMENT · {a} / {b}', { a: c.placements.length, b: K.PLACEMENTS })}</b><small>${tr('Chaque partie contre les univers rivaux compte. Après {n} parties de placement, votre rang monte à chaque podium et descend dans les dernières places.', { n: K.PLACEMENTS })}</small></div></div>`;
         const t = K.tierOf(c.points);
-        return `<div class="pf-rank"><div class="orb pf-rank-orb" data-planet="rank-${RANKS[t.idx].id}"></div><div><b>${esc(t.label).toUpperCase()}</b><small>${c.points} points${t.span ? ` · ${t.into} / ${t.span} vers la division suivante` : ''} · record ${c.best}</small><div class="xp-bar"><i style="width:${t.span ? t.into : 100}%"></i></div></div></div>`;
+        return `<div class="pf-rank"><div class="orb pf-rank-orb" data-planet="rank-${RANKS[t.idx].id}"></div><div><b>${esc(tierLabel(t)).toUpperCase()}</b><small>${tr('{n} points', { n: c.points })}${t.span ? ' · ' + tr('{a} / {b} vers la division suivante', { a: t.into, b: t.span }) : ''} · ${tr('record {n}', { n: c.best })}</small><div class="xp-bar"><i style="width:${t.span ? t.into : 100}%"></i></div></div></div>`;
       })()}
-      <div class="pf-ladder">${RANKS.map((r, i) => `<div class="pf-tier ${K.placed(classe()) && K.tierOf(classe().points).idx === i ? 'on' : ''}"><div class="orb" data-planet="rank-${r.id}"></div><b>${r.name}</b><small>${i === RANKS.length - 1 ? `dès ${K.TIER_SPAN * (RANKS.length - 1)} points` : 'III · II · I'}</small></div>`).join('')}</div>
-      <p class="muted">Points par place : ${K.DELTA.map((d) => (d > 0 ? '+' : '') + d).join(' · ')}.</p>
-      <h3 class="pf-h">STATISTIQUES</h3>
+      <div class="pf-ladder">${RANKS.map((r, i) => `<div class="pf-tier ${K.placed(classe()) && K.tierOf(classe().points).idx === i ? 'on' : ''}"><div class="orb" data-planet="rank-${r.id}"></div><b>${tr(r.name)}</b><small>${i === RANKS.length - 1 ? tr('dès {n} points', { n: K.TIER_SPAN * (RANKS.length - 1) }) : 'III · II · I'}</small></div>`).join('')}</div>
+      <p class="muted">${tr('Points par place : {list}.', { list: K.DELTA.map((d) => (d > 0 ? '+' : '') + d).join(' · ') })}</p>
+      <h3 class="pf-h">${tr('STATISTIQUES')}</h3>
       <div class="pf-stats">${tiles.map(([k, v]) => `<div><b>${v}</b><small>${k}</small></div>`).join('')}</div>
-      ${fav ? `<p class="muted">Loi favorite : <span style="color:${famColor(R.LAW[fav[0]].fam)}">${esc(R.LAW[fav[0]].name)}</span> · ${fav[1]} partie${fav[1] > 1 ? 's' : ''}</p>` : ''}
-      <h3 class="pf-h">DERNIÈRES PARTIES</h3>
-      <div class="pf-hist">${hist.length ? hist.map((h) => `<div class="${h.rank <= 3 ? 'podium' : ''}"><b>${h.quit ? '–' : ordinal(h.rank)}</b><span style="color:${famColor(R.LAW[h.law] ? R.LAW[h.law].fam : 'neutre')}">${esc(R.LAW[h.law] ? R.LAW[h.law].name : '')}</span><small>${h.quit ? 'abandon' : h.cycles + ' cycles'} · ${new Date(h.t).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</small></div>`).join('') : '<p class="muted">Aucune partie terminée pour l’instant.</p>'}</div>
+      ${fav ? `<p class="muted">${tr('Loi favorite :')} <span style="color:${famColor(R.LAW[fav[0]].fam)}">${esc(R.LAW[fav[0]].name)}</span> · ${fav[1] > 1 ? tr('{n} parties', { n: fav[1] }) : tr('{n} partie', { n: fav[1] })}</p>` : ''}
+      <h3 class="pf-h">${tr('DERNIÈRES PARTIES')}</h3>
+      <div class="pf-hist">${hist.length ? hist.map((h) => `<div class="${h.rank <= 3 ? 'podium' : ''}"><b>${h.quit ? '–' : ordinal(h.rank)}</b><span style="color:${famColor(R.LAW[h.law] ? R.LAW[h.law].fam : 'neutre')}">${esc(R.LAW[h.law] ? R.LAW[h.law].name : '')}</span><small>${h.quit ? tr('abandon') : tr('{n} cycles', { n: h.cycles })} · ${new Date(h.t).toLocaleDateString(I18N.lang, { day: '2-digit', month: '2-digit' })}</small></div>`).join('') : `<p class="muted">${tr('Aucune partie terminée pour l’instant.')}</p>`}</div>
       </div>`;
     if (window.__orbite.onlineUI) window.__orbite.onlineUI.renderProfile(tab);
   }
@@ -943,7 +965,7 @@
     if (b.dataset.pf === 'tab') { SFX.tap(); ui.pfTab = b.dataset.tab; renderProfile(); return; }
     if (b.dataset.pf === 'rename') {
       SFX.tap();
-      $('pfNameRow').innerHTML = `<input class="pf-input" id="pfInput" maxlength="16" value="${esc(pseudo())}" aria-label="Pseudo" autocomplete="off"><button class="btn" data-pf="save">OK</button>`;
+      $('pfNameRow').innerHTML = `<input class="pf-input" id="pfInput" maxlength="16" value="${esc(pseudo())}" aria-label="${tr('Pseudo')}" autocomplete="off"><button class="btn" data-pf="save">OK</button>`;
       const inp = $('pfInput');
       inp.focus();
       inp.select();
@@ -982,31 +1004,39 @@
 
   // ─── Paramètres ─────────────────────────────────────────────
   function settingsHtml() {
-    return `<h3>PARAMÈTRES</h3><div class="menu-list-sheet">
-      <button class="btn" data-act="set" data-v="sound">SON : ${SFX.muted ? 'COUPÉ' : 'ACTIVÉ'}</button>
-      <button class="btn" data-act="set" data-v="music">MUSIQUE : ${SFX.musicOn ? 'ACTIVÉE' : 'COUPÉE'}</button>
-      <button class="btn" data-act="set" data-v="tutos">TUTORIELS ET AIDE</button>
-      ${installed() ? '' : '<button class="btn" data-act="set" data-v="install">INSTALLER SUR LE TÉLÉPHONE</button>'}
-      <button class="btn" data-act="set" data-v="credits">CRÉDITS</button>
-    </div><p class="muted">Poussières d’étoiles, niveau, planète et partie en cours restent sur cet appareil.</p>
-    <p class="muted version">ORBITE · version ${VERSION}</p>`;
+    return `<h3>${tr('PARAMÈTRES')}</h3><div class="menu-list-sheet">
+      <button class="btn" data-act="set" data-v="sound">${SFX.muted ? tr('SON : COUPÉ') : tr('SON : ACTIVÉ')}</button>
+      <button class="btn" data-act="set" data-v="music">${SFX.musicOn ? tr('MUSIQUE : ACTIVÉE') : tr('MUSIQUE : COUPÉE')}</button>
+      <button class="btn" data-act="set" data-v="lang">${tr('LANGUE : {lang}', { lang: I18N.LANGS.find((l) => l.id === I18N.lang).name.toUpperCase() })}</button>
+      <button class="btn" data-act="set" data-v="tutos">${tr('TUTORIELS ET AIDE')}</button>
+      ${installed() ? '' : `<button class="btn" data-act="set" data-v="install">${tr('INSTALLER SUR LE TÉLÉPHONE')}</button>`}
+      <button class="btn" data-act="set" data-v="credits">${tr('CRÉDITS')}</button>
+    </div><p class="muted">${tr('Poussières d’étoiles, niveau, planète et partie en cours restent sur cet appareil.')}</p>
+    <p class="muted version">${tr('ORBITE · version {n}', { n: VERSION })}</p>`;
+  }
+
+  // Langue du jeu : le choix est enregistré et le jeu redémarre dans la nouvelle langue.
+  function langHtml() {
+    return `<h3>${tr('LANGUE')}</h3><div class="menu-list-sheet">
+      ${I18N.LANGS.map((l) => `<button class="btn ${l.id === I18N.lang ? 'primary' : ''}" data-act="set" data-v="lang:${l.id}">${l.name.toUpperCase()}</button>`).join('')}
+    </div><div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} ${tr('PARAMÈTRES')}</button></div>`;
   }
 
   // Tous les tutoriels et l'aide sont rangés derrière un seul bouton des Paramètres.
   function tutosHtml() {
-    return `<h3>TUTORIELS ET AIDE</h3><div class="menu-list-sheet">
-      <button class="btn" data-act="set" data-v="help">COMMENT JOUER</button>
-      <button class="btn" data-act="set" data-v="guide">GUIDE DU MENU</button>
-      <button class="btn" data-act="set" data-v="tuto">${tutoDone() ? 'REFAIRE LE TUTORIEL DE PARTIE' : 'TUTORIEL : PROCHAINE PARTIE'}</button>
-      <button class="btn" data-act="set" data-v="tutoCamp">TUTORIELS DE CAMPAGNE</button>
-      <button class="btn" data-act="set" data-v="intro">REVOIR L’INTRODUCTION</button>
-    </div><div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} PARAMÈTRES</button></div>`;
+    return `<h3>${tr('TUTORIELS ET AIDE')}</h3><div class="menu-list-sheet">
+      <button class="btn" data-act="set" data-v="help">${tr('COMMENT JOUER')}</button>
+      <button class="btn" data-act="set" data-v="guide">${tr('GUIDE DU MENU')}</button>
+      <button class="btn" data-act="set" data-v="tuto">${tutoDone() ? tr('REFAIRE LE TUTORIEL DE PARTIE') : tr('TUTORIEL : PROCHAINE PARTIE')}</button>
+      <button class="btn" data-act="set" data-v="tutoCamp">${tr('TUTORIELS DE CAMPAGNE')}</button>
+      <button class="btn" data-act="set" data-v="intro">${tr('REVOIR L’INTRODUCTION')}</button>
+    </div><div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} ${tr('PARAMÈTRES')}</button></div>`;
   }
 
   // Installation : le jeu s'ajoute à l'écran d'accueil et se joue ensuite hors ligne.
   let installPrompt = null;
   window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; });
-  window.addEventListener('appinstalled', () => { installPrompt = null; toast('ORBITE est installé'); });
+  window.addEventListener('appinstalled', () => { installPrompt = null; toast(tr('ORBITE est installé')); });
   function installed() {
     return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
   }
@@ -1020,35 +1050,37 @@
     }
     const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const steps = ios
-      ? ['Ouvrez cette page dans <b>Safari</b>.', 'Touchez le bouton <b>Partager</b> (le carré avec une flèche).', 'Choisissez <b>Sur l’écran d’accueil</b>, puis <b>Ajouter</b>.']
-      : ['Ouvrez cette page dans <b>Chrome</b>.', 'Touchez le menu <b>⋮</b> en haut à droite.', 'Choisissez <b>Installer l’application</b> (ou <b>Ajouter à l’écran d’accueil</b>).'];
-    openSheet(`<h3>INSTALLER ORBITE</h3><ol class="install-steps">${steps.map((t) => `<li>${t}</li>`).join('')}</ol>
-      <p class="muted">Lancez ensuite ORBITE depuis son icône : le jeu, la musique et les sons restent disponibles sans réseau, en mode avion compris.</p>
-      <div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} PARAMÈTRES</button></div>`);
+      ? [tr('Ouvrez cette page dans <b>Safari</b>.'), tr('Touchez le bouton <b>Partager</b> (le carré avec une flèche).'), tr('Choisissez <b>Sur l’écran d’accueil</b>, puis <b>Ajouter</b>.')]
+      : [tr('Ouvrez cette page dans <b>Chrome</b>.'), tr('Touchez le menu <b>⋮</b> en haut à droite.'), tr('Choisissez <b>Installer l’application</b> (ou <b>Ajouter à l’écran d’accueil</b>).')];
+    openSheet(`<h3>${tr('INSTALLER ORBITE')}</h3><ol class="install-steps">${steps.map((t) => `<li>${t}</li>`).join('')}</ol>
+      <p class="muted">${tr('Lancez ensuite ORBITE depuis son icône : le jeu, la musique et les sons restent disponibles sans réseau, en mode avion compris.')}</p>
+      <div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} ${tr('PARAMÈTRES')}</button></div>`);
   }
 
   // Crédits : qui a fait quoi, et les licences des ressources libres utilisées.
   function creditsHtml() {
-    return `<h3>CRÉDITS</h3><div class="credits">
-      <section><b>ORBITE</b><span>Un jeu Studio Edda</span></section>
-      <section><b>PLANÈTES</b><span>Moteur de planètes d’ORBITE</span>
-        <small>Pixel art calculé en direct (WebGL2) : chaque graine donne un astre unique.</small></section>
-      <section><b>MUSIQUE</b><span>« Orbiting Wonder » · Studio Edda</span>
-        <small>Thème du menu, créé avec Suno.</small></section>
-      <section><b>SONS</b><span>Kenney · kenney.nl</span>
-        <small>Interface Sounds et UI Audio (CC0), sons des Starter Kits FPS et 3D Platformer (CC0) et du Starter Kit City Builder (licence MIT). Copies issues des portages de Hugo Locurcio.</small></section>
-      <section><b>POLICE</b><span>Chakra Petch · Cadson Demak</span>
-        <small>SIL Open Font License, embarquée dans le jeu.</small></section>
-      <section><b>LICENCE MIT · STARTER KIT CITY BUILDER</b>
+    return `<h3>${tr('CRÉDITS')}</h3><div class="credits">
+      <section><b>ORBITE</b><span>${tr('Un jeu Studio Edda')}</span></section>
+      <section><b>${tr('PLANÈTES')}</b><span>${tr('Moteur de planètes d’ORBITE')}</span>
+        <small>${tr('Pixel art calculé en direct (WebGL2) : chaque graine donne un astre unique.')}</small></section>
+      <section><b>${tr('MUSIQUE')}</b><span>« Orbiting Wonder » · Studio Edda</span>
+        <small>${tr('Thème du menu, créé avec Suno.')}</small></section>
+      <section><b>${tr('SONS')}</b><span>Kenney · kenney.nl</span>
+        <small>${tr('Interface Sounds et UI Audio (CC0), sons des Starter Kits FPS et 3D Platformer (CC0) et du Starter Kit City Builder (licence MIT). Copies issues des portages de Hugo Locurcio.')}</small></section>
+      <section><b>${tr('POLICE')}</b><span>Chakra Petch · Cadson Demak</span>
+        <small>${tr('SIL Open Font License, embarquée dans le jeu.')}</small></section>
+      <section><b>${tr('LICENCE MIT · STARTER KIT CITY BUILDER')}</b>
         <small class="legal">Copyright (c) 2025 Kenney. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</small></section>
     </div>
-    <div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} PARAMÈTRES</button></div>`;
+    <div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} ${tr('PARAMÈTRES')}</button></div>`;
   }
 
   async function settingsAction(v, btn) {
     if (v === 'sound') { SFX.setMuted(!SFX.muted); if (!SFX.muted) SFX.tap(); openSheet(settingsHtml()); }
     else if (v === 'music') { SFX.setMusicOn(!SFX.musicOn); SFX.tap(); openSheet(settingsHtml()); }
     else if (v === 'tutos') openSheet(tutosHtml());
+    else if (v === 'lang') openSheet(langHtml());
+    else if (v.startsWith('lang:')) I18N.setLang(v.slice(5));
     else if (v === 'help') openSheet(helpHtml(true));
     else if (v === 'credits') openSheet(creditsHtml());
     else if (v === 'install') install();
@@ -1058,11 +1090,11 @@
     } else if (v === 'tuto') {
       store.set(TUTO_KEY, '');
       closeSheet();
-      toast('Votre prochaine partie sera guidée pas à pas.', 3000);
+      toast(tr('Votre prochaine partie sera guidée pas à pas.'), 3000);
     } else if (v === 'tutoCamp') {
       for (const k of ['orbite.campagne.tuto', 'orbite.campagne.carte', 'orbite.campagne.glisse']) store.set(k, '');
       closeSheet();
-      toast('La campagne vous guidera de nouveau : premier combat et carte.', 3000);
+      toast(tr('La campagne vous guidera de nouveau : premier combat et carte.'), 3000);
     }
     else if (v === 'settings') openSheet(settingsHtml());
     else if (v === 'intro') {
@@ -1091,11 +1123,11 @@
       return `<button class="law" data-law="${id}" style="--c:${f.color}">
         <canvas class="sphere" data-fam="${l.fam}" aria-hidden="true"></canvas>
         <div>
-          <span class="fam-chip">${l.fam === 'neutre' ? 'POINTS DE VIE' : f.name.toUpperCase()}</span>
+          <span class="fam-chip">${l.fam === 'neutre' ? tr('POINTS DE VIE') : f.name.toUpperCase()}</span>
           <h3>${esc(l.name)}</h3>
           <p class="tag">${esc(l.tagline)}</p>
           <p class="txt">${esc(l.text)}</p>
-          <p class="starter">PREMIER ASTRE : ${esc(st.name).toUpperCase()} ${st.atk}/${st.hp}</p>
+          <p class="starter">${tr('PREMIER ASTRE : {name}', { name: esc(st.name).toUpperCase() })} ${st.atk}/${st.hp}</p>
         </div>
       </button>`;
     }).join('');
@@ -1128,14 +1160,14 @@
     saveGame();
     await show('game');
     renderGame(true);
-    banner('CYCLE 1', 'Achetez des astres, puis lancez le combat.');
+    banner(tr('CYCLE {n}', { n: 1 }), tr('Achetez des astres, puis lancez le combat.'));
     if (!tutoDone()) {
       store.set(HINT_KEY, '1');
       coachStop(false);
       setTimeout(() => coachStart(GAME_STEPS, () => store.set(TUTO_KEY, 'fini')), 1600);
     } else if (store.get(HINT_KEY, '') !== '1') {
       store.set(HINT_KEY, '1');
-      setTimeout(() => toast('Touchez un astre pour lire ce qu’il fait. Glissez-le pour l’acheter ou le placer.', 5200), 2200);
+      setTimeout(() => toast(tr('Touchez un astre pour lire ce qu’il fait. Glissez-le pour l’acheter ou le placer.'), 5200), 2200);
     }
   });
 
@@ -1187,7 +1219,7 @@
     bubble.querySelector('.coach-count').textContent = st.extra ? '' : `${n} / ${total}`;
     const last = i === steps.length - 1;
     bubble.querySelector('.coach-actions').innerHTML =
-      (last ? '<span></span>' : '<button class="link" data-coach="skip">Passer le tutoriel</button>') +
+      (last ? '<span></span>' : `<button class="link" data-coach="skip">${tr('Passer le tutoriel')}</button>`) +
       (st.next ? `<button class="btn primary" data-coach="next">${st.next}</button>` : '');
     bubble.classList.remove('in');
     void bubble.offsetWidth;
@@ -1251,46 +1283,46 @@
     const b = e.target.closest('[data-coach]');
     if (!b) return;
     SFX.tap();
-    if (b.dataset.coach === 'skip') { coachStop(false); store.set(TUTO_KEY, 'fini'); toast('Tutoriel passé. Paramètres → Refaire le tutoriel pour le revoir.', 3600); }
+    if (b.dataset.coach === 'skip') { coachStop(false); store.set(TUTO_KEY, 'fini'); toast(tr('Tutoriel passé. Paramètres → Refaire le tutoriel pour le revoir.'), 3600); }
     else { clearTimeout(coach.timer); coachGo(coach.i + 1); }
   });
 
   // Étapes de la première partie.
   const LAW_STEPS = [
-    { id: 'loi', target: '#lawList', place: 'below', pad: 4, text: 'Choisissez une <b>loi</b>. Elle régit votre univers : elle vous donne un <b>pouvoir</b> et votre <b>premier astre</b>. Touchez une sphère.', gesture: { tap: '#lawList .law' }, wait: ['loi'] },
-    { id: 'creer', target: '#lawGo', text: 'Parfait. Touchez <b>CRÉER MON UNIVERS</b> pour commencer la partie.', gesture: { tap: '#lawGo' }, wait: ['partie'] }
+    { id: 'loi', target: '#lawList', place: 'below', pad: 4, text: tr('Choisissez une <b>loi</b>. Elle régit votre univers : elle vous donne un <b>pouvoir</b> et votre <b>premier astre</b>. Touchez une sphère.'), gesture: { tap: '#lawList .law' }, wait: ['loi'] },
+    { id: 'creer', target: '#lawGo', text: tr('Parfait. Touchez <b>CRÉER MON UNIVERS</b> pour commencer la partie.'), gesture: { tap: '#lawGo' }, wait: ['partie'] }
   ];
   const GAME_STEPS = [
-    { id: 'bienvenue', text: 'Bienvenue dans votre univers ! Vous affrontez <b>7 rivaux</b>. À chaque <b>cycle</b>, vous achetez des astres, puis votre système <b>combat tout seul</b> un rival. Le dernier debout gagne.', next: 'SUIVANT', delay: 0 },
-    { id: 'pv', target: '#hudHp', text: 'Vos <b>points de vie</b>. Un combat perdu vous en retire. À 0, vous êtes éliminé.', next: 'SUIVANT' },
-    { id: 'energie', target: '#energy', text: 'Votre <b>énergie</b> : 3 au premier cycle, une de plus à chaque cycle. Un astre coûte <b>3</b>.', next: 'SUIVANT' },
-    { id: 'creation', target: '#tavern', text: 'Voici la <b>Création</b> : c’est là que naissent les astres qu’on vous propose. <b>Touchez-en un</b> pour lire ce qu’il fait.', gesture: { tap: '#shop .unit', at: 0.35 }, wait: ['fiche'], jump: { achat: 'main', combat: 'regard' } },
-    { id: 'fiche', target: '#sheet [data-act="buy"]', dim: false, place: 'top', text: 'Sa fiche : ' + '<b>attaque</b>, <b>PV</b> et <b>pouvoir</b>. Touchez <b>ACHETER</b>.', gesture: { tap: '#sheet [data-act="buy"]', at: 0.5 }, wait: ['achat'], jump: { fermer: 'creation' } },
-    { id: 'main', target: '#handZone', text: 'L’astre attend dans votre <b>main</b>. <b>Glissez-le</b> vers votre système pour le placer en orbite.', gesture: { from: '#hand .unit', drag: '#systemZone', at: 0.35 }, wait: ['placer'], when: () => me().hand.length > 0, jump: { combat: 'regard' } },
-    { id: 'systeme', target: '#systemZone', pad: -10, text: 'Il orbite votre étoile. En combat, vos astres attaquent <b>de gauche à droite</b> : l’ordre compte, glissez-les pour les réordonner.', next: 'SUIVANT' },
-    { id: 'combat', target: '#fightBtn', text: 'Plus assez d’énergie ? Lancez le <b>combat</b> ! Il se joue tout seul.', gesture: { tap: '#fightBtn', at: 0.5 }, wait: ['combat'] },
-    { id: 'regard', soft: true, dim: false, y: 0.76, extra: true, text: 'Vos astres (en bas) frappent ceux du rival (en haut), chacun son tour. Les survivants du gagnant infligent des dégâts au perdant.', wait: ['cycle'] },
-    { id: 'degats', text: 'Le perdant perd des PV : <b>niveau de création du gagnant + niveaux de ses astres survivants</b>. Nouveau cycle, nouvelle énergie !', next: 'SUIVANT', delay: 600 },
-    { id: 'actualiser', target: '#rollBtn', text: '<b>Actualiser</b> (1 énergie) : la Création fait naître d’autres astres.', next: 'SUIVANT' },
-    { id: 'geler', target: '#freezeBtn', text: '<b>Geler</b> : les astres proposés restent les mêmes au prochain cycle. Pratique pour garder un astre que vous ne pouvez pas encore payer.', next: 'SUIVANT' },
-    { id: 'niveau', target: '#upBtn', text: '<b>Monter de niveau</b> : la Création fait naître des astres plus puissants. Le prix baisse à chaque cycle.', next: 'SUIVANT' },
-    { id: 'vendre', target: '#systemZone', pad: -10, text: 'Pour <b>vendre</b> un astre (+1 énergie), glissez-le de votre système vers la Création.', next: 'SUIVANT' },
-    { id: 'pouvoir', target: '#powerBtn', text: 'Le <b>pouvoir</b> de votre loi : touchez-le pour l’utiliser. Il coûte de l’énergie.', next: 'SUIVANT' },
-    { id: 'rivaux', target: '#rivals', text: 'Vos <b>rivaux</b> : touchez ici pour voir leurs PV et le dernier système qu’ils ont joué.', next: 'SUIVANT' },
-    { id: 'fin', text: 'Dernier secret : <b>trois copies</b> du même astre fusionnent en un astre <b>doré</b>, deux fois plus fort. Visez le podium : les 3 premiers gagnent des poussières d’étoiles. À vous !', next: 'JOUER' }
+    { id: 'bienvenue', text: tr('Bienvenue dans votre univers ! Vous affrontez <b>7 rivaux</b>. À chaque <b>cycle</b>, vous achetez des astres, puis votre système <b>combat tout seul</b> un rival. Le dernier debout gagne.'), next: tr('SUIVANT'), delay: 0 },
+    { id: 'pv', target: '#hudHp', text: tr('Vos <b>points de vie</b>. Un combat perdu vous en retire. À 0, vous êtes éliminé.'), next: tr('SUIVANT') },
+    { id: 'energie', target: '#energy', text: tr('Votre <b>énergie</b> : 3 au premier cycle, une de plus à chaque cycle. Un astre coûte <b>3</b>.'), next: tr('SUIVANT') },
+    { id: 'creation', target: '#tavern', text: tr('Voici la <b>Création</b> : c’est là que naissent les astres qu’on vous propose. <b>Touchez-en un</b> pour lire ce qu’il fait.'), gesture: { tap: '#shop .unit', at: 0.35 }, wait: ['fiche'], jump: { achat: 'main', combat: 'regard' } },
+    { id: 'fiche', target: '#sheet [data-act="buy"]', dim: false, place: 'top', text: tr('Sa fiche : <b>attaque</b>, <b>PV</b> et <b>pouvoir</b>. Touchez <b>ACHETER</b>.'), gesture: { tap: '#sheet [data-act="buy"]', at: 0.5 }, wait: ['achat'], jump: { fermer: 'creation' } },
+    { id: 'main', target: '#handZone', text: tr('L’astre attend dans votre <b>main</b>. <b>Glissez-le</b> vers votre système pour le placer en orbite.'), gesture: { from: '#hand .unit', drag: '#systemZone', at: 0.35 }, wait: ['placer'], when: () => me().hand.length > 0, jump: { combat: 'regard' } },
+    { id: 'systeme', target: '#systemZone', pad: -10, text: tr('Il orbite votre étoile. En combat, vos astres attaquent <b>de gauche à droite</b> : l’ordre compte, glissez-les pour les réordonner.'), next: tr('SUIVANT') },
+    { id: 'combat', target: '#fightBtn', text: tr('Plus assez d’énergie ? Lancez le <b>combat</b> ! Il se joue tout seul.'), gesture: { tap: '#fightBtn', at: 0.5 }, wait: ['combat'] },
+    { id: 'regard', soft: true, dim: false, y: 0.76, extra: true, text: tr('Vos astres (en bas) frappent ceux du rival (en haut), chacun son tour. Les survivants du gagnant infligent des dégâts au perdant.'), wait: ['cycle'] },
+    { id: 'degats', text: tr('Le perdant perd des PV : <b>niveau de création du gagnant + niveaux de ses astres survivants</b>. Nouveau cycle, nouvelle énergie !'), next: tr('SUIVANT'), delay: 600 },
+    { id: 'actualiser', target: '#rollBtn', text: tr('<b>Actualiser</b> (1 énergie) : la Création fait naître d’autres astres.'), next: tr('SUIVANT') },
+    { id: 'geler', target: '#freezeBtn', text: tr('<b>Geler</b> : les astres proposés restent les mêmes au prochain cycle. Pratique pour garder un astre que vous ne pouvez pas encore payer.'), next: tr('SUIVANT') },
+    { id: 'niveau', target: '#upBtn', text: tr('<b>Monter de niveau</b> : la Création fait naître des astres plus puissants. Le prix baisse à chaque cycle.'), next: tr('SUIVANT') },
+    { id: 'vendre', target: '#systemZone', pad: -10, text: tr('Pour <b>vendre</b> un astre (+1 énergie), glissez-le de votre système vers la Création.'), next: tr('SUIVANT') },
+    { id: 'pouvoir', target: '#powerBtn', text: tr('Le <b>pouvoir</b> de votre loi : touchez-le pour l’utiliser. Il coûte de l’énergie.'), next: tr('SUIVANT') },
+    { id: 'rivaux', target: '#rivals', text: tr('Vos <b>rivaux</b> : touchez ici pour voir leurs PV et le dernier système qu’ils ont joué.'), next: tr('SUIVANT') },
+    { id: 'fin', text: tr('Dernier secret : <b>trois copies</b> du même astre fusionnent en un astre <b>doré</b>, deux fois plus fort. Visez le podium : les 3 premiers gagnent des poussières d’étoiles. À vous !'), next: tr('JOUER') }
   ];
   const MENU_STEPS = [
-    { id: 'solo', target: '#menuList', text: '<b>Jouer solo</b> s’ouvre sur deux modes. La <b>Campagne</b> : éveillez-vous en Créateur et façonnez votre monde carte après carte jusqu’à Kronos. L’<b>Affrontement</b> : une partie contre 7 univers rivaux.', next: 'SUIVANT', delay: 0, enter: () => soloMenu(true) },
-    { id: 'marche', target: '#marketBtn', text: 'Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.', next: 'SUIVANT' },
-    { id: 'profil', target: '#profileBtn', text: 'Votre <b>profil</b> : pseudo, niveau, statistiques et historique. Chaque partie rapporte de l’expérience.', next: 'SUIVANT' },
-    { id: 'reglages', target: '#settingsBtn', text: '<b>Paramètres</b> : son, musique, règles du jeu, et ce guide si vous voulez le revoir.', next: 'C’EST PARTI' }
+    { id: 'solo', target: '#menuList', text: tr('<b>Jouer solo</b> s’ouvre sur deux modes. La <b>Campagne</b> : éveillez-vous en Créateur et façonnez votre monde carte après carte jusqu’à Kronos. L’<b>Affrontement</b> : une partie contre 7 univers rivaux.'), next: tr('SUIVANT'), delay: 0, enter: () => soloMenu(true) },
+    { id: 'marche', target: '#marketBtn', text: tr('Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.'), next: tr('SUIVANT') },
+    { id: 'profil', target: '#profileBtn', text: tr('Votre <b>profil</b> : pseudo, niveau, statistiques et historique. Chaque partie rapporte de l’expérience.'), next: tr('SUIVANT') },
+    { id: 'reglages', target: '#settingsBtn', text: tr('<b>Paramètres</b> : son, musique, règles du jeu, et ce guide si vous voulez le revoir.'), next: tr('C’EST PARTI') }
   ];
 
   // ─── Rendu de la partie ─────────────────────────────────────
   function renderHud() {
     const p = me();
     $('hudHp').innerHTML = icon('heart') + `<b>${Math.max(0, p.hp)}</b>`;
-    $('hudRound').textContent = 'CYCLE ' + ui.state.round;
+    $('hudRound').textContent = tr('CYCLE {n}', { n: ui.state.round });
     $('famsBtn').innerHTML = ui.state.families.map((f) => `<span style="--c:${famColor(f)}"></span>`).join('');
     $('menuBtn').innerHTML = icon('menu');
   }
@@ -1300,16 +1332,16 @@
     // Barre repliée : un menu qui se déroule, sans images.
     const alive = R.alivePlayers(s).length;
     const rank = s.players.filter((p) => p.alive).sort((a, b) => b.hp - a.hp).findIndex((p) => !p.bot) + 1;
-    $('rivals').innerHTML = `<span class="rv-label">RIVAUX</span><span class="rv-info">${alive} univers en lice${me().alive ? ` · vous êtes ${ordinal(rank)}` : ''}</span><span class="rv-open">${icon('back', 'down')}</span>`;
+    $('rivals').innerHTML = `<span class="rv-label">${tr('RIVAUX')}</span><span class="rv-info">${tr('{n} univers en lice', { n: alive })}${me().alive ? ' · ' + tr('vous êtes {rank}', { rank: ordinal(rank) }) : ''}</span><span class="rv-open">${icon('back', 'down')}</span>`;
   }
 
   function renderTavernHead(pop) {
     const p = me();
     const pips = Array.from({ length: 6 }, (_, i) => `<i class="${i < p.tier ? 'on' : ''}"></i>`).join('');
-    $('tier').innerHTML = `CRÉATION <span class="pips">${pips}</span>`;
+    $('tier').innerHTML = `${tr('CRÉATION')} <span class="pips">${pips}</span>`;
     $('tier').classList.toggle('pop', !!pop);
     const cost = R.upgradeCost(p);
-    $('upBtn').innerHTML = p.tier >= 6 ? 'MAX' : `${icon('up')} <i>${cost}</i>`;
+    $('upBtn').innerHTML = p.tier >= 6 ? tr('MAX') : `${icon('up')} <i>${cost}</i>`;
     $('upBtn').disabled = p.tier >= 6 || p.gold < cost;
     const rc = R.rollCost(p);
     $('rollBtn').innerHTML = `${icon('roll')} <i>${rc}</i>`;
@@ -1346,7 +1378,7 @@
       if (ready && !sp) {
         sp = document.createElement('span');
         sp.className = 'triple-spark';
-        sp.setAttribute('aria-label', 'Fusion possible');
+        sp.setAttribute('aria-label', tr('Fusion possible'));
         sp.innerHTML = '<i>✦</i><i>✦</i><i>✦</i>';
         el.appendChild(sp);
       } else if (!ready && sp) sp.remove();
@@ -1391,6 +1423,7 @@
   // Alliance : deux familles d'au moins 3 astres chacune → +1/+1 au début de chaque combat.
   const ALLIANCE_KEY = 'orbite.alliance';
   const famName = (f) => R.FAMILIES[f].name.toUpperCase();
+  const kwName = (k) => R.KEYWORDS[k].name.toUpperCase();
   function allianceHtml(al) {
     return al.map((f) => `<b style="color:${famColor(f)}">${famName(f)}</b>`).join(' + ');
   }
@@ -1400,13 +1433,13 @@
     const al = R.allianceOf(me().board);
     const key = al ? al.join('+') : '';
     tag.hidden = !al;
-    if (al) tag.innerHTML = 'ALLIANCE ' + allianceHtml(al);
+    if (al) tag.innerHTML = tr('ALLIANCE') + ' ' + allianceHtml(al);
     if (key && key !== ui.allianceKey && ui.allianceKey !== undefined) {
       tag.animate([{ transform: 'scale(0.6)', opacity: 0 }, { transform: 'scale(1.15)', opacity: 1 }, { transform: 'scale(1)' }], { duration: 520, easing: 'ease-out' });
       SFX.golden();
       if (store.get(ALLIANCE_KEY, '') !== '1') {
         store.set(ALLIANCE_KEY, '1');
-        toast(`Alliance ! Deux familles de ${R.ALLIANCE.min} astres : leurs astres gagnent +${R.ALLIANCE.atk}/+${R.ALLIANCE.hp} au début de chaque combat.`, 4200);
+        toast(tr('Alliance ! Deux familles de {n} astres : leurs astres gagnent +{atk}/+{hp} au début de chaque combat.', { n: R.ALLIANCE.min, atk: R.ALLIANCE.atk, hp: R.ALLIANCE.hp }), 4200);
       }
     }
     ui.allianceKey = key;
@@ -1445,9 +1478,9 @@
     const can = active && R.canUsePower(ui.state).ok;
     b.classList.toggle('active', can);
     b.classList.toggle('armed', ui.targeting);
-    const label = p.law === 'renversement' ? 'INVERSER' : p.law === 'ingenierie' ? '+ SONDE' : law.name.toUpperCase();
+    const label = p.law === 'renversement' ? tr('INVERSER') : p.law === 'ingenierie' ? tr('+ SONDE') : law.name.toUpperCase();
     const cost = active ? ` · ${law.active.cost} ${icon('bolt')}` : '';
-    const txt = `<b>${active ? 'POUVOIR' : 'LOI'}${active && p.powerUsed ? ' · UTILISÉ' : ''}</b>${label}${cost}`;
+    const txt = `<b>${active ? tr('POUVOIR') : tr('LOI')}${active && p.powerUsed ? ' · ' + tr('UTILISÉ') : ''}</b>${label}${cost}`;
     const cv = b.querySelector('canvas.sphere');
     if (cv && cv.dataset.fam === law.fam) b.querySelector('.power-txt').innerHTML = txt;
     else {
@@ -1555,7 +1588,7 @@
           const st = shown.get(e.uid);
           if (st) { const t = st.atk; st.atk = st.hp; st.hp = t; setStats(el, st.atk, st.hp, true); }
           else { const a = el.querySelector('.atk').textContent, h = el.querySelector('.hp').textContent; setStats(el, h, a, true); }
-          popOn(el, 'INVERSÉ', 'info');
+          popOn(el, tr('INVERSÉ'), 'info');
         }
       } else if (e.t === 'gold') {
         popOn($('energy'), `+${e.n} ${icon('bolt')}`, 'energy');
@@ -1583,10 +1616,10 @@
     const p = me();
     const id = p.shop[slot];
     const check = R.canBuy(ui.state, slot);
-    if (!check.ok) { refuse(check.reason); return false; }
+    if (!check.ok) { refuse(tr(check.reason)); return false; }
     const before = copyRects(id);
     const res = R.buy(ui.state, slot);
-    if (!res.ok) { refuse(res.reason); return false; }
+    if (!res.ok) { refuse(tr(res.reason)); return false; }
     tuto('achat');
     SFX.buy();
     vibrate(8);
@@ -1650,7 +1683,7 @@
     stage.setReveal(big, 0);
     stage.flash(big, 1);
     stage.reveal(big, 0, 1, 380);
-    popAt(cx, cy - size * 0.62, 'ASTRE DORÉ', 'gold');
+    popAt(cx, cy - size * 0.62, tr('ASTRE DORÉ'), 'gold');
     await sleep(900);
     if (goldEl) {
       const to = goldEl.querySelector('.orb').getBoundingClientRect();
@@ -1668,7 +1701,7 @@
 
   async function doPlay(uid, index, fromRect, targetUid) {
     const res = R.play(ui.state, uid, index, targetUid);
-    if (!res.ok) { refuse(res.reason); renderHand(); return false; }
+    if (!res.ok) { refuse(tr(res.reason)); renderHand(); return false; }
     tuto('placer');
     SFX.place();
     vibrate(12);
@@ -1684,7 +1717,7 @@
       const b = orb.getBoundingClientRect();
       stage.flash(orb, res.magnet ? 0.9 : 0.55);
       stage.ring(x, y, b.width * 0.42, { n: 40, colors: [hexRgb(famColor(R.CARD[landed.dataset.id].fam)), [255, 255, 255]], speed: 55, life: 0.55, flat: 0.45 });
-      if (res.magnet) { popOn(landed, 'ARRIMAGE', 'info'); setStats(landed, me().board.find((u) => u.uid === res.magnet).atk, me().board.find((u) => u.uid === res.magnet).hp, true); }
+      if (res.magnet) { popOn(landed, kwName('arrimage'), 'info'); setStats(landed, me().board.find((u) => u.uid === res.magnet).atk, me().board.find((u) => u.uid === res.magnet).hp, true); }
     }
     await playShopEvents(res.events);
     renderBoard();
@@ -1704,7 +1737,7 @@
     const id = el ? el.dataset.id : null;
     const golden = el ? el.classList.contains('golden') : false;
     const res = R.sell(ui.state, uid);
-    if (!res.ok) { refuse(res.reason); return false; }
+    if (!res.ok) { refuse(tr(res.reason)); return false; }
     SFX.sell();
     vibrate(6);
     const before = rects($('board'));
@@ -1732,7 +1765,7 @@
 
   async function doRoll() {
     const res = R.roll(ui.state);
-    if (!res.ok) { refuse(res.reason); return; }
+    if (!res.ok) { refuse(tr(res.reason)); return; }
     SFX.roll();
     const old = [...$('shop').children].map((el) => ({ id: el.dataset.id, r: el.querySelector('.orb').getBoundingClientRect() }));
     const temps = old.map((o) => tempOrb(o.id, o.r, false));
@@ -1758,14 +1791,14 @@
 
   async function doUpgrade() {
     const res = R.upgrade(ui.state);
-    if (!res.ok) { refuse(res.reason); return; }
+    if (!res.ok) { refuse(tr(res.reason)); return; }
     SFX.level();
     vibrate([8, 30, 8]);
     renderEnergy(1);
     renderTavernHead(true);
     const [x, y] = center($('tier'));
     stage.burst(x, y, { n: 30, colors: [[255, 255, 255], [246, 196, 83]], speed: 70, life: 0.7 });
-    popOn($('tier'), 'NIVEAU ' + res.tier, 'gold');
+    popOn($('tier'), tr('NIVEAU {n}', { n: res.tier }), 'gold');
     renderPower();
     renderFight();
     saveGame();
@@ -1811,7 +1844,7 @@
     const res = R.usePower(ui.state, targetUid);
     ui.targeting = false;
     document.querySelectorAll('#board .unit.target').forEach((el) => el.classList.remove('target'));
-    if (!res.ok) { refuse(res.reason); renderPower(); return; }
+    if (!res.ok) { refuse(tr(res.reason)); renderPower(); return; }
     SFX.level();
     renderEnergy(R.LAW[me().law].active.cost);
     renderHand();
@@ -2043,19 +2076,19 @@
       const slot = Number(el.dataset.slot);
       u = shopUnit(p.shop[slot]);
       const can = R.canBuy(ui.state, slot);
-      actions = `<button class="btn primary" data-act="buy" data-slot="${slot}" ${can.ok ? '' : 'disabled'}>ACHETER · 3 ${icon('bolt')}</button>`;
-      if (!can.ok) actions += `<p class="muted">${esc(can.reason)}</p>`;
+      actions = `<button class="btn primary" data-act="buy" data-slot="${slot}" ${can.ok ? '' : 'disabled'}>${tr('ACHETER')} · 3 ${icon('bolt')}</button>`;
+      if (!can.ok) actions += `<p class="muted">${esc(tr(can.reason))}</p>`;
     } else if (src === 'hand') {
       u = p.hand.find((v) => v.uid === el.dataset.uid);
       const full = p.board.length >= R.BOARD_MAX;
-      actions = `<button class="btn primary" data-act="play" data-uid="${u.uid}" ${full ? 'disabled' : ''}>PLACER DANS LE SYSTÈME</button>`;
-      for (const h of p.board.filter((v) => R.canMagnet(u, v))) actions += `<button class="btn" data-act="magnet" data-uid="${u.uid}" data-target="${h.uid}">ARRIMER À ${esc(R.CARD[h.id].name).toUpperCase()}</button>`;
-      if (full) actions += '<p class="muted">Votre système est plein : vendez un astre.</p>';
+      actions = `<button class="btn primary" data-act="play" data-uid="${u.uid}" ${full ? 'disabled' : ''}>${tr('PLACER DANS LE SYSTÈME')}</button>`;
+      for (const h of p.board.filter((v) => R.canMagnet(u, v))) actions += `<button class="btn" data-act="magnet" data-uid="${u.uid}" data-target="${h.uid}">${tr('ARRIMER À {name}', { name: esc(R.CARD[h.id].name).toUpperCase() })}</button>`;
+      if (full) actions += `<p class="muted">${tr('Votre système est plein : vendez un astre.')}</p>`;
     } else {
       u = p.board.find((v) => v.uid === el.dataset.uid);
       const i = p.board.indexOf(u);
       actions = `<button class="btn" data-act="left" data-uid="${u.uid}" ${i === 0 ? 'disabled' : ''}>${icon('back')}</button>
-        <button class="btn primary" data-act="sell" data-uid="${u.uid}">VENDRE · +1 ${icon('bolt')}</button>
+        <button class="btn primary" data-act="sell" data-uid="${u.uid}">${tr('VENDRE')} · +1 ${icon('bolt')}</button>
         <button class="btn" data-act="right" data-uid="${u.uid}" ${i === p.board.length - 1 ? 'disabled' : ''}><span style="display:inline-block;transform:scaleX(-1)">${icon('back')}</span></button>`;
     }
     if (!u) return;
@@ -2066,11 +2099,11 @@
 
   function unitSheet(u) {
     const c = R.CARD[u.id], f = R.FAMILIES[c.fam];
-    const att = (u.att || []).length ? `<p class="muted">Arrimés : ${u.att.map((a) => esc(R.CARD[a.id].name)).join(', ')}</p>` : '';
+    const att = (u.att || []).length ? `<p class="muted">${tr('Arrimés : {list}', { list: u.att.map((a) => esc(R.CARD[a.id].name)).join(', ') })}</p>` : '';
     return `<div class="sheet-top">
         <div class="orb sheet-orb" data-planet="${u.id}" data-golden="${u.golden ? 1 : 0}" data-shield="${u.kw.includes('bouclier') ? 1 : 0}" data-ghost="${u.kw.includes('renaissance') ? 1 : 0}"></div>
         <div>
-          <span class="fam-chip" style="--c:${f.color}">${f.name.toUpperCase()} · NIVEAU ${c.tier}${u.golden ? ' · DORÉ' : ''}</span>
+          <span class="fam-chip" style="--c:${f.color}">${f.name.toUpperCase()} · ${tr('NIVEAU {n}', { n: c.tier })}${u.golden ? ' · ' + tr('DORÉ') : ''}</span>
           <h2>${esc(c.name)}</h2>
           ${statsHtml(u.atk, u.hp, 'sheet-stats')}
         </div>
@@ -2080,7 +2113,7 @@
 
   // ─── Comprendre un astre ────────────────────────────────────
   // Termes des textes, expliqués sous l'effet.
-  const TERMS = {
+  const TERMS_FR = {
     'Début de combat': 'Se déclenche juste avant la première attaque.',
     'Début de cycle': 'Se déclenche au début de chaque phase d’achat.',
     'Fin de cycle': 'Se déclenche quand vous lancez le combat, à la fin de vos achats.',
@@ -2098,20 +2131,21 @@
     'voisins': 'Les astres juste à sa gauche et à sa droite.',
     'voisin': 'Un astre juste à sa gauche ou à sa droite.'
   };
+  const TERMS = Object.fromEntries(Object.entries(TERMS_FR).map(([k, v]) => [tr(k), tr(v)]));
   const HOOKS = ['play', 'endTurn', 'startTurn', 'buy', 'start', 'attack', 'allyAttack', 'allyDeath', 'shieldBreak', 'damaged', 'allyKill', 'reborn', 'allyReborn', 'allyPlay', 'roll', 'sold'];
   function cardMarks(id) {
     const c = R.CARD[id];
     return {
       death: typeof c.death === 'function',
-      effect: HOOKS.some((h) => typeof c[h] === 'function') || !!c.sun || /Vos effets/.test(c.text)
+      effect: HOOKS.some((h) => typeof c[h] === 'function') || !!c.sun || FX_TEXT.has(id)
     };
   }
   const KW_BY_NAME = Object.fromEntries(Object.entries(R.KEYWORDS).map(([k, v]) => [v.name, k]));
   const WORDS = [...Object.keys(TERMS), ...Object.keys(KW_BY_NAME)].sort((a, b) => b.length - a.length);
-  const WORD_RE = new RegExp('(' + WORDS.map((w) => w.replace(/[-]/g, '\\-')).join('|') + ')', 'g');
+  const WORD_RE = new RegExp('(' + WORDS.map((w) => w.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&')).join('|') + ')', 'g');
 
   function statsHtml(atk, hp, cls) {
-    return `<div class="${cls}"><span class="stat"><span class="atk">${atk}</span><small>ATTAQUE</small></span><span class="stat"><span class="hp">${hp}</span><small>PV</small></span></div>`;
+    return `<div class="${cls}"><span class="stat"><span class="atk">${atk}</span><small>${tr('ATTAQUE')}</small></span><span class="stat"><span class="hp">${hp}</span><small>${tr('PV')}</small></span></div>`;
   }
   function effectHtml(id, golden, kw) {
     const text = R.cardText(id, golden);
@@ -2125,8 +2159,8 @@
     const kws = new Set(kw);
     for (const w of found) if (KW_BY_NAME[w]) kws.add(KW_BY_NAME[w]);
     const kwHtml = defs.join('') + kwList([...kws]);
-    const power = text ? `<p class="sheet-text">${rich}</p>` : '<p class="sheet-text plain">Aucun pouvoir : un astre simple, sans effet.</p>';
-    return `<div class="power-box" style="--c:${R.FAMILIES[R.CARD[id].fam].color}"><span class="power-label">POUVOIR</span>${power}</div>${kwHtml ? `<div class="kw-list">${kwHtml}</div>` : ''}`;
+    const power = text ? `<p class="sheet-text">${rich}</p>` : `<p class="sheet-text plain">${tr('Aucun pouvoir : un astre simple, sans effet.')}</p>`;
+    return `<div class="power-box" style="--c:${R.FAMILIES[R.CARD[id].fam].color}"><span class="power-label">${tr('POUVOIR')}</span>${power}</div>${kwHtml ? `<div class="kw-list">${kwHtml}</div>` : ''}`;
   }
 
   // Fiche rapide : touchez un astre en combat, chez un rival ou en fin de partie.
@@ -2146,7 +2180,7 @@
     if (orb && orb.dataset.ghost === '1') kw.add('renaissance'); else if (orb && orb.dataset.ghost === '0') kw.delete('renaissance');
     const atk = el.querySelector('.atk') ? el.querySelector('.atk').textContent : c.atk;
     const hp = el.querySelector('.hp') ? el.querySelector('.hp').textContent : c.hp;
-    peek.innerHTML = `<span class="fam-chip" style="--c:${f.color}">${f.name.toUpperCase()} · NIVEAU ${c.tier}${golden ? ' · DORÉ' : ''}</span>
+    peek.innerHTML = `<span class="fam-chip" style="--c:${f.color}">${f.name.toUpperCase()} · ${tr('NIVEAU {n}', { n: c.tier })}${golden ? ' · ' + tr('DORÉ') : ''}</span>
       <h4>${esc(c.name)}</h4>${statsHtml(atk, hp, 'peek-stats')}${effectHtml(id, golden, [...kw])}`;
     peek.hidden = false;
     const b = el.getBoundingClientRect();
@@ -2231,15 +2265,15 @@
         const kin = c.fam === 'neutre' ? 0 : p.board.concat(p.hand).filter((u) => R.famOf(u) === c.fam).length;
         const mine = R.LAW[p.law].fam === c.fam;
         return `<button class="discover-item${mine ? ' mine' : ''}" data-act="choose" data-i="${i}" style="--c:${f.color}">
-          <span class="fam-chip">${l.fam === 'neutre' ? 'POINTS DE VIE' : f.name.toUpperCase()}</span>
+          <span class="fam-chip">${c.fam === 'neutre' ? tr('POINTS DE VIE') : f.name.toUpperCase()}</span>
           <div class="orb" data-planet="${id}"></div>
           <b>${esc(c.name)}</b>
-          <em class="kin">${mine ? 'Famille de votre loi' : kin ? `${kin} dans votre système` : '&nbsp;'}</em>
+          <em class="kin">${mine ? tr('Famille de votre loi') : kin ? tr('{n} dans votre système', { n: kin }) : '&nbsp;'}</em>
           <span class="s"><span class="atk">${c.atk}</span> · <span class="hp">${c.hp}</span></span>
           <small>${esc(R.cardText(id, false))}</small>
         </button>`;
       }).join('');
-      openSheet(`<h3>DÉCOUVERTE · NIVEAU ${R.CARD[p.discover[0]].tier}</h3><h2>Choisissez un astre</h2><div class="discover-list">${items}</div>`, { center: true, locked: true });
+      openSheet(`<h3>${tr('DÉCOUVERTE · NIVEAU {n}', { n: R.CARD[p.discover[0]].tier })}</h3><h2>${tr('Choisissez un astre')}</h2><div class="discover-list">${items}</div>`, { center: true, locked: true });
     });
   }
 
@@ -2249,11 +2283,11 @@
     const prior = copyRects(id);
     const res = R.choose(ui.state, i);
     closeSheet();
-    if (!res.ok) { refuse(res.reason); return; }
+    if (!res.ok) { refuse(tr(res.reason)); return; }
     SFX.buy();
     renderHand();
     renderBoard();
-    if (res.lost) toast('Plus de place : l’astre retourne à la réserve.');
+    if (res.lost) toast(tr('Plus de place : l’astre retourne à la réserve.'));
     else if (res.triple) await fusion(id, prior.concat([r]), res.triple);
     else {
       const el = elByUid(res.uid);
@@ -2276,57 +2310,58 @@
       const board = p.board.map(staticUnit).join('');
       const hp = Math.max(0, p.hp);
       const lost = ui.prevHp && ui.prevHp[p.id] != null && p.hp < ui.prevHp[p.id] ? ui.prevHp[p.id] - p.hp : 0;
-      const tag = p.bot && p.id === last ? '<em>DERNIER ADVERSAIRE</em>' : '';
+      const tag = p.bot && p.id === last ? `<em>${tr('DERNIER ADVERSAIRE')}</em>` : '';
       return `<button class="rival-row ${p.alive ? '' : 'dead'} ${p.bot ? '' : 'me'}" data-act="rival">
           <span class="rk">${p.alive ? i + 1 : p.rank}</span>
-          <span class="rv-who"><span class="n">${esc(p.name)}</span>${tag}<span class="l">niveau ${p.tier}${p.alive ? '' : ` · éliminé ${ordinal(p.rank)}`}</span></span>
+          <span class="rv-who"><span class="n">${esc(p.bot ? p.name : tr('VOUS'))}</span>${tag}<span class="l">${tr('niveau {n}', { n: p.tier })}${p.alive ? '' : ' · ' + tr('éliminé {rank}', { rank: ordinal(p.rank) })}</span></span>
           <span class="rv-hp">${lost ? `<small>−${lost}</small>` : ''}<b>${p.alive ? hp : '–'}</b><i class="hp-bar"><i style="width:${p.alive ? Math.min(100, hp / (p.maxHp || R.START_HP) * 100) : 0}%"></i></i></span>
         </button>
-        <div class="rival-board" hidden><p class="rv-last">${p.bot ? 'Dernier système joué' : 'Votre système'}</p><div class="row">${board || '<span class="muted">Système vide</span>'}</div></div>`;
+        <div class="rival-board" hidden><p class="rv-last">${p.bot ? tr('Dernier système joué') : tr('Votre système')}</p><div class="row">${board || `<span class="muted">${tr('Système vide')}</span>`}</div></div>`;
     }).join('');
-    openSheet(`<h3>UNIVERS EN LICE · ${R.alivePlayers(s).length}</h3><div class="rival-list">${rows}</div>
-      <p class="muted">Touchez un univers pour voir le dernier système qu’il a joué, puis un astre pour lire ce qu’il fait. Dégâts plafonnés à ${R.DAMAGE_CAP} tant que plus de trois univers sont en vie.</p>`, { top: true });
+    openSheet(`<h3>${tr('UNIVERS EN LICE · {n}', { n: R.alivePlayers(s).length })}</h3><div class="rival-list">${rows}</div>
+      <p class="muted">${tr('Touchez un univers pour voir le dernier système qu’il a joué, puis un astre pour lire ce qu’il fait. Dégâts plafonnés à {n} tant que plus de trois univers sont en vie.', { n: R.DAMAGE_CAP })}</p>`, { top: true });
   }
 
   function openFamilies() {
     const p = me();
     const items = ui.state.families.concat(['neutre']).map((f) => {
       const n = p.board.filter((u) => R.famOf(u) === f).length;
-      return `<div class="fam-item" style="--c:${famColor(f)}"><b>${R.FAMILIES[f].name.toUpperCase()}</b> <small>· ${n} dans votre système</small><p>${esc(R.FAMILIES[f].text)}</p></div>`;
+      return `<div class="fam-item" style="--c:${famColor(f)}"><b>${R.FAMILIES[f].name.toUpperCase()}</b> <small>· ${tr('{n} dans votre système', { n })}</small><p>${esc(R.FAMILIES[f].text)}</p></div>`;
     }).join('');
     const law = R.LAW[p.law];
-    openSheet(`<h3>FAMILLES DE CET UNIVERS</h3><div class="fam-list">${items}</div>
-      <h3 style="margin-top:18px">ALLIANCE</h3><div class="fam-item" style="--c:var(--gold)"><b>${(() => { const al = R.allianceOf(p.board); return al ? 'ACTIVE · ' + allianceHtml(al) : 'INACTIVE'; })()}</b><p>Réunissez deux familles d’au moins ${R.ALLIANCE.min} astres chacune : leurs astres gagnent +${R.ALLIANCE.atk}/+${R.ALLIANCE.hp} au début de chaque combat. Les mélanges deviennent aussi forts qu’une famille seule.</p></div>
-      <h3 style="margin-top:18px">VOTRE LOI</h3><div class="fam-item" style="--c:${famColor(law.fam)}"><b>${esc(law.name).toUpperCase()}</b><p>${esc(law.text)}</p></div>`);
+    openSheet(`<h3>${tr('FAMILLES DE CET UNIVERS')}</h3><div class="fam-list">${items}</div>
+      <h3 style="margin-top:18px">${tr('ALLIANCE')}</h3><div class="fam-item" style="--c:var(--gold)"><b>${(() => { const al = R.allianceOf(p.board); return al ? tr('ACTIVE') + ' · ' + allianceHtml(al) : tr('INACTIVE'); })()}</b><p>${tr('Réunissez deux familles d’au moins {n} astres chacune : leurs astres gagnent +{atk}/+{hp} au début de chaque combat. Les mélanges deviennent aussi forts qu’une famille seule.', { n: R.ALLIANCE.min, atk: R.ALLIANCE.atk, hp: R.ALLIANCE.hp })}</p></div>
+      <h3 style="margin-top:18px">${tr('VOTRE LOI')}</h3><div class="fam-item" style="--c:${famColor(law.fam)}"><b>${esc(law.name).toUpperCase()}</b><p>${esc(law.text)}</p></div>`);
   }
 
   function openMenu() {
-    openSheet(`<h3>MENU</h3><div class="menu-list-sheet">
-      <button class="btn" data-act="menu" data-v="sound">${SFX.muted ? 'ACTIVER LE SON' : 'COUPER LE SON'}</button>
-      <button class="btn" data-act="menu" data-v="help">COMMENT JOUER</button>
-      <button class="btn" data-act="menu" data-v="home">MENU PRINCIPAL (PARTIE SAUVEGARDÉE)</button>
-      <button class="btn ghost" data-act="menu" data-v="quit">ABANDONNER LA PARTIE</button>
+    openSheet(`<h3>${tr('MENU')}</h3><div class="menu-list-sheet">
+      <button class="btn" data-act="menu" data-v="sound">${SFX.muted ? tr('ACTIVER LE SON') : tr('COUPER LE SON')}</button>
+      <button class="btn" data-act="menu" data-v="help">${tr('COMMENT JOUER')}</button>
+      <button class="btn" data-act="menu" data-v="home">${tr('MENU PRINCIPAL (PARTIE SAUVEGARDÉE)')}</button>
+      <button class="btn ghost" data-act="menu" data-v="quit">${tr('ABANDONNER LA PARTIE')}</button>
     </div>`);
   }
 
   function helpHtml(fromSettings) {
-    return `<h3>COMMENT JOUER</h3><ul class="help">
-      <li>Vous affrontez <b>sept univers</b>. Chaque cycle : vous achetez, puis votre système combat seul un rival.</li>
-      <li><b>Acheter</b> coûte 3 énergies (glissez un astre vers votre main ou directement dans le système). <b>Vendre</b> rend 1 énergie (glissez un astre du système vers la Création). <b>Actualiser</b> coûte 1.</li>
-      <li><b>Geler</b> garde les astres proposés pour le cycle suivant. <b>Monter de niveau</b> débloque des astres plus puissants ; le prix baisse à chaque cycle.</li>
-      <li>Votre système compte <b>7 orbites</b>, votre main 10 astres. Les astres attaquent de gauche à droite : l’ordre compte.</li>
-      <li><b>Touchez un astre</b> pour lire ce qu’il fait, même en combat ou chez un rival. Sous chaque astre : ${icon('sword')} son <b>Attaque</b> et ${icon('heart')} ses <b>PV</b>. En haut à droite : ${icon('skull')} il a un effet d’<b>Effondrement</b> (quand il est détruit, comme laisser des Débris), ${icon('spark')} il a un autre effet.</li>
-      <li><b>Trois copies</b> d’un même astre fusionnent en un <b>astre doré</b> (stats doublées). Le placer offre une <b>découverte</b> du niveau supérieur.</li>
-      <li>Chaque partie active <b>5 familles</b> sur 12, plus les neutres. La réserve est <b>partagée</b> : si des rivaux jouent une famille, ses astres se font rares.</li>
-      <li><b>Alliance</b> : deux familles d’au moins ${R.ALLIANCE.min} astres chacune dans votre système, et leurs astres gagnent +${R.ALLIANCE.atk}/+${R.ALLIANCE.hp} au début de chaque combat. Une famille seule ou un mélange : les deux mènent à la victoire.</li>
-      <li>Le perdant subit : niveau du gagnant + niveaux de ses astres survivants. <b>Maximum ${R.DAMAGE_CAP} dégâts</b> tant que plus de trois univers sont en vie.</li>
-      <li>Seuls les <b>trois premiers</b> gagnent des poussières d’étoiles : ${R.REWARDS[1]}, ${R.REWARDS[2]} et ${R.REWARDS[3]}.</li>
-      <li>Chaque partie rapporte de l’<b>expérience</b>. Les niveaux ouvrent des améliorations au <b>Marché stellaire</b> : avec vos poussières, faites renaître votre planète, celle qui tourne derrière le menu, ou achetez des <b>fonds animés</b> (650) pour vos parties.</li>
-    </ul><div class="sheet-actions">${fromSettings ? `<button class="btn" data-act="set" data-v="tutos">${icon('back')} TUTORIELS</button>` : ''}<button class="btn primary" data-act="close">COMPRIS</button></div>`;
+    const ic = { sword: icon('sword'), heart: icon('heart'), skull: icon('skull'), spark: icon('spark') };
+    return `<h3>${tr('COMMENT JOUER')}</h3><ul class="help">
+      <li>${tr('Vous affrontez <b>sept univers</b>. Chaque cycle : vous achetez, puis votre système combat seul un rival.')}</li>
+      <li>${tr('<b>Acheter</b> coûte 3 énergies (glissez un astre vers votre main ou directement dans le système). <b>Vendre</b> rend 1 énergie (glissez un astre du système vers la Création). <b>Actualiser</b> coûte 1.')}</li>
+      <li>${tr('<b>Geler</b> garde les astres proposés pour le cycle suivant. <b>Monter de niveau</b> débloque des astres plus puissants ; le prix baisse à chaque cycle.')}</li>
+      <li>${tr('Votre système compte <b>7 orbites</b>, votre main 10 astres. Les astres attaquent de gauche à droite : l’ordre compte.')}</li>
+      <li>${tr('<b>Touchez un astre</b> pour lire ce qu’il fait, même en combat ou chez un rival. Sous chaque astre : {sword} son <b>Attaque</b> et {heart} ses <b>PV</b>. En haut à droite : {skull} il a un effet d’<b>Effondrement</b> (quand il est détruit, comme laisser des Débris), {spark} il a un autre effet.', ic)}</li>
+      <li>${tr('<b>Trois copies</b> d’un même astre fusionnent en un <b>astre doré</b> (stats doublées). Le placer offre une <b>découverte</b> du niveau supérieur.')}</li>
+      <li>${tr('Chaque partie active <b>5 familles</b> sur 12, plus les neutres. La réserve est <b>partagée</b> : si des rivaux jouent une famille, ses astres se font rares.')}</li>
+      <li>${tr('<b>Alliance</b> : deux familles d’au moins {n} astres chacune dans votre système, et leurs astres gagnent +{atk}/+{hp} au début de chaque combat. Une famille seule ou un mélange : les deux mènent à la victoire.', { n: R.ALLIANCE.min, atk: R.ALLIANCE.atk, hp: R.ALLIANCE.hp })}</li>
+      <li>${tr('Le perdant subit : niveau du gagnant + niveaux de ses astres survivants. <b>Maximum {n} dégâts</b> tant que plus de trois univers sont en vie.', { n: R.DAMAGE_CAP })}</li>
+      <li>${tr('Seuls les <b>trois premiers</b> gagnent des poussières d’étoiles : {a}, {b} et {c}.', { a: R.REWARDS[1], b: R.REWARDS[2], c: R.REWARDS[3] })}</li>
+      <li>${tr('Chaque partie rapporte de l’<b>expérience</b>. Les niveaux ouvrent des améliorations au <b>Marché stellaire</b> : avec vos poussières, faites renaître votre planète, celle qui tourne derrière le menu, ou achetez des <b>fonds animés</b> ({n}) pour vos parties.', { n: COS_PRICE })}</li>
+    </ul><div class="sheet-actions">${fromSettings ? `<button class="btn" data-act="set" data-v="tutos">${icon('back')} ${tr('TUTORIELS')}</button>` : ''}<button class="btn primary" data-act="close">${tr('COMPRIS')}</button></div>`;
   }
 
   async function menuAction(v) {
-    if (v === 'sound') { SFX.setMuted(!SFX.muted); closeSheet(); toast(SFX.muted ? 'Son coupé' : 'Son activé'); }
+    if (v === 'sound') { SFX.setMuted(!SFX.muted); closeSheet(); toast(SFX.muted ? tr('Son coupé') : tr('Son activé')); }
     else if (v === 'help') openSheet(helpHtml());
     else if (v === 'home') { closeSheet(); saveGame(); await backToMenu(); }
     else if (v === 'quit') {
@@ -2355,7 +2390,7 @@
     SFX.tap();
     ui.prevHp = Object.fromEntries(ui.state.players.map((x) => [x.id, x.hp]));
     const res = R.endTurn(ui.state);
-    if (!res.ok) { refuse(res.reason); ui.busy = false; return; }
+    if (!res.ok) { refuse(tr(res.reason)); ui.busy = false; return; }
     tuto('combat');
     if (res.battle && res.battle.winner === 0) ui.state.fightsWon = (ui.state.fightsWon || 0) + 1;
     try {
@@ -2391,7 +2426,7 @@
     ui.skip = false;
     const opp = b.opponent;
     ui.opp = opp;
-    $('oppName').textContent = opp.name + (opp.ghost ? ' · FANTÔME' : '');
+    $('oppName').textContent = opp.name + (opp.ghost ? ' · ' + tr('FANTÔME') : '');
     $('oppHp').innerHTML = opp.ghost ? '' : icon('heart') + ' ' + Math.max(0, b.before.opp);
     document.body.classList.add('in-combat');
     SFX.ambience('battle');
@@ -2424,13 +2459,13 @@
     const won = b.winner === 0, lost = b.winner === 1;
     if (won) {
       SFX.win();
-      banner('VICTOIRE', b.damage ? '' : 'Le rival est un fantôme', 'win');
+      banner(tr('VICTOIRE'), b.damage ? '' : tr('Le rival est un fantôme'), 'win');
       for (const el of $('board').children) stage.flash(el.querySelector('.orb'), 0.4);
     } else if (lost) {
       SFX.lose();
-      banner('DÉFAITE', '', 'lose');
+      banner(tr('DÉFAITE'), '', 'lose');
     } else {
-      banner('ÉGALITÉ', 'Aucun dégât');
+      banner(tr('ÉGALITÉ'), tr('Aucun dégât'));
     }
     await sleep(700);
     if ((won && !opp.ghost && b.damage) || (lost && b.damage)) await damageScene(b, won, opp);
@@ -2452,7 +2487,7 @@
 
     const box = document.createElement('div');
     box.className = 'dmg-count ' + (won ? 'good' : 'bad low');
-    box.innerHTML = `<b>0</b><small>${won ? 'DÉGÂTS INFLIGÉS À ' + esc(opp.name).toUpperCase() : 'DÉGÂTS SUBIS'}</small>`;
+    box.innerHTML = `<b>0</b><small>${won ? tr('DÉGÂTS INFLIGÉS À {name}', { name: esc(opp.name).toUpperCase() }) : tr('DÉGÂTS SUBIS')}</small>`;
     $('game').appendChild(box);
     const num = box.querySelector('b');
     const [tx, ty] = center(target);
@@ -2482,7 +2517,7 @@
       } else {
         // Le niveau de création du vainqueur frappe en dernier, depuis le compteur.
         from = center(box);
-        popOn(box, `+${s.n} NIVEAU DE CRÉATION`, 'info');
+        popOn(box, tr('+{n} NIVEAU DE CRÉATION', { n: s.n }), 'info');
       }
       SFX.whoosh(0);
       await stage.beam(from, [tx, ty], { ms: dur(440), color: won ? [255, 214, 120] : [255, 110, 110], arc: 18 + i * 4, tail: 9, head: 3 });
@@ -2518,8 +2553,8 @@
       stage.burst(hx, hy, { n: 40, colors: [[255, 170, 60], [255, 230, 140], [255, 255, 255]], speed: 110, life: 0.9 });
       SFX.buff(0, 4);
       $('hudHp').innerHTML = icon('heart') + `<b>${b.after.me}</b>`;
-      popOn($('hudHp'), `+${b.after.me} PV`, 'buff');
-      toast('Loi du phénix : votre univers renaît de ses cendres.', 3200);
+      popOn($('hudHp'), tr('+{n} PV', { n: b.after.me }), 'buff');
+      toast(tr('{law} : votre univers renaît de ses cendres.', { law: R.LAW.phenix.name }), 3200);
       await sleep(dur(900));
     }
     box.classList.add('out');
@@ -2559,13 +2594,13 @@
   async function combatEvent(e, quick) {
     switch (e.t) {
       case 'first': {
-        banner(e.side === 0 ? 'VOUS ATTAQUEZ' : esc(ui.opp.name), e.side === 0 ? 'en premier' : 'attaque en premier');
+        banner(e.side === 0 ? tr('VOUS ATTAQUEZ') : esc(ui.opp.name), e.side === 0 ? tr('en premier') : tr('attaque en premier'));
         await sleep(900);
         break;
       }
       case 'alliance': {
         const row = combatRowEl(e.side);
-        popOn(row, 'ALLIANCE · ' + allianceHtml(e.fams), 'gold');
+        popOn(row, tr('ALLIANCE') + ' · ' + allianceHtml(e.fams), 'gold');
         SFX.golden();
         for (const el of row.querySelectorAll('.unit')) {
           if (!e.fams.includes(R.CARD[el.dataset.id].fam)) continue;
@@ -2623,7 +2658,7 @@
         const b = orb.getBoundingClientRect();
         stage.ring(x, y, b.width * 0.5, { n: 30, colors: [[255, 255, 255], [190, 235, 255], [255, 190, 240]], speed: 70, life: 0.5 });
         SFX.shield(panOf(el));
-        popOn(el, 'BOUCLIER', 'info');
+        popOn(el, kwName('bouclier'), 'info');
         if (!quick) await sleep(240);
         break;
       }
@@ -2633,7 +2668,7 @@
           const [x, y] = center(el.querySelector('.orb'));
           stage.burst(x, y, { n: 18, colors: [[140, 255, 120], [60, 200, 90]], speed: 50, life: 0.6 });
           SFX.venom(panOf(el));
-          popOn(el, 'VENIN', 'good');
+          popOn(el, kwName('venin'), 'good');
         }
         break;
       }
@@ -2667,7 +2702,7 @@
         if (el) {
           await el.animate([{ transform: 'rotateX(0)' }, { transform: 'rotateX(90deg)' }, { transform: 'rotateX(0)' }], { duration: dur(380) }).finished.catch(() => {});
           setStats(el, e.atk, e.hp, true);
-          popOn(el, 'INVERSÉ', 'info');
+          popOn(el, tr('INVERSÉ'), 'info');
         }
         await sleep(120);
         break;
@@ -2724,7 +2759,7 @@
           SFX.summon(panOf(el));
         }
         stage.burst(x, y, { n: 16, colors: e.reborn ? [[220, 190, 255], [255, 255, 255]] : [[255, 255, 255]], speed: 40, life: 0.5 });
-        if (e.reborn) popOn(el, 'RENAISSANCE', 'info');
+        if (e.reborn) popOn(el, kwName('renaissance'), 'info');
         await sleep(300);
         break;
       }
@@ -2766,7 +2801,7 @@
     renderRivals();
     for (const id of res.fallen || []) {
       const p = ui.state.players.find((x) => x.id === id);
-      if (p && p.bot) toast(`${p.name} est éliminé · ${p.rank}e`, 2200);
+      if (p && p.bot) toast(tr('{name} est éliminé · {rank}', { name: p.name, rank: ordinal(p.rank, true) }), 2200);
     }
     if (res.over) {
       saveGame();
@@ -2775,7 +2810,7 @@
     }
     ui.stamp++;
     renderGame(true);
-    banner('CYCLE ' + ui.state.round, `${me().gold} énergies`);
+    banner(tr('CYCLE {n}', { n: ui.state.round }), tr('{n} énergies', { n: me().gold }));
     await sleep(400);
     await playShopEvents(res.startEvents);
     renderEnergy();
@@ -2822,16 +2857,16 @@
     $('xpLvl').textContent = lv0.lvl;
     $('xpFill').style.width = (lv0.rest / lv0.need * 100) + '%';
     $('xpGain').textContent = '+0 XP';
-    $('xpDetail').textContent = quit ? 'Partie abandonnée : pas d’expérience.' : `Classement +${gain.rank} · ${gain.cycles / 5} cycles +${gain.cycles}`;
+    $('xpDetail').textContent = quit ? tr('Partie abandonnée : pas d’expérience.') : tr('Classement +{r} · {c} cycles +{x}', { r: gain.rank, c: gain.cycles / 5, x: gain.cycles });
     try { localStorage.removeItem(SAVE_KEY); } catch (err) { /* stockage indisponible */ }
     $('endRank').innerHTML = ordinal(rank);
     $('endRank').classList.toggle('podium', rank <= 3);
-    $('endText').textContent = rank === 1 ? 'Votre système domine l’univers.'
-      : rank <= 3 ? 'Sur le podium : les poussières d’étoiles sont à vous.'
-        : 'Votre univers s’est éteint. Seuls les trois premiers gagnent des poussières.';
+    $('endText').textContent = rank === 1 ? tr('Votre système domine l’univers.')
+      : rank <= 3 ? tr('Sur le podium : les poussières d’étoiles sont à vous.')
+        : tr('Votre univers s’est éteint. Seuls les trois premiers gagnent des poussières.');
     $('endBoard').innerHTML = me().board.map(staticUnit).join('');
     $('endDust').textContent = '+0';
-    $('endTotal').innerHTML = 'Total ' + icon('dust') + ' ' + (dust() - (s.reward || 0) - gift);
+    $('endTotal').innerHTML = tr('Total') + ' ' + icon('dust') + ' ' + (dust() - (s.reward || 0) - gift);
     await show('end');
     if (rank <= 3) SFX.win(); else SFX.lose();
     const reward = s.reward || 0;
@@ -2845,7 +2880,7 @@
           if (Math.floor(v / 10) !== Math.floor((tick.v || 0) / 10)) SFX.coin();
           tick.v = v;
           $('endDust').textContent = '+' + v;
-          $('endTotal').innerHTML = 'Total ' + icon('dust') + ' ' + (base + v);
+          $('endTotal').innerHTML = tr('Total') + ' ' + icon('dust') + ' ' + (base + v);
           if (Math.random() < 0.5) {
             const [x, y] = center($('endDust'));
             stage.burst(x, y, { n: 3, colors: [[246, 196, 83], [255, 255, 255]], speed: 80, up: 40, life: 0.8 });
@@ -2912,7 +2947,7 @@
       cur = target;
       if (cur >= next) {
         shown += LEVEL_GIFT;
-        $('endTotal').innerHTML = 'Total ' + icon('dust') + ' ' + shown;
+        $('endTotal').innerHTML = tr('Total') + ' ' + icon('dust') + ' ' + shown;
         await levelUpScene(lv.lvl + 1);
         $('xpLvl').textContent = lv.lvl + 1;
         $('xpFill').style.width = '0%';
@@ -2927,12 +2962,12 @@
   async function levelUpScene(lvl) {
     const ov = $('lvlup'), planet = $('lvlPlanet');
     stage.register('lvl-planet', { type: LVL_TYPES[(lvl - 2) % LVL_TYPES.length], seed: 9100 + lvl, full: true, moons: 0, ring: false, debris: false });
-    pixelWord($('lvlWord'), 'NIVEAU', pixelSize(4));
+    pixelWord($('lvlWord'), tr('NIVEAU'), pixelSize(4));
     pixelWord($('lvlNum'), String(lvl), pixelSize(11));
     $('lvlNum').classList.add('gold');
     for (const r of ov.querySelectorAll('.pixel-word rect')) r.style.opacity = '0';
     const unlock = W.UPGRADES.find((u) => u.lvl === lvl);
-    $('lvlGift').innerHTML = `${icon('dust')} +${LEVEL_GIFT} poussières d’étoiles` + (unlock ? `<br><span>Nouvelle amélioration au Marché : ${esc(unlock.name)}</span>` : '');
+    $('lvlGift').innerHTML = `${icon('dust')} ${tr('+{n} poussières d’étoiles', { n: LEVEL_GIFT })}` + (unlock ? `<br><span>${tr('Nouvelle amélioration au Marché : {name}', { name: esc(unlock.name) })}</span>` : '');
     $('lvlGift').classList.remove('show');
     $('lvlHint').classList.remove('show');
     ov.classList.remove('charging', 'boom');
@@ -3041,15 +3076,15 @@
     SFX.tap();
     const s = loadGame();
     if (!s) { newGameFlow(); return; }
-    openSheet(`<h3>JOUER SOLO</h3><h2>Une partie vous attend</h2>
-      <p class="muted">Cycle ${s.round} · ${Math.max(0, s.players[0].hp)} PV · ${R.alivePlayers(s).length} univers en lice</p>
-      <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="resume">REPRENDRE</button><button class="btn" data-act="set" data-v="new">NOUVELLE PARTIE</button></div>`);
+    openSheet(`<h3>${tr('JOUER SOLO')}</h3><h2>${tr('Une partie vous attend')}</h2>
+      <p class="muted">${tr('Cycle {c} · {hp} PV · {n} univers en lice', { c: s.round, hp: Math.max(0, s.players[0].hp), n: R.alivePlayers(s).length })}</p>
+      <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="resume">${tr('REPRENDRE')}</button><button class="btn" data-act="set" data-v="new">${tr('NOUVELLE PARTIE')}</button></div>`);
   });
   $('multiBtn').addEventListener('click', () => {
     SFX.tap();
-    openSheet(`<h3>MULTIJOUEUR</h3><h2>Bientôt</h2>
-      <p>Les parties contre d’autres créateurs arriveront dans une prochaine version. En attendant, sept univers vous attendent en solo.</p>
-      <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="new">JOUER SOLO</button><button class="btn" data-act="close">FERMER</button></div>`);
+    openSheet(`<h3>${tr('MULTIJOUEUR')}</h3><h2>${tr('Bientôt')}</h2>
+      <p>${tr('Les parties contre d’autres créateurs arriveront dans une prochaine version. En attendant, sept univers vous attendent en solo.')}</p>
+      <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="new">${tr('JOUER SOLO')}</button><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
   });
   $('marketBtn').addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderMarket(); marketTab('planete'); await show('market'); });
   $('marketBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
@@ -3069,12 +3104,12 @@
     const p = me(), law = R.LAW[p.law];
     if (!law.active) { openFamilies(); return; }
     const can = R.canUsePower(ui.state);
-    if (!can.ok) { refuse(can.reason); return; }
+    if (!can.ok) { refuse(tr(can.reason)); return; }
     if (law.active.target) {
-      if (!p.board.length) { refuse('Placez d’abord un astre.'); return; }
+      if (!p.board.length) { refuse(tr('Placez d’abord un astre.')); return; }
       ui.targeting = !ui.targeting;
       document.querySelectorAll('#board .unit').forEach((el) => el.classList.toggle('target', ui.targeting));
-      if (ui.targeting) toast('Touchez un astre de votre système.');
+      if (ui.targeting) toast(tr('Touchez un astre de votre système.'));
       renderPower();
     } else {
       guard(() => doPower(null))();

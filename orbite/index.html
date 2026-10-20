@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ORBITE">
-<meta name="description" content="Composez le système solaire le plus puissant : achetez des planètes, formez des familles, affrontez sept univers rivaux.">
+<meta name="description" data-t-attr="content" content="Composez le système solaire le plus puissant : achetez des planètes, formez des familles, affrontez sept univers rivaux.">
 <title>ORBITE</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -33,58 +33,58 @@
         <div class="flare" id="flare"></div>
       </div>
       <div class="pixel-word" id="titleWord" aria-label="ORBITE"></div>
-      <p class="tap-hint" id="tapHint">TOUCHEZ POUR COMMENCER</p>
+      <p class="tap-hint" id="tapHint" data-t>TOUCHEZ POUR COMMENCER</p>
       <p class="title-version" id="titleVersion"></p>
     </section>
 
     <!-- RÉVEIL (première fois) -->
-    <section class="screen intro" id="wake" aria-label="Réveil">
+    <section class="screen intro" id="wake" aria-label="Réveil" data-t-attr="aria-label">
       <p class="subtitle bottom" id="wakeLine"></p>
     </section>
 
     <!-- MENU -->
-    <section class="screen" id="menu" aria-label="Menu">
+    <section class="screen" id="menu" aria-label="Menu" data-t-attr="aria-label">
       <div class="orb menu-planet" id="menuPlanet" data-planet="horizon" data-fit="body" data-speed="0.1" data-glow="0.16"></div>
       <svg class="menu-ground" id="menuGround" aria-hidden="true"></svg>
       <div class="menu-top">
         <div class="pixel-word" id="menuWord" aria-label="ORBITE"></div>
         <span class="dust" id="menuDust"></span>
       </div>
-      <button class="profile-btn" id="profileBtn" aria-label="Profil">
+      <button class="profile-btn" id="profileBtn" aria-label="Profil" data-t-attr="aria-label">
         <span class="pf-txt"><b id="pfName">Créateur</b><small id="pfLvl"></small></span>
         <span class="orb pf-avatar" data-planet="world-mini"></span>
       </button>
       <p class="subtitle center" id="menuLine"></p>
-      <nav class="menu-list" id="menuList" aria-label="Menu principal">
-        <button class="menu-item" id="soloBtn" aria-expanded="false">JOUER SOLO</button>
+      <nav class="menu-list" id="menuList" aria-label="Menu principal" data-t-attr="aria-label">
+        <button class="menu-item" id="soloBtn" aria-expanded="false" data-t>JOUER SOLO</button>
         <div class="menu-sub" id="soloSub">
-          <button class="menu-item sub" id="campBtn">CAMPAGNE <small>DÉMO · ACTE I</small></button>
-          <button class="menu-item sub" id="quickBtn">AFFRONTEMENT <small>CONTRE 7 UNIVERS</small></button>
+          <button class="menu-item sub" id="campBtn" data-t>CAMPAGNE <small>DÉMO · ACTE I</small></button>
+          <button class="menu-item sub" id="quickBtn" data-t>AFFRONTEMENT <small>CONTRE 7 UNIVERS</small></button>
         </div>
-        <button class="menu-item soon" id="multiBtn">MULTIJOUEUR <small>BIENTÔT</small></button>
-        <button class="menu-item" id="marketBtn">MARCHÉ STELLAIRE</button>
-        <button class="menu-item" id="settingsBtn">PARAMÈTRES</button>
+        <button class="menu-item soon" id="multiBtn" data-t>MULTIJOUEUR <small>BIENTÔT</small></button>
+        <button class="menu-item" id="marketBtn" data-t>MARCHÉ STELLAIRE</button>
+        <button class="menu-item" id="settingsBtn" data-t>PARAMÈTRES</button>
       </nav>
       <p class="menu-foot" id="menuFoot">STUDIO EDDA</p>
     </section>
 
     <!-- MARCHÉ STELLAIRE -->
-    <section class="screen" id="market" aria-label="Marché stellaire">
+    <section class="screen" id="market" aria-label="Marché stellaire" data-t-attr="aria-label">
       <header class="screen-head">
-        <button class="icon-btn" id="marketBack" aria-label="Retour"></button>
-        <h2>Marché stellaire</h2>
+        <button class="icon-btn" id="marketBack" aria-label="Retour" data-t-attr="aria-label"></button>
+        <h2 data-t>Marché stellaire</h2>
         <span class="dust" id="marketDust"></span>
       </header>
       <nav class="mk-tabs" id="mkTabs" role="tablist">
-        <button class="on" data-tab="planete" role="tab">MA PLANÈTE</button>
-        <button data-tab="creation" role="tab">CRÉATION</button>
-        <button data-tab="cosmetiques" role="tab">COSMÉTIQUES</button>
+        <button class="on" data-tab="planete" role="tab" data-t>MA PLANÈTE</button>
+        <button data-tab="creation" role="tab" data-t>CRÉATION</button>
+        <button data-tab="cosmetiques" role="tab" data-t>COSMÉTIQUES</button>
       </nav>
       <div class="mk-scroll mk-pane" data-pane="planete" data-clipbox>
         <div class="mk-hero">
           <div class="orb mk-planet" id="mkPlanet" data-planet="world-big" data-fit="body"></div>
           <div class="mk-state">
-            <span class="mk-kicker">VOTRE PLANÈTE</span>
+            <span class="mk-kicker" data-t>VOTRE PLANÈTE</span>
             <b id="mkStage"></b>
             <div class="xp-bar"><i id="mkProg"></i></div>
             <small id="mkCount"></small>
@@ -97,23 +97,23 @@
         <div class="forge" id="forge"></div>
         <a class="mk-atelier" href="atelier.html">
           <span class="orb mk-atelier-orb" data-planet="atelier-apercu"></span>
-          <span class="mk-kicker">CRÉATION</span>
-          <b>Atelier des planètes</b>
-          <p>Générez des planètes en pixel art, une graine à la fois, et exportez-les en image ou en GIF animé.</p>
-          <span class="btn primary">OUVRIR L’ATELIER</span>
+          <span class="mk-kicker" data-t>CRÉATION</span>
+          <b data-t>Atelier des planètes</b>
+          <p data-t>Générez des planètes en pixel art, une graine à la fois, et exportez-les en image ou en GIF animé.</p>
+          <span class="btn primary" data-t>OUVRIR L’ATELIER</span>
         </a>
       </div>
       <div class="mk-scroll mk-pane" data-pane="cosmetiques" hidden>
-        <p class="mk-intro">Des fonds animés qui remplacent le noir pendant vos parties. Touchez-en un pour l’essayer derrière cet écran.</p>
+        <p class="mk-intro" data-t>Des fonds animés qui remplacent le noir pendant vos parties. Touchez-en un pour l’essayer derrière cet écran.</p>
         <div class="cos-list" id="cosList"></div>
       </div>
     </section>
 
     <!-- MON SYSTÈME : l'étoile et les mondes forgés en orbite -->
-    <section class="screen" id="system" aria-label="Mon système">
+    <section class="screen" id="system" aria-label="Mon système" data-t-attr="aria-label">
       <header class="screen-head">
-        <button class="icon-btn" id="sysBack" aria-label="Retour"></button>
-        <h2>Mon système <small id="sysSub"></small></h2>
+        <button class="icon-btn" id="sysBack" aria-label="Retour" data-t-attr="aria-label"></button>
+        <h2><span data-t>Mon système</span> <small id="sysSub"></small></h2>
         <span class="dust" id="sysDust"></span>
       </header>
       <div class="sys-view" id="sysView"><svg class="sys-orbits" id="sysOrbits" aria-hidden="true"></svg><div class="sys-layer" id="sysLayer"></div></div>
@@ -121,42 +121,42 @@
     </section>
 
     <!-- PROFIL -->
-    <section class="screen" id="profile" aria-label="Profil">
+    <section class="screen" id="profile" aria-label="Profil" data-t-attr="aria-label">
       <header class="screen-head">
-        <button class="icon-btn" id="profileBack" aria-label="Retour"></button>
-        <h2>Profil</h2>
+        <button class="icon-btn" id="profileBack" aria-label="Retour" data-t-attr="aria-label"></button>
+        <h2 data-t>Profil</h2>
       </header>
       <div class="pf-scroll" id="profileBody" data-clipbox></div>
     </section>
 
     <!-- CHOIX DE LA LOI -->
-    <section class="screen" id="laws" aria-label="Choix de la loi">
+    <section class="screen" id="laws" aria-label="Choix de la loi" data-t-attr="aria-label">
       <header class="screen-head">
-        <button class="icon-btn" id="lawsBack" aria-label="Retour"></button>
-        <h2>Votre loi</h2>
+        <button class="icon-btn" id="lawsBack" aria-label="Retour" data-t-attr="aria-label"></button>
+        <h2 data-t>Votre loi</h2>
       </header>
-      <p class="hint">Elle régit votre univers et vous offre votre premier astre.</p>
+      <p class="hint" data-t>Elle régit votre univers et vous offre votre premier astre.</p>
       <div class="law-list" id="lawList"></div>
-      <button class="btn primary wide" id="lawGo" disabled>CRÉER MON UNIVERS</button>
+      <button class="btn primary wide" id="lawGo" disabled data-t>CRÉER MON UNIVERS</button>
     </section>
 
     <!-- PARTIE -->
-    <section class="screen" id="game" aria-label="Partie">
+    <section class="screen" id="game" aria-label="Partie" data-t-attr="aria-label">
       <header class="hud">
         <div class="hud-hp" id="hudHp"></div>
-        <button class="hud-fams" id="famsBtn" aria-label="Familles de la partie"></button>
+        <button class="hud-fams" id="famsBtn" aria-label="Familles de la partie" data-t-attr="aria-label"></button>
         <div class="hud-round" id="hudRound"></div>
-        <button class="icon-btn" id="menuBtn" aria-label="Menu"></button>
+        <button class="icon-btn" id="menuBtn" aria-label="Menu" data-t-attr="aria-label"></button>
       </header>
-      <button class="rivals" id="rivals" aria-label="Univers rivaux"></button>
+      <button class="rivals" id="rivals" aria-label="Univers rivaux" data-t-attr="aria-label"></button>
 
       <section class="zone tavern" id="tavern">
         <div class="tavern-head">
           <div class="tier" id="tier"></div>
           <div class="tavern-actions">
-            <button class="chip" id="upBtn" aria-label="Monter de niveau"></button>
-            <button class="chip" id="rollBtn" aria-label="Actualiser"></button>
-            <button class="chip" id="freezeBtn" aria-label="Geler"></button>
+            <button class="chip" id="upBtn" aria-label="Monter de niveau" data-t-attr="aria-label"></button>
+            <button class="chip" id="rollBtn" aria-label="Actualiser" data-t-attr="aria-label"></button>
+            <button class="chip" id="freezeBtn" aria-label="Geler" data-t-attr="aria-label"></button>
           </div>
         </div>
         <div class="row shop" id="shop"></div>
@@ -170,7 +170,7 @@
       <div class="energy" id="energy"></div>
 
       <section class="zone system" id="systemZone">
-        <div class="zone-label">VOTRE SYSTÈME <button class="alliance-tag" id="allianceTag" hidden></button></div>
+        <div class="zone-label"><span data-t>VOTRE SYSTÈME</span> <button class="alliance-tag" id="allianceTag" hidden></button></div>
         <div class="row board" id="board"></div>
       </section>
 
@@ -180,64 +180,64 @@
 
       <footer class="game-foot">
         <button class="power" id="powerBtn"></button>
-        <button class="btn primary fight" id="fightBtn">COMBATTRE</button>
+        <button class="btn primary fight" id="fightBtn" data-t>COMBATTRE</button>
         <div class="battle-ctl" id="battleCtl">
-          <button class="chip" id="skipBtn">PASSER</button>
+          <button class="chip" id="skipBtn" data-t>PASSER</button>
         </div>
       </footer>
       <div class="banner" id="banner" aria-live="polite"></div>
     </section>
 
     <!-- FIN -->
-    <section class="screen" id="end" aria-label="Fin de partie">
-      <p class="end-kicker">FIN DE PARTIE</p>
+    <section class="screen" id="end" aria-label="Fin de partie" data-t-attr="aria-label">
+      <p class="end-kicker" data-t>FIN DE PARTIE</p>
       <h2 class="end-rank" id="endRank"></h2>
       <p class="end-text" id="endText"></p>
       <div class="row end-board" id="endBoard"></div>
       <div class="end-dust">
-        <span>POUSSIÈRES D’ÉTOILES</span>
+        <span data-t>POUSSIÈRES D’ÉTOILES</span>
         <b id="endDust">+0</b>
         <small id="endTotal"></small>
       </div>
       <div class="end-xp">
-        <div class="xp-head"><span>NIVEAU <b id="xpLvl">1</b></span><span id="xpGain">+0 XP</span></div>
+        <div class="xp-head"><span><span data-t>NIVEAU</span> <b id="xpLvl">1</b></span><span id="xpGain">+0 XP</span></div>
         <div class="xp-bar"><i id="xpFill"></i></div>
         <small id="xpDetail"></small>
       </div>
       <p class="end-ranked" id="endRanked"></p>
-      <button class="btn primary" id="againBtn">REJOUER</button>
-      <button class="link" id="endHome">Accueil</button>
+      <button class="btn primary" id="againBtn" data-t>REJOUER</button>
+      <button class="link" id="endHome" data-t>Accueil</button>
     </section>
 
     <!-- CAMPAGNE : récit -->
-    <section class="screen intro" id="cStory" aria-label="Campagne">
+    <section class="screen intro" id="cStory" aria-label="Campagne" data-t-attr="aria-label">
       <div class="orb cs-orb" id="csOrb" data-fit="body"></div>
       <div class="cs-head"><div class="pixel-word" id="csTitle"></div><p class="cs-sub" id="csSub"></p></div>
       <p class="subtitle cs-line" id="csLine"></p>
-      <button class="link cs-skip" id="csSkip">PASSER</button>
+      <button class="link cs-skip" id="csSkip" data-t>PASSER</button>
     </section>
 
     <!-- CAMPAGNE : dialogue entre Créateurs (le nôtre, toujours à gauche, reste une silhouette) -->
-    <section class="screen intro" id="cTalk" aria-label="Dialogue">
+    <section class="screen intro" id="cTalk" aria-label="Dialogue" data-t-attr="aria-label">
       <div class="ct-figure ct-left" id="ctLeft" aria-hidden="true"></div>
       <div class="ct-figure ct-right" id="ctRight" aria-hidden="true"></div>
       <div class="ct-box" id="ctBox"><b class="ct-name" id="ctName"></b><p class="ct-text" id="ctText"></p><span class="ct-next">▾</span></div>
-      <button class="link cs-skip" id="ctSkip">PASSER</button>
+      <button class="link cs-skip" id="ctSkip" data-t>PASSER</button>
     </section>
 
     <!-- CAMPAGNE : carte des chemins -->
-    <section class="screen" id="cMap" aria-label="Carte de la campagne">
+    <section class="screen" id="cMap" aria-label="Carte de la campagne" data-t-attr="aria-label">
       <header class="screen-head">
-        <button class="icon-btn" id="cmBack" aria-label="Retour au menu"></button>
-        <h2>Acte I <small>La Nébuleuse natale</small></h2>
+        <button class="icon-btn" id="cmBack" aria-label="Retour au menu" data-t-attr="aria-label"></button>
+        <h2 data-t>Acte I <small>La Nébuleuse natale</small></h2>
         <span class="cm-hp" id="cmHp"></span>
       </header>
       <div class="cm-bar"><button class="chip cm-deck" id="cmDeck"></button><div class="cm-relics" id="cmRelics"></div></div>
-      <div class="cm-view" id="cmView"><svg class="cm-lines" id="cmLines" aria-hidden="true"></svg><div class="cm-layer" id="cmMap"></div><p class="cm-hint" id="cmHint">Glissez vers le haut pour regarder plus loin</p></div>
+      <div class="cm-view" id="cmView"><svg class="cm-lines" id="cmLines" aria-hidden="true"></svg><div class="cm-layer" id="cmMap"></div><p class="cm-hint" id="cmHint" data-t>Glissez vers le haut pour regarder plus loin</p></div>
     </section>
 
     <!-- CAMPAGNE : combat -->
-    <section class="screen" id="cFight" aria-label="Combat de campagne">
+    <section class="screen" id="cFight" aria-label="Combat de campagne" data-t-attr="aria-label">
       <header class="cf-top"><span class="cf-floor" id="cfFloor"></span><div class="cm-relics" id="cfRelics"></div></header>
       <div class="cf-foes" id="cfFoes"></div>
       <p class="cf-hint" id="cfHint"></p>
@@ -247,24 +247,24 @@
       </div>
       <div class="cf-hand" id="cfHand"></div>
       <footer class="cf-bar">
-        <button class="cf-pile" id="cfDraw" aria-label="Pioche"></button>
+        <button class="cf-pile" id="cfDraw" aria-label="Pioche" data-t-attr="aria-label"></button>
         <div class="cf-energy" id="cfEnergy"></div>
-        <button class="btn primary cf-end" id="cfEnd">FIN DU TOUR</button>
-        <button class="cf-pile" id="cfDisc" aria-label="Défausse"></button>
+        <button class="btn primary cf-end" id="cfEnd" data-t>FIN DU TOUR</button>
+        <button class="cf-pile" id="cfDisc" aria-label="Défausse" data-t-attr="aria-label"></button>
       </footer>
       <div class="banner" id="cfBanner"></div>
     </section>
 
     <!-- CAMPAGNE : fin d'expédition -->
-    <section class="screen" id="cEnd" aria-label="Fin de l’expédition">
+    <section class="screen" id="cEnd" aria-label="Fin de l’expédition" data-t-attr="aria-label">
       <div class="orb ce-orb" id="ceOrb" data-planet="camp-world" data-fit="body"></div>
       <p class="end-kicker" id="ceKicker"></p>
       <h2 class="ce-title" id="ceTitle"></h2>
       <p class="end-text" id="ceText"></p>
       <div class="ce-stats" id="ceStats"></div>
       <div class="ce-gain" id="ceGain"></div>
-      <button class="btn primary" id="ceAgain">NOUVELLE EXPÉDITION</button>
-      <button class="link" id="ceHome">Menu</button>
+      <button class="btn primary" id="ceAgain" data-t>NOUVELLE EXPÉDITION</button>
+      <button class="link" id="ceHome" data-t>Menu</button>
     </section>
   </main>
 
@@ -276,15 +276,20 @@
       <div class="lvl-title"><div class="pixel-word" id="lvlWord"></div><div class="pixel-word" id="lvlNum"></div></div>
     </div>
     <p class="lvl-gift" id="lvlGift"></p>
-    <p class="tap-hint" id="lvlHint">TOUCHEZ POUR CONTINUER</p>
+    <p class="tap-hint" id="lvlHint" data-t>TOUCHEZ POUR CONTINUER</p>
   </div>
   <div class="overlay" id="overlay" hidden>
     <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
   </div>
   <div class="toast" id="toast" role="status"></div>
-  <div class="rotate" aria-hidden="true">Tournez votre téléphone</div>
-  <p class="nogl" id="nogl" hidden>ORBITE a besoin de WebGL2. Ouvrez le jeu dans un navigateur récent (Chrome, Safari, Firefox).</p>
+  <div class="rotate" aria-hidden="true" data-t>Tournez votre téléphone</div>
+  <p class="nogl" id="nogl" hidden data-t>ORBITE a besoin de WebGL2. Ouvrez le jeu dans un navigateur récent (Chrome, Safari, Firefox).</p>
 
+  <script src="js/i18n.js"></script>
+  <script src="js/lang/regles.js"></script>
+  <script src="js/lang/jeu.js"></script>
+  <script src="js/lang/campagne.js"></script>
+  <script src="js/lang/interface.js"></script>
   <script src="js/planet-engine.js"></script>
   <script src="js/planet-renderer.js"></script>
   <script src="js/stage.js"></script>

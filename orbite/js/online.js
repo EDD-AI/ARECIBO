@@ -41,7 +41,7 @@
     const n = (k) => Number(snap[k]) || 0;
     let games = 0;
     try { games = (JSON.parse(snap['orbite.stats'] || '{}').games) || 0; } catch (err) { /* illisible */ }
-    return { xp: n('orbite.xp'), dust: n('orbite.poussieres'), games, pseudo: snap['orbite.pseudo'] || 'Créateur' };
+    return { xp: n('orbite.xp'), dust: n('orbite.poussieres'), games, pseudo: snap['orbite.pseudo'] || tr('Créateur') };
   }
   const isFresh = (snap) => { const s = summary(snap); return !s.xp && !s.games; };
   function applySnapshot(snap) {
@@ -80,7 +80,7 @@
         fb = { app, a, fs };
         const inst = app.initializeApp(CFG);
         auth = a.getAuth(inst);
-        auth.languageCode = 'fr';
+        auth.languageCode = (window.OrbiteI18n && window.OrbiteI18n.lang) || 'fr';
         db = fs.getFirestore(inst);
         if (EMU) {
           a.connectAuthEmulator(auth, EMU.auth, { disableWarnings: true });
@@ -94,7 +94,7 @@
         return true;
       } catch (err) {
         fb = null;
-        set({ status: 'offline', error: 'Mode en ligne indisponible sans réseau.' });
+        set({ status: 'offline', error: tr('Mode en ligne indisponible sans réseau.') });
         return false;
       } finally { booting = null; }
     })();
@@ -104,10 +104,10 @@
   function messageOf(err) {
     const c = (err && err.code) || '';
     if (c.includes('popup-closed') || c.includes('cancelled')) return '';
-    if (c.includes('network')) return 'Pas de réseau : réessayez plus tard.';
-    if (c.includes('unauthorized-domain')) return 'Ce site n’est pas encore autorisé dans Firebase.';
-    if (c.includes('permission')) return 'Accès refusé par le serveur.';
-    return 'Connexion impossible pour le moment.';
+    if (c.includes('network')) return tr('Pas de réseau : réessayez plus tard.');
+    if (c.includes('unauthorized-domain')) return tr('Ce site n’est pas encore autorisé dans Firebase.');
+    if (c.includes('permission')) return tr('Accès refusé par le serveur.');
+    return tr('Connexion impossible pour le moment.');
   }
 
   async function signIn() {
@@ -253,21 +253,21 @@
   }
   async function refreshRequests() { await friends().catch(() => {}); }
   async function addByCode(raw) {
-    if (!fb || state.status !== 'signedIn') return { ok: false, reason: 'Connectez-vous d’abord.' };
+    if (!fb || state.status !== 'signedIn') return { ok: false, reason: tr('Connectez-vous d’abord.') };
     const code = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (code.length !== 6) return { ok: false, reason: 'Un code ami compte 6 caractères.' };
+    if (code.length !== 6) return { ok: false, reason: tr('Un code ami compte 6 caractères.') };
     const { fs } = fb;
     const me = state.user.uid;
-    if (code === codeOf(me)) return { ok: false, reason: 'C’est votre propre code.' };
+    if (code === codeOf(me)) return { ok: false, reason: tr('C’est votre propre code.') };
     const res = await fs.getDocs(fs.query(fs.collection(db, 'profiles'), fs.where('code', '==', code), fs.limit(1)));
-    if (res.empty) return { ok: false, reason: 'Aucun Créateur avec ce code.' };
+    if (res.empty) return { ok: false, reason: tr('Aucun Créateur avec ce code.') };
     const other = res.docs[0].id;
     const ref = fs.doc(db, 'friends', pairOf(me, other));
     const cur = await fs.getDoc(ref);
     if (cur.exists()) {
       const f = cur.data();
-      if (f.status === 'accepted') return { ok: false, reason: 'Vous êtes déjà amis.' };
-      if (f.from === me) return { ok: false, reason: 'Demande déjà envoyée.' };
+      if (f.status === 'accepted') return { ok: false, reason: tr('Vous êtes déjà amis.') };
+      if (f.from === me) return { ok: false, reason: tr('Demande déjà envoyée.') };
       await fs.updateDoc(ref, { status: 'accepted' });
       return { ok: true, accepted: true, name: res.docs[0].data().pseudo };
     }
