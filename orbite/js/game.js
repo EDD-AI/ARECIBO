@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 49;
+  const VERSION = 50;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -198,7 +198,7 @@
   function loadGame() {
     try {
       const s = JSON.parse(localStorage.getItem(SAVE_KEY));
-      if (s && s.v === 1 && Array.isArray(s.players) && !s.over && s.phase === 'shop') return s;
+      if (s && s.v === 1 && Array.isArray(s.players) && !s.over && s.phase === 'shop' && !s.mp) return s;
     } catch (err) { /* sauvegarde illisible */ }
     return null;
   }
@@ -236,7 +236,6 @@
     orb.dataset.ghost = u.kw.includes('renaissance') ? '1' : '0';
     el.classList.toggle('golden', !!u.golden);
     el.classList.toggle('legend', !!c.legend);
-    if (c.legend && !orb.querySelector('.legend-ring')) orb.insertAdjacentHTML('beforeend', '<i class="legend-ring"></i>');
     el.classList.toggle('wall', u.kw.includes('rempart'));
     el.querySelector('.atk').textContent = u.atk;
     el.querySelector('.hp').textContent = u.hp;
@@ -367,7 +366,7 @@
     ui.screen = name;
     stage.starsOn = !['splash', 'title', 'wake', 'cStory'].includes(name);
     SFX.ambience({ splash: 'off', title: 'off', wake: 'wake', game: 'game', end: 'game', cStory: 'wake', cFight: 'battle', cEnd: 'game' }[name] || 'menu');
-    SFX.music(['title', 'wake', 'menu', 'market', 'creation', 'colony', 'explore', 'profile', 'laws', 'cMap', 'system'].includes(name));
+    SFX.music(['title', 'wake', 'menu', 'market', 'creation', 'colony', 'explore', 'multi', 'profile', 'laws', 'cMap', 'system'].includes(name));
     // Pendant la partie, le ciel s'efface derrière les planètes pour rester lisible.
     const busySky = ['laws', 'game', 'end', 'cFight'].includes(name);
     stage.starArea = busySky ? 3600 : 1800;
@@ -989,7 +988,7 @@
         const c = classe();
         // Toucher la carte de rang déplie ou replie l'échelle des rangs et le barème.
         const fold = `<i class="pf-fold">${ui.pfRanks ? '▴' : '▾'}</i>`;
-        if (!K.placed(c)) return `<button class="pf-rank" data-pf="ranks" aria-expanded="${!!ui.pfRanks}"><div class="pf-unranked">?</div><div><b>${tr('PLACEMENT · {a} / {b}', { a: c.placements.length, b: K.PLACEMENTS })}</b><small>${tr('Chaque partie contre les univers rivaux compte. Après {n} parties de placement, votre rang monte à chaque podium et descend dans les dernières places.', { n: K.PLACEMENTS })}</small></div>${fold}</button>`;
+        if (!K.placed(c)) return `<button class="pf-rank" data-pf="ranks" aria-expanded="${!!ui.pfRanks}"><div class="pf-unranked">?</div><div><b>${tr('PLACEMENT · {a} / {b}', { a: c.placements.length, b: K.PLACEMENTS })}</b><small>${tr('Seules les parties classées en ligne (Multijoueur) comptent. Après {n} parties de placement, votre rang monte à chaque podium et descend dans les dernières places.', { n: K.PLACEMENTS })}</small></div>${fold}</button>`;
         const t = K.tierOf(c.points);
         return `<button class="pf-rank" data-pf="ranks" aria-expanded="${!!ui.pfRanks}"><div class="orb pf-rank-orb" data-planet="rank-${RANKS[t.idx].id}"></div><div><b>${esc(tierLabel(t)).toUpperCase()}</b><small>${tr('{n} points', { n: c.points })}${t.span ? ' · ' + tr('{a} / {b} vers la division suivante', { a: t.into, b: t.span }) : ''} · ${tr('record {n}', { n: c.best })}</small><div class="xp-bar"><i style="width:${t.span ? t.into : 100}%"></i></div></div>${fold}</button>`;
       })()}
@@ -2449,10 +2448,11 @@
   async function menuAction(v) {
     if (v === 'sound') { SFX.setMuted(!SFX.muted); closeSheet(); toast(SFX.muted ? tr('Son coupé') : tr('Son activé')); }
     else if (v === 'help') openSheet(helpHtml());
-    else if (v === 'home') { closeSheet(); saveGame(); await backToMenu(); }
-    else if (v === 'quit') {
+    else if (v === 'home' && !(ui.state && ui.state.mp)) { closeSheet(); saveGame(); await backToMenu(); }
+    else if (v === 'quit' || v === 'home') {
       closeSheet();
       const s = ui.state;
+      if (s.mp && window.OrbiteMulti) window.OrbiteMulti.leave();
       const p = me();
       p.alive = false;
       p.rank = R.alivePlayers(s).length + 1;
@@ -2470,12 +2470,23 @@
   // ─── Combat ─────────────────────────────────────────────────
   async function fight() {
     if (ui.busy || !ui.state || ui.state.phase !== 'shop') return;
+    // En ligne, personne ne passe : c'est le minuteur commun qui termine le tour.
+    if (ui.state.mp && !ui.mpAuto) { toast(tr('En ligne, le tour se termine pour tous à la fin du temps.'), 1800); return; }
     const p = me();
     if (p.discover.length) { await openDiscover(); return; }
     ui.busy = true;
     SFX.tap();
     ui.prevHp = Object.fromEntries(ui.state.players.map((x) => [x.id, x.hp]));
-    const res = R.endTurn(ui.state);
+    // Multijoueur : on publie son plateau et on attend ceux des autres créateurs.
+    const MP = ui.state.mp && window.OrbiteMulti;
+    let res;
+    try {
+      res = MP ? await MP.endTurn(ui.state, () => banner(tr('EN ATTENTE'), tr('Les autres créateurs terminent leur tour…'))) : R.endTurn(ui.state);
+    } catch (err) {
+      console.error(err);
+      res = { ok: false, reason: tr('Connexion perdue avec la partie en ligne.') };
+    }
+    if (MP) clearBanner();
     if (!res.ok) { refuse(tr(res.reason)); ui.busy = false; return; }
     tuto('combat');
     if (res.battle && res.battle.winner === 0) ui.state.fightsWon = (ui.state.fightsWon || 0) + 1;
@@ -2920,12 +2931,13 @@
       s.recorded = true;
       recordGame(s, rank, quit);
     }
-    // Mode classé : chaque partie contre les univers rivaux compte (un abandon vaut la 8e place).
+    // Classement : seules les parties classées en ligne comptent (un abandon vaut la 8e place) ;
+    // le solo contre les univers rivaux et les parties privées n'y touchent pas.
     if (!s.rankedDone) {
       s.rankedDone = true;
       const c = K.sanitize(readJson(CLASSE_KEY, null));
-      s.rankedRes = K.record(c, quit ? 8 : rank);
-      store.set(CLASSE_KEY, JSON.stringify(c));
+      if (!s.mp || s.mp.mode !== 'ranked') s.rankedRes = null;
+      else { s.rankedRes = K.record(c, quit ? 8 : rank); store.set(CLASSE_KEY, JSON.stringify(c)); }
     }
     $('endRanked').innerHTML = rankedLine(s.rankedRes);
     if (!s.xpGiven) {
@@ -3170,6 +3182,7 @@
   });
   $('multiBtn').addEventListener('click', () => {
     SFX.tap();
+    if (window.OrbiteMultiUI) { stopAmbient(); window.OrbiteMultiUI.open(); return; }
     openSheet(`<h3>${tr('MULTIJOUEUR')}</h3><h2>${tr('Bientôt')}</h2>
       <p>${tr('Les parties contre d’autres créateurs arriveront dans une prochaine version. En attendant, sept univers vous attendent en solo.')}</p>
       <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="new">${tr('JOUER SOLO')}</button><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
@@ -3284,7 +3297,7 @@
       guard(() => doPower(null))();
     }
   });
-  $('skipBtn').addEventListener('click', () => { ui.skip = true; });
+  $('skipBtn').addEventListener('click', () => { if (!(ui.state && ui.state.mp)) ui.skip = true; });
   $('againBtn').addEventListener('click', async () => { SFX.tap(); renderLaws(); await show('laws'); });
   $('endHome').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
 

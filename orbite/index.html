@@ -61,7 +61,7 @@
           <button class="menu-item sub" id="campBtn" data-t>CAMPAGNE <small>DÉMO · ACTE I</small></button>
           <button class="menu-item sub" id="quickBtn" data-t>AFFRONTEMENT <small>CONTRE 7 UNIVERS</small></button>
         </div>
-        <button class="menu-item soon" id="multiBtn" data-t>MULTIJOUEUR <small>BIENTÔT</small></button>
+        <button class="menu-item" id="multiBtn" data-t>MULTIJOUEUR <small>EN LIGNE</small></button>
         <button class="menu-item" id="creationBtn" data-t>CRÉATION</button>
         <button class="menu-item" id="marketBtn" data-t>MARCHÉ STELLAIRE</button>
         <button class="menu-item" id="settingsBtn" data-t>PARAMÈTRES</button>
@@ -127,6 +127,15 @@
         </div>
         <p class="ex-hint" id="exHint" data-t>Touchez le terrain pour y envoyer le rover.</p>
       </div>
+    </section>
+
+    <!-- MULTIJOUEUR : parties classées en ligne et parties privées avec un code -->
+    <section class="screen" id="multi" aria-label="Multijoueur" data-t-attr="aria-label">
+      <header class="screen-head">
+        <button class="icon-btn" id="multiBack" aria-label="Retour" data-t-attr="aria-label"></button>
+        <h2 data-t>Multijoueur</h2>
+      </header>
+      <div class="mk-scroll"><div class="mp" id="mpBody"></div></div>
     </section>
 
     <!-- CINÉMATIQUE D'OUVERTURE DE LA CRÉATION -->
@@ -203,6 +212,7 @@
         <div class="hud-hp" id="hudHp"></div>
         <button class="hud-fams" id="famsBtn" aria-label="Familles de la partie" data-t-attr="aria-label"></button>
         <div class="hud-round" id="hudRound"></div>
+        <span class="mp-timer" id="mpTimer" hidden></span>
         <button class="icon-btn" id="menuBtn" aria-label="Menu" data-t-attr="aria-label"></button>
       </header>
       <button class="rivals" id="rivals" aria-label="Univers rivaux" data-t-attr="aria-label"></button>
@@ -375,5 +385,7 @@
   <script src="js/exploration-ui.js"></script>
   <script src="js/forge-ui.js"></script>
   <script src="js/online-ui.js"></script>
+  <script src="js/multi.js"></script>
+  <script src="js/multi-ui.js"></script>
 </body>
 </html>

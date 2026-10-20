@@ -302,7 +302,10 @@
     syncNow: () => uploadNow(),
     myCode: () => (state.user ? codeOf(state.user.uid) : ''),
     friends, addByCode, accept, remove, leaderboard, profileOf,
-    codeOf
+    codeOf,
+    // Accès Firestore pour le multijoueur (js/multi.js).
+    fire: () => (db && fb ? { db, fs: fb.fs } : null),
+    uid: () => (state.user ? state.user.uid : null)
   };
 
   // Tests contre les émulateurs uniquement : connexion Google simulée, sans fenêtre.
