@@ -90,7 +90,7 @@
     { key: 'geode', name: 'Géode de cristal', text: 'Des cristaux qui brillent dans la roche.', w: 3, gain: { dust: 15 } },
     { key: 'glace', name: 'Poche de glace', text: 'Une poche de glace pure sous la croûte.', w: 4, gain: { water: 60 } },
     { key: 'epave', name: 'Épave de rover', text: 'Des pièces récupérables.', w: 4, gain: { materials: 45 } },
-    { key: 'ruines', name: 'Ruines anciennes', text: 'Des piliers gravés par une autre civilisation.', w: 1, gain: { research: 90, dust: 25 } }
+    { key: 'ruines', name: 'Ruines anciennes', text: 'Des piliers gravés par une autre civilisation.', w: 1, gain: { research: 90, dust: 25, seeds: 1 } }
   ];
   const POI_W = POI_TYPES.reduce((n, t) => n + t.w, 0);
   // Au plus une découverte par tronçon (une chance sur trois), jamais dans la base.

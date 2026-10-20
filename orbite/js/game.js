@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 52;
+  const VERSION = 53;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -47,6 +47,7 @@
     soundOn: ['...X...', '..XX.X.', 'XXXX..X', 'XXXX..X', '..XX.X.', '...X...'],
     soundOff: ['...X....', '..XX....', 'XXXX.X.X', 'XXXX..X.', '..XX.X.X', '...X....'],
     dust: ['...X...', '...X...', '..XXX..', 'XXXXXXX', '..XXX..', '...X...', '...X...'],
+    seed: ['....XX', '...XX.', '.XXX..', 'XXXXX.', 'XXXXX.', '.XXX..'],
     wall: ['XXXXX', 'X...X', 'X...X', '.X.X.', '..X..'],
     wind: ['XX..XX..', '.XX..XX.', '..XX..XX', '.XX..XX.', 'XX..XX..'],
     drop: ['..X..', '.XXX.', 'XXXXX', 'XXXXX', '.XXX.'],
@@ -211,6 +212,13 @@
   }
   function dust() { try { return Number(localStorage.getItem(DUST_KEY)) || 0; } catch (err) { return 0; } }
   function addDust(n) { try { localStorage.setItem(DUST_KEY, String(dust() + n)); } catch (err) { /* stockage indisponible */ } }
+  // Graines de vie : la monnaie rare. Elles se gagnent (1re place, niveaux, ruines, succès) ou
+  // s'achètent ; elles accélèrent la création et paient les cosmétiques, jamais la force en partie.
+  const SEED_KEY = 'orbite.graines';
+  function seeds() { try { return Number(localStorage.getItem(SEED_KEY)) || 0; } catch (err) { return 0; } }
+  function addSeeds(n) { try { localStorage.setItem(SEED_KEY, String(Math.max(0, seeds() + n))); } catch (err) { /* stockage indisponible */ } }
+  // Les deux monnaies côte à côte (en-têtes du Marché et de la Création).
+  const wallet = () => `${icon('dust')} ${dust()} <span class="wallet-seed">${icon('seed', 'seed')} ${seeds()}</span>`;
 
   // ─── Éléments d'astre ───────────────────────────────────────
   function shopUnit(id) {
@@ -777,7 +785,7 @@
     const list = worldList(), lvl = levelInfo(xpTotal()).lvl;
     const nxt = W.next(list);
     $('marketBack').innerHTML = icon('back');
-    $('marketDust').innerHTML = icon('dust') + ' ' + dust();
+    $('marketDust').innerHTML = wallet();
     $('mkStage').textContent = W.stageName(list).toUpperCase();
     $('mkProg').style.width = (list.length / W.UPGRADES.length * 100) + '%';
     $('mkCount').textContent = tr('{a} / {b} améliorations · niveau {n}', { a: list.length, b: W.UPGRADES.length, n: lvl });
@@ -835,7 +843,8 @@
 
   // ─── Cosmétiques : fonds animés de partie ────────────────────
   const COS_KEY = 'orbite.cosmetiques';
-  const COS_PRICE = 650;
+  const COS_PRICE = 1200;
+  const COS_SEEDS = 6;
   const SKIES = [
     { id: 'nebuleuse', mode: 1, name: tr('Nébuleuse pourpre'), text: tr('Des nuages roses et violets traversés de filaments sombres, autour d’un cœur brûlant.'), c: ['#c2457f', '#2a0a3c'] },
     { id: 'aurore', mode: 2, name: tr('Aurore boréale'), text: tr('Des voiles verts et roses dansent au-dessus des montagnes et se reflètent dans un lac.'), c: ['#2fd18a', '#071a22'] },
@@ -859,7 +868,7 @@
       let btn;
       if (on) btn = `<span class="cos-on">${tr('ÉQUIPÉ')}</span>`;
       else if (owned) btn = `<button class="btn" data-cos-equip="${k.id || ''}">${tr('ÉQUIPER')}</button>`;
-      else btn = `<button class="btn primary" data-cos-buy="${k.id}" ${dust() < COS_PRICE ? 'disabled' : ''}>${icon('dust')} ${COS_PRICE}</button>`;
+      else btn = `<span class="cos-buy"><button class="btn primary" data-cos-buy="${k.id}" ${dust() < COS_PRICE ? 'disabled' : ''}>${icon('dust')} ${COS_PRICE}</button><button class="btn" data-cos-buy="${k.id}" data-seed="1" ${seeds() < COS_SEEDS ? 'disabled' : ''}>${icon('seed', 'seed')} ${COS_SEEDS}</button></span>`;
       const sw = k.id ? `background:radial-gradient(circle at 30% 35%, ${k.c[0]}, transparent 70%), radial-gradient(circle at 75% 70%, ${k.c[1]}, #000 80%)` : 'background:#000';
       return `<div class="cos-row ${sel ? 'sel' : ''}" data-cos="${k.id || ''}">
         <span class="cos-sw" style="${sw}"></span>
@@ -876,9 +885,32 @@
     for (const p of document.querySelectorAll('#market .mk-pane')) p.hidden = p.dataset.pane !== tab;
     if (tab === 'cosmetiques') { ui.cosPick = cosmetics().on || ''; renderCosmetics(); }
     if (tab === 'creation' && window.__orbite.forge) window.__orbite.forge.render();
+    if (tab === 'graines') renderSeedShop();
     stage.sky = tab === 'cosmetiques' && SKY_BY_ID[ui.cosPick] ? SKY_BY_ID[ui.cosPick].mode : 0;
     stage.skyGain = 1;
   }
+  // Boutique des graines de vie : comment en gagner, à quoi elles servent, et les paquets.
+  const SEED_PACKS = [{ n: 10, price: '0,99 €' }, { n: 55, price: '4,99 €', tag: tr('+10 %') }, { n: 120, price: '9,99 €', tag: tr('+20 %') }, { n: 260, price: '19,99 €', tag: tr('+30 %') }];
+  function renderSeedShop() {
+    $('seedShop').innerHTML = `<div class="seed-hero">${icon('seed', 'seed big')}<b>${seeds()}</b><small>${tr('graines de vie')}</small></div>
+      <h4 class="fg-h">${tr('EN GAGNER')}</h4>
+      <ul class="seed-list"><li>${tr('Une victoire (1re place), en solo ou en ligne : +1')}</li><li>${tr('Tous les 5 niveaux : +2')}</li><li>${tr('Des ruines anciennes trouvées en expédition : +1')}</li><li>${tr('Les succès')}</li></ul>
+      <h4 class="fg-h">${tr('À QUOI ELLES SERVENT')}</h4>
+      <ul class="seed-list"><li>${tr('Booster un bâtiment de la colonie (production ×2 pendant 24 h)')}</li><li>${tr('Accélérer le temps de la colonie')}</li><li>${tr('Faire grandir une planète de la Forge')}</li><li>${tr('Arroser l’arbre d’étoiles d’un coup')}</li><li>${tr('Recharger le rover d’expédition')}</li><li>${tr('Les fonds animés')}</li></ul>
+      <p class="mk-note">${tr('Jamais pour être plus fort en partie : l’Affrontement reste équitable.')}</p>
+      <h4 class="fg-h">${tr('BOUTIQUE')}</h4>
+      <div class="seed-packs">${SEED_PACKS.map((p, i) => `<button class="seed-pack" data-pack="${i}">${icon('seed', 'seed')}<b>${p.n}</b>${p.tag ? `<em>${p.tag}</em>` : ''}<span>${p.price}</span></button>`).join('')}</div>`;
+  }
+  $('seedShop').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-pack]');
+    if (!b) return;
+    SFX.tap();
+    // Le paiement réel demande un prestataire (Stripe, Google Play) et un serveur qui crédite les
+    // graines : tant qu'il n'est pas branché, la boutique l'annonce honnêtement.
+    openSheet(`<h3>${tr('BOUTIQUE')}</h3><h2>${tr('Bientôt disponible')}</h2>
+      <p class="sheet-text">${tr('L’achat de graines de vie arrive dans une prochaine version. En attendant, gagnez-en en jouant : victoires, niveaux, expéditions et succès.')}</p>
+      <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
+  });
   $('mkTabs').addEventListener('click', (e) => {
     const b = e.target.closest('[data-tab]');
     if (!b || b.classList.contains('on')) return;
@@ -892,15 +924,20 @@
       if (buy.disabled) return;
       const k = SKY_BY_ID[buy.dataset.cosBuy];
       if (!k || c.owned.includes(k.id)) return;
-      if (dust() < COS_PRICE) { refuse(tr('Il vous manque {n} poussières d’étoiles.', { n: COS_PRICE - dust() })); return; }
-      addDust(-COS_PRICE);
+      if (buy.dataset.seed) {
+        if (seeds() < COS_SEEDS) { refuse(tr('Il vous manque {n} graines de vie.', { n: COS_SEEDS - seeds() })); return; }
+        addSeeds(-COS_SEEDS);
+      } else {
+        if (dust() < COS_PRICE) { refuse(tr('Il vous manque {n} poussières d’étoiles.', { n: COS_PRICE - dust() })); return; }
+        addDust(-COS_PRICE);
+      }
       c.owned.push(k.id);
       c.on = k.id;
       saveCosmetics(c);
       SFX.golden();
       const [x, y] = center(buy);
       stage.burst(x, y, { n: 40, colors: [[246, 196, 83], [255, 255, 255]], speed: 90, life: 0.8 });
-      $('marketDust').innerHTML = icon('dust') + ' ' + dust();
+      $('marketDust').innerHTML = wallet();
       toast(tr('{name} : équipé pour vos parties.', { name: k.name }), 2600);
     } else if (eq) {
       c.on = eq.dataset.cosEquip;
@@ -2947,7 +2984,13 @@
       // que l'afficher, rien n'est perdu si l'appli se ferme pendant l'écran de fin.
       s.levelGift = (levelInfo(xpTo).lvl - levelInfo(xpFrom).lvl) * LEVEL_GIFT;
       if (s.levelGift) addDust(s.levelGift);
+      // Graines de vie : 1 pour une victoire, 2 à chaque niveau multiple de 5 franchi.
+      let sg = !quit && rank === 1 ? 1 : 0;
+      for (let l = levelInfo(xpFrom).lvl + 1; l <= levelInfo(xpTo).lvl; l++) if (l % 5 === 0) sg += 2;
+      s.seedGift = sg;
+      if (sg) addSeeds(sg);
     }
+    if (s.seedGift && !s.seedShown) { s.seedShown = true; setTimeout(() => toast(tr('+{n} graine(s) de vie', { n: s.seedGift }), 2600), 1800); }
     const gift = s.levelGift || 0;
     $('end').classList.add('pending');
     const lv0 = levelInfo(xpFrom);
@@ -3190,7 +3233,7 @@
   // Création : Forge des mondes, Atelier des planètes, Bâtisseur de colonies.
   async function openCreation() {
     stopAmbient();
-    $('creationDust').innerHTML = icon('dust') + ' ' + dust();
+    $('creationDust').innerHTML = wallet();
     stage.sky = 0;
     stage.skyGain = 1;
     await show('creation');
@@ -3323,7 +3366,8 @@
   window.__orbite.api = {
     show, openSheet, closeSheet, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
     pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient,
-    coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation
+    coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation,
+    seeds, addSeeds, wallet
   };
 
   // ─── Démarrage ──────────────────────────────────────────────

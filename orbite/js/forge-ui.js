@@ -47,7 +47,7 @@
       for (const h of F.HUES) stage.register('forge-sw-' + h, Object.assign(F.look(p), { hueShift: h, ring: false, debris: false, moons: 0, shell: false, shape: 'aucune', full: false }));
     }
   }
-  const dustHud = () => { for (const id of ['marketDust', 'creationDust']) if ($(id)) $(id).innerHTML = icon('dust') + ' ' + A.dust(); };
+  const dustHud = () => { for (const id of ['marketDust', 'creationDust']) if ($(id)) $(id).innerHTML = A.wallet(); };
 
   // ─── Affichage ──────────────────────────────────────────────
   function render() {
@@ -75,6 +75,7 @@
       <div class="xp-bar fg-bar"><i style="width:${p.mass / F.MAX_MASS * 100}%"></i></div>
       <button class="btn primary fg-feed" data-forge="feed" ${full || !feed.ok ? 'disabled' : ''}>${full ? tr('TAILLE MAXIMALE') : tr('NOURRIR · {prix}', { prix: price(F.FEED[p.mass]) })}</button>
       ${!full && !feed.ok && feed.short ? `<small class="fg-why">${esc(feed.reason)}</small>` : ''}
+      ${!full ? `<button class="btn fg-seedfeed" data-forge="seedfeed" ${A.seeds() < 1 ? 'disabled' : ''}>${tr('+1 TAILLE · 1')} ${icon('seed', 'seed')}</button>` : ''}
       <div class="fg-slots"><span>${tr('EMPLACEMENTS')}</span><span class="fg-pips">${pips}</span><span>${free > 1 ? tr('{n} libres', { n: free }) : tr('{n} libre', { n: free })}</span></div>
       ${surfaceRow(p)}`;
     // Personnalisation (nature, teinte, ajouts, relief) dans un volet repliable : fermé par défaut,
@@ -226,6 +227,19 @@
     if (k !== 'name-ok' && k !== 'shape' && !k.startsWith('sys')) SFX.tap();
     if (k === 'seed') seed();
     else if (k === 'feed') act({ t: 'feed' });
+    else if (k === 'seedfeed') {
+      // Une graine de vie : un palier de croissance, sans poussières.
+      const p = cur();
+      if (!p || p.mass >= F.MAX_MASS || A.seeds() < 1) return;
+      A.addSeeds(-1);
+      const before = F.slotsFree(p);
+      F.apply(p, { t: 'feed' });
+      register(p); save(); dustHud(); render();
+      SFX.level();
+      burstOnOrb([[120, 230, 130], [255, 255, 255]], 36);
+      A.popOn($('fgOrb'), tr('TAILLE {n}', { n: p.mass }), 'gold');
+      if (F.slotsFree(p) > before) A.toast(tr('Un emplacement s’ouvre.'), 1600);
+    }
     else if (k === 'nature') act({ t: 'nature', key: b.dataset.k });
     else if (k === 'hue') act({ t: 'hue', v: Number(b.dataset.v) });
     else if (k === 'relief') act({ t: 'relief' });

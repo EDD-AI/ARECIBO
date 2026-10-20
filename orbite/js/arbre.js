@@ -329,20 +329,27 @@
       <p class="tree-count">${tr('{n} / {max} arrosages', { n: s.water, max: MAX })}${next ? ' · ' + tr('prochain palier : {nom} ({n})', { nom: tr(next.name), n: next.at }) : ''}</p>
       <div class="sheet-actions">
         ${full ? '' : `<button class="btn primary" id="treeWater" ${have < COST ? 'disabled' : ''}>${tr('ARROSER')} · ${COST} ${api.icon('dust')}</button>`}
+        ${full ? '' : `<button class="btn" id="treeSeed" ${api.seeds() < 1 ? 'disabled' : ''}>${tr('ARROSER ×{n}', { n: SEED_WATER })} · 1 ${api.icon('seed', 'seed')}</button>`}
         <button class="btn" id="treeClose">${tr('FERMER')}</button>
       </div>
       ${!full && have < COST ? `<p class="muted center">${tr('Il vous manque {n} poussières d’étoiles.', { n: COST - have })}</p>` : ''}`);
     const w = document.getElementById('treeWater');
-    if (w) w.addEventListener('click', water);
+    if (w) w.addEventListener('click', () => water(false));
+    const ws = document.getElementById('treeSeed');
+    if (ws) ws.addEventListener('click', () => water(true));
     document.getElementById('treeClose').addEventListener('click', () => api.closeSheet());
   }
 
-  async function water() {
+  // Une graine de vie vaut plusieurs arrosages d'un coup.
+  const SEED_WATER = 5;
+  async function water(bySeed) {
     const api = A(), o = O(), s = load();
-    if (s.water >= MAX || api.dust() < COST) return;
-    api.addDust(-COST);
+    if (s.water >= MAX) return;
+    if (bySeed ? api.seeds() < 1 : api.dust() < COST) return;
+    if (bySeed) api.addSeeds(-1); else api.addDust(-COST);
     const before = stageOf(s.water);
-    s.water++;
+    const gain = bySeed ? Math.min(SEED_WATER, MAX - s.water) : 1;
+    s.water += gain;
     save(s);
     api.closeSheet();
     api.renderMenu();
@@ -357,7 +364,7 @@
     await api.wait(650);
     o.stage.burst(x, Math.min(y, topY + 20), { n: 26, colors: [[255, 236, 160], [140, 220, 255], [255, 255, 255]], speed: 45, up: 20, life: 0.8 });
     // L'arbre grandit en douceur jusqu'à son nouveau stade.
-    const from = s.water - 1, t0 = performance.now();
+    const from = s.water - gain, t0 = performance.now();
     await new Promise((res) => {
       const step = (now) => {
         const p = Math.min(1, (now - t0) / 700);

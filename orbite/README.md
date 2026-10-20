@@ -163,6 +163,34 @@ joueur) et fait varier la roche, la lave sur la face de nuit, le niveau des mers
 nuages, l’atmosphère, la végétation, les lumières des villes, puis ajoute lune, satellites et
 anneau (`livingWorld` dans `js/planet-engine.js`). Au niveau 120 elle ressemble à la Terre.
 
+## Graines de vie
+
+La monnaie rare du jeu (icône de graine verte), à côté des poussières d’étoiles dans les en-têtes.
+Elle accélère la création et paie les cosmétiques, **jamais la force en partie** : l’Affrontement
+reste équitable.
+
+- **En gagner sans payer** :
+  - +1 pour chaque victoire (1re place), en solo ou en ligne ;
+  - +2 tous les 5 niveaux ;
+  - +1 pour des ruines anciennes trouvées en expédition ;
+  - les succès.
+- **Les dépenser** :
+
+  | Usage | Coût |
+  |---|---|
+  | Booster un bâtiment de la colonie (production ×2 pendant 24 h, fiche du bâtiment) | 1 |
+  | Accélérer le temps de la colonie (toucher « SOL n ») : +6 h | 1 |
+  | Accélérer le temps de la colonie : +24 h | 3 |
+  | Faire grandir une planète de la Forge d’une taille | 1 |
+  | Arroser l’arbre d’étoiles 5 fois d’un coup | 1 |
+  | Recharger le rover quand sa batterie est vide | 1 |
+  | Un fond animé (ou 1 200 poussières au lieu de 650 avant) | 6 |
+
+- **Boutique** (Marché stellaire → GRAINES) : paquets de 10 (0,99 €), 55 (4,99 €), 120 (9,99 €)
+  et 260 (19,99 €). Le paiement réel n’est pas encore branché : il faut un prestataire (Stripe,
+  Google Play) et un serveur qui crédite les graines. En attendant, le bouton l’annonce.
+- Stockées dans `orbite.graines` (synchronisées avec la sauvegarde en ligne).
+
 ## Marché stellaire
 
 Deux onglets : **Ma planète** (les 24 améliorations décrites plus haut) et **Cosmétiques**.
@@ -224,8 +252,8 @@ planète ».
 Les règles sont dans `js/forge.js` (testées par `tests/forge.test.mjs`) et l’interface dans
 `js/forge-ui.js`. La collection est enregistrée dans `orbite.forge`. Une liste qui défile et porte
 `data-clipbox` empêche ses astres de déborder sur l’en-tête : le moteur reçoit un cadre (`bound`).
-- **Cosmétiques** : des **fonds animés** qui remplacent le noir pendant les parties, à **650
-  poussières d’étoiles** chacun. Toucher un fond l’essaie aussitôt derrière l’écran du marché. Une
+- **Cosmétiques** : des **fonds animés** qui remplacent le noir pendant les parties, à **1 200
+  poussières d’étoiles** ou **6 graines de vie** chacun. Toucher un fond l’essaie aussitôt derrière l’écran du marché. Une
   fois acheté, il s’équipe ; « Noir » remet le fond d’origine. Les fonds disponibles :
   - **Nébuleuse pourpre** : nuages roses et violets, filaments sombres, cœur brûlant ;
   - **Aurore boréale** : voiles verts et roses au-dessus de montagnes, reflétés dans un lac ;
@@ -316,7 +344,7 @@ bouton **DESCENDRE À LA SURFACE** dans la Forge.
     | Géode de cristal | 15 poussières |
     | Poche de glace | 60 eau |
     | Épave de rover | 45 matériaux |
-    | Ruines anciennes (rares) | 90 recherche + 25 poussières |
+    | Ruines anciennes (rares) | 90 recherche + 25 poussières + 1 graine de vie |
 
   - **La batterie** : 100 points, environ 300 cases ; chaque banque de batteries de la colonie
     ajoute 40 points. Vide, le rover est remorqué à la base, où il se recharge.

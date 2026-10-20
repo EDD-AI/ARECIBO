@@ -228,6 +228,17 @@
     return { ok: true, n, dust: SUPPLY.dust };
   }
 
+  // ─── Graines de vie ─────────────────────────────────────────
+  const BOOST_SOLS = 1440; // 24 h
+  function boost(col, uid) {
+    const b = col.built.find((q) => q.uid === uid);
+    if (!b) return false;
+    b.boost = Math.max(b.boost || 0, col.sol) + BOOST_SOLS;
+    return true;
+  }
+  // Accélérer : la colonie vit n sols d'un coup (sans dépasser le rattrapage ordinaire).
+  const fastForward = (col, n) => step(col, Math.min(n, MAX_CATCHUP));
+
   // ─── Bilan d'un sol ─────────────────────────────────────────
   // Énergie et ouvriers limitent la production. Les tempêtes de poussière voilent le solaire.
   function rates(col) {
@@ -241,15 +252,18 @@
     // Sans ouvriers, des drones font tourner les machines au ralenti (30 %) : une colonie vide peut repartir.
     R.workRatio = R.jobs ? Math.max(0.3, R.workers / R.jobs) : 1;
     const solar = (t) => /solaire|heliostats/.test(t.key);
-    for (const t of list) {
+    // Un bâtiment boosté (graine de vie) produit le double jusqu'au sol indiqué.
+    const pairs = col.built.map((b) => [b, E.TYPE_BY_KEY[b.key]]).filter((x) => x[1]);
+    const boostOf = (b) => (b.boost && b.boost > col.sol ? 2 : 1);
+    for (const [b, t] of pairs) {
       const e = t.eco;
-      if (e.power > 0) R.powerProd += e.power * (e.jobs ? R.workRatio : 1) * (col.storm > 0 && solar(t) ? 0.35 : 1);
+      if (e.power > 0) R.powerProd += e.power * boostOf(b) * (e.jobs ? R.workRatio : 1) * (col.storm > 0 && solar(t) ? 0.35 : 1);
       else R.powerUse += -e.power;
     }
     R.powerRatio = R.powerUse ? Math.min(1, R.powerProd / R.powerUse) : 1;
-    for (const t of list) {
+    for (const [b, t] of pairs) {
       const e = t.eco;
-      const k = (e.jobs ? R.workRatio : 1) * (e.power < 0 ? R.powerRatio : 1);
+      const k = (e.jobs ? R.workRatio : 1) * (e.power < 0 ? R.powerRatio : 1) * boostOf(b);
       for (const f of ['water', 'oxygen', 'food', 'research', 'materials']) {
         const v = e[f] || 0;
         R[f] += v > 0 ? v * k : v * (e.power < 0 ? R.powerRatio : 1);
@@ -607,5 +621,5 @@
     return { m, g, top };
   }
 
-  return { SOL_MS, MAX_CATCHUP, SALVAGE, SUPPLY, supply, ZONES, ZONE_COST, zoneIndex, zoneBox, nextZone, expand, zoneMask, ROVER, rovers, roverVoxels, findPath, SIZE, TIERS, TIER_OF, LIFE, GREEN, vegetation, greenRadius, greenEstimate, create, deposits, footprint, buildSeed, price, unlocked, hasHq, canPlace, build, demolish, rates, step, catchUp, scene };
+  return { SOL_MS, MAX_CATCHUP, BOOST_SOLS, boost, fastForward, SALVAGE, SUPPLY, supply, ZONES, ZONE_COST, zoneIndex, zoneBox, nextZone, expand, zoneMask, ROVER, rovers, roverVoxels, findPath, SIZE, TIERS, TIER_OF, LIFE, GREEN, vegetation, greenRadius, greenEstimate, create, deposits, footprint, buildSeed, price, unlocked, hasHq, canPlace, build, demolish, rates, step, catchUp, scene };
 });

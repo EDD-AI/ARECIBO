@@ -123,7 +123,7 @@
       cell(tr('NOURRITURE'), Math.round(col.stock.food), fmt(r.food), r.food < 0) +
       cell(tr('MATÉRIAUX') + ' +', Math.round(col.stock.materials), fmt(r.materials), col.stock.materials < 20, 'data-col-supply role="button"') +
       cell(tr('RECHERCHE'), Math.round(col.stock.research), fmt(r.research)) +
-      cell(icon('dust'), A.dust(), null);
+      cell(icon('dust'), A.dust(), `${icon('seed', 'seed')} ${A.seeds()}`);
     $('colSol').textContent = tr('SOL {n}', { n: col.sol }) + (col.storm > 0 ? ' · ' + tr('TEMPÊTE') : '');
   }
 
@@ -269,8 +269,17 @@
       <p class="muted">${lines.map(esc).join(' · ')}</p>
       ${green}
       ${e.jobs || e.power < 0 ? `<p class="muted">${tr('Rendement : {n} %', { n: eff })}${eff < 100 ? ' · ' + (r.workRatio < 1 && e.jobs ? tr('manque d’ouvriers') : tr('manque d’énergie')) : ''}</p>` : ''}
-      <div class="sheet-actions">${b.key === 'tour' ? '' : `<button class="btn" id="colDemolish">${tr('DÉMOLIR')} (+${Math.floor(C.price(b.key).materials / 2)} ${tr('mat.')})</button>`}
+      ${b.boost && b.boost > col.sol ? `<p class="col-boosted">${tr('Boosté : production ×2 encore {h} h', { h: Math.ceil((b.boost - col.sol) / 60) })}</p>` : ''}
+      <div class="sheet-actions">${produces(t) ? `<button class="btn primary" id="colBoost" ${A.seeds() < 1 ? 'disabled' : ''}>${tr('BOOSTER 24 H')} · 1 ${icon('seed', 'seed')}</button>` : ''}${b.key === 'tour' ? '' : `<button class="btn" id="colDemolish">${tr('DÉMOLIR')} (+${Math.floor(C.price(b.key).materials / 2)} ${tr('mat.')})</button>`}
       <button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
+    const bo = $('colBoost');
+    if (bo) bo.addEventListener('click', () => {
+      if (A.seeds() < 1) return;
+      A.addSeeds(-1);
+      C.boost(col, b.uid);
+      save(); A.closeSheet(); SFX.level(); renderRes();
+      A.toast(tr('{nom} produit le double pendant 24 h.', { nom: bname(b.key) }), 2600);
+    });
     const d = $('colDemolish');
     if (d) d.addEventListener('click', () => { C.demolish(col, b.uid); save(); A.closeSheet(); SFX.sell(); draw(); renderRes(); });
   }
@@ -319,6 +328,28 @@
       stage.ring(v.left + v.width / 2, v.top + v.height / 2, v.width * 0.4, { n: 60, colors: [[255, 226, 140], [140, 220, 255]], speed: 50, life: 0.9, flat: 0.5 });
       A.toast(tr('La zone de la colonie s’étend : {n} × {n} cases.', { n: res.size }), 2600);
       renderRes(); renderCards();
+    });
+  }
+
+  // Un bâtiment qui produit quelque chose (énergie, eau, oxygène, nourriture, matériaux, recherche).
+  const produces = (t) => ['power', 'water', 'oxygen', 'food', 'materials', 'research'].some((f) => t.eco[f] > 0);
+  // Le temps de la colonie : toucher le sol en cours permet de l'accélérer avec des graines.
+  const SKIPS = [{ sols: 360, cost: 1, label: '6 h' }, { sols: 1440, cost: 3, label: '24 h' }];
+  function timeSheet() {
+    A.openSheet(`<h3>${tr('LE TEMPS DE LA COLONIE')}</h3><h2>${tr('Sol {n}', { n: ui.col.sol })}</h2>
+      <p class="sheet-text">${tr('Un sol dure une minute, même appli fermée. Une graine de vie fait passer des heures d’un coup : production, arrivées, croissance de la verdure.')}</p>
+      <div class="sheet-actions">${SKIPS.map((k, i) => `<button class="btn ${i ? '' : 'primary'}" data-skip="${i}" ${A.seeds() < k.cost ? 'disabled' : ''}>+${k.label} · ${k.cost} ${icon('seed', 'seed')}</button>`).join('')}
+      <button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
+    for (const b of document.querySelectorAll('[data-skip]')) b.addEventListener('click', () => {
+      const k = SKIPS[Number(b.dataset.skip)];
+      if (A.seeds() < k.cost) return;
+      A.addSeeds(-k.cost);
+      const ev = C.fastForward(ui.col, k.sols);
+      ui.col.last = Date.now();
+      save(); A.closeSheet(); SFX.level();
+      const arr = ev.filter((e) => e.t === 'arrivee').reduce((n, e) => n + e.n, 0);
+      A.toast(tr('{label} passent : {n} arrivée(s).', { label: k.label, n: arr }), 2800);
+      renderRes(); renderCards(); draw();
     });
   }
 
@@ -461,6 +492,7 @@
   $('colZoomIn').addEventListener('click', () => zoom(1.25));
   $('colZoomOut').addEventListener('click', () => zoom(0.8));
   $('colZone').addEventListener('click', () => { SFX.tap(); zoneSheet(); });
+  $('colSol').addEventListener('click', () => { if (!ui.col) return; SFX.tap(); timeSheet(); });
   function zoom(k) {
     const v = $('colView').getBoundingClientRect();
     const cx = v.width / 2, cy = v.height / 2;
