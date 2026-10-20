@@ -23,8 +23,8 @@
   const ACTIVE_FAMILIES = 5;
   const COPIES = [0, 16, 15, 13, 11, 9, 7];
   // Légendaires : chance qu'un emplacement de la Création en montre une, et qu'une découverte en propose une.
-  const LEGEND_SHOP = 1 / 14;
-  const LEGEND_DISCOVER = 1 / 3;
+  const LEGEND_SHOP = 1 / 40;
+  const LEGEND_DISCOVER = 0.15;
   const SHOP_SIZE = [0, 3, 4, 4, 5, 5, 6];
   const UPGRADE = [0, 5, 7, 8, 9, 10, 0];
   const DAMAGE_CAP = 10;

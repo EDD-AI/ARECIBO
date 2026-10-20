@@ -548,8 +548,9 @@ sauvegarde en ligne. Ceux qui avaient déjà vaincu Kronos reçoivent la graine 
 
 Six astres **légendaires**, un par niveau, existent en **un seul exemplaire** par partie et sont présents
 dans toutes les parties, quelles que soient les familles tirées. Ils ne se montrent que rarement : chaque
-emplacement de la Création a 1 chance sur 14 d’en proposer un (de votre niveau ou moins), et une
-découverte en glisse un parmi ses choix une fois sur trois. Ils ne fusionnent pas (un seul exemplaire).
+emplacement de la Création a 1 chance sur 40 d’en proposer un (de votre niveau ou moins), et une
+découverte en glisse un parmi ses choix une fois sur sept environ (15 %). En moyenne, on en voit un par
+partie, et on en possède un dans environ 3 parties sur 10. Ils ne fusionnent pas (un seul exemplaire).
 
 | Niveau | Légendaire | Famille | Stats | Pouvoir |
 |---|---|---|---|---|
