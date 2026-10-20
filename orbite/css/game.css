@@ -1426,3 +1426,10 @@ body.in-combat .banner { top: calc(50% - 34px); }
 .seed-dot { width: 8px; height: 8px; border-radius: 50%; background: #ffd36a; box-shadow: 0 0 8px 2px rgba(255, 210, 110, 0.6); }
 .code-input { width: 100%; margin: 12px 0 4px; padding: 12px; font: inherit; font-size: 18px; letter-spacing: 0.14em; text-align: center; text-transform: uppercase; color: var(--ink); background: rgba(241, 236, 218, 0.06); border: 1px solid var(--faint); border-radius: 0; }
 .code-input:focus { outline: none; border-color: var(--ink); }
+
+/* Cinématique d'ouverture de la Création */
+.screen.cine { align-items: center; justify-content: center; }
+.cine-orb { width: min(46vw, 220px); height: min(46vw, 220px); }
+.cine-line { position: absolute; left: 24px; right: 24px; bottom: 22%; min-height: 2.6em; text-align: center; font-size: 17px; letter-spacing: 0.04em; color: var(--ink); }
+.cine-line.fade { opacity: 0; transition: opacity 0.9s; }
+.cine-skip { position: absolute; right: 16px; bottom: max(20px, env(safe-area-inset-bottom)); padding: 8px 12px; font: inherit; font-size: 11px; letter-spacing: 0.2em; color: var(--dim); background: none; border: 1px solid var(--faint); }

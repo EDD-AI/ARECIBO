@@ -166,9 +166,18 @@ Deux onglets : **Ma planète** (les 24 améliorations décrites plus haut) et **
 
 ## Création
 
-Bouton du menu principal, juste au-dessus du Marché stellaire. On y trouve la **Forge des mondes**,
-puis l’**Atelier des planètes** (`atelier.html`, générateur de planètes avec export PNG et GIF) et le
-**Bâtisseur de colonies** (`batisseur.html`).
+Bouton du menu principal, juste au-dessus du Marché stellaire. Elle se **débloque une fois pour toutes
+contre 1 000 poussières d’étoiles** : une cinématique s’ouvre alors (le vide, une étincelle qui devient
+une étoile, « Créateur, des mondes n’attendent que vous »), puis l’écran Création, où l’on sème sa graine
+dans la **Forge des mondes**.
+
+C’est le début d’un jeu en plusieurs étapes : faire grandir sa planète, descendre à sa surface, voir la
+vie y apparaître (« un colonisateur »), puis bâtir une colonie autonome en temps réel, avec un tutoriel.
+L’**Atelier des planètes** (`atelier.html`) et le **Bâtisseur de colonies** (`batisseur.html`) ne sont
+plus dans le menu, mais leurs moteurs servent à ce jeu et les pages restent accessibles par leur adresse.
+
+Paramètres → **Code cadeau** : un code donne des poussières d’étoiles une fois par appareil (seule
+l’empreinte SHA-256 des codes est publiée).
 
 ### Forge des mondes
 
