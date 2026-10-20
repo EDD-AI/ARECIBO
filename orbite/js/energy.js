@@ -37,20 +37,40 @@
 
   // Chaque famille : couleur, motif de surface (0 à 1) et nombre d'étincelles en orbite.
   const KINDS = {
-    vie: { color: '#9fdc7c', sparks: 5, surf(p, t) { const b = 0.5 + 0.5 * Math.sin(t * 1.6); return fbm(p[0] * 2.2, p[1] * 2.2 + t * 0.15, p[2] * 2.2) * 0.8 + b * 0.25; } },
-    neant: { color: '#a993f2', sparks: 7, inward: true, surf(p, t, r, a) { const s = Math.sin((a + r * 6 - t * 2.2) * 3) * 0.5 + 0.5; return Math.pow(r, 1.6) * (0.55 + 0.45 * s) + fbm(p[0] * 3, p[1] * 3, t * 0.4) * 0.15; } },
-    envers: { color: '#ff5f74', alt: '#5f7bff', sparks: 4, surf(p, t) { return fbm(p[0] * 2.4 + t * 0.3, -p[1] * 2.4, p[2] * 2.4); } },
-    brasier: { color: '#ff9a4a', sparks: 6, flame: true, surf(p, t) { const f = fbm(p[0] * 3, p[1] * 3 - t * 1.4, p[2] * 3 + t * 0.2); return f * 1.15 - 0.05 + 0.18 * Math.max(0, -p[1]); } },
-    glace: { color: '#8ad8ff', sparks: 5, surf(p, t) { const q = p.map((v) => Math.round(v * 3) / 3); return fbm(q[0] * 2 + t * 0.12, q[1] * 2, q[2] * 2) * 0.9 + (Math.sin(t * 2 + q[0] * 9) > 0.96 ? 0.4 : 0); } },
-    tempete: { color: '#5fe0c3', sparks: 6, surf(p, t) { return 0.5 + 0.45 * Math.sin(p[1] * 9 + fbm(p[0] * 2 + t * 1.2, p[1] * 2, p[2] * 2) * 5); } },
-    mineral: { color: '#dcbd8c', sparks: 8, rocks: true, veins: 0.6, surf(p, t) { const f = fbm(p[0] * 3.2 + t * 0.15, p[1] * 3.2, p[2] * 3.2); return f > 0.55 ? f * 1.1 : f * 0.6; } },
-    machine: { color: '#b8c4d8', sparks: 4, veins: 0.5, surf(p, t) { const lat = Math.asin(Math.max(-1, Math.min(1, p[1]))), lon = Math.atan2(p[0], p[2]) + t * 0.6; const g = Math.abs(Math.sin(lat * 5)) < 0.12 || Math.abs(Math.sin(lon * 4)) < 0.1; const pulse = Math.sin(lon * 4 - t * 4) > 0.8 ? 0.35 : 0; return (g ? 0.75 + pulse : 0.28) + fbm(p[0] * 4, p[1] * 4, t) * 0.12; } },
-    lune: { color: '#f2e3a0', sparks: 2, surf(p, t) { const cr = fbm(p[0] * 3.5 + t * 0.1, p[1] * 3.5, p[2] * 3.5); const phase = 0.5 + 0.5 * Math.sin(p[0] * 2.2 + t * 0.7); return (cr > 0.62 ? 0.35 : 0.7) * (0.35 + 0.75 * phase); } },
-    comete: { color: '#5f86ff', sparks: 9, surf(p, t) { const s = fbm(p[0] * 2 - t * 2.2, p[1] * 7, p[2] * 2); return s * 1.1 + Math.max(0, p[0]) * 0.25; } },
-    cristal: { color: '#ff7ad9', sparks: 5, surf(p, t) { const q = p.map((v) => Math.round(v * 2.5) / 2.5); const res = 0.5 + 0.5 * Math.sin(t * 3 + (q[0] + q[1] * 2) * 4); return fbm(q[0] * 2, q[1] * 2, q[2] * 2 + t * 0.2) * 0.7 + res * 0.4; } },
-    anomalie: { color: '#e6ff6e', alt: '#ff6ee6', sparks: 6, surf(p, t) { const g = Math.floor(t * 6) % 7 === 0 ? 0.4 : 0; return fbm(p[0] * 3 + g * 9, p[1] * 3 + Math.sin(t * 5) * 0.3, p[2] * 3 + t) + g; } },
-    neutre: { color: '#9aa3ad', sparks: 3, surf(p, t) { return fbm(p[0] * 2.5 + t * 0.2, p[1] * 2.5, p[2] * 2.5); } }
+    vie: { color: '#5fd35a', sparks: 5, surf(p, t) { const b = 0.5 + 0.5 * Math.sin(t * 1.6); return fbm(p[0] * 2.2, p[1] * 2.2 + t * 0.15, p[2] * 2.2) * 0.8 + b * 0.25; } },
+    neant: { color: '#9a6bff', sparks: 7, inward: true, surf(p, t, r, a) { const s = Math.sin((a + r * 6 - t * 2.2) * 3) * 0.5 + 0.5; return Math.pow(r, 1.6) * (0.55 + 0.45 * s) + fbm(p[0] * 3, p[1] * 3, t * 0.4) * 0.15; } },
+    envers: { color: '#ff4f6d', alt: '#5f7bff', sparks: 4, surf(p, t) { return fbm(p[0] * 2.4 + t * 0.3, -p[1] * 2.4, p[2] * 2.4); } },
+    brasier: { color: '#ff8a2a', sparks: 6, flame: true, surf(p, t) { const f = fbm(p[0] * 3, p[1] * 3 - t * 1.4, p[2] * 3 + t * 0.2); return f * 1.15 - 0.05 + 0.18 * Math.max(0, -p[1]); } },
+    glace: { color: '#8be6ff', sparks: 5, surf(p, t) { const q = p.map((v) => Math.round(v * 3) / 3); return fbm(q[0] * 2 + t * 0.12, q[1] * 2, q[2] * 2) * 0.9 + (Math.sin(t * 2 + q[0] * 9) > 0.96 ? 0.4 : 0); } },
+    tempete: { color: '#2fd6b0', sparks: 6, surf(p, t) { return 0.5 + 0.45 * Math.sin(p[1] * 9 + fbm(p[0] * 2 + t * 1.2, p[1] * 2, p[2] * 2) * 5); } },
+    mineral: { color: '#b8743f', sparks: 8, rocks: true, veins: 0.6, surf(p, t) { const f = fbm(p[0] * 3.2 + t * 0.15, p[1] * 3.2, p[2] * 3.2); return f > 0.55 ? f * 1.1 : f * 0.6; } },
+    machine: { color: '#9fb3c8', sparks: 4, veins: 0.5, surf(p, t) { const lat = Math.asin(Math.max(-1, Math.min(1, p[1]))), lon = Math.atan2(p[0], p[2]) + t * 0.6; const g = Math.abs(Math.sin(lat * 5)) < 0.12 || Math.abs(Math.sin(lon * 4)) < 0.1; const pulse = Math.sin(lon * 4 - t * 4) > 0.8 ? 0.35 : 0; return (g ? 0.75 + pulse : 0.28) + fbm(p[0] * 4, p[1] * 4, t) * 0.12; } },
+    lune: { color: '#ffd447', sparks: 2, surf(p, t) { const cr = fbm(p[0] * 3.5 + t * 0.1, p[1] * 3.5, p[2] * 3.5); const phase = 0.5 + 0.5 * Math.sin(p[0] * 2.2 + t * 0.7); return (cr > 0.62 ? 0.35 : 0.7) * (0.35 + 0.75 * phase); } },
+    comete: { color: '#4f7bff', sparks: 9, surf(p, t) { const s = fbm(p[0] * 2 - t * 2.2, p[1] * 7, p[2] * 2); return s * 1.1 + Math.max(0, p[0]) * 0.25; } },
+    cristal: { color: '#ff6fd8', sparks: 5, surf(p, t) { const q = p.map((v) => Math.round(v * 2.5) / 2.5); const res = 0.5 + 0.5 * Math.sin(t * 3 + (q[0] + q[1] * 2) * 4); return fbm(q[0] * 2, q[1] * 2, q[2] * 2 + t * 0.2) * 0.7 + res * 0.4; } },
+    anomalie: { color: '#c8ff3a', sparks: 6, surf(p, t) { const g = Math.floor(t * 6) % 7 === 0 ? 0.4 : 0; return fbm(p[0] * 3 + g * 9, p[1] * 3 + Math.sin(t * 5) * 0.3, p[2] * 3 + t) + g; } },
+    neutre: { color: '#f2efe6', sparks: 3, surf(p, t) { return fbm(p[0] * 2.5 + t * 0.2, p[1] * 2.5, p[2] * 2.5); } }
   };
+
+  // Silhouette de chaque sphère : distance normalisée (1 = bord), pour que les lois ne soient pas toutes rondes.
+  const poly = (x, y, n, rot) => {
+    const a = Math.atan2(y, x) - rot, k = Math.PI * 2 / n;
+    return Math.hypot(x, y) * Math.cos(((a % k) + k) % k - Math.PI / n) / Math.cos(Math.PI / n);
+  };
+  const SHAPES = {
+    vie: (x, y) => Math.hypot(x, y) / (1 + 0.13 * Math.cos(5 * Math.atan2(y, x) + Math.PI / 2)),
+    envers: (x, y) => poly(x, y, 3, Math.PI / 2) * 0.8,
+    brasier: (x, y) => Math.hypot(x, y) / (1 + 0.55 * Math.pow(Math.max(0, -y / (Math.hypot(x, y) || 1)), 4)),
+    glace: (x, y) => poly(x, y, 6, 0) * 0.95,
+    tempete: (x, y) => Math.hypot(x / 1.2, y / 0.74),
+    mineral: (x, y) => Math.pow(Math.pow(Math.abs(x * 0.97 + y * 0.12), 4) + Math.pow(Math.abs(y * 1.05 - x * 0.1), 4), 0.25) * 1.08,
+    machine: (x, y) => Math.hypot(x, y) / (1 + 0.1 * (Math.cos(8 * Math.atan2(y, x)) > 0 ? 1 : -0.4)),
+    comete: (x, y) => Math.hypot(x * 1.1, y * 1.1) / (1 + 1.1 * Math.pow(Math.max(0, -x / (Math.hypot(x, y) || 1)), 6)),
+    cristal: (x, y) => Math.abs(x) / 0.78 + Math.abs(y) / 1.12,
+    anomalie: (x, y, t) => { const a = Math.atan2(y, x); return Math.hypot(x, y) / (1 + 0.2 * Math.sin(3 * a + t * 1.3) + 0.12 * Math.sin(5 * a - t * 2.1)); }
+  };
+  // La Lune est un croissant : on retire un disque décalé.
+  const cutOf = { lune: (x, y) => Math.hypot(x - 0.42, y + 0.18) < 0.82 };
 
   const items = new Set();
   let raf = 0;
@@ -59,7 +79,7 @@
     const k = KINDS[fam] || KINDS.neutre;
     canvas.width = N;
     canvas.height = N;
-    const it = { canvas, ctx: canvas.getContext('2d'), k, ramp: rampOf(k.color, k.alt), img: null, t0: Math.random() * 100, pulse: 0, seed: Math.random() * 50 };
+    const it = { fam, canvas, ctx: canvas.getContext('2d'), k, ramp: rampOf(k.color, k.alt), img: null, t0: Math.random() * 100, pulse: 0, seed: Math.random() * 50 };
     it.img = it.ctx.createImageData(N, N);
     items.add(it);
     canvas._energy = it;
@@ -81,7 +101,9 @@
     for (let y = 0; y < N; y++) {
       for (let x = 0; x < N; x++) {
         const px = (x + 0.5) / N * 2 - 1, py = (y + 0.5) / N * 2 - 1;
-        const r = Math.hypot(px, py) / R;
+        const shape = SHAPES[it.fam];
+        const r = shape ? shape(px / R, py / R, t) : Math.hypot(px, py) / R;
+        if (cutOf[it.fam] && r < 1.65 && cutOf[it.fam](px / R, py / R)) continue;
         const th = BAYER[(y & 3) * 4 + (x & 3)];
         let level = -1, alpha = 255;
         if (r < 1) {

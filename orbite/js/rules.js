@@ -29,19 +29,19 @@
   const REWARDS = { 1: 100, 2: 60, 3: 30 };
 
   const FAMILIES = {
-    vie: { name: 'Vie', color: '#9fdc7c', text: 'Les Soleils font grandir les mondes Habitables à chaque fin de cycle.' },
-    neant: { name: 'Néant', color: '#a993f2', text: 'Trous noirs et planètes mortes : chaque effondrement nourrit les autres.' },
-    envers: { name: 'Envers', color: '#ff5f74', text: 'Le monde à l’envers : Renaissance, Venin et inversion des statistiques.' },
-    brasier: { name: 'Brasier', color: '#ff9a4a', text: 'Lave et étoiles rouges : des dégâts avant même le premier coup.' },
-    glace: { name: 'Glace', color: '#8ad8ff', text: 'Boucliers de glace, et de la force quand ils se brisent.' },
-    tempete: { name: 'Tempête', color: '#5fe0c3', text: 'Géantes gazeuses : Rafale et attaque qui monte à chaque coup.' },
-    mineral: { name: 'Minéral', color: '#dcbd8c', text: 'Remparts de roche qui accumulent les points de vie.' },
-    machine: { name: 'Machine', color: '#b8c4d8', text: 'Sondes et stations qui s’arriment les unes aux autres.' },
-    lune: { name: 'Lunes', color: '#f2e3a0', text: 'Satellites qui renforcent leurs voisins : l’ordre du système compte.' },
-    comete: { name: 'Comètes', color: '#5f86ff', text: 'Elles grandissent quand vous actualisez la Création et récompensent la vente.' },
-    cristal: { name: 'Cristal', color: '#ff7ad9', text: 'Résonance : chaque Cristal joué renforce les autres.' },
-    anomalie: { name: 'Anomalies', color: '#e6ff6e', text: 'Le chaos : astres aléatoires, découvertes et mots-clés imprévus.' },
-    neutre: { name: 'Neutre', color: '#9aa3ad', text: 'Présents dans toutes les parties.' }
+    vie: { name: 'Vie', color: '#5fd35a', text: 'Les Soleils font grandir les mondes Habitables à chaque fin de cycle.' },
+    neant: { name: 'Néant', color: '#9a6bff', text: 'Trous noirs et planètes mortes : chaque effondrement nourrit les autres.' },
+    envers: { name: 'Envers', color: '#ff4f6d', text: 'Le monde à l’envers : Renaissance, Venin et inversion des statistiques.' },
+    brasier: { name: 'Brasier', color: '#ff8a2a', text: 'Lave et étoiles rouges : des dégâts avant même le premier coup.' },
+    glace: { name: 'Glace', color: '#8be6ff', text: 'Boucliers de glace, et de la force quand ils se brisent.' },
+    tempete: { name: 'Tempête', color: '#2fd6b0', text: 'Géantes gazeuses : Rafale et attaque qui monte à chaque coup.' },
+    mineral: { name: 'Minéral', color: '#b8743f', text: 'Remparts de roche qui accumulent les points de vie.' },
+    machine: { name: 'Machine', color: '#9fb3c8', text: 'Sondes et stations qui s’arriment les unes aux autres.' },
+    lune: { name: 'Lunes', color: '#ffd447', text: 'Satellites qui renforcent leurs voisins : l’ordre du système compte.' },
+    comete: { name: 'Comètes', color: '#4f7bff', text: 'Elles grandissent quand vous actualisez la Création et récompensent la vente.' },
+    cristal: { name: 'Cristal', color: '#ff6fd8', text: 'Résonance : chaque Cristal joué renforce les autres.' },
+    anomalie: { name: 'Anomalies', color: '#c8ff3a', text: 'Le chaos : astres aléatoires, découvertes et mots-clés imprévus.' },
+    neutre: { name: 'Neutre', color: '#f2efe6', text: 'Présents dans toutes les parties.' }
   };
   const FAMILY_KEYS = ['vie', 'neant', 'envers', 'brasier', 'glace', 'tempete', 'mineral', 'machine', 'lune', 'comete', 'cristal', 'anomalie'];
   const RANDOM_KW = ['bouclier', 'rafale', 'venin', 'renaissance', 'rempart'];

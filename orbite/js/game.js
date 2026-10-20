@@ -6,6 +6,12 @@
 
   const R = window.OrbiteRules;
   const SFX = window.OrbiteSfx;
+  const I18N = window.OrbiteI18n;
+  // Les données des règles (astres, lois, familles, mots-clés) passent dans la langue choisie.
+  I18N.localize(R.CARDS, ['name', 'text']);
+  I18N.localize(R.LAWS, ['name', 'tagline', 'text']);
+  I18N.localize(R.FAMILIES, ['name', 'text']);
+  I18N.localize(R.KEYWORDS, ['name', 'text']);
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
@@ -985,11 +991,19 @@
     return `<h3>PARAMÈTRES</h3><div class="menu-list-sheet">
       <button class="btn" data-act="set" data-v="sound">SON : ${SFX.muted ? 'COUPÉ' : 'ACTIVÉ'}</button>
       <button class="btn" data-act="set" data-v="music">MUSIQUE : ${SFX.musicOn ? 'ACTIVÉE' : 'COUPÉE'}</button>
+      <button class="btn" data-act="set" data-v="lang">${tr('LANGUE')} : ${I18N.LANGS.find((l) => l.id === I18N.lang).name.toUpperCase()}</button>
       <button class="btn" data-act="set" data-v="tutos">TUTORIELS ET AIDE</button>
       ${installed() ? '' : '<button class="btn" data-act="set" data-v="install">INSTALLER SUR LE TÉLÉPHONE</button>'}
       <button class="btn" data-act="set" data-v="credits">CRÉDITS</button>
     </div><p class="muted">Poussières d’étoiles, niveau, planète et partie en cours restent sur cet appareil.</p>
     <p class="muted version">ORBITE · version ${VERSION}</p>`;
+  }
+
+  // Langue du jeu : le choix est enregistré et le jeu redémarre dans la nouvelle langue.
+  function langHtml() {
+    return `<h3>${tr('LANGUE')}</h3><div class="menu-list-sheet">
+      ${I18N.LANGS.map((l) => `<button class="btn ${l.id === I18N.lang ? 'primary' : ''}" data-act="set" data-v="lang:${l.id}">${l.name.toUpperCase()}</button>`).join('')}
+    </div><div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} PARAMÈTRES</button></div>`;
   }
 
   // Tous les tutoriels et l'aide sont rangés derrière un seul bouton des Paramètres.
@@ -1049,6 +1063,8 @@
     if (v === 'sound') { SFX.setMuted(!SFX.muted); if (!SFX.muted) SFX.tap(); openSheet(settingsHtml()); }
     else if (v === 'music') { SFX.setMusicOn(!SFX.musicOn); SFX.tap(); openSheet(settingsHtml()); }
     else if (v === 'tutos') openSheet(tutosHtml());
+    else if (v === 'lang') openSheet(langHtml());
+    else if (v.startsWith('lang:')) I18N.setLang(v.slice(5));
     else if (v === 'help') openSheet(helpHtml(true));
     else if (v === 'credits') openSheet(creditsHtml());
     else if (v === 'install') install();
