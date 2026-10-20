@@ -1522,18 +1522,72 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 /* Graines de vie */
 .pix.seed { color: #7ee08a; }
 .wallet-seed { margin-left: 10px; color: #b8f0bf; }
-.seed-shop { display: flex; flex-direction: column; gap: 6px; padding-bottom: 20px; }
-.seed-hero { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 0 6px; }
-.seed-hero .pix.big { width: 46px; height: 46px; filter: drop-shadow(0 0 10px rgba(126, 224, 138, 0.6)); }
-.seed-hero b { font-size: 30px; font-weight: 600; color: #b8f0bf; }
-.seed-hero small { font-size: 11px; letter-spacing: 0.2em; color: var(--dim); text-transform: uppercase; }
-.seed-list { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; color: var(--dim); }
-.seed-packs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.seed-pack { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 8px; font: inherit; color: var(--ink); background: rgba(126, 224, 138, 0.06); border: 1px solid rgba(126, 224, 138, 0.35); }
-.seed-pack .pix { width: 22px; height: 22px; }
-.seed-pack b { font-size: 22px; font-weight: 600; }
-.seed-pack span { font-size: 12px; color: var(--dim); }
-.seed-pack em { position: absolute; top: 6px; right: 6px; font-style: normal; font-size: 10px; color: #7ee08a; }
+.seed-shop { --sg: #7ee08a; --sg2: #b8f0bf; display: flex; flex-direction: column; gap: 10px; padding-bottom: 24px; }
+.mk-tabs button[data-tab="graines"] { color: #9fe6a8; text-shadow: 0 0 10px rgba(126, 224, 138, 0.55); }
+.mk-tabs button[data-tab="graines"].on { color: #d4f7d8; border-bottom-color: var(--sg, #7ee08a); }
+/* Vitrine : la graine flotte dans son halo, des étincelles montent */
+.seed-hero { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 0 4px; text-align: center; }
+.seed-orb { position: relative; width: 118px; height: 118px; display: grid; place-items: center; }
+.seed-halo { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, rgba(126, 224, 138, 0.42) 0%, rgba(126, 224, 138, 0.12) 42%, transparent 70%); animation: seedPulse 2.8s ease-in-out infinite; }
+.seed-hero-art { position: relative; width: 76px; height: 76px; filter: drop-shadow(0 0 12px rgba(126, 224, 138, 0.7)); animation: seedFloat 3.6s ease-in-out infinite; }
+.seed-spark { position: absolute; left: calc(18% + var(--i) * 13%); bottom: 18%; width: 3px; height: 3px; background: #d8ffdc; box-shadow: 0 0 6px #7ee08a; opacity: 0; animation: seedSpark 3s linear infinite; animation-delay: calc(var(--i) * -0.55s); }
+.seed-hero > b { font-size: 40px; font-weight: 600; line-height: 1; color: var(--sg2); text-shadow: 0 0 18px rgba(126, 224, 138, 0.55); }
+.seed-hero > small { font-size: 11px; letter-spacing: 0.24em; color: var(--sg); text-transform: uppercase; }
+.seed-hero > p { margin: 8px 12px 0; font-size: 13px; line-height: 1.45; color: var(--dim); }
+@keyframes seedFloat { 0%, 100% { transform: translateY(3px) rotate(-3deg); } 50% { transform: translateY(-6px) rotate(3deg); } }
+@keyframes seedPulse { 0%, 100% { transform: scale(0.9); opacity: 0.75; } 50% { transform: scale(1.08); opacity: 1; } }
+@keyframes seedSpark { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-96px); opacity: 0; } }
+/* Prix : une pastille verte */
+.seed-price { display: inline-flex; align-items: baseline; justify-content: center; gap: 6px; min-width: 84px; padding: 7px 12px; font-size: 14px; font-weight: 600; color: #04160a; background: linear-gradient(180deg, #a6f2b0, #5ccf6c); box-shadow: 0 0 14px rgba(126, 224, 138, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5); }
+.seed-price s { font-size: 11px; font-weight: 400; color: rgba(4, 22, 10, 0.55); }
+/* Offre de bienvenue */
+.seed-starter { position: relative; display: grid; gap: 8px; padding: 12px 12px 14px; font: inherit; color: var(--ink); text-align: left; overflow: hidden;
+  background: linear-gradient(120deg, rgba(246, 196, 83, 0.16), rgba(126, 224, 138, 0.1) 60%, rgba(0, 0, 0, 0.4)); border: 1px solid rgba(246, 196, 83, 0.7); box-shadow: 0 0 22px rgba(246, 196, 83, 0.18); }
+.seed-starter::after, .seed-pack::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.14) 50%, transparent 65%); transform: translateX(-120%); animation: seedSheen 5s ease-in-out infinite; pointer-events: none; }
+.seed-starter-tag { font-size: 10px; letter-spacing: 0.2em; color: var(--gold); }
+.seed-starter-body { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+.seed-starter-ico { width: 44px; height: 44px; filter: drop-shadow(0 0 8px rgba(126, 224, 138, 0.7)); }
+.seed-starter-txt { display: grid; gap: 2px; }
+.seed-starter-txt b { font-size: 18px; font-weight: 600; color: var(--sg2); }
+.seed-starter-txt small { font-size: 11px; line-height: 1.35; color: var(--dim); }
+@keyframes seedSheen { 0%, 60% { transform: translateX(-120%); } 85%, 100% { transform: translateX(120%); } }
+/* Les quatre paquets */
+.seed-packs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.seed-pack { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 22px 8px 12px; font: inherit; color: var(--ink); overflow: hidden;
+  background: radial-gradient(circle at 50% 28%, rgba(126, 224, 138, 0.2), rgba(126, 224, 138, 0.03) 62%), rgba(0, 0, 0, 0.35); border: 1px solid rgba(126, 224, 138, 0.4);
+  animation: seedIn 0.45s cubic-bezier(0.2, 1.3, 0.4, 1) both; animation-delay: var(--d); transition: transform 0.12s; }
+.seed-pack:active, .seed-starter:active { transform: scale(0.97); }
+.seed-pack::after { animation-delay: calc(var(--d) * 4); }
+.seed-pack-art { display: grid; place-items: center; width: 76px; height: 76px; }
+.seed-pack-art .seed-art { width: 64px; height: 64px; filter: drop-shadow(0 0 8px rgba(126, 224, 138, 0.45)); transition: transform 0.3s; }
+.seed-pack:hover .seed-art { transform: translateY(-3px) scale(1.05); }
+.seed-pack-name { font-size: 10px; letter-spacing: 0.22em; color: var(--sg); text-transform: uppercase; }
+.seed-pack > b { display: inline-flex; align-items: center; gap: 6px; font-size: 26px; font-weight: 600; line-height: 1; }
+.seed-pack > b .pix { width: 16px; height: 16px; }
+.seed-bonus { position: absolute; top: 8px; right: -26px; width: 92px; padding: 2px 0; transform: rotate(38deg); font-size: 10px; font-weight: 600; text-align: center; color: #04160a; background: var(--sg); }
+.seed-badge { position: absolute; top: 0; left: 0; padding: 3px 7px; font-size: 9px; letter-spacing: 0.16em; color: #04160a; background: var(--sg2); }
+@property --sa { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.seed-pack.best { border: 2px solid transparent; box-shadow: 0 0 24px rgba(246, 196, 83, 0.3);
+  background: radial-gradient(circle at 50% 28%, rgba(246, 196, 83, 0.24), rgba(126, 224, 138, 0.05) 62%) padding-box, linear-gradient(#070a06, #070a06) padding-box,
+    conic-gradient(from var(--sa), #f6c453, #7ee08a, #fff2c4, #7ee08a, #f6c453) border-box;
+  animation: seedIn 0.45s cubic-bezier(0.2, 1.3, 0.4, 1) both var(--d), seedSpin 4s linear infinite; }
+.seed-pack.best .seed-badge { background: var(--gold); }
+.seed-pack.best .seed-bonus { background: var(--gold); }
+.seed-pack.best .seed-art { filter: drop-shadow(0 0 10px rgba(246, 196, 83, 0.6)); }
+.seed-pack.best .seed-pack-name { color: var(--gold); }
+@keyframes seedSpin { to { --sa: 360deg; } }
+@keyframes seedIn { from { opacity: 0; transform: translateY(14px) scale(0.94); } }
+/* Usages et gains */
+.seed-uses { display: grid; gap: 6px; }
+.seed-use { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border: 1px solid var(--line); border-left: 2px solid var(--sg); background: rgba(126, 224, 138, 0.04); text-align: left; }
+.seed-use span { display: grid; gap: 1px; }
+.seed-use b { font-size: 13px; font-weight: 400; }
+.seed-use small { font-size: 11px; color: var(--dim); }
+.seed-use em { display: inline-flex; align-items: center; gap: 4px; font-style: normal; font-size: 14px; font-weight: 600; color: var(--sg2); white-space: nowrap; }
+.seed-use em .pix { width: 11px; height: 11px; }
+.seed-earn { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.seed-earn span { display: grid; gap: 3px; padding: 10px 4px; border: 1px solid var(--line); font-size: 10px; line-height: 1.3; color: var(--dim); text-align: center; }
+.seed-earn b { font-size: 18px; font-weight: 600; color: var(--sg2); }
 .cos-buy { display: flex; flex-direction: column; gap: 4px; }
 .cos-buy .btn { min-height: 34px; padding: 0 10px; }
 .fg-seedfeed { margin-top: 6px; min-height: 36px; font-size: 12px; }

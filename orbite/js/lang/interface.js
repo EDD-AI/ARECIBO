@@ -1283,3 +1283,74 @@ window.OrbiteI18n.add({
     "GRAINES": "SEMENTES"
   }
 });
+// Boutique des graines de vie (Marché stellaire → GRAINES)
+window.OrbiteI18n.add({
+  en: {
+    "La sève de vos mondes : elle fait pousser, construire et voyager plus vite.": "The sap of your worlds: it makes things grow, build and travel faster.",
+    "OFFRE DE BIENVENUE": "WELCOME OFFER", "UNE SEULE FOIS": "ONE TIME ONLY", "{n} graines": "{n} seeds",
+    "Le double d’un paquet classique, pour bien démarrer.": "Twice a regular pack, for a strong start.",
+    "POPULAIRE": "POPULAR", "MEILLEURE OFFRE": "BEST VALUE",
+    "Poignée": "Handful", "Bourgeon": "Bud", "Jardin": "Garden", "Forêt sacrée": "Sacred Forest",
+    "CE QU’ELLES FONT POUSSER": "WHAT THEY GROW",
+    "Booster un bâtiment": "Boost a building", "production ×2 pendant 24 h": "×2 production for 24 h",
+    "Avancer la colonie de 6 h": "Move the colony 6 h ahead", "touchez « SOL » à la surface": "tap “SOL” on the surface",
+    "Avancer la colonie de 24 h": "Move the colony 24 h ahead", "une journée de production d’un coup": "a full day of production at once",
+    "Faire grandir une planète": "Grow a planet", "une taille de plus dans la Forge": "one more size in the Forge",
+    "Arroser l’arbre d’étoiles": "Water the star tree", "cinq arrosages d’un coup": "five waterings at once",
+    "Recharger le rover": "Recharge the rover", "repartir aussitôt en expédition": "head straight back out on expedition",
+    "Un fond animé": "An animated background", "derrière toutes vos parties": "behind all your games",
+    "EN GAGNER EN JOUANT": "EARN THEM BY PLAYING", "par victoire": "per victory", "tous les 5 niveaux": "every 5 levels",
+    "ruines anciennes": "ancient ruins", "dans les succès": "in achievements"
+  },
+  es: {
+    "La sève de vos mondes : elle fait pousser, construire et voyager plus vite.": "La savia de tus mundos: hace crecer, construir y viajar más rápido.",
+    "OFFRE DE BIENVENUE": "OFERTA DE BIENVENIDA", "UNE SEULE FOIS": "SOLO UNA VEZ", "{n} graines": "{n} semillas",
+    "Le double d’un paquet classique, pour bien démarrer.": "El doble de un paquete normal, para empezar con fuerza.",
+    "POPULAIRE": "POPULAR", "MEILLEURE OFFRE": "MEJOR OFERTA",
+    "Poignée": "Puñado", "Bourgeon": "Brote", "Jardin": "Jardín", "Forêt sacrée": "Bosque sagrado",
+    "CE QU’ELLES FONT POUSSER": "LO QUE HACEN CRECER",
+    "Booster un bâtiment": "Impulsar un edificio", "production ×2 pendant 24 h": "producción ×2 durante 24 h",
+    "Avancer la colonie de 6 h": "Adelantar la colonia 6 h", "touchez « SOL » à la surface": "toca «SOL» en la superficie",
+    "Avancer la colonie de 24 h": "Adelantar la colonia 24 h", "une journée de production d’un coup": "un día de producción de golpe",
+    "Faire grandir une planète": "Hacer crecer un planeta", "une taille de plus dans la Forge": "un tamaño más en la Forja",
+    "Arroser l’arbre d’étoiles": "Regar el árbol de estrellas", "cinq arrosages d’un coup": "cinco riegos de golpe",
+    "Recharger le rover": "Recargar el rover", "repartir aussitôt en expédition": "volver enseguida de expedición",
+    "Un fond animé": "Un fondo animado", "derrière toutes vos parties": "detrás de todas tus partidas",
+    "EN GAGNER EN JOUANT": "GÁNALAS JUGANDO", "par victoire": "por victoria", "tous les 5 niveaux": "cada 5 niveles",
+    "ruines anciennes": "ruinas antiguas", "dans les succès": "en los logros"
+  },
+  de: {
+    "La sève de vos mondes : elle fait pousser, construire et voyager plus vite.": "Der Saft deiner Welten: Damit wächst, baut und reist alles schneller.",
+    "OFFRE DE BIENVENUE": "WILLKOMMENSANGEBOT", "UNE SEULE FOIS": "NUR EINMAL", "{n} graines": "{n} Samen",
+    "Le double d’un paquet classique, pour bien démarrer.": "Doppelt so viel wie ein normales Paket – für einen starken Start.",
+    "POPULAIRE": "BELIEBT", "MEILLEURE OFFRE": "BESTES ANGEBOT",
+    "Poignée": "Handvoll", "Bourgeon": "Knospe", "Jardin": "Garten", "Forêt sacrée": "Heiliger Wald",
+    "CE QU’ELLES FONT POUSSER": "WAS SIE WACHSEN LASSEN",
+    "Booster un bâtiment": "Ein Gebäude verstärken", "production ×2 pendant 24 h": "Produktion ×2 für 24 h",
+    "Avancer la colonie de 6 h": "Kolonie 6 h vorspulen", "touchez « SOL » à la surface": "tippe auf „SOL“ an der Oberfläche",
+    "Avancer la colonie de 24 h": "Kolonie 24 h vorspulen", "une journée de production d’un coup": "ein ganzer Tag Produktion auf einmal",
+    "Faire grandir une planète": "Einen Planeten wachsen lassen", "une taille de plus dans la Forge": "eine Größe mehr in der Schmiede",
+    "Arroser l’arbre d’étoiles": "Den Sternenbaum gießen", "cinq arrosages d’un coup": "fünfmal gießen auf einmal",
+    "Recharger le rover": "Den Rover aufladen", "repartir aussitôt en expédition": "sofort wieder auf Expedition",
+    "Un fond animé": "Ein animierter Hintergrund", "derrière toutes vos parties": "hinter all deinen Partien",
+    "EN GAGNER EN JOUANT": "DURCH SPIELEN VERDIENEN", "par victoire": "pro Sieg", "tous les 5 niveaux": "alle 5 Stufen",
+    "ruines anciennes": "uralte Ruinen", "dans les succès": "in den Erfolgen"
+  },
+  pt: {
+    "La sève de vos mondes : elle fait pousser, construire et voyager plus vite.": "A seiva dos seus mundos: faz crescer, construir e viajar mais rápido.",
+    "OFFRE DE BIENVENUE": "OFERTA DE BOAS-VINDAS", "UNE SEULE FOIS": "SÓ UMA VEZ", "{n} graines": "{n} sementes",
+    "Le double d’un paquet classique, pour bien démarrer.": "O dobro de um pacote normal, para começar bem.",
+    "POPULAIRE": "POPULAR", "MEILLEURE OFFRE": "MELHOR OFERTA",
+    "Poignée": "Punhado", "Bourgeon": "Broto", "Jardin": "Jardim", "Forêt sacrée": "Floresta sagrada",
+    "CE QU’ELLES FONT POUSSER": "O QUE ELAS FAZEM CRESCER",
+    "Booster un bâtiment": "Impulsionar um edifício", "production ×2 pendant 24 h": "produção ×2 por 24 h",
+    "Avancer la colonie de 6 h": "Avançar a colônia 6 h", "touchez « SOL » à la surface": "toque em “SOL” na superfície",
+    "Avancer la colonie de 24 h": "Avançar a colônia 24 h", "une journée de production d’un coup": "um dia inteiro de produção de uma vez",
+    "Faire grandir une planète": "Fazer um planeta crescer", "une taille de plus dans la Forge": "um tamanho a mais na Forja",
+    "Arroser l’arbre d’étoiles": "Regar a árvore de estrelas", "cinq arrosages d’un coup": "cinco regas de uma vez",
+    "Recharger le rover": "Recarregar o rover", "repartir aussitôt en expédition": "voltar logo à expedição",
+    "Un fond animé": "Um fundo animado", "derrière toutes vos parties": "atrás de todas as suas partidas",
+    "EN GAGNER EN JOUANT": "GANHE JOGANDO", "par victoire": "por vitória", "tous les 5 niveaux": "a cada 5 níveis",
+    "ruines anciennes": "ruínas antigas", "dans les succès": "nas conquistas"
+  }
+});
