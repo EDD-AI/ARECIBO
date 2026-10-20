@@ -467,5 +467,16 @@
   window.addEventListener('resize', () => { if (ui.col) place(); });
 
   const has = (id) => !!all()[id];
-  window.OrbiteColonieUI = { open, close, has, SURFACE_MASS, THEME, get state() { return ui; } };
+  // Retour d'une expédition : la colonie reprend là où on l'avait laissée.
+  async function resume() {
+    await A.show('colony');
+    stage.sky = 0;
+    renderRes(); renderCards(); hint();
+    draw();
+  }
+  $('colExplore').addEventListener('click', () => {
+    SFX.tap();
+    if (window.OrbiteExplorationUI) window.OrbiteExplorationUI.open(ui.col);
+  });
+  window.OrbiteColonieUI = { open, close, has, save, resume, SURFACE_MASS, THEME, get state() { return ui; } };
 })();

@@ -92,6 +92,7 @@
       <div class="col-view" id="colView">
         <canvas id="colCanvas"></canvas>
         <canvas id="colGhost"></canvas>
+        <button class="col-explore" id="colExplore" data-t>EXPÉDITION</button>
         <div class="col-zoom">
           <button class="icon-btn" id="colZoomIn" aria-label="Zoomer" data-t-attr="aria-label">+</button>
           <button class="icon-btn" id="colZoomOut" aria-label="Dézoomer" data-t-attr="aria-label">−</button>
@@ -107,6 +108,25 @@
       </div>
       <div class="col-cats" id="colCats"></div>
       <div class="col-cards" id="colCards"></div>
+    </section>
+
+    <!-- EXPÉDITION : le rover explore les environs de la colonie -->
+    <section class="screen explore" id="explore" aria-label="Expédition" data-t-attr="aria-label">
+      <header class="screen-head">
+        <button class="icon-btn" id="exBack" aria-label="Retour" data-t-attr="aria-label"></button>
+        <h2 data-t>Expédition</h2>
+        <span class="col-sol" id="exDist"></span>
+      </header>
+      <div class="ex-hud"><div class="ex-bat"><i id="exBatBar"></i></div><span id="exBatTxt"></span><span id="exFound"></span></div>
+      <div class="ex-view" id="exView">
+        <canvas id="exCanvas"></canvas>
+        <div class="col-zoom">
+          <button class="icon-btn" id="exZoomIn" aria-label="Zoomer" data-t-attr="aria-label">+</button>
+          <button class="icon-btn" id="exZoomOut" aria-label="Dézoomer" data-t-attr="aria-label">−</button>
+          <button class="icon-btn col-zone-btn" id="exHome" aria-label="Retour à la base" data-t-attr="aria-label">⌂</button>
+        </div>
+        <p class="ex-hint" id="exHint" data-t>Touchez le terrain pour y envoyer le rover.</p>
+      </div>
     </section>
 
     <!-- CINÉMATIQUE D'OUVERTURE DE LA CRÉATION -->
@@ -351,6 +371,8 @@
   <script src="js/building-renderer.js"></script>
   <script src="js/colonie-jeu.js"></script>
   <script src="js/colonie-ui.js"></script>
+  <script src="js/exploration.js"></script>
+  <script src="js/exploration-ui.js"></script>
   <script src="js/forge-ui.js"></script>
   <script src="js/online-ui.js"></script>
 </body>

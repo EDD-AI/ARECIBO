@@ -1482,3 +1482,14 @@ body.in-combat .banner { top: calc(50% - 34px); }
 /* Profil : la carte de rang se déplie (échelle des rangs, barème). */
 button.pf-rank { grid-template-columns: 56px 1fr auto; width: 100%; font: inherit; color: var(--ink); text-align: left; background: none; cursor: pointer; }
 .pf-fold { font-style: normal; font-size: 16px; color: var(--dim); align-self: center; }
+/* Expédition */
+.col-explore { position: absolute; left: 6px; top: 6px; z-index: 2; padding: 8px 12px; font: inherit; font-size: 10px; letter-spacing: 0.2em; color: #07060a; background: var(--gold); border: none; }
+.screen.explore { padding-left: 10px; padding-right: 10px; gap: 6px; }
+.ex-hud { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; font-size: 11px; color: var(--dim); letter-spacing: 0.06em; }
+.ex-bat { height: 8px; background: rgba(241, 236, 218, 0.1); border: 1px solid var(--faint); }
+.ex-bat i { display: block; height: 100%; background: linear-gradient(90deg, #4ea84a, #d7f59a); transition: width 0.2s; }
+.ex-bat i.low { background: linear-gradient(90deg, #a83a2a, #f08c3a); }
+.ex-view { position: relative; flex: 1; min-height: 200px; overflow: hidden; background: #07060a; border: 1px solid var(--faint); touch-action: none; }
+.ex-view canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+.ex-hint { position: absolute; left: 10px; right: 54px; bottom: 10px; margin: 0; padding: 8px 10px; font-size: 12px; color: var(--ink); background: rgba(7, 6, 10, 0.8); border: 1px solid var(--line); }
+.ex-hint[hidden] { display: none; }
