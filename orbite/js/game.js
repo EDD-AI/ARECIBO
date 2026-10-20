@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 34;
+  const VERSION = 35;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -110,6 +110,8 @@
     toast.timer = setTimeout(() => t.classList.remove('show'), ms || 1900);
   }
   function refuse(text) {
+    // Une découverte en attente bloque tout : on la rouvre au lieu d'un simple refus.
+    if (ui.state && ui.screen === 'game' && me() && me().discover.length && !ui.discoverDone) { openDiscover(); return; }
     toast(text);
     SFX.error();
   }
@@ -1786,6 +1788,8 @@
     renderTavernHead();
     renderPower();
     renderFight();
+    // Bonus déclenchés par la vente (Comètes…) : visibles comme les autres.
+    if (res.events && res.events.length) playShopEvents(res.events).then(() => renderBoard());
     if (rect && id) {
       const t = tempOrb(id, rect, golden);
       const shop = $('shop').getBoundingClientRect();
@@ -1814,18 +1818,13 @@
     renderEnergy(1);
     renderTavernHead();
     renderShop(true);
-    // Les Comètes grandissent à chaque actualisation.
-    for (const e of res.events || []) {
-      const el = e.t === 'trigger' ? elByUid(e.uid) : null;
-      if (el) {
-        const [x, y] = center(el.querySelector('.orb'));
-        stage.burst(x, y, { n: 10, colors: [[255, 255, 255], hexRgb(famColor(R.CARD[el.dataset.id].fam))], speed: 45, life: 0.45 });
-      }
-    }
     renderBoard();
     renderPower();
     renderFight();
     saveGame();
+    // Les Comètes grandissent à chaque actualisation : chaque +1 s'affiche, avec son carillon.
+    await playShopEvents(res.events);
+    renderBoard();
   }
 
   async function doUpgrade() {
@@ -3102,6 +3101,8 @@
     ui.stamp++;
     await show('game');
     renderGame(true);
+    // Partie reprise au milieu d'une découverte : elle revient tout de suite.
+    if (me() && me().discover.length) setTimeout(() => { if (!ui.discoverDone) openDiscover(); }, 700);
   }
   // Jouer solo se déplie sur ses deux modes ; Multijoueur se range pendant ce temps.
   function soloMenu(open) {
