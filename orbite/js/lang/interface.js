@@ -798,3 +798,51 @@ window.OrbiteI18n.add({
     "Demande déjà envoyée.": "Pedido já enviado."
   }
 });
+
+// Arbre d'étoiles.
+window.OrbiteI18n.add({
+  en: {
+    'Graine d’étoile': 'Star seed', 'Petite pousse': 'Little sprout', 'Pousse': 'Sprout', 'Buisson': 'Bush', 'Arbrisseau': 'Shrub',
+    'Petit arbre': 'Small tree', 'Arbre': 'Tree', 'Grand arbre': 'Great tree', 'Chêne massif': 'Mighty oak',
+    'Arbre d’étoiles': 'Star tree', 'ARBRE D’ÉTOILES': 'STAR TREE', 'ARROSER': 'WATER',
+    'Votre graine d’étoile est plantée. Touchez-la pour l’arroser.': 'Your star seed is planted. Tap it to water it.',
+    'Votre arbre est arrivé à maturité. Il veille sur votre monde.': 'Your tree has reached maturity. It watches over your world.',
+    'Chaque arrosage de poussières d’étoiles le fait grandir.': 'Every watering of stardust makes it grow.',
+    '{n} / {max} arrosages': '{n} / {max} waterings', 'prochain palier : {nom} ({n})': 'next stage: {nom} ({n})',
+    'Votre arbre est arrivé à maturité.': 'Your tree has reached maturity.', 'Votre arbre a grandi.': 'Your tree has grown.',
+    'Graine d’étoile : elle vous attend au menu.': 'Star seed: it awaits you in the menu.'
+  },
+  es: {
+    'Graine d’étoile': 'Semilla estelar', 'Petite pousse': 'Brote pequeño', 'Pousse': 'Brote', 'Buisson': 'Arbusto', 'Arbrisseau': 'Arbolillo',
+    'Petit arbre': 'Árbol pequeño', 'Arbre': 'Árbol', 'Grand arbre': 'Gran árbol', 'Chêne massif': 'Roble colosal',
+    'Arbre d’étoiles': 'Árbol de estrellas', 'ARBRE D’ÉTOILES': 'ÁRBOL DE ESTRELLAS', 'ARROSER': 'REGAR',
+    'Votre graine d’étoile est plantée. Touchez-la pour l’arroser.': 'Tu semilla estelar está plantada. Tócala para regarla.',
+    'Votre arbre est arrivé à maturité. Il veille sur votre monde.': 'Tu árbol ha llegado a la madurez. Vela por tu mundo.',
+    'Chaque arrosage de poussières d’étoiles le fait grandir.': 'Cada riego de polvo de estrellas lo hace crecer.',
+    '{n} / {max} arrosages': '{n} / {max} riegos', 'prochain palier : {nom} ({n})': 'próxima etapa: {nom} ({n})',
+    'Votre arbre est arrivé à maturité.': 'Tu árbol ha llegado a la madurez.', 'Votre arbre a grandi.': 'Tu árbol ha crecido.',
+    'Graine d’étoile : elle vous attend au menu.': 'Semilla estelar: te espera en el menú.'
+  },
+  de: {
+    'Graine d’étoile': 'Sternensamen', 'Petite pousse': 'Kleiner Keimling', 'Pousse': 'Keimling', 'Buisson': 'Busch', 'Arbrisseau': 'Strauch',
+    'Petit arbre': 'Kleiner Baum', 'Arbre': 'Baum', 'Grand arbre': 'Großer Baum', 'Chêne massif': 'Mächtige Eiche',
+    'Arbre d’étoiles': 'Sternenbaum', 'ARBRE D’ÉTOILES': 'STERNENBAUM', 'ARROSER': 'GIESSEN',
+    'Votre graine d’étoile est plantée. Touchez-la pour l’arroser.': 'Dein Sternensamen ist gepflanzt. Tippe ihn an, um ihn zu gießen.',
+    'Votre arbre est arrivé à maturité. Il veille sur votre monde.': 'Dein Baum ist ausgewachsen. Er wacht über deine Welt.',
+    'Chaque arrosage de poussières d’étoiles le fait grandir.': 'Jedes Gießen mit Sternenstaub lässt ihn wachsen.',
+    '{n} / {max} arrosages': '{n} / {max} Mal gegossen', 'prochain palier : {nom} ({n})': 'nächste Stufe: {nom} ({n})',
+    'Votre arbre est arrivé à maturité.': 'Dein Baum ist ausgewachsen.', 'Votre arbre a grandi.': 'Dein Baum ist gewachsen.',
+    'Graine d’étoile : elle vous attend au menu.': 'Sternensamen: Er wartet im Menü auf dich.'
+  },
+  pt: {
+    'Graine d’étoile': 'Semente estelar', 'Petite pousse': 'Brotinho', 'Pousse': 'Broto', 'Buisson': 'Arbusto', 'Arbrisseau': 'Arvoreta',
+    'Petit arbre': 'Árvore pequena', 'Arbre': 'Árvore', 'Grand arbre': 'Grande árvore', 'Chêne massif': 'Carvalho colossal',
+    'Arbre d’étoiles': 'Árvore de estrelas', 'ARBRE D’ÉTOILES': 'ÁRVORE DE ESTRELAS', 'ARROSER': 'REGAR',
+    'Votre graine d’étoile est plantée. Touchez-la pour l’arroser.': 'Sua semente estelar foi plantada. Toque nela para regar.',
+    'Votre arbre est arrivé à maturité. Il veille sur votre monde.': 'Sua árvore chegou à maturidade. Ela cuida do seu mundo.',
+    'Chaque arrosage de poussières d’étoiles le fait grandir.': 'Cada rega com poeira estelar a faz crescer.',
+    '{n} / {max} arrosages': '{n} / {max} regas', 'prochain palier : {nom} ({n})': 'próxima etapa: {nom} ({n})',
+    'Votre arbre est arrivé à maturité.': 'Sua árvore chegou à maturidade.', 'Votre arbre a grandi.': 'Sua árvore cresceu.',
+    'Graine d’étoile : elle vous attend au menu.': 'Semente estelar: ela espera por você no menu.'
+  }
+});

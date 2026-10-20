@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 35;
+  const VERSION = 36;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -646,6 +646,7 @@
     ground.style.height = gh + 'px';
     ground.innerHTML = `<path d="${path}" fill="#020407"/>${rims}`;
     $('menuList').style.top = horizon + Math.max(14, Math.min((H - horizon) * 0.12, H - horizon - listH - 40)) + 'px';
+    if (window.OrbiteArbre) window.OrbiteArbre.layout();
   }
 
   function renderMenu() {
@@ -684,6 +685,7 @@
     $('menuWord').parentElement.classList.add('menu-fade');
     $('menuGround').style.opacity = 0;
     await show('menu');
+    if (window.OrbiteArbre) window.OrbiteArbre.onMenu();
     const pl = $('menuPlanet');
     pl.animate([{ transform: `translateY(${Math.round(ui.menuR * 0.8)}px)` }, { transform: 'translateY(0)' }], { duration: first ? 5200 : 2400, easing: 'cubic-bezier(.16,.7,.2,1)' });
     $('menuGround').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 900, fill: 'forwards' });
@@ -709,6 +711,7 @@
     applyWorld();
     layoutMenu();
     await show('menu');
+    if (window.OrbiteArbre) window.OrbiteArbre.onMenu();
     $('menuWord').parentElement.classList.remove('menu-fade');
     $('menuGround').style.opacity = 1;
     document.querySelectorAll('.menu-item').forEach((b) => b.classList.add('show'));
