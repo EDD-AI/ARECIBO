@@ -6,11 +6,21 @@
   const THEME_NAMES = { mars: 'Mars', lune: 'Lune', glace: 'Glace', soufre: 'Soufre', volcan: 'Volcan' };
   const ACCENT_NAMES = { orange: 'Orange', rouge: 'Rouge', sarcelle: 'Sarcelle', jaune: 'Jaune', bleu: 'Bleu' };
 
-  const state = { type: 'random', theme: 'auto', accent: 'auto', view: 0, blink: true, history: [], at: -1, cur: null, scene: null };
+  const state = { type: 'random', theme: 'auto', accent: 'auto', size: 112, view: 0, blink: true, history: [], at: -1, cur: null, scene: null };
+  const ECO = [['pop', 'Logements'], ['jobs', 'Emplois'], ['power', 'Énergie'], ['water', 'Eau'], ['oxygen', 'Oxygène'], ['food', 'Nourriture'], ['research', 'Recherche'], ['materials', 'Matériaux']];
+  const ROLE = { storage: 'Stockage', spaceport: 'Port spatial', comms: 'Communications', defense: 'Défense', vehicle: 'Véhicule', ice: 'Sur gisement de glace', ore: 'Sur gisement de minerai', hq: 'Centre de commandement' };
   const rndSeed = () => Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, '0');
 
   // Sélecteurs.
-  $('typeSelect').innerHTML = '<option value="random">Au hasard</option>' + E.TYPES.map((t) => `<option value="${t.key}">${t.name}</option>`).join('');
+  function fillTypes() {
+    const groups = Object.keys(E.CATS).map((c) => {
+      const list = E.TYPES.filter((t) => t.cat === c);
+      return list.length ? `<optgroup label="${E.CATS[c]}">${list.map((t) => `<option value="${t.key}">${t.name}</option>`).join('')}</optgroup>` : '';
+    }).join('');
+    $('typeSelect').innerHTML = `<option value="random">Au hasard</option><option value="colonie">Colonie complète</option>${groups}`;
+    $('typeSelect').value = state.type;
+  }
+  fillTypes();
   $('themeSelect').innerHTML = '<option value="auto">Auto</option>' + R.GROUNDS.map((k) => `<option value="${k}">${THEME_NAMES[k] || k}</option>`).join('');
   $('accentSelect').innerHTML = '<option value="auto">Auto</option>' + R.ACCENTS.map((k) => `<option value="${k}">${ACCENT_NAMES[k] || k}</option>`).join('');
 
@@ -31,7 +41,7 @@
   }
 
   function build(entry, t) {
-    const g = E.generate(entry.type, entry.seed, { theme: state.theme === 'auto' ? null : state.theme, t: t || 0 });
+    const g = E.generate(entry.type, entry.seed, { theme: state.theme === 'auto' ? null : state.theme, t: t || 0, size: state.size });
     const pick = E.makeRng('couleur:' + entry.seed);
     g.accent = state.accent === 'auto' ? R.ACCENTS[pick.int(0, R.ACCENTS.length - 1)] : state.accent;
     g.scene = g.key === 'colonie' ? g.model : R.withGround(g.model, entry.seed);
@@ -46,11 +56,35 @@
     $('type').textContent = (E.TYPE_BY_KEY[g.key].name + ' · ' + (THEME_NAMES[g.theme] || g.theme)).toUpperCase();
     $('desc').textContent = g.desc;
     $('stats').innerHTML = `<dt>Voxels</dt><dd>${g.stats.voxels}</dd><dt>Taille</dt><dd>${g.stats.size.join(' × ')}</dd><dt>Couleur</dt><dd>${ACCENT_NAMES[g.accent] || g.accent}</dd>`;
+    $('eco').innerHTML = ecoHtml(g);
+    $('sizeLabel').hidden = g.key !== 'colonie';
     $('seed').textContent = entry.seed;
     draw();
     const params = new URLSearchParams({ type: entry.type, graine: entry.seed });
     if (state.theme !== 'auto') params.set('sol', state.theme);
     history.replaceState(null, '', '#' + params);
+  }
+
+  // Fiche économique : ce que le bâtiment produit et consomme, ou le bilan de toute la colonie.
+  const sign = (n) => (n > 0 ? '+' + n : String(n));
+  function ecoHtml(g) {
+    if (g.key === 'colonie' && g.stats.colony) {
+      const c = g.stats.colony, b = c.balance;
+      const line = (k, label, v, extra) => `<span class="${v < 0 ? 'bad' : 'ok'}"><b>${label}</b>${extra || sign(v)}</span>`;
+      const cats = Object.keys(E.CATS).filter((k) => c.counts[k]).map((k) => `${E.CATS[k]} ${c.counts[k]}`).join(' · ');
+      return `<p class="eco-title">BILAN DE LA COLONIE · ${c.buildings} BÂTIMENTS</p>
+        <div class="eco-grid">
+          ${line('pop', 'Colons', 0, `${b.pop}`)}
+          ${line('jobs', 'Emplois', b.pop - b.jobs, `${b.jobs} / ${b.pop}`)}
+          ${line('power', 'Énergie', b.power)}${line('water', 'Eau', b.water)}${line('oxygen', 'Oxygène', b.oxygen)}${line('food', 'Nourriture', b.food)}
+          ${line('research', 'Recherche', b.research)}${line('materials', 'Matériaux', b.materials)}
+        </div><p class="eco-cats">${cats}</p>`;
+    }
+    const e = g.eco || {};
+    const rows = ECO.filter(([k]) => e[k]).map(([k, label]) => `<span class="${k !== 'pop' && k !== 'jobs' && e[k] < 0 ? 'bad' : 'ok'}"><b>${label}</b>${k === 'pop' || k === 'jobs' ? e[k] : sign(e[k])}</span>`).join('');
+    const t = E.TYPE_BY_KEY[g.key];
+    const extra = [E.CATS[g.cat], t.role ? ROLE[t.role] : '', t.per ? `1 pour ${t.per} colons` : ''].filter(Boolean).join(' · ');
+    return `<p class="eco-title">${extra.toUpperCase()}</p>${rows ? `<div class="eco-grid">${rows}</div>` : ''}`;
   }
 
   function draw() {
@@ -60,7 +94,9 @@
     R.render(g.scene, { theme: g.theme, accent: g.accent, view: state.view, blink: state.blink, canvas: cv });
     // Agrandissement entier pour des pixels nets, en gardant de la place pour les commandes.
     const availW = window.innerWidth * 0.94, availH = window.innerHeight * 0.62;
-    const k = Math.max(1, Math.floor(Math.min(availW / cv.width, availH / cv.height)));
+    // Grande colonie : on réduit en dessous de ×1 plutôt que de déborder de l'écran.
+    const fit = Math.min(availW / cv.width, availH / cv.height);
+    const k = fit >= 1 ? Math.floor(fit) : fit;
     cv.style.width = cv.width * k + 'px';
     cv.style.height = cv.height * k + 'px';
     cv.style.left = Math.round((window.innerWidth - cv.width * k) / 2) + 'px';
@@ -87,13 +123,13 @@
     el.hidden = !open;
     if (!open) return;
     el.innerHTML = '';
-    for (const t of E.TYPES) {
+    for (const t of E.TYPES.filter((x) => x.key !== 'colonie')) {
       const entry = { seed: rndSeed(), type: t.key };
       const g = build(entry);
       const b = document.createElement('button');
       const cv = R.render(g.scene, { theme: g.theme, accent: g.accent });
       b.appendChild(cv);
-      b.insertAdjacentText('beforeend', t.name.toUpperCase());
+      b.insertAdjacentHTML('beforeend', `<small>${E.CATS[t.cat] || ''}</small>${t.name.toUpperCase()}`);
       b.addEventListener('click', () => { gallery(false); show(entry); });
       el.appendChild(b);
     }
@@ -106,6 +142,7 @@
   $('galleryBtn').addEventListener('click', () => gallery($('gallery').hidden));
   $('typeSelect').addEventListener('change', (e) => { state.type = e.target.value; generate(); });
   $('themeSelect').addEventListener('change', (e) => { state.theme = e.target.value; if (state.history[state.at]) show(state.history[state.at], false); });
+  $('sizeSelect').addEventListener('change', (e) => { state.size = Number(e.target.value); if (state.history[state.at]) show(state.history[state.at], false); });
   $('accentSelect').addEventListener('change', (e) => { state.accent = e.target.value; if (state.history[state.at]) show(state.history[state.at], false); });
   $('png').addEventListener('click', () => {
     // Export agrandi ×4, pixels nets.
@@ -128,17 +165,16 @@
   });
   window.addEventListener('resize', () => { sky(); draw(); });
   // Animation : pales, parabole, forage, fumées (boucle de 3 s) ; les balises clignotent.
-  const ANIMATED = new Set(['eolienne', 'antenne', 'forage', 'usine', 'reacteur', 'fusee', 'piste', 'tour', 'colonie']);
   let last = 0;
   function tick(now) {
     requestAnimationFrame(tick);
     const g = state.cur;
     if (!g || state.paused) return;
-    const every = g.key === 'colonie' ? 160 : 100;
+    const every = g.key === 'colonie' ? 250 : 100;
     if (now - last < every) return;
     last = now;
     const blink = now % 1300 < 650;
-    if (ANIMATED.has(g.key)) {
+    if (g.key === 'colonie' || (E.TYPE_BY_KEY[g.key] && E.TYPE_BY_KEY[g.key].anim)) {
       const entry = state.history[state.at];
       const next = build(entry, (now / 3000) % 1);
       next.accent = g.accent;

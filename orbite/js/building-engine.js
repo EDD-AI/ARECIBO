@@ -25,8 +25,8 @@
     for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
     return h >>> 0;
   }
-  function makeRng(seed) {
-    let a = (typeof seed === 'number' ? seed : hashString(String(seed))) >>> 0;
+  function makeRng(seed, state) {
+    let a = state != null ? state : (typeof seed === 'number' ? seed : hashString(String(seed))) >>> 0;
     const next = () => {
       a = (a + 0x6d2b79f5) >>> 0;
       let t = a;
@@ -39,7 +39,9 @@
       range: (a0, b0) => a0 + (b0 - a0) * next(),
       int: (a0, b0) => Math.floor(a0 + (b0 - a0 + 1) * next()),
       pick: (list) => list[Math.floor(next() * list.length)],
-      chance: (p) => next() < p
+      chance: (p) => next() < p,
+      // Copie qui reprend exactement la suite des tirages à partir d'ici.
+      clone: () => makeRng(0, a)
     };
   }
 
@@ -92,6 +94,25 @@
       count() { let n = 0; for (const k of v) if (k) n++; return n; }
     };
     return m;
+  }
+
+  // Recadre un modèle sur son contenu (les générateurs prévoient large) ; le sol (z = 0) est conservé.
+  function bbox(m) {
+    let x0 = m.X, y0 = m.Y, x1 = -1, y1 = -1;
+    for (let z = 0; z < m.Z; z++) for (let y = 0; y < m.Y; y++) for (let x = 0; x < m.X; x++) {
+      if (!m.v[m.idx(x, y, z)]) continue;
+      if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y;
+    }
+    return x1 < 0 ? null : [x0, y0, x1, y1];
+  }
+  // box : cadre imposé (celui de l'image t = 0 pour un bâtiment animé, pour garder la même taille).
+  function trim(m, box) {
+    const b = box || bbox(m);
+    if (!b) return m;
+    const [x0, y0, x1, y1] = b, z1 = m.Z - 1;
+    const o = model(x1 - x0 + 1, y1 - y0 + 1, z1 + 1);
+    for (let z = 0; z <= z1; z++) for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) o.v[o.idx(x - x0, y - y0, z)] = m.v[m.idx(x, y, z)];
+    return o;
   }
 
   // Sol : une dalle de terrain avec relief léger, cailloux et strates sur la tranche.
@@ -498,89 +519,317 @@
   };
 
   // ─── Catalogue ──────────────────────────────────────────────
-  const TYPES = [
-    { key: 'dome', name: 'Dôme d’habitat', desc: 'Coque géodésique posée sur un anneau, sas d’entrée et hublots.' },
-    { key: 'serre', name: 'Serre', desc: 'Dôme de verre et ses cultures : la nourriture de la colonie.' },
-    { key: 'habitat', name: 'Quartier résidentiel', desc: 'Une grappe de petits dômes reliés par des couloirs.' },
-    { key: 'module', name: 'Modules d’habitation', desc: 'Cylindres couchés sur pieds, reliés bout à bout.' },
-    { key: 'forage', name: 'Forage', desc: 'Derrick en treillis, tige de forage et réservoirs.' },
-    { key: 'reservoir', name: 'Réservoirs', desc: 'Cuves cerclées pour l’eau, l’oxygène et le carburant.' },
-    { key: 'solaire', name: 'Champ solaire', desc: 'Rangées de panneaux inclinés vers l’étoile.' },
-    { key: 'antenne', name: 'Antenne parabolique', desc: 'Parabole tournée vers le ciel pour parler aux autres mondes.' },
-    { key: 'piste', name: 'Aire de lancement', desc: 'Piste circulaire balisée, parfois avec sa fusée.' },
-    { key: 'fusee', name: 'Fusée', desc: 'Lanceur dressé sur ses ailerons, prêt au départ.' },
-    { key: 'usine', name: 'Raffinerie', desc: 'Halls, toits solaires, cheminées et conduites.' },
-    { key: 'tour', name: 'Tour de contrôle', desc: 'Fût élancé et salle vitrée qui surveille la colonie.' },
-    { key: 'reacteur', name: 'Réacteur', desc: 'Tour de refroidissement en sablier et cœur du réacteur.' },
-    { key: 'hangar', name: 'Hangar', desc: 'Voûte nervurée et grande porte pour les engins.' },
-    { key: 'labo', name: 'Laboratoire', desc: 'Bloc de recherche, coupole d’observation et capteurs.' },
-    { key: 'eolienne', name: 'Éolienne', desc: 'Mât et trois pales dans le vent fin de la planète.' },
-    { key: 'rover', name: 'Rover', desc: 'Engin à six roues, cabine vitrée et panneau solaire.' },
-    { key: 'colonie', name: 'Colonie', desc: 'Plusieurs bâtiments réunis sur un morceau de terrain.' }
-  ];
-  const TYPE_BY_KEY = Object.fromEntries(TYPES.map((t) => [t.key, t]));
+  // ─── Registre ───────────────────────────────────────────────
+  // Chaque bâtiment : { key, name, desc, cat, eco, role, per, build(r, o) }.
+  // eco (par bâtiment) : pop (places de logement), jobs (emplois), power, water, oxygen, food,
+  // research, materials : positif = production, négatif = consommation. Chaque colon consomme 1 d'eau,
+  // 1 d'oxygène et 1 de nourriture. role : 'hq', 'storage', 'spaceport', 'comms', 'defense', 'vehicle',
+  // 'ice' / 'ore' (posé sur un gisement). per : un exemplaire pour tant d'habitants (services).
+  const CATS = {
+    habitat: 'Habitat', services: 'Services', vie: 'Support vital', energie: 'Énergie',
+    industrie: 'Industrie', logistique: 'Logistique', science: 'Science', defense: 'Défense'
+  };
+  const TYPES = [];
+  const TYPE_BY_KEY = {};
+  function register(list) {
+    for (const t of list) {
+      if (TYPE_BY_KEY[t.key]) continue;
+      t.eco = Object.assign({ pop: 0, jobs: 0, power: 0, water: 0, oxygen: 0, food: 0, research: 0, materials: 0 }, t.eco || {});
+      const raw = t.build;
+      t.build = (r, o) => {
+        if (!o || !o.t) return trim(raw(r, o));
+        // Animé : même cadre qu'à t = 0, calculé avec la même suite de tirages.
+        const ref = raw(r.clone(), Object.assign({}, o, { t: 0 }));
+        return trim(raw(r, o), bbox(ref));
+      };
+      B[t.key] = t.build;
+      TYPE_BY_KEY[t.key] = t;
+      // La colonie reste en dernier dans la liste.
+      const col = TYPES.findIndex((x) => x.key === 'colonie');
+      if (col >= 0) TYPES.splice(col, 0, t); else TYPES.push(t);
+    }
+  }
+  register([
+    { key: 'dome', cat: 'habitat', name: 'Dôme d’habitat', desc: 'Coque géodésique posée sur un anneau, sas d’entrée et hublots.', eco: { pop: 10, power: -2 }, build: B.dome },
+    { key: 'habitat', cat: 'habitat', name: 'Quartier résidentiel', desc: 'Une grappe de petits dômes reliés par des couloirs.', eco: { pop: 16, power: -3 }, build: B.habitat },
+    { key: 'module', cat: 'habitat', name: 'Modules d’habitation', desc: 'Cylindres couchés sur pieds, reliés bout à bout.', eco: { pop: 6, power: -1 }, build: B.module },
+    { key: 'serre', cat: 'vie', name: 'Serre', desc: 'Dôme de verre et ses cultures : la nourriture de la colonie.', eco: { jobs: 3, power: -2, water: -2, food: 12, oxygen: 2 }, build: B.serre },
+    { key: 'reservoir', cat: 'vie', name: 'Réservoirs', desc: 'Cuves cerclées pour l’eau, l’oxygène et le carburant.', role: 'storage', eco: {}, build: B.reservoir },
+    { key: 'solaire', cat: 'energie', name: 'Champ solaire', desc: 'Rangées de panneaux inclinés vers l’étoile.', eco: { power: 6 }, build: B.solaire },
+    { key: 'eolienne', anim: true, cat: 'energie', name: 'Éolienne', desc: 'Mât et trois pales dans le vent fin de la planète.', eco: { power: 3 }, build: B.eolienne },
+    { key: 'reacteur', anim: true, cat: 'energie', name: 'Réacteur', desc: 'Tour de refroidissement en sablier et cœur du réacteur.', eco: { jobs: 4, power: 30, water: -2 }, build: B.reacteur },
+    { key: 'forage', anim: true, cat: 'industrie', name: 'Forage', desc: 'Derrick en treillis, tige de forage et réservoirs.', role: 'ore', eco: { jobs: 3, power: -3, materials: 6 }, build: B.forage },
+    { key: 'usine', anim: true, cat: 'industrie', name: 'Raffinerie', desc: 'Halls, toits solaires, cheminées et conduites.', eco: { jobs: 5, power: -5, materials: 8 }, build: B.usine },
+    { key: 'piste', anim: true, cat: 'logistique', name: 'Aire de lancement', desc: 'Piste circulaire balisée, parfois avec sa fusée.', role: 'spaceport', eco: { jobs: 2, power: -1, materials: 2 }, build: B.piste },
+    { key: 'fusee', anim: true, cat: 'logistique', name: 'Fusée', desc: 'Lanceur dressé sur ses ailerons, prêt au départ.', role: 'vehicle', eco: {}, build: B.fusee },
+    { key: 'hangar', cat: 'logistique', name: 'Hangar', desc: 'Voûte nervurée et grande porte pour les engins.', eco: { jobs: 2, power: -1 }, build: B.hangar },
+    { key: 'rover', cat: 'logistique', name: 'Rover', desc: 'Engin à six roues, cabine vitrée et panneau solaire.', role: 'vehicle', eco: {}, build: B.rover },
+    { key: 'tour', anim: true, cat: 'services', name: 'Tour de contrôle', desc: 'Fût élancé et salle vitrée qui surveille la colonie.', role: 'hq', eco: { jobs: 3, power: -1 }, build: B.tour },
+    { key: 'labo', cat: 'science', name: 'Laboratoire', desc: 'Bloc de recherche, coupole d’observation et capteurs.', eco: { jobs: 4, power: -3, research: 6 }, build: B.labo },
+    { key: 'antenne', anim: true, cat: 'science', name: 'Antenne parabolique', desc: 'Parabole tournée vers le ciel pour parler aux autres mondes.', role: 'comms', eco: { jobs: 1, power: -1, research: 1 }, build: B.antenne }
+  ]);
+  TYPES.push({ key: 'colonie', cat: 'colonie', name: 'Colonie', desc: 'Une colonie autonome planifiée : logements, support vital, énergie, industrie et réseaux.', eco: {} });
+  TYPE_BY_KEY.colonie = TYPES[TYPES.length - 1];
   const THEMES = ['mars', 'lune', 'glace', 'soufre', 'volcan'];
+  const RES = ['power', 'water', 'oxygen', 'food'];
 
-  // Colonie : bâtiments rangés sur une dalle de terrain, reliés par des chemins et des tubes.
-  function colony(r, size, t) {
-    const S = size || 64;
-    const m = model(S, S, 40);
+  // ─── Planification d'une colonie ────────────────────────────
+  // Bilan : production des bâtiments moins la consommation des colons.
+  function balance(keys) {
+    const b = { pop: 0, jobs: 0, power: 0, water: 0, oxygen: 0, food: 0, research: 0, materials: 0 };
+    for (const k of keys) { const e = TYPE_BY_KEY[k].eco; for (const f in b) b[f] += e[f] || 0; }
+    b.residents = b.pop;
+    b.water -= b.pop; b.oxygen -= b.pop; b.food -= b.pop;
+    return b;
+  }
+  const byCat = (cat, f) => TYPES.filter((t) => t.cat === cat && t.build && (!f || f(t)));
+  // Choix : on évite de répéter le même bâtiment tant qu'il y a d'autres options.
+  function choose(r, list, used) {
+    if (!list.length) return null;
+    const min = Math.min(...list.map((t) => used[t.key] || 0));
+    const fresh = list.filter((t) => (used[t.key] || 0) === min);
+    return r.pick(fresh);
+  }
+
+  // Emprise d'un bâtiment (avec ses abords), mesurée une fois par type.
+  const footCache = {};
+  function footprint(key) {
+    if (footCache[key] == null) { const b = TYPE_BY_KEY[key].build(makeRng('emprise:' + key), { t: 0 }); footCache[key] = (b.X + 3) * (b.Y + 3); }
+    return footCache[key];
+  }
+
+  // Plan d'une colonie : on dispose d'un budget de terrain ; l'essentiel d'abord (commandement, port,
+  // communications), puis les logements, puis tout ce qui manque pour les faire vivre.
+  function plan(r, S, place, lvl) {
+    lvl = lvl == null ? 1 : lvl;
+    const budget = S * S * (place ? 3 : 0.9);
+    const keys = [], used = {};
+    let area = 0;
+    const add = (t) => {
+      if (!t) return false;
+      const fp = footprint(t.key);
+      if (area + fp > budget) return false;
+      if (place && !place(t.key)) { used[t.key] = (used[t.key] || 0) + 1; return false; }
+      keys.push(t.key); used[t.key] = (used[t.key] || 0) + 1; area += fp;
+      return true;
+    };
+    const pick = (list) => choose(r, list.filter((t) => area + footprint(t.key) <= budget), used);
+    const target = Math.max(10, Math.round(S * S / 260 * lvl));
+    add(TYPES.find((t) => t.role === 'hq'));
+    add(pick(TYPES.filter((t) => t.role === 'spaceport' && t.build)));
+    add(pick(TYPES.filter((t) => t.role === 'comms' && t.build)));
+    // Comble les déficits d'oxygène, d'eau, de nourriture et d'énergie, avec ce qui tient encore.
+    const supply = () => {
+      const stuck = new Set();
+      for (let guard = 0; guard < 60; guard++) {
+        const b = balance(keys);
+        const short = ['power', 'oxygen', 'water', 'food'].find((f) => b[f] < 0 && !stuck.has(f));
+        if (!short) return;
+        const prod = TYPES.filter((t) => t.build && t.eco[short] > 0 && (short !== 'power' || t.cat === 'energie') && (used[t.key] || 0) < 4 && area + footprint(t.key) <= budget);
+        if (!prod.length) { stuck.add(short); continue; }
+        // Les plus rentables pour leur taille d'abord : on garde les trois meilleurs, puis on varie.
+        const eff = (t) => t.eco[short] / footprint(t.key);
+        prod.sort((x, y) => eff(y) - eff(x));
+        const need = -b[short];
+        const fit = prod.filter((t) => t.eco[short] <= need * 2 + 8);
+        if (!add(choose(r, (fit.length ? fit : prod).slice(0, 3), used))) stuck.add(short);
+      }
+    };
+    // Logements par étapes, en assurant la survie à chaque étape.
+    while (balance(keys).pop < target) {
+      if (!add(pick(byCat('habitat', (t) => t.eco.pop > 0)))) break;
+      supply();
+    }
+    const pop = () => balance(keys).pop;
+    // Services : un exemplaire par tranche complète d'habitants.
+    for (const t of byCat('services', (x) => x.per)) for (let n = Math.floor(pop() / t.per); (used[t.key] || 0) < n;) if (!add(t)) break;
+    supply();
+    add(pick(byCat('industrie', (t) => t.eco.materials > 0)));
+    if (lvl >= 0.6) add(pick(byCat('science', (t) => t.eco.research > 0)));
+    if (lvl >= 0.8) add(pick(byCat('defense')));
+    if (S >= 112 && lvl >= 0.9) { add(pick(byCat('industrie', (t) => t.eco.materials > 0))); add(pick(byCat('science', (t) => t.eco.research > 0))); add(pick(byCat('logistique', (t) => !t.role))); }
+    if (S >= 144 && lvl >= 0.9) { add(pick(byCat('defense'))); add(pick(byCat('industrie', (t) => t.eco.materials > 0))); }
+    supply();
+    // Trop d'emplois pour les habitants : quelques logements de plus.
+    for (let i = 0; i < 6 && balance(keys).jobs > balance(keys).pop; i++) { if (!add(pick(byCat('habitat', (t) => t.eco.pop > 0)))) break; supply(); }
+    const stores = TYPES.filter((t) => t.role === 'storage' && t.build);
+    for (let i = 0; i < Math.min(3, Math.ceil(keys.length / 10)); i++) add(pick(stores));
+    for (let i = 0; i < 3; i++) add(pick(TYPES.filter((t) => t.role === 'vehicle' && t.key !== 'fusee' && t.build)));
+    return keys;
+  }
+
+  // Zones : où chaque catégorie s'installe (fractions de la dalle).
+  const ZONES = {
+    services: [0.5, 0.48], habitat: [0.48, 0.5], vie: [0.34, 0.66], science: [0.8, 0.2],
+    energie: [0.84, 0.6], industrie: [0.16, 0.3], logistique: [0.52, 0.88], defense: [0.12, 0.86]
+  };
+  // Ordre de pose : la survie d'abord (énergie, support vital), puis le reste.
+  const ORDER = ['services', 'habitat', 'energie', 'vie', 'industrie', 'science', 'logistique', 'defense'];
+
+  // Colonie : planification, placement par zones, gisements, puis réseaux (routes, tubes, électricité, conduites).
+  function colonyBase(seed, S, lvl) {
+    const r = makeRng('colonie:' + seed);
+    const m = model(S, S, 48);
     r.seedA = r.range(0, 10); r.seedB = r.range(0, 10);
     const g = slab(m, r, { height: 3 });
     const taken = new Uint8Array(S * S);
-    const free = (x0, y0, w, d) => {
-      if (x0 < 1 || y0 < 1 || x0 + w >= S - 1 || y0 + d >= S - 1) return false;
-      for (let y = y0 - 1; y <= y0 + d; y++) for (let x = x0 - 1; x <= x0 + w; x++) if (taken[y * S + x]) return false;
+    const free = (x0, y0, w, d, pad) => {
+      if (x0 < 2 || y0 < 2 || x0 + w >= S - 2 || y0 + d >= S - 2) return false;
+      for (let y = y0 - pad; y < y0 + d + pad; y++) for (let x = x0 - pad; x < x0 + w + pad; x++) if (taken[y * S + x]) return false;
       return true;
     };
-    const centers = [];
-    const pool = ['dome', 'serre', 'habitat', 'module', 'forage', 'reservoir', 'solaire', 'antenne', 'piste', 'usine', 'tour', 'reacteur', 'hangar', 'labo', 'eolienne', 'rover'];
-    const want = Math.max(6, Math.floor(S * S / 300));
-    for (let i = 0, tries = 0; i < want && tries < want * 60; tries++) {
-      const key = i === 0 ? 'dome' : r.pick(pool);
-      // Variété : pas plus de deux bâtiments du même type.
-      if (centers.filter((c) => c[2] === key).length >= 2) continue;
-      const b = B[key](makeRng(r.int(0, 1e9)), { t });
-      if (b.X > S - 4 || b.Y > S - 4) continue;
-      const x0 = r.int(1, S - b.X - 2), y0 = r.int(1, S - b.Y - 2);
-      if (!free(x0, y0, b.X, b.Y)) continue;
-      // Aplanir l'emprise puis poser le bâtiment.
+    const placed = [], anim = [];
+    // Pose un bâtiment près de l'ancre de sa zone ; renvoie false s'il n'y a plus la place.
+    const placeOne = (key) => {
+      const t = TYPE_BY_KEY[key];
+      const it = { key, seed: r.int(0, 1e9), cat: t.cat };
+      const b = t.build(makeRng(it.seed), { t: 0 });
+      if (b.X > S - 6 || b.Y > S - 6) return false;
+      const z = ZONES[it.cat] || [0.5, 0.5];
+      const ax = z[0] * S + r.range(-3, 3), ay = z[1] * S + r.range(-3, 3);
+      const pad = t.role === 'vehicle' ? 1 : 2;
+      let best = null;
+      // Spirale autour du point d'ancrage de la zone : la place libre la plus proche (abords serrés en dernier recours).
+      for (const pd of [pad, 1]) {
+        for (let rad = 0; rad < S && !best; rad += 2) {
+          for (let k = 0; k < Math.max(1, rad * 2); k++) {
+            const a = k / Math.max(1, rad * 2) * 6.283 + r.next() * 0.3;
+            const x0 = Math.round(ax + Math.cos(a) * rad - b.X / 2), y0 = Math.round(ay + Math.sin(a) * rad - b.Y / 2);
+            if (free(x0, y0, b.X, b.Y, pd)) { best = [x0, y0]; break; }
+          }
+        }
+        if (best) break;
+      }
+      if (!best) return false;
+      const [x0, y0] = best;
       for (let y = y0; y < y0 + b.Y; y++) for (let x = x0; x < x0 + b.X; x++) {
         taken[y * S + x] = 1;
-        for (let z = g; z < m.Z; z++) m.set(x, y, z, 0);
+        for (let zz = g; zz < m.Z; zz++) m.set(x, y, zz, 0);
         m.set(x, y, g - 1, MAT.GROUND);
       }
+      // Gisements : glace sous les extracteurs d'eau, minerai sous les mines et forages.
+      if (t.role === 'ice' || t.role === 'ore') {
+        for (let y = y0 - 3; y < y0 + b.Y + 3; y++) for (let x = x0 - 3; x < x0 + b.X + 3; x++) {
+          if (!taken[y * S + x] && m.inside(x, y, g - 1) && r.chance(0.55)) m.set(x, y, g - 1, t.role === 'ice' ? MAT.ICE : MAT.ROCK);
+        }
+      }
       m.blit(b, x0, y0, g);
-      centers.push([x0 + Math.floor(b.X / 2), y0 + Math.floor(b.Y / 2), key]);
-      i++;
+      const p = { key: it.key, cat: it.cat, role: t.role, x0, y0, X: b.X, Y: b.Y, Z: b.Z, cx: x0 + b.X / 2, cy: y0 + b.Y / 2, seed: it.seed };
+      placed.push(p);
+      anim.push(p);
+      return true;
+    };
+    plan(r, S, placeOne, lvl);
+    networks(m, r, g, placed, taken, S);
+    const keysPlaced = placed.map((p) => p.key);
+    const bal = balance(keysPlaced);
+    const counts = {};
+    for (const p of placed) counts[p.cat] = (counts[p.cat] || 0) + 1;
+    return { m, g, anim, stats: { buildings: placed.length, counts, balance: bal, list: keysPlaced } };
+  }
+
+  // Réseaux de la colonie.
+  function networks(m, r, g, placed, taken, S) {
+    const hq = placed.find((p) => p.role === 'hq') || placed[0];
+    if (!hq) return;
+    const isFree = (x, y) => x >= 1 && y >= 1 && x < S - 1 && y < S - 1 && !taken[y * S + x];
+    // Chemin en L entre deux points, en contournant ce qui est construit (on saute les cases prises).
+    const path = (a, b, fn) => {
+      let x = Math.round(a[0]), y = Math.round(a[1]);
+      const tx = Math.round(b[0]), ty = Math.round(b[1]);
+      const horizFirst = r.chance(0.5);
+      for (let guard = 0; guard < S * 3 && (x !== tx || y !== ty); guard++) {
+        if ((horizFirst && x !== tx) || y === ty) x += Math.sign(tx - x); else y += Math.sign(ty - y);
+        if (isFree(x, y)) fn(x, y);
+      }
+    };
+    const edgeOf = (p, q) => [Math.max(p.x0 - 1, Math.min(p.x0 + p.X, q.cx)), Math.max(p.y0 - 1, Math.min(p.y0 + p.Y, q.cy))];
+    // Routes de régolithe tassé : du port spatial et de l'industrie vers la tour de contrôle.
+    for (const p of placed) {
+      if (p === hq || !(p.cat === 'logistique' || p.cat === 'industrie' || p.cat === 'defense')) continue;
+      path(edgeOf(p, hq), edgeOf(hq, p), (x, y) => { for (const [dx, dy] of [[0, 0], [1, 0], [0, 1]]) if (isFree(x + dx, y + dy)) { m.set(x + dx, y + dy, g - 1, MAT.STRATA); if (m.get(x + dx, y + dy, g)) m.set(x + dx, y + dy, g, 0); } });
     }
-    // Chemins de terre battue entre les bâtiments, et un tube pressurisé entre les habitats.
-    for (let i = 1; i < centers.length; i++) {
-      const [x0, y0] = centers[i], [x1, y1] = centers[r.int(0, i - 1)];
-      const steps = Math.abs(x1 - x0) + Math.abs(y1 - y0);
-      let x = x0, y = y0;
-      for (let k = 0; k < steps; k++) {
-        if (x !== x1 && (y === y1 || r.chance(0.5))) x += Math.sign(x1 - x); else y += Math.sign(y1 - y);
-        if (!taken[y * S + x]) { m.set(x, y, g - 1, MAT.SAND); if (m.get(x, y, g) === MAT.ROCK || m.get(x, y, g) === MAT.SAND) m.set(x, y, g, 0); }
+    // Tubes pressurisés : arbre couvrant entre habitats, services et support vital.
+    const core = placed.filter((p) => p.cat === 'habitat' || p.cat === 'services' || (p.cat === 'vie' && p.role !== 'storage'));
+    const linked = [core[0]].filter(Boolean);
+    while (linked.length < core.length) {
+      let best = null;
+      for (const a of linked) for (const b of core) if (!linked.includes(b)) {
+        const d = Math.hypot(a.cx - b.cx, a.cy - b.cy);
+        if (!best || d < best.d) best = { a, b, d };
+      }
+      if (!best || best.d > S * 0.6) break;
+      linked.push(best.b);
+      path(edgeOf(best.a, best.b), edgeOf(best.b, best.a), (x, y) => { m.set(x, y, g, MAT.HULL2); m.set(x, y, g + 1, (x + y) % 6 === 0 ? MAT.WINDOW : MAT.HULL2); });
+    }
+    // Lignes électriques : pylônes et câble des producteurs d'énergie vers la tour.
+    for (const p of placed.filter((q) => q.cat === 'energie')) {
+      const pts = [];
+      path(edgeOf(p, hq), edgeOf(hq, p), (x, y) => pts.push([x, y]));
+      let last = null;
+      for (let i = 0; i < pts.length; i += 6) {
+        const [x, y] = pts[i];
+        if (!isFree(x, y)) continue;
+        m.box(x, y, g, x, y, g + 5, MAT.METAL);
+        m.set(x - 1, y, g + 5, MAT.METAL); m.set(x + 1, y, g + 5, MAT.METAL);
+        if (last) m.line(last[0], last[1], g + 5, x, y, g + 5, MAT.DARK);
+        last = [x, y];
       }
     }
-    return m;
+    // Conduites d'eau et d'oxygène, au ras du sol, vers les réservoirs (ou la tour).
+    const stores = placed.filter((p) => p.role === 'storage');
+    for (const p of placed.filter((q) => q.cat === 'vie' && q.role !== 'storage')) {
+      const to = stores.length ? stores.reduce((a, b) => (Math.hypot(a.cx - p.cx, a.cy - p.cy) < Math.hypot(b.cx - p.cx, b.cy - p.cy) ? a : b)) : hq;
+      path(edgeOf(p, to), edgeOf(to, p), (x, y) => { if (!m.get(x, y, g)) m.set(x, y, g, MAT.COPPER); });
+    }
+  }
+
+  const colonyCache = new Map();
+  // Image t d'une colonie : la base est calculée une fois, seuls les bâtiments animés sont redessinés.
+  function colony(seed, S, t) {
+    const key = seed + ':' + S;
+    let base = colonyCache.get(key);
+    if (!base) {
+      if (colonyCache.size > 6) colonyCache.clear();
+      // Du plan le plus ambitieux au plus modeste : on garde le premier où tout le monde vit
+      // (énergie, eau, oxygène, nourriture à l'équilibre, assez de bras), sinon le moins déficitaire.
+      const deficit = (c) => { const b = c.stats.balance; return RES.reduce((d, f) => d + Math.max(0, -b[f]), 0) + Math.max(0, b.jobs - b.pop - 4); };
+      let bestDef = Infinity;
+      for (const lvl of [1, 0.85, 0.7, 0.55, 0.4]) {
+        const c = colonyBase(seed, S, lvl), d = deficit(c);
+        if (d < bestDef) { base = c; bestDef = d; }
+        if (d === 0) break;
+      }
+      colonyCache.set(key, base);
+    }
+    if (!t) return base;
+    const m = model(S, S, base.m.Z);
+    m.v.set(base.m.v);
+    for (const p of base.anim) {
+      const b = TYPE_BY_KEY[p.key].build(makeRng(p.seed), { t });
+      for (let z = base.g; z < base.g + p.Z; z++) for (let y = p.y0; y < p.y0 + p.Y; y++) for (let x = p.x0; x < p.x0 + p.X; x++) m.set(x, y, z, 0);
+      m.blit(b, p.x0, p.y0, base.g);
+    }
+    return { m, g: base.g, anim: base.anim, stats: base.stats };
   }
 
   const PREFIX = ['Ares', 'Hélios', 'Tharsis', 'Olympus', 'Kepler', 'Arecibo', 'Vesta', 'Nova', 'Elysium', 'Hellas', 'Utopia', 'Cydonia', 'Gale', 'Jezero'];
 
-  // generate(type, seed) → { key, name, desc, seed, model, stats }
+  // generate(type, seed, { t, theme, size }) → { key, name, desc, cat, eco, seed, theme, model, stats }
   function generate(type, seed, opts) {
     opts = opts || {};
     const key = TYPE_BY_KEY[type] ? type : 'dome';
-    const r = makeRng(key + ':' + seed);
-    const mod = key === 'colonie' ? colony(r, opts.size, opts.t || 0) : B[key](r, { t: opts.t || 0 });
     const t = TYPE_BY_KEY[key];
+    let mod, extra = {};
+    if (key === 'colonie') {
+      const c = colony(String(seed), opts.size || 112, opts.t || 0);
+      mod = c.m; extra = { colony: c.stats };
+    } else mod = t.build(makeRng(key + ':' + seed), { t: opts.t || 0 });
     const rn = makeRng('nom:' + seed);
     const name = `${t.name} ${rn.pick(PREFIX)}-${rn.int(1, 99)}`;
     const theme = opts.theme || THEMES[makeRng('theme:' + seed).int(0, THEMES.length - 1)];
-    return { key, name, desc: t.desc, seed: String(seed), theme, model: mod, stats: { voxels: mod.count(), size: [mod.X, mod.Y, mod.Z] } };
+    return { key, name, desc: t.desc, cat: t.cat, eco: t.eco, seed: String(seed), theme, model: mod, stats: Object.assign({ voxels: mod.count(), size: [mod.X, mod.Y, mod.Z] }, extra) };
   }
 
-  return { MAT, EMISSIVE, BLINK, ALPHA, TYPES, TYPE_BY_KEY, THEMES, makeRng, hashString, model, slab, generate, builders: B };
+  return { trim, MAT, EMISSIVE, BLINK, ALPHA, CATS, TYPES, TYPE_BY_KEY, THEMES, RES, makeRng, hashString, model, slab, generate, register, balance, plan, puffs, geoFrame, builders: B };
 });

@@ -1145,3 +1145,11 @@ window.OrbiteI18n.add({
   de: { 'LÉGENDAIRE': 'LEGENDÄR', 'LÉGENDAIRE !': 'LEGENDÄR!' },
   pt: { 'LÉGENDAIRE': 'LENDÁRIO', 'LÉGENDAIRE !': 'LENDÁRIO!' }
 });
+
+// Codes cadeaux.
+window.OrbiteI18n.add({
+  en: { 'CODE CADEAU': 'GIFT CODE', 'Entrez un code pour recevoir sa récompense.': 'Enter a code to receive its reward.', 'VALIDER': 'REDEEM', 'Codes indisponibles sur cet appareil.': 'Codes are unavailable on this device.', 'Ce code n’existe pas.': 'This code does not exist.', 'Ce code a déjà été utilisé.': 'This code has already been used.', 'Code accepté : +{n} poussières d’étoiles.': 'Code accepted: +{n} stardust.' },
+  es: { 'CODE CADEAU': 'CÓDIGO REGALO', 'Entrez un code pour recevoir sa récompense.': 'Introduce un código para recibir su recompensa.', 'VALIDER': 'CANJEAR', 'Codes indisponibles sur cet appareil.': 'Los códigos no están disponibles en este dispositivo.', 'Ce code n’existe pas.': 'Este código no existe.', 'Ce code a déjà été utilisé.': 'Este código ya se ha usado.', 'Code accepté : +{n} poussières d’étoiles.': 'Código aceptado: +{n} de polvo de estrellas.' },
+  de: { 'CODE CADEAU': 'GESCHENKCODE', 'Entrez un code pour recevoir sa récompense.': 'Gib einen Code ein, um seine Belohnung zu erhalten.', 'VALIDER': 'EINLÖSEN', 'Codes indisponibles sur cet appareil.': 'Codes sind auf diesem Gerät nicht verfügbar.', 'Ce code n’existe pas.': 'Diesen Code gibt es nicht.', 'Ce code a déjà été utilisé.': 'Dieser Code wurde bereits verwendet.', 'Code accepté : +{n} poussières d’étoiles.': 'Code angenommen: +{n} Sternenstaub.' },
+  pt: { 'CODE CADEAU': 'CÓDIGO PRESENTE', 'Entrez un code pour recevoir sa récompense.': 'Digite um código para receber a recompensa.', 'VALIDER': 'RESGATAR', 'Codes indisponibles sur cet appareil.': 'Códigos indisponíveis neste aparelho.', 'Ce code n’existe pas.': 'Este código não existe.', 'Ce code a déjà été utilisé.': 'Este código já foi usado.', 'Code accepté : +{n} poussières d’étoiles.': 'Código aceito: +{n} de poeira estelar.' }
+});
