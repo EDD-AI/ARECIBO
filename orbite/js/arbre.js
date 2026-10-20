@@ -1,8 +1,9 @@
 /* ORBITE — l'Arbre d'étoiles. Vaincre Kronos (fin de la démo de campagne) donne une graine ; elle se
  * plante au premier plan du menu, sur le sol noir devant la planète. Chaque arrosage coûte 100
  * poussières d'étoiles ; après 59 arrosages, la pousse est devenue un chêne massif.
- * Le dessin est du pixel art calculé : chaque branche dépend de son chemin dans l'arbre (pas d'un
- * tirage au hasard), si bien que l'arbre garde sa forme en grandissant. */
+ * Silhouette noire comme le sol, à contre-jour devant la planète : tronc noueux, branches qui se
+ * tordent, feuillage au contour déchiqueté. Chaque branche dépend de son chemin dans l'arbre (pas
+ * d'un tirage au hasard), si bien que l'arbre garde sa forme en grandissant. */
 (function () {
   'use strict';
 
@@ -40,104 +41,141 @@
     for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
     return ((h >>> 0) % 100000) / 100000;
   }
-  const BARK = ['#1a0f08', '#2f1c10', '#4a2e1a', '#6e4a2a', '#8f6a3e'];
-  const LEAF = ['#0b2016', '#143a22', '#1f5a2e', '#2f7f3a', '#4ea84a', '#8fd468', '#d7f59a'];
-  const STAR = ['#fff6c8', '#ffe27a', '#bfe9ff'];
+  // Silhouette noire comme le sol, avec un fin liseré de lumière venu de la planète derrière.
+  const INK = [0, 0, 1];
+  const HALO = [[20, 24, 31], [30, 35, 45]];
+  const RIM = [[44, 50, 62], [86, 96, 112]];
+  function noise2(x, y) {
+    const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+    const h = (a, b) => hash(a + ',' + b);
+    const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+    const a = h(xi, yi) + (h(xi + 1, yi) - h(xi, yi)) * u;
+    const b = h(xi, yi + 1) + (h(xi + 1, yi + 1) - h(xi, yi + 1)) * u;
+    return a + (b - a) * v;
+  }
 
-  // Dessin statique de l'arbre pour un nombre d'arrosages donné (mis en cache) ; les étoiles et la
-  // graine qui palpite sont ajoutées à chaque image par frame().
+  // Dessin de l'arbre pour un nombre d'arrosages donné (mis en cache) ; la graine qui palpite est
+  // ajoutée à chaque image par frame().
   function build(w) {
     const cv = document.createElement('canvas');
     cv.width = AW; cv.height = AH;
     const ctx = cv.getContext('2d');
-    const px = (x, y, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), 1, 1); };
-    const disc = (cx, cy, r, colOf) => {
-      for (let y = Math.floor(cy - r); y <= cy + r; y++) for (let x = Math.floor(cx - r); x <= cx + r; x++) {
-        const d = Math.hypot(x - cx, y - cy);
-        if (d <= r) { const c = colOf(x, y, d); if (c) px(x, y, c); }
+    // Masque : 1 là où l'arbre (ou la terre) est noir.
+    const M = new Uint8Array(AW * AH);
+    const set = (x, y) => { x = Math.round(x); y = Math.round(y); if (x >= 0 && y >= 0 && x < AW && y < AH) M[y * AW + x] = 1; };
+    const blob = (cx, cy, r, rag) => {
+      for (let y = Math.floor(cy - r * 1.3); y <= cy + r * 1.3; y++) for (let x = Math.floor(cx - r * 1.3); x <= cx + r * 1.3; x++) {
+        const d = Math.hypot(x - cx, (y - cy) * 1.15);
+        // Bord déchiqueté : le contour suit un bruit, et des feuilles isolées dépassent.
+        const edge = r * (0.72 + 0.5 * noise2(x * 0.45 + cx, y * 0.45 + cy));
+        if (d < edge || (rag && d < r * 1.25 && hash(x + ':' + y) < 0.16)) set(x, y);
       }
     };
     const bx = AW / 2, by = AH - 4;
-    const leaves = [];
-    // Monticule de terre où dort la graine.
-    disc(bx, by + 3, 6 + Math.min(4, w * 0.3), (x, y) => (y < by + 1 ? null : (x + y) % 3 ? '#20140c' : '#2c1d12'));
-    if (w <= 0) return { cv, seed: true, ext: { top: by - 4, left: bx - 7, right: bx + 7 } };
-    const g = Math.min(1, w / MAX);
-    const e = 1 - Math.pow(1 - g, 1.6);
-    if (w < 6) {
-      // Petite pousse : une tige et deux feuilles qui s'ouvrent.
-      const h = 3 + w * 2.2;
-      for (let i = 0; i < h; i++) px(bx + Math.round(Math.sin(i * 0.5) * 0.6), by - i, i < h - 2 ? LEAF[3] : LEAF[4]);
-      const top = by - h;
-      const lw = 2 + w * 0.8;
-      for (let i = 1; i <= lw; i++) { px(bx - i, top + 1 - i * 0.4, LEAF[4]); px(bx + i, top + 1 - i * 0.4, LEAF[5]); px(bx - i, top + 2 - i * 0.4, LEAF[3]); px(bx + i, top + 2 - i * 0.4, LEAF[4]); }
-      return { cv, ext: { top: top - 3, left: bx - lw - 1, right: bx + lw + 1 } };
+    // Monticule de terre.
+    for (let y = by; y < AH; y++) for (let x = bx - 9; x <= bx + 9; x++) if (Math.abs(x - bx) < 9 - (y - by) * -0.5 + 1) set(x, y);
+    let ext;
+    if (w <= 0) {
+      ext = { top: by - 4, left: bx - 7, right: bx + 7 };
+      paint();
+      return { cv, seed: true, ext };
     }
-    // Arbre : tronc puis branches qui se divisent ; le feuillage se pose au bout des rameaux.
-    const depthMax = Math.min(6, 2 + Math.floor(e * 4.6));
-    const trunkLen = 8 + e * 32;
-    const trunkW = 1.4 + e * 10;
+    const g = Math.min(1, w / MAX);
+    const e = 1 - Math.pow(1 - g, 1.5);
     let minY = by, minX = bx, maxX = bx;
-    function line(x1, y1, x2, y2, wd) {
-      const n = Math.ceil(Math.hypot(x2 - x1, y2 - y1) * 1.5) + 1;
-      for (let i = 0; i <= n; i++) {
-        const k = i / n, x = x1 + (x2 - x1) * k, y = y1 + (y2 - y1) * k, r = wd / 2;
-        for (let dx = -r; dx <= r; dx += 0.5) {
-          const shade = dx < -r * 0.4 ? 3 : dx > r * 0.4 ? 1 : 2;
-          px(x + dx, y, BARK[(Math.round(x + y) % 5 === 0 && r > 1.5) ? shade + 1 : shade]);
+    const grow = (x, y) => { minY = Math.min(minY, y); minX = Math.min(minX, x); maxX = Math.max(maxX, x); };
+    // Une branche : plusieurs segments qui se tordent un peu, de plus en plus fins.
+    function limb(path, x, y, a, len, w0, w1) {
+      const segs = Math.max(2, Math.round(len / 5));
+      let px = x, py = y, ang = a;
+      for (let s = 0; s < segs; s++) {
+        ang += (hash(path + 'w' + s) - 0.5) * 0.45;
+        ang = Math.max(-Math.PI + 0.2, Math.min(-0.2, ang));
+        const nx = px + Math.cos(ang) * len / segs, ny = py + Math.sin(ang) * len / segs;
+        const n = Math.ceil(Math.hypot(nx - px, ny - py) * 2) + 1;
+        for (let i = 0; i <= n; i++) {
+          const k = i / n, cx = px + (nx - px) * k, cy = py + (ny - py) * k;
+          const r = (w0 + (w1 - w0) * ((s + k) / segs)) / 2;
+          for (let dx = -r; dx <= r; dx += 0.5) for (let dy = -r; dy <= r; dy += 0.5) if (dx * dx + dy * dy <= r * r) set(cx + dx, cy + dy);
+        }
+        px = nx; py = ny; grow(px, py);
+      }
+      return [px, py, ang];
+    }
+    const leaves = [];
+    if (w < 6) {
+      // Petite pousse : une tige fine et deux feuilles.
+      const h = 3 + w * 2.2;
+      const [tx, ty] = limb('p', bx, by, -Math.PI / 2, h, 1, 1);
+      const lw = 1.5 + w * 0.7;
+      blob(tx - lw, ty + 1, lw * 0.8, false); blob(tx + lw, ty, lw * 0.8, false);
+      grow(tx - lw * 2, ty - lw); grow(tx + lw * 2, ty - lw);
+    } else {
+      const depthMax = Math.min(6, 2 + Math.floor(e * 4.6));
+      const trunkLen = 8 + e * 26;
+      const trunkW = 1.6 + e * 11;
+      function branch(path, x, y, a, len, wd, d) {
+        const [x2, y2, a2] = limb(path, x, y, a, len, wd, wd * 0.72);
+        if (d >= depthMax || len < 3) { leaves.push([x2, y2, d]); return; }
+        if (d >= Math.max(1, depthMax - 3)) leaves.push([(x + x2) / 2, (y + y2) / 2, d]);
+        // Le chêne se divise tôt en grosses branches qui s'étalent.
+        const n = d === 0 ? 3 : 2 + (hash(path + 'n') < 0.45 ? 1 : 0);
+        for (let i = 0; i < n; i++) {
+          const spread = (d === 0 ? 0.75 : 0.5) + 0.3 * hash(path + i + 's');
+          let ang = a2 + (i - (n - 1) / 2) * spread + (hash(path + i + 'j') - 0.5) * 0.35;
+          ang += (ang < -Math.PI / 2 ? -1 : 1) * 0.18 * e * (d < 2 ? 1 : 0.3);
+          branch(path + i, x2, y2, ang, len * (0.66 + 0.18 * hash(path + i + 'l')), wd * 0.6, d + 1);
+        }
+      }
+      branch('r', bx, by, -Math.PI / 2, trunkLen * (w < 13 ? 0.6 : 1), trunkW, 0);
+      // Racines et base évasée.
+      if (e > 0.25) {
+        for (let i = -1; i <= 1; i += 2) for (let k = 0; k < 2; k++) limb('rt' + i + k, bx + i * trunkW * 0.2, by - 2, i > 0 ? -0.15 - k * 0.2 : -Math.PI + 0.15 + k * 0.2, trunkW * (0.9 + k * 0.5), trunkW * 0.45, 1);
+      }
+      // Feuillage : des touffes au contour déchiqueté.
+      const fr = 2 + e * 7.5;
+      for (const [lx, ly, d] of leaves) {
+        const r = fr * (0.65 + 0.6 * hash(lx.toFixed(1) + ly.toFixed(1))) * (1 - d * 0.03);
+        blob(lx, ly, r, true);
+        grow(lx - r * 1.25, ly - r * 1.25); grow(lx + r * 1.25, ly);
+      }
+      // Quelques trouées dans la couronne, comme dans un vrai feuillage.
+      if (e > 0.5) for (let i = 0; i < 6 + e * 10; i++) {
+        const [lx, ly] = leaves[Math.floor(hash('tr' + i) * leaves.length)];
+        const r = 0.8 + hash('tq' + i) * fr * 0.25;
+        for (let y = Math.floor(ly - r); y <= ly + r; y++) for (let x = Math.floor(lx - r); x <= lx + r; x++) {
+          if (Math.hypot(x - lx, y - ly) <= r && x >= 0 && y >= 0 && x < AW && y < AH) M[y * AW + x] = 0;
         }
       }
     }
-    function branch(path, x, y, a, len, wd, d) {
-      const bend = (hash(path + 'b') - 0.5) * 0.25;
-      const x2 = x + Math.cos(a + bend) * len, y2 = y + Math.sin(a + bend) * len;
-      line(x, y, x2, y2, Math.max(1, wd));
-      minY = Math.min(minY, y2); minX = Math.min(minX, x2); maxX = Math.max(maxX, x2);
-      if (d >= depthMax || len < 2.5) { leaves.push([x2, y2, d]); return; }
-      // Le feuillage habille aussi le milieu des branches hautes : une couronne pleine.
-      if (d >= Math.max(1, depthMax - 3)) { leaves.push([(x + x2) / 2, (y + y2) / 2, d]); leaves.push([x2, y2, d]); }
-      const n = 2 + (hash(path + 'n') < 0.4 ? 1 : 0);
-      for (let i = 0; i < n; i++) {
-        const spread = 0.5 + 0.3 * hash(path + i + 's') + (d === 0 ? 0.2 : 0);
-        let ang = a + (i - (n - 1) / 2) * spread * 1.25 + (hash(path + i + 'j') - 0.5) * 0.3;
-        // Le chêne s'étale : les branches basses s'ouvrent vers l'horizontale.
-        ang += (ang < -Math.PI / 2 ? -1 : 1) * 0.12 * e * (d < 2 ? 1 : 0.4);
-        // Jamais vers le bas : un chêne, pas un saule.
-        ang = Math.max(-Math.PI + 0.3, Math.min(-0.3, ang));
-        branch(path + i, x2, y2, ang, len * (0.68 + 0.16 * hash(path + i + 'l')), wd * 0.62, d + 1);
+    ext = { top: minY, left: minX, right: maxX };
+    paint();
+    return { cv, ext };
+
+    // Encre noire ; un pixel du bord exposé vers le haut reçoit un reflet discret de la planète.
+    function paint() {
+      const img = ctx.createImageData(AW, AH), D = img.data;
+      const at = (x, y) => (x >= 0 && y >= 0 && x < AW && y < AH ? M[y * AW + x] : 0);
+      // Rien au-dessus sur 12 pixels : on est sur le contour extérieur (pas dans une trouée).
+      const sky = (x, y) => { for (let k = 1; k <= 12; k++) if (at(x, y - k)) return false; return true; };
+      for (let y = 0; y < AH; y++) for (let x = 0; x < AW; x++) {
+        if (!M[y * AW + x]) {
+          // Halo de contre-jour : la lumière de la planète déborde autour de la silhouette.
+          if (y >= by - 1) continue;
+          let near = 0;
+          for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) if (at(x + dx, y + dy)) near = Math.max(near, 3 - Math.max(Math.abs(dx), Math.abs(dy)));
+          if (!near || !sky(x, y + 1) || ((x + y) & 1 && near < 2)) continue;
+          const c = HALO[near > 1 ? 1 : 0], o = (y * AW + x) * 4;
+          D[o] = c[0]; D[o + 1] = c[1]; D[o + 2] = c[2]; D[o + 3] = 255;
+          continue;
+        }
+        let c = INK;
+        if (y < by - 1 && sky(x, y)) c = RIM[hash('r' + x + ',' + y) < 0.35 ? 1 : 0];
+        const o = (y * AW + x) * 4;
+        D[o] = c[0]; D[o + 1] = c[1]; D[o + 2] = c[2]; D[o + 3] = 255;
       }
+      ctx.putImageData(img, 0, 0);
     }
-    branch('r', bx, by, -Math.PI / 2, trunkLen * (w < 13 ? 0.55 : 1), trunkW, 0);
-    // Racines visibles au pied des grands arbres.
-    if (e > 0.45) for (let i = -1; i <= 1; i += 2) line(bx, by - 1, bx + i * trunkW * 1.4, by + 1, Math.max(1, trunkW * 0.35));
-    // Feuillage : des touffes ombrées, éclairées depuis la planète (en haut à gauche).
-    const fr = 2 + e * 7.5;
-    // Lumière d'ensemble : le haut de la couronne est plus clair que le dessous.
-    let cy0 = 1e9, cy1 = -1e9;
-    for (const [, ly] of leaves) { cy0 = Math.min(cy0, ly); cy1 = Math.max(cy1, ly); }
-    const crownH = Math.max(1, cy1 - cy0);
-    leaves.sort((p, q) => q[1] - p[1]);
-    for (const [lx, ly, d] of leaves) {
-      const r = fr * (1 - d * 0.04) * (0.7 + 0.6 * hash(lx.toFixed(1) + ly.toFixed(1)));
-      const top = 1 - (ly - cy0) / crownH;
-      disc(lx, ly, r, (x, y, dd) => {
-        const lit = ((lx - x) + (ly - y)) / (r * 1.6) + 0.1 + top * 0.55 - dd / (r * 2.4);
-        const dither = ((x * 3 + y * 5) % 4) / 8;
-        const k = Math.max(0, Math.min(LEAF.length - 1, Math.floor((lit + dither + 0.6) * 3.2)));
-        return LEAF[k];
-      });
-      minY = Math.min(minY, ly - r); minX = Math.min(minX, lx - r); maxX = Math.max(maxX, lx + r);
-    }
-    // Étoiles accrochées au feuillage (elles scintillent dans frame()) quand l'arbre est grand.
-    const stars = [];
-    if (w >= 30) {
-      const n = Math.floor((w - 25) / 4);
-      for (let i = 0; i < n && leaves.length; i++) {
-        const [lx, ly] = leaves[Math.floor(hash('st' + i) * leaves.length)];
-        stars.push([Math.round(lx + (hash('sx' + i) - 0.5) * fr), Math.round(ly + (hash('sy' + i) - 0.5) * fr), STAR[i % STAR.length]]);
-      }
-    }
-    return { cv, stars, ext: { top: minY, left: minX, right: maxX } };
   }
 
   const cache = new Map();
@@ -160,12 +198,6 @@
         if (d <= 2.2) px(bx + x, by + y, d < 1 ? '#fff6c8' : on ? '#ffd36a' : '#e0a440');
       }
     }
-    (tr0.stars || []).forEach(([sx, sy, c], i) => {
-      const tw = Math.sin(t * 2.4 + i * 1.7);
-      if (tw < -0.2) return;
-      px(sx, sy, c);
-      if (tw > 0.6) { px(sx - 1, sy, c); px(sx + 1, sy, c); px(sx, sy - 1, c); px(sx, sy + 1, c); }
-    });
     return tr0.ext;
   }
 
