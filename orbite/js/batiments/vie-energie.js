@@ -410,6 +410,45 @@
       }
     },
 
+    {
+      key: 'pepiniere', cat: 'vie', name: 'Pépinière', desc: 'Tunnel de semis, silo à graines et rampe d’arrosage tournante : la prairie et les arbres gagnent le sol autour, jour après jour.',
+      role: 'green', eco: { jobs: 2, power: -2, water: -3, oxygen: 1 }, anim: true,
+      build(r, o) {
+        const T = tOf(o);
+        const L = r.int(9, 12), tankLeft = r.chance(0.5), ph = r.next();
+        const m = model(L + 16, 20, 14);
+        const y0 = 2, x0 = 2, x1 = x0 + L - 1;
+        m.box(1, 1, 0, x1 + 1, 8, 0, MAT.PAD);
+        // Tunnel de semis : arceaux vitrés, rangées de jeunes pousses dedans.
+        m.tube('x', x0, x1, y0 + 2.5, 1, 3, MAT.GLASS);
+        m.tube('x', x0 + 1, x1 - 1, y0 + 2.5, 1, 2, 0);
+        for (let x = x0; x <= x1; x += 3) m.tube('x', x, x, y0 + 2.5, 1, 3.2, MAT.METAL);
+        for (let x = x0 + 1; x < x1; x++) for (const y of [y0 + 1, y0 + 4]) m.set(x, y, 1, (x + y) % 3 ? MAT.PLANT : MAT.GRASS);
+        m.box(x0, y0 + 2, 1, x0, y0 + 3, 2, MAT.DARK);
+        // Silo à graines et cuve d'eau.
+        const sx = tankLeft ? x1 + 3 : x0 + 2, tx = tankLeft ? x0 + 2 : x1 + 3;
+        m.cyl(sx, 12, 1, 7, 1.6, MAT.HULL);
+        m.cyl(sx, 12, 4, 4, 1.6, MAT.ACCENT);
+        for (let i = 0; i < 3; i++) m.cyl(sx, 12, 8 + i, 8 + i, 1.6 - i * 0.6, MAT.HULL2);
+        m.cyl(tx, 12, 1, 3, 2.2, MAT.HULL2);
+        m.cyl(tx, 12, 2, 2, 2.2, MAT.LIGHT);
+        m.line(tx, 12, 1, x0 + L / 2, 7, 1, MAT.COPPER);
+        // Planche d'essai et rampe d'arrosage qui tourne au-dessus.
+        const cx = x0 + Math.floor(L / 2) + (tankLeft ? 1 : -1), cy = 14;
+        m.cyl(cx, cy, 0, 0, 4.6, MAT.PAD);
+        for (let y = cy - 4; y <= cy + 4; y++) for (let x = cx - 4; x <= cx + 4; x++) {
+          const d = Math.hypot(x - cx, y - cy);
+          if (d < 4.2 && d > 0.9) m.set(x, y, 1, (x * 7 + y * 3) % 5 < 2 ? MAT.PLANT : MAT.GRASS);
+        }
+        m.box(cx, cy, 1, cx, cy, 3, MAT.METAL);
+        m.set(cx, cy, 4, MAT.BEACON);
+        const a = (T + ph) * TAU, ca = Math.cos(a), sa = Math.sin(a);
+        m.line(cx - ca * 4, cy - sa * 4, 3, cx + ca * 4, cy + sa * 4, 3, MAT.HULL);
+        // Gouttes sous les buses.
+        for (const k of [-3.2, -1.6, 1.6, 3.2]) m.set(cx + ca * k, cy + sa * k, 2, MAT.LIGHT);
+        return m;
+      }
+    },
     // ─── Énergie ───────────────────────────────────────────────
     {
       key: 'geothermie', cat: 'energie', name: 'Centrale géothermique', desc: 'Têtes de puits, conduites de vapeur à lyres de dilatation, salle des turbines et panaches.',

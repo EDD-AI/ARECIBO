@@ -259,6 +259,20 @@ bouton **DESCENDRE À LA SURFACE** dans la Forge.
   spatioport). En cas de pénurie, ils repartent un par sol. Les tempêtes de poussière (rares,
   12 sols) réduisent le solaire à 35 %.
 - **Tutoriel** en 6 étapes à la première visite, puis un conseil après la tour de contrôle.
+- **Pépinière** (support vital, 40 de recherche) : la prairie et les arbres gagnent la terre ocre
+  autour d’elle, en temps réel.
+  - **Croissance** : elle avance d’un sol par sol si la pépinière a des ouvriers, de l’énergie et
+    de l’eau ; sinon elle ralentit ou s’arrête.
+  - **La prairie** : le front avance d’une case toutes les 4 heures, en langues irrégulières, jusqu’à
+    30 cases (5 jours). L’herbe sort clairsemée, devient une prairie au bout de 12 heures, puis
+    dense par endroits après un jour et demi.
+  - **Les arbres** : ils sortent 1 à 3 jours après l’herbe, en bosquets. Pousse, jeune arbre, puis
+    arbre adulte un à deux jours plus tard.
+  - **Limites** : jamais sur la glace, le minerai ni sous un bâtiment ; construire sur la prairie
+    la recouvre.
+  - **Effet** : la verdure produit de l’oxygène (une case d’herbe sur 200, un arbre sur 10 : environ
+    +13 à pleine étendue).
+  - **Fiche** : toucher la pépinière montre les cases verdies, le nombre d’arbres et le temps restant.
 
 Les règles sont dans `js/colonie-jeu.js` (testées par `tests/colonie.test.mjs`), l’écran dans
 `js/colonie-ui.js`. Les colonies sont enregistrées dans `orbite.colonies`.
@@ -509,7 +523,7 @@ votre loi », ou combien d’astres de cette famille sont déjà dans votre syst
 Surviving Mars ou StarCraft, une graine à la fois (la même graine donne toujours le même bâtiment).
 On y accède depuis l’écran **Création** du menu principal.
 
-**67 bâtiments en 8 catégories**, chacun avec son **économie** (logements, emplois, énergie, eau,
+**68 bâtiments en 8 catégories**, chacun avec son **économie** (logements, emplois, énergie, eau,
 oxygène, nourriture, recherche, matériaux ; chaque colon consomme 1 d’eau, 1 d’oxygène et 1 de nourriture) :
 
 | Catégorie | Bâtiments |

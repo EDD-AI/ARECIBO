@@ -118,3 +118,41 @@ test('la scène de la colonie se construit et contient les bâtiments', () => {
   const full = C.scene(col, 0).m.v.reduce((n, v) => n + (v ? 1 : 0), 0);
   assert.ok(full > empty);
 });
+
+test('la pépinière fait pousser la prairie puis les arbres, sur plusieurs jours', () => {
+  const col = C.create('j', 77, 'mars', 1);
+  col.stock.research = 100; col.stock.materials = 2000;
+  for (const k of ['tour', 'solaire', 'solaire', 'condenseur', 'condenseur', 'moxie']) assert.ok(placeNear(col, k), k);
+  const p = placeNear(col, 'pepiniere');
+  assert.ok(p, 'pépinière posée');
+  const at = (days) => { p.b.g = days * 1440; return C.vegetation(col); };
+  assert.equal(at(0).grass, 0);
+  const d1 = at(1), d3 = at(3), d7 = at(7);
+  assert.ok(d1.grass > 0 && d1.trees.length === 0, 'au bout d’un jour : de l’herbe, pas encore d’arbres');
+  assert.ok(d3.grass > d1.grass * 3, 'la prairie s’étend');
+  assert.ok(d7.grass > d3.grass && d7.adults > 0, 'au bout d’une semaine : des arbres adultes');
+  // Jamais sur la glace, le minerai ou sous un bâtiment.
+  const dep = C.deposits(col);
+  for (let i = 0; i < d7.lvl.length; i++) if (d7.lvl[i]) assert.ok(!dep.ice[i] && !dep.ore[i]);
+  for (const b of col.built) {
+    const f = C.footprint(b.key, b.seed);
+    for (let y = b.y; y < b.y + f.Y; y++) for (let x = b.x; x < b.x + f.X; x++) assert.equal(d7.lvl[y * col.S + x], 0, b.key + ' recouvert');
+  }
+});
+
+test('la pépinière ne pousse qu’avec de l’eau et de l’énergie, et donne de l’oxygène', () => {
+  const col = C.create('k', 9, 'mars', 1);
+  col.stock.research = 100; col.stock.materials = 2000;
+  placeNear(col, 'tour');
+  const p = placeNear(col, 'pepiniere');
+  col.stock.water = 0;
+  C.step(col, 10);
+  assert.equal(p.b.g || 0, 0, 'sans eau, rien ne pousse');
+  col.stock.water = 100; col.colonists = 4;
+  for (const k of ['solaire', 'solaire', 'condenseur']) placeNear(col, k);
+  C.step(col, 20);
+  assert.ok(p.b.g > 10, 'avec eau et énergie, la croissance avance (au rythme des ouvriers)');
+  const before = C.rates(col).oxygen;
+  p.b.g = 7 * 1440;
+  assert.ok(C.rates(col).oxygen > before + 5, 'une prairie mûre produit de l’oxygène');
+});

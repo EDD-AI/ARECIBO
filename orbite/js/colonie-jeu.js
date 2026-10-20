@@ -18,11 +18,14 @@
   const BASE_CAP = 120;
   const STORE_CAP = 250;
   const LIFE = ['water', 'oxygen', 'food'];
+  // Verdure des pépinières : le front de la prairie avance d'une case toutes les 4 heures (240 sols)
+  // jusqu'à 30 cases, soit 5 jours ; les arbres sortent 1 à 3 jours après l'herbe et mûrissent en 2 jours.
+  const GREEN = { perTile: 240, radius: 30, sparse: 720, lush: 2160, treeDelay: 1440, treeSpread: 2880, treeStage: 1440 };
 
   // Paliers de recherche : ce qui est constructible dès le départ, puis à 40, 150 et 400 de recherche.
   const TIERS = [
     { research: 0, keys: ['tour', 'module', 'dome', 'capsules', 'solaire', 'eolienne', 'rtg', 'extracteur', 'condenseur', 'moxie', 'electrolyseur', 'serre', 'reservoir', 'batteries', 'labo', 'forage', 'piste', 'entrepot', 'rover'] },
-    { research: 40, keys: ['habitat', 'immeuble', 'dortoir', 'bunker', 'ferme', 'champignonniere', 'recycleur', 'aquaculture', 'cantine', 'hopital', 'geothermie', 'methane', 'mine', 'briqueterie', 'concasseur', 'garage', 'carburant', 'antenne', 'meteo', 'relais', 'hangar', 'camion'] },
+    { research: 40, keys: ['habitat', 'immeuble', 'dortoir', 'bunker', 'ferme', 'champignonniere', 'recycleur', 'aquaculture', 'cantine', 'hopital', 'pepiniere', 'geothermie', 'methane', 'mine', 'briqueterie', 'concasseur', 'garage', 'carburant', 'antenne', 'meteo', 'relais', 'hangar', 'camion'] },
     { research: 150, keys: ['villas', 'ecole', 'parc', 'marche', 'heliostats', 'reacteur', 'usine', 'fonderie', 'chimie', 'imprimante', 'robotique', 'maglev', 'drone', 'observatoire', 'radar', 'biolabo', 'tourelle', 'blockhaus', 'enceinte'] },
     { research: 400, keys: ['arcologie', 'arene', 'fusion', 'spatioport', 'donnees', 'bouclier', 'fusee'] }
   ];
@@ -34,6 +37,14 @@
     h ^= h >>> 13;
     return ((h >>> 0) % 10000) / 10000;
   };
+
+  // Bruit lisse (valeurs aux nœuds d'une grille, interpolées) : des fronts de verdure irréguliers.
+  function vnoise(seed, x, y, cell) {
+    const gx = x / cell, gy = y / cell, x0 = Math.floor(gx), y0 = Math.floor(gy), fx = gx - x0, fy = gy - y0;
+    const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+    const a = hashTile(seed, x0, y0), b = hashTile(seed, x0 + 1, y0), c = hashTile(seed, x0, y0 + 1), d = hashTile(seed, x0 + 1, y0 + 1);
+    return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
+  }
 
   // ─── Coût d'un bâtiment ─────────────────────────────────────
   // Matériaux selon son importance ; les paliers avancés demandent aussi des poussières d'étoiles.
@@ -173,6 +184,10 @@
         R[f] += v > 0 ? v * k : v * (e.power < 0 ? R.powerRatio : 1);
       }
     }
+    // La prairie et les arbres produisent un peu d'oxygène (estimation sans parcourir le terrain).
+    const gs = greenEstimate(col);
+    R.green = gs;
+    R.oxygen += gs.grass / 200 + gs.trees / 10;
     for (const f of LIFE) R[f] -= col.colonists;
     R.power = R.powerProd - R.powerUse;
     return R;
@@ -183,6 +198,9 @@
     const ev = [];
     for (let i = 0; i < n; i++) {
       const R = rates(col);
+      // Les pépinières poussent si elles ont des bras, de l'énergie et de l'eau.
+      const grow = R.workRatio * R.powerRatio * (col.stock.water > 0 ? 1 : 0);
+      for (const b of col.built) if (E.TYPE_BY_KEY[b.key] && E.TYPE_BY_KEY[b.key].role === 'green') b.g = (b.g || 0) + grow;
       for (const f of LIFE) col.stock[f] = Math.max(0, Math.min(R.caps[f], col.stock[f] + R[f]));
       col.stock.materials = Math.max(0, Math.min(R.caps.materials, col.stock.materials + R.materials));
       col.stock.research += Math.max(0, R.research);
@@ -216,6 +234,79 @@
     return step(col, n);
   }
 
+  // ─── Verdure ────────────────────────────────────────────────
+  const greens = (col) => col.built.filter((b) => E.TYPE_BY_KEY[b.key] && E.TYPE_BY_KEY[b.key].role === 'green');
+  // Estimation rapide (pour le bilan de chaque sol) : surface du disque atteint par chaque front.
+  function greenEstimate(col) {
+    let grass = 0, trees = 0;
+    for (const b of greens(col)) {
+      const g = b.g || 0;
+      const r = Math.min(GREEN.radius, g / GREEN.perTile);
+      const rt = Math.min(GREEN.radius, Math.max(0, (g - GREEN.treeDelay - GREEN.treeSpread / 2 - GREEN.treeStage * 2) / GREEN.perTile));
+      grass += 0.7 * Math.PI * r * r;
+      trees += 0.016 * 0.7 * Math.PI * rt * rt;
+    }
+    return { grass: Math.round(grass), trees: Math.round(trees) };
+  }
+  // Carte exacte de la verdure : niveau d'herbe par case (1 clairsemée, 2 prairie, 3 dense) et arbres
+  // (stade 1 pousse, 2 jeune, 3 adulte). Ni sur la glace, ni sur le minerai, ni sous un bâtiment.
+  const vegCache = new Map();
+  function vegetation(col) {
+    const gl = greens(col);
+    const key = col.id + ':' + col.seed + ':' + col.S + ':' + col.uid + ':' + col.built.length + ':' + gl.map((b) => b.uid + '@' + Math.floor((b.g || 0) / 5)).join(',');
+    const hit = vegCache.get(col.id);
+    if (hit && hit.key === key) return hit.v;
+    const S = col.S, lvl = new Uint8Array(S * S), age = new Float32Array(S * S).fill(-1), trees = [];
+    let grass = 0;
+    if (gl.length) {
+      const dep = deposits(col), block = new Uint8Array(S * S);
+      for (const b of col.built) {
+        const f = footprint(b.key, b.seed);
+        for (let y = b.y - 1; y <= b.y + f.Y; y++) for (let x = b.x - 1; x <= b.x + f.X; x++) if (x >= 0 && y >= 0 && x < S && y < S) block[y * S + x] = 1;
+      }
+      for (const b of gl) {
+        const f = footprint(b.key, b.seed), cx = b.x + f.X / 2, cy = b.y + f.Y / 2, g = b.g || 0;
+        const reach = Math.min(GREEN.radius, g / GREEN.perTile) * 1.35 + Math.max(f.X, f.Y) / 2 + 2;
+        for (let y = Math.max(0, Math.floor(cy - reach)); y < Math.min(S, cy + reach); y++) for (let x = Math.max(0, Math.floor(cx - reach)); x < Math.min(S, cx + reach); x++) {
+          const i = y * S + x;
+          if (block[i] || dep.ice[i] || dep.ore[i]) continue;
+          // Distance au bord du bâtiment, déformée par le bruit : la prairie avance en langues.
+          const dx = Math.max(b.x - x, 0, x - (b.x + f.X - 1)), dy = Math.max(b.y - y, 0, y - (b.y + f.Y - 1));
+          const d = Math.hypot(dx, dy) * (0.65 + 0.7 * vnoise(col.seed + 71, x, y, 9)) + (hashTile(col.seed + 5, x, y) - 0.5) * 2;
+          if (d > GREEN.radius) continue;
+          const a = g - Math.max(0, d) * GREEN.perTile;
+          if (a > age[i]) age[i] = a;
+        }
+      }
+      for (let i = 0; i < S * S; i++) {
+        const a = age[i];
+        if (a < 0) continue;
+        const x = i % S, y = (i / S) | 0, h = hashTile(col.seed + 13, x, y);
+        let l = 0;
+        if (a < GREEN.sparse) l = h < (a / GREEN.sparse) * 0.75 ? 1 : 0;
+        else if (a < GREEN.lush) l = h < 0.12 ? 1 : 2;
+        else l = vnoise(col.seed + 29, x, y, 6) > 0.62 - Math.min(0.3, (a - GREEN.lush) / 14400) ? 3 : 2;
+        lvl[i] = l;
+        if (l) grass++;
+      }
+      // Arbres : un emplacement possible par carré de 4 × 4, plus serrés dans les bosquets.
+      for (let cy = 0; cy < S / 4; cy++) for (let cx = 0; cx < S / 4; cx++) {
+        const x = cx * 4 + Math.floor(hashTile(col.seed + 41, cx, cy) * 4), y = cy * 4 + Math.floor(hashTile(col.seed + 43, cx, cy) * 4);
+        const i = y * S + x;
+        if (!lvl[i] || age[i] < GREEN.treeDelay) continue;
+        if (hashTile(col.seed + 47, cx, cy) > 0.04 + 0.5 * Math.max(0, vnoise(col.seed + 53, cx, cy, 3) - 0.3)) continue;
+        const ta = age[i] - GREEN.treeDelay - hashTile(col.seed + 59, cx, cy) * GREEN.treeSpread;
+        if (ta < 0) continue;
+        trees.push({ x, y, stage: ta < GREEN.treeStage ? 1 : ta < GREEN.treeStage * 2 ? 2 : 3, h: hashTile(col.seed + 61, x, y) });
+      }
+    }
+    const v = { lvl, trees, grass, adults: trees.filter((t) => t.stage === 3).length };
+    vegCache.set(col.id, { key, v });
+    return v;
+  }
+  // Rayon atteint par le front d'une pépinière (en cases).
+  const greenRadius = (b) => Math.min(GREEN.radius, (b.g || 0) / GREEN.perTile);
+
   // Modèle en voxels de la colonie (sol, gisements, bâtiments posés) pour le rendu.
   function scene(col, t) {
     const S = col.S;
@@ -227,6 +318,33 @@
     for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
       if (dep.ice[y * S + x]) m.set(x, y, g - 1, E.MAT.ICE);
       else if (dep.ore[y * S + x]) m.set(x, y, g - 1, E.MAT.ROCK);
+    }
+    // Prairie et arbres : on recolore le dessus du sol, quelques touffes, puis les arbres.
+    const veg = vegetation(col);
+    if (veg.grass) {
+      const top = (x, y) => { for (let z = g + 1; z >= 0; z--) if (m.get(x, y, z)) return z; return -1; };
+      for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+        const l = veg.lvl[y * S + x];
+        if (!l) continue;
+        const z = top(x, y);
+        if (z < 0) continue;
+        m.set(x, y, z, l === 3 ? E.MAT.PLANT : E.MAT.GRASS);
+        if (l === 3 && hashTile(col.seed + 17, x, y) < 0.07) m.set(x, y, z + 1, E.MAT.PLANT);
+      }
+      for (const tr of veg.trees) {
+        const z = top(tr.x, tr.y) + 1;
+        const trunk = tr.stage === 1 ? 1 : tr.stage === 2 ? 2 : 3 + (tr.h > 0.5 ? 1 : 0);
+        for (let k = 0; k < trunk; k++) m.set(tr.x, tr.y, z + k, E.MAT.TRUNK);
+        const cz = z + trunk;
+        if (tr.stage === 1) { m.set(tr.x, tr.y, cz, E.MAT.LEAF); continue; }
+        const rad = tr.stage === 2 ? 1.1 : 1.6 + tr.h * 0.6;
+        for (let dz = -1; dz <= Math.ceil(rad); dz++) for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+          if (Math.hypot(dx, dy, dz * 1.2) <= rad + 0.2 && cz + dz >= z + 1) {
+            const xx = tr.x + dx, yy = tr.y + dy;
+            if (!m.get(xx, yy, cz + dz)) m.set(xx, yy, cz + dz, E.MAT.LEAF);
+          }
+        }
+      }
     }
     for (const b of col.built) {
       const t0 = E.TYPE_BY_KEY[b.key];
@@ -241,5 +359,5 @@
     return { m, g };
   }
 
-  return { SOL_MS, MAX_CATCHUP, SIZE, TIERS, TIER_OF, LIFE, create, deposits, footprint, buildSeed, price, unlocked, hasHq, canPlace, build, demolish, rates, step, catchUp, scene };
+  return { SOL_MS, MAX_CATCHUP, SIZE, TIERS, TIER_OF, LIFE, GREEN, vegetation, greenRadius, greenEstimate, create, deposits, footprint, buildSeed, price, unlocked, hasHq, canPlace, build, demolish, rates, step, catchUp, scene };
 });

@@ -22,7 +22,10 @@
     window: ['#3a2a08', '#7a5a10', '#c8962a', '#f4c860', '#ffe8a8', '#fffbe8'],
     beacon: ['#3a0808', '#7a1010', '#c02020', '#ff4a3a', '#ff9a8a', '#ffe0d8'],
     trunk: ['#1a0f08', '#2f1c10', '#4a2e1a', '#6e4a2a', '#8f6a3e', '#b08a5a'],
-    lava: ['#4a0a02', '#8a2004', '#d0480a', '#ff7a1a', '#ffb04a', '#ffe8a0']
+    lava: ['#4a0a02', '#8a2004', '#d0480a', '#ff7a1a', '#ffb04a', '#ffe8a0'],
+    // Herbe jeune (vert tendre tirant sur le jaune) et feuillage des arbres (vert profond).
+    grass: ['#26300c', '#3e4e14', '#5a6e1e', '#7a902a', '#9cb03e', '#c4d264'],
+    leaf: ['#061a0c', '#0c2e16', '#144420', '#1e5e2c', '#2e7c3c', '#4e9e52']
   };
   const ACCENTS = {
     orange: ['#3a1404', '#6a2808', '#a2420e', '#d8641a', '#f08c3a', '#ffc080'],
@@ -49,6 +52,7 @@
     P[M.GLASS] = RAMPS.glass; P[M.PLANT] = RAMPS.plant; P[M.SOLAR] = RAMPS.solar; P[M.ACCENT] = ACCENTS[accent] || ACCENTS.orange;
     P[M.COPPER] = RAMPS.copper; P[M.PAD] = RAMPS.pad; P[M.STRIPE] = RAMPS.stripe; P[M.LIGHT] = RAMPS.light;
     P[M.WINDOW] = RAMPS.window; P[M.BEACON] = RAMPS.beacon; P[M.ICE] = GROUNDS.glace; P[M.TRUNK] = RAMPS.trunk; P[M.LAVA] = RAMPS.lava;
+    P[M.GRASS] = RAMPS.grass; P[M.LEAF] = RAMPS.leaf;
     return P.map((r) => (r ? r.map(hex) : null));
   }
 
@@ -120,7 +124,7 @@
           const emissive = E.EMISSIVE.has(k);
           const dim = E.BLINK.has(k) && !blinkOn;
           const a = E.ALPHA[k];
-          const natural = k === M.GROUND || k === M.ROCK || k === M.STRATA || k === M.SAND || k === M.PLANT;
+          const natural = k === M.GROUND || k === M.ROCK || k === M.STRATA || k === M.SAND || k === M.PLANT || k === M.GRASS || k === M.LEAF;
           const n = vhash(x, y, z);
           const tone = (base) => {
             if (emissive) return dim ? ramp[1] : ramp[base >= 4 ? 5 : 4];
