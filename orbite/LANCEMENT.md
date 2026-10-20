@@ -64,8 +64,12 @@ nouvelle version, la **checklist** se coche au fur et à mesure.
 - [ ] (moi) Vérifier toutes les licences et mettre à jour les crédits.
 
 ### Phase 4 · Tests et lancement
+- [x] (toi) Testeurs trouvés : un Discord de bêta-testeurs (largement plus de 12).
 - [ ] (toi) Test fermé : au moins 12 testeurs inscrits pendant 14 jours d'affilée (exigé pour un
-      nouveau compte développeur personnel).
+      nouveau compte développeur personnel). Ils doivent vraiment jouer : Google pose ensuite des
+      questions sur le test (recrutement, retours, corrections) avant d'ouvrir la publication.
+- [ ] (toi) Dès maintenant, faire tester la version web sur le Discord (lien du jeu) : un salon
+      « bugs » et un salon « idées » ; noter la version (Paramètres) dans chaque retour.
 - [ ] (moi) Corriger les retours des testeurs.
 - [ ] (toi) Lancement test dans un ou deux pays (ex. France, Belgique).
 - [ ] (moi) Suivre la rétention (J1, J7), les abandons et le nombre de parties.
