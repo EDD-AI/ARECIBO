@@ -6,6 +6,9 @@ on compose un **système solaire** de 7 orbites, puis le système combat seul co
 **7 univers rivaux** (bots). Le dernier univers en vie gagne. Seuls les trois premiers gagnent
 des **poussières d’étoiles**.
 
+> **Vers le Play Store** : les règles à respecter dans chaque version et la checklist de lancement
+> sont dans [`LANCEMENT.md`](LANCEMENT.md).
+
 - `index.html` : le jeu (portrait, tactile, installable comme une application).
 - `atelier.html` : le générateur de planètes (bouton GÉNÉRER, export PNG et GIF en boucle).
 - `batisseur.html` : le générateur de bâtiments de colonie (dômes, serres, forages, fusées…), export PNG.
