@@ -270,11 +270,13 @@
   // Arrivée au menu : la graine gagnée tombe et se plante, une seule fois.
   async function onMenu() {
     mount();
-    // Kronos déjà vaincu avant l'arrivée de l'arbre : la graine est due quand même.
+    // Kronos vaincu (ancienne campagne) ou ère I de la Genèse accomplie, même avant l'arrivée de
+    // l'arbre : la graine est due.
     try {
       const st = JSON.parse(localStorage.getItem('orbite.campagne.stats')) || {};
-      if (st.wins > 0) grant();
-    } catch (e) { /* statistiques illisibles */ }
+      const gen = JSON.parse(localStorage.getItem('orbite.genese')) || {};
+      if (st.wins > 0 || gen.done || (gen.era || 1) > 1) grant();
+    } catch (e) { /* sauvegardes illisibles */ }
     const s = load();
     shownWater = s.water;
     placeHit.done = false;
@@ -386,7 +388,7 @@
     }
   }
 
-  // Récompense de la campagne : renvoie true si la graine vient d'être gagnée.
+  // Récompense de la campagne (ère I de la Genèse) : renvoie true si la graine vient d'être gagnée.
   function grant() {
     const s = load();
     if (s.has) return false;

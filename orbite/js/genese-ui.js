@@ -654,6 +654,8 @@
     g.result = { nature: nat, trait: tra };
     save();
     A.addSeeds(3);
+    // La graine d'étoile : elle tombera et se plantera au retour au menu.
+    if (window.OrbiteArbre) window.OrbiteArbre.grant();
     const R = window.OrbiteRecit;
     if (R) {
       // Pas encore une planète : un gros rocher irrégulier, de glace, de pierre sombre et chaude,

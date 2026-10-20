@@ -811,7 +811,8 @@ auprès du moteur (`OrbiteBuildings.register`).
 
 ## Arbre d’étoiles
 
-Vaincre Kronos (fin de la démo de campagne) donne une **graine d’étoile**. Au premier retour au menu, elle
+Terminer l’ère I de la Genèse (ou avoir vaincu Kronos dans l’ancienne campagne) donne une **graine
+d’étoile**. Au premier retour au menu, elle
 tombe du ciel et se plante dans le sol noir, au premier plan devant la planète : la terre jaillit, une
 lumière sort du sol, puis de petites étincelles en montent. La toucher ouvre sa fiche : **arroser coûte
 100 poussières d’étoiles**, et chaque arrosage la fait grandir. Après **59 arrosages**, c’est un chêne
