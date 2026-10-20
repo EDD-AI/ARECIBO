@@ -116,6 +116,7 @@
       if (!res) continue;
       ex.found.add(p.id);
       if (res.gain.dust) A.addDust(res.gain.dust);
+      if (res.gain.seeds) A.addSeeds(res.gain.seeds);
       window.OrbiteColonieUI.save();
       c.cv = chunkCanvas(c.cx, c.cy);
       const g = res.gain, parts = [];
@@ -123,6 +124,7 @@
       if (g.water) parts.push(tr('+{n} eau', { n: g.water }));
       if (g.research) parts.push(tr('+{n} recherche', { n: g.research }));
       if (g.dust) parts.push(tr('+{n} poussières d’étoiles', { n: g.dust }));
+      if (g.seeds) parts.push(tr('+{n} graine(s) de vie', { n: g.seeds }));
       SFX.level();
       A.vibrate(25);
       const b = $('exCanvas').getBoundingClientRect();
@@ -179,8 +181,18 @@
     SFX.sell();
     A.openSheet(`<h3>${tr('EXPÉDITION')}</h3><h2>${tr('Batterie vide')}</h2>
       <p class="sheet-text">${tr('Le rover est remorqué jusqu’à la base, où il se recharge. Des banques de batteries dans la colonie lui donnent plus d’autonomie.')}</p>
-      <div class="sheet-actions"><button class="btn primary" data-act="close" id="exTow">${tr('RETOUR À LA BASE')}</button></div>`);
+      <div class="sheet-actions"><button class="btn primary" id="exRecharge" ${A.seeds() < 1 ? 'disabled' : ''}>${tr('RECHARGER')} · 1 ${icon('seed', 'seed')}</button>
+      <button class="btn" data-act="close" id="exTow">${tr('RETOUR À LA BASE')}</button></div>`);
     $('exTow').addEventListener('click', () => setTimeout(back, 50));
+    // Une graine de vie recharge la batterie sur place : l'expédition continue.
+    $('exRecharge').addEventListener('click', () => {
+      if (A.seeds() < 1) return;
+      A.addSeeds(-1);
+      ex.bat = ex.max;
+      A.closeSheet();
+      SFX.level();
+      hud();
+    });
   }
 
   // ─── Ouverture ──────────────────────────────────────────────
