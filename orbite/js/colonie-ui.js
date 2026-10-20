@@ -12,7 +12,8 @@
   const icon = A.icon, esc = A.esc;
 
   const KEY = 'orbite.colonies';
-  const INTRO_KEY = 'orbite.colonie.intro';
+  // v2 : la cinématique est rejouée une fois pour ceux qui l'ont vue sans texte (v44-45).
+  const INTRO_KEY = 'orbite.colonie.intro2';
   const TUTO_KEY = 'orbite.colonie.tuto';
   // Nature de la planète → sol de la colonie.
   const THEME = { terran: 'mars', earth: 'mars', desert: 'mars', dead: 'mars', ocean: 'glace', ice: 'glace', moon: 'lune', crystal: 'lune', toxic: 'soufre', lava: 'volcan' };
@@ -251,7 +252,7 @@
     const ev = C.catchUp(col, Date.now());
     save();
     await dive(orbEl);
-    if (fresh && A.store.get(INTRO_KEY, '') !== '1') { A.store.set(INTRO_KEY, '1'); await colonizer(); }
+    if (A.store.get(INTRO_KEY, '') !== '1') { A.store.set(INTRO_KEY, '1'); await colonizer(); }
     $('colName').textContent = planet.name;
     await A.show('colony');
     stage.sky = 0;
@@ -303,6 +304,8 @@
     await A.show('cine');
     const say = async (text, hold) => {
       if (skip) return;
+      // La cinématique de la Création laisse la ligne effacée (classe fade) : on la réaffiche.
+      line.classList.remove('fade');
       line.textContent = '';
       for (const ch of text) { if (skip) break; line.textContent += ch; if (ch !== ' ') SFX.type(); await A.wait(ch === '.' || ch === '…' || ch === ',' ? 300 : 55); }
       const t0 = performance.now(); while (!skip && performance.now() - t0 < (hold || 1600)) await A.wait(50);
