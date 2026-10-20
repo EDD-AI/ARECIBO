@@ -1634,7 +1634,7 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 /* ─── Genèse : ère I, la Poussière ───────────────────────── */
 .screen.genese { padding: 0; }
 .gn-view { position: relative; flex: 1; overflow: hidden; background: #05040a; touch-action: none; user-select: none; -webkit-user-select: none; }
-.gn-view canvas#gnCanvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+.gn-view canvas#gnCanvas, .gn-view canvas#esCanvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
 .gn-top { position: absolute; top: calc(var(--safe-t) + 8px); left: 10px; right: 10px; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; pointer-events: none; }
 .gn-top > * { pointer-events: auto; }
 .gn-lvl { display: grid; gap: 4px; }
@@ -1701,3 +1701,18 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .cs-orb.grain { width: 30px; height: 30px; }
 .gn-act[hidden] { display: none; }
 .gn-banner h3 { font-size: clamp(22px, 7.5vw, 34px); }
+/* Genèse, ère II : l'Essaim */
+.es-rank::before { content: none !important; }
+.es-heat { height: 3px; background: rgba(255, 255, 255, 0.08); }
+.es-heat i { display: block; height: 100%; background: linear-gradient(90deg, #ffb040, #ff5a20); transition: width 0.15s; }
+.es-heat i.hot { animation: gnBlink 0.4s steps(2) infinite; }
+.gn-sparks small { font-size: 11px; font-weight: 400; color: var(--dim); }
+.es-moons { align-items: center; }
+.es-moon-row { display: grid; grid-template-columns: repeat(4, 9px); gap: 4px; }
+.es-moon-row i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid rgba(191, 240, 255, 0.45); }
+.es-moon-row i.on { background: #bff0ff; box-shadow: 0 0 6px rgba(191, 240, 255, 0.8); }
+.es-tags { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.es-tag { position: absolute; left: 0; top: 0; padding: 2px 6px; font-size: 10px; letter-spacing: 0.08em; white-space: nowrap; background: rgba(5, 4, 10, 0.7); border: 1px solid; }
+.es-tag.big { color: #ffb0a6; border-color: rgba(255, 90, 74, 0.6); }
+.es-tag.small { color: #b8f0bf; border-color: rgba(126, 224, 138, 0.6); }
+.es-tag[hidden] { display: none; }

@@ -354,17 +354,51 @@
     $('csOrb').classList.remove('grain');
     await GU.open(window.OrbiteGenese.newGame((Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0));
   }
+  // Ère II, chapitre 1 : le planétésimal entre dans la ceinture d'une jeune étoile.
+  const ESSAIM = [
+    tr('Votre planétésimal dérive vers la lumière.'),
+    tr('Au centre de la nébuleuse, une jeune étoile vient de s’allumer.'),
+    tr('Autour d’elle tourne une ceinture de rochers… et trois autres astres qui veulent grandir.'),
+    tr('Percutez-les. Ou faites-en vos lunes.')
+  ];
+  async function newEssaim() {
+    const G = window.OrbiteGenese, g = window.OrbiteGeneseUI.load();
+    A.closeSheet();
+    A.stopAmbient();
+    try { localStorage.removeItem('orbite.genese.essaim'); } catch (err) { /* stockage indisponible */ }
+    const res = (g && g.result) || { nature: g ? G.nature(g) : 'vie', trait: g ? G.trait(g) : 'adaptable' };
+    const sh = g ? G.shares(g) : { glace: 0.3, roche: 0.4, gaz: 0.3 };
+    await openStory();
+    await wait(800);
+    await tell(ESSAIM);
+    if (!story.skip) { storyTitle(tr('ÈRE II'), tr('CHAPITRE 1 · L’ESSAIM')); SFX.level(); await wait(2400); }
+    const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
+    await window.OrbiteEssaimUI.open(window.OrbiteEssaim.newGame(seed, { comp: { glace: sh.glace, roche: sh.roche, gaz: sh.gaz, fer: 0 }, trait: res.trait, nature: res.nature }));
+  }
   $('campBtn').addEventListener('click', () => {
     SFX.tap();
     const GU = window.OrbiteGeneseUI, G = window.OrbiteGenese;
     const g = GU && GU.load();
     if (!g) { newGenese(); return; }
     if (g.done) {
+      // Ère I accomplie : l'ère II, chapitre 1 « L'Essaim ».
+      const EU = window.OrbiteEssaimUI, es = EU && EU.load();
       const res = g.result || { nature: G.nature(g), trait: G.trait(g) };
-      A.openSheet(`<h3>${tr('LA GENÈSE')}</h3><h2>${tr('Ère I accomplie')}</h2>
-        <p class="sheet-text">${tr('Votre planétésimal attend la suite : {n}, trait {t}.', { n: tr(G.NATURES[res.nature].name), t: tr(G.TRAITS[res.trait].name) })}</p>
-        <p class="muted">${tr('L’ère II, l’Astéroïde, arrive dans une prochaine version.')}</p>
-        <div class="sheet-actions"><button class="btn" data-gen="new">${tr('REJOUER L’ÈRE I')}</button><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
+      const head = `<h3>${tr('LA GENÈSE · ÈRE II')}</h3>`;
+      const replay = `<button class="btn" data-gen="new">${tr('REJOUER L’ÈRE I')}</button>`;
+      if (es && es.done) {
+        A.openSheet(`${head}<h2>${tr('L’Essaim est à vous')}</h2>
+          <p class="sheet-text">${tr('Le chapitre 2, le Cœur, arrive dans une prochaine version.')}</p>
+          <div class="sheet-actions"><button class="btn" data-gen="essaim-new">${tr('REJOUER L’ESSAIM')}</button>${replay}</div>`);
+      } else if (es) {
+        A.openSheet(`${head}<h2>${tr('L’Essaim vous attend')}</h2>
+          <p class="muted">${tr('Masse du système {m} / {g} · lunes : {n}', { m: window.OrbiteEssaim.systemMass(es).toFixed(1), g: Math.ceil(window.OrbiteEssaim.goal(es)), n: es.sats.length })}</p>
+          <div class="sheet-actions"><button class="btn primary" data-gen="essaim-resume">${tr('REPRENDRE')}</button><button class="btn" data-gen="essaim-new">${tr('RECOMMENCER')}</button></div>`);
+      } else {
+        A.openSheet(`${head}<h2>${tr('Chapitre 1 · L’Essaim')}</h2>
+          <p class="sheet-text">${tr('Votre planétésimal ({n}, trait {t}) entre dans une ceinture de rochers autour d’une jeune étoile.', { n: tr(G.NATURES[res.nature].name), t: tr(G.TRAITS[res.trait].name) })}</p>
+          <div class="sheet-actions"><button class="btn primary" data-gen="essaim-new">${tr('COMMENCER')}</button>${replay}</div>`);
+      }
       return;
     }
     A.openSheet(`<h3>${tr('LA GENÈSE')}</h3><h2>${tr('Votre grain vous attend')}</h2>
@@ -376,7 +410,11 @@
     const b = e.target.closest('[data-gen]');
     if (!b) return;
     SFX.tap();
-    if (b.dataset.gen === 'resume') { A.closeSheet(); A.stopAmbient(); window.OrbiteGeneseUI.open(); } else newGenese();
+    const k = b.dataset.gen;
+    if (k === 'resume') { A.closeSheet(); A.stopAmbient(); window.OrbiteGeneseUI.open(); }
+    else if (k === 'essaim-resume') { A.closeSheet(); A.stopAmbient(); window.OrbiteEssaimUI.open(); }
+    else if (k === 'essaim-new') newEssaim();
+    else newGenese();
   });
 
   // Les outils du récit, pour les cinématiques de la Genèse.

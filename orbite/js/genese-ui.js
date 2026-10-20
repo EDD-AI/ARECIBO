@@ -23,7 +23,8 @@
     roche: ['#33201a', '#704630', '#b07448', '#e6b482'],
     gaz: ['#2e1850', '#5e3896', '#9a74d6', '#e2ccff'],
     errant: ['#151014', '#352a2e', '#5e4e50', '#8e7a7c'],
-    comete: ['#1e3a66', '#4a8ad0', '#a8dcff', '#ffffff']
+    comete: ['#1e3a66', '#4a8ad0', '#a8dcff', '#ffffff'],
+    fer: ['#16181e', '#383e4a', '#6c7686', '#c4ccd8']
   };
   const TINT = { glace: [58, 123, 213], roche: [192, 96, 58], gaz: [138, 79, 208] };
   const hexRgb = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
@@ -54,9 +55,9 @@
       const edge = R * f(a);
       if (d > edge + 0.5) continue;
       const k = d / Math.max(0.5, edge);
-      // Lumière venue du haut à gauche, sur une sphère approximative.
       const nz = Math.sqrt(Math.max(0, 1 - k * k));
-      let l = (-dx * 0.55 - dy * 0.65) / Math.max(1, edge) + nz * 0.75;
+      // Lumière venue du haut à gauche (ou de o.lx, o.ly : vers la source), sur une sphère approximative.
+      let l = (dx * (o.lx != null ? o.lx : -0.55) + dy * (o.ly != null ? o.ly : -0.65)) / Math.max(1, edge) + nz * 0.75;
       if (o.gas) l = 0.55 + nz * 0.5 - k * 0.3;
       const t = l + (BAYER[y & 1][x & 1] - 1.5) * 0.12;
       const idx = t < 0.15 ? 0 : t < 0.5 ? 1 : t < 0.85 ? 2 : 3;
@@ -766,5 +767,7 @@
   });
 
   const has = () => !!load();
-  window.OrbiteGeneseUI = { open, leave, load, has, save, get state() { return ui; } };
+  // Outils de dessin partagés avec les chapitres suivants (L'Essaim…).
+  const gfx = { PX, RAMP, BAYER, makeSprite, sprite, blur, landmark, nebulaTiles, starHash, NEB };
+  window.OrbiteGeneseUI = { open, leave, load, has, save, gfx, get state() { return ui; } };
 })();
