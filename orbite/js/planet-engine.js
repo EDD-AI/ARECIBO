@@ -1044,6 +1044,11 @@
     if (opts.mood === 'envers') applyMood(g, (L, C, h) => (L < 0.52 ? [L * 0.8, C * 0.45 + 0.025, hueToward(h, 250, 120)] : [L * 0.92, C * 0.7 + 0.06, hueToward(h, 18, 140)]));
     // Obsidienne : verre volcanique presque noir, reflets violets.
     if (opts.mood === 'obsidienne') applyMood(g, (L, C, h) => [L * 0.5 + 0.06, C * 0.6 + 0.02, hueToward(h, 285, 160)]);
+    // Planétésimaux de la Genèse : un gros rocher dont la matière dépend de ce qu'il a absorbé.
+    if (opts.mood === 'p-glace') applyMood(g, (L, C, h) => [Math.min(0.96, L * 0.85 + 0.24), C * 0.45 + 0.025, hueToward(h, 205, 180)]);
+    if (opts.mood === 'p-roche') applyMood(g, (L, C, h) => [L * 0.82, C * 1.1 + 0.045, hueToward(h, 20, 180)]);
+    if (opts.mood === 'p-gaz') applyMood(g, (L, C, h) => [L * 0.9 + 0.03, C * 0.8 + 0.05, hueToward(h, 278, 180)]);
+    if (opts.mood === 'p-mixte') applyMood(g, (L, C, h) => (L > 0.55 ? [Math.min(0.95, L * 0.92 + 0.12), 0.03, hueToward(h, 200, 180)] : [L * 0.95, C + 0.03, hueToward(h, 30, 180)]));
     if (opts.hueShift) applyMood(g, (L, C, h) => [L, C, h + opts.hueShift]);
 
     // Options de décor : pas de calottes polaires, éclairage imposé.
