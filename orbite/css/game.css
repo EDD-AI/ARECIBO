@@ -1539,3 +1539,40 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .fg-seedfeed { margin-top: 6px; min-height: 36px; font-size: 12px; }
 .col-boosted { color: #7ee08a; font-size: 12px; margin: 4px 0; }
 .col-sol { cursor: pointer; }
+
+/* ─── Succès ─────────────────────────────────────────────── */
+.pf-tabs { grid-template-columns: repeat(4, 1fr); }
+.pf-tabs button { letter-spacing: 0.1em; }
+.succ-head { display: grid; gap: 4px; margin: 4px 0 6px; text-align: left; }
+.succ-head b { font-size: 22px; letter-spacing: 0.08em; }
+.succ-head small { color: var(--dim); font-size: 12px; display: inline-flex; align-items: center; gap: 4px; }
+.succ-head .pix, .succ-gain .pix, .succ-pop .pix { height: 10px; width: auto; }
+.succ-list { display: grid; gap: 6px; }
+.succ { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; padding: 9px 10px; border: 1px solid var(--line); text-align: left; opacity: 0.62; }
+.succ.ok { opacity: 1; border-color: rgba(126, 224, 138, 0.45); background: rgba(126, 224, 138, 0.06); }
+.succ-medal { font-size: 20px; line-height: 1; text-align: center; color: var(--dim); }
+.succ.ok .succ-medal { color: var(--gold); text-shadow: 0 0 10px rgba(255, 210, 120, 0.6); }
+.succ-txt { display: grid; gap: 2px; min-width: 0; }
+.succ-txt b { font-size: 13px; letter-spacing: 0.04em; font-weight: 400; }
+.succ-txt small { font-size: 11px; color: var(--dim); line-height: 1.35; }
+.succ-bar { display: block; height: 3px; margin-top: 4px; background: var(--line); }
+.succ-bar i { display: block; height: 100%; background: #7ee08a; }
+.succ-n { font-size: 10px !important; }
+.succ-gain { font-size: 12px; color: #7ee08a; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.succ-pop {
+  position: fixed; left: 50%; top: calc(var(--safe-t) + 12px); z-index: 60;
+  display: flex; align-items: center; gap: 12px; padding: 10px 16px 10px 12px;
+  max-width: calc(100vw - 32px); background: rgba(6, 12, 8, 0.94);
+  border: 1px solid rgba(126, 224, 138, 0.6); box-shadow: 0 0 24px rgba(126, 224, 138, 0.25);
+  transform: translate(-50%, -140%); animation: succIn 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
+  pointer-events: none;
+}
+.succ-pop.out { animation: succOut 0.45s ease-in forwards; }
+.succ-pop .succ-medal { font-size: 28px; color: var(--gold); text-shadow: 0 0 14px rgba(255, 210, 120, 0.8); animation: succSpin 0.9s ease-out; }
+.succ-pop > span:last-child { display: grid; gap: 1px; text-align: left; }
+.succ-pop small { font-size: 9px; letter-spacing: 0.24em; color: #7ee08a; }
+.succ-pop b { font-size: 14px; font-weight: 400; letter-spacing: 0.05em; }
+.succ-pop em { font-style: normal; font-size: 12px; color: #7ee08a; display: inline-flex; align-items: center; gap: 3px; }
+@keyframes succIn { to { transform: translate(-50%, 0); } }
+@keyframes succOut { from { transform: translate(-50%, 0); opacity: 1; } to { transform: translate(-50%, -140%); opacity: 0; } }
+@keyframes succSpin { from { transform: scale(0.2) rotate(-180deg); } to { transform: scale(1) rotate(0); } }

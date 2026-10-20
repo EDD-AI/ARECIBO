@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 53;
+  const VERSION = 54;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -1005,9 +1005,10 @@
     $('profileBack').innerHTML = icon('back');
     const tab = ui.pfTab || 'profil';
     $('profileBody').innerHTML = `
-      <nav class="mk-tabs pf-tabs" role="tablist">${[['profil', tr('PROFIL')], ['amis', tr('AMIS')], ['classement', tr('CLASSEMENT')]].map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-pf="tab" data-tab="${k}" role="tab">${n}${k === 'amis' ? '<i class="pf-badge" id="pfBadge" hidden></i>' : ''}</button>`).join('')}</nav>
+      <nav class="mk-tabs pf-tabs" role="tablist">${[['profil', tr('PROFIL')], ['succes', tr('SUCCÈS')], ['amis', tr('AMIS')], ['classement', tr('CLASSEMENT')]].map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-pf="tab" data-tab="${k}" role="tab">${n}${k === 'amis' ? '<i class="pf-badge" id="pfBadge" hidden></i>' : ''}</button>`).join('')}</nav>
       <div class="pf-pane" data-pfpane="amis" id="pfFriends" ${tab === 'amis' ? '' : 'hidden'}></div>
       <div class="pf-pane" data-pfpane="classement" id="pfLeader" ${tab === 'classement' ? '' : 'hidden'}></div>
+      <div class="pf-pane" data-pfpane="succes" id="pfSucces" ${tab === 'succes' ? '' : 'hidden'}></div>
       <div class="pf-pane" data-pfpane="profil" ${tab === 'profil' ? '' : 'hidden'}>
       <div id="pfOnline"></div>
       <div class="pf-id">
@@ -1036,6 +1037,7 @@
       <h3 class="pf-h">${tr('DERNIÈRES PARTIES')}</h3>
       <div class="pf-hist">${hist.length ? hist.map((h) => `<div class="${h.rank <= 3 ? 'podium' : ''}"><b>${h.quit ? '–' : ordinal(h.rank)}</b><span style="color:${famColor(R.LAW[h.law] ? R.LAW[h.law].fam : 'neutre')}">${esc(R.LAW[h.law] ? R.LAW[h.law].name : '')}</span><small>${h.quit ? tr('abandon') : tr('{n} cycles', { n: h.cycles })} · ${new Date(h.t).toLocaleDateString(I18N.lang, { day: '2-digit', month: '2-digit' })}</small></div>`).join('') : `<p class="muted">${tr('Aucune partie terminée pour l’instant.')}</p>`}</div>
       </div>`;
+    if (tab === 'succes' && window.OrbiteSucces) window.OrbiteSucces.render($('pfSucces'));
     if (window.__orbite.onlineUI) window.__orbite.onlineUI.renderProfile(tab);
   }
 
@@ -1081,6 +1083,7 @@
     const hist = readJson(HIST_KEY, []);
     hist.unshift({ rank, law: p.law, cycles: Math.max(1, p.deadRound || s.round || 1), t: Date.now(), quit: !!quit });
     store.set(HIST_KEY, JSON.stringify(hist.slice(0, 15)));
+    if (window.OrbiteSucces) window.OrbiteSucces.record(s, rank, quit);
   }
 
   // ─── Paramètres ─────────────────────────────────────────────
