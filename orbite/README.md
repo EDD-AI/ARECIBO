@@ -291,6 +291,33 @@ bouton **DESCENDRE À LA SURFACE** dans la Forge.
     +13 à pleine étendue).
   - **Fiche** : toucher la pépinière montre les cases verdies, le nombre d’arbres et le temps restant.
 
+- **Expédition** : avec un **rover** (ou un garage) construit, le bouton **EXPÉDITION** lance le
+  rover explorateur hors de la base.
+  - **Un monde infini** : il se génère par tronçons de 32 × 32 cases à partir de la graine de la
+    colonie. Les tronçons se chargent autour du rover à mesure qu’il avance et sortent du sol en
+    s’élevant, comme dans Minecraft.
+  - **Le relief** : plaines, dunes, mesas en terrasses, montagnes aux sommets givrés, canyons à
+    sec, cratères à rebords. Les falaises montrent leurs strates, et on trouve des plaques de glace
+    et de minerai.
+  - **Se déplacer** : toucher le terrain envoie le rover. Il trouve son chemin sans gravir plus de
+    2 voxels par case. ⌂ le ramène à la base.
+  - **Les découvertes** (un tronçon sur trois) se ramassent en passant dessus ; un fanion reste à
+    leur place :
+
+    | Découverte | Gain |
+    |---|---|
+    | Météorite | 70 matériaux |
+    | Sonde abandonnée | 35 recherche |
+    | Géode de cristal | 15 poussières |
+    | Poche de glace | 60 eau |
+    | Épave de rover | 45 matériaux |
+    | Ruines anciennes (rares) | 90 recherche + 25 poussières |
+
+  - **La batterie** : 100 points, environ 300 cases ; chaque banque de batteries de la colonie
+    ajoute 40 points. Vide, le rover est remorqué à la base, où il se recharge.
+  - Règles dans `js/exploration.js` (testées par `tests/exploration.test.mjs`), écran dans
+    `js/exploration-ui.js`.
+
 Les règles sont dans `js/colonie-jeu.js` (testées par `tests/colonie.test.mjs`), l’écran dans
 `js/colonie-ui.js`. Les colonies sont enregistrées dans `orbite.colonies`.
 

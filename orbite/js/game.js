@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 48;
+  const VERSION = 49;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -367,7 +367,7 @@
     ui.screen = name;
     stage.starsOn = !['splash', 'title', 'wake', 'cStory'].includes(name);
     SFX.ambience({ splash: 'off', title: 'off', wake: 'wake', game: 'game', end: 'game', cStory: 'wake', cFight: 'battle', cEnd: 'game' }[name] || 'menu');
-    SFX.music(['title', 'wake', 'menu', 'market', 'creation', 'colony', 'profile', 'laws', 'cMap', 'system'].includes(name));
+    SFX.music(['title', 'wake', 'menu', 'market', 'creation', 'colony', 'explore', 'profile', 'laws', 'cMap', 'system'].includes(name));
     // Pendant la partie, le ciel s'efface derrière les planètes pour rester lisible.
     const busySky = ['laws', 'game', 'end', 'cFight'].includes(name);
     stage.starArea = busySky ? 3600 : 1800;
