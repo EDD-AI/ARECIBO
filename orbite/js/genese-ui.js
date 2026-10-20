@@ -14,7 +14,7 @@
   const PX = 3; // pixels d'écran par pixel du jeu
   const STEP = 1 / 60;
 
-  const ui = { g: null, raf: 0, last: 0, acc: 0, cam: null, scale: 0, input: { x: 0, y: 0 }, stick: null, keys: {}, dash: false, pulse: false,
+  const ui = { g: null, raf: 0, last: 0, acc: 0, cam: null, scale: 0, input: { x: 0, y: 0 }, touch: null, dest: null, keys: {}, dash: false, pulse: false,
     parts: [], motes: [], shake: 0, flash: 0, paused: false, editor: false, hudAt: 0, saveAt: 0, sprites: new Map(), rings: [], ended: false };
 
   // ─── Couleurs ───────────────────────────────────────────────
@@ -226,6 +226,12 @@
       ctx.globalAlpha = 1;
     }
 
+    // Là où va le grain : une petite mire.
+    if (ui.target) {
+      const x = sx(ui.target.x), y = sy(ui.target.y), k = 3 + Math.round((Math.sin(now / 160) + 1) * 1);
+      ctx.fillStyle = ui.touch ? 'rgba(255,246,216,0.7)' : 'rgba(255,224,138,0.85)';
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) for (let i = k; i < k + 2; i++) ctx.fillRect(x + dx * i, y + dy * i, 1, 1);
+    }
     // Le grain.
     drawPlayer(ctx, sx(me.x), sy(me.y), Math.max(2, Math.round(r * s)), now, true);
 
@@ -327,6 +333,7 @@
     ui.last = now;
     const g = ui.g;
     if (!ui.paused && !ui.editor && !document.hidden && !g.done) {
+      steer();
       ui.acc += dt;
       let n = 0;
       while (ui.acc >= STEP && n++ < 6) {
@@ -343,6 +350,22 @@
     }
     draw(now);
     if (now - ui.hudAt > 120) { ui.hudAt = now; hud(); }
+  }
+  // Point de l'écran → monde (le canevas est en pixels de jeu, PX fois plus petits).
+  function toWorld(cx, cy) {
+    const b = view.getBoundingClientRect(), cv = $('gnCanvas');
+    return { x: ui.cam.x + ((cx - b.left) / PX - cv.width / 2) / ui.scale, y: ui.cam.y + ((cy - b.top) / PX - cv.height / 2) / ui.scale };
+  }
+  // Direction vers le doigt (ou la destination) ; pleine vitesse au-delà de 60 px d'écran.
+  function steer() {
+    const me = ui.g.me;
+    const target = ui.touch && ui.cam ? toWorld(ui.touch.x, ui.touch.y) : ui.dest;
+    ui.target = target;
+    if (!target) { ui.input = { x: 0, y: 0 }; return; }
+    const dx = target.x - me.x, dy = target.y - me.y, d = Math.hypot(dx, dy), px = d * ui.scale * PX;
+    if (!ui.touch && px < 10) { ui.dest = null; ui.target = null; ui.input = { x: 0, y: 0 }; return; }
+    const l = Math.min(1, px / 60);
+    ui.input = d ? { x: dx / d * l, y: dy / d * l } : { x: 0, y: 0 };
   }
   let eatSfx = 0;
   function handle(events) {
@@ -437,7 +460,7 @@
   }
   // Conseils, une seule fois chacun.
   const HINTS = {
-    start: 'Glissez le doigt pour guider le grain. Absorbez tout ce qui est plus petit que vous.',
+    start: 'Gardez le doigt sur l’écran : le grain le suit. Touchez un endroit pour l’y envoyer. Absorbez tout ce qui est plus petit que vous.',
     hit: 'Les astres cerclés de rouge sont plus gros que vous : fuyez-les, ou grossissez d’abord.',
     diet: 'Glace, roche ou gaz : ce que vous absorbez décide de ce que deviendra votre astre.',
     edit: 'Les étincelles ✦ servent au Façonnage : ajoutez des pièces à votre grain.'
@@ -575,28 +598,23 @@
 
   // ─── Commandes ──────────────────────────────────────────────
   const view = $('gnView');
-  // Joystick virtuel : on pose le doigt n'importe où et on glisse.
+  // Tout au doigt : le grain suit le doigt tant qu'il est posé ; un toucher bref l'envoie à cet
+  // endroit, où il s'arrête.
   view.addEventListener('pointerdown', (e) => {
     if (e.target.closest('button') || ui.editor) return;
-    ui.stick = { id: e.pointerId, x: e.clientX, y: e.clientY };
-    const st = $('gnStick');
-    st.style.left = e.clientX + 'px';
-    st.style.top = e.clientY + 'px';
-    st.classList.add('on');
-    st.firstElementChild.style.transform = 'translate(-50%,-50%)';
+    ui.touch = { id: e.pointerId, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, t0: performance.now() };
+    ui.dest = null;
   });
   window.addEventListener('pointermove', (e) => {
-    if (!ui.stick || e.pointerId !== ui.stick.id) return;
-    const dx = e.clientX - ui.stick.x, dy = e.clientY - ui.stick.y, d = Math.hypot(dx, dy), R = 44;
-    const k = d > R ? R / d : 1, l = Math.min(1, d / R);
-    ui.input = d ? { x: dx / d * l, y: dy / d * l } : { x: 0, y: 0 };
-    $('gnStick').firstElementChild.style.transform = `translate(calc(-50% + ${dx * k}px), calc(-50% + ${dy * k}px))`;
+    if (!ui.touch || e.pointerId !== ui.touch.id) return;
+    ui.touch.x = e.clientX;
+    ui.touch.y = e.clientY;
   });
   const release = (e) => {
-    if (!ui.stick || e.pointerId !== ui.stick.id) return;
-    ui.stick = null;
-    ui.input = { x: 0, y: 0 };
-    $('gnStick').classList.remove('on');
+    if (!ui.touch || e.pointerId !== ui.touch.id) return;
+    const t = ui.touch;
+    ui.touch = null;
+    if (performance.now() - t.t0 < 280 && Math.hypot(t.x - t.x0, t.y - t.y0) < 14) ui.dest = toWorld(t.x, t.y);
   };
   window.addEventListener('pointerup', release);
   window.addEventListener('pointercancel', release);

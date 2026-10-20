@@ -58,8 +58,9 @@ système solaire vivant.
 - Titre : « ÈRE I · LA POUSSIÈRE ».
 
 **Ère I, la Poussière** (`js/genese.js` pour les règles, `js/genese-ui.js` pour l’écran) :
-- **Déplacement.** On guide le grain avec un joystick virtuel : on pose le doigt n’importe où et
-  on glisse (au clavier : flèches ou ZQSD).
+- **Déplacement, tout au doigt.** Le grain suit le doigt tant qu’il reste posé sur l’écran ; un
+  toucher bref l’envoie à cet endroit, où il s’arrête. Une petite mire montre où il va (au clavier :
+  flèches ou ZQSD).
 - **Absorber.**
   - Tout ce qui est plus petit que le grain s’absorbe : glace (bleue), roche (orange), gaz
     (violet, mou : il s’absorbe jusqu’à 1,4 fois sa taille).

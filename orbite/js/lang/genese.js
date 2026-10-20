@@ -40,7 +40,7 @@ window.OrbiteI18n.add({
     "Paisible": "Peaceful", "Vous avez grandi sans briser personne. À l’ère suivante, les petits astres viennent plus volontiers à vous.": "You grew without shattering anyone. In the next era, small bodies come to you more willingly.",
     "Adaptable": "Adaptable", "Ni proie ni chasseur. À l’ère suivante, vous vous réparez plus vite.": "Neither prey nor hunter. In the next era, you repair faster.",
     "Pièce inconnue.": "Unknown part.", "Déjà en place.": "Already fitted.", "Plus de place : grandissez pour en gagner.": "No room left: grow to gain more.", "Pas assez d’étincelles.": "Not enough sparks.",
-    "Glissez le doigt pour guider le grain. Absorbez tout ce qui est plus petit que vous.": "Slide your finger to guide the grain. Absorb everything smaller than you.",
+    "Gardez le doigt sur l’écran : le grain le suit. Touchez un endroit pour l’y envoyer. Absorbez tout ce qui est plus petit que vous.": "Keep your finger on the screen: the grain follows it. Tap a spot to send it there. Absorb everything smaller than you.",
     "Les astres cerclés de rouge sont plus gros que vous : fuyez-les, ou grossissez d’abord.": "Bodies circled in red are bigger than you: flee them, or grow first.",
     "Glace, roche ou gaz : ce que vous absorbez décide de ce que deviendra votre astre.": "Ice, rock or gas: what you absorb decides what your world will become.",
     "Les étincelles ✦ servent au Façonnage : ajoutez des pièces à votre grain.": "Sparks ✦ are used for Shaping: add parts to your grain."
@@ -85,7 +85,7 @@ window.OrbiteI18n.add({
     "Paisible": "Pacífico", "Vous avez grandi sans briser personne. À l’ère suivante, les petits astres viennent plus volontiers à vous.": "Has crecido sin romper a nadie. En la era siguiente, los astros pequeños acuden a ti de mejor gana.",
     "Adaptable": "Adaptable", "Ni proie ni chasseur. À l’ère suivante, vous vous réparez plus vite.": "Ni presa ni cazador. En la era siguiente, te reparas más rápido.",
     "Pièce inconnue.": "Pieza desconocida.", "Déjà en place.": "Ya colocada.", "Plus de place : grandissez pour en gagner.": "No queda hueco: crece para ganar más.", "Pas assez d’étincelles.": "No tienes suficientes chispas.",
-    "Glissez le doigt pour guider le grain. Absorbez tout ce qui est plus petit que vous.": "Desliza el dedo para guiar el grano. Absorbe todo lo que sea más pequeño que tú.",
+    "Gardez le doigt sur l’écran : le grain le suit. Touchez un endroit pour l’y envoyer. Absorbez tout ce qui est plus petit que vous.": "Mantén el dedo en la pantalla: el grano lo sigue. Toca un lugar para enviarlo allí. Absorbe todo lo que sea más pequeño que tú.",
     "Les astres cerclés de rouge sont plus gros que vous : fuyez-les, ou grossissez d’abord.": "Los astros rodeados de rojo son más grandes que tú: huye de ellos o crece primero.",
     "Glace, roche ou gaz : ce que vous absorbez décide de ce que deviendra votre astre.": "Hielo, roca o gas: lo que absorbas decide en qué se convertirá tu astro.",
     "Les étincelles ✦ servent au Façonnage : ajoutez des pièces à votre grain.": "Las chispas ✦ sirven para el Moldeado: añade piezas a tu grano."
@@ -130,7 +130,7 @@ window.OrbiteI18n.add({
     "Paisible": "Friedlich", "Vous avez grandi sans briser personne. À l’ère suivante, les petits astres viennent plus volontiers à vous.": "Du bist gewachsen, ohne jemanden zu zerbrechen. In der nächsten Ära kommen kleine Gestirne bereitwilliger zu dir.",
     "Adaptable": "Anpassungsfähig", "Ni proie ni chasseur. À l’ère suivante, vous vous réparez plus vite.": "Weder Beute noch Jäger. In der nächsten Ära reparierst du dich schneller.",
     "Pièce inconnue.": "Unbekanntes Teil.", "Déjà en place.": "Bereits angebracht.", "Plus de place : grandissez pour en gagner.": "Kein Platz mehr: Wachse, um mehr zu bekommen.", "Pas assez d’étincelles.": "Nicht genug Funken.",
-    "Glissez le doigt pour guider le grain. Absorbez tout ce qui est plus petit que vous.": "Wische mit dem Finger, um das Korn zu lenken. Nimm alles auf, was kleiner ist als du.",
+    "Gardez le doigt sur l’écran : le grain le suit. Touchez un endroit pour l’y envoyer. Absorbez tout ce qui est plus petit que vous.": "Lass den Finger auf dem Bildschirm: Das Korn folgt ihm. Tippe auf eine Stelle, um es dorthin zu schicken. Nimm alles auf, was kleiner ist als du.",
     "Les astres cerclés de rouge sont plus gros que vous : fuyez-les, ou grossissez d’abord.": "Rot umkreiste Gestirne sind größer als du: Flieh vor ihnen oder wachse erst.",
     "Glace, roche ou gaz : ce que vous absorbez décide de ce que deviendra votre astre.": "Eis, Fels oder Gas: Was du aufnimmst, entscheidet, was aus deinem Gestirn wird.",
     "Les étincelles ✦ servent au Façonnage : ajoutez des pièces à votre grain.": "Funken ✦ dienen der Formung: Füge deinem Korn Teile hinzu."
@@ -175,7 +175,7 @@ window.OrbiteI18n.add({
     "Paisible": "Pacífico", "Vous avez grandi sans briser personne. À l’ère suivante, les petits astres viennent plus volontiers à vous.": "Você cresceu sem quebrar ninguém. Na era seguinte, os astros pequenos vêm a você de bom grado.",
     "Adaptable": "Adaptável", "Ni proie ni chasseur. À l’ère suivante, vous vous réparez plus vite.": "Nem presa nem caçador. Na era seguinte, você se repara mais rápido.",
     "Pièce inconnue.": "Peça desconhecida.", "Déjà en place.": "Já instalada.", "Plus de place : grandissez pour en gagner.": "Sem espaço: cresça para ganhar mais.", "Pas assez d’étincelles.": "Faíscas insuficientes.",
-    "Glissez le doigt pour guider le grain. Absorbez tout ce qui est plus petit que vous.": "Deslize o dedo para guiar o grão. Absorva tudo o que for menor que você.",
+    "Gardez le doigt sur l’écran : le grain le suit. Touchez un endroit pour l’y envoyer. Absorbez tout ce qui est plus petit que vous.": "Mantenha o dedo na tela: o grão o segue. Toque num ponto para enviá-lo até lá. Absorva tudo o que for menor que você.",
     "Les astres cerclés de rouge sont plus gros que vous : fuyez-les, ou grossissez d’abord.": "Os astros circulados de vermelho são maiores que você: fuja deles ou cresça primeiro.",
     "Glace, roche ou gaz : ce que vous absorbez décide de ce que deviendra votre astre.": "Gelo, rocha ou gás: o que você absorve decide o que seu astro se tornará.",
     "Les étincelles ✦ servent au Façonnage : ajoutez des pièces à votre grain.": "As faíscas ✦ servem à Modelagem: adicione peças ao seu grão."
