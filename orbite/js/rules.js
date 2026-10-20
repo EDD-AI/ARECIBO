@@ -8,6 +8,8 @@
   else root.OrbiteRules = api;
 })(typeof self !== 'undefined' ? self : globalThis, function () {
   'use strict';
+  // Traduction (js/i18n.js dans le navigateur) ; sous Node, le français avec ses {variables} remplies.
+  const tr = (typeof window !== 'undefined' && window.tr) || ((s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s);
 
   // ─── Paramètres ─────────────────────────────────────────────
   const START_HP = 30;
@@ -799,7 +801,7 @@
     if (state.phase !== 'shop' || !p.alive) return fail('Le marché est fermé.');
     if (p.tier >= 6) return fail('Niveau maximal atteint.');
     const cost = upgradeCost(p);
-    if (p.gold < cost) return fail('Il faut ' + cost + ' énergies.');
+    if (p.gold < cost) return fail(tr('Il faut {n} énergies.', { n: cost }));
     p.gold -= cost;
     p.tier++;
     p.discount = 0;
@@ -822,7 +824,7 @@
     if (!law.active) return fail('Cette loi agit seule.');
     if (state.phase !== 'shop' || !p.alive) return fail('Le marché est fermé.');
     if (p.powerUsed) return fail('Déjà utilisé ce cycle.');
-    if (p.gold < law.active.cost) return fail('Il faut ' + law.active.cost + ' énergie.');
+    if (p.gold < law.active.cost) return fail(tr('Il faut {n} énergie.', { n: law.active.cost }));
     if (p.discover.length) return fail('Choisissez d’abord votre découverte.');
     return { ok: true };
   }

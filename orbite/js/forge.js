@@ -6,6 +6,8 @@
   else root.OrbiteForge = factory();
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
+  // Traduction (js/i18n.js dans le navigateur) ; sous Node, le français avec ses {variables} remplies.
+  const tr = (typeof window !== 'undefined' && window.tr) || ((s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s);
 
   // Prix de chaque repas : du palier k au palier k + 1. 15 paliers, 517 poussières en tout.
   const FEED = [3, 4, 5, 7, 9, 12, 16, 21, 28, 36, 46, 58, 72, 90, 110];
@@ -18,39 +20,39 @@
   const HUES = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
 
   const NATURES = [
-    { key: 'terran', name: 'Tellurique', min: 1 },
-    { key: 'earth', name: 'Habitable', min: 1 },
-    { key: 'ocean', name: 'Océan', min: 1 },
-    { key: 'ice', name: 'Glace', min: 1 },
-    { key: 'desert', name: 'Désert', min: 1 },
-    { key: 'lava', name: 'Lave', min: 1 },
-    { key: 'moon', name: 'Lune', min: 1 },
-    { key: 'dead', name: 'Morte', min: 1 },
-    { key: 'toxic', name: 'Toxique', min: 1 },
-    { key: 'crystal', name: 'Cristal', min: 3 },
-    { key: 'gas', name: 'Géante gazeuse', min: 6 }
+    { key: 'terran', name: tr('Tellurique'), min: 1 },
+    { key: 'earth', name: tr('Habitable'), min: 1 },
+    { key: 'ocean', name: tr('Océan'), min: 1 },
+    { key: 'ice', name: tr('Glace'), min: 1 },
+    { key: 'desert', name: tr('Désert'), min: 1 },
+    { key: 'lava', name: tr('Lave'), min: 1 },
+    { key: 'moon', name: tr('Lune'), min: 1 },
+    { key: 'dead', name: tr('Morte'), min: 1 },
+    { key: 'toxic', name: tr('Toxique'), min: 1 },
+    { key: 'crystal', name: tr('Cristal'), min: 3 },
+    { key: 'gas', name: tr('Géante gazeuse'), min: 6 }
   ];
   const NATURE = Object.fromEntries(NATURES.map((n) => [n.key, n]));
 
   const SHAPES = [
-    { key: 'double', name: 'Double' },
-    { key: 'brisee', name: 'Brisée' },
-    { key: 'amas', name: 'Amas' },
-    { key: 'bloc', name: 'Bloc' },
-    { key: 'monolithe', name: 'Monolithe' },
-    { key: 'diamant', name: 'Diamant' },
-    { key: 'anneau', name: 'Tore' },
-    { key: 'antenne', name: 'Antenne' }
+    { key: 'double', name: tr('Double') },
+    { key: 'brisee', name: tr('Brisée') },
+    { key: 'amas', name: tr('Amas') },
+    { key: 'bloc', name: tr('Bloc') },
+    { key: 'monolithe', name: tr('Monolithe') },
+    { key: 'diamant', name: tr('Diamant') },
+    { key: 'anneau', name: tr('Tore') },
+    { key: 'antenne', name: tr('Antenne') }
   ];
 
   // Ajouts : chacun occupe un emplacement. Les lunes s'ajoutent une à une, de plus en plus cher.
   const PARTS = [
-    { key: 'debris', name: 'Ceinture de débris', text: 'Des cailloux tournent autour de votre monde.', price: [10], min: [2] },
-    { key: 'facet', name: 'Facettes', text: 'La surface se taille en facettes de cristal.', price: [10], min: [2] },
-    { key: 'shape', name: 'Silhouette', text: 'Changez la forme du monde : double, brisée, bloc, diamant, antenne…', price: [12], min: [2] },
-    { key: 'ring', name: 'Anneau', text: 'Un anneau de glace et de poussière.', price: [15], min: [3] },
-    { key: 'moons', name: 'Lune', text: 'Une lune en orbite, jusqu’à trois.', price: [12, 20, 30], min: [4, 7, 10] },
-    { key: 'shell', name: 'Coque de lumière', text: 'Une bulle irisée enveloppe la planète.', price: [25], min: [8] }
+    { key: 'debris', name: tr('Ceinture de débris'), text: tr('Des cailloux tournent autour de votre monde.'), price: [10], min: [2] },
+    { key: 'facet', name: tr('Facettes'), text: tr('La surface se taille en facettes de cristal.'), price: [10], min: [2] },
+    { key: 'shape', name: tr('Silhouette'), text: tr('Changez la forme du monde : double, brisée, bloc, diamant, antenne…'), price: [12], min: [2] },
+    { key: 'ring', name: tr('Anneau'), text: tr('Un anneau de glace et de poussière.'), price: [15], min: [3] },
+    { key: 'moons', name: tr('Lune'), text: tr('Une lune en orbite, jusqu’à trois.'), price: [12, 20, 30], min: [4, 7, 10] },
+    { key: 'shell', name: tr('Coque de lumière'), text: tr('Une bulle irisée enveloppe la planète.'), price: [25], min: [8] }
   ];
   const PART = Object.fromEntries(PARTS.map((p) => [p.key, p]));
 
@@ -61,12 +63,12 @@
   const ORBITS = 6;
   const LIGHT_COST = 40;
   const STAR_CLASSES = [
-    { key: 'naine rouge', name: 'Naine rouge', price: 15 },
-    { key: 'étoile orange', name: 'Étoile orange', price: 15 },
-    { key: 'naine jaune', name: 'Naine jaune', price: 15 },
-    { key: 'étoile blanche', name: 'Étoile blanche', price: 15 },
-    { key: 'géante bleue', name: 'Géante bleue', price: 25 },
-    { key: 'étoile exotique', name: 'Étoile exotique', price: 30 }
+    { key: 'naine rouge', name: tr('Naine rouge'), price: 15 },
+    { key: 'étoile orange', name: tr('Étoile orange'), price: 15 },
+    { key: 'naine jaune', name: tr('Naine jaune'), price: 15 },
+    { key: 'étoile blanche', name: tr('Étoile blanche'), price: 15 },
+    { key: 'géante bleue', name: tr('Géante bleue'), price: 25 },
+    { key: 'étoile exotique', name: tr('Étoile exotique'), price: 30 }
   ];
   const STAR_GROW = [25, 50, 90, 150];
 
@@ -76,39 +78,39 @@
   // Actions sur le système : { t: 'light' | 'starClass' | 'starGrow' | 'orbit', … }.
   function sysCheck(sys, a, dust) {
     const r = sysQuote(sys, a);
-    if (r.ok && dust != null && dust < r.cost) return { ok: false, cost: r.cost, reason: `Il vous manque ${r.cost - dust} poussières d’étoiles.`, short: true };
+    if (r.ok && dust != null && dust < r.cost) return { ok: false, cost: r.cost, reason: tr('Il vous manque {n} poussières d’étoiles.', { n: r.cost - dust }), short: true };
     return r;
   }
   function sysQuote(sys, a) {
     const no = (reason) => ({ ok: false, reason });
-    if (!systemOpen(sys.planets)) return no(`Un de vos mondes doit atteindre la taille ${SYSTEM_MASS}.`);
+    if (!systemOpen(sys.planets)) return no(tr('Un de vos mondes doit atteindre la taille {n}.', { n: SYSTEM_MASS }));
     const st = sys.star;
     switch (a.t) {
       case 'light':
-        if (st.lit) return no('Votre étoile brille déjà.');
+        if (st.lit) return no(tr('Votre étoile brille déjà.'));
         return { ok: true, cost: LIGHT_COST };
       case 'starClass': {
         const c = STAR_CLASSES.find((k) => k.key === a.cls);
-        if (!st.lit) return no('Allumez d’abord votre étoile.');
-        if (!c || c.key === st.cls) return no('Votre étoile a déjà cette lumière.');
+        if (!st.lit) return no(tr('Allumez d’abord votre étoile.'));
+        if (!c || c.key === st.cls) return no(tr('Votre étoile a déjà cette lumière.'));
         return { ok: true, cost: c.price };
       }
       case 'starGrow':
-        if (!st.lit) return no('Allumez d’abord votre étoile.');
-        if (st.size >= STAR_GROW.length) return no('Votre étoile a atteint sa taille maximale.');
+        if (!st.lit) return no(tr('Allumez d’abord votre étoile.'));
+        if (st.size >= STAR_GROW.length) return no(tr('Votre étoile a atteint sa taille maximale.'));
         return { ok: true, cost: STAR_GROW[st.size] };
       case 'orbit': {
         const p = sys.planets[a.i];
-        if (!st.lit) return no('Allumez d’abord votre étoile.');
-        if (!p) return no('Monde introuvable.');
-        if (a.slot == null) return p.orbit == null ? no('Ce monde n’est pas en orbite.') : { ok: true, cost: 0 };
-        if (!p.type) return no('Ce monde n’est encore qu’une graine : nourrissez-le.');
-        if (a.slot < 0 || a.slot >= ORBITS) return no('Orbite inconnue.');
-        if (p.orbit === a.slot) return no('Ce monde y tourne déjà.');
+        if (!st.lit) return no(tr('Allumez d’abord votre étoile.'));
+        if (!p) return no(tr('Monde introuvable.'));
+        if (a.slot == null) return p.orbit == null ? no(tr('Ce monde n’est pas en orbite.')) : { ok: true, cost: 0 };
+        if (!p.type) return no(tr('Ce monde n’est encore qu’une graine : nourrissez-le.'));
+        if (a.slot < 0 || a.slot >= ORBITS) return no(tr('Orbite inconnue.'));
+        if (p.orbit === a.slot) return no(tr('Ce monde y tourne déjà.'));
         return { ok: true, cost: 0 };
       }
       default:
-        return no('Action inconnue.');
+        return no(tr('Action inconnue.'));
     }
   }
   function sysApply(sys, a) {
@@ -150,53 +152,53 @@
   // Prix et conditions d'une action, sans rien changer : { ok, cost, reason }.
   function check(p, a, dust) {
     const r = quote(p, a);
-    if (r.ok && dust != null && dust < r.cost) return { ok: false, cost: r.cost, reason: `Il vous manque ${r.cost - dust} poussières d’étoiles.`, short: true };
+    if (r.ok && dust != null && dust < r.cost) return { ok: false, cost: r.cost, reason: tr('Il vous manque {n} poussières d’étoiles.', { n: r.cost - dust }), short: true };
     return r;
   }
   function quote(p, a) {
     const no = (reason) => ({ ok: false, reason });
     switch (a.t) {
       case 'feed':
-        if (p.mass >= MAX_MASS) return no('Votre monde a atteint sa taille maximale.');
+        if (p.mass >= MAX_MASS) return no(tr('Votre monde a atteint sa taille maximale.'));
         return { ok: true, cost: FEED[p.mass] };
       case 'nature': {
         const n = NATURE[a.key];
-        if (!n) return no('Nature inconnue.');
-        if (p.mass < 1) return no('Nourrissez d’abord la graine.');
-        if (p.type === a.key) return no('Votre monde a déjà cette nature.');
-        if (p.mass < n.min) return no(`Il faut un monde de taille ${n.min}.`);
-        if (a.key === 'gas' && p.shape) return no('Une géante gazeuse n’a pas de silhouette : retirez-la d’abord.');
+        if (!n) return no(tr('Nature inconnue.'));
+        if (p.mass < 1) return no(tr('Nourrissez d’abord la graine.'));
+        if (p.type === a.key) return no(tr('Votre monde a déjà cette nature.'));
+        if (p.mass < n.min) return no(tr('Il faut un monde de taille {n}.', { n: n.min }));
+        if (a.key === 'gas' && p.shape) return no(tr('Une géante gazeuse n’a pas de silhouette : retirez-la d’abord.'));
         return { ok: true, cost: p.type ? 6 + 2 * p.mass : 0 };
       }
       case 'hue':
-        if (p.mass < 1 || !p.type) return no('Choisissez d’abord la nature de votre monde.');
-        if (!HUES.includes(a.v) || a.v === p.hue) return no('Cette teinte est déjà la sienne.');
+        if (p.mass < 1 || !p.type) return no(tr('Choisissez d’abord la nature de votre monde.'));
+        if (!HUES.includes(a.v) || a.v === p.hue) return no(tr('Cette teinte est déjà la sienne.'));
         return { ok: true, cost: HUE_COST };
       case 'relief':
-        if (p.mass < 1 || !p.type) return no('Choisissez d’abord la nature de votre monde.');
+        if (p.mass < 1 || !p.type) return no(tr('Choisissez d’abord la nature de votre monde.'));
         return { ok: true, cost: RELIEF_COST };
       case 'add': {
         const part = PART[a.part];
-        if (!part) return no('Ajout inconnu.');
-        if (!p.type) return no('Choisissez d’abord la nature de votre monde.');
+        if (!part) return no(tr('Ajout inconnu.'));
+        if (!p.type) return no(tr('Choisissez d’abord la nature de votre monde.'));
         if (a.part === 'shape') {
-          if (p.type === 'gas') return no('Une géante gazeuse n’a pas de silhouette.');
-          if (!SHAPES.some((s) => s.key === a.v)) return no('Silhouette inconnue.');
-          if (p.shape === a.v) return no('Votre monde a déjà cette silhouette.');
+          if (p.type === 'gas') return no(tr('Une géante gazeuse n’a pas de silhouette.'));
+          if (!SHAPES.some((s) => s.key === a.v)) return no(tr('Silhouette inconnue.'));
+          if (p.shape === a.v) return no(tr('Votre monde a déjà cette silhouette.'));
           // Changer de silhouette garde l'emplacement déjà pris.
           if (p.shape) return { ok: true, cost: part.price[0] };
         }
         const n = a.part === 'moons' ? p.moons : 0;
-        if (a.part === 'moons' ? n >= part.price.length : has(p, a.part)) return no(a.part === 'moons' ? 'Trois lunes au plus.' : 'Déjà ajouté.');
-        if (p.mass < part.min[n]) return no(`Il faut un monde de taille ${part.min[n]}.`);
-        if (slotsFree(p) < 1) return no('Plus d’emplacement libre : nourrissez votre monde pour en ouvrir un.');
+        if (a.part === 'moons' ? n >= part.price.length : has(p, a.part)) return no(a.part === 'moons' ? tr('Trois lunes au plus.') : tr('Déjà ajouté.'));
+        if (p.mass < part.min[n]) return no(tr('Il faut un monde de taille {n}.', { n: part.min[n] }));
+        if (slotsFree(p) < 1) return no(tr('Plus d’emplacement libre : nourrissez votre monde pour en ouvrir un.'));
         return { ok: true, cost: part.price[n] };
       }
       case 'remove':
-        if (!PART[a.part] || !has(p, a.part)) return no('Rien à retirer.');
+        if (!PART[a.part] || !has(p, a.part)) return no(tr('Rien à retirer.'));
         return { ok: true, cost: 0 };
       default:
-        return no('Action inconnue.');
+        return no(tr('Action inconnue.'));
     }
   }
 

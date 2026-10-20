@@ -52,7 +52,9 @@ Face à lui :
 - **L’Ancien** (liseré ambre, bâton), un Créateur dévoré par Kronos : il apparaît dans un mystère
   et donne un conseil pour le combat.
 
-Les silhouettes sont générées en pixel art (`figureSvg` dans `js/campagne-ui.js`).
+Le récit d’ouverture, la rencontre avec Vela et le dialogue avant Kronos reviennent à **chaque nouvelle
+campagne** (le bouton Passer les saute). Les silhouettes sont générées en pixel art (`figureSvg` dans
+`js/campagne-ui.js`).
 
 **Carte des chemins : un ciel en relief.** Les 9 étages sont posés dans un espace en perspective.
 Chaque rangée s’éloigne vers l’horizon où attend Kronos. Chaque astre flotte à sa propre hauteur et
@@ -237,6 +239,28 @@ Bouton en haut à droite du menu, en trois onglets : **Profil**, **Amis** et **C
   - L’écran de fin affiche le gain (« +28 points · Lune II », « RANG SUPÉRIEUR ! »).
 - **Statistiques** : parties, victoires, podiums, rang moyen, meilleur rang, combats gagnés, astres
   dorés, cycles joués, poussières gagnées, loi favorite.
+
+## Langues
+
+Le jeu existe en **français, anglais, espagnol, allemand et portugais** : Paramètres → Langue. Au premier
+lancement, il prend la langue du téléphone (anglais si elle n’est pas proposée). Changer de langue
+redémarre le jeu dans la nouvelle langue, la partie en cours reprend là où elle était.
+
+- `js/i18n.js` : le français est la langue source et chaque texte français sert de clé ; `tr('…', { n })`
+  renvoie la traduction (ou le français s’il en manque une) ; `data-t` / `data-t-attr` traduisent les textes
+  fixes de `index.html`.
+- `js/lang/*.js` : les dictionnaires par zone — `regles.js` (astres, lois, familles, mots-clés, rangs, Forge),
+  `jeu.js` (interface d’Affrontement), `campagne.js`, `interface.js` (page, Forge, mode en ligne).
+- Les données des règles restent en français dans `rules.js` et `campagne.js` (les tests tournent en
+  français) ; l’interface les traduit sur place au démarrage. Les sauvegardes ne contiennent que des
+  identifiants, jamais de texte traduit.
+- `node tools/i18n-check.js` vérifie que chaque texte a sa traduction dans les quatre langues, avec les
+  mêmes variables et les mêmes balises.
+
+Chaque loi a aussi sa **sphère d’énergie** à la silhouette de sa famille : fleur (Vie), vortex (Néant),
+triangle renversé (Envers), flamme (Brasier), hexagone (Glace), ovale (Tempête), bloc (Minéral),
+engrenage (Machine), croissant (Lunes), comète (Comètes), losange (Cristal), forme mouvante (Anomalies),
+sphère (Neutre), et les treize couleurs de familles sont nettement distinctes.
 
 ## Mode en ligne (Firebase)
 
