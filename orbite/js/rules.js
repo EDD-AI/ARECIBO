@@ -22,6 +22,9 @@
   const PLAYERS = 8;
   const ACTIVE_FAMILIES = 5;
   const COPIES = [0, 16, 15, 13, 11, 9, 7];
+  // Légendaires : chance qu'un emplacement de la Création en montre une, et qu'une découverte en propose une.
+  const LEGEND_SHOP = 1 / 14;
+  const LEGEND_DISCOVER = 1 / 3;
   const SHOP_SIZE = [0, 3, 4, 4, 5, 5, 6];
   const UPGRADE = [0, 5, 7, 8, 9, 10, 0];
   const DAMAGE_CAP = 10;
@@ -421,6 +424,33 @@
     // JETONS (hors réserve)
     { id: 'debris', fam: 'neant', tier: 1, atk: 1, hp: 1, name: 'Débris', token: true, look: { type: 'asteroid', seed: 8181 },
       text: 'Fragment d’un monde effondré.' },
+    // ─── Légendaires : une par niveau, un seul exemplaire par partie, rares dans la Création et les découvertes.
+    { id: 'primordia', fam: 'vie', tier: 1, atk: 2, hp: 3, name: 'Primordia', legend: true, look: { type: 'ocean', seed: 8101, ring: true, moons: 2, hueShift: 120 },
+      text: 'Fin de cycle : tous vos autres astres gagnent +{1} PV.',
+      endTurn(x, u, m) { for (const v of x.others(u)) x.buff(v, 0, m); } },
+    { id: 'ouroboros', fam: 'envers', tier: 2, atk: 3, hp: 3, name: 'Ouroboros', legend: true, kw: ['renaissance'], look: { type: 'portal', seed: 8202, mood: 'envers', flip: true, ring: true },
+      text: 'Renaissance. Quand il revient, il gagne +{3}/+{3} et Venin.',
+      reborn(c, u, m) { c.buff(u, 3 * m, 3 * m); c.kw(u, 'venin'); } },
+    { id: 'oeilvide', fam: 'neant', tier: 3, atk: 4, hp: 6, name: 'Œil du Vide', legend: true, look: { type: 'blackhole', seed: 8303, pitch: 0.5, diskScale: 1.3, hot: [[0.3, 0.14, 160], [0.52, 0.2, 170], [0.72, 0.17, 180], [0.92, 0.07, 190]] },
+      text: 'Début de combat et Effondrement : anéantit l’ennemi qui a le moins de PV (99 dégâts).',
+      start(c, u) { const t = c.allies(1 - u.side).slice().sort((a, b) => a.hp - b.hp)[0]; if (t) c.dmg(u, t, 99); },
+      death(c, u) { const t = c.allies(1 - u.side).slice().sort((a, b) => a.hp - b.hp)[0]; if (t) c.dmg(u, t, 99); } },
+    { id: 'maelstrom', fam: 'tempete', tier: 4, atk: 5, hp: 7, name: 'Maelström', legend: true, kw: ['rafale'], look: { type: 'gas', seed: 8404, ring: true, moons: 1, hueShift: 250 },
+      text: 'Rafale. Après chacune de ses attaques, tous vos astres gagnent +{1}/+{1}.',
+      attack(c, u, m) { for (const v of c.allies(u.side)) c.buff(v, m, m); } },
+    { id: 'attracteur', fam: 'neutre', tier: 5, atk: 5, hp: 7, name: 'Grand Attracteur', legend: true, look: { type: 'star', seed: 8505, starClass: 'étoile exotique', shell: true, debris: true },
+      text: 'Début de combat : chaque ennemi perd 1/1 ; le Grand Attracteur gagne tout ce qu’il a volé.',
+      start(c, u) {
+        let a = 0, h = 0;
+        for (const v of c.allies(1 - u.side)) {
+          const da = v.atk > 0 ? 1 : 0, dh = v.hp > 1 ? 1 : 0;
+          c.buff(v, -da, -dh); a += da; h += dh;
+        }
+        c.buff(u, a, h);
+      } },
+    { id: 'omega', fam: 'neutre', tier: 6, atk: 7, hp: 7, name: 'Oméga', legend: true, look: { type: 'star', seed: 8606, starClass: 'étoile blanche', ring: true, moons: 3 },
+      text: 'Début de combat : vos autres astres gagnent +2/+2, et les deux premiers Bouclier.',
+      start(c, u) { c.allies(u.side).filter((v) => v !== u).forEach((v, i) => { c.buff(v, 2, 2); if (i < 2) c.kw(v, 'bouclier'); }); } },
     { id: 'sonde-t', fam: 'machine', tier: 1, atk: 3, hp: 3, name: 'Sonde', token: true, kw: ['arrimage'], look: { type: 'mecha', seed: 6161, shape: 'diamant' },
       text: 'Arrimage.' }
   ];
@@ -570,7 +600,7 @@
   function drawFromPool(state, maxTier, rng, exactTier) {
     const ids = Object.keys(state.pool).filter((id) => {
       const t = CARD[id].tier;
-      return state.pool[id] > 0 && (exactTier ? t === exactTier : t <= maxTier);
+      return state.pool[id] > 0 && !CARD[id].legend && (exactTier ? t === exactTier : t <= maxTier);
     });
     const total = ids.reduce((s, id) => s + state.pool[id], 0);
     if (total <= 0) return null;
@@ -582,6 +612,15 @@
     const last = ids[ids.length - 1];
     state.pool[last]--;
     return last;
+  }
+
+  // Une légendaire encore libre, de niveau au plus maxTier.
+  function drawLegend(state, maxTier, rng) {
+    const ids = Object.keys(state.pool).filter((id) => CARD[id].legend && state.pool[id] > 0 && CARD[id].tier <= maxTier);
+    if (!ids.length) return null;
+    const id = ids[Math.floor(rng() * ids.length)];
+    state.pool[id]--;
+    return id;
   }
 
   function releaseShop(state, p) {
@@ -599,7 +638,7 @@
     const rng = rngFor(state, 'roll:' + p.id);
     p.shop = p.shop.filter(Boolean);
     while (p.shop.length < SHOP_SIZE[p.tier]) {
-      const id = drawFromPool(state, p.tier, rng);
+      const id = (rng() < LEGEND_SHOP && drawLegend(state, p.tier, rng)) || drawFromPool(state, p.tier, rng);
       if (!id) break;
       p.shop.push(id);
     }
@@ -639,7 +678,8 @@
     };
     for (const c of CARDS) {
       if (c.token) continue;
-      if (c.fam === 'neutre' || families.includes(c.fam)) state.pool[c.id] = COPIES[c.tier];
+      if (c.legend) state.pool[c.id] = 1;
+      else if (c.fam === 'neutre' || families.includes(c.fam)) state.pool[c.id] = COPIES[c.tier];
     }
     state.poolTotal = Object.assign({}, state.pool);
     const you = newPlayer(state, 'you', 'VOUS', law.id, false);
@@ -855,9 +895,11 @@
   function openDiscover(state, p, tier) {
     const rng = rngFor(state, 'discover:' + p.id);
     p.discover = [];
+    // Parfois, une légendaire se glisse parmi les choix.
+    if (rng() < LEGEND_DISCOVER) { const l = drawLegend(state, tier, rng); if (l) p.discover.push(l); }
     for (let t = tier; t >= 1 && p.discover.length < 3; t--) {
       while (p.discover.length < 3) {
-        const avail = Object.keys(state.pool).filter((id) => CARD[id].tier === t && state.pool[id] > 0 && !p.discover.includes(id));
+        const avail = Object.keys(state.pool).filter((id) => CARD[id].tier === t && !CARD[id].legend && state.pool[id] > 0 && !p.discover.includes(id));
         if (!avail.length) break;
         const total = avail.reduce((s, id) => s + state.pool[id], 0);
         let r = rng() * total, pick = avail[avail.length - 1];
@@ -958,7 +1000,7 @@
       },
       // Un astre aléatoire du niveau donné, parmi les familles de la partie (hors réserve).
       summonRandom(s, tier, index) {
-        const ids = CARDS.filter((cd) => !cd.token && cd.tier === tier && (cd.fam === 'neutre' || state.families.includes(cd.fam))).map((cd) => cd.id);
+        const ids = CARDS.filter((cd) => !cd.token && !cd.legend && cd.tier === tier && (cd.fam === 'neutre' || state.families.includes(cd.fam))).map((cd) => cd.id);
         if (!ids.length) return null;
         return c.summon(s, ids[Math.floor(rng() * ids.length)], index, 1);
       },
@@ -1353,7 +1395,7 @@
   }
 
   return {
-    rollCost, ALLIANCE, allianceOf, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
+    rollCost, ALLIANCE, allianceOf, LEGEND_SHOP, LEGEND_DISCOVER, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
     FAMILIES, FAMILY_KEYS, KEYWORDS, CARDS, CARD, LAWS, LAW,
     cardOf, famOf, cardText, upgradeCost, lawChoices, newGame, alivePlayers,
     buy, canBuy, play, canMagnet, sell, roll, freeze, upgrade, reorder, usePower, canUsePower, choose, endTurn,

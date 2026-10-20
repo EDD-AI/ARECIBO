@@ -388,6 +388,13 @@
       if (!buffers.glass1) { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.12, { delay: i * 0.07, vol: 0.05, type: 'square' })); return; }
       chime([1, 1.26, 1.5], { vol: 0.3, rev: 0.45 });
     },
+    // Légendaire : carillon montant puis grand accord qui résonne ; big = achat.
+    legend(big) {
+      if (!buffers.glass1) { [523, 659, 784, 1046, 1318, 1568].forEach((f, i) => tone(f, 0.22, { delay: i * 0.07, type: 'triangle', vol: 0.07 })); return; }
+      chime([0.75, 1, 1.26, 1.5, 2, 2.52, 3], { vol: big ? 0.34 : 0.26, rev: 0.8, step: 0.055 });
+      play('glass4', { vol: 0.3, rate: 0.75, rev: 1.2, delay: 0.38 });
+      if (big) { play('glass1', { vol: 0.26, rate: 0.6, rev: 1.4, delay: 0.55 }); chime([0.5, 0.75, 1], { vol: 0.22, rev: 1, delay: 0.7 }); }
+    },
     golden() {
       if (!buffers.glass1) { [784, 988, 1175, 1568, 1976].forEach((f, i) => tone(f, 0.16, { delay: i * 0.06, type: 'triangle', vol: 0.07 })); return; }
       chime([1, 1.26, 1.5, 2, 2.52], { vol: 0.3, rev: 0.6, step: 0.065 });

@@ -1137,3 +1137,11 @@ window.OrbiteI18n.add({
     "Un astre juste à sa gauche ou à sa droite.": "Um astro logo à esquerda ou à direita dele."
   }
 });
+
+// Légendaires.
+window.OrbiteI18n.add({
+  en: { 'LÉGENDAIRE': 'LEGENDARY', 'LÉGENDAIRE !': 'LEGENDARY!' },
+  es: { 'LÉGENDAIRE': 'LEGENDARIO', 'LÉGENDAIRE !': '¡LEGENDARIO!' },
+  de: { 'LÉGENDAIRE': 'LEGENDÄR', 'LÉGENDAIRE !': 'LEGENDÄR!' },
+  pt: { 'LÉGENDAIRE': 'LENDÁRIO', 'LÉGENDAIRE !': 'LENDÁRIO!' }
+});

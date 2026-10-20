@@ -441,7 +441,7 @@ En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 | Univers par partie | 8 (vous + 7 bots) |
 | Familles | 12 au total, **5 actives par partie** (dont celle de votre loi) + les neutres : 792 combinaisons |
 | Lois | 15 : 12 de famille + 3 lois de vie neutres (Sacrifice 22 PV et +1 énergie par cycle, Endurance 45 PV, Phénix 25 PV et une renaissance à 15 PV), 3 proposées au départ ; les bots ne prennent que des lois de famille |
-| Astres | 9 par famille + 8 neutres = **116**, dont **53 achetables** dans une partie |
+| Astres | 9 par famille + 8 neutres = **116**, + **6 légendaires** ; **53 achetables** dans une partie, plus les légendaires |
 | Copies par astre | niveau 1 : 16 · 2 : 15 · 3 : 13 · 4 : 11 · 5 : 9 · 6 : 7 |
 | Création | 3 / 4 / 4 / 5 / 5 / 6 astres selon le niveau (1 à 6) |
 | Énergie | 3 au premier cycle, +1 par cycle, maximum 10 |
@@ -460,6 +460,28 @@ doublés). Quand vous en possédez déjà deux, la copie présente dans la Créa
 petites étoiles dorées : l’acheter déclenche la fusion. Le placer ouvre une **découverte** : un astre au choix parmi trois du niveau supérieur.
 Chaque choix est encadré de la couleur de sa famille, avec son nom. Il indique aussi « Famille de
 votre loi », ou combien d’astres de cette famille sont déjà dans votre système.
+
+## Légendaires
+
+Six astres **légendaires**, un par niveau, existent en **un seul exemplaire** par partie et sont présents
+dans toutes les parties, quelles que soient les familles tirées. Ils ne se montrent que rarement : chaque
+emplacement de la Création a 1 chance sur 14 d’en proposer un (de votre niveau ou moins), et une
+découverte en glisse un parmi ses choix une fois sur trois. Ils ne fusionnent pas (un seul exemplaire).
+
+| Niveau | Légendaire | Famille | Stats | Pouvoir |
+|---|---|---|---|---|
+| 1 | Primordia | Vie | 2/3 | Fin de cycle : tous vos autres astres gagnent +1 PV |
+| 2 | Ouroboros | Envers | 3/3 | Renaissance ; en revenant, il gagne +3/+3 et Venin |
+| 3 | Œil du Vide | Néant | 4/6 | Début de combat et Effondrement : anéantit l’ennemi le plus faible (99 dégâts) |
+| 4 | Maelström | Tempête | 5/7 | Rafale ; après chacune de ses attaques, tous vos astres gagnent +1/+1 |
+| 5 | Grand Attracteur | Neutre | 5/7 | Début de combat : chaque ennemi perd 1/1, il gagne tout ce qu’il a volé |
+| 6 | Oméga | Neutre | 7/7 | Début de combat : vos autres astres gagnent +2/+2, les deux premiers Bouclier |
+
+À l’écran : halo prismatique et deux anneaux d’étincelles arc-en-ciel qui tournent en sens contraires
+(moteur de rendu), anneau irisé autour de l’astre, chiffres irisés. Quand une légendaire apparaît dans la
+Création : éclat, carillon et « LÉGENDAIRE ! » ; quand on l’achète : l’écran s’illumine, trois anneaux
+arc-en-ciel, grand accord et bannière à son nom. Sur 3 000 parties simulées, un système qui finit avec une
+légendaire termine en moyenne 4,24e contre 4,57e sans.
 
 ## Alliance (compositions hybrides)
 

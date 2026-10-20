@@ -1259,6 +1259,9 @@ void main() { outColor = fin(texture(uTex, gl_FragCoord.xy / uRes).rgb); }
   }
 
   const GOLD = OP.gradRamp([[0.3, 0.08, 60], [0.55, 0.13, 75], [0.78, 0.15, 88], [0.97, 0.06, 100]]);
+  // Légendaires : halo prismatique (violet → cyan) et étincelles aux couleurs de l'arc-en-ciel.
+  const LEGEND = OP.gradRamp([[0.32, 0.14, 300], [0.56, 0.2, 320], [0.78, 0.16, 200], [0.96, 0.06, 180]]);
+  const RAINBOW = [10, 55, 95, 160, 210, 280, 330].map((h) => OP.gradRamp([[0.5, 0.15, h], [0.72, 0.2, h], [0.86, 0.16, h], [0.97, 0.05, h]])[6]);
   const GHOST = OP.gradRamp([[0.3, 0.06, 300], [0.55, 0.1, 295], [0.78, 0.09, 285], [0.96, 0.03, 270]]);
 
   class Renderer {
@@ -1305,6 +1308,7 @@ void main() { outColor = fin(texture(uTex, gl_FragCoord.xy / uRes).rgb); }
       this.texCache = new WeakMap();
       this.goldRows = OP.basePalette(); this.goldRows[0] = GOLD;
       this.ghostRows = OP.basePalette(); this.ghostRows[0] = GHOST;
+      this.legendRows = OP.basePalette(); this.legendRows[0] = LEGEND;
       gl.disable(gl.BLEND);
       gl.disable(gl.DEPTH_TEST);
     }
@@ -1526,7 +1530,7 @@ void main() { outColor = fin(texture(uTex, gl_FragCoord.xy / uRes).rgb); }
       const phase = st.phase;
       const light = o.light || g.light;
       const isStar = b.shader === OP.SH.STAR;
-      const P = { cx, cy, R, flip: st.flip, phase, light, st, golden: o.golden, ghost: o.ghost };
+      const P = { cx, cy, R, flip: st.flip, phase, light, st, golden: o.golden, ghost: o.ghost, legend: o.legend };
 
       const moons = g.moons.map((m) => {
         const ang = TAU * (m.phase0 + m.cycles * phase);
@@ -1561,6 +1565,7 @@ void main() { outColor = fin(texture(uTex, gl_FragCoord.xy / uRes).rgb); }
       this.drawLayer('back', st);
       moons.filter((ms) => ms.pos[2] < 0).sort((a, c) => a.pos[2] - c.pos[2]).forEach((ms) => this.moonPass(g, ms, P, isStar));
 
+      if (o.legend) this.haloPass(4, cx, cy, R, 1.75, [1.75, 1.1, 0, 0], this.legendRows, 0, b.seed, light, st);
       if (o.golden) this.haloPass(4, cx, cy, R, 1.5, [1.5, 0.95, 0, 0], this.goldRows, 0, b.seed, light, st);
       if (o.ghost) this.haloPass(4, cx, cy, R, 1.45, [1.45, 0.8, 0, 0], this.ghostRows, 0, b.seed, light, st);
       if (b.tail) {
@@ -1722,6 +1727,31 @@ void main() { outColor = fin(texture(uTex, gl_FragCoord.xy / uRes).rgb); }
         put('top', Math.cos(sp.a) * sp.r, Math.sin(sp.a) * sp.r, size, size > 1 ? 2 : 0, sp.col, 1);
       }
 
+      if (P.legend) {
+        // Deux anneaux d'étincelles qui tournent en sens contraires, des rayons qui balaient, des éclats qui scintillent.
+        for (let ring = 0; ring < 2; ring++) {
+          const k = ring ? 1.55 : 1.38, n = ring ? 22 : 16, dir = ring ? -1 : 1, tilt = ring ? 0.34 : -0.22;
+          for (let i = 0; i < n; i++) {
+            const ang = TAU * (i / n + dir * phase * (ring ? 1.5 : 2.5));
+            const X = Math.cos(ang) * k, Z = Math.sin(ang) * k, Y = Z * tilt + X * 0.06;
+            put(Z > 0 ? 'front' : 'back', X, Y, i % 4 === 0 ? 3 : 2, 0, RAINBOW[(i + ring * 3 + Math.floor(phase * 28)) % RAINBOW.length], 1);
+          }
+        }
+        for (let r = 0; r < 4; r++) {
+          const a = TAU * (r / 4 + phase * 0.5);
+          for (let j = 0; j < 6; j++) {
+            const d = 1.08 + j * 0.13;
+            if ((j + Math.floor(phase * 40)) % 3 === 0) continue;
+            put('back', Math.cos(a) * d, Math.sin(a) * d, j < 2 ? 3 : 2, 0, RAINBOW[(r * 2 + j) % RAINBOW.length], 1);
+          }
+        }
+        for (let i = 0; i < 5; i++) {
+          const tw = Math.sin(TAU * (phase * 4 + i / 5));
+          if (tw <= 0.3) continue;
+          const a = i * 1.37 + 0.4, d = 1.25 + 0.25 * ((i * 7) % 3) / 2;
+          put('top', Math.cos(a) * d, Math.sin(a) * d, tw > 0.75 ? 5 : 3, 2, RAINBOW[(i * 3) % RAINBOW.length], 1);
+        }
+      }
       if (P.golden) {
         const k = 1.32;
         for (let i = 0; i < 14; i++) {
