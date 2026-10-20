@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 42;
+  const VERSION = 43;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -651,6 +651,7 @@
 
   function renderMenu() {
     $('menuDust').innerHTML = icon('dust') + ' ' + dust();
+    if (typeof renderCreationBtn === 'function') renderCreationBtn();
     const lv = levelInfo(xpTotal());
     $('pfName').textContent = pseudo();
     $('pfLvl').innerHTML = `${tr('NIV. {n}', { n: lv.lvl })}<i class="xp-mini"><i style="width:${(lv.rest / lv.need * 100).toFixed(1)}%"></i></i>`;
@@ -1395,7 +1396,7 @@
   ];
   const MENU_STEPS = [
     { id: 'solo', target: '#menuList', text: tr('<b>Jouer solo</b> s’ouvre sur deux modes. La <b>Campagne</b> : éveillez-vous en Créateur et façonnez votre monde carte après carte jusqu’à Kronos. L’<b>Affrontement</b> : une partie contre 7 univers rivaux.'), next: tr('SUIVANT'), delay: 0, enter: () => soloMenu(true) },
-    { id: 'creation', target: '#creationBtn', text: tr('La <b>Création</b> : forgez vos propres planètes avec vos <b>poussières d’étoiles</b>, et ouvrez l’<b>Atelier des planètes</b> et le <b>Bâtisseur de colonies</b>.'), next: tr('SUIVANT') },
+    { id: 'creation', target: '#creationBtn', text: tr('La <b>Création</b> : devenez Créateur. Semez une graine d’étoile et faites grandir votre propre planète. Elle se débloque avec des <b>poussières d’étoiles</b>.'), next: tr('SUIVANT') },
     { id: 'marche', target: '#marketBtn', text: tr('Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.'), next: tr('SUIVANT') },
     { id: 'profil', target: '#profileBtn', text: tr('Votre <b>profil</b> : pseudo, niveau, statistiques et historique. Chaque partie rapporte de l’expérience.'), next: tr('SUIVANT') },
     { id: 'reglages', target: '#settingsBtn', text: tr('<b>Paramètres</b> : son, musique, règles du jeu, et ce guide si vous voulez le revoir.'), next: tr('C’EST PARTI') }
@@ -3180,7 +3181,76 @@
     await show('creation');
     if (window.__orbite.forge) window.__orbite.forge.render();
   }
-  $('creationBtn').addEventListener('click', async () => { SFX.tap(); await openCreation(); });
+  // La Création se débloque une fois pour toutes contre des poussières d'étoiles, avec une cinématique.
+  const CREATION_KEY = 'orbite.creation';
+  const CREATION_PRICE = 1000;
+  const creationOpen = () => store.get(CREATION_KEY, '') === '1';
+  function renderCreationBtn() {
+    const b = $('creationBtn');
+    if (!b) return;
+    b.innerHTML = tr('CRÉATION') + (creationOpen() ? '' : `<small>${tr('VERROUILLÉE')} · ${CREATION_PRICE} ${icon('dust')}</small>`);
+  }
+  function unlockSheet() {
+    const have = dust(), ok = have >= CREATION_PRICE;
+    openSheet(`<h3>${tr('CRÉATION')}</h3><h2>${tr('Devenez Créateur')}</h2>
+      <p class="sheet-text">${tr('Semez une graine d’étoile, faites grandir votre planète, puis descendez à sa surface : un jour, la vie y apparaîtra.')}</p>
+      <div class="sheet-actions"><button class="btn primary" id="creationBuy" ${ok ? '' : 'disabled'}>${tr('DÉBLOQUER')} · ${CREATION_PRICE} ${icon('dust')}</button>
+      <button class="btn" data-act="close">${tr('FERMER')}</button></div>
+      ${ok ? '' : `<p class="muted center">${tr('Il vous manque {n} poussières d’étoiles.', { n: CREATION_PRICE - have })}</p>`}`);
+    const b = $('creationBuy');
+    if (b) b.addEventListener('click', async () => {
+      if (dust() < CREATION_PRICE || creationOpen()) return;
+      addDust(-CREATION_PRICE);
+      store.set(CREATION_KEY, '1');
+      closeSheet();
+      renderMenu();
+      await creationCinematic();
+      await openCreation();
+    });
+  }
+  // Cinématique : le vide, une étincelle qui devient un monde, et l'appel au Créateur.
+  stage.register('cine-graine', { type: 'star', seed: 7777, starClass: 'naine jaune', compact: true });
+  async function creationCinematic() {
+    stopAmbient();
+    const orb = $('cineOrb'), line = $('cineLine');
+    let skip = false;
+    $('cineSkip').onclick = () => { skip = true; SFX.tap(); };
+    const pause = async (ms) => { const t0 = performance.now(); while (!skip && performance.now() - t0 < ms) await wait(50); };
+    orb.style.transform = 'scale(0.08)';
+    stage.setReveal(orb, 0);
+    await show('cine');
+    SFX.music(false);
+    const say = async (text) => { if (!skip) await Promise.race([typeLine(line, text, { hold: 1500, speed: 55 }), (async () => { while (!skip) await wait(60); })()]); line.innerHTML = ''; };
+    await pause(700);
+    await say(tr('Au commencement, il n’y avait que le vide.'));
+    if (!skip) {
+      stage.reveal(orb, 0, 1, 1400);
+      SFX.golden();
+      const [x, y] = center(orb);
+      stage.burst(x, y, { n: 30, colors: [[255, 236, 160], [255, 255, 255]], speed: 40, life: 1 });
+    }
+    await say(tr('Puis une étincelle : la vôtre.'));
+    if (!skip) {
+      orb.animate([{ transform: 'scale(0.08)' }, { transform: 'scale(1)' }], { duration: 2600, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'forwards' });
+      await pause(1400);
+    }
+    await say(tr('Créateur, des mondes n’attendent que vous.'));
+    if (!skip) {
+      const [x, y] = center(orb);
+      stage.ring(x, y, 30, { n: 80, colors: [[255, 236, 160], [140, 220, 255], [255, 255, 255]], speed: 120, life: 1.2 });
+      SFX.level();
+      vibrate([20, 40, 20]);
+      await pause(1200);
+    }
+    orb.getAnimations().forEach((a) => a.cancel());
+    orb.style.transform = '';
+    SFX.music(true);
+  }
+  $('creationBtn').addEventListener('click', async () => {
+    SFX.tap();
+    if (!creationOpen()) { unlockSheet(); return; }
+    await openCreation();
+  });
   $('creationBack').innerHTML = icon('back');
   $('creationBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
   $('marketBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
