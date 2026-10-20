@@ -167,7 +167,10 @@
     const m = M.match, me = uid();
     const families = R.mpFamilies(m.seed);
     const seats = m.seats.filter((s) => s.uid !== me).map((s) => ({ id: s.uid, name: s.name, law: null }));
-    const st = R.newGame(m.seed, lawId, { families, seats, mp: { me, mid: M.mid, mode: m.mode } });
+    // Niveau de la partie : la moyenne des points des autres créateurs (pour le barème classé).
+    const others = m.seats.filter((s) => s.uid !== me);
+    const lobby = others.length ? Math.round(others.reduce((n, s) => n + (s.points || 0), 0) / others.length) : null;
+    const st = R.newGame(m.seed, lawId, { families, seats, mp: { me, mid: M.mid, mode: m.mode, lobby } });
     st.players[0].name = pseudo();
     M.posts = {}; M.roundDocs = {}; M.lastSnaps = {}; M.locked = null; M.timerRound = 0;
     listenPosts();

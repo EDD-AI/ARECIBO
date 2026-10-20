@@ -25,13 +25,13 @@
     if (!ex.sprites[k]) {
       const m = E.model(8, 8, 6);
       for (const v of C.roverVoxels({ x: 3, y: 3, dir, cargo, moving: false }, 0, true)) m.set(Math.round(v.x), Math.round(v.y), v.z, v.k);
-      ex.sprites[k] = R.render(m, { theme: ex.col.theme, accent: 'orange' });
+      ex.sprites[k] = R.render(m, { theme: ex.col.theme, hue: ex.col.hue, accent: 'orange' });
     }
     return ex.sprites[k];
   }
   function chunkCanvas(cx, cy) {
     const m = X.chunk(ex.w, cx, cy, ex.found);
-    return R.render(m, { theme: ex.col.theme, accent: 'orange' });
+    return R.render(m, { theme: ex.col.theme, hue: ex.col.hue, accent: 'orange' });
   }
   // Charge les tronçons autour du rover, les plus proches d'abord (deux par image au plus).
   function stream(now) {

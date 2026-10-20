@@ -60,11 +60,24 @@
     } catch (err) { const l = $('onFriendList'); if (l) l.innerHTML = `<p class="muted">${tr('Impossible de charger vos amis pour le moment.')}</p>`; }
     badge();
   }
+  // Présence d'un ami : en ligne (moins de 3 min), en partie, ou vu il y a un moment.
+  function presenceOf(p) {
+    if (!p || !p.seen) return null;
+    const ago = Date.now() - p.seen;
+    if (ago < 180000) {
+      if (p.where === 'multi') return { cls: 'play', txt: tr('En partie en ligne') };
+      if (p.where === 'game') return { cls: 'play', txt: tr('En partie') };
+      return { cls: 'on', txt: tr('En ligne') };
+    }
+    const min = Math.round(ago / 60000), h = Math.round(ago / 3600000), d = Math.round(ago / 86400000);
+    return { cls: 'off', txt: min < 60 ? tr('Vu il y a {n} min', { n: min }) : h < 24 ? tr('Vu il y a {n} h', { n: h }) : tr('Vu il y a {n} j', { n: d }) };
+  }
   function personRow(f, actions) {
     const p = f.profile || {};
+    const pr = f.status === 'accepted' ? presenceOf(p) : null;
     return `<div class="on-row">
       <span class="orb" data-planet="${tierOrb(p)}"></span>
-      <span class="on-row-txt"><b>${esc(p.pseudo || tr('Créateur'))}<small>#${esc(p.tag || '')}</small></b><small>${tr('Niveau {n}', { n: p.level || 1 })} · ${esc(tierText(p))}</small></span>
+      <span class="on-row-txt"><b>${pr ? `<i class="on-dot ${pr.cls}"></i>` : ''}${esc(p.pseudo || tr('Créateur'))}<small>#${esc(p.tag || '')}</small></b><small>${pr && pr.cls !== 'off' ? `<em class="on-pres ${pr.cls}">${esc(pr.txt)}</em> · ` : ''}${tr('Niveau {n}', { n: p.level || 1 })} · ${esc(tierText(p))}${pr && pr.cls === 'off' ? ' · ' + esc(pr.txt) : ''}</small></span>
       <span class="on-row-act">${actions}</span></div>`;
   }
   function listHtml(list) {
@@ -182,4 +195,9 @@
       badge();
     }
   };
+  // La présence des amis se rafraîchit toute seule tant que l'onglet Amis est ouvert.
+  setInterval(() => {
+    const prof = document.getElementById('profile');
+    if (tab === 'amis' && prof && prof.classList.contains('active') && !document.hidden && N.state.status === 'signedIn' && !$('onCode')) renderFriends();
+  }, 30000);
 })();

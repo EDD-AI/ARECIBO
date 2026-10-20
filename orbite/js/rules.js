@@ -408,7 +408,7 @@
     { id: 'tesseract', fam: 'anomalie', tier: 3, atk: 4, hp: 4, name: 'Tesseract', look: { type: 'mecha', seed: 9405, hueShift: 80, shape: 'bloc' },
       text: 'Naissance : découvrez un astre de votre niveau.',
       play(x, u) { u.dtier = Math.max(1, x.p.tier); } },
-    { id: 'pulsation', fam: 'anomalie', tier: 3, atk: 3, hp: 5, name: 'Pulsation', look: { type: 'star', seed: 9406, starClass: 'étoile exotique' },
+    { id: 'pulsation', fam: 'anomalie', tier: 3, atk: 3, hp: 5, name: 'Pulsation', look: { type: 'star', seed: 9406, starClass: 'géante bleue', shape: 'diamant' },
       text: 'Début de combat : deux alliés aléatoires gagnent un mot-clé aléatoire.',
       start(c, u, m) { for (const v of c.pickAllies(u.side, 2 * m)) c.randomKw(v); } },
     { id: 'evenement', fam: 'anomalie', tier: 4, atk: 5, hp: 6, name: 'Horizon', look: { type: 'blackhole', seed: 9407, pitch: -0.55, hot: [[0.4, 0.14, 125], [0.62, 0.2, 118], [0.8, 0.2, 112], [0.93, 0.13, 108]] },

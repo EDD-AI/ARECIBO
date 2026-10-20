@@ -10,8 +10,20 @@
   const tr = (typeof window !== 'undefined' && window.tr) || ((s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)) : s);
 
   const PLACEMENTS = 5;
-  // Points gagnés ou perdus selon la place (1re → 8e).
-  const DELTA = [40, 28, 16, 6, -6, -14, -22, -30];
+  // Points de base gagnés ou perdus selon la place (1re → 8e), puis ajustés selon le niveau de la
+  // partie : battre des créateurs mieux classés rapporte plus, perdre contre eux coûte moins.
+  const DELTA = [32, 18, 4, -6, -12, -18, -24, -30];
+  const ADJ_STEP = 25; // points d'écart avec la moyenne de la partie pour 1 point d'ajustement
+  const ADJ_MAX = 8;
+  function deltaFor(rank, mine, lobby) {
+    const base = DELTA[rank - 1];
+    const adj = lobby == null ? 0 : Math.max(-ADJ_MAX, Math.min(ADJ_MAX, Math.round((lobby - mine) / ADJ_STEP)));
+    if (rank === 1) return Math.max(10, base + adj);
+    if (rank === 2) return Math.max(4, base + adj);
+    // Le 3e gagne un peu, ou rien du tout dans une partie plus faible que lui.
+    if (rank === 3) return Math.max(0, base + adj);
+    return Math.min(-1, base + adj);
+  }
   const TIERS = ['Poussière', 'Astéroïde', 'Lune', 'Planète', 'Géante', 'Étoile', 'Nébuleuse', 'Pulsar', 'Singularité'];
   const TIER_SPAN = 300;
   const DIVS = ['III', 'II', 'I'];
@@ -34,8 +46,9 @@
     return Math.max(0, Math.min(1050, Math.round(1100 - avg * 150)));
   }
 
-  // Enregistre une partie classée (rang 1 à 8 ; un abandon compte comme 8e). Renvoie le changement.
-  function record(c, rank) {
+  // Enregistre une partie classée (rang 1 à 8 ; un abandon compte comme 8e). lobby : moyenne des
+  // points des autres créateurs de la partie (null : pas d'ajustement). Renvoie le changement.
+  function record(c, rank, lobby) {
     const r = Math.max(1, Math.min(8, rank | 0 || 8));
     const before = placed(c) ? c.points : null;
     c.games++;
@@ -48,7 +61,7 @@
       }
       return { placement: true, done: false, left: PLACEMENTS - c.placements.length };
     }
-    c.points = Math.max(0, c.points + DELTA[r - 1]);
+    c.points = Math.max(0, c.points + deltaFor(r, c.points, lobby));
     c.best = Math.max(c.best, c.points);
     const t0 = tierOf(before), t1 = tierOf(c.points);
     return { placement: false, points: c.points, delta: c.points - before, tier: t1, up: t1.idx > t0.idx, down: t1.idx < t0.idx };
@@ -63,5 +76,5 @@
     return { idx, name: tr(TIERS[idx]), div: DIVS[d], into, span: 100, label: `${tr(TIERS[idx])} ${DIVS[d]}` };
   }
 
-  return { PLACEMENTS, DELTA, TIERS, TIER_SPAN, fresh, sanitize, placed, seed, record, tierOf };
+  return { PLACEMENTS, DELTA, deltaFor, TIERS, TIER_SPAN, fresh, sanitize, placed, seed, record, tierOf };
 });

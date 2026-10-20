@@ -38,7 +38,7 @@
     const cand = ui.ghost && ui.ghost.ok ? Object.assign({}, col, { built: col.built.concat([ui.ghost.b]) }) : col;
     const sc = C.scene(cand, t || 0);
     const cv = $('colCanvas');
-    R.render(sc.m, { theme: col.theme, accent: 'orange', canvas: cv, blink: (performance.now() % 1300) < 650, depth: true, dim: C.zoneMask(col) });
+    R.render(sc.m, { theme: col.theme, hue: col.hue, accent: 'orange', canvas: cv, blink: (performance.now() % 1300) < 650, depth: true, dim: C.zoneMask(col) });
     geo = { W: cv.width, H: cv.height, ox: sc.m.Y * 2, oy: sc.m.Z * 2 + 2, g: sc.g, top: sc.top };
     place();
     drawGhost();
@@ -132,7 +132,7 @@
   function thumb(key) {
     if (!thumbs[key]) {
       const m = E.TYPE_BY_KEY[key].build(E.makeRng('carte:' + key), { t: 0 });
-      thumbs[key] = R.render(m, { theme: ui.col.theme, accent: 'orange' }).toDataURL();
+      thumbs[key] = R.render(m, { theme: ui.col.theme, hue: ui.col.hue, accent: 'orange' }).toDataURL();
     }
     return thumbs[key];
   }
@@ -345,6 +345,8 @@
     const fresh = !col;
     if (fresh) col = C.create(planet.id, planet.seed, THEME[planet.type] || 'mars', Date.now());
     ui.col = col; ui.planet = planet; ui.sel = null; ui.ghost = null; ui.lastSol = -1;
+    // Le sol prend la teinte choisie pour la planète dans la Forge.
+    col.hue = planet.hue || 0;
     // Sans tour de contrôle, on ouvre l'onglet où elle se trouve.
     if (!C.hasHq(col)) ui.cat = E.TYPE_BY_KEY.tour.cat;
     for (const k in thumbs) delete thumbs[k];
@@ -381,6 +383,7 @@
   async function dive(orbEl) {
     const veil = document.createElement('div');
     veil.className = 'col-dive';
+    if (ui.col && ui.col.hue) veil.style.filter = `hue-rotate(${ui.col.hue}deg)`;
     document.body.appendChild(veil);
     if (SFX) SFX.whoosh(0);
     if (orbEl) orbEl.animate([{ transform: 'scale(1)' }, { transform: 'scale(9)' }], { duration: 1300, easing: 'cubic-bezier(.5,0,.8,.4)', fill: 'forwards' });
@@ -396,7 +399,7 @@
     const art = document.createElement('canvas');
     art.className = 'cine-art';
     const m = E.TYPE_BY_KEY.fusee.build(E.makeRng('colonisateur'), { t: 0 });
-    R.render(m, { theme: ui.col.theme, accent: 'orange', canvas: art });
+    R.render(m, { theme: ui.col.theme, hue: ui.col.hue, accent: 'orange', canvas: art });
     art.style.width = art.width * 3 + 'px'; art.style.height = art.height * 3 + 'px';
     $('cine').appendChild(art);
     art.style.opacity = '0';

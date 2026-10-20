@@ -44,8 +44,22 @@
   const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const shift = (ramp, k) => ramp.map((_, i) => ramp[Math.max(0, Math.min(5, i + k))]);
 
-  function palette(theme, accent) {
-    const g = GROUNDS[theme] || GROUNDS.mars;
+  // Rotation de teinte (degrés) d'une couleur #rrggbb : le sol suit la teinte choisie dans la Forge.
+  function rotHex(h, deg, satK) {
+    let [r, g, b] = hex(h).map((v) => v / 255);
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+    if (!d) return h;
+    const s = Math.min(1, d / (1 - Math.abs(2 * l - 1))) * (satK || 1);
+    let H = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    H = (H * 60 + deg + 360) % 360;
+    const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((H / 60) % 2 - 1)), m = l - c / 2;
+    [r, g, b] = H < 60 ? [c, x, 0] : H < 120 ? [x, c, 0] : H < 180 ? [0, c, x] : H < 240 ? [0, x, c] : H < 300 ? [x, 0, c] : [c, 0, x];
+    return '#' + [r, g, b].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+  }
+  function palette(theme, accent, hue) {
+    const g0 = GROUNDS[theme] || GROUNDS.mars;
+    // Un peu moins saturé : la planète vue de l'espace a des teintes plus douces que le sol mars.
+    const g = hue ? g0.map((c) => rotHex(c, hue, 0.72)) : g0;
     const P = [];
     P[M.GROUND] = g; P[M.ROCK] = shift(g, -1); P[M.STRATA] = shift(g, -2); P[M.SAND] = shift(g, 1);
     P[M.HULL] = RAMPS.hull; P[M.HULL2] = RAMPS.hull2; P[M.METAL] = RAMPS.metal; P[M.DARK] = RAMPS.dark;
@@ -77,7 +91,7 @@
   // render(model, { theme, accent, view, blink }) → toile à la taille en pixels « art ».
   function render(mod, o) {
     o = o || {};
-    const P = palette(o.theme, o.accent);
+    const P = palette(o.theme, o.accent, o.hue);
     const view = ((o.view || 0) % 4 + 4) % 4;
     const odd = view % 2 === 1;
     const X = odd ? mod.Y : mod.X, Y = odd ? mod.X : mod.Y, Z = mod.Z;

@@ -1087,3 +1087,55 @@ window.OrbiteI18n.add({
   de: { "Seules les parties classées en ligne (Multijoueur) comptent. Après {n} parties de placement, votre rang monte à chaque podium et descend dans les dernières places.": "Nur gewertete Online-Spiele (Mehrspieler) zählen. Nach {n} Platzierungsspielen steigt dein Rang mit jedem Podium und sinkt auf den letzten Plätzen." },
   pt: { "Seules les parties classées en ligne (Multijoueur) comptent. Après {n} parties de placement, votre rang monte à chaque podium et descend dans les dernières places.": "Só as partidas ranqueadas online (Multijogador) contam. Depois de {n} partidas de classificação, seu nível sobe a cada pódio e cai nas últimas posições." }
 });
+
+// v52 : campagne en refonte, présence des amis, barème classé.
+window.OrbiteI18n.add({
+  en: {
+    "En cours de refonte": "Being redesigned",
+    "La campagne revient bientôt sous une nouvelle forme : un vrai jeu de création d’univers, à la hauteur de votre rôle de Créateur.": "The campaign will soon return in a new form: a true universe-creation game, worthy of your role as Creator.",
+    "Points par place : {list}, ajustés selon le niveau de la partie (plus de points en battant des créateurs mieux classés, moins de pertes contre eux).": "Points per place: {list}, adjusted to the game's level (more points for beating higher-ranked creators, smaller losses against them).",
+    "En partie en ligne": "In an online game",
+    "En partie": "In a game",
+    "En ligne": "Online",
+    "Vu il y a {n} min": "Seen {n} min ago",
+    "Vu il y a {n} h": "Seen {n} h ago",
+    "Vu il y a {n} j": "Seen {n} d ago",
+    "CAMPAGNE <small>BIENTÔT</small>": "CAMPAIGN <small>SOON</small>"
+  },
+  es: {
+    "En cours de refonte": "En plena renovación",
+    "La campagne revient bientôt sous une nouvelle forme : un vrai jeu de création d’univers, à la hauteur de votre rôle de Créateur.": "La campaña volverá pronto con una nueva forma: un verdadero juego de creación de universos, a la altura de tu papel de Creador.",
+    "Points par place : {list}, ajustés selon le niveau de la partie (plus de points en battant des créateurs mieux classés, moins de pertes contre eux).": "Puntos por puesto: {list}, ajustados según el nivel de la partida (más puntos al vencer a creadores mejor clasificados, menos pérdidas contra ellos).",
+    "En partie en ligne": "En partida en línea",
+    "En partie": "En partida",
+    "En ligne": "En línea",
+    "Vu il y a {n} min": "Visto hace {n} min",
+    "Vu il y a {n} h": "Visto hace {n} h",
+    "Vu il y a {n} j": "Visto hace {n} d",
+    "CAMPAGNE <small>BIENTÔT</small>": "CAMPAÑA <small>PRONTO</small>"
+  },
+  de: {
+    "En cours de refonte": "Wird überarbeitet",
+    "La campagne revient bientôt sous une nouvelle forme : un vrai jeu de création d’univers, à la hauteur de votre rôle de Créateur.": "Die Kampagne kehrt bald in neuer Form zurück: ein echtes Spiel der Universumserschaffung, deiner Rolle als Schöpfer würdig.",
+    "Points par place : {list}, ajustés selon le niveau de la partie (plus de points en battant des créateurs mieux classés, moins de pertes contre eux).": "Punkte pro Platz: {list}, angepasst an das Niveau des Spiels (mehr Punkte für Siege gegen besser platzierte Schöpfer, geringere Verluste gegen sie).",
+    "En partie en ligne": "Im Online-Spiel",
+    "En partie": "Im Spiel",
+    "En ligne": "Online",
+    "Vu il y a {n} min": "Vor {n} Min. gesehen",
+    "Vu il y a {n} h": "Vor {n} Std. gesehen",
+    "Vu il y a {n} j": "Vor {n} Tagen gesehen",
+    "CAMPAGNE <small>BIENTÔT</small>": "KAMPAGNE <small>BALD</small>"
+  },
+  pt: {
+    "En cours de refonte": "Em reformulação",
+    "La campagne revient bientôt sous une nouvelle forme : un vrai jeu de création d’univers, à la hauteur de votre rôle de Créateur.": "A campanha volta em breve em uma nova forma: um verdadeiro jogo de criação de universos, à altura do seu papel de Criador.",
+    "Points par place : {list}, ajustés selon le niveau de la partie (plus de points en battant des créateurs mieux classés, moins de pertes contre eux).": "Pontos por posição: {list}, ajustados ao nível da partida (mais pontos ao vencer criadores mais bem classificados, menos perdas contra eles).",
+    "En partie en ligne": "Em partida online",
+    "En partie": "Em partida",
+    "En ligne": "Online",
+    "Vu il y a {n} min": "Visto há {n} min",
+    "Vu il y a {n} h": "Visto há {n} h",
+    "Vu il y a {n} j": "Visto há {n} d",
+    "CAMPAGNE <small>BIENTÔT</small>": "CAMPANHA <small>EM BREVE</small>"
+  }
+});
