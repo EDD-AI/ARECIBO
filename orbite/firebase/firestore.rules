@@ -4,6 +4,8 @@ rules_version = '2';
 // - profiles/{uid} : le profil public (pseudo, niveau, classement, système), lisible par tout joueur
 //                    connecté, modifiable par son seul propriétaire, avec des champs vérifiés.
 // - friends/{a_b}  : une amitié entre deux joueurs (demande puis acceptation).
+// - matches/{id}   : une partie en ligne (salon, puis manches) ; posts/{uid} le plateau publié
+//                    par chaque joueur, rounds/{r} les plateaux retenus par l'hôte (écrits une fois).
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
@@ -50,6 +52,38 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
         && request.resource.data.status == 'accepted';
       allow delete: if signedIn() && request.auth.uid in resource.data.members;
+    }
+    match /matches/{mid} {
+      function m() { return resource.data; }
+      function n() { return request.resource.data; }
+      function member() { return request.auth.uid in get(/databases/$(database)/documents/matches/$(mid)).data.uids; }
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && n().keys().hasOnly(['mode', 'code', 'status', 'host', 'uids', 'seats', 'bracket', 'created', 'seed', 'beat'])
+        && n().host == request.auth.uid
+        && n().uids == [request.auth.uid]
+        && n().status == 'waiting'
+        && n().mode in ['ranked', 'private']
+        && n().code is string && n().code.size() == 6;
+      // Les membres font vivre la partie (lancement, battements, relais de l'hôte) ; un nouveau
+      // venu ne peut que s'ajouter à un salon en attente.
+      allow update: if signedIn() && n().uids.size() <= 8 && (
+        request.auth.uid in m().uids
+        || (m().status == 'waiting'
+            && request.auth.uid in n().uids
+            && n().uids.size() == m().uids.size() + 1
+            && n().diff(m()).affectedKeys().hasOnly(['uids', 'seats', 'beat']))
+      );
+      allow delete: if signedIn() && m().host == request.auth.uid;
+
+      match /posts/{uid} {
+        allow read: if signedIn();
+        allow write: if isMe(uid) && member();
+      }
+      match /rounds/{r} {
+        allow read: if signedIn();
+        allow create: if signedIn() && member();
+      }
     }
   }
 }

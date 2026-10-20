@@ -1151,3 +1151,71 @@ window.OrbiteI18n.add({
     "Des piliers gravés par une autre civilisation.": "Pilares gravados por outra civilização."
   }
 });
+
+// Fiche d’un bâtiment choisi : à quoi il sert.
+window.OrbiteI18n.add({
+  en: {
+    "Loge {n} colons.": "Houses {n} colonists.",
+    "Produit par sol : {list}.": "Produces per sol: {list}.",
+    "Consomme : {list}.": "Uses: {list}.",
+    "Emplois : {n} (sans ouvriers, il tourne au ralenti).": "Jobs: {n} (without workers it runs slowly).",
+    "Le cœur de la colonie, à poser en premier. Ses rovers récupèrent 1 matériau par sol.": "The heart of the colony, built first. Its rovers salvage 1 material per sol.",
+    "Agrandit les réserves maximales d’eau, d’oxygène, de nourriture et de matériaux.": "Raises the maximum stock of water, oxygen, food and materials.",
+    "À poser sur une tache claire de glace.": "Place it on a light patch of ice.",
+    "À poser sur une tache sombre de minerai.": "Place it on a dark patch of ore.",
+    "Les colons arrivent plus vite : jusqu’à 2 par sol.": "Colonists arrive faster: up to 2 per sol.",
+    "Fait pousser prairie et arbres autour de lui pendant plusieurs jours ; la verdure produit de l’oxygène.": "Grows meadow and trees around it over several days; the greenery produces oxygen.",
+    "Permet de partir en expédition explorer les environs.": "Lets you go on expeditions to explore the surroundings.",
+    "Donne aussi 40 points d’autonomie au rover d’expédition.": "Also gives the expedition rover 40 points of range.",
+    "La recherche débloque de nouveaux bâtiments.": "Research unlocks new buildings.",
+    "Touchez le terrain pour le placer.": "Tap the ground to place it."
+  },
+  es: {
+    "Loge {n} colons.": "Aloja a {n} colonos.",
+    "Produit par sol : {list}.": "Produce por sol: {list}.",
+    "Consomme : {list}.": "Consume: {list}.",
+    "Emplois : {n} (sans ouvriers, il tourne au ralenti).": "Empleos: {n} (sin trabajadores funciona al ralentí).",
+    "Le cœur de la colonie, à poser en premier. Ses rovers récupèrent 1 matériau par sol.": "El corazón de la colonia, se coloca primero. Sus rovers recuperan 1 material por sol.",
+    "Agrandit les réserves maximales d’eau, d’oxygène, de nourriture et de matériaux.": "Aumenta las reservas máximas de agua, oxígeno, comida y materiales.",
+    "À poser sur une tache claire de glace.": "Colócalo sobre una mancha clara de hielo.",
+    "À poser sur une tache sombre de minerai.": "Colócalo sobre una mancha oscura de mineral.",
+    "Les colons arrivent plus vite : jusqu’à 2 par sol.": "Los colonos llegan más rápido: hasta 2 por sol.",
+    "Fait pousser prairie et arbres autour de lui pendant plusieurs jours ; la verdure produit de l’oxygène.": "Hace crecer pradera y árboles a su alrededor durante varios días; la vegetación produce oxígeno.",
+    "Permet de partir en expédition explorer les environs.": "Permite salir de expedición a explorar los alrededores.",
+    "Donne aussi 40 points d’autonomie au rover d’expédition.": "También da 40 puntos de autonomía al rover de expedición.",
+    "La recherche débloque de nouveaux bâtiments.": "La investigación desbloquea nuevos edificios.",
+    "Touchez le terrain pour le placer.": "Toca el terreno para colocarlo."
+  },
+  de: {
+    "Loge {n} colons.": "Beherbergt {n} Siedler.",
+    "Produit par sol : {list}.": "Produziert pro Sol: {list}.",
+    "Consomme : {list}.": "Verbraucht: {list}.",
+    "Emplois : {n} (sans ouvriers, il tourne au ralenti).": "Jobs: {n} (ohne Arbeiter läuft es langsam).",
+    "Le cœur de la colonie, à poser en premier. Ses rovers récupèrent 1 matériau par sol.": "Das Herz der Kolonie, zuerst zu bauen. Seine Rover bergen 1 Material pro Sol.",
+    "Agrandit les réserves maximales d’eau, d’oxygène, de nourriture et de matériaux.": "Erhöht die maximalen Vorräte an Wasser, Sauerstoff, Nahrung und Material.",
+    "À poser sur une tache claire de glace.": "Auf einen hellen Eisfleck setzen.",
+    "À poser sur une tache sombre de minerai.": "Auf einen dunklen Erzfleck setzen.",
+    "Les colons arrivent plus vite : jusqu’à 2 par sol.": "Siedler kommen schneller: bis zu 2 pro Sol.",
+    "Fait pousser prairie et arbres autour de lui pendant plusieurs jours ; la verdure produit de l’oxygène.": "Lässt über mehrere Tage Wiese und Bäume um sich wachsen; das Grün erzeugt Sauerstoff.",
+    "Permet de partir en expédition explorer les environs.": "Ermöglicht Expeditionen in die Umgebung.",
+    "Donne aussi 40 points d’autonomie au rover d’expédition.": "Gibt dem Expeditionsrover außerdem 40 Punkte Reichweite.",
+    "La recherche débloque de nouveaux bâtiments.": "Forschung schaltet neue Gebäude frei.",
+    "Touchez le terrain pour le placer.": "Tippe auf den Boden, um es zu platzieren."
+  },
+  pt: {
+    "Loge {n} colons.": "Abriga {n} colonos.",
+    "Produit par sol : {list}.": "Produz por sol: {list}.",
+    "Consomme : {list}.": "Consome: {list}.",
+    "Emplois : {n} (sans ouvriers, il tourne au ralenti).": "Empregos: {n} (sem trabalhadores funciona devagar).",
+    "Le cœur de la colonie, à poser en premier. Ses rovers récupèrent 1 matériau par sol.": "O coração da colônia, construído primeiro. Seus rovers recuperam 1 material por sol.",
+    "Agrandit les réserves maximales d’eau, d’oxygène, de nourriture et de matériaux.": "Aumenta as reservas máximas de água, oxigênio, comida e materiais.",
+    "À poser sur une tache claire de glace.": "Coloque sobre uma mancha clara de gelo.",
+    "À poser sur une tache sombre de minerai.": "Coloque sobre uma mancha escura de minério.",
+    "Les colons arrivent plus vite : jusqu’à 2 par sol.": "Os colonos chegam mais rápido: até 2 por sol.",
+    "Fait pousser prairie et arbres autour de lui pendant plusieurs jours ; la verdure produit de l’oxygène.": "Faz crescer campo e árvores ao redor durante vários dias; o verde produz oxigênio.",
+    "Permet de partir en expédition explorer les environs.": "Permite sair em expedição para explorar os arredores.",
+    "Donne aussi 40 points d’autonomie au rover d’expédition.": "Também dá 40 pontos de autonomia ao rover de expedição.",
+    "La recherche débloque de nouveaux bâtiments.": "A pesquisa desbloqueia novos edifícios.",
+    "Touchez le terrain pour le placer.": "Toque no terreno para posicioná-lo."
+  }
+});

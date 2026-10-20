@@ -94,7 +94,7 @@
       endTurn(x, u, m) { for (const v of x.fam('vie')) x.buff(v, m, m); } },
 
     // NÉANT
-    { id: 'cendre', fam: 'neant', tier: 1, atk: 2, hp: 1, name: 'Cendre', look: { type: 'dead', seed: 111 },
+    { id: 'cendre', fam: 'neant', tier: 1, atk: 2, hp: 1, name: 'Cendre', look: { type: 'asteroid', seed: 115, debris: true },
       text: 'Effondrement : invoque un Débris {1}/{1}.',
       death(c, u, m, i) { c.summon(u.side, 'debris', i, m); } },
     { id: 'umbra', fam: 'neant', tier: 1, atk: 1, hp: 3, name: 'Umbra', look: { type: 'blackhole', seed: 222 },
@@ -103,7 +103,7 @@
     { id: 'vestige', fam: 'neant', tier: 2, atk: 3, hp: 2, name: 'Vestige', look: { type: 'dead', seed: 333, ring: true, shape: 'brisee', coreHue: 290 },
       text: 'Effondrement : vos astres du Néant gagnent +{1} Attaque définitivement.',
       death(c, u, m) { c.permFam(u.side, 'neant', m, 0); } },
-    { id: 'nyx', fam: 'neant', tier: 2, atk: 2, hp: 2, name: 'Nyx', look: { type: 'dead', seed: 444, moons: 1, light: [-0.75, -0.35, -0.5] },
+    { id: 'nyx', fam: 'neant', tier: 2, atk: 2, hp: 2, name: 'Nyx', look: { type: 'moon', seed: 444, moons: 1, light: [-0.85, -0.2, -0.45], hueShift: 230 },
       text: 'Effondrement : invoque deux Débris {1}/{1}.',
       death(c, u, m, i) { c.summon(u.side, 'debris', i, m); c.summon(u.side, 'debris', i, m); } },
     { id: 'abysse', fam: 'neant', tier: 3, atk: 3, hp: 5, name: 'Abysse', look: { type: 'blackhole', seed: 555, disk: false, lens: 1.95, hot: [[0.28, 0.13, 305], [0.48, 0.2, 300], [0.66, 0.19, 295], [0.82, 0.12, 290]] },
@@ -665,12 +665,14 @@
     return p;
   }
 
-  function newGame(seed, lawId) {
+  function newGame(seed, lawId, opts) {
     seed = String(seed);
+    opts = opts || {};
     const rng = mulberry(hashStr(seed + '|families'));
     const law = LAW[lawId] || LAWS[0];
     const others = shuffle(FAMILY_KEYS.filter((f) => f !== law.fam), rng);
-    const families = law.fam === 'neutre' ? others.slice(0, ACTIVE_FAMILIES) : [law.fam].concat(others.slice(0, ACTIVE_FAMILIES - 1));
+    // Multijoueur : les familles sont celles de la partie, les mêmes pour tous.
+    const families = opts.families ? opts.families.slice() : law.fam === 'neutre' ? others.slice(0, ACTIVE_FAMILIES) : [law.fam].concat(others.slice(0, ACTIVE_FAMILIES - 1));
     const state = {
       v: 1, seed, round: 1, phase: 'shop', rc: 0, uidc: 1,
       families, pool: {}, poolTotal: {},
@@ -687,8 +689,16 @@
     state.players.push(you);
     const botLaws = LAWS.filter((l) => families.includes(l.fam));
     const names = shuffle(BOT_NAMES.slice(), rng);
-    for (let i = 0; i < PLAYERS - 1; i++) {
-      const bl = botLaws[Math.floor(rng() * botLaws.length)];
+    // Sièges des autres joueurs humains (multijoueur) : ni boutique ni décisions locales, leur
+    // plateau arrive du réseau à chaque manche.
+    for (const seat of opts.seats || []) {
+      // Loi par défaut identique sur tous les téléphones ; la vraie arrive avec son premier plateau.
+      const h = newPlayer(state, seat.id, seat.name, LAW[seat.law] ? seat.law : MP_SEAT_LAW, false);
+      h.remote = true;
+      state.players.push(h);
+    }
+    for (let i = state.players.length - 1; i < PLAYERS - 1; i++) {
+      const bl = botLaws.length ? botLaws[Math.floor(rng() * botLaws.length)] : LAWS[0];
       const b = newPlayer(state, 'bot' + i, names[i], bl.id, true);
       b.greed = Math.floor(rng() * 4) - 1;
       b.skill = 1;
@@ -697,7 +707,8 @@
       if (rng() < 0.4) { const others = families.filter((f) => f !== b.pref); b.pref2 = others[Math.floor(rng() * others.length)]; }
       state.players.push(b);
     }
-    for (const p of state.players) rollShop(state, p);
+    for (const p of state.players) if (!p.remote) rollShop(state, p);
+    if (opts.mp) state.mp = Object.assign({}, opts.mp);
     return state;
   }
 
@@ -1383,6 +1394,157 @@
     return { ok: true, battle, results, fallen: fallen.map((p) => p.id), endEvents: myEndEvents, startEvents, over: false };
   }
 
+  // ─── Multijoueur ────────────────────────────────────────────
+  // Chaque téléphone joue sa boutique ; à la fin du tour il publie son plateau. L'hôte publie
+  // aussi celui des bots. Une fois tous les plateaux réunis, chaque téléphone résout la manche
+  // à l'identique : mêmes paires, mêmes combats (graine commune, état de combat neuf).
+  function mpFamilies(seed) {
+    return shuffle(FAMILY_KEYS.slice(), mulberry(hashStr(String(seed) + '|mp-families'))).slice(0, ACTIVE_FAMILIES);
+  }
+  function mpLawChoices(seed, families, who) {
+    const ok = LAWS.filter((l) => l.fam === 'neutre' || families.includes(l.fam));
+    return shuffle(ok.slice(), mulberry(hashStr(String(seed) + '|laws|' + who))).slice(0, 3).map((l) => l.id);
+  }
+  const MP_SEAT_LAW = LAWS.find((l) => !l.hp).id;
+  const gidOf = (state, p) => (p.id === 'you' && state.mp ? state.mp.me : p.id);
+  function snapshotOf(state, p) {
+    return { id: gidOf(state, p), name: p.name, law: p.law, tier: p.tier, hp: p.hp, alive: p.alive, board: JSON.parse(JSON.stringify(p.board)) };
+  }
+  // Fin du tour local : effets de fin de tour (et tour des bots chez l'hôte). Le plateau à publier
+  // est alors figé.
+  function mpLock(state, host) {
+    const me = you(state);
+    if (state.phase !== 'shop' || state.over) return fail('Le combat est déjà lancé.');
+    if (me.discover.length) return fail('Choisissez d’abord votre découverte.');
+    const endEvents = endTurnEffects(state, me);
+    if (host) for (const p of alivePlayers(state)) if (p.bot) { botTurn(state, p); endTurnEffects(state, p); }
+    state.phase = 'lock';
+    return { ok: true, endEvents };
+  }
+  // La loi d'un autre joueur (et les PV de départ qu'elle donne) : les dégâts déjà subis restent.
+  function mpSeatLaw(p, law) {
+    if (!p || !law || !LAW[law] || p.law === law) return;
+    const mh = LAW[law].hp || START_HP;
+    p.hp += mh - p.maxHp;
+    p.maxHp = mh;
+    p.law = law;
+  }
+  // Nouvel hôte en cours de manche : il fait jouer les bots à son tour.
+  function mpHostBots(state) {
+    for (const p of alivePlayers(state)) if (p.bot) { botTurn(state, p); endTurnEffects(state, p); }
+  }
+  // Paires de la manche : mêmes pour tous (ordre des identifiants mélangé par la graine).
+  function mpPairs(seed, round, ids) {
+    const list = ids.slice().sort();
+    shuffle(list, mulberry(hashStr(String(seed) + '|mp-pairs|' + round)));
+    const pairs = [];
+    while (list.length >= 2) { const a = list.pop(), b = list.pop(); pairs.push(a < b ? [a, b] : [b, a]); }
+    return { pairs, odd: list[0] || null };
+  }
+  // Un combat retourné : le joueur se voit toujours en bas (côté 0).
+  function mirror(events) {
+    const sw = (s) => (s === 0 ? 1 : s === 1 ? 0 : s);
+    return events.map((e) => {
+      const o = Object.assign({}, e);
+      if ('side' in o) o.side = sw(o.side);
+      if (o.boards) o.boards = [o.boards[1], o.boards[0]];
+      if (o.t === 'end') o.winner = sw(o.winner);
+      return o;
+    });
+  }
+  // Résolution d'une manche à partir des plateaux publiés (snaps : identifiant → instantané).
+  function mpResolve(state, snaps, endEvents) {
+    const me = you(state);
+    const players = alivePlayers(state);
+    const byGid = new Map(players.map((p) => [gidOf(state, p), p]));
+    // Plateaux des autres (humains et bots) tels qu'ils ont été publiés.
+    for (const [gid, p] of byGid) {
+      if (p === me) continue;
+      const sn = snaps[gid];
+      if (!sn) continue;
+      p.board = JSON.parse(JSON.stringify(sn.board || []));
+      p.tier = sn.tier || p.tier;
+      mpSeatLaw(p, sn.law);
+    }
+    const { pairs, odd } = mpPairs(state.seed, state.round, [...byGid.keys()]);
+    if (odd && state.ghost) pairs.push([odd, 'ghost']);
+    // Si l'hôte a retenu un autre plateau pour nous (publication en retard), on combat avec
+    // celui-là, comme les autres téléphones.
+    const mine = snaps[gidOf(state, me)];
+    if (mine && JSON.stringify(mine.board) !== JSON.stringify(me.board)) {
+      const proxy = Object.assign({}, me, { board: JSON.parse(JSON.stringify(mine.board)), tier: mine.tier || me.tier });
+      byGid.set(gidOf(state, me), proxy);
+      proxy.__real = me;
+    }
+    const cap = players.length > 3 ? DAMAGE_CAP : Infinity;
+    const results = [];
+    let battle = null, myOpp = null;
+    for (const [ga, gb] of pairs) {
+      const A = byGid.get(ga), B = gb === 'ghost' ? state.ghost : byGid.get(gb);
+      const isMe = (x) => x === me || (x && x.__real === me);
+      const mineFight = isMe(A) || isMe(B);
+      const fs = { seed: state.seed, rc: 0, families: state.families, uidc: 1000000, pool: {} };
+      const r = fight(fs, A, B, state.round + ':' + ga + ':' + gb, mineFight);
+      r.damage = Math.min(cap, r.damage);
+      results.push({ a: ga, b: gb, winner: r.winner, damage: r.damage, ghost: !!B.ghost });
+      if (mineFight) {
+        const flip = isMe(B);
+        const opp = flip ? A : B;
+        myOpp = opp;
+        battle = {
+          events: flip ? mirror(r.events) : r.events,
+          winner: flip ? (r.winner === 0 ? 1 : r.winner === 1 ? 0 : -1) : r.winner,
+          damage: r.damage, cap: Number.isFinite(cap) ? cap : null,
+          opponent: { id: opp.id, name: opp.name, law: opp.law, tier: opp.tier, hp: opp.hp, ghost: !!opp.ghost },
+          before: { me: me.hp, opp: opp.hp }
+        };
+        me.lastOpp = opp.id;
+      }
+      const hurt = (x, d) => { (x.__real || x).hp -= d; };
+      if (r.winner === 0 && !B.ghost) hurt(B, r.damage);
+      if (r.winner === 1) hurt(A, r.damage);
+    }
+    for (const p of players) if (p.hp <= 0 && p.law === 'phenix' && !p.reborn) {
+      p.reborn = true;
+      p.hp = PHENIX_HP;
+      if (battle && p === me) battle.reborn = true;
+    }
+    if (battle) battle.after = { me: me.hp, opp: myOpp.ghost ? null : myOpp.hp };
+    // Éliminations : les plus endettés d'abord, à égalité par identifiant (même ordre partout).
+    const fallen = players.filter((p) => p.hp <= 0).sort((x, y) => x.hp - y.hp || (gidOf(state, x) < gidOf(state, y) ? -1 : 1));
+    let place = players.length;
+    for (const p of fallen) {
+      p.alive = false;
+      p.rank = place--;
+      p.deadRound = state.round;
+      for (const u of p.board.concat(p.hand)) releaseUnit(state, u);
+      for (const id of p.discover) state.pool[id]++;
+      releaseShop(state, p);
+      p.discover = [];
+      state.ghost = { id: 'ghost', name: p.name, law: p.law, tier: p.tier, board: JSON.parse(JSON.stringify(p.board)), ghost: true };
+      p.hand = [];
+    }
+    const still = alivePlayers(state);
+    state.history.push({ round: state.round, results, fallen: fallen.map((p) => gidOf(state, p)) });
+    if (!me.alive || still.length <= 1) {
+      if (me.alive) me.rank = 1;
+      state.over = true;
+      state.phase = 'over';
+      state.rank = me.rank;
+      state.reward = REWARDS[me.rank] || 0;
+      return { ok: true, battle, results, fallen: fallen.map((p) => p.id), endEvents: endEvents || [], over: true, rank: me.rank, reward: state.reward };
+    }
+    state.round++;
+    state.phase = 'shop';
+    let startEvents = [];
+    for (const p of still) {
+      if (p.remote) continue;
+      const evs = startTurn(state, p);
+      if (p === me) startEvents = evs;
+    }
+    return { ok: true, battle, results, fallen: fallen.map((p) => p.id), endEvents: endEvents || [], startEvents, over: false };
+  }
+
   // ─── Contrôle (tests) ───────────────────────────────────────
   function poolAudit(state) {
     const total = Object.assign({}, state.pool);
@@ -1399,6 +1561,7 @@
     FAMILIES, FAMILY_KEYS, KEYWORDS, CARDS, CARD, LAWS, LAW,
     cardOf, famOf, cardText, upgradeCost, lawChoices, newGame, alivePlayers,
     buy, canBuy, play, canMagnet, sell, roll, freeze, upgrade, reorder, usePower, canUsePower, choose, endTurn,
-    fight, poolAudit, copiesOf, botTurn, botDeploy
+    fight, poolAudit, copiesOf, botTurn, botDeploy,
+    mpFamilies, mpLawChoices, mpSeatLaw, snapshotOf, mpLock, mpHostBots, mpPairs, mirror, mpResolve
   };
 });

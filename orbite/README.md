@@ -330,8 +330,9 @@ Bouton en haut à droite du menu, en trois onglets : **Profil**, **Amis** et **C
   - le pseudo modifiable et le tag à quatre chiffres (`Créateur#4821`), le niveau, la barre d’XP et
     votre planète ;
   - le classé, les statistiques et les 15 dernières parties.
-- **Classé** (`js/classement.js`, testé). Chaque partie d’Affrontement compte, et un abandon vaut
-  la 8e place.
+- **Classé** (`js/classement.js`, testé). Seules les **parties classées en ligne** (Multijoueur)
+  comptent, et un abandon vaut la 8e place. Le solo contre les univers rivaux, la campagne et les
+  parties privées ne changent pas les points.
   - 5 parties de placement fixent le départ : un rang moyen de 1 donne Planète I, de 8 donne zéro.
   - Ensuite, les points changent selon la place : +40, +28, +16, +6, −6, −14, −22, −30.
   - 9 rangs : Poussière, Astéroïde, Lune, Planète, Géante, Étoile, Nébuleuse, Pulsar, chacun en
@@ -361,6 +362,38 @@ Chaque loi a aussi sa **sphère d’énergie** à la silhouette de sa famille : 
 triangle renversé (Envers), flamme (Brasier), hexagone (Glace), ovale (Tempête), bloc (Minéral),
 engrenage (Machine), croissant (Lunes), comète (Comètes), losange (Cristal), forme mouvante (Anomalies),
 sphère (Neutre), et les treize couleurs de familles sont nettement distinctes.
+
+## Multijoueur
+
+Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne »).
+
+- **Partie classée** : recherche de créateurs de votre rang.
+  - La tolérance s’élargit d’un rang toutes les 10 secondes ; on rejoint le salon en attente le
+    plus ancien.
+  - Au bout de 40 secondes, ou à 8 joueurs, la partie commence. Les places libres sont tenues par
+    des univers rivaux (bots).
+  - Le résultat compte pour le classement (c’est le seul mode qui en donne).
+- **Partie privée** : « Créer une partie » donne un **code de session** de 6 caractères, à
+  partager. Les amis le saisissent puis « Rejoindre ». L’hôte lance quand il veut ; les places
+  libres vont aux bots. Une partie privée ne compte pas pour le classement.
+- **Déroulement** :
+  - Chacun choisit une loi parmi trois, en 20 secondes, dans les familles de la partie (les mêmes
+    pour tous).
+  - Personne ne peut passer : un minuteur commun cadence la partie. La boutique dure 45 s, puis 5 s
+    de plus par manche, jusqu’à 75 s ; le bouton de combat affiche le compte à rebours et le tour
+    se termine pour tous à zéro. Les combats ne se passent pas ; 25 s leur sont réservées avant la
+    boutique suivante. On ne peut passer qu’en solo, contre les bots.
+- **Sous le capot** (`js/multi.js`, règles dans `js/rules.js`) :
+  - Chaque téléphone joue sa propre boutique. À la fin du tour, il publie son plateau.
+  - L’hôte rassemble les plateaux des humains et ceux des bots dans un document de manche, écrit
+    une seule fois. Un joueur en retard de plus de 20 s garde son plateau précédent.
+  - Chaque téléphone résout alors la manche à l’identique (`mpResolve`) : mêmes paires, mêmes
+    combats (graine commune, état de combat neuf). Les PV sont donc les mêmes partout. On voit
+    toujours son combat de son côté (`mirror`).
+  - Si l’hôte est éliminé ou se tait plus de 30 s, un autre humain prend le relais.
+- **Données** : `matches/{id}` (salon), `matches/{id}/posts/{uid}` (plateaux),
+  `matches/{id}/rounds/{r}` (manches). Les règles de sécurité sont dans `firebase/firestore.rules`.
+  Tests : `tests/multi.test.mjs`.
 
 ## Mode en ligne (Firebase)
 
@@ -658,7 +691,7 @@ partie, et on en possède un dans environ 3 parties sur 10. Ils ne fusionnent pa
 | 6 | Oméga | Neutre | 7/7 | Début de combat : vos autres astres gagnent +2/+2, les deux premiers Bouclier |
 
 À l’écran : halo prismatique et deux anneaux d’étincelles arc-en-ciel qui tournent en sens contraires
-(moteur de rendu), anneau irisé autour de l’astre, chiffres irisés. Quand une légendaire apparaît dans la
+(moteur de rendu) et chiffres irisés. Quand une légendaire apparaît dans la
 Création : éclat, carillon et « LÉGENDAIRE ! » ; quand on l’achète : l’écran s’illumine, trois anneaux
 arc-en-ciel, grand accord et bannière à son nom. Sur 3 000 parties simulées, un système qui finit avec une
 légendaire termine en moyenne 4,24e contre 4,57e sans.
@@ -715,6 +748,8 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `js/forge.js`, `js/forge-ui.js` | Forge des mondes : règles (paliers, prix, ajouts) et interface (écran Création) |
 | `js/colonie-jeu.js`, `js/colonie-ui.js` | Colonie : règles et simulation en temps réel, écran de la surface (construction, réserves, tutoriel) |
 | `js/classement.js` | Mode classé : placements, points, rangs et divisions |
+| `js/multi.js`, `js/multi-ui.js` | Multijoueur : salons, recherche classée, codes de session, manches en ligne, et leur écran |
+| `js/exploration.js`, `js/exploration-ui.js` | Expédition : monde infini généré par tronçons autour du rover, découvertes |
 | `js/online-config.js`, `js/online.js`, `js/online-ui.js` | Mode en ligne : configuration Firebase, connexion, sauvegarde, amis, classement, et leur interface |
 | `firebase/` | Règles de sécurité Firestore et configuration des émulateurs |
 | `js/rules.js` | Règles pures et déterministes : catalogue, lois, création, fusion, combat (journal d’événements), bots |

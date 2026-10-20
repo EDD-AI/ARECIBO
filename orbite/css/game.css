@@ -1359,18 +1359,7 @@ body.in-combat .banner { top: calc(50% - 34px); }
 }
 @media (prefers-reduced-motion: reduce) { .triple-spark i { animation: none; opacity: 0.9; } }
 
-/* ─── Légendaires : anneau prismatique qui tourne, chiffres irisés, arrivée en éclat ─── */
-.unit .legend-ring {
-  position: absolute;
-  inset: -12%;
-  border-radius: 50%;
-  background: conic-gradient(from 0deg, #ff5a78, #ffbe50, #faf078, #6ef0a0, #64d2ff, #aa82ff, #ff78e6, #ff5a78);
-  -webkit-mask: radial-gradient(closest-side, transparent 86%, #000 88%, #000 96%, transparent 98%);
-  mask: radial-gradient(closest-side, transparent 86%, #000 88%, #000 96%, transparent 98%);
-  animation: spin 4s linear infinite;
-  opacity: 0.85;
-  pointer-events: none;
-}
+/* ─── Légendaires : chiffres irisés, arrivée en éclat (le halo vient du rendu de l'astre) ─── */
 .unit.legend .stats b { text-shadow: 0 0 6px rgba(170, 130, 255, 0.9), 0 0 2px rgba(100, 210, 255, 0.9); }
 .unit.legend .fam { width: 18px; background: linear-gradient(90deg, #ff5a78, #faf078, #64d2ff, #aa82ff); }
 .unit.legend-in { animation: legendIn 0.9s cubic-bezier(.2, 1.6, .4, 1); }
@@ -1409,7 +1398,7 @@ body.in-combat .banner { top: calc(50% - 34px); }
   box-shadow: 0 0 18px rgba(170, 130, 255, 0.45);
 }
 .discover-item.legend .fam-chip { color: #faf078; }
-@media (prefers-reduced-motion: reduce) { .unit .legend-ring { animation: none; } .unit.legend-in { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .unit.legend-in { animation: none; } }
 
 /* ─── Arbre d'étoiles (menu) ─── */
 .star-tree { position: absolute; z-index: 1; pointer-events: none; image-rendering: pixelated; image-rendering: crisp-edges; }
@@ -1493,3 +1482,33 @@ button.pf-rank { grid-template-columns: 56px 1fr auto; width: 100%; font: inheri
 .ex-view canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
 .ex-hint { position: absolute; left: 10px; right: 54px; bottom: 10px; margin: 0; padding: 8px 10px; font-size: 12px; color: var(--ink); background: rgba(7, 6, 10, 0.8); border: 1px solid var(--line); }
 .ex-hint[hidden] { display: none; }
+.col-place #colPlaceTxt { display: flex; flex-direction: column; gap: 3px; max-height: 42vh; overflow-y: auto; }
+.col-pname { font-size: 14px; font-weight: 600; letter-spacing: 0.06em; }
+.col-pdesc { font-size: 12px; color: var(--ink); line-height: 1.35; }
+.col-puse { font-size: 11px; color: #9fdc8c; line-height: 1.45; }
+.col-ptip { font-size: 10px; color: var(--dim); letter-spacing: 0.06em; }
+/* Multijoueur */
+.mp { display: flex; flex-direction: column; gap: 12px; padding-top: 6px; }
+.mp-card { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--line); }
+.mp-card b { font-size: 13px; letter-spacing: 0.22em; font-weight: 600; }
+.mp-card p { margin: 0; font-size: 13px; line-height: 1.45; color: var(--dim); }
+.mp-rank { font-size: 11px; letter-spacing: 0.08em; color: var(--gold); }
+.mp-note { color: var(--dim); text-align: center; margin-top: 20vh; }
+.mp-join { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+.mp-join .code-input { margin: 0; }
+.mp-code { font-size: 34px; letter-spacing: 0.3em; text-align: center; color: var(--gold); padding: 6px 0; }
+.mp-seats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.mp-seat { display: flex; flex-direction: column; gap: 2px; padding: 10px; border: 1px dashed var(--faint); color: var(--dim); min-width: 0; }
+.mp-seat.on { border-style: solid; border-color: var(--line); color: var(--ink); }
+.mp-seat b { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-seat small { font-size: 10px; letter-spacing: 0.08em; color: var(--dim); }
+.mp-laws { display: flex; flex-direction: column; gap: 8px; }
+.mp-law { display: flex; flex-direction: column; gap: 4px; padding: 12px; font: inherit; color: var(--ink); text-align: left; background: rgba(241, 236, 218, 0.03); border: 1px solid var(--faint); border-left: 3px solid var(--c); }
+.mp-law.on { border-color: var(--c); background: rgba(241, 236, 218, 0.08); }
+.mp-law b { font-size: 15px; font-weight: 600; }
+.mp-law small { font-size: 12px; color: var(--dim); line-height: 1.4; }
+.mp-timer { font-size: 13px; letter-spacing: 0.1em; color: var(--ink); padding: 2px 8px; border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.mp-timer.low { color: #ff8a7a; border-color: rgba(255, 106, 90, 0.6); }
+.mp-timer[hidden] { display: none; }
+body.mp-game #skipBtn { display: none; }
+body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgba(241, 236, 218, 0.08); border-color: var(--line); font-variant-numeric: tabular-nums; }

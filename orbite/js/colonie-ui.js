@@ -171,13 +171,44 @@
     hint();
     draw();
   }
+  // À quoi sert un bâtiment : ce qu'il produit, consomme, et son rôle particulier.
+  function useText(key) {
+    const t = E.TYPE_BY_KEY[key], e = t.eco, out = [];
+    const names = { power: tr('énergie'), water: tr('eau'), oxygen: tr('oxygène'), food: tr('nourriture'), materials: tr('matériaux'), research: tr('recherche') };
+    const prod = [], use = [];
+    for (const f of ['power', 'water', 'oxygen', 'food', 'materials', 'research']) {
+      if (e[f] > 0) prod.push(`+${e[f]} ${names[f]}`);
+      else if (e[f] < 0) use.push(`${-e[f]} ${names[f]}`);
+    }
+    if (e.pop) out.push(tr('Loge {n} colons.', { n: e.pop }));
+    if (prod.length) out.push(tr('Produit par sol : {list}.', { list: prod.join(', ') }));
+    if (use.length) out.push(tr('Consomme : {list}.', { list: use.join(', ') }));
+    if (e.jobs) out.push(tr('Emplois : {n} (sans ouvriers, il tourne au ralenti).', { n: e.jobs }));
+    const role = {
+      hq: tr('Le cœur de la colonie, à poser en premier. Ses rovers récupèrent 1 matériau par sol.'),
+      storage: tr('Agrandit les réserves maximales d’eau, d’oxygène, de nourriture et de matériaux.'),
+      ice: tr('À poser sur une tache claire de glace.'),
+      ore: tr('À poser sur une tache sombre de minerai.'),
+      spaceport: tr('Les colons arrivent plus vite : jusqu’à 2 par sol.'),
+      green: tr('Fait pousser prairie et arbres autour de lui pendant plusieurs jours ; la verdure produit de l’oxygène.'),
+      vehicle: tr('Permet de partir en expédition explorer les environs.')
+    }[t.role];
+    if (role) out.push(role);
+    if (key === 'batteries') out.push(tr('Donne aussi 40 points d’autonomie au rover d’expédition.'));
+    if (e.research > 0) out.push(tr('La recherche débloque de nouveaux bâtiments.'));
+    return out;
+  }
   function hint() {
     const box = $('colPlace');
     if (!ui.sel) { box.hidden = true; return; }
     box.hidden = false;
     const gh = ui.ghost;
     const short = gh && gh.reason === 'Pas assez de matériaux.' ? ' ' + tr('Touchez MATÉRIAUX pour un ravitaillement.') : gh && gh.reason && gh.reason.startsWith('Hors de la zone') ? ' ⤢' : '';
-    $('colPlaceTxt').innerHTML = gh ? (gh.ok ? `${esc(bname(ui.sel))} · ${C.price(ui.sel).materials} ${tr('mat.')}` : `<span class="bad">${esc(tr(gh.reason) + short)}</span>`) : tr('Touchez le terrain pour placer : {nom}', { nom: esc(bname(ui.sel)) });
+    const t = E.TYPE_BY_KEY[ui.sel];
+    // Sans emplacement visé : la fiche du bâtiment (ce que c'est, à quoi il sert).
+    const info = gh ? '' : `<b class="col-pname">${esc(bname(ui.sel))}</b><span class="col-pdesc">${esc(tr(t.desc))}</span>
+      <span class="col-puse">${useText(ui.sel).map(esc).join('<br>')}</span><span class="col-ptip">${tr('Touchez le terrain pour le placer.')}</span>`;
+    $('colPlaceTxt').innerHTML = gh ? (gh.ok ? `${esc(bname(ui.sel))} · ${C.price(ui.sel).materials} ${tr('mat.')}` : `<span class="bad">${esc(tr(gh.reason) + short)}</span>`) : info;
     $('colBuild').disabled = !(gh && gh.ok);
   }
   function aim(tx, ty) {
