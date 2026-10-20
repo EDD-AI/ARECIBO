@@ -46,7 +46,7 @@ système solaire vivant.
 | Ère | Équivalent Spore | Gameplay | État |
 |---|---|---|---|
 | I · La Poussière | Cellule | Le grain dérive vu du dessus, absorbe plus petit que lui, fuit plus gros, se façonne | **jouable** |
-| II · L’Astéroïde | Créature | Planétésimal en orbite : percuter les rivaux (prédateur) ou les capturer en lunes (paisible) | à venir |
+| II · L’Astéroïde | Créature | 4 chapitres : l’Essaim, le Cœur, la Sculpture, le Grand Impact | **chapitre 1 jouable** |
 | III · La Planète | Tribu | Modeler la surface : océans, volcans, atmosphère ; parer les bombardements | à venir |
 | IV · Le Système | Civilisation | Allumer ou capturer un soleil, placer lunes et planètes en orbite | à venir |
 | V · La Vie | Espace | Rendre le monde vivable (température, air, eau), faire naître la vie, puis la Colonie | à venir |
@@ -131,6 +131,43 @@ système solaire vivant.
   - Une ère I dure environ 5 à 10 minutes (simulée par un joueur automatique dans
     `tests/genese.test.mjs`).
   - Sauvegarde dans `orbite.genese` : le grain est gardé, la nébuleuse se régénère autour.
+
+**Ère II, chapitre 1 · L’Essaim** (`js/essaim.js` pour les règles, `js/essaim-ui.js` pour
+l’écran) :
+- **Accès** : quand l’ère I est terminée, le bouton Campagne propose l’ère II. Le planétésimal
+  garde sa composition et son trait.
+- **Orbites.** Le planétésimal tourne autour d’une jeune étoile, dans une ceinture de rochers qui
+  suivent tous leur orbite.
+  - Sans doigt, l’assistance d’orbite vous range sur une orbite circulaire ; doigt posé, on se
+    propulse vers lui.
+  - La lueur de l’étoile éclaire chaque astre du bon côté, et votre orbite est tracée en pointillé.
+  - Bouton **Poussée** : un élan, toutes les 4 s.
+- **Capturer** (voie paisible) : glisser à côté d’un rocher plus petit, sans le toucher et
+  presque à la même vitesse. Un lien se tisse en 1,6 s (1 s pour un Paisible de l’ère I) et le
+  rocher devient une **lune**.
+  - Les lunes parent un choc chacune (puis 8 s de repos).
+  - Elles balaient les petits rochers qu’elles touchent et grossissent, jusqu’à 70 % de votre
+    masse.
+  - Leur nombre maximal grandit avec vous (8 au plus).
+- **Percuter** (voie prédatrice) : foncer dans un rocher plus petit l’absorbe d’un coup.
+  - L’impact chauffe, selon la vitesse et la taille du rocher. Au-delà de 80, la croûte se
+    fissure et vous perdez de la solidité.
+  - À bout : vous perdez 15 % de masse et la moitié de vos lunes.
+  - Les rochers plus gros (cerclés de rouge) blessent.
+- **Rivales.** Vesta, Pallas et Hygie (des protoplanètes) grandissent aussi, jusqu’à 4, 9 et 18.
+  - Plus grosses que vous, elles vous attirent (effet de fronde) et vous arrachent de la masse au
+    contact.
+  - Plus petites, on les absorbe, ou on les capture (si vous pesez 1,6 fois leur masse) : elles
+    deviennent une grande lune.
+- **Comètes** : elles traversent la ceinture et apportent de la glace, mais blessent, sauf si une
+  lune les pare.
+- **Fin du chapitre** : devenir le **système le plus massif de la ceinture** (vous et vos lunes),
+  d’une masse d’au moins 26 et 1,25 fois la plus grosse rivale.
+  - Trait du chapitre : Prédateur, Paisible ou Adaptable, selon la masse gagnée en percutant ou en
+    capturant.
+  - +3 graines de vie.
+- **Durée** : 3 à 10 minutes selon le style (simulée par trois joueurs automatiques).
+- Sauvegarde dans `orbite.genese.essaim`. Tests : `tests/essaim.test.mjs`.
 
 ### Ancienne campagne de cartes (désactivée)
 
@@ -914,6 +951,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `js/colonie-jeu.js`, `js/colonie-ui.js` | Colonie : règles et simulation en temps réel, écran de la surface (construction, réserves, tutoriel) |
 | `js/classement.js` | Mode classé : placements, points, rangs et divisions |
 | `js/genese.js`, `js/genese-ui.js` | La Genèse (campagne façon Spore) : règles de l’ère I et son écran pixel art, Façonnage, récits |
+| `js/essaim.js`, `js/essaim-ui.js` | Genèse, ère II, chapitre 1 « L’Essaim » : orbites, captures, impacts, rivales, et son écran |
 | `js/succes.js` | Les 100 succès : catalogue, progression, déblocage, onglet du Profil |
 | `js/multi.js`, `js/multi-ui.js` | Multijoueur : salons, recherche classée, codes de session, manches en ligne, et leur écran |
 | `js/exploration.js`, `js/exploration-ui.js` | Expédition : monde infini généré par tronçons autour du rover, découvertes |
