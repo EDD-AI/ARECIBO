@@ -11,6 +11,7 @@
 
   // ─── Paramètres ─────────────────────────────────────────────
   const START_HP = 30;
+  const PHENIX_HP = 15;
   const MAX_GOLD = 10;
   const BUY_COST = 3;
   const ROLL_COST = 1;
@@ -435,7 +436,11 @@
     { id: 'passage', fam: 'comete', name: 'Loi du passage', starter: 'meteore', tagline: 'Tout repasse un jour.', text: 'Votre première actualisation de chaque cycle est gratuite.' },
     { id: 'resonance', fam: 'cristal', name: 'Loi de résonance', starter: 'quartz', tagline: 'Une note, et tout vibre.', text: 'Quand vous jouez un Cristal, un autre Cristal aléatoire gagne +1/+1.' },
     { id: 'chaos', fam: 'anomalie', name: 'Loi du chaos', starter: 'fluctuation', tagline: 'Le hasard a toujours raison.', text: 'Début de combat : un allié aléatoire gagne un mot-clé aléatoire.' },
-    { id: 'ingenierie', fam: 'machine', name: 'Loi d’ingénierie', starter: 'sonde', tagline: 'Assembler les mondes.', text: 'Pouvoir (1 énergie, une fois par cycle) : ajoute une Sonde 3/3 Arrimage à votre main.', active: { cost: 1, target: false } }
+    { id: 'ingenierie', fam: 'machine', name: 'Loi d’ingénierie', starter: 'sonde', tagline: 'Assembler les mondes.', text: 'Pouvoir (1 énergie, une fois par cycle) : ajoute une Sonde 3/3 Arrimage à votre main.', active: { cost: 1, target: false } },
+    // Lois de vie : neutres, elles ne choisissent pas de famille et changent les PV de départ.
+    { id: 'sacrifice', fam: 'neutre', name: 'Loi du sacrifice', starter: 'errante', hp: 22, tagline: 'Tout se paie, même l’élan.', text: 'Vous commencez avec 22 PV, mais gagnez 1 énergie de plus à chaque cycle.' },
+    { id: 'endurance', fam: 'neutre', name: 'Loi d’endurance', starter: 'echo', hp: 45, tagline: 'Durer, c’est déjà vaincre.', text: 'Vous commencez avec 45 PV au lieu de 30.' },
+    { id: 'phenix', fam: 'neutre', name: 'Loi du phénix', starter: 'errante', hp: 25, tagline: 'Des cendres, un monde.', text: 'Vous commencez avec 25 PV. La première fois que vous tombez à 0 PV, vous renaissez avec 15 PV.' }
   ];
   const LAW = Object.fromEntries(LAWS.map((l) => [l.id, l]));
 
@@ -608,7 +613,7 @@
     const law = LAW[lawId];
     const p = {
       id, name, bot, law: lawId, pref: law.fam,
-      hp: START_HP, tier: 1, gold: 3, discount: 0,
+      hp: law.hp || START_HP, maxHp: law.hp || START_HP, tier: 1, gold: 3, discount: 0,
       board: [], hand: [], shop: [], discover: [],
       frozen: false, powerUsed: false, alive: true, rank: null,
       lastOpp: null, deadRound: 0, greed: 0
@@ -624,7 +629,7 @@
     const rng = mulberry(hashStr(seed + '|families'));
     const law = LAW[lawId] || LAWS[0];
     const others = shuffle(FAMILY_KEYS.filter((f) => f !== law.fam), rng);
-    const families = [law.fam].concat(others.slice(0, ACTIVE_FAMILIES - 1));
+    const families = law.fam === 'neutre' ? others.slice(0, ACTIVE_FAMILIES) : [law.fam].concat(others.slice(0, ACTIVE_FAMILIES - 1));
     const state = {
       v: 1, seed, round: 1, phase: 'shop', rc: 0, uidc: 1,
       families, pool: {}, poolTotal: {},
@@ -635,7 +640,9 @@
       if (c.fam === 'neutre' || families.includes(c.fam)) state.pool[c.id] = COPIES[c.tier];
     }
     state.poolTotal = Object.assign({}, state.pool);
-    state.players.push(newPlayer(state, 'you', 'VOUS', law.id, false));
+    const you = newPlayer(state, 'you', 'VOUS', law.id, false);
+    if (law.fam === 'neutre') you.pref = families[0];
+    state.players.push(you);
     const botLaws = LAWS.filter((l) => families.includes(l.fam));
     const names = shuffle(BOT_NAMES.slice(), rng);
     for (let i = 0; i < PLAYERS - 1; i++) {
@@ -876,7 +883,7 @@
 
   // ─── Début et fin de cycle ──────────────────────────────────
   function startTurn(state, p) {
-    p.gold = Math.min(MAX_GOLD, state.round + 2);
+    p.gold = Math.min(MAX_GOLD, state.round + 2 + (p.law === 'sacrifice' ? 1 : 0));
     p.discount += 1;
     p.powerUsed = false;
     p.rolls = 0;
@@ -1286,6 +1293,12 @@
       }
       if (r.winner === 0 && !B.ghost) B.hp -= r.damage;
       if (r.winner === 1) A.hp -= r.damage;
+    }
+    // Loi du phénix : la première chute ramène à la vie au lieu d'éliminer.
+    for (const p of players) if (p.hp <= 0 && p.law === 'phenix' && !p.reborn) {
+      p.reborn = true;
+      p.hp = PHENIX_HP;
+      if (battle && p === me) battle.reborn = true;
     }
     if (battle) battle.after = { me: me.hp, opp: battle.opponent.ghost ? null : findPlayer(state, battle.opponent.id).hp };
 

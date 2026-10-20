@@ -416,7 +416,7 @@ En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 |---|---|
 | Univers par partie | 8 (vous + 7 bots) |
 | Familles | 12 au total, **5 actives par partie** (dont celle de votre loi) + les neutres : 792 combinaisons |
-| Lois | 12 (une par famille), 3 proposées au départ |
+| Lois | 15 : 12 de famille + 3 lois de vie neutres (Sacrifice 22 PV et +1 énergie par cycle, Endurance 45 PV, Phénix 25 PV et une renaissance à 15 PV), 3 proposées au départ ; les bots ne prennent que des lois de famille |
 | Astres | 9 par famille + 8 neutres = **116**, dont **53 achetables** dans une partie |
 | Copies par astre | niveau 1 : 16 · 2 : 15 · 3 : 13 · 4 : 11 · 5 : 9 · 6 : 7 |
 | Création | 3 / 4 / 4 / 5 / 5 / 6 astres selon le niveau (1 à 6) |
@@ -432,7 +432,8 @@ La **réserve est partagée** : les vitrines réservent les copies, les achats l
 vente et l’élimination les rendent. Quand un bot joue une famille, ses astres se raréfient.
 
 **Trois copies** d’un même astre fusionnent en un **astre doré** (statistiques et effets
-doublés). Le placer ouvre une **découverte** : un astre au choix parmi trois du niveau supérieur.
+doublés). Quand vous en possédez déjà deux, la copie présente dans la Création scintille de
+petites étoiles dorées : l’acheter déclenche la fusion. Le placer ouvre une **découverte** : un astre au choix parmi trois du niveau supérieur.
 Chaque choix est encadré de la couleur de sa famille, avec son nom. Il indique aussi « Famille de
 votre loi », ou combien d’astres de cette famille sont déjà dans votre système.
 

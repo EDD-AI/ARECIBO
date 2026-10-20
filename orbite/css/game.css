@@ -1342,3 +1342,19 @@ body.in-combat .banner { top: calc(50% - 34px); }
 .ct-box.ready .ct-next { opacity: 1; animation: blink 1.2s ease-in-out infinite; }
 
 @media (max-height: 720px) { .menu-item { padding: 9px 0; } }
+
+/* Fusion possible : trois petites étoiles dorées scintillent autour de l'astre de la Création. */
+.triple-spark { position: absolute; inset: -6px -4px auto -4px; height: calc(var(--u) + 8px); pointer-events: none; z-index: 2; }
+.triple-spark i {
+  position: absolute; font-style: normal; color: #ffd76a; line-height: 1;
+  text-shadow: 0 0 6px rgba(255, 200, 80, 0.9), 0 0 2px #fff;
+  animation: tripleTwinkle 1.4s ease-in-out infinite;
+}
+.triple-spark i:nth-child(1) { top: 0; right: 4%; font-size: 18px; }
+.triple-spark i:nth-child(2) { top: 34%; left: -2%; font-size: 12px; animation-delay: 0.45s; }
+.triple-spark i:nth-child(3) { bottom: 6%; right: 12%; font-size: 14px; animation-delay: 0.9s; }
+@keyframes tripleTwinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.6) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.15) rotate(20deg); }
+}
+@media (prefers-reduced-motion: reduce) { .triple-spark i { animation: none; opacity: 0.9; } }
