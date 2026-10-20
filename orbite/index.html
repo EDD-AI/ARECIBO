@@ -58,7 +58,7 @@
       <nav class="menu-list" id="menuList" aria-label="Menu principal" data-t-attr="aria-label">
         <button class="menu-item" id="soloBtn" aria-expanded="false" data-t>JOUER SOLO</button>
         <div class="menu-sub" id="soloSub">
-          <button class="menu-item sub soon" id="campBtn" data-t>CAMPAGNE <small>BIENTÔT</small></button>
+          <button class="menu-item sub" id="campBtn" data-t>CAMPAGNE <small>LA GENÈSE</small></button>
           <button class="menu-item sub" id="quickBtn" data-t>AFFRONTEMENT <small>CONTRE 7 UNIVERS</small></button>
         </div>
         <button class="menu-item" id="multiBtn" data-t>MULTIJOUEUR <small>EN LIGNE</small></button>
@@ -108,6 +108,33 @@
       </div>
       <div class="col-cats" id="colCats"></div>
       <div class="col-cards" id="colCards"></div>
+    </section>
+
+    <!-- GENÈSE : ère I, la Poussière (le grain dérive, absorbe, grossit) -->
+    <section class="screen genese" id="genese" aria-label="Genèse" data-t-attr="aria-label">
+      <div class="gn-view" id="gnView">
+        <canvas id="gnCanvas"></canvas>
+        <div class="gn-top">
+          <button class="icon-btn" id="gnBack" aria-label="Retour" data-t-attr="aria-label"></button>
+          <div class="gn-lvl"><div class="gn-lvl-row"><b id="gnLevel"></b><small id="gnNext"></small></div><div class="gn-prog"><i id="gnProg"></i></div><div class="gn-hp"><i id="gnHp"></i></div></div>
+          <span class="gn-sparks" id="gnSparks"></span>
+        </div>
+        <div class="gn-diet" id="gnDiet"></div>
+        <div class="gn-actions">
+          <button class="gn-act" id="gnPulse" hidden><span>ϟ</span><small data-t>DÉCHARGE</small></button>
+          <button class="gn-act" id="gnDash" hidden><span>⇶</span><small data-t>ÉRUPTION</small></button>
+          <button class="gn-act gn-edit" id="gnEdit"><span>✦</span><small data-t>FAÇONNER</small></button>
+        </div>
+        <div class="gn-stick" id="gnStick"><i></i></div>
+        <p class="gn-hint" id="gnHint"></p>
+        <div class="banner gn-banner" id="gnBanner" aria-live="polite"></div>
+        <div class="gn-editor" id="gnEditor" hidden>
+          <div class="gn-ed-head" id="gnEdHead"></div>
+          <div class="gn-ed-top"><canvas id="gnEdView"></canvas><div class="gn-ed-slots" id="gnEdSlots"></div></div>
+          <div class="gn-ed-list" id="gnEdList"></div>
+          <button class="btn primary gn-ed-done" id="gnEdDone" data-t>REPARTIR</button>
+        </div>
+      </div>
     </section>
 
     <!-- EXPÉDITION : le rover explore les environs de la colonie -->
@@ -363,6 +390,7 @@
   <script src="js/lang/interface.js"></script>
   <script src="js/lang/batiments.js"></script>
   <script src="js/lang/succes.js"></script>
+  <script src="js/lang/genese.js"></script>
   <script src="js/planet-engine.js"></script>
   <script src="js/planet-renderer.js"></script>
   <script src="js/stage.js"></script>
@@ -374,6 +402,8 @@
   <script src="js/arbre.js"></script>
   <script src="js/game.js"></script>
   <script src="js/campagne.js"></script>
+  <script src="js/genese.js"></script>
+  <script src="js/genese-ui.js"></script>
   <script src="js/campagne-ui.js"></script>
   <script src="js/online-config.js"></script>
   <script src="js/online.js"></script>
