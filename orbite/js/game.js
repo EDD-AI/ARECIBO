@@ -1052,6 +1052,7 @@
       <button class="btn" data-act="set" data-v="lang">${tr('LANGUE : {lang}', { lang: I18N.LANGS.find((l) => l.id === I18N.lang).name.toUpperCase() })}</button>
       <button class="btn" data-act="set" data-v="tutos">${tr('TUTORIELS ET AIDE')}</button>
       ${installed() ? '' : `<button class="btn" data-act="set" data-v="install">${tr('INSTALLER SUR LE TÉLÉPHONE')}</button>`}
+      <button class="btn" data-act="set" data-v="code">${tr('CODE CADEAU')}</button>
       <button class="btn" data-act="set" data-v="credits">${tr('CRÉDITS')}</button>
     </div><p class="muted">${tr('Poussières d’étoiles, niveau, planète et partie en cours restent sur cet appareil.')}</p>
     <p class="muted version">${tr('ORBITE · version {n}', { n: VERSION })}</p>`;
@@ -1062,6 +1063,44 @@
     return `<h3>${tr('LANGUE')}</h3><div class="menu-list-sheet">
       ${I18N.LANGS.map((l) => `<button class="btn ${l.id === I18N.lang ? 'primary' : ''}" data-act="set" data-v="lang:${l.id}">${l.name.toUpperCase()}</button>`).join('')}
     </div><div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} ${tr('PARAMÈTRES')}</button></div>`;
+  }
+
+  // Codes cadeaux : seule l'empreinte SHA-256 de chaque code est publiée ; chacun ne sert qu'une fois par appareil.
+  const GIFTS = {
+    '69c6a9d25df079588239c63c3a69003d4e26fc55ca5ea4d72977649b42944415': { id: 'test-10k', dust: 10000 }
+  };
+  const GIFT_KEY = 'orbite.cadeaux';
+  function openCode() {
+    openSheet(`<h3>${tr('CODE CADEAU')}</h3><p class="muted">${tr('Entrez un code pour recevoir sa récompense.')}</p>
+      <input class="code-input" id="giftCode" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40">
+      <div class="sheet-actions"><button class="btn primary" id="giftGo">${tr('VALIDER')}</button>
+      <button class="btn" data-act="set" data-v="settings">${icon('back')} ${tr('PARAMÈTRES')}</button></div>`);
+    const go = async () => {
+      const code = $('giftCode').value.trim().toUpperCase();
+      if (!code) return;
+      let hex = '';
+      try {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
+        hex = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+      } catch (err) { refuse(tr('Codes indisponibles sur cet appareil.')); return; }
+      const gift = GIFTS[hex];
+      const used = readJson(GIFT_KEY, []);
+      if (!gift) { refuse(tr('Ce code n’existe pas.')); return; }
+      if (used.includes(gift.id)) { refuse(tr('Ce code a déjà été utilisé.')); return; }
+      used.push(gift.id);
+      store.set(GIFT_KEY, JSON.stringify(used));
+      addDust(gift.dust);
+      closeSheet();
+      renderMenu();
+      SFX.golden();
+      const [x, y] = center($('menuDust'));
+      stage.ring(x, y, 20, { n: 60, colors: [[255, 226, 140], [255, 255, 255]], speed: 90, life: 1 });
+      popOn($('menuDust'), `+${gift.dust} ${icon('dust')}`, 'gold');
+      toast(tr('Code accepté : +{n} poussières d’étoiles.', { n: gift.dust }), 3200);
+    };
+    $('giftGo').addEventListener('click', go);
+    $('giftCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+    setTimeout(() => $('giftCode').focus(), 200);
   }
 
   // Tous les tutoriels et l'aide sont rangés derrière un seul bouton des Paramètres.
@@ -1125,6 +1164,7 @@
     else if (v.startsWith('lang:')) I18N.setLang(v.slice(5));
     else if (v === 'help') openSheet(helpHtml(true));
     else if (v === 'credits') openSheet(creditsHtml());
+    else if (v === 'code') openCode();
     else if (v === 'install') install();
     else if (v === 'guide') {
       closeSheet();

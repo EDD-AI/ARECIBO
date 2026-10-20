@@ -64,8 +64,8 @@
           const d = Math.hypot(gx, gy, z - z0);
           if (d > R + 0.3 || d <= R - 1.3) continue;
           const lx = gx * c + gy * s, ly = -gx * s + gy * c;
-          if (Math.abs(ly) < 1.1 && lx > -0.6 && z > z0) continue;
-          const k = Math.abs(ly) < 2.1 && lx > -1.2 ? MAT.METAL : z === z0 ? MAT.HULL2 : MAT.HULL;
+          if (Math.abs(ly) < 1.4 && lx > -0.6 && z > z0) continue;
+          const k = Math.abs(ly) < 2.3 && lx > -1.2 ? MAT.METAL : z === z0 ? MAT.HULL2 : MAT.HULL;
           m.set(cx + gx, cy + gy, z, k);
         }
         // Télescope sur son pilier, pointé dans la fente.
@@ -83,7 +83,7 @@
       desc: 'Grande antenne radar qui tourne sans fin au sommet d’une tour en treillis.',
       eco: { jobs: 2, power: -3, research: 3 }, anim: true,
       build(r, o) {
-        const W = r.int(5, 7), Ht = r.int(6, 10), ph = r.int(4, 5), S = W * 2 + 9;
+        const W = r.int(5, 7), Ht = r.int(6, 10), ph = r.int(4, 5), S = W * 2 + 6;
         const m = model(S, S, Ht + ph + 6);
         const c = Math.floor(S / 2);
         m.box(0, 0, 0, S - 1, S - 1, 0, MAT.PAD);
@@ -350,7 +350,7 @@
         const L = r.int(5, 7), Rb = r.range(3, 4.2), Hb = r.int(3, 5);
         const S = (L + 3) * 2 + 1, c = L + 3;
         const m = model(S, S, Hb + 8);
-        m.box(0, 0, 0, S - 1, S - 1, 0, MAT.PAD);
+        m.cyl(c, c, 0, 0, c + 0.3, MAT.PAD);
         m.cyl(c, c, 0, 0, Rb + 2.2, MAT.STRIPE, 0.8);
         // Socle blindé et couronne de rotation.
         m.cyl(c, c, 1, Hb, Rb, MAT.HULL2);
@@ -360,27 +360,27 @@
         // Caisses de munitions dans un coin.
         if (r.chance(0.6)) m.box(S - 4, 1, 1, S - 2, 2, 2, MAT.HULL);
         const twin = r.chance(0.6), radar = r.chance(0.5);
-        const base = r.range(0, TAU);
-        const yaw = base + 1.1 * Math.sin(time(o) * TAU);
+        const base = r.range(0.4, 1.2);
+        const yaw = base + 0.9 * Math.sin(time(o) * TAU);
         const zh = Hb + 2;
         // Tourelle : caisson blindé biseauté.
-        spinFill(m, c, c, 5, zh, zh + 3, yaw, (lx, ly, z) => {
+        spinFill(m, c, c, 6, zh, zh + 3, yaw, (lx, ly, z) => {
           const al = Math.abs(ly);
-          if (z === zh) return lx >= -3.4 && lx <= 2.4 && al <= 2.4 ? MAT.HULL2 : 0;
-          if (z === zh + 1) return lx >= -3.4 && lx <= 2.4 && al <= 2.4 ? (lx < -2.6 ? MAT.METAL : al > 1.6 && lx < -1 ? MAT.ACCENT : MAT.HULL) : 0;
-          if (z === zh + 2) return lx >= -2.6 && lx <= 1.4 && al <= 1.6 ? MAT.HULL : 0;
-          if (z === zh + 3) return radar && lx >= -2.4 && lx <= -1.6 && ly >= 0.6 && ly <= 1.4 ? MAT.DARK : 0;
+          if (z === zh) return lx >= -3.6 && lx <= 2.6 && al <= 2.7 ? MAT.HULL2 : 0;
+          if (z === zh + 1) return lx >= -3.6 && lx <= 2.6 && al <= 2.7 ? (lx < -2.8 ? MAT.METAL : al > 1.8 && lx < -0.5 ? MAT.ACCENT : MAT.HULL) : 0;
+          if (z === zh + 2) return lx >= -3 && lx <= 1.6 && al <= 2 ? MAT.HULL : 0;
+          if (z === zh + 3) return radar && lx >= -2.6 && lx <= -1.4 && ly >= 0.4 && ly <= 1.6 ? MAT.DARK : 0;
           return 0;
         });
-        // Canon(s) légèrement relevé(s).
+        // Canon(s) : tubes épais, légèrement relevés, frein de bouche sombre.
         const P = toWorld(c, c, yaw);
-        for (const off of twin ? [-1, 1] : [0]) {
-          const [x0, y0] = P(2.4, off), [x1, y1] = P(2.4 + L, off);
-          m.line(x0, y0, zh + 1, x1, y1, zh + 2, MAT.METAL);
-          m.set(x1, y1, zh + 2, MAT.DARK);
+        for (const off of twin ? [-1.2, 1.2] : [0]) {
+          for (let u = 0; u <= L; u += 0.3) for (const w of twin ? [-0.3, 0.3] : [-0.45, 0.45]) {
+            const [x, y] = P(2.6 + u, off + w);
+            m.set(x, y, zh + 1 + Math.floor(u / L * 1.6), u > L - 1.2 ? MAT.DARK : MAT.HULL2);
+          }
         }
-        const [mx, my] = P(2.6, 0);
-        m.set(mx, my, zh + 1, MAT.DARK);
+        for (let w = -1; w <= 1; w += 0.5) { const [x, y] = P(2.8, w); m.set(x, y, zh + 1, MAT.DARK); m.set(x, y, zh + 2, MAT.DARK); }
         if (radar) { const [bx, by] = P(-2, 1); m.set(bx, by, zh + 4, MAT.LIGHT); }
         return m;
       }
@@ -390,7 +390,7 @@
       desc: 'Pylône à anneaux et condensateurs : une onde d’énergie monte jusqu’à l’émetteur.',
       role: 'defense', eco: { jobs: 2, power: -8 }, anim: true,
       build(r, o) {
-        const H = r.int(14, 20), n = r.int(3, 5), S = 15, c = 7;
+        const H = r.int(16, 22), n = r.int(3, 4), S = 15, c = 7;
         const m = model(S, S, H + 6);
         m.box(0, 0, 0, S - 1, S - 1, 0, MAT.PAD);
         m.cyl(c, c, 0, 0, 6.6, MAT.STRIPE, 0.8);
@@ -408,15 +408,15 @@
         }
         // Pylône central et ses nervures.
         m.cyl(c, c, 3, H, 1.2, MAT.HULL2);
-        for (let z = 4; z < H; z += 3) m.cyl(c, c, z, z, 1.2, MAT.METAL);
+        for (let z = 4; z < H; z += 4) m.cyl(c, c, z, z, 1.2, MAT.ACCENT);
         // Anneaux : une onde lumineuse les parcourt de bas en haut.
         const T = time(o);
         for (let i = 0; i < n; i++) {
-          const z = Math.round(5 + i * (H - 8) / Math.max(1, n - 1));
-          const rr = 3.8 - i * 0.35;
+          const z = Math.round(7 + i * (H - 10) / Math.max(1, n - 1));
+          const rr = 4.4 - i * 0.6;
           const p = (T - i / (n + 1) + 1) % 1;
           const glow = p < 0.22;
-          m.cyl(c, c, z, z, rr + (glow ? 0.6 : 0), glow ? MAT.LIGHT : MAT.ACCENT, 1);
+          m.cyl(c, c, z, z, rr + (glow ? 0.7 : 0), glow ? MAT.LIGHT : MAT.HULL, 0.9);
           for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) m.line(c + dx * 1.2, c + dy * 1.2, z, c + dx * (rr - 0.5), c + dy * (rr - 0.5), z, MAT.METAL);
         }
         // Émetteur sphérique, halo qui s'élargit.
@@ -431,46 +431,50 @@
       }
     },
     {
-      key: 'bunker', cat: 'defense', name: 'Bunker de défense',
+      key: 'blockhaus', cat: 'defense', name: 'Bunker de défense',
       desc: 'Bloc de béton aux flancs biseautés, meurtrières et talus de régolithe.',
       role: 'defense', eco: { jobs: 3, power: -2 },
       build(r) {
-        const W = r.int(11, 16), D = r.int(8, 12), H = r.int(4, 6);
+        const W = r.int(11, 16), D = r.int(8, 11), H = r.int(5, 7);
         const m = model(W + 6, D + 6, H + 7);
         const x0 = 3, y0 = 3, x1 = x0 + W - 1, y1 = y0 + D - 1;
-        // Talus de régolithe tassé autour du bloc.
+        m.box(x0 - 1, y0 - 1, 0, x1 + 2, y1 + 3, 0, MAT.PAD);
+        // Talus de régolithe contre les faces arrière.
         const berm = r.int(2, 3);
         for (let k = 0; k < berm; k++) {
-          const g = berm - k;
-          m.box(x0 - g, y0 - g, k + 1, x1 + g, y1 + g, k + 1, k === berm - 1 ? MAT.SAND : MAT.ROCK);
+          const g = berm - k, mat = k === berm - 1 ? MAT.SAND : MAT.ROCK;
+          m.box(x0 - g, y0 - g, k + 1, x1 + 1, y0 - 1, k + 1, mat);
+          m.box(x0 - g, y0 - g, k + 1, x0 - 1, y1 + 1, k + 1, mat);
         }
-        // Bloc de béton aux arêtes biseautées.
-        for (let z = 1; z <= H; z++) {
-          const i = z === H ? 1 : 0;
-          m.box(x0 + i, y0 + i, z, x1 - i, y1 - i, z, MAT.HULL2);
-        }
-        m.box(x0 + 2, y0 + 2, H + 1, x1 - 2, y1 - 2, H + 1, MAT.PAD);
-        // Meurtrières sur les deux faces visibles.
-        const zs = H - 1;
-        for (let x = x0 + 2; x + 2 <= x1 - 1; x += 4) m.box(x, y1, zs, x + 2, y1, zs, MAT.DARK);
-        for (let y = y0 + 2; y + 1 <= y1 - 3; y += 4) m.box(x1, y, zs, x1, y + 1, zs, MAT.DARK);
-        // Porte blindée encadrée de bandes jaunes, dans une tranchée.
+        // Bloc de béton : corps droit, puis deux gradins biseautés.
+        const zf = H - 2;
+        m.box(x0, y0, 1, x1, y1, zf, MAT.HULL2);
+        m.box(x0, y0, 1, x1, y1, 1, MAT.PAD);
+        m.box(x0 + 1, y0 + 1, zf + 1, x1 - 1, y1 - 1, zf + 1, MAT.HULL2);
+        m.box(x0 + 2, y0 + 2, zf + 2, x1 - 2, y1 - 2, zf + 2, MAT.HULL);
+        // Meurtrières sur les deux faces visibles, sous le gradin.
+        const zs = zf - 1;
+        for (let x = x0 + 2; x + 2 <= x1 - 1; x += 4) if (Math.abs(x + 1 - (x0 + Math.floor(W / 2))) > 2) m.box(x, y1, zs, x + 2, y1, zs, MAT.DARK);
+        for (let y = y0 + 2; y + 2 <= y1 - 1; y += 4) m.box(x1, y, zs, x1, y + 2, zs, MAT.DARK);
+        // Porte blindée encadrée de bandes jaunes, mur pare-éclats devant.
         const dxd = x0 + Math.floor(W / 2);
-        m.box(dxd - 2, y1 + 1, 1, dxd + 2, y1 + berm + 1, berm + 1, MAT.EMPTY);
-        m.box(dxd - 2, y1 + 1, 0, dxd + 2, y1 + berm + 1, 0, MAT.PAD);
-        m.box(dxd - 2, y1 + 1, 1, dxd - 2, y1 + berm, 2, MAT.HULL2);
-        m.box(dxd + 2, y1 + 1, 1, dxd + 2, y1 + berm, 2, MAT.HULL2);
-        m.box(dxd - 1, y1, 1, dxd + 1, y1, 3, MAT.STRIPE);
-        m.box(dxd, y1, 1, dxd, y1, 2, MAT.ACCENT);
-        // Toit : coupole d'observation, périscope, aérations.
-        const kx = x0 + 2 + r.int(0, 2), ky = y0 + 2;
-        m.cyl(kx + 1, ky + 1, H + 2, H + 2, 1.5, MAT.HULL2);
-        m.cyl(kx + 1, ky + 1, H + 3, H + 3, 1.2, MAT.DARK);
-        m.cyl(kx + 1, ky + 1, H + 4, H + 4, 1.5, MAT.HULL2);
-        m.line(x1 - 3, y0 + 3, H + 2, x1 - 3, y0 + 3, H + 5, MAT.METAL);
-        m.set(x1 - 3, y0 + 3, H + 6, MAT.BEACON);
-        for (let i = 0; i < r.int(1, 3); i++) m.box(x1 - 6 - i * 3, y1 - 3, H + 2, x1 - 5 - i * 3, y1 - 3, H + 2, MAT.METAL);
-        if (r.chance(0.5)) m.box(x1 - 2, y0 + 1, H + 1, x1 - 1, y0 + 4, H + 1, MAT.SAND);
+        m.box(dxd - 2, y1, 1, dxd + 2, y1, 3, MAT.STRIPE);
+        m.box(dxd - 1, y1, 1, dxd + 1, y1, 2, MAT.DARK);
+        m.box(dxd - 1, y1, 2, dxd + 1, y1, 2, MAT.ACCENT);
+        m.box(dxd - 3, y1 + 2, 1, dxd + 1, y1 + 2, 2, MAT.HULL2);
+        m.set(dxd + 2, y1, 4, MAT.LIGHT);
+        // Sacs de sable à l'angle avant.
+        if (r.chance(0.6)) { m.box(x1 + 1, y1 - 2, 1, x1 + 2, y1 + 2, 1, MAT.SAND); m.box(x1 + 1, y1 + 1, 2, x1 + 2, y1 + 2, 2, MAT.SAND); }
+        // Toit : coupole d'observation à fente, périscope et aérations.
+        const kx = x0 + 3 + r.int(0, 2), ky = y0 + 3;
+        const zt = zf + 3;
+        m.cyl(kx, ky, zt, zt + 1, 1.6, MAT.HULL2);
+        m.cyl(kx, ky, zt + 1, zt + 1, 1.6, MAT.DARK, 0.8);
+        m.cyl(kx, ky, zt + 2, zt + 2, 1.6, MAT.HULL);
+        m.line(x1 - 3, y0 + 3, zt, x1 - 3, y0 + 3, zt + 3, MAT.METAL);
+        m.set(x1 - 3, y0 + 3, zt + 4, MAT.BEACON);
+        const nv = r.int(1, 2);
+        for (let i = 0; i < nv; i++) m.box(x1 - 5 - i * 3, y1 - 3, zt, x1 - 4 - i * 3, y1 - 3, zt, MAT.METAL);
         return m;
       }
     },

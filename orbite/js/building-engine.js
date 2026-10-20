@@ -591,93 +591,116 @@
     return r.pick(fresh);
   }
 
-  function plan(r, S) {
-    const target = Math.max(12, Math.round(S * S / 170));
+  // Emprise d'un bâtiment (avec ses abords), mesurée une fois par type.
+  const footCache = {};
+  function footprint(key) {
+    if (footCache[key] == null) { const b = TYPE_BY_KEY[key].build(makeRng('emprise:' + key), { t: 0 }); footCache[key] = (b.X + 3) * (b.Y + 3); }
+    return footCache[key];
+  }
+
+  // Plan d'une colonie : on dispose d'un budget de terrain ; l'essentiel d'abord (commandement, port,
+  // communications), puis les logements, puis tout ce qui manque pour les faire vivre.
+  function plan(r, S, place, lvl) {
+    lvl = lvl == null ? 1 : lvl;
+    const budget = S * S * (place ? 3 : 0.9);
     const keys = [], used = {};
-    const add = (t) => { if (!t) return false; keys.push(t.key); used[t.key] = (used[t.key] || 0) + 1; return true; };
+    let area = 0;
+    const add = (t) => {
+      if (!t) return false;
+      const fp = footprint(t.key);
+      if (area + fp > budget) return false;
+      if (place && !place(t.key)) { used[t.key] = (used[t.key] || 0) + 1; return false; }
+      keys.push(t.key); used[t.key] = (used[t.key] || 0) + 1; area += fp;
+      return true;
+    };
+    const pick = (list) => choose(r, list.filter((t) => area + footprint(t.key) <= budget), used);
+    const target = Math.max(10, Math.round(S * S / 260 * lvl));
     add(TYPES.find((t) => t.role === 'hq'));
-    // Logements jusqu'à la population visée.
-    while (balance(keys).pop < target) add(choose(r, byCat('habitat', (t) => t.eco.pop > 0), used));
-    const pop = () => balance(keys).pop;
-    // Services : un exemplaire pour tant d'habitants.
-    for (const t of byCat('services', (t) => t.per)) for (let n = Math.ceil(pop() / t.per); (used[t.key] || 0) < n;) add(t);
-    // Une colonie a besoin de stocker, de communiquer, d'un port spatial et d'un peu d'industrie et de science.
-    add(choose(r, TYPES.filter((t) => t.role === 'spaceport' && t.build), used));
-    add(choose(r, TYPES.filter((t) => t.role === 'comms' && t.build), used));
-    add(choose(r, byCat('industrie', (t) => t.eco.materials > 0), used));
-    add(choose(r, byCat('science', (t) => t.eco.research > 0), used));
-    if (S >= 80) { add(choose(r, byCat('industrie', (t) => t.eco.materials > 0), used)); add(choose(r, byCat('logistique', (t) => !t.role), used)); }
-    if (r.chance(0.7)) add(choose(r, byCat('defense'), used));
-    // Support vital et énergie : on comble chaque déficit avec un producteur, puis on recommence
-    // (un producteur peut consommer autre chose, par exemple de l'énergie).
-    const stuck = new Set();
-    const cap = Math.round(S * S / 150);
-    for (let guard = 0; guard < 80 && keys.length < cap; guard++) {
-      const b = balance(keys);
-      const short = ['oxygen', 'water', 'food', 'power'].find((f) => b[f] < 0 && !stuck.has(f));
-      if (!short) {
-        // Trop d'emplois pour les habitants : un logement de plus.
-        if (b.jobs > b.pop) { add(choose(r, byCat('habitat', (t) => t.eco.pop > 0), used)); continue; }
-        break;
+    add(pick(TYPES.filter((t) => t.role === 'spaceport' && t.build)));
+    add(pick(TYPES.filter((t) => t.role === 'comms' && t.build)));
+    // Comble les déficits d'oxygène, d'eau, de nourriture et d'énergie, avec ce qui tient encore.
+    const supply = () => {
+      const stuck = new Set();
+      for (let guard = 0; guard < 60; guard++) {
+        const b = balance(keys);
+        const short = ['power', 'oxygen', 'water', 'food'].find((f) => b[f] < 0 && !stuck.has(f));
+        if (!short) return;
+        const prod = TYPES.filter((t) => t.build && t.eco[short] > 0 && (short !== 'power' || t.cat === 'energie') && (used[t.key] || 0) < 4 && area + footprint(t.key) <= budget);
+        if (!prod.length) { stuck.add(short); continue; }
+        // Les plus rentables pour leur taille d'abord : on garde les trois meilleurs, puis on varie.
+        const eff = (t) => t.eco[short] / footprint(t.key);
+        prod.sort((x, y) => eff(y) - eff(x));
+        const need = -b[short];
+        const fit = prod.filter((t) => t.eco[short] <= need * 2 + 8);
+        if (!add(choose(r, (fit.length ? fit : prod).slice(0, 3), used))) stuck.add(short);
       }
-      const cat = short === 'power' ? 'energie' : null;
-      const prod = TYPES.filter((t) => t.build && t.eco[short] > 0 && (!cat || t.cat === cat));
-      // L'énergie : petits producteurs d'abord, un réacteur seulement si le déficit est grand.
-      const pool = short === 'power' && b.power > -12 ? prod.filter((t) => t.eco.power <= 12) : prod;
-      // Pas plus de quatre exemplaires d'un même bâtiment ; sinon cette ressource reste en déficit.
-      const ok = (pool.length ? pool : prod).filter((t) => (used[t.key] || 0) < 4);
-      if (!ok.length) { stuck.add(short); continue; }
-      add(choose(r, ok, used));
+    };
+    // Logements par étapes, en assurant la survie à chaque étape.
+    while (balance(keys).pop < target) {
+      if (!add(pick(byCat('habitat', (t) => t.eco.pop > 0)))) break;
+      supply();
     }
-    // Stockages : réservoirs si l'on produit de l'eau ou de l'oxygène, batteries pour l'énergie.
+    const pop = () => balance(keys).pop;
+    // Services : un exemplaire par tranche complète d'habitants.
+    for (const t of byCat('services', (x) => x.per)) for (let n = Math.floor(pop() / t.per); (used[t.key] || 0) < n;) if (!add(t)) break;
+    supply();
+    if (lvl >= 0.5) add(pick(byCat('industrie', (t) => t.eco.materials > 0)));
+    if (lvl >= 0.6) add(pick(byCat('science', (t) => t.eco.research > 0)));
+    if (lvl >= 0.8) add(pick(byCat('defense')));
+    if (S >= 112 && lvl >= 0.9) { add(pick(byCat('industrie', (t) => t.eco.materials > 0))); add(pick(byCat('science', (t) => t.eco.research > 0))); add(pick(byCat('logistique', (t) => !t.role))); }
+    if (S >= 144 && lvl >= 0.9) { add(pick(byCat('defense'))); add(pick(byCat('industrie', (t) => t.eco.materials > 0))); }
+    supply();
+    // Trop d'emplois pour les habitants : quelques logements de plus.
+    for (let i = 0; i < 6 && balance(keys).jobs > balance(keys).pop; i++) { if (!add(pick(byCat('habitat', (t) => t.eco.pop > 0)))) break; supply(); }
     const stores = TYPES.filter((t) => t.role === 'storage' && t.build);
-    for (let i = 0; i < Math.min(2, Math.ceil(keys.length / 12)); i++) add(choose(r, stores, used));
-    // Quelques véhicules pour animer les routes.
-    for (let i = 0; i < 2; i++) add(choose(r, TYPES.filter((t) => t.role === 'vehicle' && t.key !== 'fusee' && t.build), used));
+    for (let i = 0; i < Math.min(3, Math.ceil(keys.length / 10)); i++) add(pick(stores));
+    for (let i = 0; i < 3; i++) add(pick(TYPES.filter((t) => t.role === 'vehicle' && t.key !== 'fusee' && t.build)));
     return keys;
   }
 
   // Zones : où chaque catégorie s'installe (fractions de la dalle).
   const ZONES = {
-    services: [0.5, 0.5], habitat: [0.5, 0.5], vie: [0.5, 0.5], science: [0.78, 0.22],
-    energie: [0.85, 0.55], industrie: [0.18, 0.3], logistique: [0.5, 0.88], defense: [0.12, 0.85]
+    services: [0.5, 0.48], habitat: [0.48, 0.5], vie: [0.34, 0.66], science: [0.8, 0.2],
+    energie: [0.84, 0.6], industrie: [0.16, 0.3], logistique: [0.52, 0.88], defense: [0.12, 0.86]
   };
-  const ORDER = ['services', 'habitat', 'vie', 'science', 'logistique', 'industrie', 'energie', 'defense'];
+  // Ordre de pose : la survie d'abord (énergie, support vital), puis le reste.
+  const ORDER = ['services', 'habitat', 'energie', 'vie', 'industrie', 'science', 'logistique', 'defense'];
 
   // Colonie : planification, placement par zones, gisements, puis réseaux (routes, tubes, électricité, conduites).
-  function colonyBase(seed, S) {
+  function colonyBase(seed, S, lvl) {
     const r = makeRng('colonie:' + seed);
     const m = model(S, S, 48);
     r.seedA = r.range(0, 10); r.seedB = r.range(0, 10);
     const g = slab(m, r, { height: 3 });
-    const keys = plan(r, S);
     const taken = new Uint8Array(S * S);
     const free = (x0, y0, w, d, pad) => {
       if (x0 < 2 || y0 < 2 || x0 + w >= S - 2 || y0 + d >= S - 2) return false;
       for (let y = y0 - pad; y < y0 + d + pad; y++) for (let x = x0 - pad; x < x0 + w + pad; x++) if (taken[y * S + x]) return false;
       return true;
     };
-    const items = keys.map((key, i) => ({ key, seed: r.int(0, 1e9), cat: TYPE_BY_KEY[key].cat, i }));
-    const first = (it) => (['hq', 'spaceport'].includes(TYPE_BY_KEY[it.key].role) ? 0 : 1);
-    items.sort((a, b) => first(a) - first(b) || ORDER.indexOf(a.cat) - ORDER.indexOf(b.cat));
     const placed = [], anim = [];
-    for (const it of items) {
-      const t = TYPE_BY_KEY[it.key];
+    // Pose un bâtiment près de l'ancre de sa zone ; renvoie false s'il n'y a plus la place.
+    const placeOne = (key) => {
+      const t = TYPE_BY_KEY[key];
+      const it = { key, seed: r.int(0, 1e9), cat: t.cat };
       const b = t.build(makeRng(it.seed), { t: 0 });
-      if (b.X > S - 6 || b.Y > S - 6) continue;
+      if (b.X > S - 6 || b.Y > S - 6) return false;
       const z = ZONES[it.cat] || [0.5, 0.5];
       const ax = z[0] * S + r.range(-3, 3), ay = z[1] * S + r.range(-3, 3);
       const pad = t.role === 'vehicle' ? 1 : 2;
       let best = null;
-      // Spirale autour du point d'ancrage de la zone : la place libre la plus proche.
-      for (let rad = 0; rad < S && !best; rad += 2) {
-        for (let k = 0; k < Math.max(1, rad * 2); k++) {
-          const a = k / Math.max(1, rad * 2) * 6.283 + r.next() * 0.3;
-          const x0 = Math.round(ax + Math.cos(a) * rad - b.X / 2), y0 = Math.round(ay + Math.sin(a) * rad - b.Y / 2);
-          if (free(x0, y0, b.X, b.Y, pad)) { best = [x0, y0]; break; }
+      // Spirale autour du point d'ancrage de la zone : la place libre la plus proche (abords serrés en dernier recours).
+      for (const pd of [pad, 1]) {
+        for (let rad = 0; rad < S && !best; rad += 2) {
+          for (let k = 0; k < Math.max(1, rad * 2); k++) {
+            const a = k / Math.max(1, rad * 2) * 6.283 + r.next() * 0.3;
+            const x0 = Math.round(ax + Math.cos(a) * rad - b.X / 2), y0 = Math.round(ay + Math.sin(a) * rad - b.Y / 2);
+            if (free(x0, y0, b.X, b.Y, pd)) { best = [x0, y0]; break; }
+          }
         }
+        if (best) break;
       }
-      if (!best) continue;
+      if (!best) return false;
       const [x0, y0] = best;
       for (let y = y0; y < y0 + b.Y; y++) for (let x = x0; x < x0 + b.X; x++) {
         taken[y * S + x] = 1;
@@ -694,7 +717,9 @@
       const p = { key: it.key, cat: it.cat, role: t.role, x0, y0, X: b.X, Y: b.Y, Z: b.Z, cx: x0 + b.X / 2, cy: y0 + b.Y / 2, seed: it.seed };
       placed.push(p);
       anim.push(p);
-    }
+      return true;
+    };
+    plan(r, S, placeOne, lvl);
     networks(m, r, g, placed, taken, S);
     const keysPlaced = placed.map((p) => p.key);
     const bal = balance(keysPlaced);
@@ -764,7 +789,19 @@
   function colony(seed, S, t) {
     const key = seed + ':' + S;
     let base = colonyCache.get(key);
-    if (!base) { if (colonyCache.size > 6) colonyCache.clear(); base = colonyBase(seed, S); colonyCache.set(key, base); }
+    if (!base) {
+      if (colonyCache.size > 6) colonyCache.clear();
+      // Du plan le plus ambitieux au plus modeste : on garde le premier où tout le monde vit
+      // (énergie, eau, oxygène, nourriture à l'équilibre, assez de bras), sinon le moins déficitaire.
+      const deficit = (c) => { const b = c.stats.balance; return RES.reduce((d, f) => d + Math.max(0, -b[f]), 0) + Math.max(0, b.jobs - b.pop - 4); };
+      let bestDef = Infinity;
+      for (const lvl of [1, 0.85, 0.7, 0.55, 0.4]) {
+        const c = colonyBase(seed, S, lvl), d = deficit(c);
+        if (d < bestDef) { base = c; bestDef = d; }
+        if (d === 0) break;
+      }
+      colonyCache.set(key, base);
+    }
     if (!t) return base;
     const m = model(S, S, base.m.Z);
     m.v.set(base.m.v);
