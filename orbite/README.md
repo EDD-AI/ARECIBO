@@ -8,6 +8,7 @@ des **poussières d’étoiles**.
 
 - `index.html` : le jeu (portrait, tactile, installable comme une application).
 - `atelier.html` : le générateur de planètes (bouton GÉNÉRER, export PNG et GIF en boucle).
+- `batisseur.html` : le générateur de bâtiments de colonie (dômes, serres, forages, fusées…), export PNG.
 
 ## Ouverture du jeu
 
@@ -460,6 +461,41 @@ doublés). Quand vous en possédez déjà deux, la copie présente dans la Créa
 petites étoiles dorées : l’acheter déclenche la fusion. Le placer ouvre une **découverte** : un astre au choix parmi trois du niveau supérieur.
 Chaque choix est encadré de la couleur de sa famille, avec son nom. Il indique aussi « Famille de
 votre loi », ou combien d’astres de cette famille sont déjà dans votre système.
+
+## Bâtisseur de colonies
+
+`batisseur.html` génère des bâtiments de colonie en **voxels pixel art isométriques**, dans l’esprit de
+Surviving Mars ou StarCraft, une graine à la fois (la même graine donne toujours le même bâtiment).
+On y accède depuis le Marché stellaire, onglet Création.
+
+| Bâtiment | Ce qu’on y voit |
+|---|---|
+| Dôme d’habitat | coque géodésique (treillis) opaque ou vitrée, intérieur visible, sas et hublots |
+| Serre | dôme de verre, rangées de cultures |
+| Quartier résidentiel | grappe de petits dômes reliés par des couloirs |
+| Modules d’habitation | cylindres couchés sur pieds, hublots, bandes, toit solaire |
+| Forage | derrick en treillis, entretoises, tige de forage, réservoirs, balise |
+| Réservoirs | cuves cerclées reliées par des conduites |
+| Champ solaire | rangées de panneaux inclinés |
+| Antenne parabolique | mât, parabole orientée, récepteur |
+| Aire de lancement | piste circulaire balisée, parfois avec sa fusée |
+| Fusée | lanceur sur ailerons, hublots |
+| Raffinerie | halls, toits solaires, cheminées, conduites |
+| Tour de contrôle | fût cerclé, salle vitrée, antennes |
+| Réacteur | tour de refroidissement en sablier, bâtiment du cœur |
+| Hangar | voûte nervurée, grande porte |
+| Laboratoire | bloc de recherche, coupole d’observation, capteurs |
+| Éolienne | mât et trois pales |
+| Rover | six roues, cabine vitrée, panneau solaire |
+| **Colonie** | une douzaine de ces bâtiments sur une dalle de terrain (relief, cratères, cailloux, strates), reliés par des chemins |
+
+- **Rendu** (`js/building-renderer.js`) : chaque voxel est un cube de 4 × 4 pixels ; dessus clair, flanc
+  droit éclairé, flanc gauche dans l’ombre, ombres portées vers l’avant gauche (soleil à l’arrière droit),
+  occlusion ambiante, texture tramée du sol, verre translucide avec reflets, balises et feux qui clignotent,
+  vue tournable d’un quart de tour (bouton TOURNER ou touche R).
+- **Sols** : Mars, Lune, Glace, Soufre, Volcan ; **couleurs d’accent** : orange, rouge, sarcelle, jaune, bleu.
+- **Moteur** (`js/building-engine.js`) : pur et déterministe, testé sous Node (`tests/batiments.test.mjs`) ;
+  `OrbiteBuildings.generate(type, graine)` renvoie le modèle en voxels, réutilisable plus tard dans le jeu.
 
 ## Arbre d’étoiles
 
