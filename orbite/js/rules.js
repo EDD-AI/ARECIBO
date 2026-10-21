@@ -673,6 +673,18 @@
     const others = shuffle(FAMILY_KEYS.filter((f) => f !== law.fam), rng);
     // Multijoueur : les familles sont celles de la partie, les mêmes pour tous.
     const families = opts.families ? opts.families.slice() : law.fam === 'neutre' ? others.slice(0, ACTIVE_FAMILIES) : [law.fam].concat(others.slice(0, ACTIVE_FAMILIES - 1));
+    const seats = opts.seats || [];
+    // Outils de mesure : liste complète, en ordre de création des bots (pas leurs identifiants).
+    // Les lois explicites sont validées avant de créer les astres et de réserver leurs copies.
+    const assignedBotLaws = opts.botLaws;
+    if (assignedBotLaws !== undefined) {
+      if (!Array.isArray(assignedBotLaws)) throw new TypeError('botLaws doit être une liste de lois.');
+      if (assignedBotLaws.length !== PLAYERS - 1 - seats.length) throw new RangeError('botLaws doit contenir une loi par bot.');
+      for (const id of assignedBotLaws) {
+        if (typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(LAW, id)) throw new RangeError('Loi de bot inconnue.');
+        if (LAW[id].fam !== 'neutre' && !families.includes(LAW[id].fam)) throw new RangeError('La famille de cette loi de bot est inactive.');
+      }
+    }
     const state = {
       v: 1, seed, round: 1, phase: 'shop', rc: 0, uidc: 1,
       families, pool: {}, poolTotal: {},
@@ -691,16 +703,17 @@
     const names = shuffle(BOT_NAMES.slice(), rng);
     // Sièges des autres joueurs humains (multijoueur) : ni boutique ni décisions locales, leur
     // plateau arrive du réseau à chaque manche.
-    for (const seat of opts.seats || []) {
+    for (const seat of seats) {
       // Loi par défaut identique sur tous les téléphones ; la vraie arrive avec son premier plateau.
       const h = newPlayer(state, seat.id, seat.name, LAW[seat.law] ? seat.law : MP_SEAT_LAW, false);
       h.remote = true;
       state.players.push(h);
     }
-    for (let i = state.players.length - 1; i < PLAYERS - 1; i++) {
+    for (let i = state.players.length - 1, botIndex = 0; i < PLAYERS - 1; i++, botIndex++) {
       // Les bots préfèrent les familles fortes en solo (FAM_POWER), sans s'y limiter.
       let bl = LAWS[0];
-      if (botLaws.length) {
+      if (assignedBotLaws) bl = LAW[assignedBotLaws[botIndex]];
+      else if (botLaws.length) {
         const ws = botLaws.map((l) => Math.pow(FAM_POWER[l.fam] || 0.5, BOT.famWeight));
         let x = rng() * ws.reduce((a, b) => a + b, 0);
         bl = botLaws[botLaws.length - 1];
@@ -1364,13 +1377,16 @@
   }
 
   // ─── Fin de cycle : combats, dégâts, éliminations ───────────
-  function endTurn(state) {
+  // observer : les outils peuvent suivre la table jusqu'au dernier survivant, même après
+  // l'élimination du joueur local. Cette option n'est pas conservée dans les sauvegardes.
+  function endTurn(state, opts) {
+    const observer = !!(opts && opts.observer === true);
     const me = you(state);
     if (state.phase !== 'shop' || state.over) return fail('Le combat est déjà lancé.');
-    if (me.discover.length) return fail('Choisissez d’abord votre découverte.');
+    if (me.alive && me.discover.length) return fail('Choisissez d’abord votre découverte.');
     const players = alivePlayers(state);
     for (const p of players) if (p.bot) botTurn(state, p);
-    const myEndEvents = endTurnEffects(state, me);
+    const myEndEvents = me.alive ? endTurnEffects(state, me) : [];
     for (const p of players) if (p.bot) endTurnEffects(state, p);
 
     const rng = rngFor(state, 'pairs:' + state.round);
@@ -1432,8 +1448,12 @@
     state.history.push({ round: state.round, results, fallen: fallen.map((p) => p.id) });
 
     let over = false;
-    if (!me.alive) over = true;
-    else if (still.length <= 1) { me.rank = 1; over = true; }
+    if (!me.alive && !observer) over = true;
+    else if (still.length <= 1) {
+      const winner = observer ? still[0] : me;
+      if (winner) winner.rank = 1;
+      over = true;
+    }
     if (over) {
       state.over = true;
       state.phase = 'over';

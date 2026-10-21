@@ -1,15 +1,16 @@
 # ORBITE
 
-Autobattler de planètes façon *Champs de bataille* (Hearthstone), pensé pour le téléphone.
-On choisit une **loi** (elle donne un premier astre), on achète des planètes dans la **Création** (là où naissent les astres),
-on compose un **système solaire** de 7 orbites, puis le système combat seul contre un des
-**7 univers rivaux** (bots). Le dernier univers en vie gagne. Seuls les trois premiers gagnent
-des **poussières d’étoiles**.
+Jeu de stratégie de planètes, pensé pour le téléphone. **Jouer** ouvre désormais le prototype du **plateau commun** : deux à six participants, achats, familles, ordres simultanés et orbites mobiles. Il se joue contre des IA ou entre amis sur le même appareil. Les positions et les blessures persistent entre les manches ; les relais et les étoiles offrent deux objectifs de victoire.
+
+Pour essayer le jeu, voir [`JOUER.md`](JOUER.md) : démarrage immédiat contre l’IA, aide contextuelle et export autonome à ouvrir sur ordinateur. Les règles, statistiques de départ et limites du prototype sont décrites dans [`PLATEAU.md`](PLATEAU.md). Le nouveau plateau n’est pas encore connecté aux salons en ligne et son équilibrage reste expérimental.
+
+L’**Affrontement classique** contre sept univers reste accessible dans **Multijoueur → Autres modes**, avec son moteur et ses sauvegardes. La campagne est masquée au menu ; son code et sa progression sont conservés. Les sections historiques ci-dessous décrivent encore ces systèmes.
 
 > **Vers le Play Store** : les règles à respecter dans chaque version et la checklist de lancement
 > sont dans [`LANCEMENT.md`](LANCEMENT.md).
 
-- `index.html` : le jeu (portrait, tactile, installable comme une application).
+- `index.html` : menu principal et modes historiques (portrait, tactile, installable comme une application).
+- `plateau.html` : prototype du plateau commun ; règles dans `js/plateau.js`, simulations dans `tools/plateau-sim.js`.
 - `atelier.html` : le générateur de planètes (bouton GÉNÉRER, export PNG et GIF en boucle).
 - `batisseur.html` : le générateur de bâtiments de colonie (dômes, serres, forages, fusées…), export PNG.
 
@@ -23,10 +24,7 @@ des **poussières d’étoiles**.
 4. **Menu** : **votre planète** se lève sur l’horizon et tourne très lentement, des poussières
    montent du sol, des étoiles filantes passent. La première fois, « Voilà votre terrain de jeu. »
    s’écrit au centre.
-5. Menu : **Jouer solo**, **Multijoueur** (bientôt), **Marché stellaire**, **Paramètres**, et en
-   haut à droite le **profil** (pseudo, niveau, avatar = votre planète). **Jouer solo** se déplie
-   en accordéon sur **Campagne** et **Affrontement** (contre 7 univers) ; Multijoueur se replie
-   dessous. Le menu reste rangé.
+5. Menu : **Jouer · Plateau commun**, **Multijoueur · Autres modes**, **Marché stellaire**, **Paramètres**, et le **profil**. Jouer ouvre directement la configuration du plateau. Les autres modes conservent l’accès à l’affrontement classique et à ses salons historiques.
 
 Les **Paramètres** restent courts : son, musique, **Tutoriels et aide**, installation et crédits.
 La progression (niveau, poussières, planète, historique) ne peut pas être effacée depuis le jeu. **Tutoriels et aide** regroupe en un seul bouton :
@@ -39,7 +37,7 @@ La progression (niveau, poussières, planète, historique) ne peut pas être eff
 La vitesse des combats n’est pas réglable : tout le monde voit les combats au même rythme. Le
 bouton « Passer » reste disponible pendant un combat.
 
-## Campagne : la Genèse (façon Spore)
+## Campagne : la Genèse (masquée au menu)
 
 Bouton **CAMPAGNE · LA GENÈSE**. Comme dans Spore, on commence minuscule et on grandit d’étape en
 étape. Chaque ère a son propre gameplay, et ce qu’on fait dans l’une change la suivante. Ici, on
@@ -1048,6 +1046,8 @@ et de système, la fusion dorée et la découverte, l’Arrimage, le gel, les mo
 le plafond de dégâts, le déterminisme et 160 parties complètes jouées par des bots.
 
 ## Équilibrage
+
+Les outils de mesure ont été corrigés pour utiliser des IA comparables et poursuivre les parties jusqu’au vrai classement final. Voir [les commandes et les limites des mesures](tools/README.md). Les chiffres historiques ci-dessous précèdent cette correction et ne sont pas directement comparables aux nouveaux rapports.
 
 Réglé sur des parties entières simulées entre 8 bots : `node orbite/tools/equilibrage.js 6000`
 (environ 40 secondes). Idéal : rang moyen 4,5 et 12,5 % de victoires.

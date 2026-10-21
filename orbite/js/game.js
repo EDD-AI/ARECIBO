@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 65;
+  const VERSION = 67;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -1498,10 +1498,11 @@
     { id: 'fin', text: tr('Dernier secret : <b>trois copies</b> du même astre fusionnent en un astre <b>doré</b>, deux fois plus fort. Visez le podium : les 3 premiers gagnent des poussières d’étoiles. À vous !'), next: tr('JOUER') }
   ];
   const MENU_STEPS = [
-    { id: 'solo', target: '#menuList', text: tr('<b>Jouer solo</b> s’ouvre sur deux modes. La <b>Campagne</b> : éveillez-vous en Créateur et façonnez votre monde carte après carte jusqu’à Kronos. L’<b>Affrontement</b> : une partie contre 7 univers rivaux.'), next: tr('SUIVANT'), delay: 0, enter: () => soloMenu(true) },
+    { id: 'plateau', target: '#soloBtn', text: tr('<b>Jouer</b> ouvre le <b>plateau commun</b> : achetez vos astres, préparez vos ordres et affrontez l’IA ou vos amis sur cet appareil.'), next: tr('SUIVANT'), delay: 0 },
+    { id: 'multi', target: '#multiBtn', text: tr('<b>Multijoueur</b> regroupe les autres modes : l’affrontement classique contre 7 univers et ses salons en ligne.'), next: tr('SUIVANT') },
     { id: 'creation', target: '#creationBtn', text: tr('La <b>Création</b> : devenez Créateur. Semez une graine d’étoile et faites grandir votre propre planète. Elle se débloque avec des <b>poussières d’étoiles</b>.'), next: tr('SUIVANT') },
     { id: 'marche', target: '#marketBtn', text: tr('Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.'), next: tr('SUIVANT') },
-    { id: 'profil', target: '#profileBtn', text: tr('Votre <b>profil</b> : pseudo, niveau, statistiques et historique. Chaque partie rapporte de l’expérience.'), next: tr('SUIVANT') },
+    { id: 'profil', target: '#profileBtn', text: tr('Votre <b>profil</b> conserve votre pseudo, votre niveau et votre historique des modes classiques.'), next: tr('SUIVANT') },
     { id: 'reglages', target: '#settingsBtn', text: tr('<b>Paramètres</b> : son, musique, règles du jeu, et ce guide si vous voulez le revoir.'), next: tr('C’EST PARTI') }
   ];
 
@@ -3271,14 +3272,13 @@
     // Partie reprise au milieu d'une découverte : elle revient tout de suite.
     if (me() && me().discover.length) setTimeout(() => { if (!ui.discoverDone) openDiscover(); }, 700);
   }
-  // Jouer solo se déplie sur ses deux modes ; Multijoueur se range pendant ce temps.
-  function soloMenu(open) {
-    const m = $('menuList');
-    open = open == null ? !m.classList.contains('solo-open') : open;
-    m.classList.toggle('solo-open', open);
-    $('soloBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
-  }
-  $('soloBtn').addEventListener('click', () => { SFX.tap(); soloMenu(); });
+  // Le plateau commun a son propre écran et sa propre sauvegarde locale.
+  $('soloBtn').addEventListener('click', () => {
+    SFX.tap();
+    stopAmbient();
+    window.location.href = 'plateau.html';
+  });
+  $('legacySoloBtn')?.addEventListener('click', () => $('quickBtn').click());
   $('quickBtn').addEventListener('click', () => {
     SFX.tap();
     const s = loadGame();
@@ -3287,12 +3287,17 @@
       <p class="muted">${tr('Cycle {c} · {hp} PV · {n} univers en lice', { c: s.round, hp: Math.max(0, s.players[0].hp), n: R.alivePlayers(s).length })}</p>
       <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="resume">${tr('REPRENDRE')}</button><button class="btn" data-act="set" data-v="new">${tr('NOUVELLE PARTIE')}</button></div>`);
   });
-  $('multiBtn').addEventListener('click', () => {
+  $('multiBtn').addEventListener('click', async () => {
     SFX.tap();
     if (window.OrbiteMultiUI) { stopAmbient(); window.OrbiteMultiUI.open(); return; }
-    openSheet(`<h3>${tr('MULTIJOUEUR')}</h3><h2>${tr('Bientôt')}</h2>
-      <p>${tr('Les parties contre d’autres créateurs arriveront dans une prochaine version. En attendant, sept univers vous attendent en solo.')}</p>
-      <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="new">${tr('JOUER SOLO')}</button><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
+    stopAmbient();
+    await show('multi');
+    $('mpBody').innerHTML = `<p class="muted">${tr('Les salons en ligne sont indisponibles. Vous pouvez jouer à l’affrontement classique en solo.')}</p>`;
+  });
+  $('multiBack').addEventListener('click', async () => {
+    if (window.OrbiteMultiUI) return;
+    SFX.tap();
+    await backToMenu();
   });
   $('marketBtn').addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderMarket(); marketTab('planete'); await show('market'); });
   // Création : Forge des mondes, Atelier des planètes, Bâtisseur de colonies.

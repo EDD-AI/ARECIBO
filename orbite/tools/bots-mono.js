@@ -1,8 +1,6 @@
-// Le joueur « naïf » contre les bots (node orbite/tools/bots-mono.js 150) : il joue une seule
-// famille, achète tout ce qui en est, monte de niveau dès qu'il peut et complète avec n'importe
-// quoi. Pour chaque famille : sa part de victoires (12,5 % = autant que chaque bot).
-const R = require('../js/rules.js');
-const N = Number(process.argv[2] || 150);
+// Politique d'achat naïve contre la population choisie, parties terminées jusqu'au vainqueur.
+const { R, parseArguments, argumentHelp, simulateGame, runCli } = require('./lib/simulation.js');
+const { summarizeRanks } = require('./lib/statistiques.js');
 const LAWS = { vie: 'symbiose', cristal: 'resonance', lune: 'marees', tempete: 'vents', glace: 'stase', mineral: 'gravite', neant: 'entropie', brasier: 'combustion', machine: 'ingenierie', comete: 'passage', envers: 'renversement', anomalie: 'chaos' };
 function naive(st, p, fam) {
   const val = (u) => u.atk + u.hp + R.CARD[u.id].tier * 2 + (R.famOf(u) === fam ? 10 : 0) + (u.golden ? 6 : 0);
@@ -12,7 +10,8 @@ function naive(st, p, fam) {
       if (!p.hand.length) break;
       const u = p.hand.slice().sort((a, b) => val(b) - val(a))[0];
       if (p.board.length >= R.BOARD_MAX) { const weak = p.board.slice().sort((a, b) => val(a) - val(b))[0]; if (val(u) <= val(weak)) { R.sell(st, u.uid, p); continue; } R.sell(st, weak.uid, p); }
-      if (u.kw.includes('arrimage') && p.board[0]) { R.play(st, u.uid, null, p.board[0].uid, p); continue; }
+      const host = u.kw.includes('arrimage') && p.board.find(target => R.canMagnet(u, target));
+      if (host) { R.play(st, u.uid, null, host.uid, p); continue; }
       R.play(st, u.uid, p.board.length, null, p);
     }
   };
@@ -27,16 +26,60 @@ function naive(st, p, fam) {
   }
   deploy();
 }
-const t0 = Date.now(), rows = [];
-for (const [fam, law] of Object.entries(LAWS)) {
-  const ranks = [];
-  for (let i = 0; i < N; i++) {
-    const st = R.newGame('mono-' + fam + '-' + i, law);
-    for (let r = 0; r < 60 && !st.over; r++) { naive(st, st.players[0], fam); R.endTurn(st); }
-    ranks.push(st.rank || st.players[0].rank);
+function compareMono(options) {
+  const families = {}, truncated = [];
+  let completed = 0, totalRounds = 0;
+  for (const [family, law] of Object.entries(LAWS)) {
+    const ranks = [];
+    let familyTruncated = 0;
+    for (let i = 0; i < options.games; i++) {
+      const seed = `${options.seed}|bots-mono|${family}|${i}`;
+      const result = simulateGame({
+        seed, lawId: law, skill: options.skill, population: options.population,
+        maxRounds: options.maxRounds, takeTurn: (state, player) => naive(state, player, family),
+      });
+      if (!result.completed) { truncated.push(seed); familyTruncated++; continue; }
+      completed++;
+      totalRounds += result.rounds;
+      ranks.push(result.state.players[0].rank);
+    }
+    families[family] = { ...summarizeRanks(ranks), requestedGames: options.games, truncatedGames: familyTruncated };
   }
-  const win = Math.round(ranks.filter((r) => r === 1).length / N * 100), avg = ranks.reduce((a, b) => a + b, 0) / N;
-  rows.push([fam, win, avg]);
-  console.log(`${fam.padEnd(9)} 1er ${String(win).padStart(2)} %  rang moyen ${avg.toFixed(2)}`);
+  return {
+    schemaVersion: 1, experiment: 'bots-mono',
+    parameters: { gamesPerFamily: options.games, seed: options.seed, maxRounds: options.maxRounds, population: options.population, opponentSkill: options.skill },
+    requestedGames: options.games * Object.keys(LAWS).length,
+    completedGames: completed, truncatedGames: truncated.length, truncatedSeeds: truncated,
+    meanRounds: completed ? totalRounds / completed : null,
+    families,
+    limitations: [
+      'La politique naïve est comparée aux bots indiqués ; elle ne mesure pas la meilleure stratégie possible d’une famille.',
+      'La politique naïve choisit désormais un hôte compatible pour l’Arrimage ; les anciens résultats pouvaient inclure des actions d’arrimage refusées et ne sont pas directement comparables.',
+      'Les intervalles de Wilson à 95 % concernent les résultats du joueur focal, un par partie, pas les huit joueurs supposés indépendants.',
+      'Les lois associées aux familles diffèrent : leurs effets et ceux des familles ne sont pas isolés.',
+      ...(options.games < 100 ? ['Échantillon pilote par famille : trop peu de parties pour une conclusion précise.'] : []),
+    ],
+  };
 }
-console.log(`moyenne : ${(rows.reduce((s, r) => s + r[1], 0) / rows.length).toFixed(1)} % de victoires · ${N * rows.length} parties en ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+
+function main() {
+  const options = parseArguments(process.argv.slice(2), { defaultGames: 10 });
+  if (options.help) {
+    console.log(argumentHelp('bots-mono.js').replace('[nombre]', '[nombre-par-famille]') + 'Le nombre demandé est répété pour chacune des 12 familles.');
+    return;
+  }
+  const report = compareMono(options);
+  if (options.json) console.log(JSON.stringify(report, null, 2));
+  else {
+    console.log(`${report.completedGames}/${report.requestedGames} parties terminées ; ${report.truncatedGames} tronquées et exclues ; population ${options.population}, IA adverse ${options.skill}.`);
+    for (const [family, summary] of Object.entries(report.families)) {
+      const interval = summary.winRate95;
+      console.log(`${family.padEnd(10)} rang ${summary.meanRank == null ? 'indisponible' : summary.meanRank.toFixed(2)} ; victoires ${summary.winRate == null ? 'indisponible' : (summary.winRate * 100).toFixed(1) + ' %'} ; IC95 ${interval ? '[' + (interval.low * 100).toFixed(1) + ', ' + (interval.high * 100).toFixed(1) + '] %' : 'indisponible'} ; n=${summary.n}`);
+    }
+    for (const warning of report.limitations) console.log(warning);
+  }
+  if (report.truncatedGames) process.exitCode = 2;
+}
+
+if (require.main === module) runCli(main);
+module.exports = { LAWS, naive, compareMono };

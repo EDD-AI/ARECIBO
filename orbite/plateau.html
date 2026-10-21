@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080d17">
+  <meta name="description" content="Achetez des astres, préparez vos ordres et disputez un plateau orbital commun." data-t-attr="content">
+  <title>ORBITE · Plateau commun</title>
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/plateau.css">
+</head>
+<body>
+  <div class="stars" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="wordmark" href="index.html" aria-label="ORBITE, retour au menu" data-t-attr="aria-label"><span class="wordmark-orbit" aria-hidden="true">◉</span> ORBITE</a>
+    <span class="topbar-caption" data-t>Plateau commun</span>
+    <div class="topbar-actions">
+      <label class="language-label"><span class="sr-only" data-t>Langue</span><select id="language-select" aria-label="Langue" data-t-attr="aria-label"><option value="fr">FR</option><option value="en">EN</option><option value="es">ES</option><option value="de">DE</option><option value="pt">PT</option></select></label>
+      <button class="icon-button" id="help-open" type="button" aria-label="Règles" data-t-attr="aria-label">?</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="setup-screen" class="setup-screen">
+      <div class="setup-art" aria-hidden="true"><div class="setup-ring ring-one"></div><div class="setup-ring ring-two"></div><div class="setup-ring ring-three"></div><div class="setup-sun"></div><i class="setup-planet planet-one"></i><i class="setup-planet planet-two"></i></div>
+      <div class="setup-copy"><p class="eyebrow" data-t>Une arène. Vos décisions.</p><h1 data-t>Achetez, placez, anticipez.</h1><p class="setup-intro" data-t>Objectif : 10 influences ou la dernière étoile en vie.</p></div>
+      <div class="setup-card">
+        <div class="card-heading"><h2 data-t>Nouvelle partie</h2><span class="tiny-tag" data-t>Coups simultanés</span></div>
+        <div id="saved-game-panel" class="saved-game-panel" hidden><p id="saved-game-message"></p><button id="resume-game" class="button secondary" data-testid="resume-game" type="button" data-t>Reprendre la partie</button></div>
+        <p class="setup-note" id="replace-save-note" hidden data-t>Démarrer remplace la partie locale enregistrée.</p>
+        <button id="quick-play" data-testid="quick-play" class="button primary wide quick-play" type="button"><span aria-hidden="true">▷</span><span data-t>Jouer contre l’IA</span></button>
+        <p class="quick-play-note" data-t>Visez les relais pour gagner de l’influence.</p>
+        <details id="customize-game" class="customize-game"><summary data-t>Personnaliser la partie</summary><div class="customize-fields">
+        <div class="setup-fields"><label><span data-t>Joueurs</span><select id="player-count"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></label><label><span data-t>Famille de départ</span><select id="starting-family"></select></label></div>
+        <div id="player-settings" class="player-settings"></div>
+        <label class="seed-field"><span data-t>Graine de la partie</span><div><input id="game-seed" maxlength="64" spellcheck="false" autocomplete="off"><button class="icon-button" id="new-seed" type="button" aria-label="Nouvelle graine" data-t-attr="aria-label">↻</button></div></label>
+        <button id="start-game" data-testid="start-game" class="button primary wide" type="button"><span data-t>Démarrer</span><svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16"><path d="M3 13L13 3M4 3h9v9" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
+        </div></details>
+        <p class="setup-note" data-t>Vos achats et vos positions restent entre les manches.</p>
+      </div>
+    </section>
+
+    <section id="game-screen" class="game-screen" hidden>
+      <div class="match-toolbar"><div><p class="eyebrow" id="round-label"></p><h1 id="phase-label"></h1></div><button id="new-game" class="text-button" type="button" data-t>Nouvelle partie</button></div>
+      <div id="players-strip" class="players-strip"></div>
+      <section id="turn-guide" class="turn-guide" aria-live="polite"><div class="guide-heading"><span class="eyebrow" data-t>Votre premier affrontement</span><button id="hide-guide" class="text-button" type="button" data-t>Masquer le guide</button></div><p id="guide-objective" data-t>Visez les relais pour gagner de l’influence.</p><div class="guide-current"><span id="guide-step" class="guide-step" aria-hidden="true">1</span><p id="guide-text"></p></div><p class="guide-note" data-t>Vous pouvez ignorer ce guide et jouer librement.</p></section>
+      <button id="show-guide" class="text-button show-guide" type="button" hidden data-t>Afficher le guide</button>
+      <div id="end-panel" class="end-panel" hidden><p class="eyebrow" data-t>Fin de partie</p><h2 id="end-title"></h2><p id="end-detail"></p><button id="play-again" class="button primary" type="button" data-t>Jouer à nouveau</button></div>
+      <div class="arena-layout">
+        <div class="arena-column">
+          <div class="board-topline"><span id="active-player-label"></span><span id="drift-label" class="drift-label"></span></div>
+          <div id="playback-panel" class="playback-panel" hidden role="status" aria-live="polite"><div class="playback-topline"><span id="playback-title"></span><button id="skip-resolution" data-testid="skip-resolution" class="text-button" type="button" data-t>Passer la résolution</button></div><div class="playback-steps" aria-hidden="true"><i></i><i></i><i></i><i></i></div><p id="playback-description"></p></div>
+          <div class="board-viewport" id="board-viewport"><svg id="battle-board" data-testid="battle-board" viewBox="0 0 640 640" role="group" aria-label="Plateau commun" data-t-attr="aria-label"></svg></div>
+          <div class="board-bottomline"><span><i class="relay-symbol" aria-hidden="true"></i><span data-t>Relais</span></span><span id="fleet-count"></span><div><button id="zoom-out" class="icon-button" type="button" aria-label="Zoom arrière" data-t-attr="aria-label">−</button><button id="zoom-in" class="icon-button" type="button" aria-label="Zoom avant" data-t-attr="aria-label">+</button></div></div>
+          <div class="inspector" id="unit-inspector"><p class="muted" data-t>Sélectionnez un astre pour préparer son ordre.</p></div>
+          <section class="reserve-panel"><div class="section-heading"><h2 data-t>Réserve</h2><span id="reserve-count" class="muted"></span></div><div id="bench-units" class="bench-units"></div></section>
+        </div>
+        <aside class="command-column">
+          <section class="market-panel"><div class="section-heading"><h2 data-t>Achat</h2><span class="energy-wallet" id="energy-wallet"></span></div><div class="market-actions"><button id="refresh-shop" class="small-button" type="button" data-t>Actualiser · 1</button><button id="freeze-shop" class="small-button" type="button" data-t>Geler</button></div><div id="shop-cards" class="shop-cards"></div><button id="upgrade-shop" class="small-button wide" type="button" data-t>Débloquer les artilleurs · 5</button></section>
+          <section class="orders-panel"><div class="section-heading"><h2 data-t>Préparation</h2><button id="clear-orders" class="text-button" type="button" data-t>Effacer les ordres</button></div><div id="orders-list" class="orders-list"></div><button id="lock-turn" data-testid="lock-turn" class="button primary wide" type="button" data-t>Verrouiller mes ordres</button><p class="turn-note" id="turn-note"></p></section>
+          <section class="resolution-panel" id="resolution-panel" hidden><div class="section-heading"><h2 data-t>Résolution</h2><span id="resolution-round" class="muted"></span></div><ul id="resolution-log"></ul></section>
+        </aside>
+      </div>
+    </section>
+
+    <section id="privacy-screen" class="privacy-screen" hidden><div class="privacy-icon" aria-hidden="true">◈</div><p class="eyebrow" data-t>Sur cet appareil</p><h1 id="privacy-title"></h1><p data-t>Les ordres et les achats de chacun restent privés.</p><button id="privacy-confirm" class="button primary" type="button"></button></section>
+    <section id="load-error" class="load-error" hidden><h1 data-t>Le plateau ne peut pas être chargé.</h1><a href="index.html" class="button secondary" data-t>Retour au menu</a></section>
+  </main>
+
+  <dialog id="help-dialog" class="help-dialog"><div class="section-heading"><h2 data-t>Règles</h2><button class="icon-button" id="help-close" type="button" aria-label="Fermer" data-t-attr="aria-label">×</button></div><ol><li data-t>Objectif : 10 influences ou la dernière étoile en vie.</li><li data-t>Vos achats et vos positions restent entre les manches.</li><li data-t>Déployez vos achats sur les cases voisines de votre étoile.</li><li data-t>Sélectionnez un astre, puis une case pour vous déplacer ou une cible pour attaquer.</li><li data-t>Chaque astre reçoit un ordre par manche. Vous pouvez le modifier avant de verrouiller.</li><li data-t>L’énergie est renouvelée à chaque manche : dépensez-la avant de verrouiller.</li><li data-t>Vos ordres sont révélés ensemble. Une cible sortie de portée échappe à l’attaque.</li><li data-t>Les mouvements vers une même case sont annulés.</li><li data-t>Une défense augmente l’armure de 2 pour cette manche.</li><li data-t>L’anneau intérieur avance à chaque manche, le médian une manche sur deux. L’extérieur reste fixe.</li><li data-t>Les relais rapportent une influence après la rotation.</li><li data-t>Trois astres identiques fusionnent en un astre doré.</li><li data-t>Après 40 manches sans vainqueur, la partie est nulle.</li></ol><p class="prototype-note"><span data-t>Règles en essai</span> · <span data-t>Les statistiques de ce prototype restent à équilibrer.</span></p></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="js/i18n.js"></script>
+  <script src="js/lang/plateau.js"></script>
+  <script src="js/plateau.js"></script>
+  <script src="js/plateau-bot.js"></script>
+  <script src="js/plateau-ui.js"></script>
+</body>
+</html>

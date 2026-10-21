@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ORBITE">
-<meta name="description" data-t-attr="content" content="Composez le système solaire le plus puissant : achetez des planètes, formez des familles, affrontez sept univers rivaux.">
+<meta name="description" data-t-attr="content" content="Achetez vos astres, combinez les familles et contrôlez un plateau spatial commun. Duel contre l’IA ou partie locale entre amis.">
 <title>ORBITE</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
@@ -56,12 +56,12 @@
       </button>
       <p class="subtitle center" id="menuLine"></p>
       <nav class="menu-list" id="menuList" aria-label="Menu principal" data-t-attr="aria-label">
-        <button class="menu-item" id="soloBtn" aria-expanded="false" data-t>JOUER SOLO</button>
-        <div class="menu-sub" id="soloSub">
+        <button class="menu-item" id="soloBtn" data-t>JOUER <small>PLATEAU COMMUN</small></button>
+        <div class="menu-sub" id="soloSub" hidden>
           <button class="menu-item sub" id="campBtn" data-t>CAMPAGNE <small>LA GENÈSE</small></button>
           <button class="menu-item sub" id="quickBtn" data-t>AFFRONTEMENT <small>CONTRE 7 UNIVERS</small></button>
         </div>
-        <button class="menu-item" id="multiBtn" data-t>MULTIJOUEUR <small>EN LIGNE</small></button>
+        <button class="menu-item" id="multiBtn" data-t>MULTIJOUEUR <small>AUTRES MODES</small></button>
         <button class="menu-item" id="creationBtn" data-t>CRÉATION</button>
         <button class="menu-item" id="marketBtn" data-t>MARCHÉ STELLAIRE</button>
         <button class="menu-item" id="settingsBtn" data-t>PARAMÈTRES</button>
@@ -209,7 +209,14 @@
         <button class="icon-btn" id="multiBack" aria-label="Retour" data-t-attr="aria-label"></button>
         <h2 data-t>Multijoueur</h2>
       </header>
-      <div class="mk-scroll"><div class="mp" id="mpBody"></div></div>
+      <div class="mk-scroll">
+        <section class="mp-card legacy-mode-card">
+          <b data-t>MODES CLASSIQUES</b>
+          <p data-t>Retrouvez l’affrontement à huit univers. Le solo reste accessible hors ligne ; les salons en ligne sont proposés ci-dessous.</p>
+          <button class="btn" id="legacySoloBtn" data-t>AFFRONTEMENT CLASSIQUE <small>CONTRE 7 UNIVERS</small></button>
+        </section>
+        <div class="mp" id="mpBody"></div>
+      </div>
     </section>
 
     <!-- CINÉMATIQUE D'OUVERTURE DE LA CRÉATION -->
@@ -438,6 +445,7 @@
   <script src="js/lang/batiments.js"></script>
   <script src="js/lang/succes.js"></script>
   <script src="js/lang/genese.js"></script>
+  <script src="js/lang/plateau-menu.js"></script>
   <script src="js/planet-engine.js"></script>
   <script src="js/planet-renderer.js"></script>
   <script src="js/stage.js"></script>

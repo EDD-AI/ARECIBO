@@ -1,40 +1,73 @@
-// Compositions hybrides (node orbite/tools/hybrides.js 3000) : dans chaque partie, la moitié des univers
-// vise une seule famille (celle de sa loi), l'autre moitié deux familles (sa loi + une autre famille
-// active). Tous jouent avec l'IA experte. Rang moyen attendu à égalité : 4,5.
-const R = require('../js/rules.js');
-const N = Number(process.argv[2] || 3000);
-const res = { mono: [], duo: [] }, byPair = {};
-const t0 = Date.now();
-for (let g = 0; g < N; g++) {
-  const s = R.newGame('hyb-' + g, R.LAWS[g % R.LAWS.length].id);
-  s.players.forEach((p, i) => {
-    p.skill = 1;
-    p.pref = R.LAW[p.law].fam;
-    p.pref2 = null;
-    if ((i + g) % 2) {
-      const others = s.families.filter((f) => f !== p.pref);
-      p.pref2 = others[(g * 7 + i * 3) % others.length];
+// Quatre stratégies mono-famille contre quatre stratégies à deux familles.
+const { R, parseArguments, argumentHelp, simulateGame, addRank, runCli } = require('./lib/simulation.js');
+const { summarizeRanks } = require('./lib/statistiques.js');
+
+function compareHybrids(options) {
+  const ranks = { mono: [], duo: [] }, pairRanks = {};
+  const truncated = [];
+  let completed = 0, totalRounds = 0;
+  for (let g = 0; g < options.games; g++) {
+    const seed = `${options.seed}|hybrides|${g}`;
+    const result = simulateGame({
+      seed, lawId: R.LAWS[g % R.LAWS.length].id, skill: options.skill,
+      population: options.population, maxRounds: options.maxRounds,
+      setup(state) {
+        state.players.forEach((p, i) => {
+          const family = R.LAW[p.law].fam;
+          p.pref = family === 'neutre' ? state.families[(g + i) % state.families.length] : family;
+          p.pref2 = null;
+          p.measureGroup = (i + g) % 2 ? 'duo' : 'mono';
+          if (p.measureGroup === 'duo') {
+            const others = state.families.filter(f => f !== p.pref);
+            p.pref2 = others[(g * 7 + i * 3) % others.length];
+            p.measurePair = [p.pref, p.pref2].sort().join(' + ');
+          }
+        });
+      },
+    });
+    if (!result.completed) { truncated.push(seed); continue; }
+    completed++;
+    totalRounds += result.rounds;
+    for (const p of result.state.players) {
+      ranks[p.measureGroup].push(p.rank);
+      if (p.measurePair) addRank(pairRanks, p.measurePair, p.rank);
     }
-  });
-  while (!s.over && s.round < 60) { R.botTurn(s, s.players[0]); R.endTurn(s); }
-  const alive = s.players.filter((p) => p.alive).sort((a, b) => b.hp - a.hp);
-  let place = 1;
-  for (const p of alive) p.rank = place++;
-  for (const p of s.players) {
-    if (p.pref2) {
-      res.duo.push(p.rank);
-      const k = [p.pref, p.pref2].sort().join(' + ');
-      (byPair[k] = byPair[k] || []).push(p.rank);
-    } else res.mono.push(p.rank);
   }
+  return {
+    schemaVersion: 1, experiment: 'hybrides',
+    parameters: { games: options.games, seed: options.seed, maxRounds: options.maxRounds, population: options.population, skill: options.skill },
+    requestedGames: options.games, completedGames: completed, truncatedGames: truncated.length, truncatedSeeds: truncated,
+    meanRounds: completed ? totalRounds / completed : null,
+    groups: {
+      mono: summarizeRanks(ranks.mono, { independent: false }),
+      duo: summarizeRanks(ranks.duo, { independent: false }),
+    },
+    pairs: Object.fromEntries(Object.entries(pairRanks).sort(([a], [b]) => a.localeCompare(b)).map(([pair, samples]) => [pair, summarizeRanks(samples, { independent: false })])),
+    limitations: [
+      'Les groupes décrivent les préférences initiales des bots, pas une obligation sur leur composition finale.',
+      'Les observations des joueurs d’une même partie sont corrélées ; aucun intervalle binomial indépendant n’est calculé.',
+      'Les résultats par duo sont descriptifs : un seuil de rang moyen ne prouve pas qu’un duo est viable ou équilibré.',
+      ...(completed < 100 ? ['Échantillon pilote : trop peu de parties pour une conclusion précise.'] : []),
+    ],
+  };
 }
-const avg = (a) => a.reduce((x, y) => x + y, 0) / a.length;
-const pct = (a, f) => Math.round(a.filter(f).length / a.length * 100);
-const line = (k, v) => `${k.padEnd(22)} rang ${avg(v).toFixed(2)}  victoires ${String(pct(v, (r) => r === 1)).padStart(2)} %  top 3 ${String(pct(v, (r) => r <= 3)).padStart(2)} %  (n=${v.length})`;
-console.log(line('une famille', res.mono));
-console.log(line('deux familles', res.duo));
-const pairs = Object.entries(byPair).filter(([, v]) => v.length >= 40).sort((a, b) => avg(a[1]) - avg(b[1]));
-const viable = pairs.filter(([, v]) => avg(v) <= 4.75).length;
-console.log(`duos jouables (rang ≤ 4,75) : ${viable} / ${pairs.length}`);
-if (process.argv.includes('--detail')) pairs.forEach(([k, v]) => console.log('  ' + line(k, v)));
-console.log(`${N} parties en ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+
+function main() {
+  const options = parseArguments(process.argv.slice(2), { defaultGames: 120, detail: true });
+  if (options.help) { console.log(argumentHelp('hybrides.js').replace('[nombre]', '[nombre] [--detail]')); return; }
+  const report = compareHybrids(options);
+  if (options.json) console.log(JSON.stringify(report, null, 2));
+  else {
+    const line = (label, group) => `${label.padEnd(24)} rang ${group.meanRank == null ? 'indisponible' : group.meanRank.toFixed(2)} ; victoires ${group.winRate == null ? 'indisponible' : (group.winRate * 100).toFixed(1) + ' %'} ; n=${group.n}`;
+    console.log(`${report.completedGames}/${report.requestedGames} parties terminées ; ${report.truncatedGames} tronquées et exclues ; population ${options.population}, IA ${options.skill}.`);
+    console.log(line('une famille', report.groups.mono));
+    console.log(line('deux familles', report.groups.duo));
+    console.log(`${Object.keys(report.pairs).length} duos observés ; ${Object.values(report.pairs).filter(p => p.n >= 40).length} avec au moins 40 observations.`);
+    if (options.detail) for (const [pair, summary] of Object.entries(report.pairs)) console.log(line(pair, summary));
+    for (const warning of report.limitations) console.log(warning);
+  }
+  if (report.truncatedGames) process.exitCode = 2;
+}
+
+if (require.main === module) runCli(main);
+module.exports = { compareHybrids };
