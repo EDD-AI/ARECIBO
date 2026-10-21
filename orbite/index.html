@@ -110,6 +110,21 @@
       <div class="col-cards" id="colCards"></div>
     </section>
 
+    <!-- GENÈSE : ère II, chapitre 2, le Cœur (l'astre en coupe, on le chauffe pour ranger ses couches) -->
+    <section class="screen genese" id="coeur" aria-label="Le Cœur" data-t-attr="aria-label">
+      <div class="gn-view co-view" id="coView">
+        <div class="gn-top">
+          <button class="icon-btn" id="coBack" aria-label="Retour" data-t-attr="aria-label"></button>
+          <div class="gn-lvl"><div class="gn-lvl-row"><b data-t>LE CŒUR</b><small class="es-rank" id="coScoreTxt"></small></div><div class="gn-prog co-score"><i id="coScore"></i></div><div class="es-heat"><i id="coEnergy"></i></div></div>
+        </div>
+        <div class="co-stage"><canvas id="coCanvas" width="64" height="64"></canvas></div>
+        <div class="co-stats" id="coStats"></div>
+        <button class="btn primary co-done" id="coDone" disabled></button>
+        <p class="gn-hint" id="coHint"></p>
+        <div class="co-bilan" id="coBilan" hidden></div>
+      </div>
+    </section>
+
     <!-- GENÈSE : ère II, chapitre 1, l'Essaim (orbites, captures, impacts, rivales) -->
     <section class="screen genese" id="essaim" aria-label="L’Essaim" data-t-attr="aria-label">
       <div class="gn-view" id="esView">
@@ -422,6 +437,8 @@
   <script src="js/genese-ui.js"></script>
   <script src="js/essaim.js"></script>
   <script src="js/essaim-ui.js"></script>
+  <script src="js/coeur.js"></script>
+  <script src="js/coeur-ui.js"></script>
   <script src="js/campagne-ui.js"></script>
   <script src="js/online-config.js"></script>
   <script src="js/online.js"></script>

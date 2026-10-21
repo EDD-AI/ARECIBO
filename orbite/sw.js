@@ -1,6 +1,6 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
 // Garder ce numéro égal à VERSION dans js/game.js et à version.json.
-const CACHE = 'orbite-v63';
+const CACHE = 'orbite-v64';
 const SHELL = [
   './',
   './index.html',
@@ -56,6 +56,8 @@ const SHELL = [
   './js/genese-ui.js',
   './js/essaim.js',
   './js/essaim-ui.js',
+  './js/coeur.js',
+  './js/coeur-ui.js',
   './js/lang/batiments.js',
   './js/lang/succes.js',
   './js/lang/genese.js',

@@ -375,6 +375,27 @@
     const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
     await window.OrbiteEssaimUI.open(window.OrbiteEssaim.newGame(seed, { comp: { glace: sh.glace, roche: sh.roche, gaz: sh.gaz, fer: 0 }, trait: res.trait, nature: res.nature }));
   }
+  // Ère II, chapitre 2 : l'astre fond de l'intérieur.
+  const COEUR = [
+    tr('La ceinture s’est calmée. Mais à l’intérieur de votre astre, quelque chose gronde.'),
+    tr('La chaleur des impacts, et celle des atomes instables, commence à le faire fondre.'),
+    tr('Chauffez son cœur : le fer, lourd, coulera au centre. La glace et le gaz remonteront.'),
+    tr('Mais ménagez sa surface : trop chaud, et la croûte se brise.')
+  ];
+  async function newCoeur() {
+    const ES = window.OrbiteEssaim, es = window.OrbiteEssaimUI.load();
+    A.closeSheet();
+    A.stopAmbient();
+    try { localStorage.removeItem('orbite.genese.coeur'); } catch (err) { /* stockage indisponible */ }
+    const res = (es && es.result) || {};
+    const from = { comp: es ? ES.shares(es) : null, trait: res.trait, trait1: es ? es.trait1 : 'adaptable', moons: res.moons || (es ? es.sats.length : 0), heat: res.heat || 0 };
+    await openStory();
+    await wait(800);
+    await tell(COEUR);
+    if (!story.skip) { storyTitle(tr('ÈRE II'), tr('CHAPITRE 2 · LE CŒUR')); SFX.level(); await wait(2400); }
+    const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
+    await window.OrbiteCoeurUI.open(window.OrbiteCoeur.newGame(seed, from));
+  }
   $('campBtn').addEventListener('click', () => {
     SFX.tap();
     const GU = window.OrbiteGeneseUI, G = window.OrbiteGenese;
@@ -387,9 +408,22 @@
       const head = `<h3>${tr('LA GENÈSE · ÈRE II')}</h3>`;
       const replay = `<button class="btn" data-gen="new">${tr('REJOUER L’ÈRE I')}</button>`;
       if (es && es.done) {
-        A.openSheet(`${head}<h2>${tr('L’Essaim est à vous')}</h2>
-          <p class="sheet-text">${tr('Le chapitre 2, le Cœur, arrive dans une prochaine version.')}</p>
-          <div class="sheet-actions"><button class="btn" data-gen="essaim-new">${tr('REJOUER L’ESSAIM')}</button>${replay}</div>`);
+        // Chapitre 2 : le Cœur.
+        const CU = window.OrbiteCoeurUI, co = CU && CU.load();
+        const replayEs = `<button class="btn" data-gen="essaim-new">${tr('REJOUER L’ESSAIM')}</button>`;
+        if (co && co.done) {
+          A.openSheet(`${head}<h2>${tr('Le Cœur est formé')}</h2>
+            <p class="sheet-text">${tr('Le chapitre 3, la Sculpture, arrive dans une prochaine version.')}</p>
+            <div class="sheet-actions"><button class="btn" data-gen="coeur-new">${tr('REJOUER LE CŒUR')}</button>${replayEs}</div>`);
+        } else if (co) {
+          A.openSheet(`${head}<h2>${tr('Le Cœur vous attend')}</h2>
+            <p class="muted">${tr('Couches rangées : {n}', { n: Math.round(window.OrbiteCoeur.score(co) * 100) + ' %' })}</p>
+            <div class="sheet-actions"><button class="btn primary" data-gen="coeur-resume">${tr('REPRENDRE')}</button><button class="btn" data-gen="coeur-new">${tr('RECOMMENCER')}</button></div>`);
+        } else {
+          A.openSheet(`${head}<h2>${tr('Chapitre 2 · Le Cœur')}</h2>
+            <p class="sheet-text">${tr('Votre astre fond de l’intérieur. Rangez ses couches : le fer au centre, la roche autour, la glace et le gaz en surface.')}</p>
+            <div class="sheet-actions"><button class="btn primary" data-gen="coeur-new">${tr('COMMENCER')}</button>${replayEs}</div>`);
+        }
       } else if (es) {
         A.openSheet(`${head}<h2>${tr('L’Essaim vous attend')}</h2>
           <p class="muted">${tr('Masse du système {m} / {g} · lunes : {n}', { m: window.OrbiteEssaim.systemMass(es).toFixed(1), g: Math.ceil(window.OrbiteEssaim.goal(es)), n: es.sats.length })}</p>
@@ -414,6 +448,8 @@
     if (k === 'resume') { A.closeSheet(); A.stopAmbient(); window.OrbiteGeneseUI.open(); }
     else if (k === 'essaim-resume') { A.closeSheet(); A.stopAmbient(); window.OrbiteEssaimUI.open(); }
     else if (k === 'essaim-new') newEssaim();
+    else if (k === 'coeur-resume') { A.closeSheet(); A.stopAmbient(); window.OrbiteCoeurUI.open(); }
+    else if (k === 'coeur-new') newCoeur();
     else newGenese();
   });
 

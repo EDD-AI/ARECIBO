@@ -49,7 +49,7 @@ système solaire vivant.
 | Ère | Équivalent Spore | Gameplay | État |
 |---|---|---|---|
 | I · La Poussière | Cellule | Le grain dérive vu du dessus, absorbe plus petit que lui, fuit plus gros, se façonne | **jouable** |
-| II · L’Astéroïde | Créature | 4 chapitres : l’Essaim, le Cœur, la Sculpture, le Grand Impact | **chapitre 1 jouable** |
+| II · L’Astéroïde | Créature | 4 chapitres : l’Essaim, le Cœur, la Sculpture, le Grand Impact | **chapitres 1 et 2 jouables** |
 | III · La Planète | Tribu | Modeler la surface : océans, volcans, atmosphère ; parer les bombardements | à venir |
 | IV · Le Système | Civilisation | Allumer ou capturer un soleil, placer lunes et planètes en orbite | à venir |
 | V · La Vie | Espace | Rendre le monde vivable (température, air, eau), faire naître la vie, puis la Colonie | à venir |
@@ -171,6 +171,30 @@ l’écran) :
   - +3 graines de vie.
 - **Durée** : 3 à 10 minutes selon le style (simulée par trois joueurs automatiques).
 - Sauvegarde dans `orbite.genese.essaim`. Tests : `tests/essaim.test.mjs`.
+
+**Ère II, chapitre 2 · Le Cœur** (`js/coeur.js` pour les règles, `js/coeur-ui.js` pour
+l’écran) :
+- **La coupe.** L’astre est vu en coupe, en gros pixels (64 × 64) : fer gris sombre, roche brune,
+  glace bleue, gaz violet, quelques grains radioactifs verts. Au départ, tout est mélangé.
+- **Chauffer.** Doigt posé, on chauffe à cet endroit, tant qu’il reste de l’énergie (environ
+  70 s de doigt posé). La chaleur se répand, se perd par la surface, et rougeoit à l’écran.
+  - Les grains radioactifs chauffent seuls, et les lunes de l’Essaim chauffent par les marées.
+  - Les impacts de l’Essaim ont réchauffé le cœur au départ.
+  - Un Adaptable a plus d’énergie.
+- **Se ranger.** Là où la matière a fondu (glace 10, roche 32, fer 42), la plus dense coule
+  vers le centre, par l’une de ses voisines plus profondes : le fer forme le noyau, la roche le
+  manteau, la glace et le gaz remontent. La barre « Couches rangées » mesure le tri.
+- **Ménager la surface** (surchauffe au-delà de 88, juste sous le bord) :
+  - roche fondue dessous → éruption, la croûte se perce ;
+  - glace → elle bout et devient du gaz : plus d’air, moins d’océans ;
+  - gaz → il s’échappe dans l’espace.
+- **Fin du chapitre** : à partir de 50 % de couches rangées, le bouton « Laisser refroidir »
+  termine ; sinon le chapitre finit quand l’énergie est épuisée et l’astre refroidi.
+  - Le bilan prépare la suite : champ magnétique (fort, faible ou aucun selon le fer au centre),
+    croûte (solide ou volcanique), eau (océans, glace profonde ou sec), atmosphère (primitive
+    ou aucune).
+  - +3 graines de vie.
+- **Durée** : 2 à 4 minutes. Sauvegarde dans `orbite.genese.coeur`. Tests : `tests/coeur.test.mjs`.
 
 ### Ancienne campagne de cartes (désactivée)
 
@@ -955,6 +979,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `js/classement.js` | Mode classé : placements, points, rangs et divisions |
 | `js/genese.js`, `js/genese-ui.js` | La Genèse (campagne façon Spore) : règles de l’ère I et son écran pixel art, Façonnage, récits |
 | `js/essaim.js`, `js/essaim-ui.js` | Genèse, ère II, chapitre 1 « L’Essaim » : orbites, captures, impacts, rivales, et son écran |
+| `js/coeur.js`, `js/coeur-ui.js` | Genèse, ère II, chapitre 2 « Le Cœur » : l’astre en coupe, chaleur, tri des couches, bilan |
 | `js/succes.js` | Les 100 succès : catalogue, progression, déblocage, onglet du Profil |
 | `js/multi.js`, `js/multi-ui.js` | Multijoueur : salons, recherche classée, codes de session, manches en ligne, et leur écran |
 | `js/exploration.js`, `js/exploration-ui.js` | Expédition : monde infini généré par tronçons autour du rover, découvertes |
