@@ -39,7 +39,7 @@ nouvelle version, la **checklist** se coche au fur et à mesure.
       - [x] Ère I · La Poussière
       - [x] Ère II · chapitre 1 · L'Essaim
       - [x] Ère II · chapitre 2 · Le Cœur
-      - [ ] Ère II · chapitre 3 · La Sculpture
+      - [x] Ère II · chapitre 3 · La Sculpture
       - [ ] Ère II · chapitre 4 · Le Grand Impact (+ choix du destin)
 - [ ] (toi) Publier les règles Firestore (`firebase/firestore.rules`) dans la console Firebase.
 - [ ] (moi) Supprimer son compte depuis le jeu (et ses données en ligne).

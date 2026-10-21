@@ -1742,3 +1742,20 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .co-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .co-list li { display: grid; grid-template-columns: 12px 1fr; gap: 10px; align-items: baseline; font-size: 14px; line-height: 1.45; }
 .co-list li::before { content: ''; width: 10px; height: 10px; }
+/* Genèse, ère II : la Sculpture */
+.sc-view { gap: 10px; padding-top: calc(var(--safe-t) + 64px); }
+.sc-stage { width: min(92vw, 46vh, 420px); background: radial-gradient(circle at 30% 40%, rgba(255, 230, 180, 0.1), transparent 62%); }
+#scCanvas { width: 100%; height: 100%; image-rendering: pixelated; touch-action: none; }
+.sc-goals { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; width: min(92vw, 420px); }
+.sc-goals li { display: grid; grid-template-columns: 16px 1fr auto; gap: 8px; align-items: center; padding: 5px 8px; font-size: 12px; border: 1px solid var(--line); background: rgba(5, 4, 10, 0.6); color: var(--dim); }
+.sc-goals li i { width: 14px; height: 14px; display: grid; place-items: center; font-style: normal; font-size: 11px; border: 1px solid var(--line); }
+.sc-goals li b { font-weight: 600; color: var(--ink); font-size: 11px; }
+.sc-goals li.ok { color: var(--ink); border-color: rgba(126, 224, 138, 0.5); }
+.sc-goals li.ok i { color: #04160a; background: #7ee08a; border-color: #7ee08a; }
+.sc-tools { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; width: min(92vw, 420px); }
+.sc-tool { display: grid; place-items: center; gap: 2px; padding: 8px 0 6px; color: var(--ink); background: rgba(5, 4, 10, 0.7); border: 1px solid var(--line); }
+.sc-tool span { font-size: 20px; line-height: 1; }
+.sc-tool small { font-size: 8px; letter-spacing: 0.08em; color: var(--dim); }
+.sc-tool.on { border-color: #ffe08a; box-shadow: 0 0 10px rgba(255, 224, 138, 0.35); }
+.sc-tool.on small { color: #ffe08a; }
+.sc-tool:disabled { opacity: 0.3; }
