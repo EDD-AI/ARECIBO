@@ -304,17 +304,6 @@
       if (this.sky) this.skyMode = this.sky;
       // skyGain atténue le fond pendant le jeu ; skyOff le fait défiler (carte de campagne).
       if (this.skyFade > 0.01 && this.skyMode) r.drawSky(this.skyMode, this.time, { reveal: 1, phase, flash: 0, dim: dimBg * this.skyFade * (this.skyGain == null ? 1 : this.skyGain), flip: 1 }, this.skyOff);
-      // Fiche ouverte : la toile passe au-dessus d'elle (pour ses planètes) ; le fond animé, opaque,
-      // ne doit pas la recouvrir : on y découpe la zone de la fiche.
-      if (cover && this.skyFade > 0.01 && this.skyMode) {
-        const [ax0, ay1] = this.toArt(cover.left, cover.top), [ax1, ay0] = this.toArt(cover.right, cover.bottom);
-        const gl = r.gl;
-        gl.enable(gl.SCISSOR_TEST);
-        gl.scissor(Math.floor(ax0), Math.floor(ay0), Math.ceil(ax1 - ax0) + 1, Math.ceil(ay1 - ay0) + 1);
-        gl.clearColor(0, 0, 0, 0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.disable(gl.SCISSOR_TEST);
-      }
       const starCount = Math.round((window.innerWidth * window.innerHeight) / this.starArea);
       if (this.starFade > 0.01) r.drawStars(this.stars, phase, { reveal: this.starFade, phase, flash: 0, dim: dimBg * (this.starDim || 0.85), flip: 1 }, starCount, skip);
       const els = document.querySelectorAll('[data-planet]');
@@ -324,7 +313,19 @@
         if (s && s.flash > 0) s.flash = Math.max(0, s.flash - dt * 4);
         if (!el.getClientRects().length) { this.stepTween(el, now); continue; }
         if (this.modal && el.closest('.overlay')) { top.push(el); continue; }
-        this.drawEl(el, phase, this.modal ? 0.32 : 1, now, cover);
+        this.drawEl(el, phase, this.modal ? 0.32 : 1, now, null);
+      }
+      // Fiche ouverte : la toile passe au-dessus d'elle (pour ses planètes). Le fond (ciel animé,
+      // planètes de l'écran, même immenses) reste dessiné, atténué, et l'on découpe seulement la zone
+      // de la fiche pour ne pas la recouvrir.
+      if (cover) {
+        const [ax0, ay1] = this.toArt(cover.left, cover.top), [ax1, ay0] = this.toArt(cover.right, cover.bottom);
+        const gl = r.gl;
+        gl.enable(gl.SCISSOR_TEST);
+        gl.scissor(Math.floor(ax0), Math.floor(ay0), Math.ceil(ax1 - ax0) + 1, Math.ceil(ay1 - ay0) + 1);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.disable(gl.SCISSOR_TEST);
       }
       for (const el of top) {
         if (cover) {
