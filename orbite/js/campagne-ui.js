@@ -375,6 +375,26 @@
     const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
     await window.OrbiteEssaimUI.open(window.OrbiteEssaim.newGame(seed, { comp: { glace: sh.glace, roche: sh.roche, gaz: sh.gaz, fer: 0 }, trait: res.trait, nature: res.nature }));
   }
+  // Ère II, chapitre 3 : l'astre en grand, à modeler.
+  const SCULPTURE = [
+    tr('Votre astre a un cœur. Il lui faut maintenant un visage.'),
+    tr('Creusez des bassins, dressez des montagnes, allumez des volcans.'),
+    tr('Et laissez la gravité faire son œuvre : un rocher assez lourd finit toujours rond.')
+  ];
+  async function newSculpture() {
+    const G = window.OrbiteGenese, g = window.OrbiteGeneseUI.load(), co = window.OrbiteCoeurUI.load();
+    A.closeSheet();
+    A.stopAmbient();
+    try { localStorage.removeItem('orbite.genese.sculpture'); } catch (err) { /* stockage indisponible */ }
+    const nature = (g && g.result && g.result.nature) || (g ? G.nature(g) : 'vie');
+    const core = (co && co.result) || (co ? window.OrbiteCoeur.result(co) : {});
+    await openStory();
+    await wait(800);
+    await tell(SCULPTURE);
+    if (!story.skip) { storyTitle(tr('ÈRE II'), tr('CHAPITRE 3 · LA SCULPTURE')); SFX.level(); await wait(2400); }
+    const seed = (Date.now() ^ Math.floor(Math.random() * 1e9)) >>> 0;
+    await window.OrbiteSculptureUI.open(window.OrbiteSculpture.newGame(seed, { nature, core: { field: core.field, crustKind: core.crustKind, water: core.water, air: core.air } }));
+  }
   // Ère II, chapitre 2 : l'astre fond de l'intérieur.
   const COEUR = [
     tr('La ceinture s’est calmée. Mais à l’intérieur de votre astre, quelque chose gronde.'),
@@ -412,9 +432,22 @@
         const CU = window.OrbiteCoeurUI, co = CU && CU.load();
         const replayEs = `<button class="btn" data-gen="essaim-new">${tr('REJOUER L’ESSAIM')}</button>`;
         if (co && co.done) {
-          A.openSheet(`${head}<h2>${tr('Le Cœur est formé')}</h2>
-            <p class="sheet-text">${tr('Le chapitre 3, la Sculpture, arrive dans une prochaine version.')}</p>
-            <div class="sheet-actions"><button class="btn" data-gen="coeur-new">${tr('REJOUER LE CŒUR')}</button>${replayEs}</div>`);
+          // Chapitre 3 : la Sculpture.
+          const SU = window.OrbiteSculptureUI, sc = SU && SU.load();
+          const replayCo = `<button class="btn" data-gen="coeur-new">${tr('REJOUER LE CŒUR')}</button>`;
+          if (sc && sc.done) {
+            A.openSheet(`${head}<h2>${tr('Votre planète est sculptée')}</h2>
+              <p class="sheet-text">${tr('Le chapitre 4, le Grand Impact, arrive dans une prochaine version.')}</p>
+              <div class="sheet-actions"><button class="btn" data-gen="sculpture-new">${tr('REJOUER LA SCULPTURE')}</button>${replayCo}</div>`);
+          } else if (sc) {
+            A.openSheet(`${head}<h2>${tr('La Sculpture vous attend')}</h2>
+              <p class="muted">${tr('Objectifs atteints : {a} / {b}', { a: window.OrbiteSculpture.goals(sc).filter((x) => x.ok).length, b: window.OrbiteSculpture.goals(sc).length })}</p>
+              <div class="sheet-actions"><button class="btn primary" data-gen="sculpture-resume">${tr('REPRENDRE')}</button><button class="btn" data-gen="sculpture-new">${tr('RECOMMENCER')}</button></div>`);
+          } else {
+            A.openSheet(`${head}<h2>${tr('Chapitre 3 · La Sculpture')}</h2>
+              <p class="sheet-text">${tr('Votre astre est en grand devant vous. Creusez, soulevez, lissez : faites de ce rocher une planète.')}</p>
+              <div class="sheet-actions"><button class="btn primary" data-gen="sculpture-new">${tr('COMMENCER')}</button>${replayCo}</div>`);
+          }
         } else if (co) {
           A.openSheet(`${head}<h2>${tr('Le Cœur vous attend')}</h2>
             <p class="muted">${tr('Couches rangées : {n}', { n: Math.round(window.OrbiteCoeur.score(co) * 100) + ' %' })}</p>
@@ -450,6 +483,8 @@
     else if (k === 'essaim-new') newEssaim();
     else if (k === 'coeur-resume') { A.closeSheet(); A.stopAmbient(); window.OrbiteCoeurUI.open(); }
     else if (k === 'coeur-new') newCoeur();
+    else if (k === 'sculpture-resume') { A.closeSheet(); A.stopAmbient(); window.OrbiteSculptureUI.open(); }
+    else if (k === 'sculpture-new') newSculpture();
     else newGenese();
   });
 

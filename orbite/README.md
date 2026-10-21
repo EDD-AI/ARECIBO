@@ -49,7 +49,7 @@ système solaire vivant.
 | Ère | Équivalent Spore | Gameplay | État |
 |---|---|---|---|
 | I · La Poussière | Cellule | Le grain dérive vu du dessus, absorbe plus petit que lui, fuit plus gros, se façonne | **jouable** |
-| II · L’Astéroïde | Créature | 4 chapitres : l’Essaim, le Cœur, la Sculpture, le Grand Impact | **chapitres 1 et 2 jouables** |
+| II · L’Astéroïde | Créature | 4 chapitres : l’Essaim, le Cœur, la Sculpture, le Grand Impact | **chapitres 1 à 3 jouables** |
 | III · La Planète | Tribu | Modeler la surface : océans, volcans, atmosphère ; parer les bombardements | à venir |
 | IV · Le Système | Civilisation | Allumer ou capturer un soleil, placer lunes et planètes en orbite | à venir |
 | V · La Vie | Espace | Rendre le monde vivable (température, air, eau), faire naître la vie, puis la Colonie | à venir |
@@ -195,6 +195,38 @@ l’écran) :
     ou aucune).
   - +3 graines de vie.
 - **Durée** : 2 à 4 minutes. Sauvegarde dans `orbite.genese.coeur`. Tests : `tests/coeur.test.mjs`.
+
+**Ère II, chapitre 3 · La Sculpture** (`js/sculpture.js` pour les règles, `js/sculpture-ui.js`
+pour l’écran) :
+- **L’astre en grand.** Il est dessiné en pixel art (112 × 112) et tourne lentement sur lui-même :
+  - silhouette bosselée tant qu’il n’est pas rond ;
+  - relief éclairé par la lumière ;
+  - mers d’eau (si le Cœur a donné des océans) ou de lave (croûte volcanique) au fond des
+    bassins ;
+  - glace, volcans qui luisent, nuages et halo si le Cœur a donné une atmosphère.
+- **La carte.** L’astre est une carte de hauteurs (longitude × latitude, 128 × 64) en deux
+  couches : la **forme** (ses grosses bosses, sa silhouette) et le **relief** sculpté.
+- **Outils** (un à la fois, au doigt) :
+
+  | Outil | Effet |
+  |---|---|
+  | ✋ Tourner | fait tourner l’astre (glisser) |
+  | ☄ Impact | creuse un cratère ; un impact = un bassin |
+  | ⛰ Soulever | maintenu : élève des montagnes |
+  | 〰 Lisser | maintenu : la gravité arrondit la forme |
+  | 🜂 Volcan | un cône et sa lave |
+  | ❄ Glace | maintenu : pose une calotte |
+
+  - Le Volcan est libre avec une croûte volcanique ou un monde de feu, sinon limité à 2.
+  - La Glace n’est disponible qu’avec de l’eau.
+  - La gravité arrondit aussi l’astre toute seule, lentement.
+- **Objectifs** :
+  - arrondir l’astre (85 %), creuser deux bassins, dresser des montagnes (3 % de la surface) ;
+  - plus un objectif selon le chemin : trois volcans (croûte volcanique ou monde de feu), des
+    calottes de glace (3 %, si de l’eau), sinon un volcan.
+- **Fin.** « C’est une planète » termine.
+  - Bilan, puis cinématique (« quelque chose de très grand approche… ») et +3 graines de vie.
+- Sauvegarde dans `orbite.genese.sculpture`. Tests : `tests/sculpture.test.mjs`.
 
 ### Ancienne campagne de cartes (désactivée)
 
@@ -980,6 +1012,7 @@ Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrima
 | `js/genese.js`, `js/genese-ui.js` | La Genèse (campagne façon Spore) : règles de l’ère I et son écran pixel art, Façonnage, récits |
 | `js/essaim.js`, `js/essaim-ui.js` | Genèse, ère II, chapitre 1 « L’Essaim » : orbites, captures, impacts, rivales, et son écran |
 | `js/coeur.js`, `js/coeur-ui.js` | Genèse, ère II, chapitre 2 « Le Cœur » : l’astre en coupe, chaleur, tri des couches, bilan |
+| `js/sculpture.js`, `js/sculpture-ui.js` | Genèse, ère II, chapitre 3 « La Sculpture » : l’astre en grand, outils de modelage, objectifs |
 | `js/succes.js` | Les 100 succès : catalogue, progression, déblocage, onglet du Profil |
 | `js/multi.js`, `js/multi-ui.js` | Multijoueur : salons, recherche classée, codes de session, manches en ligne, et leur écran |
 | `js/exploration.js`, `js/exploration-ui.js` | Expédition : monde infini généré par tronçons autour du rover, découvertes |
