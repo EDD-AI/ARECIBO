@@ -64,7 +64,7 @@ body.modal #gl { z-index: 35; }
   flex-direction: column;
   padding: calc(var(--safe-t) + 10px) 14px calc(var(--safe-b) + 12px);
 }
-.screen.active { display: flex; animation: screenIn 0.35s ease both; }
+.screen.active { display: flex; animation: screenIn 0.35s ease backwards; }
 @keyframes screenIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
 .pix { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em; shape-rendering: crispEdges; }
@@ -1402,6 +1402,9 @@ body.in-combat .banner { top: calc(50% - 34px); }
 
 /* ─── Arbre d'étoiles (menu) ─── */
 .star-tree { position: absolute; z-index: 1; pointer-events: none; image-rendering: pixelated; image-rendering: crisp-edges; }
+/* Copie de l'arbre au-dessus de la toile 3D quand une fiche est ouverte (voir arbre.js). */
+.star-tree-mirror { position: fixed; z-index: 36; pointer-events: none; filter: brightness(0.45); image-rendering: pixelated; image-rendering: crisp-edges; }
+.star-tree-mirror[hidden] { display: none; }
 .star-tree-hit { position: absolute; z-index: 3; background: transparent; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .seed-fall {
   position: fixed; left: -5px; top: -5px; z-index: 40; width: 10px; height: 10px; border-radius: 50%; pointer-events: none;

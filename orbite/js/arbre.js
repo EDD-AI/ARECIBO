@@ -202,7 +202,7 @@
   }
 
   // ─── Menu ───────────────────────────────────────────────────
-  const el = { cv: null, hit: null };
+  const el = { cv: null, hit: null, mirror: null };
   let anim = 0, shownWater = 0, extent = null, sparkT = 0;
 
   function mount() {
@@ -251,9 +251,10 @@
   function loop(now) {
     anim = 0;
     const o = O();
-    if (!o || o.ui.screen !== 'menu' || !el.cv || el.cv.hidden) return;
+    if (!o || o.ui.screen !== 'menu' || !el.cv || el.cv.hidden) { if (el.mirror) el.mirror.hidden = true; return; }
     // Une douzaine d'images par seconde suffit au scintillement.
     if (now - (loop.t || 0) > 80) { loop.t = now; extent = frame(el.cv, shownWater, now / 1000); }
+    mirror();
     // Quelques étincelles montent de la graine, puis du feuillage.
     if (now - sparkT > (shownWater ? 900 : 600)) {
       sparkT = now;
@@ -266,6 +267,28 @@
     anim = requestAnimationFrame(loop);
   }
   function start() { if (!anim) anim = requestAnimationFrame(loop); }
+  // Fiche ouverte : la toile 3D passe au-dessus de toute la page pour que la planète du fond reste
+  // visible ; l'arbre, dessiné dans la page, serait caché derrière. On en montre alors une copie
+  // au-dessus de la toile 3D, atténuée comme le reste du fond et coupée là où commence la fiche.
+  function mirror() {
+    const modal = document.body.classList.contains('modal');
+    if (!modal) { if (el.mirror) el.mirror.hidden = true; return; }
+    if (!el.mirror) {
+      el.mirror = document.createElement('canvas');
+      el.mirror.className = 'star-tree-mirror';
+      el.mirror.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(el.mirror);
+    }
+    const m = el.mirror, b = el.cv.getBoundingClientRect(), sh = document.getElementById('sheet').getBoundingClientRect();
+    if (m.width !== el.cv.width || m.height !== el.cv.height) { m.width = el.cv.width; m.height = el.cv.height; }
+    const ctx = m.getContext('2d');
+    ctx.clearRect(0, 0, m.width, m.height);
+    ctx.drawImage(el.cv, 0, 0);
+    Object.assign(m.style, { left: b.left + 'px', top: b.top + 'px', width: b.width + 'px', height: b.height + 'px' });
+    const cut = Math.max(0, Math.ceil(b.bottom - sh.top));
+    m.style.clipPath = cut ? `inset(0 0 ${cut}px 0)` : '';
+    m.hidden = false;
+  }
 
   // Arrivée au menu : la graine gagnée tombe et se plante, une seule fois.
   async function onMenu() {
