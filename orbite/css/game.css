@@ -1719,3 +1719,26 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .es-tag.big { color: #ffb0a6; border-color: rgba(255, 90, 74, 0.6); }
 .es-tag.small { color: #b8f0bf; border-color: rgba(126, 224, 138, 0.6); }
 .es-tag[hidden] { display: none; }
+/* Genèse, ère II : le Cœur (l'astre en coupe) */
+.co-view { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: calc(var(--safe-t) + 86px) 16px calc(var(--safe-b) + 16px); }
+.co-stage { position: relative; width: min(92vw, 52vh, 420px); aspect-ratio: 1; display: grid; place-items: center;
+  background: radial-gradient(circle at 30% 45%, rgba(255, 220, 160, 0.12), transparent 60%); }
+#coCanvas { width: 100%; height: 100%; image-rendering: pixelated; touch-action: none; cursor: crosshair; }
+.co-score { height: 6px; position: relative; }
+.co-score::after { content: ''; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: rgba(255, 255, 255, 0.6); }
+.co-score i.ok { background: linear-gradient(90deg, #7ee08a, #c8ffd0); }
+.co-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: min(92vw, 420px); }
+.co-chip { display: flex; align-items: center; gap: 6px; padding: 6px 8px; font-size: 11px; color: var(--dim); border: 1px solid var(--line); background: rgba(5, 4, 10, 0.6); }
+.co-chip i { width: 9px; height: 9px; flex: none; }
+.co-chip b { margin-left: auto; color: var(--ink); font-weight: 600; }
+.co-chip.fer i, .co-list .fer::before { background: #6c6670; }
+.co-chip.glace i, .co-list .glace::before { background: #8cc4ee; }
+.co-chip.gaz i, .co-list .gaz::before { background: #a080d6; }
+.co-chip.lave i, .co-list .lave::before { background: #ff9640; }
+.co-done { width: min(92vw, 420px); }
+.co-bilan { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 24px; background: rgba(5, 4, 10, 0.92); }
+.co-bilan[hidden] { display: none; }
+.co-bilan h3 { margin: 0; text-align: center; letter-spacing: 0.24em; color: #ffe08a; }
+.co-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.co-list li { display: grid; grid-template-columns: 12px 1fr; gap: 10px; align-items: baseline; font-size: 14px; line-height: 1.45; }
+.co-list li::before { content: ''; width: 10px; height: 10px; }
