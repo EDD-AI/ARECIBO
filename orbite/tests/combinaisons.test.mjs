@@ -78,7 +78,7 @@ test('les dénombrements du sous-modèle à sept identités sont exacts et séri
   assert.equal(report.distinctIdentityModel.orderedArrangements, '1719393207840');
   assert.deepEqual(JSON.parse(JSON.stringify(report)), report);
   assert.ok(report.limitations.some((s) => s.includes('états légalement atteignables')));
-  assert.ok(report.limitations.some((s) => s.includes('plateau commun')));
+  assert.ok(report.limitations.some((s) => s.includes('placement')));
 });
 
 test('le modèle distingue une sélection vide, une paire et un nombre d’astres impossible', () => {

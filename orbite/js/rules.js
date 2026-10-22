@@ -28,10 +28,32 @@
   const SHOP_SIZE = [0, 3, 4, 4, 5, 5, 6];
   const UPGRADE = [0, 5, 7, 8, 9, 10, 0];
   const DAMAGE_CAP = 10;
-  // Alliance : un système qui réunit deux familles d'au moins ALLIANCE.min astres chacune renforce
-  // les astres de ces deux familles au début de chaque combat.
-  const ALLIANCE = { min: 3, atk: 1, hp: 1 };
   const REWARDS = { 1: 100, 2: 60, 3: 30 };
+  // Duel : le jeu principal, un contre un en plusieurs manches. La mêlée à huit reste un mode.
+  // En duel, chaque univers a DUEL.hp fois plus de PV : la partie dure une douzaine de manches.
+  const DUEL = { players: 2, hp: 2, rewards: { 1: 40, 2: 10 } };
+  // Placement : deux rangées de ROW_MAX places. L'avant (rangée 0) attaque et encaisse ; l'arrière
+  // (rangée 1) est à l'abri des attaques et avance dès que l'avant est tombé.
+  const ROW_MAX = 4;
+  // Formation : au moins FORM_MIN astres d'une même famille dans la même rangée. Son niveau vaut
+  // leur nombre moins un (au plus 3). Chaque famille a un effet à l'avant et un autre à l'arrière ;
+  // {n} = niveau, {d} = deux fois le niveau. « Ils » : les astres de la formation. front1 / back1 :
+  // la phrase du niveau I quand le pluriel ne convient pas.
+  const FORM_MIN = 2;
+  const FORMATIONS = {
+    vie: { front: 'Ils gagnent +{n}/+{n}.', back: 'Après chaque attaque de votre avant, l’attaquant récupère {n} PV.' },
+    neant: { front: 'Quand l’un d’eux s’effondre, les autres gagnent +{n}/+{n}.', back: 'Quand un astre de votre avant s’effondre, ils gagnent +{n}/+{n}.' },
+    envers: { front: 'Les {n} premiers gagnent Renaissance.', front1: 'Le premier gagne Renaissance.', back: 'Les {n} ennemis de l’avant les plus offensifs échangent leur Attaque et leurs PV (s’ils ont plus d’Attaque que de PV).', back1: 'L’ennemi de l’avant le plus offensif échange son Attaque et ses PV (s’il a plus d’Attaque que de PV).' },
+    brasier: { front: 'Chacun inflige {n} dégâts à l’ennemi en face.', back: 'Inflige {d} dégâts à l’ennemi de l’avant qui a le moins de PV.' },
+    glace: { front: 'Les {n} premiers gagnent Bouclier.', front1: 'Le premier gagne Bouclier.', back: 'Les ennemis de l’avant perdent {n} Attaque.' },
+    tempete: { front: 'Après chacune de leurs attaques, ils gagnent +{n} Attaque.', back: 'Vos astres de l’avant gagnent +{n} Attaque.' },
+    mineral: { front: 'Ils gagnent +0/+{d} ; le plus robuste gagne Rempart.', back: 'Vos astres de l’avant gagnent +0/+{d}.' },
+    machine: { front: 'Ils gagnent +{d} Attaque.', back: 'Chacun donne ses mots-clés et +{n}/+{n} à l’astre de l’avant juste devant lui.' },
+    lune: { front: 'Leurs voisins de rangée gagnent +{n}/+{n}.', back: 'L’astre de l’avant juste devant chacune gagne +{d}/+{d}.' },
+    comete: { front: 'Ils gagnent +{n} Attaque et attaquent avant le reste de l’avant.', back: 'Quand votre avant est tombé, ils avancent avec +{d}/+{n}.' },
+    cristal: { front: 'Ils gagnent +{n}/+{n}, le double si l’arrière a aussi une formation de Cristal.', back: 'Tous vos Cristaux gagnent +{n}/+{n}.' },
+    anomalie: { front: 'Chacun gagne {n} mots-clés aléatoires.', front1: 'Chacun gagne un mot-clé aléatoire.', back: '{n} astres de votre avant gagnent un mot-clé aléatoire.', back1: 'Un astre de votre avant gagne un mot-clé aléatoire.' }
+  };
 
   const FAMILIES = {
     vie: { name: 'Vie', color: '#5fd35a', text: 'Les Soleils font grandir les mondes Habitables à chaque fin de cycle.' },
@@ -522,6 +544,48 @@
     return { uid: 'u' + state.uidc++, id, golden: !!golden, atk: c.atk * k, hp: c.hp * k, kw: (c.kw || []).slice(), att: [] };
   }
 
+  // ─── Rangées et formations ──────────────────────────────────
+  const rowOf = (u) => (u && u.row === 1 ? 1 : 0);
+  // [avant, arrière] d'un système, sans le modifier. Au plus ROW_MAX astres par rangée : les
+  // anciennes sauvegardes (sans rangée) voient leurs derniers astres passer à l'arrière.
+  function layout(board) {
+    const front = [], back = [];
+    for (const u of board) (rowOf(u) ? back : front).push(u);
+    while (front.length > ROW_MAX) back.unshift(front.pop());
+    while (back.length > ROW_MAX) front.push(back.shift());
+    return [front, back];
+  }
+  // Range le système d'un joueur : l'avant d'abord, puis l'arrière.
+  function arrange(p) {
+    const [front, back] = layout(p.board);
+    for (const u of front) u.row = 0;
+    for (const u of back) u.row = 1;
+    p.board = front.concat(back);
+  }
+  // Les formations d'une liste d'astres déjà rangés : { fam, row, n, lvl, units }.
+  function groupForms(units) {
+    const out = [];
+    for (const row of [0, 1]) {
+      for (const fam of FAMILY_KEYS) {
+        const list = units.filter((u) => rowOf(u) === row && famOf(u) === fam);
+        if (list.length >= FORM_MIN) out.push({ fam, row, n: list.length, lvl: Math.min(3, list.length - 1), units: list });
+      }
+    }
+    return out;
+  }
+  // Formations d'un système (pour l'écran) : { fam, row, n, lvl }.
+  function formationsOf(board) {
+    const [front, back] = layout(board || []);
+    const ranked = front.map((u) => ({ id: u.id, row: 0 })).concat(back.map((u) => ({ id: u.id, row: 1 })));
+    return groupForms(ranked).map((f) => ({ fam: f.fam, row: f.row, n: f.n, lvl: f.lvl }));
+  }
+  function formText(fam, row, lvl) {
+    const f = FORMATIONS[fam];
+    if (!f) return '';
+    const text = row ? (lvl === 1 && f.back1) || f.back : (lvl === 1 && f.front1) || f.front;
+    return tr(text, { n: lvl, d: 2 * lvl });
+  }
+
   function copiesOf(u) {
     const list = [];
     if (!cardOf(u).token) for (let i = 0; i < (u.golden ? 3 : 1); i++) list.push(u.id);
@@ -545,8 +609,10 @@
       pick: (list, n) => shuffle(list.slice(), rng).slice(0, n),
       fam: (f, except) => p.board.filter((v) => v !== except && famOf(v) === f),
       others: (u) => p.board.filter((v) => v !== u),
-      left: (u) => p.board[p.board.indexOf(u) - 1] || null,
-      right: (u) => p.board[p.board.indexOf(u) + 1] || null,
+      // Gauche et droite : dans la même rangée.
+      mates: (u) => p.board.filter((v) => rowOf(v) === rowOf(u)),
+      left: (u) => { const l = x.mates(u); return l[l.indexOf(u) - 1] || null; },
+      right: (u) => { const l = x.mates(u); return l[l.indexOf(u) + 1] || null; },
       neighbors: (u) => [x.left(u), x.right(u)].filter(Boolean),
       hasSun: () => p.board.some((v) => cardOf(v).sun),
       habitable(fn) {
@@ -652,15 +718,17 @@
 
   function newPlayer(state, id, name, lawId, bot) {
     const law = LAW[lawId];
+    const hpMult = state.size === DUEL.players ? DUEL.hp : 1;
     const p = {
-      id, name, bot, law: lawId, pref: law.fam,
-      hp: law.hp || START_HP, maxHp: law.hp || START_HP, tier: 1, gold: 3, discount: 0,
+      id, name, bot, law: lawId, pref: law.fam, hpMult,
+      hp: (law.hp || START_HP) * hpMult, maxHp: (law.hp || START_HP) * hpMult, tier: 1, gold: 3, discount: 0,
       board: [], hand: [], shop: [], discover: [],
       frozen: false, powerUsed: false, alive: true, rank: null,
       lastOpp: null, deadRound: 0, greed: 0
     };
     const starter = makeUnit(state, law.starter);
     state.pool[law.starter]--;
+    starter.row = 0;
     p.board.push(starter);
     return p;
   }
@@ -674,19 +742,21 @@
     // Multijoueur : les familles sont celles de la partie, les mêmes pour tous.
     const families = opts.families ? opts.families.slice() : law.fam === 'neutre' ? others.slice(0, ACTIVE_FAMILIES) : [law.fam].concat(others.slice(0, ACTIVE_FAMILIES - 1));
     const seats = opts.seats || [];
+    // Nombre d'univers : 2 pour un duel, 8 pour une mêlée.
+    const size = Math.max(2, Math.min(PLAYERS, opts.size || PLAYERS));
     // Outils de mesure : liste complète, en ordre de création des bots (pas leurs identifiants).
     // Les lois explicites sont validées avant de créer les astres et de réserver leurs copies.
     const assignedBotLaws = opts.botLaws;
     if (assignedBotLaws !== undefined) {
       if (!Array.isArray(assignedBotLaws)) throw new TypeError('botLaws doit être une liste de lois.');
-      if (assignedBotLaws.length !== PLAYERS - 1 - seats.length) throw new RangeError('botLaws doit contenir une loi par bot.');
+      if (assignedBotLaws.length !== size - 1 - seats.length) throw new RangeError('botLaws doit contenir une loi par bot.');
       for (const id of assignedBotLaws) {
         if (typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(LAW, id)) throw new RangeError('Loi de bot inconnue.');
         if (LAW[id].fam !== 'neutre' && !families.includes(LAW[id].fam)) throw new RangeError('La famille de cette loi de bot est inactive.');
       }
     }
     const state = {
-      v: 1, seed, round: 1, phase: 'shop', rc: 0, uidc: 1,
+      v: 1, seed, size, round: 1, phase: 'shop', rc: 0, uidc: 1,
       families, pool: {}, poolTotal: {},
       players: [], history: [], ghost: null, over: false, rank: null, reward: 0
     };
@@ -709,7 +779,7 @@
       h.remote = true;
       state.players.push(h);
     }
-    for (let i = state.players.length - 1, botIndex = 0; i < PLAYERS - 1; i++, botIndex++) {
+    for (let i = state.players.length - 1, botIndex = 0; i < size - 1; i++, botIndex++) {
       // Les bots préfèrent les familles fortes en solo (FAM_POWER), sans s'y limiter.
       let bl = LAWS[0];
       if (assignedBotLaws) bl = LAW[assignedBotLaws[botIndex]];
@@ -737,6 +807,8 @@
   }
 
   function alivePlayers(state) { return state.players.filter((p) => p.alive); }
+  const isDuel = (state) => state.size === DUEL.players || state.players.length === DUEL.players;
+  const rewardsOf = (state) => (isDuel(state) ? DUEL.rewards : REWARDS);
 
   // ─── Actions de création ─────────────────────────────────────
   function ownedCopies(p, id) {
@@ -796,8 +868,11 @@
     return !!target && u.kw.includes('arrimage') && famOf(target) === 'machine' && target !== u;
   }
 
-  function play(state, uid, index, targetUid, p) {
+  // index : la place dans la rangée ; row : 0 (avant) ou 1 (arrière). Sans rangée, l'astre va à
+  // l'avant s'il y a de la place, sinon à l'arrière.
+  function play(state, uid, index, targetUid, p, row) {
     p = p || you(state);
+    arrange(p);
     if (state.phase !== 'shop' || !p.alive) return fail('Le marché est fermé.');
     if (p.discover.length) return fail('Choisissez d’abord votre découverte.');
     const hi = p.hand.findIndex((u) => u.uid === uid);
@@ -817,9 +892,17 @@
       return { ok: true, magnet: target.uid, events: x.events, discover };
     }
     if (p.board.length >= BOARD_MAX) return fail('Votre système est plein : vendez un astre.');
+    const count = (r) => p.board.filter((v) => rowOf(v) === r).length;
+    let r = row === 0 || row === 1 ? row : count(0) < ROW_MAX ? 0 : 1;
+    if (count(r) >= ROW_MAX) {
+      if (row === 0 || row === 1) return fail(r ? 'L’arrière est complet.' : 'L’avant est complet.');
+      r = 1 - r;
+    }
     p.hand.splice(hi, 1);
-    const at = Math.max(0, Math.min(p.board.length, index == null ? p.board.length : index));
-    p.board.splice(at, 0, u);
+    const n = count(r);
+    const at = Math.max(0, Math.min(n, index == null ? n : index));
+    u.row = r;
+    p.board.splice((r ? count(0) : 0) + at, 0, u);
     hook(u, 'play', x, at);
     for (const v of p.board.slice()) if (v !== u) hook(v, 'allyPlay', x, u);
     if (p.law === 'resonance' && famOf(u) === 'cristal') x.buff(x.rnd(x.fam('cristal', u)), 1, 1);
@@ -830,7 +913,7 @@
       openDiscover(state, p, t);
       discover = p.discover.length > 0;
     }
-    return { ok: true, index: at, events: x.events, discover };
+    return { ok: true, index: at, row: r, events: x.events, discover };
   }
 
   function sell(state, uid, p) {
@@ -883,14 +966,38 @@
     return { ok: true, tier: p.tier };
   }
 
-  function reorder(state, uid, index, p) {
+  // Déplace un astre du système vers une rangée (index : sa place dans la rangée). Si la rangée
+  // visée est pleine, l'astre qui occupait cette place prend celle qu'il laisse.
+  function move(state, uid, row, index, p) {
     p = p || you(state);
     if (state.phase !== 'shop') return fail('Le marché est fermé.');
-    const i = p.board.findIndex((u) => u.uid === uid);
-    if (i < 0) return fail('Astre introuvable.');
-    const [u] = p.board.splice(i, 1);
-    p.board.splice(Math.max(0, Math.min(p.board.length, index)), 0, u);
-    return { ok: true };
+    arrange(p);
+    const u = p.board.find((v) => v.uid === uid);
+    if (!u) return fail('Astre introuvable.');
+    row = row === 1 ? 1 : 0;
+    const from = rowOf(u);
+    const old = p.board.filter((v) => rowOf(v) === from).indexOf(u);
+    const rows = [0, 1].map((r) => p.board.filter((v) => v !== u && rowOf(v) === r));
+    const dest = rows[row];
+    let at = Math.max(0, Math.min(dest.length, index == null ? dest.length : index));
+    let swapped = null;
+    if (from !== row && dest.length >= ROW_MAX) {
+      at = Math.min(at, dest.length - 1);
+      swapped = dest.splice(at, 1)[0];
+      rows[from].splice(old, 0, swapped);
+    }
+    dest.splice(at, 0, u);
+    rows[0].forEach((v) => { v.row = 0; });
+    rows[1].forEach((v) => { v.row = 1; });
+    p.board = rows[0].concat(rows[1]);
+    return { ok: true, swapped: swapped ? swapped.uid : null };
+  }
+  // Change la place d'un astre dans sa rangée.
+  function reorder(state, uid, index, p) {
+    p = p || you(state);
+    const u = p.board.find((v) => v.uid === uid);
+    if (!u) return fail('Astre introuvable.');
+    return move(state, uid, rowOf(u), index, p);
   }
 
   function canUsePower(state, p) {
@@ -954,7 +1061,13 @@
     const u = makeUnit(state, chosen);
     let where = 'hand';
     if (p.hand.length < HAND_MAX) p.hand.push(u);
-    else if (p.board.length < BOARD_MAX) { p.board.push(u); where = 'board'; }
+    else if (p.board.length < BOARD_MAX) {
+      arrange(p);
+      u.row = p.board.filter((v) => rowOf(v) === 0).length < ROW_MAX ? 0 : 1;
+      p.board.push(u);
+      arrange(p);
+      where = 'board';
+    }
     else { state.pool[chosen]++; return { ok: true, lost: true }; }
     const triple = checkTriple(state, p, chosen);
     return { ok: true, uid: u.uid, where, triple: triple ? triple.uid : null, merged: triple ? triple.merged : null };
@@ -998,32 +1111,58 @@
   // ─── Combat ─────────────────────────────────────────────────
   // a, b : { id, name, tier, law, board } (joueurs ou fantôme). Les bonus
   // « définitifs » s'appliquent aux astres de a.board / b.board.
+  // Placement : seul l'avant attaque, et toujours l'ennemi de l'avant le plus en face de lui
+  // (les Remparts d'abord). L'arrière est à l'abri des attaques ; il avance quand l'avant est tombé.
   function fight(state, a, b, tag, keepLog) {
     const rng = rngFor(state, 'fight:' + tag);
     const players = [a, b];
     let cidc = 1;
     const ev = [];
     const log = (e) => { if (keepLog) ev.push(e); };
-    const toCombat = (u, side) => ({
+    const toCombat = (u, side, row) => ({
       cid: 'c' + cidc++, ref: u.uid, id: u.id, golden: !!u.golden, m: u.golden ? 2 : 1,
-      atk: u.atk, hp: u.hp, maxHp: u.hp, kw: u.kw.slice(), side,
-      dead: false, attacked: false, rebornUsed: false, killer: null
+      atk: u.atk, hp: u.hp, maxHp: u.hp, kw: u.kw.slice(), side, row,
+      dead: false, attacked: false, rebornUsed: false, killer: null, form: null
     });
-    const sides = [a.board.map((u) => toCombat(u, 0)), b.board.map((u) => toCombat(u, 1))];
+    const sides = players.map((pl, s) => {
+      const [front, back] = layout(pl.board);
+      return front.map((u) => toCombat(u, s, 0)).concat(back.map((u) => toCombat(u, s, 1)));
+    });
     const alive = (s) => sides[s].filter((u) => !u.dead && u.hp > 0);
-    const snap = (u) => ({ cid: u.cid, id: u.id, golden: u.golden, atk: u.atk, hp: u.hp, maxHp: u.maxHp, kw: u.kw.slice() });
+    const inRow = (s, r) => alive(s).filter((u) => u.row === r);
+    const snap = (u) => ({ cid: u.cid, id: u.id, golden: u.golden, atk: u.atk, hp: u.hp, maxHp: u.maxHp, kw: u.kw.slice(), row: u.row });
     const snapAll = () => [sides[0].filter((u) => !u.dead).map(snap), sides[1].filter((u) => !u.dead).map(snap)];
     const pendingBreak = [], pendingHurt = [];
     const countOf = (s, id) => alive(s).filter((u) => u.id === id).reduce((n, u) => n + u.m, 0);
+    const forms = [[], []];
+    let curRow = null;
+
+    // Position d'un astre, en largeurs d'astre depuis le centre : les rangées sont centrées à
+    // l'écran, « en face » veut donc dire ce qu'on voit.
+    const xOf = (u) => { const l = inRow(u.side, u.row); const i = l.indexOf(u); return i < 0 ? 0 : i - (l.length - 1) / 2; };
+    // L'astre de la liste le plus en face de u (à égalité : le moins de PV, puis le plus à gauche).
+    function facing(u, list) {
+      let best = null, bd = 9;
+      const x = xOf(u);
+      for (const v of list) {
+        const d = Math.abs(xOf(v) - x);
+        if (!best || d < bd - 1e-9 || (Math.abs(d - bd) < 1e-9 && v.hp < best.hp)) { best = v; bd = d; }
+      }
+      return best;
+    }
+    // L'astre de l'avant juste devant u (même camp).
+    const ahead = (u) => facing(u, inRow(u.side, 0).filter((v) => v !== u));
 
     const c = {
       rnd: (list) => (list && list.length ? list[Math.floor(rng() * list.length)] : null),
       allies: (s) => alive(s),
       sideList: (s) => sides[s].filter((u) => !u.dead),
       alliesFam: (s, f) => alive(s).filter((u) => famOf(u) === f),
+      front: (s) => inRow(s, 0),
+      back: (s) => inRow(s, 1),
       ranked: (s) => alive(s).slice().sort((x, y) => y.atk - x.atk || y.hp - x.hp),
       neighbors(u) {
-        const l = sides[u.side].filter((v) => !v.dead);
+        const l = sides[u.side].filter((v) => !v.dead && v.row === u.row);
         const i = l.indexOf(u);
         return [l[i - 1], l[i + 1]].filter((v) => v && v.hp > 0);
       },
@@ -1050,6 +1189,13 @@
           if (ref) { ref.atk = Math.max(0, ref.atk + da); ref.hp += dh; }
         }
       },
+      heal(u, n) {
+        if (!u || u.dead || u.hp <= 0) return;
+        const k = Math.min(n, u.maxHp - u.hp);
+        if (k <= 0) return;
+        u.hp += k;
+        log({ t: 'heal', cid: u.cid, n: k, hp: u.hp });
+      },
       permFam(s, f, da, dh) {
         for (const v of players[s].board) if (famOf(v) === f) { v.atk = Math.max(0, v.atk + da); v.hp += dh; }
         for (const u of alive(s)) if (famOf(u) === f) c.buff(u, da, dh);
@@ -1071,22 +1217,25 @@
         u.maxHp = Math.max(1, at);
         log({ t: 'swap', cid: u.cid, atk: u.atk, hp: u.hp });
       },
+      // Un astre invoqué naît dans la rangée de celui qui s'effondre (sinon à l'avant).
       summon(s, id, index, mult, o) {
         o = o || {};
         if (sides[s].filter((u) => !u.dead).length >= BOARD_MAX) return null;
         const card = CARD[id];
         const k = (o.golden ? 2 : 1) * (mult || 1);
+        const row = o.row != null ? o.row : curRow != null ? curRow : 0;
         const u = {
           cid: 'c' + cidc++, ref: o.ref || null, id, golden: !!o.golden, m: o.golden ? 2 : 1,
           atk: card.atk * k, hp: o.reborn ? 1 : card.hp * k, maxHp: o.reborn ? 1 : card.hp * k,
-          kw: (card.kw || []).filter((kk) => !(o.reborn && kk === 'renaissance')), side: s,
-          dead: false, attacked: false, rebornUsed: !!o.reborn, killer: null
+          kw: (card.kw || []).filter((kk) => !(o.reborn && kk === 'renaissance')), side: s, row,
+          dead: false, attacked: false, rebornUsed: !!o.reborn, killer: null, form: null
         };
         const list = sides[s];
         let pos = 0, seen = 0;
         while (pos < list.length && seen < index) { if (!list[pos].dead) seen++; pos++; }
         list.splice(pos, 0, u);
-        log({ t: 'summon', side: s, index: list.filter((v) => !v.dead).indexOf(u), unit: snap(u), reborn: !!o.reborn });
+        list.sort((x, y) => x.row - y.row);
+        log({ t: 'summon', side: s, index: list.filter((v) => !v.dead).indexOf(u), row, unit: snap(u), reborn: !!o.reborn });
         return u;
       }
     };
@@ -1125,6 +1274,31 @@
       }
     }
 
+    // Formations du Néant : un membre qui tombe renforce les autres (avant) ; un astre de l'avant
+    // qui tombe renforce ceux restés à l'arrière.
+    function formDeath(s, u) {
+      for (const f of forms[s]) {
+        if (f.fam !== 'neant') continue;
+        const live = f.units.filter((v) => v !== u && !v.dead && v.hp > 0);
+        if (f.row === 0 && u.form === f) for (const v of live) c.buff(v, f.lvl, f.lvl);
+        if (f.row === 1 && u.row === 0) for (const v of live) if (v.row === 1) c.buff(v, f.lvl, f.lvl);
+      }
+    }
+
+    // L'avant est tombé : l'arrière avance (et devient la cible des attaques).
+    function advance() {
+      for (let s = 0; s < 2; s++) {
+        if (inRow(s, 0).length || !inRow(s, 1).length) continue;
+        const moved = inRow(s, 1);
+        for (const u of moved) { u.row = 0; u.attacked = false; }
+        log({ t: 'advance', side: s, cids: moved.map((u) => u.cid) });
+        for (const f of forms[s]) {
+          if (f.fam !== 'comete' || f.row !== 1) continue;
+          for (const u of f.units) if (!u.dead && u.hp > 0) c.buff(u, 2 * f.lvl, f.lvl);
+        }
+      }
+    }
+
     function resolveDeaths() {
       for (let loop = 0; loop < 60; loop++) {
         let found = false;
@@ -1140,33 +1314,38 @@
             i--;
             log({ t: 'die', cid: u.cid, side: s });
             const card = cardOf(u);
+            curRow = u.row;
             if (typeof card.death === 'function') {
               const times = 1 + countOf(s, 'linceul');
               for (let k = 0; k < times; k++) { log({ t: 'fx', cid: u.cid }); card.death(c, u, u.m, idx); }
             }
             for (const v of alive(s)) fire(v, 'allyDeath', u);
             if (players[s].law === 'entropie') for (const v of alive(s)) if (famOf(v) === 'neant') c.buff(v, 1, 0);
+            formDeath(s, u);
             const k = u.killer;
             if (k && !k.dead && k.hp > 0) for (const v of alive(k.side)) fire(v, 'allyKill', k, u);
             if (u.kw.includes('renaissance') && !u.rebornUsed) {
-              const r = c.summon(s, u.id, idx, 1, { reborn: true, golden: u.golden, ref: u.ref });
+              const r = c.summon(s, u.id, idx, 1, { reborn: true, golden: u.golden, ref: u.ref, row: u.row });
               if (r) {
                 fire(r, 'reborn');
                 for (const v of alive(s)) if (v !== r) fire(v, 'allyReborn', r);
               }
             }
+            curRow = null;
           }
         }
         flush();
         if (!found) break;
       }
+      advance();
     }
 
     function attackOnce(att) {
-      const enemies = alive(1 - att.side);
+      const front = inRow(1 - att.side, 0);
+      const enemies = front.length ? front : alive(1 - att.side);
       if (!enemies.length) return;
       const walls = enemies.filter((u) => u.kw.includes('rempart'));
-      const t = c.rnd(walls.length ? walls : enemies);
+      const t = facing(att, walls.length ? walls : enemies);
       log({ t: 'attack', cid: att.cid, target: t.cid });
       const da = att.atk, dt = t.atk;
       hit(t, da, att, 'attack');
@@ -1175,22 +1354,62 @@
       fire(att, 'attack', t);
       for (const v of alive(att.side)) fire(v, 'allyAttack', att, t);
       if (players[att.side].law === 'vents' && !att.dead) c.buff(att, 1, 0);
+      if (!att.dead && att.hp > 0) {
+        const f = att.form;
+        if (f && f.fam === 'tempete' && f.row === 0) c.buff(att, f.lvl, 0);
+        const vie = forms[att.side].find((g) => g.fam === 'vie' && g.row === 1);
+        if (vie && att.row === 0) c.heal(att, vie.lvl);
+      }
       flush();
       resolveDeaths();
     }
 
+    // Seul l'avant attaque, de gauche à droite (une formation de Comètes passe devant).
     function nextAttacker(s) {
-      const able = alive(s).filter((u) => u.atk > 0);
+      const able = inRow(s, 0).filter((u) => u.atk > 0);
       if (!able.length) return null;
-      let cand = able.find((u) => !u.attacked);
+      const quick = (u) => u.form && u.form.fam === 'comete' && u.form.row === 0;
+      const order = able.filter(quick).concat(able.filter((u) => !quick(u)));
+      let cand = order.find((u) => !u.attacked);
       if (!cand) {
         for (const u of alive(s)) u.attacked = false;
-        cand = able[0];
+        cand = order[0];
       }
       return cand;
     }
 
+    // Effets de formation au début du combat.
+    function applyForm(s, f) {
+      const L = f.lvl, d = 2 * L, e = 1 - s;
+      const F = f.units.filter((u) => !u.dead && u.hp > 0);
+      if (!F.length) return;
+      switch (f.fam + ':' + f.row) {
+        case 'vie:0': for (const u of F) c.buff(u, L, L); break;
+        case 'envers:0': for (const u of F.slice(0, L)) c.kw(u, 'renaissance'); break;
+        case 'envers:1': for (const u of inRow(e, 0).filter((v) => v.atk > v.hp).sort((x, y) => y.atk - x.atk).slice(0, L)) c.swap(u); break;
+        case 'brasier:0': for (const u of F) c.dmg(u, facing(u, inRow(e, 0)), L); break;
+        case 'brasier:1': { const t = inRow(e, 0).sort((x, y) => x.hp - y.hp)[0]; if (t) c.dmg(F[0], t, d); break; }
+        case 'glace:0': for (const u of F.slice(0, L)) c.kw(u, 'bouclier'); break;
+        case 'glace:1': for (const u of inRow(e, 0)) if (u.atk > 0) c.buff(u, -Math.min(L, u.atk), 0); break;
+        case 'tempete:1': for (const u of inRow(s, 0)) c.buff(u, L, 0); break;
+        case 'mineral:0': { for (const u of F) c.buff(u, 0, d); c.kw(F.slice().sort((x, y) => y.hp - x.hp)[0], 'rempart'); break; }
+        case 'mineral:1': for (const u of inRow(s, 0)) c.buff(u, 0, d); break;
+        case 'machine:0': for (const u of F) c.buff(u, d, 0); break;
+        case 'machine:1': for (const u of F) { const t = ahead(u); if (!t) continue; for (const k of u.kw) if (k !== 'arrimage') c.kw(t, k); c.buff(t, L, L); } break;
+        case 'lune:0': for (const u of F) for (const v of c.neighbors(u)) c.buff(v, L, L); break;
+        case 'lune:1': for (const u of F) c.buff(ahead(u), d, d); break;
+        case 'comete:0': for (const u of F) c.buff(u, L, 0); break;
+        case 'cristal:0': { const k = forms[s].some((g) => g.fam === 'cristal' && g.row === 1) ? 2 * L : L; for (const u of F) c.buff(u, k, k); break; }
+        case 'cristal:1': for (const u of c.alliesFam(s, 'cristal')) c.buff(u, L, L); break;
+        case 'anomalie:0': for (const u of F) for (let i = 0; i < L; i++) c.randomKw(u); break;
+        case 'anomalie:1': for (const u of shuffle(inRow(s, 0), rng).slice(0, L)) c.randomKw(u); break;
+        default: break; // vie:1, neant, tempete:0 et comete:1 agissent pendant le combat.
+      }
+    }
+
     log({ t: 'start', boards: snapAll() });
+    // Un système rangé tout à l'arrière avance aussitôt.
+    advance();
     let turn = sides[0].length > sides[1].length ? 0 : sides[1].length > sides[0].length ? 1 : rng() < 0.5 ? 0 : 1;
     log({ t: 'first', side: turn });
     for (const s of [turn, 1 - turn]) {
@@ -1199,11 +1418,17 @@
       if (p.law === 'chaos') { log({ t: 'law', side: s, law: p.law }); c.randomKw(c.rnd(alive(s))); }
       if (p.law === 'stase' && first) { log({ t: 'law', side: s, law: p.law }); for (const u of alive(s).slice(0, 2)) c.kw(u, 'bouclier'); }
     }
+    // Les formations sont comptées pour les deux camps avant d'agir.
+    for (const s of [0, 1]) {
+      forms[s] = groupForms(alive(s));
+      for (const f of forms[s]) for (const u of f.units) u.form = f;
+    }
     for (const s of [turn, 1 - turn]) {
-      const al = allianceOf(alive(s));
-      if (!al || (!ALLIANCE.atk && !ALLIANCE.hp)) continue;
-      log({ t: 'alliance', side: s, fams: al });
-      for (const u of alive(s)) if (al.includes(famOf(u))) c.buff(u, ALLIANCE.atk, ALLIANCE.hp);
+      for (const f of forms[s]) {
+        log({ t: 'formation', side: s, fam: f.fam, row: f.row, lvl: f.lvl, cids: f.units.map((u) => u.cid) });
+        applyForm(s, f);
+        flush();
+      }
     }
     for (const s of [turn, 1 - turn]) for (const u of alive(s)) fire(u, 'start');
     flush();
@@ -1235,14 +1460,6 @@
     const damage = winner < 0 ? 0 : players[winner].tier + surv.reduce((s, u) => s + cardOf(u).tier, 0);
     log({ t: 'end', winner, damage });
     return { events: ev, winner, damage, survivors: surv.length };
-  }
-
-  // Les deux familles d'une Alliance (les plus nombreuses), ou null.
-  function allianceOf(units) {
-    const n = {};
-    for (const u of units) { const f = famOf(u); if (f !== 'neutre') n[f] = (n[f] || 0) + 1; }
-    const top = Object.entries(n).filter(([, k]) => k >= ALLIANCE.min).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
-    return top.length >= 2 ? [top[0][0], top[1][0]] : null;
   }
 
   // ─── Bots ───────────────────────────────────────────────────
@@ -1296,17 +1513,18 @@
     }
   }
 
-  // Force d'un plateau : quelques combats simulés contre les plateaux actuels des rivaux.
-  function simScore(state, p, board) {
-    const opps = alivePlayers(state).filter((q) => q.id !== p.id && q.board.length);
+  // Force d'un plateau : quelques combats simulés contre les systèmes que les rivaux ont joués au
+  // dernier combat (ce que tout joueur peut voir), pas contre leur système du moment.
+  function simScore(state, p, board, nOpp) {
+    const opps = alivePlayers(state).filter((q) => q.id !== p.id && q.seen && q.seen.length);
     if (!opps.length || !board.length) return 0;
     let score = 0;
-    for (let k = 0; k < Math.min(BOT.simOpp, opps.length); k++) {
+    for (let k = 0; k < Math.min(nOpp || BOT.simOpp, opps.length); k++) {
       const op = opps[(k + state.round) % opps.length];
       for (let t = 0; t < 2; t++) {
         const fs = { seed: state.seed, rc: 0, families: state.families, uidc: 1000000, pool: {} };
         const me = { id: 'sim', law: p.law, tier: p.tier, board: JSON.parse(JSON.stringify(board)) };
-        const them = { id: 'opp', law: op.law, tier: op.tier, board: JSON.parse(JSON.stringify(op.board)) };
+        const them = { id: 'opp', law: op.law, tier: op.tier, board: JSON.parse(JSON.stringify(op.seen)) };
         const r = fight(fs, me, them, 'sim:' + p.id + ':' + state.round + ':' + k + ':' + t, false);
         score += r.winner === 0 ? 1 + r.damage * 0.05 : r.winner === 1 ? -1 - r.damage * 0.05 : 0;
       }
@@ -1329,6 +1547,68 @@
       if (!best || total > best.total) best = Object.assign({}, o, { total, gain });
     }
     return best;
+  }
+
+  // ─── Placement des bots ─────────────────────────────────────
+  // Ce qu'un astre apporte à l'avant : de quoi frapper et encaisser. Ceux qui grandissent quand un
+  // allié tombe préfèrent l'arrière, d'où ils avancent plus forts.
+  function frontValue(u) {
+    const c = cardOf(u);
+    let v = u.atk + u.hp * 0.8;
+    if (u.kw.includes('rempart')) v += 8;
+    if (u.kw.includes('bouclier')) v += 3;
+    if (u.kw.includes('venin') || u.kw.includes('rafale') || u.kw.includes('megarafale')) v += 4;
+    if (u.kw.includes('renaissance')) v += 2;
+    if (typeof c.allyDeath === 'function') v -= 6;
+    return v;
+  }
+  // Quelques placements candidats : les plus solides devant (pour chaque taille d'avant possible),
+  // puis les deux familles les plus nombreuses regroupées devant ou derrière.
+  function placements(board) {
+    const n = board.length;
+    const kMin = Math.max(1, n - ROW_MAX), kMax = Math.min(ROW_MAX, n);
+    const order = board.slice().sort((a, b) => frontValue(b) - frontValue(a));
+    const build = (pref, k) => {
+      const front = pref.slice(0, k);
+      for (const u of order) if (front.length < k && !front.includes(u)) front.push(u);
+      return front;
+    };
+    const out = [];
+    for (let k = kMax; k >= kMin; k--) out.push(build([], k));
+    const fams = FAMILY_KEYS.map((f) => board.filter((u) => famOf(u) === f)).filter((l) => l.length >= FORM_MIN).sort((a, b) => b.length - a.length).slice(0, 2);
+    for (const l of fams) {
+      const mine = order.filter((u) => l.includes(u));
+      out.push(build(mine, Math.max(kMin, Math.min(kMax, Math.max(mine.length, Math.ceil(n / 2))))));
+      const rest = order.filter((u) => !l.includes(u));
+      const k = Math.max(kMin, Math.min(kMax, n - Math.min(mine.length, ROW_MAX)));
+      out.push(build(rest, k));
+    }
+    const seen = new Set();
+    return out.filter((front) => { const key = front.map((u) => u.uid).sort().join(','); if (seen.has(key)) return false; seen.add(key); return true; });
+  }
+  function applyPlacement(p, front) {
+    const back = p.board.filter((u) => !front.includes(u));
+    for (const u of front) u.row = 0;
+    for (const u of back) u.row = 1;
+    p.board = front.concat(back);
+  }
+  // L'IA experte essaie ses placements contre les systèmes vus au dernier combat.
+  function botArrange(state, p) {
+    arrange(p);
+    if (p.board.length <= 1) { for (const u of p.board) u.row = 0; return; }
+    const cands = placements(p.board);
+    let best = cands[0];
+    if (expert(p) && state.round >= 2 && cands.length > 1) {
+      const nOpp = state.players.length <= 2 ? 1 : 2;
+      let top = -Infinity;
+      for (const front of cands) {
+        const back = p.board.filter((u) => !front.includes(u));
+        const board = front.map((u) => Object.assign({}, u, { row: 0 })).concat(back.map((u) => Object.assign({}, u, { row: 1 })));
+        const sc = simScore(state, p, board, nOpp);
+        if (sc > top + 1e-9) { top = sc; best = front; }
+      }
+    }
+    applyPlacement(p, best);
   }
 
   function botTurn(state, p) {
@@ -1374,6 +1654,7 @@
       const keep = p.shop.some((id) => id && (ownedCopies(p, id).length >= 1 || (CARD[id].fam === p.pref && CARD[id].tier >= p.tier)));
       if (keep) freeze(state, p);
     }
+    botArrange(state, p);
   }
 
   // ─── Fin de cycle : combats, dégâts, éliminations ───────────
@@ -1388,6 +1669,8 @@
     for (const p of players) if (p.bot) botTurn(state, p);
     const myEndEvents = me.alive ? endTurnEffects(state, me) : [];
     for (const p of players) if (p.bot) endTurnEffects(state, p);
+    // Les systèmes tels qu'ils combattent : chacun peut ensuite voir celui de ses rivaux.
+    for (const p of players) { arrange(p); p.seen = JSON.parse(JSON.stringify(p.board)); }
 
     const rng = rngFor(state, 'pairs:' + state.round);
     const cap = players.length > 3 ? DAMAGE_CAP : Infinity;
@@ -1425,7 +1708,7 @@
     // Loi du phénix : la première chute ramène à la vie au lieu d'éliminer.
     for (const p of players) if (p.hp <= 0 && p.law === 'phenix' && !p.reborn) {
       p.reborn = true;
-      p.hp = PHENIX_HP;
+      p.hp = PHENIX_HP * (p.hpMult || 1);
       if (battle && p === me) battle.reborn = true;
     }
     if (battle) battle.after = { me: me.hp, opp: battle.opponent.ghost ? null : findPlayer(state, battle.opponent.id).hp };
@@ -1458,7 +1741,7 @@
       state.over = true;
       state.phase = 'over';
       state.rank = me.rank;
-      state.reward = REWARDS[me.rank] || 0;
+      state.reward = rewardsOf(state)[me.rank] || 0;
       return { ok: true, battle, results, fallen: fallen.map((p) => p.id), endEvents: myEndEvents, over: true, rank: me.rank, reward: state.reward };
     }
 
@@ -1495,13 +1778,14 @@
     if (me.discover.length) return fail('Choisissez d’abord votre découverte.');
     const endEvents = endTurnEffects(state, me);
     if (host) for (const p of alivePlayers(state)) if (p.bot) { botTurn(state, p); endTurnEffects(state, p); }
+    arrange(me);
     state.phase = 'lock';
     return { ok: true, endEvents };
   }
   // La loi d'un autre joueur (et les PV de départ qu'elle donne) : les dégâts déjà subis restent.
   function mpSeatLaw(p, law) {
     if (!p || !law || !LAW[law] || p.law === law) return;
-    const mh = LAW[law].hp || START_HP;
+    const mh = (LAW[law].hp || START_HP) * (p.hpMult || 1);
     p.hp += mh - p.maxHp;
     p.maxHp = mh;
     p.law = law;
@@ -1543,6 +1827,7 @@
       p.tier = sn.tier || p.tier;
       mpSeatLaw(p, sn.law);
     }
+    for (const [gid, p] of byGid) p.seen = JSON.parse(JSON.stringify(snaps[gid] && p !== me ? snaps[gid].board || [] : p.board));
     const { pairs, odd } = mpPairs(state.seed, state.round, [...byGid.keys()]);
     if (odd && state.ghost) pairs.push([odd, 'ghost']);
     // Si l'hôte a retenu un autre plateau pour nous (publication en retard), on combat avec
@@ -1583,7 +1868,7 @@
     }
     for (const p of players) if (p.hp <= 0 && p.law === 'phenix' && !p.reborn) {
       p.reborn = true;
-      p.hp = PHENIX_HP;
+      p.hp = PHENIX_HP * (p.hpMult || 1);
       if (battle && p === me) battle.reborn = true;
     }
     if (battle) battle.after = { me: me.hp, opp: myOpp.ghost ? null : myOpp.hp };
@@ -1608,7 +1893,7 @@
       state.over = true;
       state.phase = 'over';
       state.rank = me.rank;
-      state.reward = REWARDS[me.rank] || 0;
+      state.reward = rewardsOf(state)[me.rank] || 0;
       return { ok: true, battle, results, fallen: fallen.map((p) => p.id), endEvents: endEvents || [], over: true, rank: me.rank, reward: state.reward };
     }
     state.round++;
@@ -1634,7 +1919,7 @@
   }
 
   return {
-    rollCost, ALLIANCE, allianceOf, LEGEND_SHOP, LEGEND_DISCOVER, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
+    rollCost, DUEL, isDuel, rewardsOf, ROW_MAX, FORM_MIN, FORMATIONS, formationsOf, formText, layout, arrange, rowOf, move, botArrange, LEGEND_SHOP, LEGEND_DISCOVER, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
     FAMILIES, FAMILY_KEYS, KEYWORDS, CARDS, CARD, LAWS, LAW,
     cardOf, famOf, cardText, upgradeCost, lawChoices, newGame, alivePlayers,
     buy, canBuy, play, canMagnet, sell, roll, freeze, upgrade, reorder, usePower, canUsePower, choose, endTurn,

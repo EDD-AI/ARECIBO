@@ -12,6 +12,7 @@ function invariant(s) {
   for (const p of s.players) {
     if (!p.alive) continue;
     assert.ok(p.board.length <= R.BOARD_MAX, 'système trop grand');
+    assert.ok(p.board.filter((u) => u.row !== 1).length <= R.ROW_MAX && p.board.filter((u) => u.row === 1).length <= R.ROW_MAX, 'rangée trop grande');
     assert.ok(p.hand.length <= R.HAND_MAX, 'main trop grande');
     assert.ok(p.gold >= 0, 'énergie négative');
     for (const u of p.board.concat(p.hand)) {
@@ -235,20 +236,106 @@ test('textes : nombres doublés pour les dorés, pas de marqueur restant', () =>
   assert.equal(R.cardText('gaia', true), 'Habitable : fin de cycle, avec un Soleil, gagne +2/+2.');
 });
 
-test('Alliance : deux familles de 3 astres gagnent +1/+1 au début du combat', () => {
-  const s = gameWith('envers', 'al1');
-  const mk = (id) => ({ uid: 'x' + Math.random(), id, golden: false, atk: R.CARD[id].atk, hp: R.CARD[id].hp, kw: (R.CARD[id].kw || []).slice(), att: [] });
-  const duo = [mk('silex'), mk('agate'), mk('basalte'), mk('nive'), mk('givre'), mk('boreale'), mk('errante')];
-  assert.deepEqual(R.allianceOf(duo).slice().sort(), ['glace', 'mineral']);
-  assert.equal(R.allianceOf(duo.slice(0, 5)), null, 'il faut 3 astres de chaque famille');
-  const A = { id: 'A', tier: 1, law: 'symbiose', board: duo };
-  const B = { id: 'B', tier: 1, law: 'symbiose', board: [mk('errante')] };
-  const r = R.fight(s, A, B, 'alliance', true);
-  const al = r.events.find((e) => e.t === 'alliance');
-  assert.ok(al && al.side === 0, 'Alliance annoncée pour le premier système');
-  const i = r.events.indexOf(al);
-  const buffs = r.events.slice(i + 1, i + 7).filter((e) => e.t === 'buff' && e.a === R.ALLIANCE.atk && e.h === R.ALLIANCE.hp);
-  assert.equal(buffs.length, 6, 'les six astres alliés sont renforcés, pas le neutre');
+const unit = (id, extra = {}) => Object.assign({ uid: 'x' + Math.random(), id, golden: false, atk: R.CARD[id].atk, hp: R.CARD[id].hp, kw: (R.CARD[id].kw || []).slice(), att: [] }, extra);
+
+test('formations : deux astres d’une famille dans une rangée, niveau = nombre − 1', () => {
+  const board = [unit('silex', { row: 0 }), unit('agate', { row: 0 }), unit('basalte', { row: 0 }), unit('nive', { row: 1 }), unit('givre', { row: 1 }), unit('errante', { row: 1 })];
+  assert.deepEqual(R.formationsOf(board), [
+    { fam: 'mineral', row: 0, n: 3, lvl: 2 },
+    { fam: 'glace', row: 1, n: 2, lvl: 1 }
+  ]);
+  assert.deepEqual(R.formationsOf(board.slice(0, 1).concat(board.slice(3, 4))), [], 'un seul astre par famille : pas de formation');
+  for (const f of R.FAMILY_KEYS) for (const row of [0, 1]) assert.ok(!/[{}]/.test(R.formText(f, row, 2)), f + row);
+  // Au combat : la formation de Glace à l'arrière retire 1 Attaque aux ennemis de l'avant.
+  const s = gameWith('envers', 'fo1');
+  const A = { id: 'A', tier: 1, law: 'symbiose', board };
+  const B = { id: 'B', tier: 1, law: 'symbiose', board: [unit('errante', { atk: 4, hp: 30 }), unit('errante', { atk: 4, hp: 30 })] };
+  const r = R.fight(s, A, B, 'formations', true);
+  const forms = r.events.filter((e) => e.t === 'formation' && e.side === 0).map((e) => e.fam + ':' + e.row + ':' + e.lvl);
+  assert.deepEqual(forms.sort(), ['glace:1:1', 'mineral:0:2']);
+  const enemies = r.events[0].boards[1].map((u) => u.cid);
+  for (const cid of enemies) assert.ok(r.events.some((e) => e.t === 'buff' && e.cid === cid && e.a === -1), 'gel de l’ennemi ' + cid);
+});
+
+test('placement : seul l’avant attaque ; l’arrière, à l’abri, avance quand l’avant tombe', () => {
+  const s = gameWith('envers', 'pl1');
+  const A = { id: 'A', tier: 1, law: 'symbiose', board: [unit('errante', { atk: 1, hp: 2, row: 0 }), unit('errante', { atk: 9, hp: 40, row: 1 })] };
+  const B = { id: 'B', tier: 1, law: 'symbiose', board: [unit('errante', { atk: 3, hp: 40, row: 0 })] };
+  const r = R.fight(s, A, B, 'rows', true);
+  const [front, back] = r.events[0].boards[0].map((u) => u.cid);
+  const adv = r.events.findIndex((e) => e.t === 'advance' && e.side === 0);
+  assert.ok(adv > 0, 'l’arrière avance');
+  const before = r.events.slice(0, adv);
+  assert.ok(!before.some((e) => e.t === 'attack' && (e.cid === back || e.target === back)), 'avant l’avance, l’arrière n’attaque pas et n’est pas visé');
+  assert.ok(before.some((e) => e.t === 'attack' && e.cid === front));
+  assert.ok(r.events.slice(adv).some((e) => e.t === 'attack' && e.cid === back), 'puis il combat');
+  assert.equal(r.winner, 0);
+});
+
+test('ciblage : chaque astre de l’avant frappe l’ennemi en face de lui', () => {
+  const s = gameWith('envers', 'pl2');
+  const A = { id: 'A', tier: 1, law: 'symbiose', board: [unit('errante', { atk: 1, hp: 90 }), unit('errante', { atk: 1, hp: 90 })] };
+  const B = { id: 'B', tier: 1, law: 'symbiose', board: [unit('errante', { atk: 1, hp: 90 }), unit('errante', { atk: 1, hp: 90 })] };
+  const r = R.fight(s, A, B, 'facing', true);
+  const [a0, a1] = r.events[0].boards[0].map((u) => u.cid), [b0, b1] = r.events[0].boards[1].map((u) => u.cid);
+  const attacks = r.events.filter((e) => e.t === 'attack');
+  assert.ok(attacks.length > 8);
+  for (const e of attacks) {
+    if (e.cid === a0) assert.equal(e.target, b0);
+    if (e.cid === a1) assert.equal(e.target, b1);
+    if (e.cid === b0) assert.equal(e.target, a0);
+  }
+});
+
+test('rangées : 4 places chacune, placement choisi, échange quand la rangée visée est pleine', () => {
+  const s = gameWith('mineral', 'pl3');
+  const p = s.players[0];
+  p.board = [];
+  for (let i = 0; i < 6; i++) p.hand.push(unit(i < 4 ? 'errante' : 'silex', { uid: 'h' + i }));
+  for (let i = 0; i < 4; i++) assert.equal(R.play(s, 'h' + i, null, null, p).row, 0);
+  assert.equal(R.play(s, 'h4', null, null, p).row, 1, 'avant complet : l’astre passe à l’arrière');
+  assert.equal(R.play(s, 'h5', 0, null, p, 0).ok, false, 'l’avant est complet');
+  assert.equal(R.play(s, 'h5', 0, null, p, 1).ok, true);
+  assert.deepEqual(p.board.map((u) => u.row), [0, 0, 0, 0, 1, 1]);
+  assert.equal(p.board[4].uid, 'h5', 'placé en tête de l’arrière');
+  const r = R.move(s, 'h5', 0, 1, p);
+  assert.equal(r.ok, true);
+  assert.equal(r.swapped, 'h1', 'l’astre de l’avant prend la place libérée');
+  assert.deepEqual(p.board.map((u) => u.uid), ['h0', 'h5', 'h2', 'h3', 'h1', 'h4']);
+  assert.deepEqual(p.board.map((u) => u.row), [0, 0, 0, 0, 1, 1]);
+  assert.equal(R.reorder(s, 'h3', 0, p).ok, true);
+  assert.deepEqual(p.board.slice(0, 4).map((u) => u.uid), ['h3', 'h0', 'h5', 'h2']);
+  // Une ancienne sauvegarde sans rangées : les astres au-delà de 4 passent à l'arrière.
+  const [front, back] = R.layout([1, 2, 3, 4, 5, 6].map((i) => ({ id: 'errante', uid: 'o' + i })));
+  assert.equal(front.length, 4);
+  assert.equal(back.length, 2);
+});
+
+test('duel : deux univers, PV doublés, une douzaine de manches, récompenses du duel', () => {
+  let rounds = 0;
+  const N = 24;
+  for (let g = 0; g < N; g++) {
+    const s = R.newGame('duel-' + g, R.LAWS[g % R.LAWS.length].id, { size: 2 });
+    assert.equal(s.players.length, 2);
+    assert.ok(R.isDuel(s));
+    const law = R.LAW[s.players[0].law];
+    assert.equal(s.players[0].hp, (law.hp || R.START_HP) * R.DUEL.hp);
+    for (let i = 0; i < 60 && !s.over; i++) {
+      R.botTurn(s, s.players[0]);
+      invariant(s);
+      const res = R.endTurn(s);
+      assert.equal(res.ok, true);
+      assert.ok(res.battle, 'un combat à chaque manche');
+      assert.equal(res.battle.opponent.id, s.players[1].id);
+      for (const p of s.players) if (p.alive) assert.deepEqual(p.seen.map((u) => u.uid), p.board.map((u) => u.uid));
+    }
+    assert.equal(s.over, true);
+    assert.ok(s.rank === 1 || s.rank === 2);
+    assert.equal(s.reward, R.DUEL.rewards[s.rank]);
+    rounds += s.round;
+  }
+  const avg = rounds / N;
+  assert.ok(avg >= 8 && avg <= 18, 'durée moyenne d’un duel : ' + avg.toFixed(1));
 });
 
 test('lois de vie : PV de départ, énergie du sacrifice, renaissance du phénix', () => {

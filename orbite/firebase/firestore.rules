@@ -61,7 +61,8 @@ service cloud.firestore {
       function member() { return request.auth.uid in get(/databases/$(database)/documents/matches/$(mid)).data.uids; }
       allow read: if signedIn();
       allow create: if signedIn()
-        && n().keys().hasOnly(['mode', 'code', 'status', 'host', 'uids', 'seats', 'bracket', 'created', 'seed', 'beat'])
+        && n().keys().hasOnly(['mode', 'code', 'status', 'host', 'uids', 'seats', 'bracket', 'created', 'seed', 'beat', 'size'])
+        && (!('size' in n()) || n().size == 2)
         && n().host == request.auth.uid
         && n().uids == [request.auth.uid]
         && n().status == 'waiting'
@@ -69,7 +70,7 @@ service cloud.firestore {
         && n().code is string && n().code.size() == 6;
       // Les membres font vivre la partie (lancement, battements, relais de l'hôte) ; un nouveau
       // venu ne peut que s'ajouter à un salon en attente.
-      allow update: if signedIn() && n().uids.size() <= 8 && (
+      allow update: if signedIn() && n().uids.size() <= ('size' in m() ? m().size : 8) && (
         request.auth.uid in m().uids
         || (m().status == 'waiting'
             && request.auth.uid in n().uids
