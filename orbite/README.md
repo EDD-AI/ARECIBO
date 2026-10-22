@@ -1,16 +1,20 @@
 # ORBITE
 
-Jeu de stratégie de planètes, pensé pour le téléphone. **Jouer** ouvre désormais le prototype du **plateau commun** : deux à six participants, achats, familles, ordres simultanés et orbites mobiles. Il se joue contre des IA ou entre amis sur le même appareil. Les positions et les blessures persistent entre les manches ; les relais et les étoiles offrent deux objectifs de victoire.
+Jeu de stratégie de planètes, pensé pour le téléphone. Le cœur du jeu est le **duel** : un contre un,
+cycle après cycle. On choisit une **loi** (elle donne un premier astre), on achète des planètes dans la
+**Création** (là où naissent les astres), puis on les **place sur deux rangées** : l’avant attaque et
+encaisse, l’arrière reste à l’abri et avance quand l’avant tombe. Chaque astre de l’avant frappe
+l’ennemi **en face** de lui, sans hasard : le placement décide. Deux astres d’une même famille dans la
+même rangée forment une **formation**. Le système combat ensuite seul ; le premier à 0 PV perd.
 
-Pour essayer le jeu, voir [`JOUER.md`](JOUER.md) : démarrage immédiat contre l’IA, aide contextuelle et export autonome à ouvrir sur ordinateur. Les règles, statistiques de départ et limites du prototype sont décrites dans [`PLATEAU.md`](PLATEAU.md). Le nouveau plateau n’est pas encore connecté aux salons en ligne et son équilibrage reste expérimental.
-
-L’**Affrontement classique** contre sept univers reste accessible dans **Multijoueur → Autres modes**, avec son moteur et ses sauvegardes. La campagne est masquée au menu ; son code et sa progression sont conservés. Les sections historiques ci-dessous décrivent encore ces systèmes.
+La **mêlée à 8** (contre 7 univers rivaux) suit les mêmes règles ; elle est rangée dans
+**Multijoueur**, hors ligne ou en ligne, avec les duels en ligne. La campagne (la Genèse) est masquée
+au menu ; son code et sa progression sont conservés.
 
 > **Vers le Play Store** : les règles à respecter dans chaque version et la checklist de lancement
 > sont dans [`LANCEMENT.md`](LANCEMENT.md).
 
-- `index.html` : menu principal et modes historiques (portrait, tactile, installable comme une application).
-- `plateau.html` : prototype du plateau commun ; règles dans `js/plateau.js`, simulations dans `tools/plateau-sim.js`.
+- `index.html` : le jeu (portrait, tactile, installable comme une application).
 - `atelier.html` : le générateur de planètes (bouton GÉNÉRER, export PNG et GIF en boucle).
 - `batisseur.html` : le générateur de bâtiments de colonie (dômes, serres, forages, fusées…), export PNG.
 
@@ -24,7 +28,11 @@ L’**Affrontement classique** contre sept univers reste accessible dans **Multi
 4. **Menu** : **votre planète** se lève sur l’horizon et tourne très lentement, des poussières
    montent du sol, des étoiles filantes passent. La première fois, « Voilà votre terrain de jeu. »
    s’écrit au centre.
-5. Menu : **Jouer · Plateau commun**, **Multijoueur · Autres modes**, **Marché stellaire**, **Paramètres**, et le **profil**. Jouer ouvre directement la configuration du plateau. Les autres modes conservent l’accès à l’affrontement classique et à ses salons historiques.
+5. Menu : **Jouer · Duel 1 contre 1**, **Multijoueur · En ligne · Mêlée à 8**, **Création**,
+   **Marché stellaire**, **Paramètres**, et en haut à droite le **profil** (pseudo, niveau, avatar =
+   votre planète). **Jouer** lance un duel contre l’IA (ou reprend la partie en cours, quel que soit
+   son mode). **Multijoueur** propose les duels en ligne, la mêlée à 8 en ligne et la mêlée à 8 hors
+   ligne.
 
 Les **Paramètres** restent courts : son, musique, **Tutoriels et aide**, installation et crédits.
 La progression (niveau, poussières, planète, historique) ne peut pas être effacée depuis le jeu. **Tutoriels et aide** regroupe en un seul bouton :
@@ -300,18 +308,18 @@ Pensé pour quelqu’un qui n’a jamais joué à un jeu de ce genre. Un « coac
 éclaire ce qu’il faut toucher, montre le geste avec un doigt animé (toucher ou glisser) et explique
 en une phrase. Il avance quand le joueur fait l’action demandée, ou sur « SUIVANT ».
 
-- **Guide du menu** (première visite) : Jouer solo (ouvre Campagne et Affrontement), Marché
-  stellaire et poussières d’étoiles, Profil, Paramètres.
+- **Guide du menu** (première visite) : Jouer (le duel), Multijoueur (duels en ligne et mêlée à
+  8), Création, Marché stellaire et poussières d’étoiles, Profil, Paramètres.
 - **Campagne** : le premier combat est guidé, et la carte en relief a son propre guide
   (`MAP_STEPS`).
-- **Première partie guidée** :
+- **Premier duel guidé** :
   - le choix de la loi ;
   - les PV et l’énergie ;
-  - lire une fiche puis acheter, et glisser l’astre de la main au système ;
-  - l’ordre d’attaque et le combat ;
-  - le calcul des dégâts ;
-  - actualiser, geler, monter de niveau, vendre, le pouvoir et les rivaux ;
-  - enfin, les astres dorés et le podium.
+  - lire une fiche puis acheter, et glisser l’astre de la main vers l’avant ou l’arrière ;
+  - les deux rangées (l’avant attaque l’ennemi en face, l’arrière avance) et le combat ;
+  - le calcul des dégâts, puis les formations ;
+  - actualiser, geler, monter de niveau, vendre, le pouvoir, et le système du rival à contrer ;
+  - enfin, les astres dorés et les poussières du duel gagné.
 - « Passer le tutoriel » est proposé à chaque étape. Paramètres → **Tutoriels et aide** les
   relance : guide du menu, tutoriel de partie (la prochaine partie est alors guidée) et tutoriels
   de campagne (premier combat et carte).
@@ -396,7 +404,7 @@ Profil → **SUCCÈS** : 100 objectifs en 10 catégories, chacun rapporte de 1 �
 | Familles | 24 | « Champion » (gagner avec une majorité de la famille) et « Fidèle » (10 parties avec elle), pour les 12 familles |
 | Lois | 5 | jouer les 15 lois, gagner avec 5 lois, gagner avec la Loi du sacrifice, de l’endurance, du phénix après renaissance |
 | Légendaires | 7 | en posséder un, puis chacun des 6 en fin de partie |
-| Exploits | 7 | gagner sans perdre un combat, avec 3 PV ou moins, en 12 cycles ; 7 astres, 3 dorés, une Alliance |
+| Exploits | 7 | gagner sans perdre un combat, avec 3 PV ou moins, en 12 cycles ; 7 astres, 3 dorés, deux formations |
 | En ligne | 10 | première partie, victoire, 10 parties, partie privée, placement, rangs Lune → Singularité |
 | Création | 5 | débloquer, semer 3 graines, taille 15, allumer l’étoile, 6 mondes en orbite |
 | Colonie | 9 | tour de contrôle, 10 / 25 bâtiments, 10 / 25 / 50 colons, 400 de recherche, tout le terrain, 20 arbres |
@@ -622,14 +630,20 @@ sphère (Neutre), et les treize couleurs de familles sont nettement distinctes.
 
 Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne »).
 
-- **Partie classée** : recherche de créateurs de votre rang.
+- **Duel en ligne** : « Rechercher un duel » cherche un créateur de votre rang ; personne au bout de
+  40 secondes ? Un univers rival (bot) prend la place. « Défier un ami » crée un duel privé avec un
+  code. Un duel classé compte comme une 2e place s’il est gagné (+18 points de base) et une 6e s’il
+  est perdu (−18). Le salon porte `size: 2` (`MP.seatsOf`) ; les règles Firestore l’acceptent depuis
+  la v68 (à republier dans la console).
+- **Mêlée à 8 hors ligne** : la carte en bas de l’écran Multijoueur, sans connexion.
+- **Mêlée classée** : recherche de créateurs de votre rang.
   - La tolérance s’élargit d’un rang toutes les 10 secondes ; on rejoint le salon en attente le
     plus ancien.
   - Au bout de 40 secondes, ou à 8 joueurs, la partie commence. Les places libres sont tenues par
     des univers rivaux (bots).
   - Le résultat compte pour le classement (c’est le seul mode qui en donne).
-- **Partie privée** : « Créer une partie » donne un **code de session** de 6 caractères, à
-  partager. Les amis le saisissent puis « Rejoindre ». L’hôte lance quand il veut ; les places
+- **Mêlée privée** : « Créer une mêlée privée » donne un **code de session** de 6 caractères, à
+  partager. Les amis le saisissent dans « Rejoindre un ami ». L’hôte lance quand il veut ; les places
   libres vont aux bots. Une partie privée ne compte pas pour le classement.
 - **Déroulement** :
   - Chacun choisit une loi parmi trois, en 20 secondes, dans les familles de la partie (les mêmes
@@ -829,7 +843,7 @@ En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 
 | Élément | Valeur |
 |---|---|
-| Univers par partie | 8 (vous + 7 bots) |
+| Univers par partie | **duel : 2** (vous + 1 rival) · mêlée : 8 (vous + 7 bots) |
 | Familles | 12 au total, **5 actives par partie** (dont celle de votre loi) + les neutres : 792 combinaisons |
 | Lois | 15 : 12 de famille + 3 lois de vie neutres (Sacrifice 22 PV et +1 énergie par cycle, Endurance 45 PV, Phénix 25 PV et une renaissance à 15 PV), 3 proposées au départ ; les bots ne prennent que des lois de famille |
 | Astres | 9 par famille + 8 neutres = **116**, + **6 légendaires** ; **53 achetables** dans une partie, plus les légendaires |
@@ -838,10 +852,11 @@ En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 | Énergie | 3 au premier cycle, +1 par cycle, maximum 10 |
 | Coûts | acheter 3 · vendre +1 · actualiser 1 · geler gratuit |
 | Montée de niveau | 5 / 7 / 8 / 9 / 10, −1 à chaque cycle sans monter |
-| Système / main | 7 orbites / 10 astres |
-| PV de départ | 30 |
-| Dégâts du perdant | niveau du gagnant + niveaux des astres survivants, **plafonnés à 10 tant que plus de 3 univers sont en vie** |
-| Poussières d’étoiles | 1er : 100 · 2e : 60 · 3e : 30 · ensuite : 0 |
+| Système / main | **2 rangées de 4** (7 astres au plus) / 10 astres |
+| PV de départ | 30, **doublés en duel** (60 ; les lois de vie aussi : 44, 90, 50 et renaissance à 30) |
+| Dégâts du perdant | niveau du gagnant + niveaux des astres survivants, **plafonnés à 10 en mêlée tant que plus de 3 univers sont en vie** |
+| Poussières d’étoiles | duel gagné : 40 · perdu : 10 · mêlée : 1er 100 · 2e 60 · 3e 30 · ensuite 0 |
+| Expérience | duel : 80 (victoire) ou 25, + 5 par cycle · mêlée : selon la place, + 5 par cycle |
 
 La **réserve est partagée** : les vitrines réservent les copies, les achats les retirent, la
 vente et l’élimination les rendent. Quand un bot joue une famille, ses astres se raréfient.
@@ -955,30 +970,57 @@ Création : éclat, carillon et « LÉGENDAIRE ! » ; quand on l’achète : l�
 arc-en-ciel, grand accord et bannière à son nom. Sur 3 000 parties simulées, un système qui finit avec une
 légendaire termine en moyenne 4,24e contre 4,57e sans.
 
-## Alliance (compositions hybrides)
+## Placement et formations (v68)
 
-Un système qui réunit **deux familles d’au moins 3 astres chacune** forme une **Alliance**. Au début
-de chaque combat, les astres de ces deux familles gagnent +1/+1 (`R.ALLIANCE`, `R.allianceOf`).
-- **Pendant la création**, une étiquette dorée « ALLIANCE … » s’affiche à côté de « Votre
-  système ». Une explication apparaît la première fois. Toucher l’étiquette ouvre la fiche des
-  familles.
-- **En combat**, « ALLIANCE · … » s’annonce au-dessus du système, puis chaque astre allié gagne son
-  +1/+1.
-- **Les bots** : environ 40 % d’entre eux visent une Alliance de deux familles, les autres une
-  famille seule.
-- **Ocre** (Minéral) renforce désormais un allié aléatoire de toute famille, et plus seulement un
-  Minéral. Le Minéral devient ainsi un bon partenaire.
+Le système a **deux rangées de 4 places** (`R.ROW_MAX`), 7 astres au plus. On glisse un astre vers la
+moitié haute (l’**avant**) ou basse (l’**arrière**) ; la rangée visée s’éclaire. Rangée pleine : un
+astre déplacé **échange** sa place avec celui qu’il vise (`R.move`), un nouvel astre est refusé. La
+fiche d’un astre propose aussi « Passer à l’avant / à l’arrière ». Les anciennes sauvegardes sont
+rangées seules : au-delà de 4, les derniers astres passent à l’arrière (`R.layout`, `R.arrange`).
 
-**Mesure** avec `node orbite/tools/hybrides.js 4000` : dans les mêmes parties, la moitié des univers
-vise une famille et l’autre moitié deux.
+**Combat** (`R.fight`) :
+- Seul l’**avant** attaque, de gauche à droite, et seul l’avant ennemi peut être attaqué.
+- Chaque attaquant frappe l’ennemi **en face** de lui. Les rangées sont centrées, comme à l’écran ;
+  à égalité, celui qui a le moins de PV. Les **Remparts** de l’avant sont visés d’abord. Plus aucun
+  hasard dans les cibles (il en reste dans certains effets d’astres et de lois).
+- Quand l’avant est tombé, l’**arrière avance** (« VOTRE ARRIÈRE AVANCE ») et devient l’avant.
+  Un système rangé tout à l’arrière avance dès le début.
+- Les effets des astres (Naissance, début de combat, Effondrement…) agissent depuis les deux rangées.
+  « Voisins », « à gauche » et « à droite » s’entendent dans la même rangée. Un astre invoqué naît
+  dans la rangée de celui qui s’effondre.
 
-| | Rang moyen avant | Rang moyen après |
+**Formations** (`R.FORMATIONS`, `R.formationsOf`) : au moins **2 astres d’une même famille dans la
+même rangée**. Niveau I à 2 astres, II à 3, III à 4. Chaque famille a un effet à l’avant et un autre
+à l’arrière (n = niveau). Elles remplacent l’Alliance.
+
+| Famille | À l’avant (les astres de la formation) | À l’arrière |
 |---|---|---|
-| Une famille | 4,45 | 4,60 |
-| Deux familles | 4,55 | 4,40 |
-| Duos jouables (rang ≤ 4,75) | 50 / 66 | 62 / 66 |
+| Vie | +n/+n | après chaque attaque de votre avant, l’attaquant récupère n PV |
+| Néant | quand l’un d’eux s’effondre, les autres +n/+n | quand un astre de l’avant s’effondre, +n/+n |
+| Envers | les n premiers gagnent Renaissance | les n ennemis de l’avant les plus offensifs échangent Attaque et PV |
+| Brasier | chacun inflige n dégâts à l’ennemi en face | 2n dégâts à l’ennemi de l’avant qui a le moins de PV |
+| Glace | les n premiers gagnent Bouclier | les ennemis de l’avant perdent n Attaque |
+| Tempête | +n Attaque après chacune de leurs attaques | votre avant gagne +n Attaque |
+| Minéral | +0/+2n, le plus robuste gagne Rempart | votre avant gagne +0/+2n |
+| Machine | +2n Attaque | chacun donne ses mots-clés et +n/+n à l’astre de l’avant juste devant lui |
+| Lunes | leurs voisins de rangée +n/+n | l’astre de l’avant juste devant chacune +2n/+2n |
+| Comètes | +n Attaque, elles attaquent avant le reste de l’avant | quand l’avant est tombé, elles avancent avec +2n/+n |
+| Cristal | +n/+n, le double avec une formation de Cristal à l’arrière | tous vos Cristaux +n/+n |
+| Anomalies | n mots-clés aléatoires chacun | n astres de l’avant gagnent un mot-clé aléatoire |
 
-Les deux styles mènent à la victoire. L’écart entre les lois (`tools/equilibrage.js`) reste le même.
+À l’écran : étiquettes colorées à côté de « Votre système » (toucher pour la fiche « Vos formations »
+et les effets de chaque famille), un trait de la couleur de la famille sous chaque astre d’une
+formation, et en combat l’annonce « BRASIER II · AVANT » au-dessus de ses astres.
+
+**Repérage** : chaque joueur voit le système que son rival a joué au dernier combat (`p.seen`).
+En duel, la barre du haut montre le rival, ses PV et « voir son système ». Les bots se placent
+contre ces mêmes systèmes vus, jamais contre votre système du moment (`botArrange` : quelques
+placements candidats, chacun mis à l’épreuve par des combats simulés).
+
+**Mesures** (scripts de simulation, IA experte des deux côtés) : un duel dure en moyenne 11,7
+cycles (9 à 15 pour 80 % des parties) et finit vers le niveau 5 ; environ 2,9 formations par combat ;
+l’arrière avance dans 83 % des combats. Le placement pèse : à IA égale, un joueur qui replace ses
+astres au hasard passe de 45 % à 34 % de victoires.
 
 ## Familles
 
