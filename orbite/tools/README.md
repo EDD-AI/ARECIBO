@@ -1,35 +1,8 @@
 # Mesurer les règles et l’équilibrage d’ORBITE
 
-Deux moteurs ont leurs outils séparés : le nouveau **plateau commun** et l’**affrontement classique** à huit participants. Node.js suffit ; aucune dépendance n’est à installer. Les statistiques de l’un ne décrivent pas l’autre.
+Outils de mesure du moteur d’ORBITE (`js/rules.js`). Node.js suffit ; aucune dépendance n’est à installer. Ces outils jouent la **mêlée à huit** ; le duel se mesure avec les tests (`tests/rules.test.mjs`, « duel »).
 
-## Plateau commun
-
-Règles détaillées dans [`../PLATEAU.md`](../PLATEAU.md). Depuis la racine du dépôt :
-
-```sh
-node orbite/tools/plateau-sim.js 60 --players 2 --seed plateau-essai
-node orbite/tools/plateau-sim.js 40 --players 5 --seed plateau-amis --json
-node orbite/tools/plateau-sim.js 20 --players 3 --policy aggressive
-node orbite/tools/plateau-combinaisons.js --players 2 --units 7 --json
-```
-
-Le tournoi vérifie les invariants après chaque préparation et résolution, conserve les graines et compte les nulles prévues par les règles. `mixed` alterne les politiques `balanced`, `aggressive` et `control` entre les places. Les intervalles de Wilson sont réservés aux observations indépendantes par partie ; les observations groupées par politique restent descriptives. Une erreur fait échouer la commande.
-
-Le compteur distingue les 36 types du catalogue, les 15 types actifs, les choix d’une armée de types distincts, ses placements sur un terrain autrement vide, et les ordres possibles dans une ouverture fixée. Les achats, doublons, fusions, ennemis et états accessibles ne font pas partie de ce sous-modèle. Ce nombre ne mesure ni la profondeur ni la diversité des stratégies gagnantes.
-
-Avant les améliorations des IA de la version 67, un pilote de 300 parties (`plateau-pilote-2` : 200 duels ; `plateau-pilote-3` : 40 parties à trois ; `plateau-pilote-5` : 40 à cinq ; `plateau-pilote-6` : 20 à six) a terminé sans violation d’invariant, avec 17 nulles. Toutes les fins étaient liées au score de relais. La politique agressive n’a remporté aucune de ses 281 apparitions et n’a marqué aucun point : elle ignore volontairement les relais et ne réagit pas à l’urgence du score adverse. Son cheminement glouton peut aussi se bloquer devant une congestion. Seules huit parties ont comporté des dégâts d’étoile. Il faut donc tester des offensives capables de contester les relais et éprouver le rapport entre attaque et contrôle avant de conclure à l’équilibre des règles. Ces graines servent de reproduction, pas d’échantillon de validation indépendant pour les prochains réglages.
-
-Le pilote IA de la version 67 utilise `plateau-ia-v2-2` (30 duels), `plateau-ia-v2-3`, `plateau-ia-v2-5` et `plateau-ia-v2-6` (10 parties chacun). Il termine 60 parties sans violation d’invariant, avec deux nulles au score. Le routage borné tient compte de la rotation et des détours ; l’urgence au score peut détourner une unité de son objectif offensif. Les 15 tests des bots vérifient notamment détour, cible hors de portée, confidentialité et relais décisif. Ces résultats restent exploratoires : seuls deux matchs ont comporté des dégâts d’étoile.
-
-## Export pour jouer sans installation
-
-```sh
-node orbite/tools/export-plateau.js /chemin/de/sortie/ORBITE.html
-```
-
-Le fichier généré intègre styles, scripts, polices et icône. La licence de la police est conservée. Il peut être ouvert directement sur ordinateur, sans npm, compilation supplémentaire ni service externe. Les liens de retour reviennent au même fichier et l’enregistrement du service worker est désactivé dans cet export. Le fichier source `plateau.html` reste inchangé. Voir [`../JOUER.md`](../JOUER.md) pour les premiers coups.
-
-## Affrontement classique
+## Mêlée à huit
 
 Depuis la racine du dépôt :
 
@@ -110,4 +83,4 @@ node --test --test-concurrency=3 orbite/tests/*.test.mjs
 node orbite/tools/i18n-check.js
 ```
 
-Les tests `plateau*.test.mjs` couvrent maintenant les actions, collisions, tirs simultanés, familles, stock et sauvegardes du nouveau moteur. Les prochains réglages devront comparer plusieurs politiques, des positions initiales échangées et des graines de validation distinctes. L’équilibre à deux devra être vérifié séparément à trois ou davantage, avec attention aux coalitions et aux ressources disputées.
+Les tests `rules.test.mjs` couvrent aussi les rangées, le ciblage en face, les formations et le duel. Les prochains réglages devront comparer plusieurs politiques de placement et des graines de validation distinctes, en duel comme en mêlée.

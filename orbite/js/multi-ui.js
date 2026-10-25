@@ -37,32 +37,40 @@
     }
     if (m && m.status === 'playing' && !(O.ui.state && O.ui.state.mp && O.ui.state.mp.mid === m.id)) { renderLaws(box); return; }
     if (m && m.status === 'waiting') { renderLobby(box, m); return; }
+    const off = st.busy ? 'disabled' : '';
     box.innerHTML = `
-      <div class="mp-card"><b>${tr('PARTIE CLASSÉE')}</b>
-        <p>${tr('Affrontez des créateurs de votre rang. Les places libres sont tenues par des univers rivaux.')}</p>
+      <div class="mp-card"><b>${tr('DUEL EN LIGNE')}</b>
+        <p>${tr('Un contre un, face à un créateur de votre rang. Personne au bout de 40 s ? Un univers rival prend la place.')}</p>
         <small class="mp-rank">${tr('Votre rang : {r}', { r: esc(myRank()) })}</small>
-        <button class="btn primary" data-mp="ranked" ${st.busy ? 'disabled' : ''}>${tr('RECHERCHER UNE PARTIE')}</button></div>
-      <div class="mp-card"><b>${tr('PARTIE PRIVÉE')}</b>
-        <p>${tr('Créez une partie et donnez son code à vos amis. Elle ne compte pas pour le classement.')}</p>
-        <button class="btn" data-mp="create" ${st.busy ? 'disabled' : ''}>${tr('CRÉER UNE PARTIE')}</button>
+        <button class="btn primary" data-mp="ranked" data-size="2" ${off}>${tr('RECHERCHER UN DUEL')}</button>
+        <button class="btn" data-mp="create" data-size="2" ${off}>${tr('DÉFIER UN AMI')}</button></div>
+      <div class="mp-card"><b>${tr('MÊLÉE À 8 EN LIGNE')}</b>
+        <p>${tr('Affrontez des créateurs de votre rang. Les places libres sont tenues par des univers rivaux.')}</p>
+        <button class="btn" data-mp="ranked" data-size="8" ${off}>${tr('RECHERCHER UNE MÊLÉE')}</button>
+        <button class="btn" data-mp="create" data-size="8" ${off}>${tr('CRÉER UNE MÊLÉE PRIVÉE')}</button></div>
+      <div class="mp-card"><b>${tr('REJOINDRE UN AMI')}</b>
+        <p>${tr('Saisissez le code de sa partie. Les parties privées ne comptent pas pour le classement.')}</p>
         <div class="mp-join"><input class="code-input" id="mpCode" maxlength="7" placeholder="${tr('CODE')}" autocomplete="off" spellcheck="false">
-        <button class="btn" data-mp="join" ${st.busy ? 'disabled' : ''}>${tr('REJOINDRE')}</button></div></div>`;
+        <button class="btn" data-mp="join" ${off}>${tr('REJOINDRE')}</button></div></div>`;
   }
   function renderLobby(box, m) {
     const host = m.host === ON.uid();
     const left = Math.max(0, Math.ceil((m.created + MP.WAIT_MS - Date.now()) / 1000));
-    const seats = Array.from({ length: MP.SEATS }, (_, i) => {
+    const n = MP.seatsOf(m), duel = n === 2;
+    const seats = Array.from({ length: n }, (_, i) => {
       const s = m.seats[i];
       return s ? `<div class="mp-seat on"><b>${esc(s.name)}</b><small>${s.uid === ON.uid() ? tr('vous') : s.uid === m.host ? tr('hôte') : ''} ${s.points ? s.points + ' pts' : ''}</small></div>`
         : `<div class="mp-seat"><b>…</b><small>${m.mode === 'ranked' ? tr('en recherche') : tr('place libre')}</small></div>`;
     }).join('');
     const head = m.mode === 'ranked'
-      ? `<b>${tr('RECHERCHE DE CRÉATEURS')}</b><p>${left > 0 ? tr('Les places restantes seront tenues par des univers rivaux dans {n} s.', { n: left }) : tr('La partie commence…')}</p>`
-      : `<b>${tr('CODE DE SESSION')}</b><div class="mp-code">${esc(m.code)}</div><p>${tr('Vos amis le saisissent dans Multijoueur → Rejoindre. Les places libres seront tenues par des univers rivaux.')}</p>
+      ? duel
+        ? `<b>${tr('RECHERCHE D’UN RIVAL')}</b><p>${left > 0 ? tr('Si personne n’arrive dans {n} s, un univers rival prend la place.', { n: left }) : tr('La partie commence…')}</p>`
+        : `<b>${tr('RECHERCHE DE CRÉATEURS')}</b><p>${left > 0 ? tr('Les places restantes seront tenues par des univers rivaux dans {n} s.', { n: left }) : tr('La partie commence…')}</p>`
+      : `<b>${duel ? tr('DUEL ENTRE AMIS') : tr('CODE DE SESSION')}</b><div class="mp-code">${esc(m.code)}</div><p>${duel ? tr('Votre ami saisit ce code dans Multijoueur → Rejoindre un ami.') : tr('Vos amis le saisissent dans Multijoueur → Rejoindre. Les places libres seront tenues par des univers rivaux.')}</p>
          <button class="btn" data-mp="share">${tr('PARTAGER LE CODE')}</button>`;
     box.innerHTML = `<div class="mp-card">${head}</div>
       <div class="mp-seats">${seats}</div>
-      <div class="sheet-actions">${host && m.mode === 'private' ? `<button class="btn primary" data-mp="start">${tr('LANCER LA PARTIE')} · ${m.uids.length}/${MP.SEATS}</button>` : ''}
+      <div class="sheet-actions">${host && m.mode === 'private' ? `<button class="btn primary" data-mp="start">${tr('LANCER LA PARTIE')} · ${m.uids.length}/${n}</button>` : ''}
       <button class="btn" data-mp="leave">${tr('QUITTER')}</button></div>`;
   }
   // Choix de la loi : trois lois parmi les familles de la partie ; 20 s pour choisir.
@@ -95,8 +103,8 @@
     SFX.tap();
     try {
       if (k === 'signin') { await ON.signIn(); }
-      else if (k === 'ranked') { st.busy = true; render(); await MP.searchRanked(); }
-      else if (k === 'create') { st.busy = true; render(); await MP.createPrivate(); }
+      else if (k === 'ranked') { st.busy = true; render(); await MP.searchRanked(Number(b.dataset.size)); }
+      else if (k === 'create') { st.busy = true; render(); await MP.createPrivate(Number(b.dataset.size)); }
       else if (k === 'join') { st.busy = true; render(); await MP.joinCode($('mpCode').value); }
       else if (k === 'start') { await MP.start(); }
       else if (k === 'leave') { await MP.leave(); }

@@ -12,8 +12,9 @@ function dominantFamily(player) {
     if (family !== 'neutre') counts[family] = (counts[family] || 0) + 1;
   }
   const first = Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
-  const alliance = R.allianceOf(player.board);
-  const dominant = alliance ? `alliance:${alliance.slice().sort().join('+')}` : first && first[1] >= 3 ? first[0] : 'mixte';
+  // Deux familles d'au moins 3 astres : un mélange, compté à part plutôt qu'au nom d'une seule.
+  const duo = Object.entries(counts).filter(([, n]) => n >= 3).map(([f]) => f).sort();
+  const dominant = duo.length >= 2 ? `duo:${duo.slice(0, 2).join('+')}` : first && first[1] >= 3 ? first[0] : 'mixte';
   return { dominant, count: Object.keys(counts).length };
 }
 
@@ -61,7 +62,7 @@ function runBalance(options = {}) {
   const lowSampleLaws = Object.entries(lawsFocal).filter(([, stats]) => stats.n < 30).map(([id]) => id);
   return {
     schemaVersion: 1,
-    scope: 'Moteur actuel à huit participants ; ne valide pas le futur plateau commun.',
+    scope: 'Mêlée à huit participants ; ne valide pas le duel.',
     settings: { games: options.games, seed: options.seed, maxRounds: options.maxRounds, skill: options.skill, population: options.population },
     counts: { requested: options.games, completed, truncated: truncated.length, failed: 0 },
     durationMs: Date.now() - start,
@@ -103,7 +104,7 @@ function formatBalance(report) {
   ];
   const sorted = entries => Object.entries(entries).sort((a, b) => (a[1].meanRank ?? Infinity) - (b[1].meanRank ?? Infinity));
   for (const [id, stats] of sorted(report.laws.focal)) lines.push(formatRow(id, stats));
-  lines.push('', 'Famille dominante ou Alliance : observations descriptives de tous les joueurs, sans intervalle indépendant');
+  lines.push('', 'Famille dominante ou duo de familles : observations descriptives de tous les joueurs, sans intervalle indépendant');
   for (const [id, stats] of sorted(report.dominantFamilies.allPlayers)) lines.push(formatRow(id, stats));
   lines.push('', 'Sièges : une observation par siège et par partie');
   for (const [id, stats] of Object.entries(report.seats)) lines.push(formatRow(`siège ${id}`, stats));

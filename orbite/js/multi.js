@@ -4,7 +4,8 @@
  * rassemble les plateaux (et ceux des bots qui complètent la table) dans un document de manche,
  * écrit une seule fois ; chaque téléphone résout alors la manche à l'identique (rules.js, mpResolve).
  *
- * matches/{id}              : { mode, code, status, host, uids, seats, bracket, created, seed, beat }
+ * matches/{id}              : { mode, code, status, host, uids, seats, bracket, created, seed, beat, size }
+ *                             size : 2 pour un duel (absent : mêlée à 8)
  * matches/{id}/posts/{uid}  : { r, snap } — le dernier plateau publié par chaque joueur
  * matches/{id}/rounds/{r}   : { r, snaps, by } — les plateaux retenus pour la manche r */
 (function () {
@@ -16,6 +17,8 @@
   // Réglages (raccourcis par les tests via window.ORBITE_MP_FAST).
   const F = window.ORBITE_MP_FAST || {};
   const SEATS = 8;
+  // Places d'une partie : 2 en duel, 8 en mêlée (anciens salons sans « size »).
+  const seatsOf = (m) => (m && m.size === 2 ? 2 : SEATS);
   const WAIT_MS = F.wait || 40000; // recherche classée : délai avant de compléter avec des bots
   const shopMs = (r) => F.shop || Math.min(75000, 40000 + 5000 * r);
   const GRACE_MS = F.grace || 20000; // retard toléré après la fin du temps de boutique
@@ -60,16 +63,18 @@
     if (!M.mid) return;
     try { const { fs } = fire(); await fs.updateDoc(ref(M.mid), { ['beat.' + uid()]: now() }); } catch (err) { /* hors ligne : on réessaiera */ }
   }
-  async function create(mode) {
+  async function create(mode, size) {
     const { db, fs } = fire();
     const id = fs.doc(fs.collection(db, 'matches')).id;
     let code = '';
     for (let i = 0; i < 6; i++) code += ALPHA[Math.floor(Math.random() * ALPHA.length)];
     const me = seatOf();
-    await fs.setDoc(ref(id), {
+    const doc = {
       mode, code, status: 'waiting', host: me.uid, uids: [me.uid], seats: [me], bracket: bracketOf(me.points),
       created: now(), seed: '', beat: { [me.uid]: now() }
-    });
+    };
+    if (size === 2) doc.size = 2;
+    await fs.setDoc(ref(id), doc);
     M.mode = mode;
     watch(id);
     return id;
@@ -83,7 +88,7 @@
       const m = d.data();
       if (m.uids.includes(me.uid)) return;
       if (m.status !== 'waiting') throw new Error(tr('La partie a déjà commencé.'));
-      if (m.uids.length >= SEATS) throw new Error(tr('La partie est complète.'));
+      if (m.uids.length >= seatsOf(m)) throw new Error(tr('La partie est complète.'));
       t.update(ref(mid), { uids: m.uids.concat([me.uid]), seats: m.seats.concat([me]), ['beat.' + me.uid]: now() });
     });
     watch(mid);
@@ -112,8 +117,9 @@
 
   // Recherche classée : on rejoint le plus ancien salon d'un rang proche ; sinon on ouvre le sien.
   // La tolérance de rang s'élargit avec l'attente ; au bout de 40 s, l'hôte complète avec des bots.
-  async function searchRanked() {
+  async function searchRanked(size) {
     M.mode = 'ranked';
+    M.size = size === 2 ? 2 : SEATS;
     M.searchStart = now();
     await findOrCreate();
     clearInterval(M.poll);
@@ -125,7 +131,7 @@
     const b = bracketOf(myPoints()), spread = Math.min(9, Math.floor((now() - M.searchStart) / 10000));
     const res = await fs.getDocs(fs.query(fs.collection(db, 'matches'), fs.where('status', '==', 'waiting'), fs.where('mode', '==', 'ranked'), fs.limit(30)));
     const ok = res.docs.map((d) => Object.assign({ id: d.id }, d.data()))
-      .filter((m) => m.uids.length < SEATS && Math.abs(m.bracket - b) <= spread && now() - m.created < 120000 && now() - Math.max(...Object.values(m.beat || {}), 0) < STALE_MS)
+      .filter((m) => seatsOf(m) === M.size && m.uids.length < seatsOf(m) && Math.abs(m.bracket - b) <= spread && now() - m.created < 120000 && now() - Math.max(...Object.values(m.beat || {}), 0) < STALE_MS)
       .sort((x, y) => x.created - y.created || (x.id < y.id ? -1 : 1));
     const best = ok[0];
     if (M.mid && best && best.id === M.mid) return;
@@ -135,14 +141,14 @@
       M.mode = 'ranked';
       try { await join(best.id); return; } catch (err) { /* complet entre-temps */ }
     }
-    if (!M.mid) await create('ranked');
+    if (!M.mid) await create('ranked', M.size);
   }
   function hostStartCheck() {
     const m = M.match;
     if (!m || m.status !== 'waiting' || m.host !== uid() || m.mode !== 'ranked') return;
-    if (m.uids.length >= SEATS || now() - m.created >= WAIT_MS) start();
+    if (m.uids.length >= seatsOf(m) || now() - m.created >= WAIT_MS) start();
   }
-  async function createPrivate() { M.mode = 'private'; return create('private'); }
+  async function createPrivate(size) { M.mode = 'private'; return create('private', size === 2 ? 2 : SEATS); }
   async function joinCode(raw) {
     const code = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (code.length !== 6) throw new Error(tr('Le code compte 6 caractères.'));
@@ -170,7 +176,7 @@
     // Niveau de la partie : la moyenne des points des autres créateurs (pour le barème classé).
     const others = m.seats.filter((s) => s.uid !== me);
     const lobby = others.length ? Math.round(others.reduce((n, s) => n + (s.points || 0), 0) / others.length) : null;
-    const st = R.newGame(m.seed, lawId, { families, seats, mp: { me, mid: M.mid, mode: m.mode, lobby } });
+    const st = R.newGame(m.seed, lawId, { families, seats, size: seatsOf(m), mp: { me, mid: M.mid, mode: m.mode, lobby } });
     st.players[0].name = pseudo();
     M.posts = {}; M.roundDocs = {}; M.lastSnaps = {}; M.locked = null; M.timerRound = 0;
     listenPosts();
@@ -336,6 +342,6 @@
   window.OrbiteMulti = {
     get state() { return M; },
     searchRanked, createPrivate, joinCode, start, leave, newState, lawChoices, endTurn, startRound, stopRound, isHost,
-    SEATS, WAIT_MS, LAW_MS
+    SEATS, seatsOf, WAIT_MS, LAW_MS
   };
 })();

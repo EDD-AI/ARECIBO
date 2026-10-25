@@ -31,7 +31,7 @@ function compareBots(options) {
     },
     limitations: [
       'Chaque groupe contient quatre joueurs d’une même partie : ces observations sont corrélées et aucun intervalle binomial indépendant n’est calculé.',
-      'La comparaison porte sur cette population de bots, et ne certifie pas l’équilibre des familles ni le futur plateau commun.',
+      'La comparaison porte sur cette population de bots, et ne certifie pas l’équilibre des familles ni des formations.',
       ...(completed < 100 ? ['Échantillon pilote : trop peu de parties pour une conclusion précise.'] : []),
     ],
   };

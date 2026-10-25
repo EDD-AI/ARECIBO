@@ -101,7 +101,7 @@ function computeCombinationsReport({ units = R.BOARD_MAX } = {}) {
       'Les légendaires sont incluses dans le catalogue nominal, mais leur rareté et leur exemplaire unique limitent leur disponibilité.',
       'Toutes les permutations sont distinguées ; certaines peuvent être tactiquement équivalentes.',
       'Ces nombres ne mesurent ni les états légalement atteignables, ni les déroulements possibles, ni le nombre de stratégies compétitives ou la profondeur.',
-      'Le futur plateau commun n’est pas modélisé : ses dimensions et ses règles restent à définir.',
+      'Le placement n’est pas compté : rangée avant ou arrière (4 places chacune) et ordre dans chaque rangée multiplient encore ces nombres.',
     ],
   };
 }

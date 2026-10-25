@@ -1,17 +1,15 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
 // Garder ce numéro égal à VERSION dans js/game.js et à version.json.
-const CACHE = 'orbite-v67';
+const CACHE = 'orbite-v68';
 const SHELL = [
   './',
   './index.html',
-  './plateau.html',
   './atelier.html',
   './batisseur.html',
   './manifest.webmanifest',
   './version.json',
   './css/fonts.css',
   './css/game.css',
-  './css/plateau.css',
   './fonts/chakra-petch-400.woff2',
   './fonts/chakra-petch-500.woff2',
   './fonts/chakra-petch-600.woff2',
@@ -22,11 +20,6 @@ const SHELL = [
   './js/lang/jeu.js',
   './js/lang/campagne.js',
   './js/lang/interface.js',
-  './js/lang/plateau-menu.js',
-  './js/lang/plateau.js',
-  './js/plateau.js',
-  './js/plateau-bot.js',
-  './js/plateau-ui.js',
   './js/planet-engine.js',
   './js/planet-renderer.js',
   './js/stage.js',
@@ -70,6 +63,7 @@ const SHELL = [
   './js/lang/batiments.js',
   './js/lang/succes.js',
   './js/lang/genese.js',
+  './js/lang/duel.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',

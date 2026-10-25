@@ -9,9 +9,9 @@ const { runBalance, dominantFamily } = require('../tools/lib/equilibrage.js');
 const { parseArguments, createSimulation } = require('../tools/lib/simulation.js');
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
-test('une Alliance ne doit pas attribuer ses performances à une seule famille', () => {
+test('un duo de familles ne doit pas attribuer ses performances à une seule famille', () => {
   const player = { board: [...Array(3).fill({ id: 'aube' }), ...Array(3).fill({ id: 'givre' })] };
-  assert.deepEqual(dominantFamily(player), { dominant: 'alliance:glace+vie', count: 2 });
+  assert.deepEqual(dominantFamily(player), { dominant: 'duo:glace+vie', count: 2 });
   assert.equal(dominantFamily({ board: player.board.slice(0, 4) }).dominant, 'vie');
   assert.equal(dominantFamily({ board: player.board.slice(1, 5) }).dominant, 'mixte');
 });

@@ -33,15 +33,18 @@ nouvelle version, la **checklist** se coche au fur et à mesure.
 ### Phase 1 · Le jeu prêt à être montré
 - [ ] (moi) Les 10 premières minutes : un seul parcours au premier lancement (réveil → première
       partie guidée → menu), les autres modes se débloquent progressivement.
-- [ ] (moi) Menu simplifié avec un mode-vitrine clair (Genèse ou Affrontement).
+- [x] (moi) Menu simplifié avec un mode-vitrine clair : **Jouer = le duel** (v68), la mêlée à 8 et
+      le jeu en ligne dans Multijoueur.
 - [ ] (toi + moi) Contenu de la campagne en v1 : ère I + les 4 chapitres de l'ère II, avec une fin
-      « à suivre ».
+      « à suivre ». *Masquée au menu pendant le travail sur le duel.*
       - [x] Ère I · La Poussière
       - [x] Ère II · chapitre 1 · L'Essaim
       - [x] Ère II · chapitre 2 · Le Cœur
       - [x] Ère II · chapitre 3 · La Sculpture
       - [ ] Ère II · chapitre 4 · Le Grand Impact (+ choix du destin)
-- [ ] (toi) Publier les règles Firestore (`firebase/firestore.rules`) dans la console Firebase.
+- [ ] (toi) Publier les règles Firestore (`firebase/firestore.rules`) dans la console Firebase
+      (nécessaire depuis la v68 pour les duels en ligne : champ `size`).
+- [ ] (toi + moi) Faire jouer le duel aux testeurs : placement, formations, durée (~12 cycles).
 - [ ] (moi) Supprimer son compte depuis le jeu (et ses données en ligne).
 - [ ] (moi) Remontée des erreurs (plantages chez les joueurs).
 - [ ] (toi + moi) Performances testées sur un téléphone moyen ou ancien ; mode économie si besoin.

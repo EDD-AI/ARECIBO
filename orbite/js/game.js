@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 67;
+  const VERSION = 68;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -263,6 +263,7 @@
     el.dataset.id = u.id;
     if (u.uid) el.dataset.uid = u.uid;
     if (u.cid) el.dataset.cid = u.cid;
+    if (where === 'board' || where === 'combat') el.dataset.row = u.row === 1 ? '1' : '0';
   }
 
   function setStats(el, atk, hp, flashUp) {
@@ -875,7 +876,7 @@
         <span class="cos-txt"><b>${esc(k.name)}</b><small>${esc(k.text)}</small></span>${btn}</div>`;
     };
     $('cosList').innerHTML = `<h4>${tr('FONDS ANIMÉS')}</h4>` + row({ id: '', name: tr('Noir'), text: tr('Le fond sobre d’origine.') }) + SKIES.map(row).join('') +
-      (dust() < COS_PRICE ? `<p class="mk-note">${tr('Vous avez {n} poussières d’étoiles. Le podium d’une partie en rapporte.', { n: dust() })}</p>` : '');
+      (dust() < COS_PRICE ? `<p class="mk-note">${tr('Vous avez {n} poussières d’étoiles. Un duel gagné ou un podium en rapporte.', { n: dust() })}</p>` : '');
   }
   // Aperçu de l'onglet Création : une planète détaillée qui change à chaque visite.
   stage.register('atelier-apercu', { type: 'terran', seed: (Date.now() % 100000) + 1, full: true, ring: true, moons: 1 });
@@ -1057,11 +1058,13 @@
   function renderProfile() {
     const st = stats(), lv = levelInfo(xpTotal()), list = worldList();
     const hist = readJson(HIST_KEY, []);
-    const pct = (n) => tr('{n} %', { n: st.games ? Math.round(n / st.games * 100) : 0 });
+    // Podiums et rang moyen : ceux des mêlées (les duels ont leur propre ligne).
+    const melee = st.games - (st.duels || 0);
+    const pct = (n) => tr('{n} %', { n: melee ? Math.round(n / melee * 100) : 0 });
     const fav = Object.entries(st.laws).sort((a, b) => b[1] - a[1])[0];
     const tiles = [
-      [tr('PARTIES'), st.games], [tr('VICTOIRES'), st.wins], [tr('PODIUMS'), pct(st.top3)],
-      [tr('RANG MOYEN'), st.games ? (st.rankSum / st.games).toFixed(1) : '–'], [tr('MEILLEUR RANG'), st.best ? ordinal(st.best) : '–'], [tr('COMBATS GAGNÉS'), st.fights],
+      [tr('PARTIES'), st.games], [tr('VICTOIRES'), st.wins], [tr('DUELS GAGNÉS'), `${st.duelWins || 0} / ${st.duels || 0}`],
+      [tr('PODIUMS'), pct(st.top3)], [tr('RANG MOYEN'), melee ? (st.rankSum / melee).toFixed(1) : '–'], [tr('COMBATS GAGNÉS'), st.fights],
       [tr('ASTRES DORÉS'), st.goldens], [tr('CYCLES JOUÉS'), st.cycles], [tr('POUSSIÈRES GAGNÉES'), st.dust]
     ];
     $('profileBack').innerHTML = icon('back');
@@ -1097,7 +1100,7 @@
       <div class="pf-stats">${tiles.map(([k, v]) => `<div><b>${v}</b><small>${k}</small></div>`).join('')}</div>
       ${fav ? `<p class="muted">${tr('Loi favorite :')} <span style="color:${famColor(R.LAW[fav[0]].fam)}">${esc(R.LAW[fav[0]].name)}</span> · ${fav[1] > 1 ? tr('{n} parties', { n: fav[1] }) : tr('{n} partie', { n: fav[1] })}</p>` : ''}
       <h3 class="pf-h">${tr('DERNIÈRES PARTIES')}</h3>
-      <div class="pf-hist">${hist.length ? hist.map((h) => `<div class="${h.rank <= 3 ? 'podium' : ''}"><b>${h.quit ? '–' : ordinal(h.rank)}</b><span style="color:${famColor(R.LAW[h.law] ? R.LAW[h.law].fam : 'neutre')}">${esc(R.LAW[h.law] ? R.LAW[h.law].name : '')}</span><small>${h.quit ? tr('abandon') : tr('{n} cycles', { n: h.cycles })} · ${new Date(h.t).toLocaleDateString(I18N.lang, { day: '2-digit', month: '2-digit' })}</small></div>`).join('') : `<p class="muted">${tr('Aucune partie terminée pour l’instant.')}</p>`}</div>
+      <div class="pf-hist">${hist.length ? hist.map((h) => `<div class="${(h.duel ? h.rank === 1 : h.rank <= 3) ? 'podium' : ''}"><b>${h.quit ? '–' : h.duel ? (h.rank === 1 ? tr('V') : tr('D')) : ordinal(h.rank)}</b><span style="color:${famColor(R.LAW[h.law] ? R.LAW[h.law].fam : 'neutre')}">${esc(R.LAW[h.law] ? R.LAW[h.law].name : '')}</span><small>${h.quit ? tr('abandon') : tr('{n} cycles', { n: h.cycles })} · ${new Date(h.t).toLocaleDateString(I18N.lang, { day: '2-digit', month: '2-digit' })}</small></div>`).join('') : `<p class="muted">${tr('Aucune partie terminée pour l’instant.')}</p>`}</div>
       </div>`;
     if (tab === 'succes' && window.OrbiteSucces) window.OrbiteSucces.render($('pfSucces'));
     if (window.__orbite.onlineUI) window.__orbite.onlineUI.renderProfile(tab);
@@ -1129,8 +1132,14 @@
   function recordGame(s, rank, quit) {
     const st = stats();
     const p = s.players[0];
+    const duel = R.isDuel(s);
     st.games++;
-    if (!quit) {
+    if (duel) {
+      // Les duels comptent dans les parties et les victoires ; rang moyen et podiums restent ceux
+      // des mêlées.
+      st.duels = (st.duels || 0) + 1;
+      if (!quit && rank === 1) { st.wins++; st.duelWins = (st.duelWins || 0) + 1; }
+    } else if (!quit) {
       st.rankSum += rank;
       if (rank === 1) st.wins++;
       if (rank <= 3) st.top3++;
@@ -1143,7 +1152,7 @@
     st.laws[p.law] = (st.laws[p.law] || 0) + 1;
     store.set(STATS_KEY, JSON.stringify(st));
     const hist = readJson(HIST_KEY, []);
-    hist.unshift({ rank, law: p.law, cycles: Math.max(1, p.deadRound || s.round || 1), t: Date.now(), quit: !!quit });
+    hist.unshift({ rank, law: p.law, cycles: Math.max(1, p.deadRound || s.round || 1), t: Date.now(), quit: !!quit, duel });
     store.set(HIST_KEY, JSON.stringify(hist.slice(0, 15)));
     if (window.OrbiteSucces) window.OrbiteSucces.record(s, rank, quit);
   }
@@ -1313,7 +1322,7 @@
           <h3>${esc(l.name)}</h3>
           <p class="tag">${esc(l.tagline)}</p>
           <p class="txt">${esc(l.text)}</p>
-          <p class="starter">${tr('PREMIER ASTRE : {name}', { name: esc(st.name).toUpperCase() })} ${st.atk}/${st.hp}</p>
+          <p class="starter">${tr('PREMIER ASTRE : {name}', { name: esc(st.name).toUpperCase() })} ${st.atk}/${st.hp} · ${tr('{n} PV', { n: (l.hp || R.START_HP) * (ui.size === 8 ? 1 : R.DUEL.hp) })}</p>
         </div>
       </button>`;
     }).join('');
@@ -1341,12 +1350,12 @@
   $('lawGo').addEventListener('click', async () => {
     if (!ui.lawPick) return;
     SFX.level();
-    ui.state = R.newGame(ui.seed, ui.lawPick);
+    ui.state = R.newGame(ui.seed, ui.lawPick, { size: ui.size || 2 });
     ui.stamp++;
     saveGame();
     await show('game');
     renderGame(true);
-    banner(tr('CYCLE {n}', { n: 1 }), tr('Achetez des astres, puis lancez le combat.'));
+    banner(R.isDuel(ui.state) ? tr('DUEL · {name}', { name: esc(ui.state.players[1].name) }) : tr('CYCLE {n}', { n: 1 }), tr('Achetez des astres, placez-les, puis lancez le combat.'));
     if (!tutoDone()) {
       store.set(HINT_KEY, '1');
       coachStop(false);
@@ -1479,30 +1488,31 @@
     { id: 'creer', target: '#lawGo', text: tr('Parfait. Touchez <b>CRÉER MON UNIVERS</b> pour commencer la partie.'), gesture: { tap: '#lawGo' }, wait: ['partie'] }
   ];
   const GAME_STEPS = [
-    { id: 'bienvenue', text: tr('Bienvenue dans votre univers ! Vous affrontez <b>7 rivaux</b>. À chaque <b>cycle</b>, vous achetez des astres, puis votre système <b>combat tout seul</b> un rival. Le dernier debout gagne.'), next: tr('SUIVANT'), delay: 0 },
+    { id: 'bienvenue', text: tr('Bienvenue dans votre premier <b>duel</b> ! Un seul rival, plusieurs cycles. À chaque <b>cycle</b>, vous achetez des astres, vous les placez, puis votre système <b>combat tout seul</b>. Le premier à 0 PV perd.'), next: tr('SUIVANT'), delay: 0 },
     { id: 'pv', target: '#hudHp', text: tr('Vos <b>points de vie</b>. Un combat perdu vous en retire. À 0, vous êtes éliminé.'), next: tr('SUIVANT') },
     { id: 'energie', target: '#energy', text: tr('Votre <b>énergie</b> : 3 au premier cycle, une de plus à chaque cycle. Un astre coûte <b>3</b>.'), next: tr('SUIVANT') },
     { id: 'creation', target: '#tavern', text: tr('Voici la <b>Création</b> : c’est là que naissent les astres qu’on vous propose. <b>Touchez-en un</b> pour lire ce qu’il fait.'), gesture: { tap: '#shop .unit', at: 0.35 }, wait: ['fiche'], jump: { achat: 'main', combat: 'regard' } },
     { id: 'fiche', target: '#sheet [data-act="buy"]', dim: false, place: 'top', text: tr('Sa fiche : <b>attaque</b>, <b>PV</b> et <b>pouvoir</b>. Touchez <b>ACHETER</b>.'), gesture: { tap: '#sheet [data-act="buy"]', at: 0.5 }, wait: ['achat'], jump: { fermer: 'creation' } },
-    { id: 'main', target: '#handZone', text: tr('L’astre attend dans votre <b>main</b>. <b>Glissez-le</b> vers votre système pour le placer en orbite.'), gesture: { from: '#hand .unit', drag: '#systemZone', at: 0.35 }, wait: ['placer'], when: () => me().hand.length > 0, jump: { combat: 'regard' } },
-    { id: 'systeme', target: '#systemZone', pad: -10, text: tr('Il orbite votre étoile. En combat, vos astres attaquent <b>de gauche à droite</b> : l’ordre compte, glissez-les pour les réordonner.'), next: tr('SUIVANT') },
+    { id: 'main', target: '#handZone', text: tr('L’astre attend dans votre <b>main</b>. <b>Glissez-le</b> vers votre système : en haut l’<b>avant</b>, en bas l’<b>arrière</b>.'), gesture: { from: '#hand .unit', drag: '#systemZone', at: 0.35 }, wait: ['placer'], when: () => me().hand.length > 0, jump: { combat: 'regard' } },
+    { id: 'systeme', target: '#systemZone', pad: -10, text: tr('Deux rangées de 4. L’<b>avant</b> attaque et encaisse ; l’<b>arrière</b> reste à l’abri et avance quand l’avant tombe. Chaque astre de l’avant frappe l’ennemi <b>en face</b> de lui : glissez vos astres pour les placer.'), next: tr('SUIVANT') },
     { id: 'combat', target: '#fightBtn', text: tr('Plus assez d’énergie ? Lancez le <b>combat</b> ! Il se joue tout seul.'), gesture: { tap: '#fightBtn', at: 0.5 }, wait: ['combat'] },
-    { id: 'regard', soft: true, dim: false, y: 0.76, extra: true, text: tr('Vos astres (en bas) frappent ceux du rival (en haut), chacun son tour. Les survivants du gagnant infligent des dégâts au perdant.'), wait: ['cycle'] },
+    { id: 'regard', soft: true, dim: false, y: 0.76, extra: true, text: tr('Vos astres (en bas) frappent ceux du rival (en haut) : seul l’avant attaque, chacun l’ennemi en face. Les survivants du gagnant infligent des dégâts au perdant.'), wait: ['cycle'] },
     { id: 'degats', text: tr('Le perdant perd des PV : <b>niveau de création du gagnant + niveaux de ses astres survivants</b>. Nouveau cycle, nouvelle énergie !'), next: tr('SUIVANT'), delay: 600 },
+    { id: 'formation', target: '#systemZone', pad: -10, text: tr('<b>Formation</b> : deux astres d’une même famille dans la même rangée donnent un bonus au début du combat. Chaque famille a le sien, à l’avant comme à l’arrière. Touchez l’étiquette des familles pour les lire.'), next: tr('SUIVANT') },
     { id: 'actualiser', target: '#rollBtn', text: tr('<b>Actualiser</b> (1 énergie) : la Création fait naître d’autres astres.'), next: tr('SUIVANT') },
     { id: 'geler', target: '#freezeBtn', text: tr('<b>Geler</b> : les astres proposés restent les mêmes au prochain cycle. Pratique pour garder un astre que vous ne pouvez pas encore payer.'), next: tr('SUIVANT') },
     { id: 'niveau', target: '#upBtn', text: tr('<b>Monter de niveau</b> : la Création fait naître des astres plus puissants. Le prix baisse à chaque cycle.'), next: tr('SUIVANT') },
     { id: 'vendre', target: '#systemZone', pad: -10, text: tr('Pour <b>vendre</b> un astre (+1 énergie), glissez-le de votre système vers la Création.'), next: tr('SUIVANT') },
     { id: 'pouvoir', target: '#powerBtn', text: tr('Le <b>pouvoir</b> de votre loi : touchez-le pour l’utiliser. Il coûte de l’énergie.'), next: tr('SUIVANT') },
-    { id: 'rivaux', target: '#rivals', text: tr('Vos <b>rivaux</b> : touchez ici pour voir leurs PV et le dernier système qu’ils ont joué.'), next: tr('SUIVANT') },
-    { id: 'fin', text: tr('Dernier secret : <b>trois copies</b> du même astre fusionnent en un astre <b>doré</b>, deux fois plus fort. Visez le podium : les 3 premiers gagnent des poussières d’étoiles. À vous !'), next: tr('JOUER') }
+    { id: 'rivaux', target: '#rivals', text: tr('Votre <b>rival</b> : touchez ici pour voir le système qu’il a joué au dernier combat, et placez vos astres pour le contrer.'), next: tr('SUIVANT') },
+    { id: 'fin', text: tr('Dernier secret : <b>trois copies</b> du même astre fusionnent en un astre <b>doré</b>, deux fois plus fort. Gagnez le duel pour remporter des poussières d’étoiles. À vous !'), next: tr('JOUER') }
   ];
   const MENU_STEPS = [
-    { id: 'plateau', target: '#soloBtn', text: tr('<b>Jouer</b> ouvre le <b>plateau commun</b> : achetez vos astres, préparez vos ordres et affrontez l’IA ou vos amis sur cet appareil.'), next: tr('SUIVANT'), delay: 0 },
-    { id: 'multi', target: '#multiBtn', text: tr('<b>Multijoueur</b> regroupe les autres modes : l’affrontement classique contre 7 univers et ses salons en ligne.'), next: tr('SUIVANT') },
+    { id: 'jouer', target: '#soloBtn', text: tr('<b>Jouer</b> lance un <b>duel</b> contre l’IA : un rival, plusieurs cycles. Achetez, placez vos astres sur deux rangées, formez des familles.'), next: tr('SUIVANT'), delay: 0 },
+    { id: 'multi', target: '#multiBtn', text: tr('<b>Multijoueur</b> : des duels en ligne, et la <b>mêlée à 8</b> contre sept univers, en ligne ou hors ligne.'), next: tr('SUIVANT') },
     { id: 'creation', target: '#creationBtn', text: tr('La <b>Création</b> : devenez Créateur. Semez une graine d’étoile et faites grandir votre propre planète. Elle se débloque avec des <b>poussières d’étoiles</b>.'), next: tr('SUIVANT') },
-    { id: 'marche', target: '#marketBtn', text: tr('Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.'), next: tr('SUIVANT') },
-    { id: 'profil', target: '#profileBtn', text: tr('Votre <b>profil</b> conserve votre pseudo, votre niveau et votre historique des modes classiques.'), next: tr('SUIVANT') },
+    { id: 'marche', target: '#marketBtn', text: tr('Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées en duel et sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.'), next: tr('SUIVANT') },
+    { id: 'profil', target: '#profileBtn', text: tr('Votre <b>profil</b> : pseudo, niveau, statistiques et historique. Chaque partie rapporte de l’expérience.'), next: tr('SUIVANT') },
     { id: 'reglages', target: '#settingsBtn', text: tr('<b>Paramètres</b> : son, musique, règles du jeu, et ce guide si vous voulez le revoir.'), next: tr('C’EST PARTI') }
   ];
 
@@ -1520,6 +1530,12 @@
     // Barre repliée : un menu qui se déroule, sans images.
     const alive = R.alivePlayers(s).length;
     const rank = s.players.filter((p) => p.alive).sort((a, b) => b.hp - a.hp).findIndex((p) => !p.bot) + 1;
+    if (R.isDuel(s)) {
+      // Duel : le rival, ses PV, et son dernier système d'un geste.
+      const o = s.players[1];
+      $('rivals').innerHTML = `<span class="rv-label">${tr('DUEL')}</span><span class="rv-info"><b>${esc(o.name)}</b> · ${icon('heart')} ${Math.max(0, o.hp)}${s.round > 1 ? ' · ' + tr('voir son système') : ''}</span><span class="rv-open">${icon('back', 'down')}</span>`;
+      return;
+    }
     $('rivals').innerHTML = `<span class="rv-label">${tr('RIVAUX')}</span><span class="rv-info">${tr('{n} univers en lice', { n: alive })}${me().alive ? ' · ' + tr('vous êtes {rank}', { rank: ordinal(rank) }) : ''}</span><span class="rv-open">${icon('back', 'down')}</span>`;
   }
 
@@ -1587,51 +1603,76 @@
     container.style.setProperty('--u', Math.round(Math.min(cap, col * k)) + 'px');
   }
 
-  function arc(container) {
-    const kids = [...container.children];
-    const n = kids.length;
-    kids.forEach((el, i) => {
-      const d = i - (n - 1) / 2;
-      el.style.setProperty('--arc', Math.round(d * d * 2.2) + 'px');
-    });
+  // ─── Rangées : l'avant face au rival, l'arrière à l'abri ─────
+  // Grille de demi-colonnes : chaque astre en prend deux et chaque rangée est centrée, comme dans
+  // les règles (« en face », c'est ce qu'on voit). L'avant regarde le rival : en haut pour vous,
+  // en bas pour lui.
+  function layoutRows(container, enemy) {
+    const kids = [...container.children].filter((el) => el.classList.contains('unit'));
+    const rows = [kids.filter((el) => el.dataset.row !== '1'), kids.filter((el) => el.dataset.row === '1')];
+    const width = Math.max(R.ROW_MAX, rows[0].length, rows[1].length);
+    const col = Math.min(window.innerWidth, 520) - 20;
+    container.style.setProperty('--cols', width * 2);
+    container.style.setProperty('--u', Math.round(Math.min(70, window.innerHeight * 0.095, col / (width + 0.7))) + 'px');
+    rows.forEach((list, r) => list.forEach((el, i) => {
+      el.style.gridRow = String(enemy ? 2 - r : r + 1);
+      el.style.gridColumn = `${width - list.length + 2 * i + 1} / span 2`;
+      const d = i - (list.length - 1) / 2;
+      el.style.setProperty('--arc', Math.round(d * d * 1.6 * (enemy ? -1 : 1)) + 'px');
+    }));
   }
+  const rowOfEl = (el) => (el.dataset.row === '1' ? 1 : 0);
 
   function renderBoard() {
     const p = me();
+    // Anciennes sauvegardes : au-delà de 4 astres, les derniers passent à l'arrière.
+    R.arrange(p);
     markTriples();
     syncList($('board'), p.board, (u) => u.uid, (u) => {
       const el = makeUnit(u, 'board');
       el.dataset.src = 'board';
       return el;
     }, (el, u) => { updateUnit(el, u, 'board'); el.dataset.src = 'board'; });
-    sizeRow($('board'), 'board', 88);
-    arc($('board'));
-    renderAlliance();
+    $('board').dataset.front = tr('AVANT');
+    $('board').dataset.back = tr('ARRIÈRE');
+    layoutRows($('board'));
+    renderFormations();
   }
 
-  // Alliance : deux familles d'au moins 3 astres chacune → +1/+1 au début de chaque combat.
-  const ALLIANCE_KEY = 'orbite.alliance';
+  // Formations : deux astres (ou plus) d'une même famille dans la même rangée.
+  const FORM_KEY = 'orbite.formation';
   const famName = (f) => R.FAMILIES[f].name.toUpperCase();
   const kwName = (k) => R.KEYWORDS[k].name.toUpperCase();
-  function allianceHtml(al) {
-    return al.map((f) => `<b style="color:${famColor(f)}">${famName(f)}</b>`).join(' + ');
+  const ROMAN = ['', 'I', 'II', 'III'];
+  const rowName = (row) => (row ? tr('ARRIÈRE') : tr('AVANT'));
+  const formLabel = (f) => `<b style="color:${famColor(f.fam)}">${famName(f.fam)} ${ROMAN[f.lvl]}</b> · ${rowName(f.row)}`;
+  // Marque les astres d'une formation (un trait de la couleur de leur famille).
+  function markForms(container, forms) {
+    for (const el of container.querySelectorAll('.unit')) {
+      const fam = R.CARD[el.dataset.id] && R.CARD[el.dataset.id].fam;
+      const f = forms.find((g) => g.fam === fam && g.row === rowOfEl(el));
+      el.classList.toggle('in-form', !!f);
+      if (f) el.style.setProperty('--fc', famColor(f.fam));
+    }
   }
-  function renderAlliance() {
+  function renderFormations() {
     const tag = $('allianceTag');
     if (!tag || !ui.state) return;
-    const al = R.allianceOf(me().board);
-    const key = al ? al.join('+') : '';
-    tag.hidden = !al;
-    if (al) tag.innerHTML = tr('ALLIANCE') + ' ' + allianceHtml(al);
-    if (key && key !== ui.allianceKey && ui.allianceKey !== undefined) {
+    const forms = R.formationsOf(me().board);
+    markForms($('board'), forms);
+    const key = forms.map((f) => f.fam + f.row + f.lvl).join('|');
+    tag.hidden = !forms.length;
+    if (forms.length) tag.innerHTML = forms.map((f) => `<i style="--c:${famColor(f.fam)}">${famName(f.fam)} ${ROMAN[f.lvl]}</i>`).join('');
+    if (key && key !== ui.formKey && ui.formKey !== undefined && forms.length >= (ui.formCount || 0)) {
       tag.animate([{ transform: 'scale(0.6)', opacity: 0 }, { transform: 'scale(1.15)', opacity: 1 }, { transform: 'scale(1)' }], { duration: 520, easing: 'ease-out' });
       SFX.golden();
-      if (store.get(ALLIANCE_KEY, '') !== '1') {
-        store.set(ALLIANCE_KEY, '1');
-        toast(tr('Alliance ! Deux familles de {n} astres : leurs astres gagnent +{atk}/+{hp} au début de chaque combat.', { n: R.ALLIANCE.min, atk: R.ALLIANCE.atk, hp: R.ALLIANCE.hp }), 4200);
+      if (store.get(FORM_KEY, '') !== '1') {
+        store.set(FORM_KEY, '1');
+        toast(tr('Formation ! Deux astres d’une même famille dans la même rangée : un bonus au début de chaque combat. Touchez l’étiquette pour le lire.'), 4600);
       }
     }
-    ui.allianceKey = key;
+    ui.formKey = key;
+    ui.formCount = forms.length;
   }
   $('allianceTag').addEventListener('click', () => { SFX.tap(); openFamilies(); });
 
@@ -1889,8 +1930,9 @@
     big.remove();
   }
 
-  async function doPlay(uid, index, fromRect, targetUid) {
-    const res = R.play(ui.state, uid, index, targetUid);
+  // slot : { row, index } choisi en glissant, ou rien (l'avant s'il y a de la place).
+  async function doPlay(uid, slot, fromRect, targetUid) {
+    const res = R.play(ui.state, uid, slot ? slot.index : null, targetUid, undefined, slot ? slot.row : undefined);
     if (!res.ok) { refuse(tr(res.reason)); renderHand(); return false; }
     tuto('placer');
     SFX.place();
@@ -2062,14 +2104,17 @@
     return null;
   }
 
-  function boardIndexAt(x, skip) {
-    let i = 0;
+  // La place visée dans le système : la rangée (moitié haute = avant), puis le rang dans la rangée.
+  function boardSlotAt(x, y, skip) {
+    const box = $('board').getBoundingClientRect();
+    const row = y < box.top + box.height / 2 ? 0 : 1;
+    let index = 0;
     for (const el of $('board').children) {
-      if (el.dataset.key === skip) continue;
+      if (el.dataset.key === skip || rowOfEl(el) !== row) continue;
       const b = el.getBoundingClientRect();
-      if (x > b.left + b.width / 2) i++;
+      if (x > b.left + b.width / 2) index++;
     }
-    return i;
+    return { row, index };
   }
 
   function magnetTargetAt(x, y, unit) {
@@ -2083,18 +2128,27 @@
     return null;
   }
 
-  function previewBoard(index, skip) {
-    const kids = [...$('board').children].filter((el) => el.dataset.key !== skip);
-    const room = me().board.length < R.BOARD_MAX || drag.src === 'board';
-    $('board').classList.add('previewing');
+  // Aperçu de la pose : la rangée visée s'éclaire et ses astres s'écartent. Rangée pleine : un
+  // astre déplacé échange sa place avec celui qu'il vise ; un nouvel astre est refusé.
+  function previewBoard(slot, skip) {
+    const p = me();
+    const moving = drag.src === 'board' ? p.board.find((u) => u.uid === skip) : null;
+    const count = p.board.filter((u) => u !== moving && R.rowOf(u) === slot.row).length;
+    const swap = !!moving && R.rowOf(moving) !== slot.row && count >= R.ROW_MAX;
+    const room = swap || (count < R.ROW_MAX && (moving || p.board.length < R.BOARD_MAX));
+    const board = $('board');
+    board.classList.add('previewing', 'drop-' + slot.row);
+    board.classList.toggle('cant', !room);
+    const kids = [...board.children].filter((el) => el.dataset.key !== skip && rowOfEl(el) === slot.row);
     kids.forEach((el, i) => {
       const w = el.getBoundingClientRect().width;
-      el.style.setProperty('--sx', index == null || !room ? '0px' : (i < index ? -w * 0.32 : w * 0.32) + 'px');
+      el.style.setProperty('--sx', !room || swap ? '0px' : (i < slot.index ? -w * 0.3 : w * 0.3) + 'px');
+      el.classList.toggle('swap', swap && i === Math.min(slot.index, kids.length - 1));
     });
   }
   function clearPreview() {
-    for (const el of $('board').children) el.style.removeProperty('--sx');
-    $('board').classList.remove('previewing');
+    for (const el of $('board').children) { el.style.removeProperty('--sx'); el.classList.remove('swap'); }
+    $('board').classList.remove('previewing', 'drop-0', 'drop-1', 'cant');
     document.querySelectorAll('.unit.magnet').forEach((el) => el.classList.remove('magnet'));
     $('systemZone').classList.remove('drop');
     $('tavern').classList.remove('drop');
@@ -2147,10 +2201,10 @@
       const m = drag.src === 'hand' ? magnetTargetAt(e.clientX, e.clientY, drag.unit) : null;
       if (m) { m.classList.add('magnet'); drag.magnet = m.dataset.uid; }
       else {
-        const index = boardIndexAt(e.clientX, drag.src === 'board' ? drag.key : null);
-        if (index !== drag.index && drag.index != null) SFX.slot();
-        drag.index = index;
-        previewBoard(drag.index, drag.src === 'board' ? drag.key : null);
+        const slot = boardSlotAt(e.clientX, e.clientY, drag.src === 'board' ? drag.key : null);
+        if (drag.slot && (slot.row !== drag.slot.row || slot.index !== drag.slot.index)) SFX.slot();
+        drag.slot = slot;
+        previewBoard(slot, drag.src === 'board' ? drag.key : null);
         $('systemZone').classList.add('drop');
       }
     } else if (zone === 'tavern' && drag.src === 'board') {
@@ -2179,16 +2233,17 @@
       if (!cancelled) {
         if (d.src === 'shop' && (d.zone === 'hand' || d.zone === 'board')) {
           finish();
-          acted = await doBuy(Number(d.el.dataset.slot), ghostRect, d.zone === 'board' ? d.index : null);
+          acted = await doBuy(Number(d.el.dataset.slot), ghostRect, d.zone === 'board' ? d.slot : null);
         } else if (d.src === 'hand' && d.zone === 'board') {
           finish();
-          acted = await doPlay(d.key, d.index, ghostRect, d.magnet);
+          acted = await doPlay(d.key, d.slot, ghostRect, d.magnet);
         } else if (d.src === 'board' && d.zone === 'tavern') {
           finish();
           acted = await doSell(d.key, ghostRect);
         } else if (d.src === 'board' && d.zone === 'board') {
           const before = rects($('board'));
-          R.reorder(ui.state, d.key, d.index);
+          const mv = R.move(ui.state, d.key, d.slot.row, d.slot.index);
+          if (mv.ok) tuto('rangee');
           finish();
           renderBoard();
           flipFrom($('board'), before, new Set([d.key]));
@@ -2273,10 +2328,13 @@
       if (full) actions += `<p class="muted">${tr('Votre système est plein : vendez un astre.')}</p>`;
     } else {
       u = p.board.find((v) => v.uid === el.dataset.uid);
-      const i = p.board.indexOf(u);
+      const mates = p.board.filter((v) => R.rowOf(v) === R.rowOf(u));
+      const i = mates.indexOf(u);
+      const other = p.board.filter((v) => R.rowOf(v) !== R.rowOf(u)).length;
       actions = `<button class="btn" data-act="left" data-uid="${u.uid}" ${i === 0 ? 'disabled' : ''}>${icon('back')}</button>
         <button class="btn primary" data-act="sell" data-uid="${u.uid}">${tr('VENDRE')} · +1 ${icon('bolt')}</button>
-        <button class="btn" data-act="right" data-uid="${u.uid}" ${i === p.board.length - 1 ? 'disabled' : ''}><span style="display:inline-block;transform:scaleX(-1)">${icon('back')}</span></button>`;
+        <button class="btn" data-act="right" data-uid="${u.uid}" ${i === mates.length - 1 ? 'disabled' : ''}><span style="display:inline-block;transform:scaleX(-1)">${icon('back')}</span></button>
+        <button class="btn wide" data-act="row" data-uid="${u.uid}">${R.rowOf(u) ? tr('PASSER À L’AVANT') : tr('PASSER À L’ARRIÈRE')}${other >= R.ROW_MAX ? ' · ' + tr('ÉCHANGE') : ''}</button>`;
     }
     if (!u) return;
     SFX.tap();
@@ -2409,15 +2467,17 @@
       const r = el ? el.querySelector('.orb').getBoundingClientRect() : null;
       closeSheet();
       ui.busy = true;
-      await doPlay(b.dataset.uid, me().board.length, r, act === 'magnet' ? b.dataset.target : null).finally(() => { ui.busy = false; });
+      await doPlay(b.dataset.uid, null, r, act === 'magnet' ? b.dataset.target : null).finally(() => { ui.busy = false; });
     } else if (act === 'sell') {
       closeSheet();
       ui.busy = true;
       await doSell(b.dataset.uid).finally(() => { ui.busy = false; });
-    } else if (act === 'left' || act === 'right') {
-      const p = me(), i = p.board.findIndex((u) => u.uid === b.dataset.uid);
+    } else if (act === 'left' || act === 'right' || act === 'row') {
+      const p = me(), u = p.board.find((v) => v.uid === b.dataset.uid);
+      const i = p.board.filter((v) => R.rowOf(v) === R.rowOf(u)).indexOf(u);
       const before = rects($('board'));
-      R.reorder(ui.state, b.dataset.uid, i + (act === 'left' ? -1 : 1));
+      if (act === 'row') { R.move(ui.state, u.uid, 1 - R.rowOf(u), null); tuto('rangee'); }
+      else R.reorder(ui.state, u.uid, i + (act === 'left' ? -1 : 1));
       renderBoard();
       flipFrom($('board'), before);
       SFX.tap();
@@ -2432,7 +2492,7 @@
     } else if (act === 'set') {
       const v = b.dataset.v;
       if (v === 'resume') { closeSheet(); await resumeGame(); }
-      else if (v === 'new') { closeSheet(); await newGameFlow(); }
+      else if (v === 'new') { closeSheet(); await newGameFlow(Number(b.dataset.size) || 2); }
       else await settingsAction(v, b);
     } else if (act === 'rival') {
       const row = b.nextElementSibling;
@@ -2487,14 +2547,22 @@
   }
 
   // ─── Rivaux, familles, menu, aide ───────────────────────────
+  // Un système vu de loin (rival, fin de partie) : l'avant au-dessus, l'arrière dessous.
+  function staticRows(board) {
+    const [front, back] = R.layout(board || []);
+    if (!front.length && !back.length) return `<span class="muted">${tr('Système vide')}</span>`;
+    const line = (list, row) => `<div class="srow"><small>${rowName(row)}</small><div class="row">${list.map(staticUnit).join('') || '<span class="muted">–</span>'}</div></div>`;
+    return `<div class="static-rows">${line(front, 0)}${back.length ? line(back, 1) : ''}</div>`;
+  }
   const staticUnit = (u) => `<div class="unit" data-id="${u.id}" data-golden="${u.golden ? 1 : 0}" data-kw="${u.kw.join(' ')}"><div class="orb" data-planet="${u.id}" data-golden="${u.golden ? 1 : 0}"></div><div class="stats"><b class="atk">${u.atk}</b><b class="hp">${u.hp}</b></div></div>`;
 
   function openRivals() {
     const s = ui.state;
+    const duel = R.isDuel(s);
     const list = s.players.slice().sort((a, b) => (b.alive - a.alive) || (a.alive ? b.hp - a.hp : a.rank - b.rank));
     const last = me().lastOpp;
     const rows = list.map((p, i) => {
-      const board = p.board.map(staticUnit).join('');
+      const board = staticRows(p.bot || p.remote ? p.seen || [] : p.board);
       const hp = Math.max(0, p.hp);
       const lost = ui.prevHp && ui.prevHp[p.id] != null && p.hp < ui.prevHp[p.id] ? ui.prevHp[p.id] - p.hp : 0;
       const tag = p.bot && p.id === last ? `<em>${tr('DERNIER ADVERSAIRE')}</em>` : '';
@@ -2503,21 +2571,32 @@
           <span class="rv-who"><span class="n">${esc(p.bot ? p.name : tr('VOUS'))}</span>${tag}<span class="l">${tr('niveau {n}', { n: p.tier })}${p.alive ? '' : ' · ' + tr('éliminé {rank}', { rank: ordinal(p.rank) })}</span></span>
           <span class="rv-hp">${lost ? `<small>−${lost}</small>` : ''}<b>${p.alive ? hp : '–'}</b><i class="hp-bar"><i style="width:${p.alive ? Math.min(100, hp / (p.maxHp || R.START_HP) * 100) : 0}%"></i></i></span>
         </button>
-        <div class="rival-board" hidden><p class="rv-last">${p.bot ? tr('Dernier système joué') : tr('Votre système')}</p><div class="row">${board || `<span class="muted">${tr('Système vide')}</span>`}</div></div>`;
+        <div class="rival-board" ${duel && p !== me() ? '' : 'hidden'}><p class="rv-last">${p.bot || p.remote ? tr('Système joué au dernier combat') : tr('Votre système')}</p>${board}</div>`;
     }).join('');
-    openSheet(`<h3>${tr('UNIVERS EN LICE · {n}', { n: R.alivePlayers(s).length })}</h3><div class="rival-list">${rows}</div>
-      <p class="muted">${tr('Touchez un univers pour voir le dernier système qu’il a joué, puis un astre pour lire ce qu’il fait. Dégâts plafonnés à {n} tant que plus de trois univers sont en vie.', { n: R.DAMAGE_CAP })}</p>`, { top: true });
+    const note = duel
+      ? tr('Voici le système que votre rival a joué au dernier combat. Préparez votre placement : chaque astre de l’avant frappe celui d’en face.')
+      : tr('Touchez un univers pour voir le dernier système qu’il a joué, puis un astre pour lire ce qu’il fait. Dégâts plafonnés à {n} tant que plus de trois univers sont en vie.', { n: R.DAMAGE_CAP });
+    openSheet(`<h3>${duel ? tr('DUEL') : tr('UNIVERS EN LICE · {n}', { n: R.alivePlayers(s).length })}</h3><div class="rival-list">${rows}</div>
+      <p class="muted">${note}</p>`, { top: true });
+    tuto('repere');
   }
 
   function openFamilies() {
     const p = me();
     const items = ui.state.families.concat(['neutre']).map((f) => {
       const n = p.board.filter((u) => R.famOf(u) === f).length;
-      return `<div class="fam-item" style="--c:${famColor(f)}"><b>${R.FAMILIES[f].name.toUpperCase()}</b> <small>· ${tr('{n} dans votre système', { n })}</small><p>${esc(R.FAMILIES[f].text)}</p></div>`;
+      // Chaque famille : son effet propre, puis ses formations à l'avant et à l'arrière (niveau I).
+      const forms = f === 'neutre' ? '' : `<p class="fam-form"><b>${tr('AVANT')}</b> ${esc(R.formText(f, 0, 1))}</p><p class="fam-form"><b>${tr('ARRIÈRE')}</b> ${esc(R.formText(f, 1, 1))}</p>`;
+      return `<div class="fam-item" style="--c:${famColor(f)}"><b>${R.FAMILIES[f].name.toUpperCase()}</b> <small>· ${tr('{n} dans votre système', { n })}</small><p>${esc(R.FAMILIES[f].text)}</p>${forms}</div>`;
     }).join('');
     const law = R.LAW[p.law];
-    openSheet(`<h3>${tr('FAMILLES DE CET UNIVERS')}</h3><div class="fam-list">${items}</div>
-      <h3 style="margin-top:18px">${tr('ALLIANCE')}</h3><div class="fam-item" style="--c:var(--gold)"><b>${(() => { const al = R.allianceOf(p.board); return al ? tr('ACTIVE') + ' · ' + allianceHtml(al) : tr('INACTIVE'); })()}</b><p>${tr('Réunissez deux familles d’au moins {n} astres chacune : leurs astres gagnent +{atk}/+{hp} au début de chaque combat. Les mélanges deviennent aussi forts qu’une famille seule.', { n: R.ALLIANCE.min, atk: R.ALLIANCE.atk, hp: R.ALLIANCE.hp })}</p></div>
+    const active = R.formationsOf(p.board);
+    const now = active.length
+      ? active.map((f) => `<div class="fam-item" style="--c:${famColor(f.fam)}"><b>${formLabel(f)}</b> <small>· ${tr('{n} astres', { n: f.n })}</small><p>${esc(R.formText(f.fam, f.row, f.lvl))}</p></div>`).join('')
+      : `<p class="muted">${tr('Aucune formation pour l’instant.')}</p>`;
+    openSheet(`<h3>${tr('VOS FORMATIONS')}</h3>${now}
+      <p class="muted">${tr('Deux astres d’une même famille dans la même rangée forment une formation : niveau I à 2 astres, II à 3, III à 4. Chaque famille a un bonus à l’avant et un autre à l’arrière, au début du combat.')}</p>
+      <h3 style="margin-top:18px">${tr('FAMILLES DE CET UNIVERS')}</h3><div class="fam-list">${items}</div>
       <h3 style="margin-top:18px">${tr('VOTRE LOI')}</h3><div class="fam-item" style="--c:${famColor(law.fam)}"><b>${esc(law.name).toUpperCase()}</b><p>${esc(law.text)}</p></div>`);
   }
 
@@ -2533,16 +2612,18 @@
   function helpHtml(fromSettings) {
     const ic = { sword: icon('sword'), heart: icon('heart'), skull: icon('skull'), spark: icon('spark') };
     return `<h3>${tr('COMMENT JOUER')}</h3><ul class="help">
-      <li>${tr('Vous affrontez <b>sept univers</b>. Chaque cycle : vous achetez, puis votre système combat seul un rival.')}</li>
+      <li>${tr('En <b>duel</b>, vous affrontez un seul rival, cycle après cycle. Chaque cycle : vous achetez, vous placez, puis votre système combat seul. Le premier à 0 PV perd. La <b>mêlée à 8</b> (Multijoueur) suit les mêmes règles contre sept univers.')}</li>
       <li>${tr('<b>Acheter</b> coûte 3 énergies (glissez un astre vers votre main ou directement dans le système). <b>Vendre</b> rend 1 énergie (glissez un astre du système vers la Création). <b>Actualiser</b> coûte 1.')}</li>
       <li>${tr('<b>Geler</b> garde les astres proposés pour le cycle suivant. <b>Monter de niveau</b> débloque des astres plus puissants ; le prix baisse à chaque cycle.')}</li>
-      <li>${tr('Votre système compte <b>7 orbites</b>, votre main 10 astres. Les astres attaquent de gauche à droite : l’ordre compte.')}</li>
+      <li>${tr('Votre système a <b>deux rangées de 4</b> (7 astres au plus). L’<b>avant</b> attaque et encaisse ; l’<b>arrière</b> est à l’abri des attaques et <b>avance</b> quand l’avant est tombé. Les effets des astres agissent depuis les deux rangées.')}</li>
+      <li>${tr('Chaque astre de l’avant frappe l’ennemi <b>en face</b> de lui (les Remparts d’abord), de gauche à droite. Aucun hasard dans les cibles : votre placement décide.')}</li>
+      <li>${tr('<b>Formation</b> : deux astres d’une même famille dans la même rangée. Chaque famille a un bonus à l’avant et un autre à l’arrière, plus fort à 3 et 4 astres. Mélangez : trois Brasier devant, deux Glace derrière…')}</li>
+      <li>${tr('Touchez la barre du rival pour voir le <b>système qu’il a joué</b> au dernier combat, et adaptez votre placement.')}</li>
       <li>${tr('<b>Touchez un astre</b> pour lire ce qu’il fait, même en combat ou chez un rival. Sous chaque astre : {sword} son <b>Attaque</b> et {heart} ses <b>PV</b>. En haut à droite : {skull} il a un effet d’<b>Effondrement</b> (quand il est détruit, comme laisser des Débris), {spark} il a un autre effet.', ic)}</li>
       <li>${tr('<b>Trois copies</b> d’un même astre fusionnent en un <b>astre doré</b> (stats doublées). Le placer offre une <b>découverte</b> du niveau supérieur.')}</li>
       <li>${tr('Chaque partie active <b>5 familles</b> sur 12, plus les neutres. La réserve est <b>partagée</b> : si des rivaux jouent une famille, ses astres se font rares.')}</li>
-      <li>${tr('<b>Alliance</b> : deux familles d’au moins {n} astres chacune dans votre système, et leurs astres gagnent +{atk}/+{hp} au début de chaque combat. Une famille seule ou un mélange : les deux mènent à la victoire.', { n: R.ALLIANCE.min, atk: R.ALLIANCE.atk, hp: R.ALLIANCE.hp })}</li>
-      <li>${tr('Le perdant subit : niveau du gagnant + niveaux de ses astres survivants. <b>Maximum {n} dégâts</b> tant que plus de trois univers sont en vie.', { n: R.DAMAGE_CAP })}</li>
-      <li>${tr('Seuls les <b>trois premiers</b> gagnent des poussières d’étoiles : {a}, {b} et {c}.', { a: R.REWARDS[1], b: R.REWARDS[2], c: R.REWARDS[3] })}</li>
+      <li>${tr('Le perdant subit : niveau du gagnant + niveaux de ses astres survivants. En duel, chacun commence avec <b>deux fois plus de PV</b>. En mêlée, <b>maximum {n} dégâts</b> tant que plus de trois univers sont en vie.', { n: R.DAMAGE_CAP })}</li>
+      <li>${tr('Un duel gagné rapporte {d} poussières d’étoiles. En mêlée, seuls les <b>trois premiers</b> en gagnent : {a}, {b} et {c}.', { d: R.DUEL.rewards[1], a: R.REWARDS[1], b: R.REWARDS[2], c: R.REWARDS[3] })}</li>
       <li>${tr('Chaque partie rapporte de l’<b>expérience</b>. Les niveaux ouvrent des améliorations au <b>Marché stellaire</b> : avec vos poussières, faites renaître votre planète, celle qui tourne derrière le menu, ou achetez des <b>fonds animés</b> ({n}) pour vos parties.', { n: COS_PRICE })}</li>
     </ul><div class="sheet-actions">${fromSettings ? `<button class="btn" data-act="set" data-v="tutos">${icon('back')} ${tr('TUTORIELS')}</button>` : ''}<button class="btn primary" data-act="close">${tr('COMPRIS')}</button></div>`;
   }
@@ -2611,12 +2692,13 @@
     const make = (u) => { const el = makeUnit(u, 'combat'); return el; };
     syncList($('board'), boards[0], (u) => u.cid, make, (el, u) => updateUnit(el, u, 'combat'));
     syncList($('enemy'), boards[1], (u) => u.cid, make, (el, u) => updateUnit(el, u, 'combat'));
-    sizeRow($('board'), 'board', 92);
-    sizeRow($('enemy'), 'board', 92);
-    arc($('board'));
-    arc($('enemy'));
-    for (const el of $('enemy').children) el.style.setProperty('--arc', (-parseFloat(el.style.getPropertyValue('--arc')) || 0) + 'px');
+    layoutRows($('board'));
+    layoutRows($('enemy'), true);
+    const forms = (b) => R.formationsOf(b.map((u) => ({ id: u.id, row: u.row })));
+    markForms($('board'), forms(boards[0]));
+    markForms($('enemy'), forms(boards[1]));
   }
+  const relayout = (row) => layoutRows(row, row === $('enemy'));
 
   const unitByCid = (cid) => document.querySelector(`#board .unit[data-cid="${cid}"], #enemy .unit[data-cid="${cid}"]`);
 
@@ -2797,17 +2879,43 @@
         await sleep(900);
         break;
       }
-      case 'alliance': {
-        const row = combatRowEl(e.side);
-        popOn(row, tr('ALLIANCE') + ' · ' + allianceHtml(e.fams), 'gold');
+      case 'formation': {
+        // La formation s'annonce au-dessus de ses astres, qui s'allument de la couleur de leur famille.
+        const els = e.cids.map(unitByCid).filter(Boolean);
+        if (!els.length) break;
+        const c = hexRgb(famColor(e.fam));
+        const xs = els.map((el) => center(el.querySelector('.orb')));
+        const top = Math.min(...els.map((el) => el.getBoundingClientRect().top));
+        popAt(xs.reduce((n, p) => n + p[0], 0) / xs.length, top + 6, `${famName(e.fam)} ${ROMAN[e.lvl]} · ${rowName(e.row)}`, 'gold');
         SFX.golden();
-        for (const el of row.querySelectorAll('.unit')) {
-          if (!e.fams.includes(R.CARD[el.dataset.id].fam)) continue;
+        for (const el of els) {
           const orb = el.querySelector('.orb');
           const [x, y] = center(orb);
-          stage.ring(x, y, orb.getBoundingClientRect().width * 0.45, { n: 22, colors: [hexRgb(famColor(R.CARD[el.dataset.id].fam)), [246, 196, 83]], speed: 40, life: 0.6, flat: 0.5 });
+          stage.ring(x, y, orb.getBoundingClientRect().width * 0.45, { n: 22, colors: [c, [255, 255, 255]], speed: 40, life: 0.6, flat: 0.5 });
         }
-        await sleep(600);
+        await sleep(650);
+        break;
+      }
+      case 'advance': {
+        // L'avant est tombé : l'arrière avance d'un pas, face au rival.
+        const row = combatRowEl(e.side);
+        const before = rects(row);
+        for (const cid of e.cids) { const el = unitByCid(cid); if (el) el.dataset.row = '0'; }
+        relayout(row);
+        flipFrom(row, before);
+        SFX.whoosh(0);
+        popOn(row, e.side === 0 ? tr('VOTRE ARRIÈRE AVANCE') : tr('SON ARRIÈRE AVANCE'), 'info');
+        await sleep(520);
+        break;
+      }
+      case 'heal': {
+        const el = unitByCid(e.cid);
+        if (el) {
+          el.querySelector('.hp').textContent = e.hp;
+          popOn(el, tr('+{n} PV', { n: e.n }), 'good');
+          SFX.buff(panOf(el));
+        }
+        await sleep(160);
         break;
       }
       case 'law': {
@@ -2877,8 +2985,9 @@
           const atk = Number(el.querySelector('.atk').textContent) + e.a;
           const hp = Number(el.querySelector('.hp').textContent) + e.h;
           setStats(el, Math.max(0, atk), hp, true);
-          popOn(el, `+${e.a}/+${e.h}`, 'good');
-          SFX.buff(panOf(el));
+          const sg = (n) => (n < 0 ? '−' + -n : '+' + n);
+          popOn(el, `${sg(e.a)}/${sg(e.h)}`, e.a < 0 || e.h < 0 ? 'bad' : 'good');
+          if (e.a >= 0 && e.h >= 0) SFX.buff(panOf(el));
         }
         await sleep(160);
         break;
@@ -2921,9 +3030,7 @@
         const row = el.parentElement;
         const before = rects(row);
         el.remove();
-        sizeRow(row, 'board', 92);
-        arc(row);
-        if (row === $('enemy')) for (const k of row.children) k.style.setProperty('--arc', (-parseFloat(k.style.getPropertyValue('--arc')) || 0) + 'px');
+        relayout(row);
         flipFrom(row, before);
         await sleep(160);
         break;
@@ -2935,9 +3042,7 @@
         el.dataset.key = e.unit.cid;
         const kids = [...row.children];
         row.insertBefore(el, kids[e.index] || null);
-        sizeRow(row, 'board', 92);
-        arc(row);
-        if (row === $('enemy')) for (const k of row.children) k.style.setProperty('--arc', (-parseFloat(k.style.getPropertyValue('--arc')) || 0) + 'px');
+        relayout(row);
         flipFrom(row, before);
         const orb = el.querySelector('.orb');
         stage.setReveal(orb, 0);
@@ -3039,7 +3144,8 @@
       s.rankedDone = true;
       const c = K.sanitize(readJson(CLASSE_KEY, null));
       if (!s.mp || s.mp.mode !== 'ranked') s.rankedRes = null;
-      else { s.rankedRes = K.record(c, quit ? 8 : rank, s.mp.lobby); store.set(CLASSE_KEY, JSON.stringify(c)); }
+      // Un duel classé compte comme une 2e place (victoire) ou une 6e (défaite) : ±18 points.
+      else { s.rankedRes = K.record(c, quit ? 8 : R.isDuel(s) ? (rank === 1 ? 2 : 6) : rank, s.mp.lobby); store.set(CLASSE_KEY, JSON.stringify(c)); }
     }
     $('endRanked').innerHTML = rankedLine(s.rankedRes);
     if (!s.xpGiven) {
@@ -3065,16 +3171,21 @@
     $('xpGain').textContent = '+0 XP';
     $('xpDetail').textContent = quit ? tr('Partie abandonnée : pas d’expérience.') : tr('Classement +{r} · {c} cycles +{x}', { r: gain.rank, c: gain.cycles / 5, x: gain.cycles });
     try { localStorage.removeItem(SAVE_KEY); } catch (err) { /* stockage indisponible */ }
-    $('endRank').innerHTML = ordinal(rank);
-    $('endRank').classList.toggle('podium', rank <= 3);
-    $('endText').textContent = rank === 1 ? tr('Votre système domine l’univers.')
-      : rank <= 3 ? tr('Sur le podium : les poussières d’étoiles sont à vous.')
-        : tr('Votre univers s’est éteint. Seuls les trois premiers gagnent des poussières.');
-    $('endBoard').innerHTML = me().board.map(staticUnit).join('');
+    const duel = R.isDuel(s);
+    const good = duel ? rank === 1 : rank <= 3;
+    $('endRank').innerHTML = duel ? (rank === 1 ? tr('VICTOIRE') : tr('DÉFAITE')) : ordinal(rank);
+    $('endRank').classList.toggle('podium', good);
+    $('endRank').classList.toggle('duel', duel);
+    $('endText').textContent = duel
+      ? (rank === 1 ? tr('Votre système l’emporte sur {name}.', { name: s.players[1].name }) : tr('{name} l’emporte cette fois. Regardez son système et préparez la revanche.', { name: s.players[1].name }))
+      : rank === 1 ? tr('Votre système domine l’univers.')
+        : rank <= 3 ? tr('Sur le podium : les poussières d’étoiles sont à vous.')
+          : tr('Votre univers s’est éteint. Seuls les trois premiers gagnent des poussières.');
+    $('endBoard').innerHTML = staticRows(me().board);
     $('endDust').textContent = '+0';
     $('endTotal').innerHTML = tr('Total') + ' ' + icon('dust') + ' ' + (dust() - (s.reward || 0) - gift);
     await show('end');
-    if (rank <= 3) SFX.win(); else SFX.lose();
+    if (good) SFX.win(); else SFX.lose();
     const reward = s.reward || 0;
     if (reward) {
       const t0 = performance.now();
@@ -3105,6 +3216,7 @@
   // Chaque partie rapporte de l'expérience : selon le classement et les cycles tenus.
   const XP_KEY = 'orbite.xp';
   const RANK_XP = [0, 120, 90, 70, 55, 40, 30, 20, 10];
+  const DUEL_XP = { win: 80, loss: 25 };
   const LEVEL_GIFT = 25;
   // Environ 300 parties pour atteindre le niveau 120 et une planète pleinement vivante.
   const xpNeed = (lvl) => 80 + 5 * (lvl - 1);
@@ -3117,7 +3229,7 @@
   function xpFor(s, rank) {
     const p = s.players[0];
     const cycles = Math.max(1, p.deadRound || s.round || 1);
-    const r = RANK_XP[rank] || 10;
+    const r = R.isDuel(s) ? (rank === 1 ? DUEL_XP.win : DUEL_XP.loss) : RANK_XP[rank] || 10;
     return { rank: r, cycles: cycles * 5, total: r + cycles * 5 };
   }
 
@@ -3255,7 +3367,8 @@
     try { await fn(); } finally { ui.busy = false; }
   };
 
-  async function newGameFlow() {
+  async function newGameFlow(size) {
+    ui.size = size === 8 ? 8 : 2;
     stopAmbient();
     renderLaws();
     await show('laws');
@@ -3272,27 +3385,29 @@
     // Partie reprise au milieu d'une découverte : elle revient tout de suite.
     if (me() && me().discover.length) setTimeout(() => { if (!ui.discoverDone) openDiscover(); }, 700);
   }
-  // Le plateau commun a son propre écran et sa propre sauvegarde locale.
-  $('soloBtn').addEventListener('click', () => {
-    SFX.tap();
-    stopAmbient();
-    window.location.href = 'plateau.html';
-  });
-  $('legacySoloBtn')?.addEventListener('click', () => $('quickBtn').click());
-  $('quickBtn').addEventListener('click', () => {
+  // Jouer : le duel contre l'IA, le cœur du jeu. La mêlée à 8 est rangée dans Multijoueur.
+  // Une seule partie solo à la fois : celle en cours se reprend, quel que soit son mode.
+  function openMode(size) {
     SFX.tap();
     const s = loadGame();
-    if (!s) { newGameFlow(); return; }
-    openSheet(`<h3>${tr('JOUER SOLO')}</h3><h2>${tr('Une partie vous attend')}</h2>
-      <p class="muted">${tr('Cycle {c} · {hp} PV · {n} univers en lice', { c: s.round, hp: Math.max(0, s.players[0].hp), n: R.alivePlayers(s).length })}</p>
-      <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="resume">${tr('REPRENDRE')}</button><button class="btn" data-act="set" data-v="new">${tr('NOUVELLE PARTIE')}</button></div>`);
-  });
+    if (!s) { newGameFlow(size); return; }
+    const duel = R.isDuel(s);
+    const info = duel
+      ? tr('Duel contre {name} · cycle {c} · {hp} PV', { name: esc(s.players[1].name), c: s.round, hp: Math.max(0, s.players[0].hp) })
+      : tr('Mêlée · cycle {c} · {hp} PV · {n} univers en lice', { c: s.round, hp: Math.max(0, s.players[0].hp), n: R.alivePlayers(s).length });
+    openSheet(`<h3>${size === 2 ? tr('DUEL') : tr('MÊLÉE À 8')}</h3><h2>${tr('Une partie vous attend')}</h2>
+      <p class="muted">${info}</p>
+      <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="resume">${tr('REPRENDRE')}</button><button class="btn" data-act="set" data-v="new" data-size="${size}">${size === 2 ? tr('NOUVEAU DUEL') : tr('NOUVELLE MÊLÉE')}</button></div>`);
+  }
+  $('soloBtn').addEventListener('click', () => openMode(2));
+  $('quickBtn').addEventListener('click', () => openMode(8));
+  $('meleeBtn').addEventListener('click', () => openMode(8));
   $('multiBtn').addEventListener('click', async () => {
     SFX.tap();
     if (window.OrbiteMultiUI) { stopAmbient(); window.OrbiteMultiUI.open(); return; }
     stopAmbient();
     await show('multi');
-    $('mpBody').innerHTML = `<p class="muted">${tr('Les salons en ligne sont indisponibles. Vous pouvez jouer à l’affrontement classique en solo.')}</p>`;
+    $('mpBody').innerHTML = `<p class="muted">${tr('Les salons en ligne sont indisponibles. La mêlée à 8 reste jouable hors ligne.')}</p>`;
   });
   $('multiBack').addEventListener('click', async () => {
     if (window.OrbiteMultiUI) return;
@@ -3410,7 +3525,7 @@
     }
   });
   $('skipBtn').addEventListener('click', () => { if (!(ui.state && ui.state.mp)) ui.skip = true; });
-  $('againBtn').addEventListener('click', async () => { SFX.tap(); renderLaws(); await show('laws'); });
+  $('againBtn').addEventListener('click', async () => { SFX.tap(); ui.size = ui.state && !R.isDuel(ui.state) ? 8 : 2; renderLaws(); await show('laws'); });
   $('endHome').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
 
   window.addEventListener('resize', () => {

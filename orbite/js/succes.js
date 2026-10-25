@@ -48,7 +48,7 @@
   add('eclair', 'exploits', 'Éclair', 'Gagner une partie en 12 cycles ou moins.', 1, (f) => f.c.fast, 3);
   add('complet', 'exploits', 'Système complet', 'Finir une partie avec 7 astres dans votre système.', 1, (f) => f.c.fullBoard, 1);
   add('tresor', 'exploits', 'Trésor doré', 'Finir une partie avec 3 astres dorés dans votre système.', 1, (f) => f.c.triGold, 2);
-  add('alliance', 'exploits', 'Alliance sacrée', 'Finir une partie avec une Alliance de deux familles.', 1, (f) => f.c.alliance, 1);
+  add('alliance', 'exploits', 'Double formation', 'Finir une partie avec deux formations.', 1, (f) => f.c.alliance, 1);
 
   add('ligne-1', 'ligne', 'Premier contact', 'Jouer une partie en ligne.', 1, (f) => f.c.mpGames, 1);
   add('ligne-gagne', 'ligne', 'Victoire en ligne', 'Gagner une partie en ligne.', 1, (f) => f.c.mpWins, 3);
@@ -145,7 +145,7 @@
       if (cycles >= 20) c.marathon++;
       if (board.length >= 7) c.fullBoard++;
       if (board.filter((u) => u.golden).length >= 3) c.triGold++;
-      if (R.allianceOf(board)) c.alliance++;
+      if (R.formationsOf(board).length >= 2) c.alliance++;
     }
     if (won) {
       c.lawWins[p.law] = 1;
