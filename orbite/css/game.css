@@ -657,7 +657,7 @@ body.in-combat .system::before { display: none; }
 .zone-label { position: absolute; top: 6px; left: 0; font-size: 10px; letter-spacing: 0.2em; color: var(--faint); }
 /* Deux rangées : grille de demi-colonnes, chaque astre en couvre deux et chaque rangée est centrée
    (js : layoutRows). Pour vous, l'avant est en haut, face au rival ; pour lui, en bas. */
-.board, .enemy {
+.row.board, .row.enemy {
   --u: clamp(44px, 12.6vw, 64px);
   display: grid;
   grid-template-columns: repeat(var(--cols, 8), calc(var(--u) / 2 + 3px));
@@ -669,9 +669,9 @@ body.in-combat .system::before { display: none; }
   row-gap: 4px;
   gap: 4px 0;
 }
-.board .unit, .enemy .unit { width: var(--u); }
+.row.board .unit, .row.enemy .unit { width: var(--u); }
 /* Les deux orbites du système : l'avant (extérieure) et l'arrière (intérieure). */
-.board::before, .board::after {
+.row.board::before, .row.board::after {
   position: absolute;
   left: 0;
   right: 0;
@@ -683,11 +683,11 @@ body.in-combat .system::before { display: none; }
   pointer-events: none;
   transition: border-color 0.2s, background 0.2s;
 }
-.board::before { content: attr(data-front); top: calc(var(--u) * 0.04); height: calc(var(--u) * 0.92); }
-.board::after { content: attr(data-back); top: calc(var(--u) * 1.04 + 34px); height: calc(var(--u) * 0.92); inset-inline: 7%; }
-.board.drop-0::before, .board.drop-1::after { border-color: var(--line); background: rgba(241, 236, 218, 0.03); color: var(--dim); }
-.board.drop-0.cant::before, .board.drop-1.cant::after { border-color: rgba(255, 111, 111, 0.5); color: var(--bad); }
-body.in-combat .board::before, body.in-combat .board::after { content: none; }
+.row.board::before { content: attr(data-front); top: calc(var(--u) * 0.04); height: calc(var(--u) * 0.92); }
+.row.board::after { content: attr(data-back); top: calc(var(--u) * 1.04 + 34px); height: calc(var(--u) * 0.92); inset-inline: 7%; }
+.row.board.drop-0::before, .row.board.drop-1::after { border-color: var(--line); background: rgba(241, 236, 218, 0.03); color: var(--dim); }
+.row.board.drop-0.cant::before, .row.board.drop-1.cant::after { border-color: rgba(255, 111, 111, 0.5); color: var(--bad); }
+body.in-combat .row.board::before, body.in-combat .row.board::after { content: none; }
 .unit.swap .orb { outline: 1px dashed var(--gold); outline-offset: 2px; border-radius: 50%; }
 /* Astres d'une formation : un trait de la couleur de leur famille sous leurs statistiques. */
 .unit.in-form .stats::after { content: ''; position: absolute; left: 22%; right: 22%; bottom: -5px; height: 2px; background: var(--fc); opacity: 0.85; }
