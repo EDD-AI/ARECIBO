@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 71;
+  const VERSION = 72;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -27,6 +27,9 @@
   I18N.localize(R.FAMILIES, ['name', 'text']);
   I18N.localize(R.KEYWORDS, ['name', 'text']);
   const $ = (id) => document.getElementById(id);
+  // Écouteur posé seulement si l'élément existe (une page plus ancienne restée en cache peut ne pas
+  // l'avoir). Pas de « ?. » dans ce fichier : un iPhone resté sous iOS 12 ou 13 ne le lirait plus.
+  function listen(id, type, fn, opts) { const el = $(id); if (el) el.addEventListener(type, fn, opts); }
   const SAVE_KEY = 'orbite.partie.v1';
   // Le jeu est en pré-alpha : le numéro s'affiche toujours « PRE.ALPHA n ».
   const VERSION_LABEL = 'PRE.ALPHA ' + VERSION;
@@ -391,6 +394,8 @@
     }
     const next = $(name);
     next.classList.add('active');
+    // Un écran s'affiche : le filet de secours d'index.html n'a plus à intervenir.
+    window.__orbiteUp = true;
     // Les grands écrans s'allument et s'éteignent comme les consoles d'ARECIBO.
     const PANELS = ['market', 'creation', 'multi', 'profile', 'colony', 'explore', 'system'];
     if (ui.screen === 'menu' && PANELS.includes(name)) SFX.on();
@@ -800,7 +805,11 @@
       if (fin && ui.screen === 'menu') { ui.state = fin; await endScreen(); }
     } catch (err) {
       console.error(err);
-      await enterMenu(false);
+      try { await enterMenu(false); } catch (err2) {
+        // Même le menu ne s'ouvre pas : l'écran de secours propose de réparer.
+        console.error(err2);
+        if (window.__orbiteRescue) window.__orbiteRescue(err2);
+      }
     }
   }
 
@@ -835,7 +844,7 @@
       }).join('')).join('');
   }
 
-  $('mkNext')?.addEventListener('click', async (e) => {
+  listen('mkNext', 'click', async (e) => {
     const b = e.target.closest('[data-up]');
     if (!b || b.disabled || ui.busy) return;
     const u = W.BY_ID[b.dataset.up], list = worldList();
@@ -985,7 +994,7 @@
       </div>
       <p class="mk-note">${tr('Jamais pour être plus fort en partie : l’Affrontement reste équitable.')}</p>`;
   }
-  $('seedShop')?.addEventListener('click', (e) => {
+  listen('seedShop', 'click', (e) => {
     const b = e.target.closest('[data-pack]');
     if (!b) return;
     SFX.tap();
@@ -997,13 +1006,13 @@
       <p class="sheet-text">${tr('L’achat de graines de vie arrive dans une prochaine version. En attendant, gagnez-en en jouant : victoires, niveaux, expéditions et succès.')}</p>
       <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
   });
-  $('mkTabs')?.addEventListener('click', (e) => {
+  listen('mkTabs', 'click', (e) => {
     const b = e.target.closest('[data-tab]');
     if (!b || b.classList.contains('on')) return;
     SFX.tap();
     marketTab(b.dataset.tab);
   });
-  $('cosList')?.addEventListener('click', (e) => {
+  listen('cosList', 'click', (e) => {
     const buy = e.target.closest('[data-cos-buy]'), eq = e.target.closest('[data-cos-equip]'), row = e.target.closest('[data-cos]');
     const c = cosmetics();
     if (buy) {
@@ -1129,7 +1138,7 @@
     if (window.__orbite.onlineUI) window.__orbite.onlineUI.renderProfile(tab);
   }
 
-  $('profileBody')?.addEventListener('click', (e) => {
+  listen('profileBody', 'click', (e) => {
     const b = e.target.closest('[data-pf]');
     if (!b) return;
     if (b.dataset.pf === 'tab') { SFX.tap(); ui.pfTab = b.dataset.tab; renderProfile(); return; }
@@ -1234,8 +1243,8 @@
       popOn($('menuDust'), `+${gift.dust} ${icon('dust')}`, 'gold');
       toast(tr('Code accepté : +{n} poussières d’étoiles.', { n: gift.dust }), 3200);
     };
-    $('giftGo')?.addEventListener('click', go);
-    $('giftCode')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+    listen('giftGo', 'click', go);
+    listen('giftCode', 'keydown', (e) => { if (e.key === 'Enter') go(); });
     setTimeout(() => $('giftCode').focus(), 200);
   }
 
@@ -1366,7 +1375,7 @@
     };
     draw(0);
   }
-  $('creditsClose')?.addEventListener('click', () => closeCredits());
+  listen('creditsClose', 'click', () => closeCredits());
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCredits(); });
 
   async function settingsAction(v, btn) {
@@ -1436,7 +1445,7 @@
     }
   }
 
-  $('lawList')?.addEventListener('click', (e) => {
+  listen('lawList', 'click', (e) => {
     const b = e.target.closest('.law');
     if (!b) return;
     SFX.tap();
@@ -1447,7 +1456,7 @@
     tuto('loi');
   });
 
-  $('lawGo')?.addEventListener('click', async () => {
+  listen('lawGo', 'click', async () => {
     if (!ui.lawPick) return;
     SFX.level();
     ui.state = R.newGame(ui.seed, ui.lawPick, { size: ui.size || 2 });
@@ -1778,7 +1787,7 @@
     ui.formKey = key;
     ui.formCount = forms.length + phen.length;
   }
-  $('allianceTag')?.addEventListener('click', () => { SFX.tap(); openFamilies(); });
+  listen('allianceTag', 'click', () => { SFX.tap(); openFamilies(); });
 
   function renderHand() {
     const p = me();
@@ -2407,7 +2416,7 @@
     if (cb) cb();
     tuto('fermer');
   }
-  $('overlay')?.addEventListener('click', (e) => {
+  listen('overlay', 'click', (e) => {
     if (e.target === $('overlay') && !ui.sheetLocked) { SFX.tap(); closeSheet(); }
   });
 
@@ -2554,7 +2563,7 @@
     if (el) showPeek(el);
   });
 
-  $('sheet')?.addEventListener('click', async (e) => {
+  listen('sheet', 'click', async (e) => {
     const b = e.target.closest('[data-act]');
     if (!b || b.disabled) return;
     const act = b.dataset.act;
@@ -3556,22 +3565,22 @@
       <p class="muted">${info}</p>
       <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="resume">${tr('REPRENDRE')}</button><button class="btn" data-act="set" data-v="new" data-size="${size}">${size === 2 ? tr('NOUVEAU DUEL') : tr('NOUVELLE MÊLÉE')}</button></div>`);
   }
-  $('soloBtn')?.addEventListener('click', () => openMode(2));
-  $('quickBtn')?.addEventListener('click', () => openMode(8));
-  $('meleeBtn')?.addEventListener('click', () => openMode(8));
-  $('multiBtn')?.addEventListener('click', async () => {
+  listen('soloBtn', 'click', () => openMode(2));
+  listen('quickBtn', 'click', () => openMode(8));
+  listen('meleeBtn', 'click', () => openMode(8));
+  listen('multiBtn', 'click', async () => {
     SFX.tap();
     if (window.OrbiteMultiUI) { stopAmbient(); window.OrbiteMultiUI.open(); return; }
     stopAmbient();
     await show('multi');
     $('mpBody').innerHTML = `<p class="muted">${tr('Les salons en ligne sont indisponibles. La mêlée à 8 reste jouable hors ligne.')}</p>`;
   });
-  $('multiBack')?.addEventListener('click', async () => {
+  listen('multiBack', 'click', async () => {
     if (window.OrbiteMultiUI) return;
     SFX.tap();
     await backToMenu();
   });
-  $('marketBtn')?.addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderMarket(); marketTab('planete'); await show('market'); });
+  listen('marketBtn', 'click', async () => { SFX.tap(); stopAmbient(); renderMarket(); marketTab('planete'); await show('market'); });
   // Création : Forge des mondes, Atelier des planètes, Bâtisseur de colonies.
   async function openCreation() {
     stopAmbient();
@@ -3646,26 +3655,26 @@
     orb.style.transform = '';
     SFX.music(true);
   }
-  $('creationBtn')?.addEventListener('click', async () => {
+  listen('creationBtn', 'click', async () => {
     SFX.tap();
     if (!creationOpen()) { unlockSheet(); return; }
     await openCreation();
   });
   $('creationBack').innerHTML = icon('back');
-  $('creationBack')?.addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
-  $('marketBack')?.addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
-  $('profileBtn')?.addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderProfile(); await show('profile'); });
-  $('profileBack')?.addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
-  $('settingsBtn')?.addEventListener('click', () => { SFX.tap(); openSheet(settingsHtml()); });
-  $('lawsBack')?.addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
-  $('upBtn')?.addEventListener('click', guard(doUpgrade));
-  $('rollBtn')?.addEventListener('click', guard(doRoll));
-  $('freezeBtn')?.addEventListener('click', () => { if (!ui.busy) doFreeze(); });
-  $('fightBtn')?.addEventListener('click', fight);
-  $('rivals')?.addEventListener('click', () => { if (!ui.busy) { SFX.tap(); openRivals(); } });
-  $('famsBtn')?.addEventListener('click', () => { SFX.tap(); openFamilies(); });
-  $('menuBtn')?.addEventListener('click', () => { SFX.tap(); openMenu(); });
-  $('powerBtn')?.addEventListener('click', () => {
+  listen('creationBack', 'click', async () => { SFX.tap(); await backToMenu(); });
+  listen('marketBack', 'click', async () => { SFX.tap(); await backToMenu(); });
+  listen('profileBtn', 'click', async () => { SFX.tap(); stopAmbient(); renderProfile(); await show('profile'); });
+  listen('profileBack', 'click', async () => { SFX.tap(); await backToMenu(); });
+  listen('settingsBtn', 'click', () => { SFX.tap(); openSheet(settingsHtml()); });
+  listen('lawsBack', 'click', async () => { SFX.tap(); await backToMenu(); });
+  listen('upBtn', 'click', guard(doUpgrade));
+  listen('rollBtn', 'click', guard(doRoll));
+  listen('freezeBtn', 'click', () => { if (!ui.busy) doFreeze(); });
+  listen('fightBtn', 'click', fight);
+  listen('rivals', 'click', () => { if (!ui.busy) { SFX.tap(); openRivals(); } });
+  listen('famsBtn', 'click', () => { SFX.tap(); openFamilies(); });
+  listen('menuBtn', 'click', () => { SFX.tap(); openMenu(); });
+  listen('powerBtn', 'click', () => {
     if (ui.busy) return;
     const p = me(), law = R.LAW[p.law];
     if (!law.active) { openFamilies(); return; }
@@ -3681,9 +3690,9 @@
       guard(() => doPower(null))();
     }
   });
-  $('skipBtn')?.addEventListener('click', () => { if (!(ui.state && ui.state.mp)) ui.skip = true; });
-  $('againBtn')?.addEventListener('click', async () => { SFX.tap(); ui.size = ui.state && !R.isDuel(ui.state) ? 8 : 2; renderLaws(); await show('laws'); });
-  $('endHome')?.addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
+  listen('skipBtn', 'click', () => { if (!(ui.state && ui.state.mp)) ui.skip = true; });
+  listen('againBtn', 'click', async () => { SFX.tap(); ui.size = ui.state && !R.isDuel(ui.state) ? 8 : 2; renderLaws(); await show('laws'); });
+  listen('endHome', 'click', async () => { SFX.tap(); await backToMenu(); });
 
   window.addEventListener('resize', () => {
     if (ui.screen === 'menu') layoutMenu();

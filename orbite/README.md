@@ -823,7 +823,15 @@ se recharge une fois sur la page à jour (`?v=N`), au lieu de planter. Les écou
 plantent plus si un élément manque. Le service worker télécharge sa copie hors ligne en
 contournant le cache du navigateur (`cache: 'reload'`).
 À chaque version, augmenter ensemble : `VERSION` (js/game.js), `version.json`, le cache de `sw.js`
-et la balise `orbite-version` d’index.html.
+et la balise `orbite-version` d’index.html (`tests/compat.test.mjs` le vérifie).
+
+**Téléphones anciens et écran de secours** (v72) : les scripts du lancement n’utilisent ni `a?.b`
+ni `a ?? b`, qu’un iPhone resté sous iOS 12 ou 13 ne sait pas lire (un seul de ces signes empêche
+tout le fichier de se charger). `tests/compat.test.mjs` le vérifie ; seul `online.js` (le jeu en
+ligne, à part) y échappe. Si aucun écran ne s’affiche malgré tout, un petit script d’index.html,
+écrit à l’ancienne, montre « ORBITE N’A PAS PU DÉMARRER », l’erreur, la version et le navigateur,
+avec un bouton **RÉPARER ET RELANCER** : il redemande les fichiers au serveur, retire le service
+worker et sa copie hors ligne, puis relance. La progression (stockage local) n’est pas touchée.
 
 Les pages fonctionnent en ouvrant directement `index.html` ou `atelier.html` dans un navigateur
 récent (WebGL2 requis).
