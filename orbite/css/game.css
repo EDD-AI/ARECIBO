@@ -198,7 +198,12 @@ body.modal #gl { z-index: 35; }
   gap: 12px;
   transition: opacity 1.2s ease;
 }
-.menu-top .dust { font-size: 12px; letter-spacing: 0.16em; }
+/* Pastille sombre : les poussières restent lisibles devant une planète claire (glace, nuages). */
+.menu-top .dust {
+  font-size: 12px; letter-spacing: 0.16em; padding: 4px 10px 4px 9px;
+  background: rgba(4, 6, 12, 0.62); border: 1px solid rgba(255, 226, 140, 0.22); border-radius: 999px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
 .menu-top .lvl { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: 0.24em; color: var(--dim); }
 .xp-mini { display: block; width: 56px; height: 2px; background: rgba(241, 236, 218, 0.14); }
 .xp-mini i { display: block; height: 100%; background: var(--ink); }

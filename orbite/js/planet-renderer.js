@@ -1284,11 +1284,15 @@ void main() {
       this.bound = null;
       this.W = canvas.width;
       this.H = canvas.height;
-      this.progBody = this.program(VS_QUAD, FS_BODY, ['aPos']);
+      // Les astres et le ciel ont une variante de shader par type (voir variant) : compilées à la
+      // demande, en arrière-plan si o.async et si le navigateur le permet.
+      this.parallel = o.async ? gl.getExtension('KHR_parallel_shader_compile') : null;
+      this.bodyVariants = new Map();
+      this.skyVariants = new Map();
       this.progHalo = this.program(VS_QUAD, FS_HALO, ['aPos']);
       this.progRing = this.program(VS_QUAD, FS_RING, ['aPos']);
       this.progBg = this.program(VS_QUAD, FS_BG, ['aPos']);
-      this.progSky = null;
+      this.progBlit = null;
       this.progSprite = this.program(VS_SPRITE, FS_SPRITE, ['aPos', 'aSize', 'aShape', 'aCol']);
 
       this.quadVao = gl.createVertexArray();
@@ -1328,6 +1332,45 @@ void main() {
       gl.linkProgram(p);
       if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error('Programme : ' + gl.getProgramInfoLog(p));
       return { p, cache: {} };
+    }
+
+    // Variante d'un shader où des uniformes entiers deviennent des constantes (consts : { uType: 3 }).
+    // Le shader complet des astres réunit tous les types : sous Windows, Direct3D le compile en près
+    // d'une minute et fige le navigateur (Opera, Brave, Firefox…) ; une variante ne garde que le code
+    // de son cas et se compile en une à trois secondes. Avec la compilation parallèle, elle se prépare
+    // sans bloquer la page : rend null tant qu'elle n'est pas prête (l'astre apparaît juste après).
+    variant(cache, fs, consts) {
+      const key = Object.keys(consts).map((k) => consts[k]).join(':');
+      let v = cache.get(key);
+      if (!v) {
+        let src = fs;
+        for (const k of Object.keys(consts)) src = src.replace(`uniform int ${k};`, `const int ${k} = ${consts[k] | 0};`);
+        if (!this.parallel) v = this.program(VS_QUAD, src, ['aPos']);
+        else {
+          const gl = this.gl, p = gl.createProgram();
+          for (const [type, s] of [[gl.VERTEX_SHADER, VS_QUAD], [gl.FRAGMENT_SHADER, src]]) {
+            const sh = gl.createShader(type);
+            gl.shaderSource(sh, s);
+            gl.compileShader(sh);
+            gl.attachShader(p, sh);
+          }
+          gl.bindAttribLocation(p, 0, 'aPos');
+          gl.linkProgram(p);
+          v = { p, cache: {}, pending: true };
+        }
+        cache.set(key, v);
+      }
+      if (v.pending) {
+        const gl = this.gl;
+        if (!gl.getProgramParameter(v.p, this.parallel.COMPLETION_STATUS_KHR)) return null;
+        v.pending = false;
+        if (!gl.getProgramParameter(v.p, gl.LINK_STATUS)) v.broken = gl.getProgramInfoLog(v.p) || 'échec';
+      }
+      if (v.broken) {
+        if (!v.told) { v.told = true; console.error('Programme ' + key + ' : ' + v.broken); }
+        return null;
+      }
+      return v;
     }
 
     loc(prog, name) {
@@ -1410,9 +1453,12 @@ void main() {
 
     // ─── Passes ───────────────────────────────────────────────
     bodyPass(b, layer, P) {
-      const gl = this.gl, pr = this.progBody;
+      const gl = this.gl;
       const ext = layer === 1 ? P.r : P.r * (b.bound || 1);
       if (!this.clip(P.cx, P.cy, ext)) return;
+      const sh = layer === 0 && b.shape ? b.shape : null;
+      const pr = this.variant(this.bodyVariants, FS_BODY, { uType: b.shader, uShape: sh ? sh.kind : 0 });
+      if (!pr) return;
       gl.useProgram(pr.p);
       this.common(pr, P.st);
       const U = (n) => this.loc(pr, n);
@@ -1420,7 +1466,6 @@ void main() {
       if (!b.M32) b.M32 = new Float32Array(b.M || (b.M = OP.tiltMatrix(b.roll, b.pitch)));
       gl.uniform2f(U('uCenter'), P.cx, P.cy);
       gl.uniform1f(U('uRadius'), P.r);
-      gl.uniform1i(U('uType'), b.shader);
       gl.uniform1i(U('uLayer'), layer);
       gl.uniform1i(U('uOct'), P.r < 16 ? 3 : P.r < 34 ? 4 : 5);
       gl.uniformMatrix3fv(U('uTilt'), false, b.M32);
@@ -1444,8 +1489,6 @@ void main() {
       }
       gl.uniform1f(U('uUnit'), P.unit);
       gl.uniform1i(U('uShadeBias'), P.bias || 0);
-      const sh = layer === 0 && b.shape ? b.shape : null;
-      gl.uniform1i(U('uShape'), sh ? sh.kind : 0);
       gl.uniform4fv(U('uSh'), sh ? sh.P : ZERO4);
       gl.uniform4fv(U('uSh2'), sh ? sh.Q : ZERO4);
       this.bindPal(pr, b.pal);
@@ -1779,10 +1822,8 @@ void main() {
     // puis agrandi sans lissage. off : décalage du ciel (la carte de campagne le fait défiler).
     drawSky(mode, t, st, off) {
       const gl = this.gl;
-      if (!this.progSky) {
-        this.progSky = this.program(VS_QUAD, FS_SKY, ['aPos']);
-        this.progBlit = this.program(VS_QUAD, FS_BLIT, ['aPos']);
-      }
+      if (!this.progBlit) this.progBlit = this.program(VS_QUAD, FS_BLIT, ['aPos']);
+      const pr = this.variant(this.skyVariants, FS_SKY, { uSky: mode });
       const w = Math.max(1, Math.ceil(this.W / 2)), h = Math.max(1, Math.ceil(this.H / 2));
       if (!this.skyTex || this.skyW !== w || this.skyH !== h) {
         if (this.skyTex) { gl.deleteTexture(this.skyTex); gl.deleteFramebuffer(this.skyFbo); }
@@ -1802,15 +1843,14 @@ void main() {
       const o = off || [0, 0];
       const key = mode + ':' + o[0].toFixed(4) + ':' + o[1].toFixed(4);
       gl.disable(gl.SCISSOR_TEST);
-      if (key !== this.skyKey || t - (this.skyT || -9) > 0.05) {
+      // Variante du ciel pas encore prête : l'image précédente reste affichée.
+      if (pr && (key !== this.skyKey || t - (this.skyT || -9) > 0.05)) {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.skyFbo);
         gl.viewport(0, 0, w, h);
-        const pr = this.progSky;
         gl.useProgram(pr.p);
         this.common(pr, { reveal: 1, phase: 0, flash: 0, dim: 1, flip: 1 });
         gl.uniform2f(this.loc(pr, 'uRes'), w, h);
         gl.uniform1f(this.loc(pr, 'uT'), t % 3600);
-        gl.uniform1i(this.loc(pr, 'uSky'), mode);
         gl.uniform3f(this.loc(pr, 'uSeed'), 3.1, -7.4, 11.2);
         gl.uniform2f(this.loc(pr, 'uOff'), o[0], o[1]);
         this.quad();

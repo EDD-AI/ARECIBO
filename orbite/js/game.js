@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 82;
+  const VERSION = 83;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -2133,7 +2133,7 @@
 
   async function fusion(id, sources, goldUid) {
     ui.state.goldens = (ui.state.goldens || 0) + 1;
-    SFX.golden();
+    SFX.fusion();
     vibrate([12, 40, 12]);
     const goldEl = elByUid(goldUid);
     const goldOrb = goldEl ? goldEl.querySelector('.orb') : null;

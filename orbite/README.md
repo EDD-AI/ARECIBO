@@ -849,10 +849,11 @@ déclics mécaniques, avec une touche sci-fi discrète. Les bruitages viennent d
 - **Interface** : un déclic tiré parmi cinq (jamais deux fois le même de suite, à hauteur variable,
   parfois mêlé d’un petit caillou), survol à la souris, feuilles qui s’ouvrent, carillons de verre pour
   les niveaux, petit refus quand une action est impossible.
-- **Fusion dorée** (v82) : un chœur d’âmes synthétisé (`choir`, js/sfx.js) monte pendant que les
-  trois astres convergent (« ou… »), s’ouvre sur l’éclat doré (« aah ») avec une couronne de
-  cristaux et un halo aigu, puis se perd dans la réverbération. Accord majeur sur la note du
-  cristal (glass1, environ 1922 Hz), trois octaves plus bas.
+- **Fusion dorée** (v82, `SFX.fusion`, réservé aux trios depuis la v83) : un chœur d’âmes synthétisé
+  (`choir`, js/sfx.js) monte pendant que les trois astres convergent (« ou… »), s’ouvre sur l’éclat
+  doré (« aah ») avec une couronne de cristaux et un halo aigu, puis se perd dans la réverbération.
+  Accord majeur sur la note du cristal (glass1, environ 1922 Hz), trois octaves plus bas. Les autres
+  récompenses (boosts, succès, campagne) gardent le carillon de `SFX.golden`.
 
 Les sons se chargent quand la page est servie en HTTP(S). Ouverte directement depuis un fichier,
 la page garde les anciens sons synthétisés.
@@ -875,6 +876,19 @@ l’écran à une hauteur virtuelle de 800 px (1,35 en 1080p, 1,8 en 1440p ; jam
 - La toile 3D, elle, compte en pixels réels : ce qu’on lui donne en pixels virtuels est multiplié
   par `ui.z` (v82 : la ligne où la planète du menu passe sous le sol, les poussières de l’horizon).
 - Sur téléphone, rien ne change.
+- Sur la pastille sombre du menu, les poussières restent lisibles devant une planète claire (v83).
+
+## Shaders sous Windows (v83)
+
+Sous Windows, les navigateurs traduisent WebGL en Direct3D, dont le compilateur déroule et inline
+tout. Le shader des astres (`FS_BODY`) réunit tous les types de planètes et le tracé des
+astéroïdes : d’un bloc, il se compilait en près d’une minute (55 s mesurées sur une RTX 3070), et
+Opera, Brave ou Firefox se figeaient puis tombaient (Chrome s’en sortait grâce à son cache de
+shaders). Depuis la v83, `Renderer.variant` (js/planet-renderer.js) fabrique une variante par type
+et forme d’astéroïde (`uType`, `uShape` deviennent des constantes), et une par ciel animé (`uSky`) :
+de 0,1 à 3,5 s chacune, compilées seulement quand le jeu en a besoin. Dans le jeu (`async`), elles
+se compilent en arrière-plan avec `KHR_parallel_shader_compile` : un astre apparaît une à deux
+secondes plus tard au lieu de bloquer la page. L’atelier garde une compilation immédiate (exports).
 
 ## Lancer
 
