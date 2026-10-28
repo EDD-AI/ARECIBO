@@ -78,8 +78,10 @@ body.desk #rivals:hover { border-color: var(--line); }
 .dr-scout small { font-size: 10px; letter-spacing: 0.16em; color: var(--dim); }
 .dr-scout .static-rows .srow { grid-template-columns: 1fr; }
 .dr-scout .static-rows .srow small { display: none; }
-.dr-scout .row { --u: 36px; gap: 2px; flex-wrap: wrap; justify-content: flex-start; }
-.dr-scout .unit .stats { font-size: 10px; }
+.dr-scout .row { --u: 36px; gap: 4px 8px; flex-wrap: wrap; justify-content: flex-start; }
+/* Un astre est au moins aussi large que ses chiffres (« 13 18 ») : ils ne débordent plus sur le voisin. */
+.dr-scout .unit { width: auto; min-width: var(--u); }
+.dr-scout .unit .stats { font-size: 10px; gap: 3px; }
 .dr-more { font-size: 10px; letter-spacing: 0.14em; color: var(--faint); text-align: center; }
 
 /* Colonne centrale : la Création, l'énergie, le système, la main. */
