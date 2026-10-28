@@ -369,6 +369,62 @@
     src.start(t);
   }
 
+  // Chœur d'âmes : chaque note est chantée par trois voix un peu désaccordées (dents de scie) qui
+  // passent par les formants d'une voyelle. La bouche s'ouvre pendant la montée (« ou » → « a »),
+  // le vibrato arrive avec elle, et la fin se perd dans la réverbération.
+  function choir(notes, o) {
+    const a = audio();
+    if (!a) return;
+    o = o || {};
+    const t = a.currentTime + (o.delay || 0);
+    const vol = o.vol || 0.12, rise = o.rise || 0.9, hold = o.hold || 0.5, fall = o.fall || 1.6;
+    const end = t + rise + hold + fall;
+    const env = a.createGain();
+    env.gain.setValueAtTime(0.0001, t);
+    env.gain.exponentialRampToValueAtTime(vol, t + rise);
+    env.gain.setValueAtTime(vol, t + rise + hold);
+    env.gain.exponentialRampToValueAtTime(0.0001, end);
+    env.connect(sfxBus);
+    const send = a.createGain();
+    send.gain.value = o.rev == null ? 1 : o.rev;
+    env.connect(send).connect(revIn);
+    const voices = a.createGain();
+    voices.gain.value = 1 / Math.sqrt(notes.length * 3);
+    // Formants : de « ou » (300, 870, 2240 Hz) à « a » (800, 1150, 2900 Hz).
+    for (const [f0, f1, lvl] of [[300, 800, 4], [870, 1150, 2], [2240, 2900, 0.7]]) {
+      const bp = a.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.Q.value = 8;
+      bp.frequency.setValueAtTime(f0, t);
+      bp.frequency.exponentialRampToValueAtTime(f1, t + rise);
+      const g = a.createGain();
+      g.gain.value = lvl;
+      voices.connect(bp).connect(g).connect(env);
+    }
+    const lfo = a.createOscillator(), depth = a.createGain();
+    lfo.frequency.value = 5.1;
+    depth.gain.setValueAtTime(0, t);
+    depth.gain.linearRampToValueAtTime(12, t + rise);
+    lfo.connect(depth);
+    lfo.start(t);
+    lfo.stop(end + 0.05);
+    notes.forEach((f, i) => {
+      const pan = notes.length > 1 ? (i / (notes.length - 1)) * 1.2 - 0.6 : 0;
+      for (const d of [-9, 0, 8]) {
+        const osc = a.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.value = f;
+        osc.detune.value = d + (Math.random() * 2 - 1) * 3;
+        depth.connect(osc.detune);
+        let out = osc;
+        if (a.createStereoPanner) { const p = a.createStereoPanner(); p.pan.value = pan + d / 40; out = osc.connect(p); }
+        out.connect(voices);
+        osc.start(t);
+        osc.stop(end + 0.05);
+      }
+    });
+  }
+
   // Souffle naturel : bruit passé dans un filtre passe-bande qui s'ouvre puis se referme.
   function swoosh(pan) {
     const a = audio();
@@ -477,10 +533,17 @@
       play('glass4', { vol: 0.3, rate: 0.75, rev: 1.2, delay: 0.38 });
       if (big) { play('glass1', { vol: 0.26, rate: 0.6, rev: 1.4, delay: 0.55 }); chime([0.5, 0.75, 1], { vol: 0.22, rev: 1, delay: 0.7 }); }
     },
+    // Fusion dorée : un chœur d'âmes monte pendant que les trois astres convergent (« ou… »), s'ouvre
+    // sur l'éclat doré (« aah ») avec une couronne de cristaux et un halo aigu, puis s'éteint dans
+    // l'espace. Accord majeur sur la note du cristal (glass1 ≈ 1922 Hz, trois octaves plus bas).
     golden() {
-      if (!buffers.glass1) { [784, 988, 1175, 1568, 1976].forEach((f, i) => tone(f, 0.16, { delay: i * 0.06, type: 'triangle', vol: 0.07 })); return; }
-      chime([1, 1.26, 1.5, 2, 2.52], { vol: 0.3, rev: 0.6, step: 0.065 });
-      play('glass4', { vol: 0.28, rate: 0.9, rev: 1, delay: 0.32 });
+      const root = 240;
+      choir([1, 1.25, 1.5, 2, 2.5].map((k) => root * k), { vol: 0.14, rise: 0.95, hold: 0.55, fall: 1.9, rev: 1.1 });
+      choir([root * 4, root * 6], { vol: 0.035, delay: 0.9, rise: 0.25, hold: 0.4, fall: 1.6, rev: 1.4 });
+      if (!buffers.glass1) { [784, 988, 1175, 1568, 1976].forEach((f, i) => tone(f, 0.16, { delay: 0.95 + i * 0.06, type: 'triangle', vol: 0.07 })); return; }
+      play('rise', { vol: 0.14, rate: 1.2, rev: 0.6, jit: 0 });
+      [1, 1.26, 1.5, 2, 2.52].forEach((r, i) => play('glass1', { rate: r, jit: 0.01, vol: 0.24, rev: 0.8, delay: 0.95 + i * 0.065 }));
+      play('glass4', { vol: 0.24, rate: 0.9, rev: 1.1, delay: 1.27 });
     },
     // Souffle d'une attaque : bruit filtré qui passe, à hauteur variable.
     whoosh(pan) { swoosh(pan); },

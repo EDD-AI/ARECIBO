@@ -848,7 +848,11 @@ déclics mécaniques, avec une touche sci-fi discrète. Les bruitages viennent d
   planète touchée.
 - **Interface** : un déclic tiré parmi cinq (jamais deux fois le même de suite, à hauteur variable,
   parfois mêlé d’un petit caillou), survol à la souris, feuilles qui s’ouvrent, carillons de verre pour
-  les niveaux et les astres dorés, petit refus quand une action est impossible.
+  les niveaux, petit refus quand une action est impossible.
+- **Fusion dorée** (v82) : un chœur d’âmes synthétisé (`choir`, js/sfx.js) monte pendant que les
+  trois astres convergent (« ou… »), s’ouvre sur l’éclat doré (« aah ») avec une couronne de
+  cristaux et un halo aigu, puis se perd dans la réverbération. Accord majeur sur la note du
+  cristal (glass1, environ 1922 Hz), trois octaves plus bas.
 
 Les sons se chargent quand la page est servie en HTTP(S). Ouverte directement depuis un fichier,
 la page garde les anciens sons synthétisés.
