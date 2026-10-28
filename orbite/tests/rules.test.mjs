@@ -254,7 +254,7 @@ test('formations : deux astres d’une famille dans une rangée, niveau = nombre
   const forms = r.events.filter((e) => e.t === 'formation' && e.side === 0).map((e) => e.fam + ':' + e.row + ':' + e.lvl);
   assert.deepEqual(forms.sort(), ['glace:1:1', 'mineral:0:2']);
   const enemies = r.events[0].boards[1].map((u) => u.cid);
-  for (const cid of enemies) assert.ok(r.events.some((e) => e.t === 'buff' && e.cid === cid && e.a === -1), 'gel de l’ennemi ' + cid);
+  for (const cid of enemies) assert.ok(r.events.some((e) => e.t === 'buff' && e.cid === cid && e.a === -2), 'gel de l’ennemi ' + cid);
 });
 
 test('placement : seul l’avant attaque ; l’arrière, à l’abri, avance quand l’avant tombe', () => {
@@ -309,6 +309,53 @@ test('rangées : 4 places chacune, placement choisi, échange quand la rangée v
   const [front, back] = R.layout([1, 2, 3, 4, 5, 6].map((i) => ({ id: 'errante', uid: 'o' + i })));
   assert.equal(front.length, 4);
   assert.equal(back.length, 2);
+});
+
+test('l’arrière : Portée tire sans riposte, Percée frappe l’arrière, Garde la bloque', () => {
+  const s = gameWith('envers', 'pos1');
+  // Portée : un astre de l'arrière attaque, et sa cible ne riposte pas.
+  const A = { id: 'A', tier: 1, law: 'symbiose', board: [unit('errante', { atk: 0, hp: 400, row: 0 }), unit('errante', { atk: 3, hp: 5, row: 1, kw: ['portee'] })] };
+  const B = { id: 'B', tier: 1, law: 'symbiose', board: [unit('errante', { atk: 9, hp: 60 })] };
+  const r1 = R.fight(s, A, B, 'portee', true);
+  const shooter = r1.events[0].boards[0][1].cid;
+  const shots = r1.events.filter((e) => e.t === 'attack' && e.cid === shooter);
+  assert.ok(shots.length > 0 && shots.every((e) => e.ranged), 'l’astre à Portée tire depuis l’arrière');
+  assert.ok(!r1.events.some((e) => e.t === 'hit' && e.cid === shooter && e.kind === 'attack'), 'pas de riposte sur le tireur');
+  // Percée : vise l'arrière ennemi…
+  const C = { id: 'C', tier: 1, law: 'symbiose', board: [unit('errante', { atk: 2, hp: 40, kw: ['percee'] })] };
+  const D = { id: 'D', tier: 1, law: 'symbiose', board: [unit('errante', { atk: 0, hp: 40, row: 0 }), unit('errante', { atk: 0, hp: 40, row: 1 })] };
+  const r2 = R.fight(s, C, D, 'percee', true);
+  const backCid = r2.events[0].boards[1][1].cid;
+  assert.ok(r2.events.some((e) => e.t === 'attack' && e.target === backCid && e.pierce), 'la Percée frappe l’arrière');
+  // … sauf si une Garde tient l'avant.
+  const E = { id: 'E', tier: 1, law: 'symbiose', board: [unit('errante', { atk: 0, hp: 40, row: 0, kw: ['garde'] }), unit('errante', { atk: 0, hp: 40, row: 1 })] };
+  const r3 = R.fight(s, C, E, 'garde', true);
+  const back3 = r3.events[0].boards[1][1].cid;
+  const adv = r3.events.findIndex((e) => e.t === 'advance');
+  assert.ok(!r3.events.slice(0, adv < 0 ? undefined : adv).some((e) => e.t === 'attack' && e.target === back3), 'la Garde protège l’arrière tant qu’elle tient');
+  // Des astres du catalogue portent ces mots-clés.
+  for (const k of ['portee', 'percee', 'garde']) assert.ok(R.POSITION_KW[k].every((id) => R.CARD[id].kw.includes(k)));
+});
+
+test('phénomènes : accrétion, trou noir, supernova selon qui est juste derrière qui', () => {
+  const board = [unit('errante', { uid: 'f0', row: 0 }), unit('cendre', { uid: 'f1', row: 0 }), unit('silex', { uid: 'b0', row: 1 }), unit('umbra', { uid: 'b1', row: 1 })];
+  const ph = R.phenomenaOf(board);
+  assert.deepEqual(ph.map((p) => p.kind + ':' + p.uid + '<' + p.partner).sort(), ['accretion:f0<b0', 'trounoir:f1<b1']);
+  assert.deepEqual(R.phenomenaOf([board[0], board[1], board[3], board[2]].map((u, i) => Object.assign({}, u, { row: i < 2 ? 0 : 1 }))).map((p) => p.kind).sort(), ['accretion'], 'l’ordre des colonnes compte');
+  const s = gameWith('envers', 'ph1');
+  const A = { id: 'A', tier: 1, law: 'symbiose', board };
+  const B = { id: 'B', tier: 1, law: 'symbiose', board: [unit('errante', { atk: 1, hp: 50 })] };
+  const r = R.fight(s, A, B, 'phen', true);
+  const kinds = r.events.filter((e) => e.t === 'phenom' && e.side === 0).map((e) => e.kind).sort();
+  assert.deepEqual(kinds, ['accretion', 'trounoir']);
+  const f0 = r.events[0].boards[0][0].cid;
+  assert.ok(r.events.some((e) => e.t === 'buff' && e.cid === f0 && e.a === 2 && e.h === 5), 'l’astre grossit');
+  // Supernova : deux Brasier en colonne ; l'astre de l'avant explose en s'effondrant.
+  const C = { id: 'C', tier: 1, law: 'symbiose', board: [unit('scorie', { atk: 1, hp: 1, row: 0 }), unit('braise', { atk: 0, hp: 30, row: 1, kw: [] })] };
+  const D = { id: 'D', tier: 1, law: 'symbiose', board: [unit('errante', { atk: 5, hp: 30 }), unit('errante', { atk: 5, hp: 30 })] };
+  const r2 = R.fight(s, C, D, 'nova', true);
+  assert.ok(r2.events.some((e) => e.t === 'phenom' && e.kind === 'explode'), 'la supernova explose');
+  for (const t of Object.keys(R.PHENOMENA)) assert.ok(R.PHENOMENA[t].name && R.PHENOMENA[t].text);
 });
 
 test('duel : deux univers, PV doublés, une douzaine de manches, récompenses du duel', () => {

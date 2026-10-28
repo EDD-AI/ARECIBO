@@ -219,6 +219,31 @@
       </div>
     </section>
 
+    <!-- CRÉDITS : le même écran que dans ARECIBO -->
+    <div class="credits-overlay" id="credits" hidden>
+      <section class="credits-panel" aria-label="Crédits" data-t-attr="aria-label">
+        <canvas class="credits-space" id="creditsSpace" aria-hidden="true"></canvas>
+        <button class="credits-close" id="creditsClose" type="button" aria-label="Fermer" data-t-attr="aria-label">x</button>
+        <div class="credits-moon-wrap" aria-hidden="true">
+          <svg class="credits-moon" viewBox="0 0 8 8" shape-rendering="crispEdges" focusable="false">
+            <rect x="2" y="0" width="4" height="1" fill="#f5f8ff"/>
+            <rect x="1" y="1" width="6" height="1" fill="#dce7ff"/>
+            <rect x="0" y="2" width="7" height="1" fill="#eef4ff"/>
+            <rect x="0" y="3" width="8" height="1" fill="#b9cff8"/>
+            <rect x="0" y="4" width="8" height="1" fill="#f7fbff"/>
+            <rect x="1" y="5" width="6" height="1" fill="#c6d8fa"/>
+            <rect x="2" y="6" width="5" height="1" fill="#eef4ff"/>
+            <rect x="3" y="7" width="3" height="1" fill="#a9bfe8"/>
+            <rect x="1" y="2" width="2" height="1" fill="#ffffff" opacity=".76"/>
+            <rect x="4" y="1" width="2" height="1" fill="#ffffff" opacity=".64"/>
+            <rect x="5" y="4" width="2" height="1" fill="#8faee0" opacity=".8"/>
+            <rect x="2" y="5" width="1" height="1" fill="#7895c8" opacity=".72"/>
+          </svg>
+        </div>
+        <div class="credits-content" id="creditsContent"></div>
+      </section>
+    </div>
+
     <!-- CINÉMATIQUE D'OUVERTURE DE LA CRÉATION -->
     <section class="screen cine" id="cine" aria-live="polite">
       <div class="orb cine-orb" id="cineOrb" data-planet="cine-graine"></div>
@@ -446,6 +471,7 @@
   <script src="js/lang/succes.js"></script>
   <script src="js/lang/genese.js"></script>
   <script src="js/lang/duel.js"></script>
+  <script src="js/lang/position.js"></script>
   <script src="js/planet-engine.js"></script>
   <script src="js/planet-renderer.js"></script>
   <script src="js/stage.js"></script>

@@ -1811,3 +1811,102 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .rv-info b { color: var(--ink); font-weight: 400; letter-spacing: 0.08em; }
 #endRank.duel { font-size: clamp(30px, 10vw, 46px); letter-spacing: 0.2em; }
 .sheet-actions .btn.wide { flex-basis: 100%; }
+
+/* v70 : mots-clés de position et phénomènes. */
+.unit .kws .kw-pos { display: flex; color: var(--ink); }
+.unit .kws .kw-pos .pix { height: 7px; }
+.alliance-tag i.ph { --c: var(--gold); border-style: dashed; }
+.unit.in-phen .orb::before { content: ''; position: absolute; inset: -6%; border-radius: 50%; border: 1px dotted rgba(246, 196, 83, 0.55); pointer-events: none; }
+.unit .orb { scale: var(--grow, 1); transition: scale 0.6s cubic-bezier(.2, .8, .2, 1); }
+.unit.nova .orb { box-shadow: 0 0 18px 4px rgba(255, 140, 60, 0.35); border-radius: 50%; }
+.unit.blackhole .orb { box-shadow: 0 0 22px 6px rgba(150, 100, 255, 0.28); border-radius: 50%; }
+.ph-item { --c: var(--gold); opacity: 0.72; }
+.ph-item.on { opacity: 1; }
+.ph-item b { color: var(--gold); }
+
+/* ─── Crédits : le même écran que dans ARECIBO ─────────────── */
+.credits-overlay { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.78); --cr-cream: #f7ffc3; --cr-orange: #fa5a1f; }
+.credits-overlay[hidden] { display: none; }
+.credits-panel {
+  position: relative;
+  width: min(940px, calc(100vw - 28px));
+  height: min(760px, calc(100vh - 42px));
+  height: min(760px, calc(100dvh - 42px));
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(247, 255, 195, 0.28);
+  border-radius: 4px;
+  opacity: 0;
+  transform: scale(0.94) translateY(12px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 0 70px rgba(0, 0, 0, 0.86), inset 0 0 54px rgba(247, 255, 195, 0.035), inset 0 0 140px rgba(0, 0, 0, 0.72);
+}
+.credits-overlay.visible .credits-panel { opacity: 1; transform: none; }
+.credits-panel::before, .credits-panel::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
+.credits-panel::before {
+  z-index: 3;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(112, 137, 255, 0.16), transparent 18%),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.58) 100%),
+    repeating-linear-gradient(0deg, rgba(247, 255, 195, 0.038) 0 1px, transparent 1px 7px);
+  mix-blend-mode: screen;
+  opacity: 0.72;
+}
+.credits-panel::after { z-index: 4; border: 1px solid rgba(247, 255, 195, 0.08); box-shadow: inset 0 0 44px rgba(0, 0, 0, 0.76); }
+.credits-space { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+.credits-moon-wrap {
+  position: absolute;
+  left: 50%;
+  top: 17%;
+  width: clamp(58px, 8vw, 86px);
+  aspect-ratio: 1;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 13px rgba(216, 226, 255, 0.82)) drop-shadow(0 0 42px rgba(84, 118, 255, 0.38)) drop-shadow(0 0 96px rgba(31, 59, 180, 0.24));
+  animation: creditsMoonPulse 5.8s ease-in-out infinite;
+}
+.credits-moon { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+@keyframes creditsMoonPulse { 0%, 100% { opacity: 0.82; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.045); } }
+.credits-content {
+  position: absolute;
+  left: clamp(20px, 5vw, 72px);
+  right: clamp(20px, 5vw, 72px);
+  top: 30%;
+  bottom: 0;
+  padding-bottom: clamp(24px, 5vh, 60px);
+  overflow-y: auto;
+  z-index: 5;
+  color: rgba(247, 255, 195, 0.88);
+  text-shadow: 0 0 14px rgba(247, 255, 195, 0.12);
+}
+.cr-kicker { font-size: 11px; letter-spacing: 0.2em; color: var(--cr-orange); margin-bottom: 10px; text-transform: uppercase; }
+.cr-title { margin: 0; font-size: clamp(38px, 11vw, 92px); font-weight: 600; line-height: 0.86; letter-spacing: 0.04em; color: var(--cr-cream); }
+.cr-body { margin-top: clamp(16px, 3vh, 34px); max-width: 640px; display: grid; gap: 8px; font-size: clamp(14px, 1.7vw, 19px); line-height: 1.25; }
+.cr-line { display: grid; grid-template-columns: minmax(110px, 180px) 1fr; gap: 14px; border-bottom: 1px solid rgba(247, 255, 195, 0.09); padding-bottom: 7px; }
+.cr-label { color: var(--cr-orange); text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.82em; padding-top: 0.12em; }
+.cr-value { color: rgba(247, 255, 195, 0.78); }
+.cr-note { margin-top: 16px; max-width: 540px; color: rgba(247, 255, 195, 0.54); font-size: 13px; line-height: 1.5; }
+.cr-legal { margin-top: 12px; max-width: 640px; color: rgba(247, 255, 195, 0.46); font-size: 11px; line-height: 1.5; }
+.cr-legal summary { cursor: pointer; letter-spacing: 0.2em; color: rgba(247, 255, 195, 0.62); }
+.cr-legal b { font-weight: 400; letter-spacing: 0.14em; }
+.credits-close {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 42px;
+  height: 42px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(247, 255, 195, 0.34);
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.42);
+  color: rgba(247, 255, 195, 0.74);
+  font: inherit;
+  font-size: 20px;
+}
+.credits-close:hover { color: var(--cr-orange); border-color: var(--cr-orange); background: rgba(250, 90, 31, 0.08); }
+@media (max-width: 560px) {
+  .cr-line { grid-template-columns: 1fr; gap: 2px; }
+}

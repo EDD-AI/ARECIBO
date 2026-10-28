@@ -1,7 +1,8 @@
 # Sons d’ORBITE
 
 Les bruitages viennent de packs de **Kenney** ([kenney.nl](https://kenney.nl)), libres de droits ;
-les musiques, nappes et sons d’interface d’ARECIBO sont de Studio Edda (voir plus bas).
+les musiques, nappes et sons d’interface d’ARECIBO sont de **Victor Desrat** (sound design et
+composition), pour Studio EDDA (voir plus bas).
 Ils ont été coupés, normalisés et encodés en MP3 mono (96 kbit/s ; 56 kbit/s pour le vent) avec
 ffmpeg. `js/sfx.js` les joue avec un léger hasard de hauteur et de volume, une réverbération de
 grotte et un placement gauche/droite selon la planète concernée.
@@ -27,9 +28,9 @@ grotte et un placement gauche/droite selon la planète concernée.
 | `rise` | Interface Sounds · glass_004, réverbéré puis inversé | lancement du jeu, renaissance |
 | `wind` | Starter Kit City Builder · ambience, oiseaux retirés (passe-bas), descendue d’une quarte | ambiance |
 
-## Sons d’ARECIBO (Studio Edda)
+## Sons d’ARECIBO (Victor Desrat)
 
-Créés par Studio Edda pour ARECIBO (`assets/audio/` à la racine du dépôt), repris dans ORBITE (v69).
+Sound design et composition : **Victor Desrat**, pour ARECIBO // Salvage Protocol (Studio EDDA) (`assets/audio/` à la racine du dépôt), repris dans ORBITE (v69).
 Encodés avec ffmpeg :
 - musiques : volume ramené à −16 LUFS, MP3 stéréo 112 kbit/s ;
 - nappes : −24 LUFS, MP3 stéréo 64 kbit/s, 32 kHz ;

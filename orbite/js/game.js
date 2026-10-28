@@ -17,7 +17,9 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 69;
+  const VERSION = 70;
+  // Le jeu est en pré-alpha : le numéro s'affiche toujours « PRE.ALPHA n ».
+  const VERSION_LABEL = 'PRE.ALPHA ' + VERSION;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -59,7 +61,11 @@
     shield: ['XXXXXXX', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'],
     ask: ['.XXX.', 'X...X', '...X.', '..X..', '.....', '..X..'],
     moon: ['..XXX.', '.XX...', 'XX....', 'XX....', '.XX...', '..XXX.'],
-    flame: ['..X...', '..XX..', '.XXX.X', '.XXXXX', 'XXXXXX', '.XXXX.']
+    flame: ['..X...', '..XX..', '.XXX.X', '.XXXXX', 'XXXXXX', '.XXXX.'],
+    // Mots-clés de position : Portée (une cible), Percée (une flèche qui plonge), Garde (une tour).
+    range: ['..X..', '.X.X.', 'X.X.X', '.X.X.', '..X..'],
+    pierce: ['..X..', '..X..', 'X.X.X', '.XXX.', '..X..'],
+    guard: ['X.X.X', 'XXXXX', 'X...X', 'XX.XX', 'XXXXX']
   };
   function icon(name, cls) {
     const g = ICONS[name];
@@ -253,6 +259,9 @@
     else if (u.kw.includes('rafale')) k += icon('wind');
     if (u.kw.includes('venin')) k += `<span style="color:${famColor('envers')}">${icon('drop')}</span>`;
     if (u.kw.includes('arrimage') && (where === 'shop' || where === 'hand')) k += icon('magnet');
+    if (u.kw.includes('portee')) k += `<span class="kw-pos" title="${tr('Portée')}">${icon('range')}</span>`;
+    if (u.kw.includes('percee')) k += `<span class="kw-pos" title="${tr('Percée')}">${icon('pierce')}</span>`;
+    if (u.kw.includes('garde')) k += `<span class="kw-pos" title="${tr('Garde')}">${icon('guard')}</span>`;
     const marks = cardMarks(u.id);
     if (marks.death) k = `<span class="mark" title="${tr('Effondrement')}">${icon('skull')}</span>` + k;
     if (marks.effect) k = `<span class="mark" title="${tr('Effet')}">${icon('spark')}</span>` + k;
@@ -732,8 +741,8 @@
   }
 
   // Numéro de version visible au lancement (écran-titre) et en bas du menu.
-  $('titleVersion').textContent = tr('VERSION {n}', { n: VERSION });
-  $('menuFoot').textContent = 'STUDIO EDDA · ' + tr('VERSION {n}', { n: VERSION });
+  $('titleVersion').textContent = tr('VERSION {n}', { n: VERSION_LABEL });
+  $('menuFoot').textContent = 'STUDIO EDDA · ' + tr('VERSION {n}', { n: VERSION_LABEL });
 
   // ─── Reprise rapide ─────────────────────────────────────────
   // Sur iPhone, une appli web installée est souvent fermée par le système quand on passe à une
@@ -1172,7 +1181,7 @@
       <button class="btn" data-act="set" data-v="code">${tr('CODE CADEAU')}</button>
       <button class="btn" data-act="set" data-v="credits">${tr('CRÉDITS')}</button>
     </div><p class="muted">${tr('Poussières d’étoiles, niveau, planète et partie en cours restent sur cet appareil.')}</p>
-    <p class="muted version">${tr('ORBITE · version {n}', { n: VERSION })}</p>`;
+    <p class="muted version">${tr('ORBITE · version {n}', { n: VERSION_LABEL })}</p>`;
   }
 
   // Langue du jeu : le choix est enregistré et le jeu redémarre dans la nouvelle langue.
@@ -1255,25 +1264,100 @@
       <div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} ${tr('PARAMÈTRES')}</button></div>`);
   }
 
-  // Crédits : qui a fait quoi, et les licences des ressources libres utilisées.
-  function creditsHtml() {
-    return `<h3>${tr('CRÉDITS')}</h3><div class="credits">
-      <section><b>ORBITE</b><span>${tr('Un jeu Studio Edda')}</span></section>
-      <section><b>${tr('PLANÈTES')}</b><span>${tr('Moteur de planètes d’ORBITE')}</span>
-        <small>${tr('Pixel art calculé en direct (WebGL2) : chaque graine donne un astre unique.')}</small></section>
-      <section><b>${tr('MUSIQUE')}</b><span>« Distant Earth », « Orbiting Wonder » · Studio Edda</span>
-        <small>${tr('Thèmes du menu, créés avec Suno.')}</small></section>
-      <section><b>${tr('MUSIQUES ET SONS D’ARECIBO')}</b><span>Studio Edda</span>
-        <small>${tr('Les deux thèmes d’ARECIBO, ses nappes d’espace et de vaisseau, et ses sons d’interface (déclic, survol, texte, démarrage, allumage, erreur, jingle, alarme).')}</small></section>
-      <section><b>${tr('SONS')}</b><span>Kenney · kenney.nl</span>
-        <small>${tr('Interface Sounds et UI Audio (CC0), sons des Starter Kits FPS et 3D Platformer (CC0) et du Starter Kit City Builder (licence MIT). Copies issues des portages de Hugo Locurcio.')}</small></section>
-      <section><b>${tr('POLICE')}</b><span>Chakra Petch · Cadson Demak</span>
-        <small>${tr('SIL Open Font License, embarquée dans le jeu.')}</small></section>
-      <section><b>${tr('LICENCE MIT · STARTER KIT CITY BUILDER')}</b>
-        <small class="legal">Copyright (c) 2025 Kenney. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</small></section>
-    </div>
-    <div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} ${tr('PARAMÈTRES')}</button></div>`;
+  // Crédits : le même écran que dans ARECIBO (ciel animé, lune en pixels, fiche d'archive), avec
+  // l'équipe d'ARECIBO, ce qu'apporte ORBITE et les licences des ressources libres.
+  const MIT_KENNEY = `Copyright (c) 2025 Kenney. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`;
+  const credits = { raf: 0, stars: [], dust: [], w: 0, h: 0 };
+  function creditsLines() {
+    const line = (label, value) => `<div class="cr-line"><span class="cr-label">${label}</span><span class="cr-value">${value}</span></div>`;
+    return [
+      line(tr('Projet'), 'ORBITE'),
+      line(tr('Direction'), 'Studio EDDA'),
+      line(tr('Design'), 'Corentin Flatres'),
+      line(tr('Statut'), tr('prototype jouable en construction') + ' · ' + VERSION_LABEL),
+      line(tr('Sound design'), 'Victor Desrat'),
+      line(tr('Compositeur'), 'Victor Desrat'),
+      line(tr('Archives'), tr('Musiques, nappes et sons d’ARECIBO // Salvage Protocol')),
+      line(tr('Thèmes du menu'), '« Distant Earth », « Orbiting Wonder » · Studio EDDA (Suno)'),
+      line(tr('Planètes'), tr('Moteur de planètes d’ORBITE, pixel art calculé en direct (WebGL2)')),
+      line(tr('Bruitages'), 'Kenney · kenney.nl · CC0, MIT'),
+      line(tr('Police'), 'Chakra Petch · Cadson Demak · SIL Open Font License')
+    ].join('');
   }
+  function openCredits() {
+    closeSheet();
+    const ov = $('credits');
+    $('creditsContent').innerHTML = `<div class="cr-kicker">STUDIO EDDA // ARCHIVE CREDIT</div>
+      <h2 class="cr-title">${tr('CRÉDITS')}</h2>
+      <div class="cr-body">${creditsLines()}</div>
+      <p class="cr-note">${tr('Cette fenêtre recevra les crédits complets, les contributeurs et les archives du projet au fil du développement.')}</p>
+      <details class="cr-legal"><summary>${tr('LICENCES')}</summary>
+        <p>${tr('Interface Sounds et UI Audio (CC0), sons des Starter Kits FPS et 3D Platformer (CC0) et du Starter Kit City Builder (licence MIT). Copies issues des portages de Hugo Locurcio.')}</p>
+        <p>${tr('SIL Open Font License, embarquée dans le jeu.')}</p>
+        <p><b>${tr('LICENCE MIT · STARTER KIT CITY BUILDER')}</b><br>${MIT_KENNEY}</p></details>`;
+    ov.hidden = false;
+    document.body.classList.add('credits-open');
+    SFX.on();
+    requestAnimationFrame(() => ov.classList.add('visible'));
+    creditsSpace(true);
+  }
+  function closeCredits() {
+    const ov = $('credits');
+    if (ov.hidden) return;
+    SFX.off();
+    ov.classList.remove('visible');
+    creditsSpace(false);
+    setTimeout(() => { ov.hidden = true; document.body.classList.remove('credits-open'); }, 300);
+  }
+  // Le ciel des crédits : étoiles qui scintillent et poussières qui montent, comme dans ARECIBO.
+  function creditsSpace(on) {
+    cancelAnimationFrame(credits.raf);
+    const cv = $('creditsSpace');
+    if (!on || !cv) return;
+    const g = cv.getContext('2d');
+    const r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.max(1, Math.floor(r.width * dpr));
+    cv.height = Math.max(1, Math.floor(r.height * dpr));
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    credits.w = r.width; credits.h = r.height;
+    const mote = (y) => ({ x: Math.random() * r.width, y: y == null ? Math.random() * r.height : y, size: Math.random() > 0.86 ? 2 : 1, vx: (Math.random() - 0.5) * 0.05, vy: -0.035 - Math.random() * 0.18, alpha: 0.08 + Math.random() * 0.28, phase: Math.random() * Math.PI * 2 });
+    credits.stars = Array.from({ length: 118 }, (_, i) => ({ x: Math.random() * r.width, y: Math.random() * r.height, size: i < 18 ? 2 : i < 58 ? 1.45 : 1, alpha: 0.26 + Math.random() * 0.68, phase: Math.random() * Math.PI * 2, pulse: 0.45 + Math.random() * 1.4 }));
+    credits.dust = Array.from({ length: 86 }, () => mote());
+    const still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const draw = (t) => {
+      g.fillStyle = '#000';
+      g.fillRect(0, 0, credits.w, credits.h);
+      g.save();
+      g.globalCompositeOperation = 'screen';
+      for (const st of credits.stars) {
+        const tw = 0.62 + Math.sin(t * 0.001 * st.pulse + st.phase) * 0.38;
+        g.globalAlpha = Math.max(0.12, st.alpha * tw);
+        g.fillStyle = '#f4f7ff';
+        g.fillRect(Math.round(st.x), Math.round(st.y), st.size, st.size);
+        if (st.size > 1.5) {
+          g.globalAlpha *= 0.24;
+          g.fillRect(Math.round(st.x - 1), Math.round(st.y), st.size + 2, 1);
+          g.fillRect(Math.round(st.x), Math.round(st.y - 1), 1, st.size + 2);
+        }
+      }
+      for (const d of credits.dust) {
+        const px = d.x, py = d.y;
+        d.x += d.vx + Math.sin(t * 0.0008 + d.phase) * 0.035;
+        d.y += d.vy;
+        if (d.y < -8 || d.x < -8 || d.x > credits.w + 8) Object.assign(d, mote(credits.h + Math.random() * 28));
+        g.globalAlpha = d.alpha;
+        g.fillStyle = '#eef4ff';
+        g.fillRect(Math.round(d.x), Math.round(d.y), d.size, d.size);
+        g.globalAlpha = d.alpha * 0.18;
+        g.fillRect(Math.round(px), Math.round(py + 2), 1, 4);
+      }
+      g.restore();
+      if (!still && !$('credits').hidden) credits.raf = requestAnimationFrame(draw);
+    };
+    draw(0);
+  }
+  $('creditsClose').addEventListener('click', () => closeCredits());
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCredits(); });
 
   async function settingsAction(v, btn) {
     if (v === 'sound') { SFX.setMuted(!SFX.muted); if (!SFX.muted) SFX.tap(); openSheet(settingsHtml()); }
@@ -1282,7 +1366,7 @@
     else if (v === 'lang') openSheet(langHtml());
     else if (v.startsWith('lang:')) I18N.setLang(v.slice(5));
     else if (v === 'help') openSheet(helpHtml(true));
-    else if (v === 'credits') openSheet(creditsHtml());
+    else if (v === 'credits') openCredits();
     else if (v === 'code') openCode();
     else if (v === 'install') install();
     else if (v === 'guide') {
@@ -1666,10 +1750,14 @@
     if (!tag || !ui.state) return;
     const forms = R.formationsOf(me().board);
     markForms($('board'), forms);
-    const key = forms.map((f) => f.fam + f.row + f.lvl).join('|');
-    tag.hidden = !forms.length;
-    if (forms.length) tag.innerHTML = forms.map((f) => `<i style="--c:${famColor(f.fam)}">${famName(f.fam)} ${ROMAN[f.lvl]}</i>`).join('');
-    if (key && key !== ui.formKey && ui.formKey !== undefined && forms.length >= (ui.formCount || 0)) {
+    // Phénomènes : un éclat doré sur les astres concernés, et leur nom dans l'étiquette.
+    const phen = R.phenomenaOf(me().board);
+    for (const el of $('board').querySelectorAll('.unit')) el.classList.toggle('in-phen', phen.some((p) => p.uid === el.dataset.uid || p.partner === el.dataset.uid));
+    const key = forms.map((f) => f.fam + f.row + f.lvl).concat(phen.map((p) => p.kind + p.uid)).join('|');
+    tag.hidden = !forms.length && !phen.length;
+    tag.innerHTML = forms.map((f) => `<i style="--c:${famColor(f.fam)}">${famName(f.fam)} ${ROMAN[f.lvl]}</i>`).join('') +
+      [...new Set(phen.map((p) => p.kind))].map((k) => `<i class="ph">✦ ${esc(tr(R.PHENOMENA[k].name)).toUpperCase()}</i>`).join('');
+    if (key && key !== ui.formKey && ui.formKey !== undefined && forms.length + phen.length >= (ui.formCount || 0)) {
       tag.animate([{ transform: 'scale(0.6)', opacity: 0 }, { transform: 'scale(1.15)', opacity: 1 }, { transform: 'scale(1)' }], { duration: 520, easing: 'ease-out' });
       SFX.golden();
       if (store.get(FORM_KEY, '') !== '1') {
@@ -1678,7 +1766,7 @@
       }
     }
     ui.formKey = key;
-    ui.formCount = forms.length;
+    ui.formCount = forms.length + phen.length;
   }
   $('allianceTag').addEventListener('click', () => { SFX.tap(); openFamilies(); });
 
@@ -2600,8 +2688,15 @@
     const now = active.length
       ? active.map((f) => `<div class="fam-item" style="--c:${famColor(f.fam)}"><b>${formLabel(f)}</b> <small>· ${tr('{n} astres', { n: f.n })}</small><p>${esc(R.formText(f.fam, f.row, f.lvl))}</p></div>`).join('')
       : `<p class="muted">${tr('Aucune formation pour l’instant.')}</p>`;
+    const phen = R.phenomenaOf(p.board).map((x) => x.kind);
+    const phenHtml = Object.entries(R.PHENOMENA).map(([k, ph]) => `<div class="fam-item ph-item ${phen.includes(k) ? 'on' : ''}"><b>✦ ${esc(tr(ph.name)).toUpperCase()}</b>${phen.includes(k) ? ` <small>· ${tr('actif')}</small>` : ''}<p>${esc(tr(ph.text))}</p></div>`).join('');
+    const posHtml = ['portee', 'percee', 'garde'].map((k) => `<div class="fam-item" style="--c:var(--ink)"><b>${icon({ portee: 'range', percee: 'pierce', garde: 'guard' }[k])} ${esc(R.KEYWORDS[k].name).toUpperCase()}</b><p>${esc(R.KEYWORDS[k].text)}</p></div>`).join('');
     openSheet(`<h3>${tr('VOS FORMATIONS')}</h3>${now}
       <p class="muted">${tr('Deux astres d’une même famille dans la même rangée forment une formation : niveau I à 2 astres, II à 3, III à 4. Chaque famille a un bonus à l’avant et un autre à l’arrière, au début du combat.')}</p>
+      <h3 style="margin-top:18px">${tr('PHÉNOMÈNES')}</h3>
+      <p class="muted">${tr('Des combinaisons de placement qui transforment un astre au début du combat. « Juste derrière » : l’astre de l’arrière dans la même colonne.')}</p>
+      <div class="fam-list">${phenHtml}</div>
+      <h3 style="margin-top:18px">${tr('L’ARRIÈRE AU COMBAT')}</h3><div class="fam-list">${posHtml}</div>
       <h3 style="margin-top:18px">${tr('FAMILLES DE CET UNIVERS')}</h3><div class="fam-list">${items}</div>
       <h3 style="margin-top:18px">${tr('VOTRE LOI')}</h3><div class="fam-item" style="--c:${famColor(law.fam)}"><b>${esc(law.name).toUpperCase()}</b><p>${esc(law.text)}</p></div>`);
   }
@@ -2624,6 +2719,8 @@
       <li>${tr('Votre système a <b>deux rangées de 4</b> (7 astres au plus). L’<b>avant</b> attaque et encaisse ; l’<b>arrière</b> est à l’abri des attaques et <b>avance</b> quand l’avant est tombé. Les effets des astres agissent depuis les deux rangées.')}</li>
       <li>${tr('Chaque astre de l’avant frappe l’ennemi <b>en face</b> de lui (les Remparts d’abord), de gauche à droite. Aucun hasard dans les cibles : votre placement décide.')}</li>
       <li>${tr('<b>Formation</b> : deux astres d’une même famille dans la même rangée. Chaque famille a un bonus à l’avant et un autre à l’arrière, plus fort à 3 et 4 astres. Mélangez : trois Brasier devant, deux Glace derrière…')}</li>
+      <li>${tr('L’arrière a son rôle : <b>Portée</b> attaque depuis l’arrière sans riposte ; <b>Percée</b> frappe l’arrière ennemi ; <b>Garde</b>, à l’avant, protège votre arrière de la Percée.')}</li>
+      <li>${tr('<b>Phénomènes</b> : certaines combinaisons de placement transforment un astre au début du combat. Un Minéral juste derrière un astre le fait grossir ; deux Néant l’un derrière l’autre forment un trou noir ; deux Brasier, une supernova… La liste est dans la fiche des familles.')}</li>
       <li>${tr('Touchez la barre du rival pour voir le <b>système qu’il a joué</b> au dernier combat, et adaptez votre placement.')}</li>
       <li>${tr('<b>Touchez un astre</b> pour lire ce qu’il fait, même en combat ou chez un rival. Sous chaque astre : {sword} son <b>Attaque</b> et {heart} ses <b>PV</b>. En haut à droite : {skull} il a un effet d’<b>Effondrement</b> (quand il est détruit, comme laisser des Débris), {spark} il a un autre effet.', ic)}</li>
       <li>${tr('<b>Trois copies</b> d’un même astre fusionnent en un <b>astre doré</b> (stats doublées). Le placer offre une <b>découverte</b> du niveau supérieur.')}</li>
@@ -2858,6 +2955,19 @@
   async function animateAttack(e, group) {
     const a = unitByCid(e.cid), t = unitByCid(e.target);
     if (!a || !t) { for (const h of group) await combatEvent(h); return; }
+    if (e.ranged) {
+      // Portée : un tir depuis l'arrière, sans riposte.
+      SFX.whoosh(panOf(a));
+      stage.flash(a.querySelector('.orb'), 0.5);
+      await stage.beam(center(a.querySelector('.orb')), center(t.querySelector('.orb')), { ms: dur(380), color: hexRgb(famColor(R.CARD[a.dataset.id].fam)), arc: 26, tail: 10, head: 3 });
+      SFX.hit(Math.max(1, ...group.filter((h) => h.t === 'hit').map((h) => h.n)), panOf(t));
+      stage.flash(t.querySelector('.orb'), 0.9);
+      t.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(0)' }], { duration: dur(220) });
+      for (const h of group) await combatEvent(h, true);
+      await sleep(160);
+      return;
+    }
+    if (e.pierce) popOn(a, kwName('percee'), 'info');
     const [ax, ay] = center(a), [tx, ty] = center(t);
     const dx = (tx - ax) * 0.8, dy = (ty - ay) * 0.8;
     a.style.zIndex = 5;
@@ -2905,6 +3015,32 @@
           stage.ring(x, y, orb.getBoundingClientRect().width * 0.45, { n: 22, colors: [c, [255, 255, 255]], speed: 40, life: 0.6, flat: 0.5 });
         }
         await sleep(650);
+        break;
+      }
+      case 'phenom': {
+        const el = unitByCid(e.cid);
+        if (!el) break;
+        const orb = el.querySelector('.orb');
+        const [x, y] = center(orb);
+        const w = orb.getBoundingClientRect().width;
+        if (e.kind === 'explode') {
+          // Supernova : l'astre explose en s'effondrant.
+          SFX.explode();
+          stage.burst(x, y, { n: 90, colors: [[255, 140, 60], [255, 220, 140], [255, 255, 255]], speed: 160, life: 1, size: 2 });
+          stage.ring(x, y, w * 0.4, { n: 60, colors: [[255, 160, 80], [255, 255, 255]], speed: 150, life: 0.7 });
+          popAt(x, y - w * 0.6, tr('SUPERNOVA'), 'gold');
+          await sleep(500);
+          break;
+        }
+        const partner = unitByCid(e.partner);
+        if (partner) await stage.beam(center(partner.querySelector('.orb')), [x, y], { ms: dur(360), color: [246, 196, 83], arc: 10, tail: 8, head: 2 });
+        popAt(x, y - w * 0.62, '✦ ' + tr(R.PHENOMENA[e.kind].name).toUpperCase(), 'gold');
+        SFX.golden();
+        stage.ring(x, y, w * 0.45, { n: 30, colors: [[246, 196, 83], [255, 255, 255]], speed: 50, life: 0.7, flat: 0.5 });
+        if (e.kind === 'accretion') el.style.setProperty('--grow', '1.22');
+        if (e.kind === 'trounoir') { orb.dataset.planet = 'neant'; el.classList.add('blackhole'); }
+        if (e.kind === 'supernova') el.classList.add('nova');
+        await sleep(dur(520));
         break;
       }
       case 'advance': {
