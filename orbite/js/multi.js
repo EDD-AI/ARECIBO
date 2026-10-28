@@ -208,7 +208,7 @@
     // Niveau de la partie : la moyenne des points des autres créateurs (pour le barème classé).
     const others = m.seats.filter((s) => s.uid !== me);
     const lobby = others.length ? Math.round(others.reduce((n, s) => n + (s.points || 0), 0) / others.length) : null;
-    const st = R.newGame(m.seed, lawId, { families, seats, size: seatsOf(m), mp: { me, mid: M.mid, mode: m.mode, lobby } });
+    const st = R.newGame(m.seed, lawId, { families, seats, size: seatsOf(m), event: 'auto', mp: { me, mid: M.mid, mode: m.mode, lobby } });
     st.players[0].name = pseudo();
     M.posts = {}; M.roundDocs = {}; M.lastSnaps = {}; M.locked = null; M.timerRound = 0;
     listenPosts();
@@ -365,6 +365,7 @@
       if (st.phase !== 'shop' || O.ui.busy || left > 0) return;
       const me = st.players[0];
       if (me.discover.length) R.choose(st, 0, me);
+      if (me.relicChoice && me.relicChoice.length && O.autoRelic) O.autoRelic();
       O.ui.mpAuto = true;
       try { O.fight(); } finally { O.ui.mpAuto = false; }
     }, 250);

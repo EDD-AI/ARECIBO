@@ -15,6 +15,8 @@ function naive(st, p, fam) {
       R.play(st, u.uid, p.board.length, null, p);
     }
   };
+  // Relique (cycles 4 et 8) : la première proposée.
+  if (p.relicChoice && p.relicChoice.length) R.chooseRelic(st, 0, p);
   for (let g = 0; g < 40; g++) {
     deploy();
     const slot = p.shop.findIndex((id) => id && R.CARD[id].fam === fam);

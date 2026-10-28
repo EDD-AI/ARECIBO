@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="orbite-version" content="83">
+<meta name="orbite-version" content="84">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -112,15 +112,27 @@
       </button>
       <p class="subtitle center" id="menuLine"></p>
       <nav class="menu-list" id="menuList" aria-label="Menu principal" data-t-attr="aria-label">
-        <button class="menu-item" id="soloBtn" data-t>JOUER <small>DUEL · 1 CONTRE 1</small></button>
-        <div class="menu-sub" id="soloSub" hidden>
-          <button class="menu-item sub" id="campBtn" data-t>CAMPAGNE <small>LA GENÈSE</small></button>
-          <button class="menu-item sub" id="quickBtn" data-t>AFFRONTEMENT <small>CONTRE 7 UNIVERS</small></button>
+        <!-- Trois pages : le menu principal, Jouer (solo ou multijoueur), puis les modes solo. -->
+        <div class="menu-page on" data-page="main">
+          <button class="menu-item" id="playBtn" data-t>JOUER <small>SOLO · MULTIJOUEUR</small></button>
+          <button class="menu-item" id="codexBtn" data-t>CODEX <small>TOUS LES ASTRES</small></button>
+          <button class="menu-item" id="creationBtn" data-t>CRÉATION</button>
+          <button class="menu-item" id="marketBtn" data-t>MARCHÉ STELLAIRE</button>
+          <button class="menu-item" id="settingsBtn" data-t>PARAMÈTRES</button>
         </div>
-        <button class="menu-item" id="multiBtn" data-t>MULTIJOUEUR <small>EN LIGNE · ENTRE AMIS</small></button>
-        <button class="menu-item" id="creationBtn" data-t>CRÉATION</button>
-        <button class="menu-item" id="marketBtn" data-t>MARCHÉ STELLAIRE</button>
-        <button class="menu-item" id="settingsBtn" data-t>PARAMÈTRES</button>
+        <div class="menu-page" data-page="play">
+          <button class="menu-item" id="soloBtn" data-t>SOLO <small>CONTRE L’IA</small></button>
+          <button class="menu-item" id="multiBtn" data-t>MULTIJOUEUR <small>EN LIGNE · ENTRE AMIS</small></button>
+          <button class="menu-item back" data-menu-back="main" data-t>RETOUR</button>
+        </div>
+        <div class="menu-page" data-page="solo">
+          <button class="menu-item" id="duelBtn" data-t>DUEL <small>1 CONTRE 1</small></button>
+          <button class="menu-item" id="quickBtn" data-t>MÊLÉE <small>CONTRE 7 UNIVERS</small></button>
+          <button class="menu-item" id="dailyBtn" data-t>DÉFI DU JOUR <small>LA MÊME PARTIE POUR TOUS</small></button>
+          <button class="menu-item back" data-menu-back="play" data-t>RETOUR</button>
+        </div>
+        <!-- La campagne (la Genèse) est masquée ; son bouton reste pour campagne-ui.js. -->
+        <button class="menu-item" id="campBtn" hidden data-t>CAMPAGNE <small>LA GENÈSE</small></button>
       </nav>
       <p class="menu-foot" id="menuFoot">STUDIO EDDA</p>
     </section>
@@ -267,11 +279,6 @@
       </header>
       <div class="mk-scroll">
         <div class="mp" id="mpBody"></div>
-        <section class="mp-card melee-card">
-          <b data-t>MÊLÉE À 8 · HORS LIGNE</b>
-          <p data-t>Les mêmes règles contre sept univers rivaux, sans connexion : le dernier debout gagne.</p>
-          <button class="btn" id="meleeBtn" data-t>JOUER LA MÊLÉE <small>CONTRE 7 UNIVERS</small></button>
-        </section>
       </div>
     </section>
 
@@ -308,6 +315,23 @@
     </section>
 
     <!-- MARCHÉ STELLAIRE -->
+    <!-- CODEX : tous les astres, les lois, les reliques et les événements cosmiques -->
+    <section class="screen" id="codex" aria-label="Codex" data-t-attr="aria-label">
+      <header class="screen-head">
+        <button class="icon-btn" id="codexBack" aria-label="Retour" data-t-attr="aria-label"></button>
+        <h2 data-t>Codex</h2>
+        <span class="cx-count" id="codexCount"></span>
+      </header>
+      <nav class="mk-tabs cx-tabs" id="codexTabs" role="tablist">
+        <button class="on" data-cx="astres" role="tab" data-t>ASTRES</button>
+        <button data-cx="lois" role="tab" data-t>LOIS</button>
+        <button data-cx="reliques" role="tab" data-t>RELIQUES</button>
+        <button data-cx="evenements" role="tab" data-t>ÉVÉNEMENTS</button>
+      </nav>
+      <div class="cx-fams" id="codexFams"></div>
+      <div class="mk-scroll cx-body" id="codexBody" data-clipbox></div>
+    </section>
+
     <section class="screen" id="market" aria-label="Marché stellaire" data-t-attr="aria-label">
       <header class="screen-head">
         <button class="icon-btn" id="marketBack" aria-label="Retour" data-t-attr="aria-label"></button>
@@ -368,6 +392,7 @@
         <h2 data-t>Votre loi</h2>
       </header>
       <p class="hint" data-t>Elle régit votre univers et vous offre votre premier astre.</p>
+      <div class="law-event" id="lawEvent" hidden></div>
       <div class="law-list" id="lawList"></div>
       <button class="btn primary wide" id="lawGo" disabled data-t>CRÉER MON UNIVERS</button>
     </section>
@@ -377,6 +402,7 @@
       <header class="hud">
         <div class="hud-hp" id="hudHp"></div>
         <button class="hud-fams" id="famsBtn" aria-label="Familles de la partie" data-t-attr="aria-label"></button>
+        <button class="hud-cosmos" id="cosmosBtn" aria-label="Événement et reliques" data-t-attr="aria-label"></button>
         <div class="hud-round" id="hudRound"></div>
         <span class="mp-timer" id="mpTimer" hidden></span>
         <button class="icon-btn chat-btn" id="chatBtn" aria-label="Discussion" data-t-attr="aria-label"></button>
@@ -530,6 +556,7 @@
   <script src="js/lang/duel.js"></script>
   <script src="js/lang/position.js"></script>
   <script src="js/lang/eveil.js"></script>
+  <script src="js/lang/contenu.js"></script>
   <script src="js/planet-engine.js"></script>
   <script src="js/planet-renderer.js"></script>
   <script src="js/stage.js"></script>

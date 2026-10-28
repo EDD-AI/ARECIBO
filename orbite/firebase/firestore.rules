@@ -6,6 +6,7 @@ rules_version = '2';
 // - friends/{a_b}  : une amitié entre deux joueurs (demande puis acceptation).
 // - matches/{id}   : une partie en ligne (salon, puis manches) ; posts/{uid} le plateau publié
 //                    par chaque joueur, rounds/{r} les plateaux retenus par l'hôte (écrits une fois).
+// - daily/{d}_{uid} : le score du défi du jour, écrit une seule fois par joueur et par jour (v84).
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
@@ -34,6 +35,22 @@ service cloud.firestore {
         && request.resource.data.games is int && request.resource.data.wins is int
         && request.resource.data.world is list && request.resource.data.world.size() <= 30
         && request.resource.data.forge is map;
+    }
+
+    match /daily/{id} {
+      function nd() { return request.resource.data; }
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && nd().keys().hasOnly(['d', 'uid', 'pseudo', 'tag', 'score', 'win', 'rounds', 'law', 'at'])
+        && nd().uid == request.auth.uid
+        && nd().d is string && nd().d.size() == 10
+        && id == nd().d + '_' + request.auth.uid
+        && nd().pseudo is string && nd().pseudo.size() <= 16
+        && nd().tag is string && nd().tag.size() <= 6
+        && nd().score is int && nd().score >= 0 && nd().score <= 5000
+        && nd().win is bool
+        && nd().rounds is int && nd().rounds >= 1 && nd().rounds <= 60
+        && nd().law is string && nd().law.size() <= 16;
     }
 
     match /friends/{pair} {

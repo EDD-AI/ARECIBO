@@ -319,6 +319,26 @@
     return rows.filter((p) => p.placed).sort((a, b) => b.points - a.points || b.level - a.level).slice(0, 50);
   }
 
+  // ─── Défi du jour (v84) ─────────────────────────────────────
+  // daily/{date}_{uid} : un score par joueur et par jour, écrit une seule fois.
+  async function dailySubmit(d, r) {
+    if (!fb || state.status !== 'signedIn') return false;
+    const { fs } = fb, uid = state.user.uid, pub = publicProfile();
+    await fs.setDoc(fs.doc(db, 'daily', d + '_' + uid), {
+      d, uid, pseudo: String(pub.pseudo || '').slice(0, 16), tag: String(pub.tag || '').slice(0, 6),
+      score: Math.max(0, Math.min(5000, Math.round(r.score) || 0)), win: !!r.win,
+      rounds: Math.max(1, Math.min(60, r.rounds | 0)), law: String(r.law || '').slice(0, 16), at: fs.serverTimestamp()
+    });
+    return true;
+  }
+  // Les meilleurs du jour (tri ici : pas d'index composé à créer).
+  async function dailyTop(d) {
+    if (!fb || state.status !== 'signedIn') return [];
+    const { fs } = fb;
+    const res = await fs.getDocs(fs.query(fs.collection(db, 'daily'), fs.where('d', '==', d), fs.limit(500)));
+    return res.docs.map((x) => x.data()).sort((a, b) => b.score - a.score || a.rounds - b.rounds).slice(0, 50);
+  }
+
   window.OrbiteOnline = {
     get configured() { return !!CFG; },
     state,
@@ -326,7 +346,7 @@
     boot, signIn, signOut, resolveConflict,
     syncNow: () => uploadNow(),
     myCode: () => (state.user ? codeOf(state.user.uid) : ''),
-    friends, addByCode, accept, remove, leaderboard, profileOf,
+    friends, addByCode, accept, remove, leaderboard, profileOf, dailySubmit, dailyTop,
     codeOf,
     // Accès Firestore pour le multijoueur (js/multi.js).
     fire: () => (db && fb ? { db, fs: fb.fs } : null),
