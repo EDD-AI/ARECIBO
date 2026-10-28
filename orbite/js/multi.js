@@ -5,7 +5,8 @@
  * écrit une seule fois ; chaque téléphone résout alors la manche à l'identique (rules.js, mpResolve).
  *
  * matches/{id}              : { mode, code, status, host, uids, seats, bracket, created, seed, beat, size }
- *                             size : 2 pour un duel (absent : mêlée à 8)
+ *                             size : 2 pour un duel (absent : mêlée à 8) ; la graine d'un duel
+ *                             commence aussi par « D » (règles en ligne d'avant la v68, sans « size »)
  * matches/{id}/posts/{uid}  : { r, snap } — le dernier plateau publié par chaque joueur
  * matches/{id}/rounds/{r}   : { r, snaps, by } — les plateaux retenus pour la manche r */
 (function () {
@@ -17,8 +18,11 @@
   // Réglages (raccourcis par les tests via window.ORBITE_MP_FAST).
   const F = window.ORBITE_MP_FAST || {};
   const SEATS = 8;
-  // Places d'une partie : 2 en duel, 8 en mêlée (anciens salons sans « size »).
-  const seatsOf = (m) => (m && m.size === 2 ? 2 : SEATS);
+  // Places d'une partie : 2 en duel, 8 en mêlée. Un duel se reconnaît à size: 2 ou, si les règles
+  // publiées dans Firebase sont plus anciennes que la v68 et refusent ce champ, à sa graine en « D ».
+  const DUEL_MARK = 'D';
+  const seatsOf = (m) => (m && (m.size === 2 || String(m.seed || '').charAt(0) === DUEL_MARK) ? 2 : SEATS);
+  const denied = (err) => !!err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
   const WAIT_MS = F.wait || 40000; // recherche classée : délai avant de compléter avec des bots
   const shopMs = (r) => F.shop || Math.min(75000, 40000 + 5000 * r);
   const GRACE_MS = F.grace || 20000; // retard toléré après la fin du temps de boutique
@@ -73,8 +77,13 @@
       mode, code, status: 'waiting', host: me.uid, uids: [me.uid], seats: [me], bracket: bracketOf(me.points),
       created: now(), seed: '', beat: { [me.uid]: now() }
     };
-    if (size === 2) doc.size = 2;
-    await fs.setDoc(ref(id), doc);
+    if (size === 2) { doc.size = 2; doc.seed = DUEL_MARK; }
+    try { await fs.setDoc(ref(id), doc); } catch (err) {
+      // Règles d'avant la v68 : sans le champ « size », la graine marque le duel.
+      if (size !== 2 || !denied(err)) throw err;
+      delete doc.size;
+      await fs.setDoc(ref(id), doc);
+    }
     M.mode = mode;
     watch(id);
     return id;
@@ -163,7 +172,7 @@
     if (!m || m.host !== uid() || m.status !== 'waiting') return;
     const a = new Uint32Array(2);
     crypto.getRandomValues(a);
-    const seed = 'MP' + a[0].toString(16).toUpperCase() + a[1].toString(16).toUpperCase();
+    const seed = (seatsOf(m) === 2 ? DUEL_MARK : '') + 'MP' + a[0].toString(16).toUpperCase() + a[1].toString(16).toUpperCase();
     try { const { fs } = fire(); await fs.updateDoc(ref(M.mid), { status: 'playing', seed, startAt: now() }); } catch (err) { A.refuse(err.message); }
   }
 

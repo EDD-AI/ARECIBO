@@ -647,7 +647,9 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
   rejoint la partie tout seul (le code attend dans la session si la connexion recharge la page). Un
   lien touché pendant que le jeu est ouvert marche aussi. Un duel classé compte comme une 2e place s’il est gagné (+18 points de base) et une 6e s’il
   est perdu (−18). Le salon porte `size: 2` (`MP.seatsOf`) ; les règles Firestore l’acceptent depuis
-  la v68 (à republier dans la console).
+  la v68. Si les règles publiées sont plus anciennes et refusent ce champ, le salon est recréé
+  sans lui (v75) : la graine du duel commence par « D », ce qui suffit à le reconnaître. Le duel
+  entre amis marche donc sans republier les règles.
 - **Mêlée à 8 hors ligne** : la carte en bas de l’écran Multijoueur, sans connexion.
 - **Mêlée classée** : recherche de créateurs de votre rang.
   - La tolérance s’élargit d’un rang toutes les 10 secondes ; on rejoint le salon en attente le
