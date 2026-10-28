@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 72;
+  const VERSION = 73;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -515,11 +515,15 @@
     el.classList.remove('fade');
     el.innerHTML = '<span></span><span class="caret">_</span>';
     const span = el.firstChild;
+    // o.onChar : appelé à chaque lettre ; o.stop() : vrai quand le joueur passe la scène.
+    const stop = () => o.stop && o.stop();
     for (const ch of text) {
+      if (stop()) break;
       span.textContent += ch;
-      if (ch !== ' ') SFX.type();
+      if (ch !== ' ') { SFX.type(); if (o.onChar) o.onChar(ch); }
       await wait(ch === ',' || ch === '.' || ch === '…' ? 320 : o.speed || 60);
     }
+    if (stop()) { el.innerHTML = ''; return; }
     await wait(o.hold || 1700);
     el.classList.add('fade');
     await wait(1000);
@@ -612,11 +616,41 @@
     flare.classList.remove('go');
   }
 
+  // Le réveil : une entité numérique faite de caractères nous parle, puis s'effondre et explose en
+  // big bang numérique ; les caractères retombent en planète (js/eveil.js). Toucher l'écran passe.
   async function wakeScreen() {
     await show('wake');
-    await wait(1100);
-    await typeLine($('wakeLine'), tr('Réveillez-vous. Bonjour, créateur.'), { hold: 2000, speed: 70 });
-    await wait(400);
+    const fx = window.OrbiteEveil ? window.OrbiteEveil.start($('wakeCanvas')) : null;
+    const run = { off: false, t0: performance.now(), wake: null };
+    const pause = (ms) => (run.off ? Promise.resolve() : new Promise((r) => { const id = setTimeout(r, ms); run.wake = () => { clearTimeout(id); r(); }; }));
+    const skip = () => {
+      if (run.off || performance.now() - run.t0 < 1500) return;
+      run.off = true;
+      if (run.wake) run.wake();
+      if (fx) fx.cut();
+    };
+    $('wake').addEventListener('pointerdown', skip);
+    const say = (text, o) => (run.off ? null : typeLine($('wakeLine'), text, Object.assign({ stop: () => run.off }, o)));
+    try {
+      await pause(500);
+      if (fx && !run.off) await fx.appear();
+      await pause(500);
+      await say(tr('Réveillez-vous. Bonjour, créateur.'), { hold: 1500, speed: 70, onChar: () => fx && fx.speak() });
+      if (fx && !run.off) {
+        SFX.charge();
+        await fx.implode();
+        if (!run.off) { SFX.explode(); vibrate([30, 40, 60]); }
+        if (!run.off) await fx.bang();
+        if (!run.off) await fx.form();
+        await pause(300);
+        await say(tr('Vous venez de créer un monde.'), { hold: 1600, speed: 65 });
+      }
+      await pause(200);
+    } finally {
+      $('wake').removeEventListener('pointerdown', skip);
+      $('wakeLine').innerHTML = '';
+      if (fx) { await fx.fadeOut(run.off ? 300 : 900); fx.stop(); }
+    }
   }
 
   // ─── Votre planète ──────────────────────────────────────────
