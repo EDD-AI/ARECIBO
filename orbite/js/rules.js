@@ -726,6 +726,9 @@
         const nu = makeUnit(state, id);
         p.hand.push(nu);
         x.events.push({ t: 'hand', uid: nu.uid, id });
+        // Troisième exemplaire : fusion dorée, comme à l'achat.
+        const triple = checkTriple(state, p, id);
+        if (triple) x.events.push({ t: 'triple', id, uid: triple.uid, merged: triple.merged });
       }
     };
     return x;

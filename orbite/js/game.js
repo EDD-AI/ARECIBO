@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 81;
+  const VERSION = 82;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -715,7 +715,8 @@
     pl.style.width = pl.style.height = 2 * R + 'px';
     pl.style.left = W / 2 - R + 'px';
     pl.style.top = cy - R + 'px';
-    pl.dataset.clip = horizon + 5;
+    // La toile 3D compte en pixels réels : l'horizon (en pixels virtuels) suit le zoom du PC.
+    pl.dataset.clip = (horizon + 5) * ui.z;
     ui.menuR = R;
     ui.horizon = horizon;
     const g = stage.genome ? stage.genome('horizon') : null;
@@ -762,7 +763,7 @@
       if (ui.screen !== 'menu' || !$('overlay').hidden) return;
       const W = window.innerWidth;
       const x = W * (0.15 + Math.random() * 0.7);
-      stage.burst(x, ui.horizon + 2, { n: 1, colors: [[210, 235, 255], [255, 255, 255]], speed: 4, up: 14 + Math.random() * 10, drag: 0.2, life: 2.6 + Math.random() * 2, size: 1 });
+      stage.burst(x, (ui.horizon + 2) * ui.z, { n: 1, colors: [[210, 235, 255], [255, 255, 255]], speed: 4, up: 14 + Math.random() * 10, drag: 0.2, life: 2.6 + Math.random() * 2, size: 1 });
       if (++n % 34 === 0) {
         const y0 = window.innerHeight * (0.05 + Math.random() * 0.2);
         const x0 = W * (Math.random() * 0.5);
@@ -1981,7 +1982,7 @@
     return part(a, 'sword') + part(h, 'heart');
   }
 
-  async function playShopEvents(events, model) {
+  async function playShopEvents(events, model, pre) {
     const units = model || null;
     const list = events || [];
     // Les chiffres affichés repartent de l'état d'avant les effets, puis montent à chaque bonus
@@ -2058,8 +2059,23 @@
       } else if (e.t === 'law') {
         const b = $('powerBtn');
         b.animate([{ borderColor: 'var(--ink)' }, { borderColor: 'var(--faint)' }], { duration: 600 });
+      } else if (e.t === 'triple' && !units) {
+        // Un astre ajouté à la main (Fluctuation, Multivers) complète un trio : fusion dorée.
+        renderBoard();
+        renderHand();
+        const h = $('hand').getBoundingClientRect(), w = 54;
+        const fallback = { left: h.left + h.width / 2 - w / 2, top: h.top + h.height / 2 - w / 2, width: w, height: w };
+        const sources = e.merged.map((uid) => (pre && pre.get(uid)) || fallback);
+        await fusion(e.id, sources, e.uid);
       }
     }
+  }
+
+  // Position des astres affichés, avant une action qui pourrait les fusionner.
+  function uidRects() {
+    const m = new Map();
+    for (const el of document.querySelectorAll('#board .unit, #hand .unit')) if (el.dataset.uid) m.set(el.dataset.uid, el.querySelector('.orb').getBoundingClientRect());
+    return m;
   }
 
   function hexRgb(h) {
@@ -2164,6 +2180,7 @@
 
   // slot : { row, index } choisi en glissant, ou rien (l'avant s'il y a de la place).
   async function doPlay(uid, slot, fromRect, targetUid) {
+    const pre = uidRects();
     const res = R.play(ui.state, uid, slot ? slot.index : null, targetUid, undefined, slot ? slot.row : undefined);
     if (!res.ok) { refuse(tr(res.reason)); renderHand(); return false; }
     tuto('placer');
@@ -2183,7 +2200,7 @@
       stage.ring(x, y, b.width * 0.42, { n: 40, colors: [hexRgb(famColor(R.CARD[landed.dataset.id].fam)), [255, 255, 255]], speed: 55, life: 0.55, flat: 0.45 });
       if (res.magnet) { popOn(landed, kwName('arrimage'), 'info'); setStats(landed, me().board.find((u) => u.uid === res.magnet).atk, me().board.find((u) => u.uid === res.magnet).hp, true); }
     }
-    await playShopEvents(res.events);
+    await playShopEvents(res.events, null, pre);
     renderBoard();
     renderHand();
     renderEnergy();
@@ -2911,6 +2928,7 @@
     ui.prevHp = Object.fromEntries(ui.state.players.map((x) => [x.id, x.hp]));
     // Multijoueur : on publie son plateau et on attend ceux des autres créateurs.
     const MP = ui.state.mp && window.OrbiteMulti;
+    const pre = uidRects();
     let res;
     try {
       res = MP ? await MP.endTurn(ui.state, () => banner(tr('EN ATTENTE'), tr('Les autres créateurs terminent leur tour…'))) : R.endTurn(ui.state);
@@ -2923,7 +2941,7 @@
     tuto('combat');
     if (res.battle && res.battle.winner === 0) ui.state.fightsWon = (ui.state.fightsWon || 0) + 1;
     try {
-      await playShopEvents(res.endEvents);
+      await playShopEvents(res.endEvents, null, pre);
       await sleep(250);
       if (res.battle) await playBattle(res.battle);
       await afterBattle(res);
