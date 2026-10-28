@@ -1538,6 +1538,7 @@ button.pf-rank { grid-template-columns: 56px 1fr auto; width: 100%; font: inheri
 .melee-card .btn { flex-direction: column; gap: 4px; }
 .melee-card .btn small { display: block; font-size: 10px; letter-spacing: 0.12em; color: var(--dim); }
 .mp-rank { font-size: 11px; letter-spacing: 0.08em; color: var(--gold); }
+.mp-card p.mp-invite { color: var(--gold); }
 .mp-note { color: var(--dim); text-align: center; margin-top: 20vh; }
 .mp-join { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
 .mp-join .code-input { margin: 0; }

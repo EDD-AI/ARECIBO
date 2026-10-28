@@ -14,7 +14,8 @@
   const LOCAL_ONLY = ['orbite.session', 'orbite.partie.v1', 'orbite.campagne', SYNC_KEY];
 
   const listeners = new Set();
-  const state = { status: CFG ? 'off' : 'unconfigured', user: null, syncAt: 0, error: '', conflict: null, requests: 0 };
+  // synced : la progression en ligne est réglée (envoyée, ou récupérée, ce qui recharge la page).
+  const state = { status: CFG ? 'off' : 'unconfigured', user: null, syncAt: 0, error: '', conflict: null, requests: 0, synced: false };
   let fb = null, auth = null, db = null, timer = 0, booting = null;
 
   const emit = () => { for (const fn of listeners) { try { fn(state); } catch (err) { console.error(err); } } };
@@ -89,7 +90,7 @@
         a.getRedirectResult(auth).catch((err) => set({ error: messageOf(err) }));
         a.onAuthStateChanged(auth, (u) => {
           if (u) onSignedIn(u);
-          else { clearInterval(timer); set({ status: 'signedOut', user: null, conflict: null, requests: 0 }); }
+          else { clearInterval(timer); set({ status: 'signedOut', user: null, conflict: null, requests: 0, synced: false }); }
         });
         return true;
       } catch (err) {
@@ -133,11 +134,12 @@
 
   // ─── Synchronisation de la progression ──────────────────────
   async function onSignedIn(u) {
-    set({ status: 'signedIn', user: { uid: u.uid, name: u.displayName || '', email: u.email || '', photo: u.photoURL || '' }, error: '' });
+    set({ status: 'signedIn', synced: false, user: { uid: u.uid, name: u.displayName || '', email: u.email || '', photo: u.photoURL || '' }, error: '' });
     try {
       await reconcile();
+      set({ synced: true });
       await refreshRequests();
-    } catch (err) { set({ error: messageOf(err) }); }
+    } catch (err) { set({ error: messageOf(err), synced: true }); }
     clearInterval(timer);
     timer = setInterval(() => { uploadIfChanged().catch(() => {}); }, 20000);
   }

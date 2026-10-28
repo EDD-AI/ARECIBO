@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 73;
+  const VERSION = 74;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -812,6 +812,24 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) saveAll(); });
   window.addEventListener('pagehide', saveAll);
 
+  // Invitation d'un ami : le lien …/orbite/#rejoindre=CODE ouvre le Multijoueur sur ce code, qui se
+  // rejoint seul une fois connecté. Le code attend dans la session (la connexion Google peut
+  // recharger la page) jusqu'à ce que le Multijoueur le prenne.
+  const INVITE_KEY = 'orbite.invite';
+  function readInvite() {
+    const m = /[#&]rejoindre=([A-Za-z0-9]{6})\b/.exec(location.hash);
+    if (!m) return;
+    try { sessionStorage.setItem(INVITE_KEY, m[1].toUpperCase()); } catch (err) { /* stockage indisponible */ }
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (err) { /* sans importance */ }
+  }
+  readInvite();
+  function openInvite() {
+    let code = null;
+    try { code = sessionStorage.getItem(INVITE_KEY); } catch (err) { /* stockage indisponible */ }
+    if (code && ui.screen === 'menu' && window.OrbiteMultiUI) { stopAmbient(); window.OrbiteMultiUI.open({ code }); }
+  }
+  window.addEventListener('hashchange', () => { readInvite(); if (!ui.busy) openInvite(); });
+
   async function quickResume() {
     let ses = null;
     try { ses = JSON.parse(store.get(SESSION_KEY, 'null')); } catch (err) { /* illisible */ }
@@ -828,7 +846,7 @@
     try {
       // Attend que tous les scripts (dont la Campagne) soient chargés avant de reprendre.
       if (document.readyState === 'loading') await new Promise((r) => document.addEventListener('DOMContentLoaded', r, { once: true }));
-      if (!full && await quickResume()) return;
+      if (!full && await quickResume()) { openInvite(); return; }
       await splash();
       await titleScreen();
       const first = store.get(WAKE_KEY, '') !== '1';
@@ -837,6 +855,7 @@
       // Une partie terminée pendant que l'appli était fermée : ses récompenses attendent.
       const fin = loadFinished();
       if (fin && ui.screen === 'menu') { ui.state = fin; await endScreen(); }
+      openInvite();
     } catch (err) {
       console.error(err);
       try { await enterMenu(false); } catch (err2) {
