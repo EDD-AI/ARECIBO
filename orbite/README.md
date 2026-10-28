@@ -685,8 +685,9 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
 - **Déroulement** :
   - Chacun choisit une loi parmi trois, en 20 secondes, dans les familles de la partie (les mêmes
     pour tous).
-  - Personne ne peut passer : un minuteur commun cadence la partie. La boutique dure 45 s, puis 5 s
-    de plus par manche, jusqu’à 75 s ; le bouton de combat affiche le compte à rebours et le tour
+  - Personne ne peut passer : un minuteur commun cadence la partie. La boutique est courte au
+    début pour jouer vite (v80) : 25 s au cycle 1, 35 s au cycle 2, 50 s au cycle 3, puis 60 s,
+    65 s, 70 s et 75 s au plus ; le bouton de combat affiche le compte à rebours et le tour
     se termine pour tous à zéro. Les combats ne se passent pas ; 25 s leur sont réservées avant la
     boutique suivante. On ne peut passer qu’en solo, contre les bots.
 - **Sous le capot** (`js/multi.js`, règles dans `js/rules.js`) :

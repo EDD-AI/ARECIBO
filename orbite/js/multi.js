@@ -24,7 +24,10 @@
   const seatsOf = (m) => (m && (m.size === 2 || String(m.seed || '').charAt(0) === DUEL_MARK) ? 2 : SEATS);
   const denied = (err) => !!err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
   const WAIT_MS = F.wait || 40000; // recherche classée : délai avant de compléter avec des bots
-  const shopMs = (r) => F.shop || Math.min(75000, 40000 + 5000 * r);
+  // Temps de boutique : court au début pour jouer vite (25 s, 35 s, 50 s), puis 60 s, 65 s, 70 s
+  // et 75 s au plus.
+  const SHOP_START = [25000, 35000, 50000];
+  const shopMs = (r) => F.shop || (r <= SHOP_START.length ? SHOP_START[Math.max(1, r) - 1] : Math.min(75000, 40000 + 5000 * r));
   const GRACE_MS = F.grace || 20000; // retard toléré après la fin du temps de boutique
   const LAW_MS = F.law || 20000; // choix de la loi
   const BATTLE_MS = F.battle || 25000; // le temps des combats, avant la boutique suivante
