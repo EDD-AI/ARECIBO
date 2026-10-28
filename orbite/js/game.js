@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 80;
+  const VERSION = 81;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -37,8 +37,30 @@
 
   const ui = {
     state: null, screen: null, lawPick: null, lawOptions: [], busy: false,
-    time: 1, skip: false, targeting: false, stamp: 1, prevHp: null
+    time: 1, skip: false, targeting: false, stamp: 1, prevHp: null, desk: false, z: 1
   };
+
+  // ─── Écran de PC ────────────────────────────────────────────
+  // Sur un grand écran horizontal (PC, tablette en largeur), le jeu passe en 16:9 et grossit : les
+  // écrans sont agrandis d'un même zoom (--z, pour une hauteur virtuelle de 800 px) et la partie
+  // s'étale en largeur (css/desk.css). Les tailles calculées pour un écran zoomé se comptent en
+  // pixels virtuels : viewW() × viewH().
+  function deskFit() {
+    const W = window.innerWidth, H = window.innerHeight;
+    ui.desk = W >= 900 && H >= 540 && W >= H * 1.2;
+    ui.z = ui.desk ? Math.max(1, Math.min(2.4, H / 800)) : 1;
+    document.body.classList.toggle('desk', ui.desk);
+    document.documentElement.style.setProperty('--z', String(Math.round(ui.z * 1000) / 1000));
+  }
+  deskFit();
+  const viewW = () => window.innerWidth / ui.z;
+  const viewH = () => window.innerHeight / ui.z;
+  // Un élément posé sur la page (bulle, chiffre qui s'envole) : même zoom, coordonnées converties.
+  function placeAt(el, x, y) {
+    el.style.zoom = ui.z === 1 ? '' : String(ui.z);
+    el.style.left = x / ui.z + 'px';
+    el.style.top = y / ui.z + 'px';
+  }
 
   let stage;
   try {
@@ -147,8 +169,7 @@
     const d = document.createElement('div');
     d.className = 'pop ' + (cls || '');
     d.innerHTML = text;
-    d.style.left = x + 'px';
-    d.style.top = y + 'px';
+    placeAt(d, x, y);
     const ms = /\bbuff\b/.test(cls || '') ? 1300 : 900;
     d.style.animationDuration = dur(ms) + 'ms';
     document.body.appendChild(d);
@@ -683,7 +704,7 @@
   })();
 
   function layoutMenu() {
-    const W = window.innerWidth, H = window.innerHeight;
+    const W = viewW(), H = viewH();
     // L'horizon remonte si besoin pour que tous les boutons du menu tiennent sous lui.
     // Place réservée au dépliage de « Jouer solo » (une ligne de plus).
     const listH = ($('menuList').offsetHeight || 260) + 52;
@@ -1606,14 +1627,16 @@
       const r = t.getBoundingClientRect();
       const pad = st.pad == null ? 6 : st.pad;
       Object.assign(hole.style, { left: r.left - pad + 'px', top: r.top - pad + 'px', width: r.width + pad * 2 + 'px', height: r.height + pad * 2 + 'px' });
-      const bh = bubble.offsetHeight;
+      bubble.style.zoom = ui.z === 1 ? '' : String(ui.z);
+      const bh = bubble.offsetHeight * ui.z;
       const below = st.place ? st.place === 'below' : r.top + r.height / 2 < H * 0.5;
       let y = st.place === 'top' ? 12 : below ? r.bottom + pad + 14 : r.top - pad - 14 - bh;
       y = Math.max(10, Math.min(H - bh - 10, y));
-      bubble.style.top = y + 'px';
+      bubble.style.top = y / ui.z + 'px';
     } else {
       Object.assign(hole.style, { left: '50%', top: '50%', width: '0px', height: '0px' });
-      bubble.style.top = Math.round(H * (st.y || 0.36)) + 'px';
+      bubble.style.zoom = ui.z === 1 ? '' : String(ui.z);
+      bubble.style.top = Math.round(H * (st.y || 0.36)) / ui.z + 'px';
     }
     if (st.gesture) {
       const a = coachQ(st.gesture.from || st.gesture.tap || st.target);
@@ -1695,8 +1718,35 @@
     $('menuBtn').innerHTML = icon('menu');
   }
 
+  // PC : la colonne de gauche montre les rivaux en permanence, comme le classement de Battlegrounds,
+  // avec le système du rival (duel) ou du prochain adversaire (mêlée) sous les yeux.
+  function rivalsPanel(s) {
+    const duel = R.isDuel(s);
+    const nx = s.phase === 'shop' ? R.nextOpponent(s) : null;
+    const last = me().lastOpp;
+    const list = s.players.slice().sort((a, b) => (b.alive - a.alive) || (a.alive ? b.hp - a.hp : a.rank - b.rank));
+    const rows = list.map((p, i) => {
+      const mine = p === me(), isNext = !duel && !!nx && nx === p;
+      const hp = Math.max(0, p.hp);
+      // En duel, le rival est toujours le même : pas d'étiquette.
+      const tag = duel ? '' : isNext ? tr('PROCHAIN ADVERSAIRE') : !mine && p.id === last ? tr('DERNIER ADVERSAIRE') : '';
+      return `<span class="dr-row ${mine ? 'me' : ''} ${isNext ? 'next' : ''} ${p.alive ? '' : 'dead'}">
+        <i class="dr-rk">${p.alive ? i + 1 : p.rank}</i>
+        <span class="dr-who"><b>${esc(mine ? tr('VOUS') : p.name)}</b>${tag ? `<em>${tag}</em>` : `<small>${tr('niveau {n}', { n: p.tier })}</small>`}</span>
+        <span class="dr-hp"><b>${p.alive ? hp : '–'}</b><i class="hp-bar"><i style="width:${p.alive ? Math.min(100, hp / (p.maxHp || R.START_HP) * 100) : 0}%"></i></i></span>
+      </span>`;
+    }).join('');
+    const opp = duel ? s.players[1] : nx;
+    const scout = opp && s.round > 1
+      ? `<span class="dr-scout"><small>${duel ? tr('Système joué au dernier combat') : tr('Prochain adversaire : {name}', { name: esc(opp.ghost ? tr('{name} (fantôme)', { name: opp.name }) : opp.name) })}</small>${staticRows(opp.ghost ? opp.board : opp.seen || [])}</span>`
+      : '';
+    return `<span class="dr-head">${duel ? tr('DUEL') : tr('UNIVERS EN LICE · {n}', { n: R.alivePlayers(s).length })}</span>
+      <span class="dr-list">${rows}</span>${scout}<span class="dr-more">${tr('Touchez pour les détails')}</span>`;
+  }
+
   function renderRivals() {
     const s = ui.state;
+    if (ui.desk) { $('rivals').innerHTML = rivalsPanel(s); return; }
     // Barre repliée : un menu qui se déroule, sans images.
     const alive = R.alivePlayers(s).length;
     const rank = s.players.filter((p) => p.alive).sort((a, b) => b.hp - a.hp).indexOf(me()) + 1;
@@ -1771,11 +1821,13 @@
     board: [0.22, 0.22, 0.22, 0.2, 0.18, 0.162, 0.14, 0.126],
     hand: [0.13, 0.13, 0.13, 0.13, 0.13, 0.13, 0.12, 0.11, 0.1, 0.094, 0.088]
   };
+  // Largeur utile d'une rangée : la colonne du téléphone, ou la colonne centrale sur PC.
+  const colOf = (container) => (ui.desk ? Math.max(320, (container.parentElement && container.parentElement.clientWidth) || 640) - 10 : Math.min(window.innerWidth, 520) - 20);
   function sizeRow(container, kind, cap) {
     const n = container.children.length;
-    const col = Math.min(window.innerWidth, 520) - 20;
+    const col = colOf(container);
     const k = SIZE[kind][Math.min(n, SIZE[kind].length - 1)];
-    container.style.setProperty('--u', Math.round(Math.min(cap, col * k)) + 'px');
+    container.style.setProperty('--u', Math.round(Math.min(ui.desk ? cap * 1.2 : cap, col * k)) + 'px');
   }
 
   // ─── Rangées : l'avant face au rival, l'arrière à l'abri ─────
@@ -1786,9 +1838,10 @@
     const kids = [...container.children].filter((el) => el.classList.contains('unit'));
     const rows = [kids.filter((el) => el.dataset.row !== '1'), kids.filter((el) => el.dataset.row === '1')];
     const width = Math.max(R.ROW_MAX, rows[0].length, rows[1].length);
-    const col = Math.min(window.innerWidth, 520) - 20;
+    const col = colOf(container);
     container.style.setProperty('--cols', width * 2);
-    container.style.setProperty('--u', Math.round(Math.min(70, window.innerHeight * 0.095, col / (width + 0.7))) + 'px');
+    const u = ui.desk ? Math.min(100, viewH() * 0.13, col / (width + 0.7)) : Math.min(70, window.innerHeight * 0.095, col / (width + 0.7));
+    container.style.setProperty('--u', Math.round(u) + 'px');
     rows.forEach((list, r) => list.forEach((el, i) => {
       el.style.gridRow = String(enemy ? 2 - r : r + 1);
       el.style.gridColumn = `${width - list.length + 2 * i + 1} / span 2`;
@@ -2607,13 +2660,13 @@
     peek.innerHTML = `<span class="fam-chip" style="--c:${f.color}">${c.legend ? tr('LÉGENDAIRE') + ' · ' : ''}${f.name.toUpperCase()} · ${tr('NIVEAU {n}', { n: c.tier })}${golden ? ' · ' + tr('DORÉ') : ''}</span>
       <h4>${esc(c.name)}</h4>${statsHtml(atk, hp, 'peek-stats')}${effectHtml(id, golden, [...kw])}`;
     peek.hidden = false;
+    peek.style.zoom = ui.z === 1 ? '' : String(ui.z);
     const b = el.getBoundingClientRect();
-    const w = peek.offsetWidth, h = peek.offsetHeight;
+    const w = peek.offsetWidth * ui.z, h = peek.offsetHeight * ui.z;
     const x = Math.max(10, Math.min(window.innerWidth - w - 10, b.left + b.width / 2 - w / 2));
     const below = b.top + b.height / 2 < window.innerHeight / 2;
     const y = below ? Math.min(window.innerHeight - h - 10, b.bottom + 8) : Math.max(10, b.top - h - 8);
-    peek.style.left = x + 'px';
-    peek.style.top = y + 'px';
+    placeAt(peek, x, y);
     peek.classList.remove('in');
     void peek.offsetWidth;
     peek.classList.add('in');
@@ -3769,6 +3822,7 @@
   listen('endHome', 'click', async () => { SFX.tap(); await backToMenu(); });
 
   window.addEventListener('resize', () => {
+    deskFit();
     if (ui.screen === 'menu') layoutMenu();
     if (ui.screen === 'game' && ui.state && !document.body.classList.contains('in-combat') && !drag) renderGame(false);
   });
@@ -3790,7 +3844,7 @@
   // Outils partagés avec le mode Campagne (js/campagne-ui.js).
   window.__orbite.api = {
     show, openSheet, closeSheet, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
-    pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient,
+    pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH,
     coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation,
     seeds, addSeeds, wallet
   };

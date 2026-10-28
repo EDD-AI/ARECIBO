@@ -226,7 +226,8 @@
     const show = s.has && s.planted;
     el.cv.hidden = !show; el.hit.hidden = !show;
     if (!show) return;
-    const W = window.innerWidth, hz = O().ui.horizon || window.innerHeight * 0.55;
+    // Sur PC, le menu est zoomé : ses tailles se comptent en pixels virtuels.
+    const api = O().api, W = api.viewW ? api.viewW() : window.innerWidth, hz = O().ui.horizon || (api.viewH ? api.viewH() : window.innerHeight) * 0.55;
     const cw = Math.min(W * 0.85, 400), ch = cw * AH / AW;
     const cx = W * 0.5;
     el.cv.style.width = cw + 'px'; el.cv.style.height = ch + 'px';

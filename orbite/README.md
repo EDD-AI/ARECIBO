@@ -653,8 +653,9 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
   sans lui (v75) : la graine du duel commence par « D », ce qui suffit à le reconnaître. Le duel
   entre amis marche donc sans republier les règles.
 - **Discussion** (v77, `js/chat.js`) : dans le salon d’attente et pendant la partie (bouton bulle en
-  haut, à côté du minuteur, avec une pastille quand un message arrive et un aperçu en bas de
-  l’écran). Six messages rapides (« Bonne chance ! », « Bien joué ! », « Aïe ! », « Joli combo ! »,
+  haut, à côté du minuteur, avec une pastille quand un message arrive). Depuis la v81, un message
+  reçu s’affiche en grosse bulle en haut de l’écran de l’autre (nom en doré, texte en grand, trois
+  au plus, 4,5 s) ; la toucher ouvre la discussion. Six messages rapides (« Bonne chance ! », « Bien joué ! », « Aïe ! », « Joli combo ! »,
   « GG », « Revanche ? »), affichés dans la langue de chacun ; texte libre (120 caractères) seulement
   entre amis, en partie privée. Un message par seconde au plus. Les 40 derniers messages vivent dans
   le salon (champ `chat` de `matches/{id}`, que ses membres peuvent modifier) : aucune règle
@@ -851,6 +852,23 @@ déclics mécaniques, avec une touche sci-fi discrète. Les bruitages viennent d
 
 Les sons se chargent quand la page est servie en HTTP(S). Ouverte directement depuis un fichier,
 la page garde les anciens sons synthétisés.
+
+## Sur un écran de PC (16:9, v81)
+
+Sur un grand écran horizontal (au moins 900 × 540 et plus large que 1,2 fois la hauteur : PC,
+tablette tenue en largeur), `deskFit` (js/game.js) pose `body.desk` et `--z`, le zoom qui ramène
+l’écran à une hauteur virtuelle de 800 px (1,35 en 1080p, 1,8 en 1440p ; jamais moins de 1).
+`css/desk.css` :
+- **La partie en largeur, sur trois colonnes** : à gauche les rivaux en permanence (classement avec
+  PV, prochain adversaire en doré, et le dernier système du rival ou du prochain adversaire sous les
+  yeux), au centre la Création, l’énergie, le système et la main (astres jusqu’à 100 px virtuels),
+  à droite la loi et le bouton de combat. En combat, le système adverse prend la place de la
+  Création.
+- **Les autres écrans** (menu, lois, multijoueur, marché, profil, fin, Création, fiches, messages)
+  sont agrandis du même zoom. Les tailles calculées en JavaScript pour un écran zoomé se comptent
+  en pixels virtuels (`viewW`, `viewH`) ; les bulles posées sur la page (chiffres, aide d’un astre,
+  tutoriel) prennent le même zoom (`placeAt`).
+- Sur téléphone, rien ne change.
 
 ## Lancer
 

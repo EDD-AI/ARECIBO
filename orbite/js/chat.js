@@ -75,6 +75,22 @@
   const btn = $('chatBtn');
   if (btn) btn.addEventListener('click', () => { SFX.tap(); open(); });
 
+  // Les messages reçus s'affichent en grand en haut de l'écran, pour qu'on voie tout de suite qu'un
+  // ami nous parle ; toucher une bulle ouvre la discussion.
+  const pops = document.createElement('div');
+  pops.className = 'chat-pops';
+  document.body.appendChild(pops);
+  pops.addEventListener('click', (e) => { if (e.target.closest('.chat-pop')) { pops.innerHTML = ''; open(); } });
+  function popMsg(m) {
+    const d = document.createElement('div');
+    d.className = 'chat-pop';
+    d.innerHTML = `<b>${esc(m.name || '?')}</b><span>${esc(textOf(m))}</span>`;
+    pops.appendChild(d);
+    while (pops.children.length > 3) pops.firstChild.remove();
+    setTimeout(() => d.classList.add('out'), 4500);
+    setTimeout(() => d.remove(), 5000);
+  }
+
   window.addEventListener('orbite-match', () => {
     const m = match();
     if (!m) { st.mid = null; st.seen = new Set(); st.unread = 0; badge(); return; }
@@ -88,11 +104,10 @@
       const list = document.querySelector('#sheet .chat-list');
       if (list) list.innerHTML = listHtml(30);
       scrollDown();
-    } else if (others.length && O.ui.screen === 'game') {
-      const last = others[others.length - 1];
+    } else if (others.length && (O.ui.screen === 'game' || (O.ui.screen === 'multi' && !document.querySelector('#mpBody .chat-list')))) {
       st.unread += others.length;
       badge();
-      A.toast(tr('{name} : {text}', { name: last.name || '?', text: textOf(last) }), 3000);
+      for (const x of others.slice(-3)) popMsg(x);
     }
     if (others.length) SFX.type();
     // Dans le salon, la liste est redessinée par multi-ui.js ; on garde le bas en vue.
