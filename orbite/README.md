@@ -24,7 +24,17 @@ au menu ; son code et sa progression sont conservés.
 2. Titre **ORBITE** sous une **éclipse** : une lune sombre glisse devant une étoile blanche jusqu’à
    ne laisser que la couronne, qui s’épanouit et scintille. « Touchez pour commencer » : la lune
    s’écarte d’un cheveu (anneau de diamant), un éclat jaillit, le titre éclate en pixels.
-3. **Première fois seulement** : écran noir, sous-titre en bas « Réveillez-vous. Bonjour, créateur. »
+3. **Première fois seulement, le réveil** (v73, `js/eveil.js`) : sur fond noir, une **entité
+   numérique** se compose de minuscules caractères (silhouette éclairée, cœur et yeux lumineux,
+   pluie de données, jambes qui se défont en caractères), entourée de blocs de données qui
+   clignotent (hexadécimal, binaire, `ORBITE.SYS`, `ARECIBO//1974`…). Elle dit « Réveillez-vous.
+   Bonjour, créateur. » : à chaque lettre, sa bouche s’anime, des lignes de son corps glissent et
+   un bloc surgit. Puis elle s’effondre en tourbillon vers son cœur, un éclair blanc, et c’est le
+   **big bang numérique** : rayons de caractères, onde de choc. Les caractères retombent en une
+   **planète ASCII** ombrée qui tourne (continents, océans, nuages), entourée d’étoiles éparses :
+   « Vous venez de créer un monde. » Toucher l’écran passe la scène. Rendu sur un canvas 2D, grille
+   de caractères copiés depuis un atlas, environ 30 images par seconde. « Revoir l’introduction »
+   (Tutoriels) la rejoue.
 4. **Menu** : **votre planète** se lève sur l’horizon et tourne très lentement, des poussières
    montent du sol, des étoiles filantes passent. La première fois, « Voilà votre terrain de jeu. »
    s’écrit au centre.

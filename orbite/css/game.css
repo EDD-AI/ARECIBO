@@ -106,6 +106,9 @@ body.modal #gl { z-index: 35; }
 
 /* ─── Intro : Studio EDDA, titre, réveil ──────────────────── */
 .screen.intro { justify-content: center; align-items: center; }
+/* Réveil : l'entité numérique et le big bang sont dessinés en caractères (js/eveil.js). */
+.wake-ascii { position: absolute; left: 0; top: 0; pointer-events: none; }
+#wake .subtitle { z-index: 2; }
 .pixel-word svg { display: block; overflow: visible; shape-rendering: crispEdges; }
 .pixel-word rect { fill: #fff; opacity: 0; }
 .pixel-word.shown rect { opacity: 1; }

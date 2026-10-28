@@ -1,6 +1,6 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
 // Garder ce numéro égal à VERSION dans js/game.js et à version.json.
-const CACHE = 'orbite-v72';
+const CACHE = 'orbite-v73';
 const SHELL = [
   './',
   './index.html',
@@ -23,6 +23,7 @@ const SHELL = [
   './js/planet-engine.js',
   './js/planet-renderer.js',
   './js/stage.js',
+  './js/eveil.js',
   './js/sfx.js',
   './js/rules.js',
   './js/world.js',
@@ -65,6 +66,7 @@ const SHELL = [
   './js/lang/genese.js',
   './js/lang/duel.js',
   './js/lang/position.js',
+  './js/lang/eveil.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',

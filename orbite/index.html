@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="orbite-version" content="72">
+<meta name="orbite-version" content="73">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -93,6 +93,7 @@
 
     <!-- RÉVEIL (première fois) -->
     <section class="screen intro" id="wake" aria-label="Réveil" data-t-attr="aria-label">
+      <canvas class="wake-ascii" id="wakeCanvas" aria-hidden="true"></canvas>
       <p class="subtitle bottom" id="wakeLine"></p>
     </section>
 
@@ -526,9 +527,11 @@
   <script src="js/lang/genese.js"></script>
   <script src="js/lang/duel.js"></script>
   <script src="js/lang/position.js"></script>
+  <script src="js/lang/eveil.js"></script>
   <script src="js/planet-engine.js"></script>
   <script src="js/planet-renderer.js"></script>
   <script src="js/stage.js"></script>
+  <script src="js/eveil.js"></script>
   <script src="js/sfx.js"></script>
   <script src="js/rules.js"></script>
   <script src="js/world.js"></script>
