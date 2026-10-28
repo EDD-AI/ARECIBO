@@ -42,8 +42,9 @@ nouvelle version, la **checklist** se coche au fur et à mesure.
       - [x] Ère II · chapitre 2 · Le Cœur
       - [x] Ère II · chapitre 3 · La Sculpture
       - [ ] Ère II · chapitre 4 · Le Grand Impact (+ choix du destin)
-- [ ] (toi) Publier les règles Firestore (`firebase/firestore.rules`) dans la console Firebase
-      (nécessaire depuis la v68 pour les duels en ligne : champ `size`).
+- [ ] (toi) Publier les règles Firestore (`firebase/firestore.rules`) dans la console Firebase.
+      Plus bloquant depuis la v75 (les duels se reconnaissent aussi sans le champ `size`), mais
+      les règles à jour limitent un duel à deux joueurs côté serveur.
 - [ ] (toi + moi) Faire jouer le duel aux testeurs : placement, formations, durée (~12 cycles).
 - [ ] (moi) Supprimer son compte depuis le jeu (et ses données en ligne).
 - [ ] (moi) Remontée des erreurs (plantages chez les joueurs).
