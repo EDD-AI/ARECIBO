@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="orbite-version" content="71">
+<meta name="orbite-version" content="72">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,6 +11,59 @@
 <meta name="apple-mobile-web-app-title" content="ORBITE">
 <meta name="description" data-t-attr="content" content="Achetez des planètes, placez-les sur deux rangées, formez des familles et battez votre rival en duel, manche après manche.">
 <title>ORBITE</title>
+<script>
+  // Filet de secours, écrit à l'ancienne pour que tout téléphone le lise : si aucun écran du jeu ne
+  // s'affiche, on propose de réparer (vider la copie hors ligne et relancer, sans toucher à la
+  // progression) et on montre l'erreur, à envoyer pour qu'elle soit corrigée.
+  (function () {
+    var errs = [], shown = false;
+    window.addEventListener('error', function (e) {
+      if (e.message) errs.push(e.message + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : ''));
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+      var r = e.reason;
+      errs.push('promesse : ' + String(r && r.message || r));
+    });
+    function rescue(err) {
+      if (shown || !document.body) return;
+      shown = true;
+      if (err) errs.push(String(err && err.message || err));
+      var v = (document.querySelector('meta[name="orbite-version"]') || {}).content || '?';
+      var box = document.createElement('div');
+      box.id = 'rescue';
+      box.setAttribute('style', 'position:fixed;inset:0;top:0;left:0;right:0;bottom:0;z-index:2147483647;background:#000;color:#f1ecda;' +
+        'display:flex;flex-direction:column;justify-content:center;gap:16px;padding:32px 24px;font:14px/1.5 monospace;text-align:center;overflow:auto');
+      box.innerHTML = '<b style="font-size:17px;letter-spacing:.12em">ORBITE N’A PAS PU DÉMARRER</b>' +
+        '<p style="margin:0;opacity:.8">Votre progression est conservée. Réparer vide la copie hors ligne du jeu et le relance.<br>' +
+        '<i>Your progress is kept. Repair clears the offline copy and restarts.</i></p>' +
+        '<button type="button" style="align-self:center;padding:14px 22px;border:1px solid #f1ecda;background:#f1ecda;color:#000;font:600 14px monospace;letter-spacing:.12em">RÉPARER ET RELANCER</button>' +
+        '<pre style="margin:0;white-space:pre-wrap;word-break:break-word;font-size:11px;opacity:.6;text-align:left"></pre>';
+      box.querySelector('pre').textContent = 'PRE.ALPHA ' + v + '\n' + (errs.slice(0, 4).join('\n') || 'aucun écran affiché') + '\n' + navigator.userAgent;
+      box.querySelector('button').addEventListener('click', repair);
+      document.body.appendChild(box);
+    }
+    function repair() {
+      var go = function () { location.replace(location.pathname + '?r=' + Date.now()); };
+      var jobs = [];
+      // Les fichiers du jeu sont redemandés au serveur : le cache du navigateur prend la version en ligne.
+      var nodes = document.querySelectorAll('script[src], link[rel="stylesheet"]');
+      for (var i = 0; i < nodes.length; i++) jobs.push(fetch(nodes[i].src || nodes[i].href, { cache: 'reload' }).catch(function () {}));
+      jobs.push(fetch(location.pathname, { cache: 'reload' }).catch(function () {}));
+      if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) {
+        return Promise.all(rs.map(function (r) { return r.unregister(); }));
+      }).catch(function () {}));
+      if (window.caches) jobs.push(caches.keys().then(function (ks) {
+        return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+      }).catch(function () {}));
+      Promise.all(jobs).then(go, go);
+      setTimeout(go, 6000);
+    }
+    window.__orbiteRescue = rescue;
+    var check = function () { if (!window.__orbiteUp && !document.querySelector('.screen.active')) rescue(); };
+    window.addEventListener('load', function () { setTimeout(check, 6000); });
+    setTimeout(check, 25000);
+  })();
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
