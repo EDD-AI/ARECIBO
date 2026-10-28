@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 75;
+  const VERSION = 76;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -1691,7 +1691,7 @@
     const s = ui.state;
     // Barre repliée : un menu qui se déroule, sans images.
     const alive = R.alivePlayers(s).length;
-    const rank = s.players.filter((p) => p.alive).sort((a, b) => b.hp - a.hp).findIndex((p) => !p.bot) + 1;
+    const rank = s.players.filter((p) => p.alive).sort((a, b) => b.hp - a.hp).indexOf(me()) + 1;
     if (R.isDuel(s)) {
       // Duel : le rival, ses PV, et son dernier système d'un geste.
       const o = s.players[1];
@@ -2728,13 +2728,15 @@
     const list = s.players.slice().sort((a, b) => (b.alive - a.alive) || (a.alive ? b.hp - a.hp : a.rank - b.rank));
     const last = me().lastOpp;
     const rows = list.map((p, i) => {
+      // En ligne, les autres créateurs ne sont pas des bots : seul le joueur lui-même est « VOUS ».
+      const mine = p === me();
       const board = staticRows(p.bot || p.remote ? p.seen || [] : p.board);
       const hp = Math.max(0, p.hp);
       const lost = ui.prevHp && ui.prevHp[p.id] != null && p.hp < ui.prevHp[p.id] ? ui.prevHp[p.id] - p.hp : 0;
-      const tag = p.bot && p.id === last ? `<em>${tr('DERNIER ADVERSAIRE')}</em>` : '';
-      return `<button class="rival-row ${p.alive ? '' : 'dead'} ${p.bot ? '' : 'me'}" data-act="rival">
+      const tag = !mine && p.id === last ? `<em>${tr('DERNIER ADVERSAIRE')}</em>` : '';
+      return `<button class="rival-row ${p.alive ? '' : 'dead'} ${mine ? 'me' : ''}" data-act="rival">
           <span class="rk">${p.alive ? i + 1 : p.rank}</span>
-          <span class="rv-who"><span class="n">${esc(p.bot ? p.name : tr('VOUS'))}</span>${tag}<span class="l">${tr('niveau {n}', { n: p.tier })}${p.alive ? '' : ' · ' + tr('éliminé {rank}', { rank: ordinal(p.rank) })}</span></span>
+          <span class="rv-who"><span class="n">${esc(mine ? tr('VOUS') : p.name)}</span>${tag}<span class="l">${tr('niveau {n}', { n: p.tier })}${p.alive ? '' : ' · ' + tr('éliminé {rank}', { rank: ordinal(p.rank) })}</span></span>
           <span class="rv-hp">${lost ? `<small>−${lost}</small>` : ''}<b>${p.alive ? hp : '–'}</b><i class="hp-bar"><i style="width:${p.alive ? Math.min(100, hp / (p.maxHp || R.START_HP) * 100) : 0}%"></i></i></span>
         </button>
         <div class="rival-board" ${duel && p !== me() ? '' : 'hidden'}><p class="rv-last">${p.bot || p.remote ? tr('Système joué au dernier combat') : tr('Votre système')}</p>${board}</div>`;
