@@ -4,6 +4,18 @@
 (function () {
   'use strict';
 
+  // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
+  // balise orbite-version d'index.html.
+  const VERSION = 71;
+  // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
+  // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
+  const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
+  if (PAGE_VERSION !== VERSION && location.protocol !== 'file:') {
+    let again = false;
+    try { again = sessionStorage.getItem('orbite.page') === String(VERSION); sessionStorage.setItem('orbite.page', String(VERSION)); } catch (err) { again = true; }
+    if (!again) { location.replace(location.pathname + '?v=' + VERSION + location.hash); return; }
+  }
+
   const R = window.OrbiteRules;
   const SFX = window.OrbiteSfx;
   const I18N = window.OrbiteI18n;
@@ -16,8 +28,6 @@
   I18N.localize(R.KEYWORDS, ['name', 'text']);
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
-  // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 70;
   // Le jeu est en pré-alpha : le numéro s'affiche toujours « PRE.ALPHA n ».
   const VERSION_LABEL = 'PRE.ALPHA ' + VERSION;
   const DUST_KEY = 'orbite.poussieres';
@@ -825,7 +835,7 @@
       }).join('')).join('');
   }
 
-  $('mkNext').addEventListener('click', async (e) => {
+  $('mkNext')?.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-up]');
     if (!b || b.disabled || ui.busy) return;
     const u = W.BY_ID[b.dataset.up], list = worldList();
@@ -975,7 +985,7 @@
       </div>
       <p class="mk-note">${tr('Jamais pour être plus fort en partie : l’Affrontement reste équitable.')}</p>`;
   }
-  $('seedShop').addEventListener('click', (e) => {
+  $('seedShop')?.addEventListener('click', (e) => {
     const b = e.target.closest('[data-pack]');
     if (!b) return;
     SFX.tap();
@@ -987,13 +997,13 @@
       <p class="sheet-text">${tr('L’achat de graines de vie arrive dans une prochaine version. En attendant, gagnez-en en jouant : victoires, niveaux, expéditions et succès.')}</p>
       <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
   });
-  $('mkTabs').addEventListener('click', (e) => {
+  $('mkTabs')?.addEventListener('click', (e) => {
     const b = e.target.closest('[data-tab]');
     if (!b || b.classList.contains('on')) return;
     SFX.tap();
     marketTab(b.dataset.tab);
   });
-  $('cosList').addEventListener('click', (e) => {
+  $('cosList')?.addEventListener('click', (e) => {
     const buy = e.target.closest('[data-cos-buy]'), eq = e.target.closest('[data-cos-equip]'), row = e.target.closest('[data-cos]');
     const c = cosmetics();
     if (buy) {
@@ -1119,7 +1129,7 @@
     if (window.__orbite.onlineUI) window.__orbite.onlineUI.renderProfile(tab);
   }
 
-  $('profileBody').addEventListener('click', (e) => {
+  $('profileBody')?.addEventListener('click', (e) => {
     const b = e.target.closest('[data-pf]');
     if (!b) return;
     if (b.dataset.pf === 'tab') { SFX.tap(); ui.pfTab = b.dataset.tab; renderProfile(); return; }
@@ -1224,8 +1234,8 @@
       popOn($('menuDust'), `+${gift.dust} ${icon('dust')}`, 'gold');
       toast(tr('Code accepté : +{n} poussières d’étoiles.', { n: gift.dust }), 3200);
     };
-    $('giftGo').addEventListener('click', go);
-    $('giftCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+    $('giftGo')?.addEventListener('click', go);
+    $('giftCode')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
     setTimeout(() => $('giftCode').focus(), 200);
   }
 
@@ -1356,7 +1366,7 @@
     };
     draw(0);
   }
-  $('creditsClose').addEventListener('click', () => closeCredits());
+  $('creditsClose')?.addEventListener('click', () => closeCredits());
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCredits(); });
 
   async function settingsAction(v, btn) {
@@ -1426,7 +1436,7 @@
     }
   }
 
-  $('lawList').addEventListener('click', (e) => {
+  $('lawList')?.addEventListener('click', (e) => {
     const b = e.target.closest('.law');
     if (!b) return;
     SFX.tap();
@@ -1437,7 +1447,7 @@
     tuto('loi');
   });
 
-  $('lawGo').addEventListener('click', async () => {
+  $('lawGo')?.addEventListener('click', async () => {
     if (!ui.lawPick) return;
     SFX.level();
     ui.state = R.newGame(ui.seed, ui.lawPick, { size: ui.size || 2 });
@@ -1768,7 +1778,7 @@
     ui.formKey = key;
     ui.formCount = forms.length + phen.length;
   }
-  $('allianceTag').addEventListener('click', () => { SFX.tap(); openFamilies(); });
+  $('allianceTag')?.addEventListener('click', () => { SFX.tap(); openFamilies(); });
 
   function renderHand() {
     const p = me();
@@ -2397,7 +2407,7 @@
     if (cb) cb();
     tuto('fermer');
   }
-  $('overlay').addEventListener('click', (e) => {
+  $('overlay')?.addEventListener('click', (e) => {
     if (e.target === $('overlay') && !ui.sheetLocked) { SFX.tap(); closeSheet(); }
   });
 
@@ -2544,7 +2554,7 @@
     if (el) showPeek(el);
   });
 
-  $('sheet').addEventListener('click', async (e) => {
+  $('sheet')?.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-act]');
     if (!b || b.disabled) return;
     const act = b.dataset.act;
@@ -3546,22 +3556,22 @@
       <p class="muted">${info}</p>
       <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="resume">${tr('REPRENDRE')}</button><button class="btn" data-act="set" data-v="new" data-size="${size}">${size === 2 ? tr('NOUVEAU DUEL') : tr('NOUVELLE MÊLÉE')}</button></div>`);
   }
-  $('soloBtn').addEventListener('click', () => openMode(2));
-  $('quickBtn').addEventListener('click', () => openMode(8));
-  $('meleeBtn').addEventListener('click', () => openMode(8));
-  $('multiBtn').addEventListener('click', async () => {
+  $('soloBtn')?.addEventListener('click', () => openMode(2));
+  $('quickBtn')?.addEventListener('click', () => openMode(8));
+  $('meleeBtn')?.addEventListener('click', () => openMode(8));
+  $('multiBtn')?.addEventListener('click', async () => {
     SFX.tap();
     if (window.OrbiteMultiUI) { stopAmbient(); window.OrbiteMultiUI.open(); return; }
     stopAmbient();
     await show('multi');
     $('mpBody').innerHTML = `<p class="muted">${tr('Les salons en ligne sont indisponibles. La mêlée à 8 reste jouable hors ligne.')}</p>`;
   });
-  $('multiBack').addEventListener('click', async () => {
+  $('multiBack')?.addEventListener('click', async () => {
     if (window.OrbiteMultiUI) return;
     SFX.tap();
     await backToMenu();
   });
-  $('marketBtn').addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderMarket(); marketTab('planete'); await show('market'); });
+  $('marketBtn')?.addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderMarket(); marketTab('planete'); await show('market'); });
   // Création : Forge des mondes, Atelier des planètes, Bâtisseur de colonies.
   async function openCreation() {
     stopAmbient();
@@ -3636,26 +3646,26 @@
     orb.style.transform = '';
     SFX.music(true);
   }
-  $('creationBtn').addEventListener('click', async () => {
+  $('creationBtn')?.addEventListener('click', async () => {
     SFX.tap();
     if (!creationOpen()) { unlockSheet(); return; }
     await openCreation();
   });
   $('creationBack').innerHTML = icon('back');
-  $('creationBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
-  $('marketBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
-  $('profileBtn').addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderProfile(); await show('profile'); });
-  $('profileBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
-  $('settingsBtn').addEventListener('click', () => { SFX.tap(); openSheet(settingsHtml()); });
-  $('lawsBack').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
-  $('upBtn').addEventListener('click', guard(doUpgrade));
-  $('rollBtn').addEventListener('click', guard(doRoll));
-  $('freezeBtn').addEventListener('click', () => { if (!ui.busy) doFreeze(); });
-  $('fightBtn').addEventListener('click', fight);
-  $('rivals').addEventListener('click', () => { if (!ui.busy) { SFX.tap(); openRivals(); } });
-  $('famsBtn').addEventListener('click', () => { SFX.tap(); openFamilies(); });
-  $('menuBtn').addEventListener('click', () => { SFX.tap(); openMenu(); });
-  $('powerBtn').addEventListener('click', () => {
+  $('creationBack')?.addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
+  $('marketBack')?.addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
+  $('profileBtn')?.addEventListener('click', async () => { SFX.tap(); stopAmbient(); renderProfile(); await show('profile'); });
+  $('profileBack')?.addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
+  $('settingsBtn')?.addEventListener('click', () => { SFX.tap(); openSheet(settingsHtml()); });
+  $('lawsBack')?.addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
+  $('upBtn')?.addEventListener('click', guard(doUpgrade));
+  $('rollBtn')?.addEventListener('click', guard(doRoll));
+  $('freezeBtn')?.addEventListener('click', () => { if (!ui.busy) doFreeze(); });
+  $('fightBtn')?.addEventListener('click', fight);
+  $('rivals')?.addEventListener('click', () => { if (!ui.busy) { SFX.tap(); openRivals(); } });
+  $('famsBtn')?.addEventListener('click', () => { SFX.tap(); openFamilies(); });
+  $('menuBtn')?.addEventListener('click', () => { SFX.tap(); openMenu(); });
+  $('powerBtn')?.addEventListener('click', () => {
     if (ui.busy) return;
     const p = me(), law = R.LAW[p.law];
     if (!law.active) { openFamilies(); return; }
@@ -3671,9 +3681,9 @@
       guard(() => doPower(null))();
     }
   });
-  $('skipBtn').addEventListener('click', () => { if (!(ui.state && ui.state.mp)) ui.skip = true; });
-  $('againBtn').addEventListener('click', async () => { SFX.tap(); ui.size = ui.state && !R.isDuel(ui.state) ? 8 : 2; renderLaws(); await show('laws'); });
-  $('endHome').addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
+  $('skipBtn')?.addEventListener('click', () => { if (!(ui.state && ui.state.mp)) ui.skip = true; });
+  $('againBtn')?.addEventListener('click', async () => { SFX.tap(); ui.size = ui.state && !R.isDuel(ui.state) ? 8 : 2; renderLaws(); await show('laws'); });
+  $('endHome')?.addEventListener('click', async () => { SFX.tap(); await backToMenu(); });
 
   window.addEventListener('resize', () => {
     if (ui.screen === 'menu') layoutMenu();

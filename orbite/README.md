@@ -816,6 +816,15 @@ la page garde les anciens sons synthétisés.
 
 ## Lancer
 
+**Page restée en cache** (v71) : après une mise à jour, un téléphone peut garder l’ancienne page
+`index.html` et charger les nouveaux scripts. La page porte sa version
+(`<meta name="orbite-version">`). Si elle ne correspond pas à `VERSION` dans `js/game.js`, le jeu
+se recharge une fois sur la page à jour (`?v=N`), au lieu de planter. Les écouteurs d’éléments ne
+plantent plus si un élément manque. Le service worker télécharge sa copie hors ligne en
+contournant le cache du navigateur (`cache: 'reload'`).
+À chaque version, augmenter ensemble : `VERSION` (js/game.js), `version.json`, le cache de `sw.js`
+et la balise `orbite-version` d’index.html.
+
 Les pages fonctionnent en ouvrant directement `index.html` ou `atelier.html` dans un navigateur
 récent (WebGL2 requis).
 
