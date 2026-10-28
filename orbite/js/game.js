@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 78;
+  const VERSION = 79;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -382,7 +382,10 @@
     // Fonds : le cosmétique équipé pendant les parties (atténué pour la lisibilité), le ciel de la
     // Nébuleuse natale derrière la carte de campagne.
     stage.sky = name === 'game' || name === 'cFight' ? equippedSky() : name === 'cMap' ? 7 : name === 'system' ? 3 : 0;
-    stage.skyGain = name === 'cMap' ? 0.9 : name === 'system' ? 0.45 : 0.6;
+    // En partie, le fond animé s'assombrit et pâlit : les astres et les textes restent lisibles.
+    const inPlay = name === 'game' || name === 'cFight';
+    stage.skyGain = name === 'cMap' ? 0.9 : name === 'system' ? 0.45 : inPlay ? 0.3 : 0.6;
+    stage.skySat = inPlay ? 0.45 : 1;
     stage.skyOff = name === 'cMap' ? stage.skyOff : null;
     if (coach.steps === GAME_STEPS && name !== 'game') coachStop(false);
     if (coach.steps === LAW_STEPS && name !== 'laws') coachStop(false);
@@ -1703,7 +1706,12 @@
       $('rivals').innerHTML = `<span class="rv-label">${tr('DUEL')}</span><span class="rv-info"><b>${esc(o.name)}</b> · ${icon('heart')} ${Math.max(0, o.hp)}${s.round > 1 ? ' · ' + tr('voir son système') : ''}</span><span class="rv-open">${icon('back', 'down')}</span>`;
       return;
     }
-    $('rivals').innerHTML = `<span class="rv-label">${tr('RIVAUX')}</span><span class="rv-info">${tr('{n} univers en lice', { n: alive })}${me().alive ? ' · ' + tr('vous êtes {rank}', { rank: ordinal(rank) }) : ''}</span><span class="rv-open">${icon('back', 'down')}</span>`;
+    // Mêlée : le prochain adversaire est connu dès la boutique, comme dans Battlegrounds.
+    const nx = s.phase === 'shop' ? R.nextOpponent(s) : null;
+    const info = nx
+      ? tr('Prochain : {name}', { name: `<b>${esc(nx.ghost ? tr('{name} (fantôme)', { name: nx.name }) : nx.name)}</b>` }) + ' · ' + tr('vous êtes {rank}', { rank: ordinal(rank) })
+      : tr('{n} univers en lice', { n: alive }) + (me().alive ? ' · ' + tr('vous êtes {rank}', { rank: ordinal(rank) }) : '');
+    $('rivals').innerHTML = `<span class="rv-label">${tr('RIVAUX')}</span><span class="rv-info">${info}</span><span class="rv-open">${icon('back', 'down')}</span>`;
   }
 
   function renderTavernHead(pop) {
@@ -2735,24 +2743,27 @@
     const duel = R.isDuel(s);
     const list = s.players.slice().sort((a, b) => (b.alive - a.alive) || (a.alive ? b.hp - a.hp : a.rank - b.rank));
     const last = me().lastOpp;
+    const nx = !duel && s.phase === 'shop' ? R.nextOpponent(s) : null;
     const rows = list.map((p, i) => {
       // En ligne, les autres créateurs ne sont pas des bots : seul le joueur lui-même est « VOUS ».
       const mine = p === me();
+      const isNext = !!nx && nx === p;
       const board = staticRows(p.bot || p.remote ? p.seen || [] : p.board);
       const hp = Math.max(0, p.hp);
       const lost = ui.prevHp && ui.prevHp[p.id] != null && p.hp < ui.prevHp[p.id] ? ui.prevHp[p.id] - p.hp : 0;
-      const tag = !mine && p.id === last ? `<em>${tr('DERNIER ADVERSAIRE')}</em>` : '';
-      return `<button class="rival-row ${p.alive ? '' : 'dead'} ${mine ? 'me' : ''}" data-act="rival">
+      const tag = isNext ? `<em class="next">${tr('PROCHAIN ADVERSAIRE')}</em>` : !mine && p.id === last ? `<em>${tr('DERNIER ADVERSAIRE')}</em>` : '';
+      return `<button class="rival-row ${p.alive ? '' : 'dead'} ${mine ? 'me' : ''} ${isNext ? 'next' : ''}" data-act="rival">
           <span class="rk">${p.alive ? i + 1 : p.rank}</span>
           <span class="rv-who"><span class="n">${esc(mine ? tr('VOUS') : p.name)}</span>${tag}<span class="l">${tr('niveau {n}', { n: p.tier })}${p.alive ? '' : ' · ' + tr('éliminé {rank}', { rank: ordinal(p.rank) })}</span></span>
           <span class="rv-hp">${lost ? `<small>−${lost}</small>` : ''}<b>${p.alive ? hp : '–'}</b><i class="hp-bar"><i style="width:${p.alive ? Math.min(100, hp / (p.maxHp || R.START_HP) * 100) : 0}%"></i></i></span>
         </button>
-        <div class="rival-board" ${duel && p !== me() ? '' : 'hidden'}><p class="rv-last">${p.bot || p.remote ? tr('Système joué au dernier combat') : tr('Votre système')}</p>${board}</div>`;
+        <div class="rival-board" ${(duel && p !== me()) || isNext ? '' : 'hidden'}><p class="rv-last">${p.bot || p.remote ? tr('Système joué au dernier combat') : tr('Votre système')}</p>${board}</div>`;
     }).join('');
     const note = duel
       ? tr('Voici le système que votre rival a joué au dernier combat. Préparez votre placement : chaque astre de l’avant frappe celui d’en face.')
-      : tr('Touchez un univers pour voir le dernier système qu’il a joué, puis un astre pour lire ce qu’il fait. Dégâts plafonnés à {n} tant que plus de trois univers sont en vie.', { n: R.DAMAGE_CAP });
-    openSheet(`<h3>${duel ? tr('DUEL') : tr('UNIVERS EN LICE · {n}', { n: R.alivePlayers(s).length })}</h3><div class="rival-list">${rows}</div>
+      : tr('Vous affrontez d’abord ceux que vous n’avez pas croisés depuis le plus longtemps, jamais deux fois de suite : votre prochain adversaire est annoncé pendant la boutique, son dernier système est déjà ouvert. Touchez un univers pour voir le sien. Dégâts plafonnés à {n} tant que plus de trois univers sont en vie.', { n: R.DAMAGE_CAP });
+    const ghostNext = nx && nx.ghost ? `<p class="rv-ghost">${tr('Prochain adversaire : {name}', { name: `<b>${esc(tr('{name} (fantôme)', { name: nx.name }))}</b>` })}</p>${staticRows(nx.board)}` : '';
+    openSheet(`<h3>${duel ? tr('DUEL') : tr('UNIVERS EN LICE · {n}', { n: R.alivePlayers(s).length })}</h3>${ghostNext}<div class="rival-list">${rows}</div>
       <p class="muted">${note}</p>`, { top: true });
     tuto('repere');
   }

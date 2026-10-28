@@ -490,7 +490,9 @@ Les règles sont dans `js/forge.js` (testées par `tests/forge.test.mjs`) et l�
 `data-clipbox` empêche ses astres de déborder sur l’en-tête : le moteur reçoit un cadre (`bound`).
 - **Cosmétiques** : des **fonds animés** qui remplacent le noir pendant les parties, à **1 200
   poussières d’étoiles** ou **6 graines de vie** chacun. Toucher un fond l’essaie aussitôt derrière l’écran du marché. Une
-  fois acheté, il s’équipe ; « Noir » remet le fond d’origine. Les fonds disponibles :
+  fois acheté, il s’équipe ; « Noir » remet le fond d’origine. En partie (v79), le fond est assombri
+  (30 % de sa lumière) et désaturé (45 % de ses couleurs, `uSat` du rendu) pour que les astres et
+  les textes restent lisibles ; il garde tout son éclat dans le marché. Les fonds disponibles :
   - **Nébuleuse pourpre** : nuages roses et violets, filaments sombres, cœur brûlant ;
   - **Aurore boréale** : voiles verts et roses au-dessus de montagnes, reflétés dans un lac ;
   - **Galaxie spirale** : cœur doré, bras bleus et roses ;
@@ -670,6 +672,16 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
 - **Mêlée privée** : « Créer une mêlée privée » donne un **code de session** de 6 caractères, à
   partager. Les amis le saisissent dans « Rejoindre un ami ». L’hôte lance quand il veut ; les places
   libres vont aux bots. Une partie privée ne compte pas pour le classement.
+- **Qui affronte qui** (v79, façon Battlegrounds, `planPairs` dans `js/rules.js`), en mêlée solo
+  comme en ligne : pas un tirage au hasard. Chaque cycle, les paires sont choisies pour que chacun
+  affronte d’abord ceux qu’il n’a pas croisés depuis le plus longtemps (jamais deux fois de suite
+  tant que 4 univers ou plus sont en vie), puis ceux qu’il a le moins affrontés ; l’univers en trop
+  affronte le fantôme du dernier éliminé, à tour de rôle. Les paires sont fixées dès la boutique :
+  la barre des rivaux annonce « Prochain : NOM », la liste le marque PROCHAIN ADVERSAIRE avec son
+  dernier système déjà ouvert. En ligne, elles ne dépendent que de la graine, du cycle, des univers
+  en vie et des rencontres passées (`state.met`) : tous les téléphones trouvent les mêmes.
+- **Les 5 dernières secondes** (en ligne, v79) : un cadre rouge léger palpite et tremble autour de
+  l’écran, le téléphone vibre à chaque seconde, jusqu’au combat.
 - **Déroulement** :
   - Chacun choisit une loi parmi trois, en 20 secondes, dans les familles de la partie (les mêmes
     pour tous).

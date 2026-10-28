@@ -306,7 +306,7 @@
       this.skyFade = Math.max(0, Math.min(1, (this.skyFade || 0) + (this.sky ? dt : -dt) * 1.2));
       if (this.sky) this.skyMode = this.sky;
       // skyGain atténue le fond pendant le jeu ; skyOff le fait défiler (carte de campagne).
-      if (this.skyFade > 0.01 && this.skyMode) r.drawSky(this.skyMode, this.time, { reveal: 1, phase, flash: 0, dim: dimBg * this.skyFade * (this.skyGain == null ? 1 : this.skyGain), flip: 1 }, this.skyOff);
+      if (this.skyFade > 0.01 && this.skyMode) r.drawSky(this.skyMode, this.time, { reveal: 1, phase, flash: 0, dim: dimBg * this.skyFade * (this.skyGain == null ? 1 : this.skyGain), sat: this.skySat == null ? 1 : this.skySat, flip: 1 }, this.skyOff);
       const starCount = Math.round((window.innerWidth * window.innerHeight) / this.starArea);
       if (this.starFade > 0.01) r.drawStars(this.stars, phase, { reveal: this.starFade, phase, flash: 0, dim: dimBg * (this.starDim || 0.85), flip: 1 }, starCount, skip);
       const els = document.querySelectorAll('[data-planet]');

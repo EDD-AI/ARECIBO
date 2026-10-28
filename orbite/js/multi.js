@@ -353,6 +353,12 @@
       if (el) { el.hidden = st.phase !== 'shop'; el.textContent = txt; el.classList.toggle('low', left < 10000); }
       // Le bouton de combat devient le compte à rebours : on ne peut pas finir son tour en avance.
       if (btn) { btn.disabled = true; btn.textContent = st.phase === 'shop' ? tr('COMBAT DANS {t}', { t: txt }) : tr('COMBAT'); }
+      // Les 5 dernières secondes : un cadre rouge léger palpite autour de l'écran, le téléphone vibre
+      // à chaque seconde.
+      const hurry = st.phase === 'shop' && !O.ui.busy && left > 0 && left <= 5000;
+      document.body.classList.toggle('mp-hurry', hurry);
+      const sec = Math.ceil(left / 1000);
+      if (hurry && sec !== M.hurrySec) { M.hurrySec = sec; A.vibrate(25); }
       if (st.phase !== 'shop' || O.ui.busy || left > 0) return;
       const me = st.players[0];
       if (me.discover.length) R.choose(st, 0, me);
@@ -362,7 +368,7 @@
   }
   function stopRound() {
     clearInterval(M.tick); clearTimeout(M.asmT);
-    document.body.classList.remove('mp-game');
+    document.body.classList.remove('mp-game', 'mp-hurry');
     const el = document.getElementById('mpTimer'), btn = document.getElementById('fightBtn');
     if (el) el.hidden = true;
     if (btn) { btn.disabled = false; btn.textContent = tr('COMBATTRE'); }

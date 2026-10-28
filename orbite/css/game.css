@@ -1044,6 +1044,10 @@ body.in-combat .banner { top: calc(50% - 34px); }
 .rival-row em { font-style: normal; font-size: 9px; letter-spacing: 0.2em; color: var(--energy); }
 .rival-row .l { font-size: 11px; color: var(--dim); }
 .rival-row.me .n { color: var(--energy); }
+/* Mêlée : le prochain adversaire, annoncé dès la boutique. */
+.rival-row.next { box-shadow: inset 2px 0 0 var(--gold); }
+.rival-row em.next { color: var(--gold); }
+.rv-ghost { margin: 0 0 6px; font-size: 12px; color: var(--dim); }
 .rv-hp { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 2px 6px; }
 .rv-hp b { grid-column: 2; font-size: 17px; font-weight: 600; color: var(--hp); font-variant-numeric: tabular-nums; }
 .rv-hp small { grid-column: 1; justify-self: end; font-size: 11px; color: var(--bad); }
@@ -1572,6 +1576,19 @@ body.mp-game .chat-btn { display: inline-flex; }
 .mp-timer.low { color: #ff8a7a; border-color: rgba(255, 106, 90, 0.6); }
 .mp-timer[hidden] { display: none; }
 body.mp-game #skipBtn { display: none; }
+/* En ligne, les 5 dernières secondes avant le combat : un cadre rouge léger qui palpite et tremble. */
+body.mp-hurry::after {
+  content: ''; position: fixed; inset: 0; z-index: 60; pointer-events: none;
+  box-shadow: inset 0 0 0 2px rgba(255, 80, 70, 0.6), inset 0 0 46px rgba(255, 60, 50, 0.32);
+  animation: mp-hurry 0.5s ease-in-out infinite;
+}
+@keyframes mp-hurry {
+  0%, 100% { opacity: 0.55; transform: translate(0, 0); }
+  25% { transform: translate(1px, -1px); }
+  50% { opacity: 1; transform: translate(-1px, 1px); }
+  75% { transform: translate(1px, 1px); }
+}
+@media (prefers-reduced-motion: reduce) { body.mp-hurry::after { animation: none; opacity: 0.8; } }
 body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgba(241, 236, 218, 0.08); border-color: var(--line); font-variant-numeric: tabular-nums; }
 /* Présence des amis */
 .on-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; background: rgba(241, 236, 218, 0.25); }

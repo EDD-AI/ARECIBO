@@ -50,10 +50,12 @@ test('un plateau publié en retard ne crée pas d’écart', () => {
 });
 
 test('paires identiques pour tous, combats retournés pour se voir en bas', () => {
-  const p1 = R.mpPairs('S', 3, ['x', 'b', 'k', 'a', 'z']), p2 = R.mpPairs('S', 3, ['a', 'z', 'x', 'k', 'b']);
+  const st = { seed: 'S', round: 3, met: { 'a|b': { r: 2, n: 1 } }, ghost: { id: 'ghost' } };
+  const p1 = R.planPairs(st, ['x', 'b', 'k', 'a', 'z']), p2 = R.planPairs(st, ['a', 'z', 'x', 'k', 'b']);
   assert.deepEqual(p1, p2);
-  assert.equal(p1.pairs.length, 2);
-  assert.ok(p1.odd);
+  assert.equal(p1.length, 3, 'deux paires et un univers contre le fantôme');
+  assert.ok(p1.some((pr) => pr[1] === 'ghost'));
+  assert.ok(!p1.some((pr) => pr.includes('a') && pr.includes('b')), 'pas de revanche immédiate');
   const ev = [{ t: 'start', boards: [[1], [2]] }, { t: 'first', side: 0 }, { t: 'die', cid: 'c1', side: 1 }, { t: 'end', winner: 1, damage: 3 }];
   const m = R.mirror(ev);
   assert.deepEqual(m[0].boards, [[2], [1]]);

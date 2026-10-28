@@ -879,10 +879,71 @@
     }
     for (const p of state.players) if (!p.remote) rollShop(state, p);
     if (opts.mp) state.mp = Object.assign({}, opts.mp);
+    state.met = {};
+    ensurePlan(state);
     return state;
   }
 
   function alivePlayers(state) { return state.players.filter((p) => p.alive); }
+
+  // ─── Appariements façon Battlegrounds ───────────────────────
+  // Pas un tirage au hasard : à chaque cycle, les paires sont choisies pour que chacun affronte
+  // d'abord ceux qu'il n'a pas croisés depuis le plus longtemps (jamais deux fois de suite tant que
+  // c'est possible), puis ceux qu'il a le moins affrontés. S'il reste un univers seul, il affronte
+  // le fantôme du dernier éliminé, à tour de rôle. Les paires du cycle sont fixées dès la boutique
+  // (state.plan) : chacun connaît son prochain adversaire. Elles ne dépendent que de la graine, du
+  // cycle, des univers en vie et des rencontres passées (state.met) : en ligne, tous les téléphones
+  // trouvent les mêmes. Clés : identifiants des joueurs (identifiants globaux en ligne).
+  const metKey = (a, b) => (a < b ? a + '|' + b : b + '|' + a);
+  function pairCost(state, a, b) {
+    const m = state.met && state.met[metKey(a, b)];
+    // Départage stable entre paires équivalentes (moins d'une rencontre d'écart).
+    const tie = hashStr(state.seed + '|pair|' + state.round + '|' + metKey(a, b)) / 4294967296;
+    return m ? 1000 / Math.max(1, state.round - m.r) + 10 * m.n + tie : tie;
+  }
+  // La meilleure répartition en paires (au plus 8 univers : 105 possibilités, toutes essayées).
+  function planPairs(state, ids) {
+    const list = ids.slice().sort();
+    if (list.length % 2) list.push(state.ghost ? 'ghost' : '~seul');
+    let best = [], bestCost = Infinity;
+    (function rec(rest, acc, cost) {
+      if (cost >= bestCost) return;
+      if (!rest.length) { best = acc.slice(); bestCost = cost; return; }
+      for (let i = 1; i < rest.length; i++) {
+        acc.push([rest[0], rest[i]]);
+        rec(rest.slice(1, i).concat(rest.slice(i + 1)), acc, cost + (rest[i] === '~seul' ? 0 : pairCost(state, rest[0], rest[i])));
+        acc.pop();
+      }
+    })(list, [], 0);
+    // Le fantôme toujours en second ; un univers sans adversaire (sans fantôme) ne combat pas.
+    return best.filter((pr) => pr[1] !== '~seul').map((pr) => (pr[0] === 'ghost' ? [pr[1], pr[0]] : pr));
+  }
+  const idsOf = (state) => alivePlayers(state).map((p) => gidOf(state, p));
+  // Les paires du cycle en cours, calculées une fois (ou de nouveau si les univers en vie ont changé).
+  function ensurePlan(state) {
+    const ids = idsOf(state).sort();
+    const planned = state.plan && state.plan.r === state.round
+      ? state.plan.pairs.reduce((l, pr) => l.concat(pr), []).filter((x) => x !== 'ghost').sort() : null;
+    if (!planned || planned.join('|') !== ids.join('|')) state.plan = { r: state.round, pairs: planPairs(state, ids) };
+    return state.plan.pairs;
+  }
+  function recordMet(state, pairs) {
+    state.met = state.met || {};
+    for (const [a, b] of pairs) {
+      const k = metKey(a, b), m = state.met[k];
+      state.met[k] = { r: state.round, n: (m ? m.n : 0) + 1 };
+    }
+  }
+  // Le prochain adversaire du joueur (un univers, le fantôme, ou personne).
+  function nextOpponent(state) {
+    const me = you(state);
+    if (!me || !me.alive || state.over) return null;
+    const mine = gidOf(state, me);
+    const pr = ensurePlan(state).find((x) => x[0] === mine || x[1] === mine);
+    if (!pr) return null;
+    const o = pr[0] === mine ? pr[1] : pr[0];
+    return o === 'ghost' ? state.ghost : state.players.find((x) => gidOf(state, x) === o) || null;
+  }
   const isDuel = (state) => state.size === DUEL.players || state.players.length === DUEL.players;
   const rewardsOf = (state) => (isDuel(state) ? DUEL.rewards : REWARDS);
 
@@ -1806,19 +1867,18 @@
     // Les systèmes tels qu'ils combattent : chacun peut ensuite voir celui de ses rivaux.
     for (const p of players) { arrange(p); p.seen = JSON.parse(JSON.stringify(p.board)); }
 
-    const rng = rngFor(state, 'pairs:' + state.round);
     const cap = players.length > 3 ? DAMAGE_CAP : Infinity;
-    let pool = players.slice();
+    // Les paires prévues dès la boutique (le joueur toujours en premier dans la sienne).
+    const plan = ensurePlan(state);
+    const byId = new Map(players.map((p) => [p.id, p]));
     const pairs = [];
-    if (me.alive) {
-      const others = pool.filter((p) => p !== me);
-      const fresh = others.filter((p) => p.id !== me.lastOpp);
-      const opp = (fresh.length ? fresh : others)[Math.floor(rng() * (fresh.length ? fresh : others).length)];
-      if (opp) { pairs.push([me, opp]); pool = pool.filter((p) => p !== me && p !== opp); }
+    for (const [a, b] of plan) {
+      let A = byId.get(a), B = b === 'ghost' ? state.ghost : byId.get(b);
+      if (!A || !B) continue;
+      if (B === me) { const t = A; A = B; B = t; }
+      pairs.push([A, B]);
     }
-    shuffle(pool, rng);
-    while (pool.length >= 2) pairs.push([pool.pop(), pool.pop()]);
-    if (pool.length === 1 && state.ghost) pairs.push([pool.pop(), state.ghost]);
+    recordMet(state, plan);
 
     const results = [];
     let battle = null;
@@ -1880,6 +1940,7 @@
     }
 
     state.round++;
+    ensurePlan(state);
     let startEvents = [];
     for (const p of still) {
       const evs = startTurn(state, p);
@@ -1928,14 +1989,6 @@
   function mpHostBots(state) {
     for (const p of alivePlayers(state)) if (p.bot) { botTurn(state, p); endTurnEffects(state, p); }
   }
-  // Paires de la manche : mêmes pour tous (ordre des identifiants mélangé par la graine).
-  function mpPairs(seed, round, ids) {
-    const list = ids.slice().sort();
-    shuffle(list, mulberry(hashStr(String(seed) + '|mp-pairs|' + round)));
-    const pairs = [];
-    while (list.length >= 2) { const a = list.pop(), b = list.pop(); pairs.push(a < b ? [a, b] : [b, a]); }
-    return { pairs, odd: list[0] || null };
-  }
   // Un combat retourné : le joueur se voit toujours en bas (côté 0).
   function mirror(events) {
     const sw = (s) => (s === 0 ? 1 : s === 1 ? 0 : s);
@@ -1962,8 +2015,9 @@
       mpSeatLaw(p, sn.law);
     }
     for (const [gid, p] of byGid) p.seen = JSON.parse(JSON.stringify(snaps[gid] && p !== me ? snaps[gid].board || [] : p.board));
-    const { pairs, odd } = mpPairs(state.seed, state.round, [...byGid.keys()]);
-    if (odd && state.ghost) pairs.push([odd, 'ghost']);
+    // Les mêmes paires sur tous les téléphones, prévues dès la boutique.
+    const pairs = ensurePlan(state).slice();
+    recordMet(state, pairs);
     // Si l'hôte a retenu un autre plateau pour nous (publication en retard), on combat avec
     // celui-là, comme les autres téléphones.
     const mine = snaps[gidOf(state, me)];
@@ -2032,6 +2086,7 @@
     }
     state.round++;
     state.phase = 'shop';
+    ensurePlan(state);
     let startEvents = [];
     for (const p of still) {
       if (p.remote) continue;
@@ -2058,6 +2113,6 @@
     cardOf, famOf, cardText, upgradeCost, lawChoices, newGame, alivePlayers,
     buy, canBuy, play, canMagnet, sell, roll, freeze, upgrade, reorder, usePower, canUsePower, choose, endTurn,
     fight, poolAudit, copiesOf, botTurn, botDeploy,
-    mpFamilies, mpLawChoices, mpSeatLaw, snapshotOf, mpLock, mpHostBots, mpPairs, mirror, mpResolve
+    mpFamilies, mpLawChoices, mpSeatLaw, snapshotOf, mpLock, mpHostBots, mirror, mpResolve, planPairs, nextOpponent
   };
 });
