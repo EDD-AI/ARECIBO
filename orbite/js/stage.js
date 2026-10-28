@@ -95,11 +95,14 @@
     reveal(el, from, to, ms) {
       if (!el) return Promise.resolve();
       const s = this.state(el);
+      // Un fondu remplacé avant sa fin se termine quand même : sinon un changement d'écran qui
+      // l'attend (un fondu d'entrée parti juste après) resterait bloqué.
+      if (s.tween) s.tween.resolve();
       s.reveal = from;
       return new Promise((resolve) => { s.tween = { from, to, t0: performance.now(), ms: ms || 380, resolve }; });
     }
 
-    setReveal(el, v) { const s = this.state(el); s.reveal = v; s.tween = null; }
+    setReveal(el, v) { const s = this.state(el); if (s.tween) s.tween.resolve(); s.reveal = v; s.tween = null; }
 
     // Coordonnées pixel art depuis un rectangle CSS.
     toArt(x, y) { return [x / this.px, this.r.H - y / this.px]; }

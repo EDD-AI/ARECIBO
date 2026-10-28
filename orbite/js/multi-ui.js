@@ -9,7 +9,11 @@
   const $ = (id) => document.getElementById(id);
   const tr = window.tr || ((s) => s);
   const { esc } = A;
-  const st = { busy: false, law: null, lawTimer: 0, lawEnd: 0, view: 'menu', tick: 0 };
+  const st = { busy: false, law: null, lawTimer: 0, lawEnd: 0, view: 'menu', tick: 0, invite: null };
+  const INVITE_KEY = 'orbite.invite';
+  const dropInvite = () => { st.invite = null; try { sessionStorage.removeItem(INVITE_KEY); } catch (err) { /* sans importance */ } };
+  // Le lien d'invitation : la page du jeu, avec le code de la partie après #rejoindre=.
+  const inviteUrl = (code) => location.origin + location.pathname + '#rejoindre=' + code;
 
   function myRank() {
     try {
@@ -25,13 +29,22 @@
     const typed = $('mpCode') ? $('mpCode').value : '';
     const shadow = { set innerHTML(h) { if (h !== st.last) { st.last = h; box.innerHTML = h; if ($('mpCode') && typed) $('mpCode').value = typed; } } };
     draw(shadow);
+    // Invitation reçue par lien : une fois connecté et la progression en ligne réglée (sa récupération
+    // recharge la page), on rejoint la partie de son ami tout seul. Le code ne quitte la session
+    // qu'après la tentative : un rechargement en route la relance (rejoindre deux fois ne fait rien).
+    if (st.invite && ON.configured && ON.uid() && ON.state.synced && !ON.state.conflict && !MP.state.match && !st.busy) {
+      const code = st.invite;
+      st.invite = null;
+      act('join', { dataset: { code } }).then(dropInvite);
+    }
   }
   function draw(box) {
     const m = MP.state.match;
     if (!ON.configured) { box.innerHTML = `<p class="mp-note">${tr('Le jeu en ligne n’est pas configuré sur cette version.')}</p>`; return; }
     if (!ON.uid()) {
       const loading = ON.state.status === 'loading';
-      box.innerHTML = `<div class="mp-card"><b>${tr('JOUER EN LIGNE')}</b><p>${tr('Connectez-vous avec votre compte Google pour affronter d’autres créateurs et jouer avec vos amis.')}</p>
+      const inv = st.invite ? `<p class="mp-invite">${tr('Invitation reçue : connectez-vous pour rejoindre la partie {c}.', { c: `<b>${esc(st.invite)}</b>` })}</p>` : '';
+      box.innerHTML = `<div class="mp-card"><b>${tr('JOUER EN LIGNE')}</b>${inv}<p>${tr('Connectez-vous avec votre compte Google pour affronter d’autres créateurs et jouer avec vos amis.')}</p>
         <button class="btn primary" data-mp="signin" ${loading ? 'disabled' : ''}>${loading ? tr('CONNEXION…') : tr('SE CONNECTER AVEC GOOGLE')}</button></div>`;
       return;
     }
@@ -50,7 +63,7 @@
         <button class="btn" data-mp="create" data-size="8" ${off}>${tr('CRÉER UNE MÊLÉE PRIVÉE')}</button></div>
       <div class="mp-card"><b>${tr('REJOINDRE UN AMI')}</b>
         <p>${tr('Saisissez le code de sa partie. Les parties privées ne comptent pas pour le classement.')}</p>
-        <div class="mp-join"><input class="code-input" id="mpCode" maxlength="7" placeholder="${tr('CODE')}" autocomplete="off" spellcheck="false">
+        <div class="mp-join"><input class="code-input" id="mpCode" maxlength="7" placeholder="${tr('CODE')}" autocomplete="off" spellcheck="false" value="${esc(st.prefill || '')}">
         <button class="btn" data-mp="join" ${off}>${tr('REJOINDRE')}</button></div></div>`;
   }
   function renderLobby(box, m) {
@@ -66,8 +79,11 @@
       ? duel
         ? `<b>${tr('RECHERCHE D’UN RIVAL')}</b><p>${left > 0 ? tr('Si personne n’arrive dans {n} s, un univers rival prend la place.', { n: left }) : tr('La partie commence…')}</p>`
         : `<b>${tr('RECHERCHE DE CRÉATEURS')}</b><p>${left > 0 ? tr('Les places restantes seront tenues par des univers rivaux dans {n} s.', { n: left }) : tr('La partie commence…')}</p>`
-      : `<b>${duel ? tr('DUEL ENTRE AMIS') : tr('CODE DE SESSION')}</b><div class="mp-code">${esc(m.code)}</div><p>${duel ? tr('Votre ami saisit ce code dans Multijoueur → Rejoindre un ami.') : tr('Vos amis le saisissent dans Multijoueur → Rejoindre. Les places libres seront tenues par des univers rivaux.')}</p>
-         <button class="btn" data-mp="share">${tr('PARTAGER LE CODE')}</button>`;
+      : !host
+        // L'invité attend : c'est l'hôte qui lance.
+        ? `<b>${duel ? tr('DUEL ENTRE AMIS') : tr('CODE DE SESSION')}</b><div class="mp-code">${esc(m.code)}</div><p>${tr('En attente : {name} lance la partie.', { name: esc((m.seats.find((x) => x.uid === m.host) || {}).name || tr('l’hôte')) })}</p>`
+        : `<b>${duel ? tr('DUEL ENTRE AMIS') : tr('CODE DE SESSION')}</b><div class="mp-code">${esc(m.code)}</div><p>${duel ? tr('Envoyez le lien à votre ami : il ouvre le jeu directement dans votre partie. Il peut aussi saisir le code dans Multijoueur → Rejoindre un ami.') : tr('Vos amis le saisissent dans Multijoueur → Rejoindre. Les places libres seront tenues par des univers rivaux.')}</p>
+         <button class="btn" data-mp="share">${tr('ENVOYER LE LIEN')}</button>`;
     box.innerHTML = `<div class="mp-card">${head}</div>
       <div class="mp-seats">${seats}</div>
       <div class="sheet-actions">${host && m.mode === 'private' ? `<button class="btn primary" data-mp="start">${tr('LANCER LA PARTIE')} · ${m.uids.length}/${n}</button>` : ''}
@@ -105,25 +121,28 @@
       if (k === 'signin') { await ON.signIn(); }
       else if (k === 'ranked') { st.busy = true; render(); await MP.searchRanked(Number(b.dataset.size)); }
       else if (k === 'create') { st.busy = true; render(); await MP.createPrivate(Number(b.dataset.size)); }
-      else if (k === 'join') { st.busy = true; render(); await MP.joinCode($('mpCode').value); }
+      else if (k === 'join') { st.busy = true; render(); await MP.joinCode(b.dataset.code || ($('mpCode') ? $('mpCode').value : '')); }
       else if (k === 'start') { await MP.start(); }
       else if (k === 'leave') { await MP.leave(); }
       else if (k === 'share') {
-        const code = MP.state.match.code, text = tr('Rejoins ma partie ORBITE avec le code {c}', { c: code });
-        if (navigator.share) navigator.share({ text, url: location.href.split('#')[0] }).catch(() => {});
-        else if (navigator.clipboard) { await navigator.clipboard.writeText(code); A.toast(tr('Code copié.')); }
+        const code = MP.state.match.code, url = inviteUrl(code), text = tr('Rejoins ma partie ORBITE avec le code {c}', { c: code });
+        if (navigator.share) navigator.share({ title: 'ORBITE', text, url }).catch(() => {});
+        else if (navigator.clipboard) { await navigator.clipboard.writeText(text + ' ' + url); A.toast(tr('Lien copié.')); }
       }
       else if (k === 'law') { st.law = b.dataset.law; }
       else if (k === 'go') { if (st.law) await begin(st.law); return; }
     } catch (err) {
       const denied = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
       A.refuse(denied ? tr('Le serveur n’autorise pas encore les parties en ligne : réessayez plus tard.') : err && err.message ? err.message : tr('Connexion impossible.'));
+      // Invitation qui n'aboutit pas (partie lancée, code périmé) : le code reste affiché.
+      if (k === 'join' && b.dataset.code) st.prefill = b.dataset.code;
     }
     st.busy = false;
     render();
   }
 
-  async function open() {
+  async function open(opts) {
+    if (opts && opts.code) { st.invite = String(opts.code).toUpperCase(); st.prefill = st.invite; }
     // Une partie en ligne terminée : on libère le salon avant d'en chercher un autre.
     const s = O.ui.state;
     if (MP.state.mid && (!s || !s.mp || s.over)) await MP.leave();

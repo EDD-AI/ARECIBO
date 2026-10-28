@@ -642,7 +642,10 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
 
 - **Duel en ligne** : « Rechercher un duel » cherche un créateur de votre rang ; personne au bout de
   40 secondes ? Un univers rival (bot) prend la place. « Défier un ami » crée un duel privé avec un
-  code. Un duel classé compte comme une 2e place s’il est gagné (+18 points de base) et une 6e s’il
+  code. **Envoyer le lien** (v74) partage `…/orbite/#rejoindre=CODE` : l’ami qui le touche arrive,
+  après l’ouverture du jeu, dans le Multijoueur avec le code prêt ; une fois connecté avec Google, il
+  rejoint la partie tout seul (le code attend dans la session si la connexion recharge la page). Un
+  lien touché pendant que le jeu est ouvert marche aussi. Un duel classé compte comme une 2e place s’il est gagné (+18 points de base) et une 6e s’il
   est perdu (−18). Le salon porte `size: 2` (`MP.seatsOf`) ; les règles Firestore l’acceptent depuis
   la v68 (à republier dans la console).
 - **Mêlée à 8 hors ligne** : la carte en bas de l’écran Multijoueur, sans connexion.
