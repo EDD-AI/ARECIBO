@@ -764,19 +764,32 @@ MIT), la police Chakra Petch (SIL Open Font License, embarquée dans `fonts/` av
 
 ## Musique
 
-Deux thèmes (Studio Edda, créés avec Suno), réencodés en MP3 128 kbit/s, qui se suivent l’un
-après l’autre : **« Distant Earth »** (`audio/earth.mp3`), le thème principal, puis **« Orbiting
-Wonder »** (`audio/menu.mp3`). La musique démarre au toucher sur le titre, accompagne l’accueil, le marché, le profil et
-le choix de la loi, puis s’efface en fondu au début d’une partie (l’ambiance spatiale reprend). Il
-passe par le graphe WebAudio pour des fondus fiables, y compris sur iPhone. Paramètres → Musique
-le coupe sans couper les bruitages.
+Quatre thèmes de Studio Edda, qui se suivent l’un après l’autre :
+1. le **thème principal d’ARECIBO** (`audio/arecibo1.mp3`) ;
+2. **« Distant Earth »** (`audio/earth.mp3`) ;
+3. le **second thème d’ARECIBO** (`audio/arecibo2.mp3`) ;
+4. **« Orbiting Wonder »** (`audio/menu.mp3`).
+
+« Distant Earth » et « Orbiting Wonder » ont été créés avec Suno. La musique démarre au toucher sur
+le titre et accompagne l’accueil, le marché, le profil et le choix de la loi. Elle s’efface en
+fondu au début d’une partie, et l’ambiance spatiale reprend. Elle passe par le graphe WebAudio pour
+des fondus fiables, y compris sur iPhone. Paramètres → Musique la coupe sans couper les bruitages.
 
 ## Sons
 
 Des sons naturels plutôt que des bips : impacts de pierre, éboulis, éclats de verre, gouttes,
-déclics mécaniques, avec une touche sci-fi discrète. Tous viennent des packs gratuits de
-**Kenney** (CC0), voir `audio/README.md`.
+déclics mécaniques, avec une touche sci-fi discrète. Les bruitages viennent des packs gratuits de
+**Kenney** (CC0) ; l’interface, les nappes et les musiques d’ARECIBO sont de Studio Edda. Voir
+`audio/README.md`.
 
+- **Sons d’ARECIBO** (v69) :
+  - nappes d’espace pendant la partie et le combat ;
+  - nappes de vaisseau au réveil, dans la Création et le Multijoueur ;
+  - déclic des boutons, survol, texte qui s’écrit, son de démarrage, erreur ;
+  - allumage et extinction des grands écrans ;
+  - jingle de victoire, et alarme quand vos PV passent sous le quart.
+
+  Détail dans `audio/README.md`.
 - **Ambiance** : un vent profond (l’ambiance extérieure de Kenney sans les oiseaux, descendue
   d’une quarte) et, au menu et en partie, des cristaux lointains qui tintent dans une grotte.
   Elle s’assombrit pendant les combats.

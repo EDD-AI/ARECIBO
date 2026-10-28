@@ -17,7 +17,7 @@
   const $ = (id) => document.getElementById(id);
   const SAVE_KEY = 'orbite.partie.v1';
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json et le cache de sw.js.
-  const VERSION = 68;
+  const VERSION = 69;
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
@@ -372,9 +372,13 @@
     }
     const next = $(name);
     next.classList.add('active');
+    // Les grands écrans s'allument et s'éteignent comme les consoles d'ARECIBO.
+    const PANELS = ['market', 'creation', 'multi', 'profile', 'colony', 'explore', 'system'];
+    if (ui.screen === 'menu' && PANELS.includes(name)) SFX.on();
+    else if (name === 'menu' && PANELS.includes(ui.screen)) SFX.off();
     ui.screen = name;
     stage.starsOn = !['splash', 'title', 'wake', 'cStory'].includes(name);
-    SFX.ambience({ splash: 'off', title: 'off', wake: 'wake', game: 'game', end: 'game', cStory: 'wake', genese: 'wake', essaim: 'wake', coeur: 'wake', sculpture: 'wake', cFight: 'battle', cEnd: 'game' }[name] || 'menu');
+    SFX.ambience({ splash: 'off', title: 'off', wake: 'wake', game: 'game', end: 'end', cStory: 'wake', genese: 'wake', essaim: 'wake', coeur: 'wake', sculpture: 'wake', cFight: 'battle', cEnd: 'game', multi: 'ship', creation: 'atelier', colony: 'atelier', explore: 'atelier', system: 'atelier' }[name] || 'menu');
     SFX.music(['title', 'wake', 'menu', 'market', 'creation', 'colony', 'explore', 'genese', 'essaim', 'coeur', 'sculpture', 'multi', 'profile', 'laws', 'cMap', 'system'].includes(name));
     // Pendant la partie, le ciel s'efface derrière les planètes pour rester lisible.
     const busySky = ['laws', 'game', 'end', 'cFight'].includes(name);
@@ -1257,8 +1261,10 @@
       <section><b>ORBITE</b><span>${tr('Un jeu Studio Edda')}</span></section>
       <section><b>${tr('PLANÈTES')}</b><span>${tr('Moteur de planètes d’ORBITE')}</span>
         <small>${tr('Pixel art calculé en direct (WebGL2) : chaque graine donne un astre unique.')}</small></section>
-      <section><b>${tr('MUSIQUE')}</b><span>« Orbiting Wonder » · Studio Edda</span>
-        <small>${tr('Thème du menu, créé avec Suno.')}</small></section>
+      <section><b>${tr('MUSIQUE')}</b><span>« Distant Earth », « Orbiting Wonder » · Studio Edda</span>
+        <small>${tr('Thèmes du menu, créés avec Suno.')}</small></section>
+      <section><b>${tr('MUSIQUES ET SONS D’ARECIBO')}</b><span>Studio Edda</span>
+        <small>${tr('Les deux thèmes d’ARECIBO, ses nappes d’espace et de vaisseau, et ses sons d’interface (déclic, survol, texte, démarrage, allumage, erreur, jingle, alarme).')}</small></section>
       <section><b>${tr('SONS')}</b><span>Kenney · kenney.nl</span>
         <small>${tr('Interface Sounds et UI Audio (CC0), sons des Starter Kits FPS et 3D Platformer (CC0) et du Starter Kit City Builder (licence MIT). Copies issues des portages de Hugo Locurcio.')}</small></section>
       <section><b>${tr('POLICE')}</b><span>Chakra Petch · Cadson Demak</span>
@@ -2818,6 +2824,11 @@
       };
       requestAnimationFrame(tick);
     });
+    // Alerte : vos PV passent sous le quart (une fois par partie).
+    if (!won && !b.reborn && hpTo > 0 && hpTo <= (me().maxHp || R.START_HP) * 0.25 && !ui.state.alarmed) {
+      ui.state.alarmed = true;
+      SFX.alarm();
+    }
     if (!won) {
       const v = document.createElement('div');
       v.className = 'vignette';
@@ -3185,7 +3196,7 @@
     $('endDust').textContent = '+0';
     $('endTotal').innerHTML = tr('Total') + ' ' + icon('dust') + ' ' + (dust() - (s.reward || 0) - gift);
     await show('end');
-    if (good) SFX.win(); else SFX.lose();
+    if (rank === 1 && !quit) SFX.jingle(); else if (good) SFX.win(); else SFX.lose();
     const reward = s.reward || 0;
     if (reward) {
       const t0 = performance.now();

@@ -1,7 +1,8 @@
 /* ORBITE — sons.
-   Échantillons des packs Kenney (CC0, voir audio/README.md), joués par WebAudio avec un léger
-   hasard de hauteur et de volume pour qu'aucun coup ne sonne deux fois pareil. Une réverbération
-   de grotte donne de la profondeur ; l'ambiance mêle un vent profond et des cristaux lointains.
+   Échantillons des packs Kenney (CC0) et sons d'ARECIBO (Studio Edda), voir audio/README.md, joués
+   par WebAudio avec un léger hasard de hauteur et de volume pour qu'aucun coup ne sonne deux fois
+   pareil. Une réverbération de grotte donne de la profondeur ; l'ambiance mêle un vent profond, des
+   cristaux lointains et les nappes d'ARECIBO (espace, vaisseau).
    Si un fichier manque (page ouverte en file://, réseau coupé), un son synthétisé le remplace. */
 (function () {
   'use strict';
@@ -15,8 +16,11 @@
     'drop1', 'drop2', 'drop3', 'pluck1', 'pluck2', 'break', 'blast', 'rise', 'wind',
     'glass1', 'glass2', 'glass3', 'glass4', 'glass5', 'glass6',
     'place1', 'place2', 'place3', 'place4', 'crumble1', 'crumble2', 'crumble3', 'crumble4',
-    'click1', 'click2', 'click3', 'click4', 'click5'
+    'click1', 'click2', 'click3', 'click4', 'click5',
+    // Sons d'ARECIBO.
+    'ui-click', 'ui-hover1', 'ui-hover2', 'ui-hover3', 'ui-text', 'ui-start', 'ui-on', 'ui-off', 'ui-wrong', 'jingle', 'alarm'
   ];
+  const HOVERS = ['ui-hover1', 'ui-hover2', 'ui-hover3'];
   const GLASS = ['glass1', 'glass2', 'glass3', 'glass5', 'glass6'];
   const DROPS = ['drop1', 'drop2', 'drop3'];
   const PLACE = ['place1', 'place2', 'place3', 'place4'];
@@ -25,16 +29,20 @@
   const CLICKS = { click1: 0.3, click2: 0.28, click3: 0.3, click4: 0.17, click5: 0.16 };
   let lastClick = '';
 
-  // Ambiance par écran : niveau du vent, coupure du filtre, intervalle des cristaux (s).
+  // Ambiance par écran : niveau du vent, coupure du filtre, intervalle des cristaux (s), et nappe
+  // d'ARECIBO (bed) avec son niveau.
   const MOODS = {
     off: { wind: 0, cut: 600, drips: 0 },
-    wake: { wind: 0.14, cut: 420, drips: 0 },
+    wake: { wind: 0.06, cut: 420, drips: 0, bed: 'ship1', bedVol: 0.55 },
     menu: { wind: 0.32, cut: 900, drips: [2.5, 7] },
-    game: { wind: 0.18, cut: 650, drips: [7, 15] },
-    battle: { wind: 0.12, cut: 380, drips: 0 }
+    game: { wind: 0.06, cut: 650, drips: [9, 18], bed: 'space1', bedVol: 0.5 },
+    battle: { wind: 0, cut: 380, drips: 0, bed: 'space3', bedVol: 0.6 },
+    end: { wind: 0.06, cut: 650, drips: [9, 18], bed: 'space2', bedVol: 0.5 },
+    ship: { wind: 0, cut: 600, drips: 0, bed: 'ship3', bedVol: 0.5 },
+    atelier: { wind: 0.1, cut: 700, drips: [6, 14], bed: 'ship2', bedVol: 0.45 }
   };
 
-  let ctx = null, master, sfxBus, revIn, ambBus, windFilter;
+  let ctx = null, master, sfxBus, revIn, ambBus, windFilter, bedBus;
   let muted = false;
   try { muted = localStorage.getItem(KEY) === '1'; } catch (err) { muted = false; }
   const raw = {};
@@ -93,6 +101,9 @@
     ambBus.gain.value = 0;
     windFilter.connect(ambBus);
     ambBus.connect(master);
+    bedBus = ctx.createGain();
+    bedBus.gain.value = 0;
+    bedBus.connect(master);
     for (const n of NAMES) {
       if (!raw[n]) continue;
       raw[n].then((data) => (data ? decode(data) : null)).then((b) => {
@@ -103,8 +114,8 @@
     }
     document.addEventListener('visibilitychange', () => {
       if (!ctx) return;
-      if (document.hidden) { ctx.suspend(); if (musicEl) musicEl.pause(); }
-      else if (!muted) { ctx.resume(); if (musicWant) setMusic(true); }
+      if (document.hidden) { ctx.suspend(); if (musicEl) musicEl.pause(); pauseBeds(); }
+      else if (!muted) { ctx.resume(); if (musicWant) setMusic(true); setBed(MOODS[mood].bed, true); }
     });
     if (musicWant) setMusic(true);
     return true;
@@ -112,8 +123,9 @@
 
   // En HTTP(S), la musique passe par le graphe WebAudio (fondus fiables, même sur iPhone) ;
   // ouverte depuis un fichier, elle est lue directement (le navigateur refuserait le graphe).
-  // Deux thèmes qui se suivent : « Distant Earth » (thème principal), puis « Orbiting Wonder ».
-  const TRACKS = ['earth.mp3', 'menu.mp3'];
+  // Quatre thèmes qui se suivent : le thème principal d'ARECIBO, « Distant Earth », le second thème
+  // d'ARECIBO, puis « Orbiting Wonder ».
+  const TRACKS = ['arecibo1.mp3', 'earth.mp3', 'arecibo2.mp3', 'menu.mp3'];
   let track = 0;
   function musicNode() {
     if (musicEl || !ctx) return musicEl;
@@ -154,11 +166,12 @@
     }
     if (ambBus) setMood(mood, false);
   }
-  function fadeElement(el, to) {
+  function fadeElement(el, to) { fadeElementTo(el, to, 1500); }
+  function fadeElementTo(el, to, ms) {
     const from = el.volume, t0 = performance.now();
     const step = (now) => {
-      const k = Math.min(1, (now - t0) / 1500);
-      el.volume = from + (to - from) * k;
+      const k = Math.min(1, (now - t0) / ms);
+      el.volume = Math.max(0, Math.min(1, from + (to - from) * k));
       if (k < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
@@ -204,6 +217,65 @@
     src.start(a.currentTime + (o.delay || 0));
     return true;
   }
+
+  // ─── Nappes d'ARECIBO ───────────────────────────────────────
+  // Espace et vaisseau : lues en continu par deux éléments audio qui se relaient en fondu avant la
+  // fin du fichier (pas de couture), sans tout décoder en mémoire. Créées au premier besoin.
+  const BED_X = 3; // durée du fondu enchaîné (s)
+  const beds = {};
+  let bedName = null;
+  function bedEl(b, i) {
+    if (b.els[i]) return b.els[i];
+    const el = new Audio(BASE + b.name + '.mp3');
+    el.preload = 'auto';
+    let g = null;
+    if (location.protocol !== 'file:') {
+      try {
+        const src = ctx.createMediaElementSource(el);
+        g = ctx.createGain();
+        g.gain.value = 0;
+        src.connect(g).connect(bedBus);
+      } catch (err) { g = null; }
+    }
+    if (!g) el.volume = 0;
+    el.addEventListener('timeupdate', () => {
+      // Le relais : l'autre lecteur part du début quand celui-ci approche de la fin.
+      if (bedName !== b.name || b.cur !== i || !el.duration || el.currentTime < el.duration - BED_X) return;
+      b.cur = 1 - i;
+      bedFade(b, 1 - i, 1, BED_X, true);
+      bedFade(b, i, 0, BED_X);
+    });
+    b.els[i] = el;
+    b.gains[i] = g;
+    return el;
+  }
+  // Fondu d'un lecteur vers to (0..1) ; restart : repart du début.
+  function bedFade(b, i, to, sec, restart) {
+    const el = bedEl(b, i), g = b.gains[i];
+    clearTimeout(b.stop[i]);
+    if (to > 0) {
+      if (restart) { try { el.currentTime = 0; } catch (err) { /* pas encore chargé */ } }
+      if (el.paused) el.play().catch(() => { /* reprendra au prochain toucher */ });
+    } else b.stop[i] = setTimeout(() => el.pause(), sec * 1000 + 200);
+    const level = to * (g ? 1 : bedBusLevel());
+    if (g) { g.gain.cancelScheduledValues(ctx.currentTime); g.gain.setTargetAtTime(level, ctx.currentTime, sec / 3); }
+    else fadeElementTo(el, level, sec * 1000);
+  }
+  function bedBusLevel() {
+    const m = MOODS[mood];
+    return (m.bedVol || 0) * (musicWant && musicOn && !muted ? 0.35 : 1);
+  }
+  // Passe à la nappe name (ou au silence) en fondu ; force : relance celle en cours.
+  function setBed(name, force) {
+    if (!ctx || muted) return;
+    if (name === bedName && !force) return;
+    for (const b of Object.values(beds)) if (b.name !== name) for (let i = 0; i < 2; i++) if (b.els[i]) bedFade(b, i, 0, 1.5);
+    bedName = name || null;
+    if (!name) return;
+    const b = beds[name] || (beds[name] = { name, els: [], gains: [], stop: [], cur: 0 });
+    bedFade(b, b.cur, 1, 2, !b.els[b.cur] || b.els[b.cur].paused);
+  }
+  function pauseBeds() { for (const b of Object.values(beds)) for (const el of b.els) if (el) el.pause(); }
 
   // ─── Ambiance ───────────────────────────────────────────────
   // Le vent tourne en boucle par fondus enchaînés de 4 s, sans couture audible.
@@ -251,6 +323,9 @@
     ambBus.gain.cancelScheduledValues(t);
     const under = musicWant && musicOn && !muted ? 0.35 : 1;
     ambBus.gain.setTargetAtTime(m.wind * under, t, 0.9);
+    bedBus.gain.cancelScheduledValues(t);
+    bedBus.gain.setTargetAtTime((m.bedVol || 0) * under, t, 0.9);
+    setBed(m.bed, force && !document.hidden);
     windFilter.frequency.setTargetAtTime(m.cut, t, 0.8);
     if (m.wind > 0 && (windNext < t + 1 || force)) scheduleWind();
     if (changed || force) scheduleDrip();
@@ -329,11 +404,12 @@
       const now = performance.now();
       if (now - lastHover < 45) return;
       lastHover = now;
-      play('hover', { vol: 0.1, jit: 0.08 });
+      play(HOVERS, { vol: 0.2, jit: 0.03 }) || play('hover', { vol: 0.1, jit: 0.08 });
     },
-    // Un déclic tiré parmi cinq, jamais deux fois le même de suite, à hauteur variable ; de temps
-    // en temps, un petit caillou s'y mêle pour garder un grain naturel.
+    // Le déclic d'ARECIBO, à hauteur à peine variable ; sinon, un déclic tiré parmi cinq, jamais
+    // deux fois le même de suite, avec de temps en temps un petit caillou pour le grain naturel.
     tap() {
+      if (play('ui-click', { vol: 0.36, jit: 0.03 })) return;
       const names = Object.keys(CLICKS).filter((n) => n !== lastClick && buffers[n]);
       if (!names.length) { play('tap', { vol: 0.32 }) || tone(880, 0.05, { vol: 0.03, type: 'square' }); return; }
       const n = pick(names);
@@ -341,7 +417,7 @@
       play(n, { vol: CLICKS[n], jit: 0.1 });
       if (Math.random() < 0.3) play(PLACE, { vol: 0.06, rate: 1.7, jit: 0.15, delay: 0.005 });
     },
-    type() { play('type', { vol: 0.07, jit: 0.12 }) || tone(1500 + Math.random() * 300, 0.018, { vol: 0.012, type: 'triangle' }); },
+    type() { play('ui-text', { vol: 0.16, jit: 0.06 }) || play('type', { vol: 0.07, jit: 0.12 }) || tone(1500 + Math.random() * 300, 0.018, { vol: 0.012, type: 'triangle' }); },
     // Ouvrir ou fermer une fiche : un petit caillou posé, jamais tout à fait le même, parfois
     // un tintement de cristal très léger. Pas de balayage de hauteur (effet « laser »).
     open() {
@@ -349,8 +425,14 @@
       if (Math.random() < 0.4) play(GLASS, { vol: 0.03, rate: 2.2, jit: 0.1, rev: 0.6, delay: 0.015 });
     },
     close() { play(PLACE, { vol: 0.08, rate: 1.2, jit: 0.14 }); },
-    error() { play('error', { vol: 0.22 }) || tone(220, 0.12, { vol: 0.05, type: 'triangle' }); },
+    error() { play('ui-wrong', { vol: 0.34, jit: 0.02 }) || play('error', { vol: 0.22 }) || tone(220, 0.12, { vol: 0.05, type: 'triangle' }); },
+    // Allumage et extinction d'un grand écran (Marché, Création, Multijoueur…), comme les consoles
+    // d'ARECIBO.
+    on() { play('ui-on', { vol: 0.26, jit: 0.02 }); },
+    off() { play('ui-off', { vol: 0.22, jit: 0.02 }); },
+    // « Touchez pour commencer » : le son de démarrage d'ARECIBO, sinon le souffle inversé.
     start() {
+      if (play('ui-start', { vol: 0.55, jit: 0, rev: 0.15 })) return;
       if (!play('rise', { vol: 0.55, rev: 0.4, jit: 0 })) {
         noise(0.9, { vol: 0.08, cut: 600 });
         [196, 262, 392, 523].forEach((f, i) => tone(f, 0.9, { delay: 0.12 + i * 0.1, vol: 0.05 }));
@@ -443,6 +525,10 @@
       play(CRUMBLE, { vol: 0.5, rate: 0.6, delay: 0.05 });
       play('glass4', { vol: 0.3, rate: 0.6, rev: 1, delay: 0.1, jit: 0 });
     },
+    // Le jingle d'ARECIBO : la victoire d'une partie.
+    jingle() { if (!play('jingle', { vol: 0.5, jit: 0 })) SFX.win(); },
+    // Alerte : vos PV passent sous le quart.
+    alarm() { play('alarm', { vol: 0.22, jit: 0 }); },
     win() {
       if (!buffers.glass1) { [523, 659, 784, 1046, 1318].forEach((f, i) => tone(f, 0.18, { delay: i * 0.09, type: 'triangle', vol: 0.07 })); return; }
       chime([1, 1.26, 1.5, 2], { vol: 0.28, rev: 0.6, step: 0.09 });
@@ -452,7 +538,7 @@
       if (!play('down', { vol: 0.3, rev: 0.4 })) { [392, 330, 262, 196].forEach((f, i) => tone(f, 0.22, { delay: i * 0.12, type: 'triangle', vol: 0.07 })); return; }
       play(CRUMBLE, { vol: 0.28, rate: 0.6, delay: 0.1, rev: 0.4 });
     },
-    // Ambiance : 'off', 'wake', 'menu', 'game', 'battle'.
+    // Ambiance : 'off', 'wake', 'menu', 'game', 'battle', 'end', 'ship', 'atelier'.
     ambience(name) { setMood(name); },
     // Musique du menu : true sur les écrans hors partie.
     music(on) { if (on !== musicWant) setMusic(on); },
@@ -470,7 +556,7 @@
       muted = !!v;
       try { localStorage.setItem(KEY, muted ? '1' : '0'); } catch (err) { /* stockage indisponible */ }
       if (!ctx) { if (!muted) audio(); return; }
-      if (muted) { ctx.suspend(); if (musicEl) musicEl.pause(); }
+      if (muted) { ctx.suspend(); if (musicEl) musicEl.pause(); pauseBeds(); bedName = null; }
       else { ctx.resume(); setMood(mood, true); setMusic(musicWant); }
     }
   };
