@@ -759,18 +759,29 @@ lunes, cristaux, machines…), et « Comète » et « Éclipse » rejoignent la 
 
 ## Crédits
 
-Paramètres → **Crédits** : Studio Edda, les sons de Kenney (CC0 et MIT, avec l’avis de licence
-MIT), la police Chakra Petch (SIL Open Font License, embarquée dans `fonts/` avec sa licence). Détail des sons dans `audio/README.md`.
+Paramètres → **Crédits** ouvre le même écran que dans ARECIBO (v70) : un ciel où les étoiles
+scintillent et des poussières montent, une lune en pixels qui luit, puis la fiche d’archive
+« STUDIO EDDA // ARCHIVE CREDIT ».
+
+- **L’équipe d’ARECIBO** : Direction Studio EDDA, Design Corentin Flatres, Sound design et
+  Compositeur Victor Desrat.
+- **Statut** : prototype jouable en construction, avec la version (« PRE.ALPHA n »).
+- **Ce qu’apporte ORBITE** : les musiques, nappes et sons d’ARECIBO, les thèmes du menu, le moteur
+  de planètes, les bruitages de Kenney (CC0, MIT) et la police Chakra Petch (SIL OFL).
+- **Licences** : l’avis MIT et le détail des licences sont repliés en bas (« LICENCES »).
+
+Détail des sons dans `audio/README.md`. Le numéro de version s’affiche toujours « PRE.ALPHA n »
+(titre, bas du menu, Paramètres).
 
 ## Musique
 
-Quatre thèmes de Studio Edda, qui se suivent l’un après l’autre :
-1. le **thème principal d’ARECIBO** (`audio/arecibo1.mp3`) ;
+Quatre thèmes, qui se suivent l’un après l’autre :
+1. le **thème principal d’ARECIBO** (`audio/arecibo1.mp3`), composé par **Victor Desrat** ;
 2. **« Distant Earth »** (`audio/earth.mp3`) ;
-3. le **second thème d’ARECIBO** (`audio/arecibo2.mp3`) ;
+3. le **second thème d’ARECIBO** (`audio/arecibo2.mp3`), de Victor Desrat ;
 4. **« Orbiting Wonder »** (`audio/menu.mp3`).
 
-« Distant Earth » et « Orbiting Wonder » ont été créés avec Suno. La musique démarre au toucher sur
+« Distant Earth » et « Orbiting Wonder » (Studio EDDA) ont été créés avec Suno. La musique démarre au toucher sur
 le titre et accompagne l’accueil, le marché, le profil et le choix de la loi. Elle s’efface en
 fondu au début d’une partie, et l’ambiance spatiale reprend. Elle passe par le graphe WebAudio pour
 des fondus fiables, y compris sur iPhone. Paramètres → Musique la coupe sans couper les bruitages.
@@ -779,7 +790,7 @@ des fondus fiables, y compris sur iPhone. Paramètres → Musique la coupe sans 
 
 Des sons naturels plutôt que des bips : impacts de pierre, éboulis, éclats de verre, gouttes,
 déclics mécaniques, avec une touche sci-fi discrète. Les bruitages viennent des packs gratuits de
-**Kenney** (CC0) ; l’interface, les nappes et les musiques d’ARECIBO sont de Studio Edda. Voir
+**Kenney** (CC0) ; l’interface, les nappes et les musiques d’ARECIBO sont de Victor Desrat. Voir
 `audio/README.md`.
 
 - **Sons d’ARECIBO** (v69) :
@@ -1008,13 +1019,13 @@ même rangée**. Niveau I à 2 astres, II à 3, III à 4. Chaque famille a un ef
 
 | Famille | À l’avant (les astres de la formation) | À l’arrière |
 |---|---|---|
-| Vie | +n/+n | après chaque attaque de votre avant, l’attaquant récupère n PV |
+| Vie | +n/+n | après chaque attaque de votre avant, l’attaquant récupère 2n PV |
 | Néant | quand l’un d’eux s’effondre, les autres +n/+n | quand un astre de l’avant s’effondre, +n/+n |
-| Envers | les n premiers gagnent Renaissance | les n ennemis de l’avant les plus offensifs échangent Attaque et PV |
-| Brasier | chacun inflige n dégâts à l’ennemi en face | 2n dégâts à l’ennemi de l’avant qui a le moins de PV |
-| Glace | les n premiers gagnent Bouclier | les ennemis de l’avant perdent n Attaque |
-| Tempête | +n Attaque après chacune de leurs attaques | votre avant gagne +n Attaque |
-| Minéral | +0/+2n, le plus robuste gagne Rempart | votre avant gagne +0/+2n |
+| Envers | +n/+n, les n premiers gagnent Renaissance | les n ennemis de l’avant les plus offensifs échangent Attaque et PV |
+| Brasier | chacun inflige 2n dégâts à l’ennemi en face | 2n dégâts à l’ennemi de l’avant qui a le moins de PV |
+| Glace | +n/+n, les n premiers gagnent Bouclier | les ennemis de l’avant perdent 2n Attaque |
+| Tempête | +n/+2n, puis +n Attaque après chacune de leurs attaques | votre avant gagne +n/+2n, le premier Rafale |
+| Minéral | +n/+2n, le plus robuste gagne Rempart | votre avant gagne +n/+2n |
 | Machine | +2n Attaque | chacun donne ses mots-clés et +n/+n à l’astre de l’avant juste devant lui |
 | Lunes | leurs voisins de rangée +n/+n | l’astre de l’avant juste devant chacune +2n/+2n |
 | Comètes | +n Attaque, elles attaquent avant le reste de l’avant | quand l’avant est tombé, elles avancent avec +2n/+n |
@@ -1025,10 +1036,62 @@ même rangée**. Niveau I à 2 astres, II à 3, III à 4. Chaque famille a un ef
 et les effets de chaque famille), un trait de la couleur de la famille sous chaque astre d’une
 formation, et en combat l’annonce « BRASIER II · AVANT » au-dessus de ses astres.
 
+**L’arrière au combat** (v70, `R.POSITION_KW`) : trois mots-clés de position, portés par 23 astres.
+- **Portée** : l’astre attaque aussi depuis l’arrière, et sa cible ne riposte pas. Aube, Braise,
+  Magma, Géante, Sélène, Europe, Prisme, Satellite et Nimbus.
+- **Percée** : l’astre frappe l’arrière ennemi en priorité. Météore, Encke, Ison, Spore, Zéphyr et
+  Éclipse.
+- **Garde** : tant qu’il tient à l’avant, l’ennemi ne peut pas frapper votre arrière avec Percée.
+  Silex, Basalte, Monolithe, Station, Sentinelle, Banquise, Luna et Titania.
+
+Ces mots-clés se contrent les uns les autres. Les tireurs à Portée tiennent l’arrière ; la Percée les
+atteint ; la Garde la bloque ; et la Garde, à l’avant, encaisse les tirs sans riposter. Une petite
+icône les signale sur l’astre (cible, flèche, tour). Le tir à Portée s’anime comme un trait lancé
+depuis l’arrière.
+
+**Phénomènes** (v70, `R.PHENOMENA`, `R.phenomenaOf`) : des combinaisons de placement qui
+transforment un astre au début du combat. « Juste derrière » : l’astre de l’arrière dans la même
+colonne (rangées centrées, comme à l’écran ; à égalité, celui de gauche). Les colonnes comptent
+donc autant que les rangées.
+
+| Phénomène | Placement | Effet |
+|---|---|---|
+| Accrétion | un Minéral juste derrière n’importe quel astre de l’avant | il grossit : +2/+5 (+3/+7 si c’est aussi un Minéral) |
+| Trou noir | Néant devant, Néant juste derrière | l’astre devient un trou noir : Rempart, +1/+1 à chaque effondrement |
+| Supernova | Brasier devant, Brasier juste derrière | en s’effondrant, il explose : 4 dégâts à tout l’avant ennemi |
+| Éclipse | Lune devant, Soleil juste derrière | l’ennemi en face de la Lune perd la moitié de son Attaque |
+| Zone habitable | astre de Vie devant, Soleil juste derrière | +2/+3 et Renaissance |
+| Queue de comète | Comète devant, Comète juste derrière | Rafale et +2 Attaque |
+| Halo | Glace devant, Glace juste derrière | les deux gagnent Bouclier |
+| Jumeaux | Envers devant, Envers juste derrière | les deux gagnent Renaissance |
+| Œil du cyclone | Tempête devant, Tempête juste derrière | Rafale, ou Méga-rafale |
+| Prisme | un Cristal entre deux Cristaux de sa rangée | +2/+2 par voisin et Bouclier |
+
+À l’écran : les astres concernés portent un cercle doré en pointillé. Le nom du phénomène s’ajoute
+aux étiquettes de « Votre système » (« ✦ TROU NOIR »). La fiche des familles liste tous les
+phénomènes, ceux qui sont actifs en premier. En combat, l’astre se transforme :
+- l’accrétion le fait grossir ;
+- le trou noir prend l’aspect d’un trou noir ;
+- la supernova le fait luire, puis exploser.
+
+Les bots essaient tous les ordres de leurs rangées pour déclencher le plus de phénomènes
+(`alignPhenomena`).
+
 **Repérage** : chaque joueur voit le système que son rival a joué au dernier combat (`p.seen`).
 En duel, la barre du haut montre le rival, ses PV et « voir son système ». Les bots se placent
 contre ces mêmes systèmes vus, jamais contre votre système du moment (`botArrange` : quelques
 placements candidats, chacun mis à l’épreuve par des combats simulés).
+
+**Équilibre des familles en duel** (v70, 80 duels par famille, IA experte des deux côtés, taux de
+victoire selon la famille de la loi). Avant la v70, l’écart allait de 22 % (Minéral) à 62 %
+(Anomalies). Après les mots-clés de position, les phénomènes et le réglage des formations :
+
+| Vie | Cristal | Néant | Tempête | Minéral | Anomalies | Lunes | Machine | Envers | Glace | Comètes | Brasier |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 57 % | 56 % | 51 % | 46 % | 46 % | 46 % | 43 % | 41 % | 40 % | 40 % | 39 % | 38 % |
+
+Chaque mesure a environ ±5,5 points de bruit. La Loi des vents (Tempête) donne désormais +1/+1
+après chaque attaque, au lieu de +1 Attaque.
 
 **Mesures** (scripts de simulation, IA experte des deux côtés) : un duel dure en moyenne 11,7
 cycles (9 à 15 pour 80 % des parties) et finit vers le niveau 5 ; environ 2,9 formations par combat ;

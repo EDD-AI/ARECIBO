@@ -41,13 +41,13 @@
   // la phrase du niveau I quand le pluriel ne convient pas.
   const FORM_MIN = 2;
   const FORMATIONS = {
-    vie: { front: 'Ils gagnent +{n}/+{n}.', back: 'Après chaque attaque de votre avant, l’attaquant récupère {n} PV.' },
+    vie: { front: 'Ils gagnent +{n}/+{n}.', back: 'Après chaque attaque de votre avant, l’attaquant récupère {d} PV.' },
     neant: { front: 'Quand l’un d’eux s’effondre, les autres gagnent +{n}/+{n}.', back: 'Quand un astre de votre avant s’effondre, ils gagnent +{n}/+{n}.' },
-    envers: { front: 'Les {n} premiers gagnent Renaissance.', front1: 'Le premier gagne Renaissance.', back: 'Les {n} ennemis de l’avant les plus offensifs échangent leur Attaque et leurs PV (s’ils ont plus d’Attaque que de PV).', back1: 'L’ennemi de l’avant le plus offensif échange son Attaque et ses PV (s’il a plus d’Attaque que de PV).' },
-    brasier: { front: 'Chacun inflige {n} dégâts à l’ennemi en face.', back: 'Inflige {d} dégâts à l’ennemi de l’avant qui a le moins de PV.' },
-    glace: { front: 'Les {n} premiers gagnent Bouclier.', front1: 'Le premier gagne Bouclier.', back: 'Les ennemis de l’avant perdent {n} Attaque.' },
-    tempete: { front: 'Après chacune de leurs attaques, ils gagnent +{n} Attaque.', back: 'Vos astres de l’avant gagnent +{n} Attaque.' },
-    mineral: { front: 'Ils gagnent +0/+{d} ; le plus robuste gagne Rempart.', back: 'Vos astres de l’avant gagnent +0/+{d}.' },
+    envers: { front: 'Ils gagnent +{n}/+{n} ; les {n} premiers gagnent Renaissance.', front1: 'Ils gagnent +{n}/+{n} ; le premier gagne Renaissance.', back: 'Les {n} ennemis de l’avant les plus offensifs échangent leur Attaque et leurs PV (s’ils ont plus d’Attaque que de PV).', back1: 'L’ennemi de l’avant le plus offensif échange son Attaque et ses PV (s’il a plus d’Attaque que de PV).' },
+    brasier: { front: 'Chacun inflige {d} dégâts à l’ennemi en face.', back: 'Inflige {d} dégâts à l’ennemi de l’avant qui a le moins de PV.' },
+    glace: { front: 'Ils gagnent +{n}/+{n} ; les {n} premiers gagnent Bouclier.', front1: 'Ils gagnent +{n}/+{n} ; le premier gagne Bouclier.', back: 'Les ennemis de l’avant perdent {d} Attaque.' },
+    tempete: { front: 'Ils gagnent +{n}/+{d}, puis +{n} Attaque après chacune de leurs attaques.', back: 'Vos astres de l’avant gagnent +{n}/+{d}, et le premier Rafale.' },
+    mineral: { front: 'Ils gagnent +{n}/+{d} ; le plus robuste gagne Rempart.', back: 'Vos astres de l’avant gagnent +{n}/+{d}.' },
     machine: { front: 'Ils gagnent +{d} Attaque.', back: 'Chacun donne ses mots-clés et +{n}/+{n} à l’astre de l’avant juste devant lui.' },
     lune: { front: 'Leurs voisins de rangée gagnent +{n}/+{n}.', back: 'L’astre de l’avant juste devant chacune gagne +{d}/+{d}.' },
     comete: { front: 'Ils gagnent +{n} Attaque et attaquent avant le reste de l’avant.', back: 'Quand votre avant est tombé, ils avancent avec +{d}/+{n}.' },
@@ -80,7 +80,33 @@
     megarafale: { name: 'Méga-rafale', text: 'Attaque quatre fois.' },
     renaissance: { name: 'Renaissance', text: 'Revient une fois avec 1 PV après s’être effondré.' },
     venin: { name: 'Venin', text: 'Détruit tout astre qu’il blesse en attaquant.' },
-    arrimage: { name: 'Arrimage', text: 'Peut se poser sur une Machine pour lui donner ses statistiques et ses mots-clés.' }
+    arrimage: { name: 'Arrimage', text: 'Peut se poser sur une Machine pour lui donner ses statistiques et ses mots-clés.' },
+    // Mots-clés de position (v70) : l'arrière a son rôle.
+    portee: { name: 'Portée', text: 'Attaque aussi depuis l’arrière, sans subir de riposte.' },
+    percee: { name: 'Percée', text: 'Frappe l’arrière ennemi en priorité, sauf si une Garde tient l’avant ennemi.' },
+    garde: { name: 'Garde', text: 'Tant qu’il tient à l’avant, l’ennemi ne peut pas frapper votre arrière avec Percée.' }
+  };
+  // Les astres qui reçoivent un mot-clé de position (ajouté en tête de leur texte).
+  const POSITION_KW = {
+    portee: ['aube', 'braise', 'magma', 'geante', 'selene', 'europe', 'prisme', 'satellite', 'nimbus'],
+    percee: ['meteore', 'encke', 'ison', 'spore', 'zephyr', 'eclipse'],
+    garde: ['silex', 'basalte', 'monolithe', 'station', 'sentinelle', 'banquise', 'luna', 'titania']
+  };
+
+  // Phénomènes (v70) : des combinaisons de placement qui transforment un astre au début du combat.
+  // « Juste derrière » : l'astre de l'arrière dans la même colonne (rangées centrées, comme à
+  // l'écran) ; « entre deux » : ses deux voisins de rangée.
+  const PHENOMENA = {
+    accretion: { name: 'Accrétion', text: 'Un astre de l’avant avec un Minéral juste derrière lui grossit : +2/+5, ou +3/+7 si c’est aussi un Minéral.' },
+    trounoir: { name: 'Trou noir', text: 'Un astre du Néant à l’avant, avec un astre du Néant juste derrière lui, s’effondre en trou noir : Rempart, et +1/+1 chaque fois qu’un astre s’effondre pendant le combat.' },
+    supernova: { name: 'Supernova', text: 'Un astre du Brasier à l’avant, avec un astre du Brasier juste derrière lui, explose en s’effondrant : 4 dégâts à tous les ennemis de l’avant.' },
+    eclipse: { name: 'Éclipse', text: 'Une Lune à l’avant, avec un Soleil juste derrière elle : l’ennemi en face d’elle perd la moitié de son Attaque.' },
+    habitable: { name: 'Zone habitable', text: 'Un astre de Vie à l’avant, avec un Soleil juste derrière lui : +2/+3 et Renaissance.' },
+    queue: { name: 'Queue de comète', text: 'Une Comète à l’avant, avec une Comète juste derrière elle : Rafale et +2 Attaque.' },
+    halo: { name: 'Halo', text: 'Un astre de Glace à l’avant, avec un astre de Glace juste derrière lui : tous deux gagnent Bouclier.' },
+    jumeaux: { name: 'Jumeaux', text: 'Un astre de l’Envers à l’avant, avec un astre de l’Envers juste derrière lui : tous deux gagnent Renaissance.' },
+    prisme: { name: 'Prisme', text: 'Un Cristal entre deux Cristaux de sa rangée : +2/+2 par voisin et Bouclier.' },
+    cyclone: { name: 'Œil du cyclone', text: 'Un astre de Tempête à l’avant, avec un astre de Tempête juste derrière lui : Rafale, ou Méga-rafale s’il l’avait déjà.' }
   };
 
   // ─── Catalogue ──────────────────────────────────────────────
@@ -477,6 +503,13 @@
       text: 'Arrimage.' }
   ];
   const CARD = Object.fromEntries(CARDS.map((c) => [c.id, c]));
+  for (const [k, ids] of Object.entries(POSITION_KW)) {
+    for (const id of ids) {
+      const c = CARD[id];
+      c.kw = (c.kw || []).concat([k]);
+      c.text = KEYWORDS[k].name + '. ' + c.text;
+    }
+  }
 
   const LAWS = [
     { id: 'symbiose', fam: 'vie', name: 'Loi de symbiose', starter: 'aube', tagline: 'Tout commence par une étoile.', text: 'Fin de cycle : votre astre le plus faible gagne +1 PV.' },
@@ -484,7 +517,7 @@
     { id: 'renversement', fam: 'envers', name: 'Loi du renversement', starter: 'reflet', tagline: 'Le haut est en bas.', text: 'Pouvoir (gratuit, une fois par cycle) : inverse l’Attaque et les PV d’un de vos astres, puis il gagne +1/+1.', active: { cost: 0, target: true } },
     { id: 'combustion', fam: 'brasier', name: 'Loi de combustion', starter: 'braise', tagline: 'Brûler avant de disparaître.', text: 'Début de combat : inflige 3 dégâts à un ennemi aléatoire.' },
     { id: 'stase', fam: 'glace', name: 'Loi de stase', starter: 'nive', tagline: 'Le silence est une forteresse.', text: 'Début de combat : vos deux premiers astres gagnent Bouclier.' },
-    { id: 'vents', fam: 'tempete', name: 'Loi des vents', starter: 'brume', tagline: 'Tout ce qui bouge frappe.', text: 'Après chaque attaque, l’astre attaquant gagne +1 Attaque pour le combat.' },
+    { id: 'vents', fam: 'tempete', name: 'Loi des vents', starter: 'brume', tagline: 'Tout ce qui bouge frappe.', text: 'Après chaque attaque, l’astre attaquant gagne +1/+1 pour le combat.' },
     { id: 'gravite', fam: 'mineral', name: 'Loi de gravité', starter: 'silex', tagline: 'Ce qui pèse dure.', text: 'Fin de cycle : vos Remparts gagnent +0/+1.' },
     { id: 'marees', fam: 'lune', name: 'Loi des marées', starter: 'phobos', tagline: 'Rien ne tourne seul.', text: 'Fin de cycle : l’astre à droite de chaque Lune gagne +1 PV.' },
     { id: 'passage', fam: 'comete', name: 'Loi du passage', starter: 'meteore', tagline: 'Tout repasse un jour.', text: 'Votre première actualisation de chaque cycle est gratuite.' },
@@ -584,6 +617,49 @@
     if (!f) return '';
     const text = row ? (lvl === 1 && f.back1) || f.back : (lvl === 1 && f.front1) || f.front;
     return tr(text, { n: lvl, d: 2 * lvl });
+  }
+
+  // L'astre de l'avant juste devant un astre de l'arrière : le plus proche en colonne, rangées
+  // centrées ; à égalité, celui de gauche. front, back : listes dans l'ordre de l'écran.
+  function aheadOf(front, back, v) {
+    const xb = back.indexOf(v) - (back.length - 1) / 2;
+    let best = null, bd = 9;
+    front.forEach((u, i) => { const d = Math.abs(i - (front.length - 1) / 2 - xb); if (d < bd - 1e-9) { best = u; bd = d; } });
+    return best;
+  }
+  // Phénomènes d'un système rangé : [{ kind, unit, partner }]. unit : l'astre transformé.
+  function findPhenomena(front, back) {
+    const out = [];
+    const fam = (u) => famOf(u);
+    const sun = (u) => !!cardOf(u).sun;
+    const behind = (u) => back.filter((v) => aheadOf(front, back, v) === u);
+    for (const u of front) {
+      const bs = behind(u);
+      const with_ = (test) => bs.find(test);
+      let v;
+      if ((v = with_((b) => fam(b) === 'mineral'))) out.push({ kind: 'accretion', unit: u, partner: v });
+      if (fam(u) === 'neant' && (v = with_((b) => fam(b) === 'neant'))) out.push({ kind: 'trounoir', unit: u, partner: v });
+      if (fam(u) === 'brasier' && (v = with_((b) => fam(b) === 'brasier'))) out.push({ kind: 'supernova', unit: u, partner: v });
+      if (fam(u) === 'lune' && (v = with_(sun))) out.push({ kind: 'eclipse', unit: u, partner: v });
+      if (fam(u) === 'vie' && !sun(u) && (v = with_(sun))) out.push({ kind: 'habitable', unit: u, partner: v });
+      if (fam(u) === 'comete' && (v = with_((b) => fam(b) === 'comete'))) out.push({ kind: 'queue', unit: u, partner: v });
+      if (fam(u) === 'glace' && (v = with_((b) => fam(b) === 'glace'))) out.push({ kind: 'halo', unit: u, partner: v });
+      if (fam(u) === 'envers' && (v = with_((b) => fam(b) === 'envers'))) out.push({ kind: 'jumeaux', unit: u, partner: v });
+      if (fam(u) === 'tempete' && (v = with_((b) => fam(b) === 'tempete'))) out.push({ kind: 'cyclone', unit: u, partner: v });
+    }
+    for (const row of [front, back]) {
+      row.forEach((u, i) => {
+        const l = row[i - 1], r = row[i + 1];
+        if (!l || !r) return;
+        if (fam(u) === 'cristal' && fam(l) === 'cristal' && fam(r) === 'cristal') out.push({ kind: 'prisme', unit: u, partner: l });
+      });
+    }
+    return out;
+  }
+  // Phénomènes d'un système (pour l'écran) : [{ kind, uid, partner }].
+  function phenomenaOf(board) {
+    const [front, back] = layout(board || []);
+    return findPhenomena(front, back).map((p) => ({ kind: p.kind, uid: p.unit.uid, partner: p.partner.uid }));
   }
 
   function copiesOf(u) {
@@ -1322,6 +1398,13 @@
             for (const v of alive(s)) fire(v, 'allyDeath', u);
             if (players[s].law === 'entropie') for (const v of alive(s)) if (famOf(v) === 'neant') c.buff(v, 1, 0);
             formDeath(s, u);
+            // Trou noir : il grossit à chaque astre qui s'effondre, d'un camp comme de l'autre.
+            for (let w = 0; w < 2; w++) for (const v of alive(w)) if (v.blackhole) c.buff(v, 1, 1);
+            // Supernova : l'astre explose en s'effondrant.
+            if (u.supernova) {
+              log({ t: 'phenom', side: s, kind: 'explode', cid: u.cid });
+              for (const t of inRow(1 - s, 0)) hit(t, 4, null, 'effect');
+            }
             const k = u.killer;
             if (k && !k.dead && k.hp > 0) for (const v of alive(k.side)) fire(v, 'allyKill', k, u);
             if (u.kw.includes('renaissance') && !u.rebornUsed) {
@@ -1340,42 +1423,68 @@
       advance();
     }
 
+    // Cible : l'ennemi de l'avant en face (Remparts d'abord). Percée : l'arrière ennemi, sauf si une
+    // Garde tient l'avant. Portée depuis l'arrière : pas de riposte.
     function attackOnce(att) {
-      const front = inRow(1 - att.side, 0);
-      const enemies = front.length ? front : alive(1 - att.side);
+      const foe = 1 - att.side;
+      const front = inRow(foe, 0), back = inRow(foe, 1);
+      const pierce = att.kw.includes('percee') && back.length && !front.some((u) => u.kw.includes('garde'));
+      const enemies = pierce ? back : front.length ? front : alive(foe);
       if (!enemies.length) return;
       const walls = enemies.filter((u) => u.kw.includes('rempart'));
       const t = facing(att, walls.length ? walls : enemies);
-      log({ t: 'attack', cid: att.cid, target: t.cid });
+      const ranged = att.row === 1;
+      log({ t: 'attack', cid: att.cid, target: t.cid, ranged, pierce: !!pierce });
       const da = att.atk, dt = t.atk;
       hit(t, da, att, 'attack');
-      hit(att, dt, t, 'attack');
+      if (!ranged) hit(att, dt, t, 'attack');
       flush();
       fire(att, 'attack', t);
       for (const v of alive(att.side)) fire(v, 'allyAttack', att, t);
-      if (players[att.side].law === 'vents' && !att.dead) c.buff(att, 1, 0);
+      if (players[att.side].law === 'vents' && !att.dead) c.buff(att, 1, 1);
       if (!att.dead && att.hp > 0) {
         const f = att.form;
         if (f && f.fam === 'tempete' && f.row === 0) c.buff(att, f.lvl, 0);
         const vie = forms[att.side].find((g) => g.fam === 'vie' && g.row === 1);
-        if (vie && att.row === 0) c.heal(att, vie.lvl);
+        if (vie && att.row === 0) c.heal(att, 2 * vie.lvl);
       }
       flush();
       resolveDeaths();
     }
 
-    // Seul l'avant attaque, de gauche à droite (une formation de Comètes passe devant).
+    // L'avant attaque de gauche à droite (une formation de Comètes passe devant), puis les astres
+    // de l'arrière qui ont Portée.
     function nextAttacker(s) {
       const able = inRow(s, 0).filter((u) => u.atk > 0);
-      if (!able.length) return null;
+      const shooters = inRow(s, 1).filter((u) => u.atk > 0 && u.kw.includes('portee'));
+      if (!able.length && !shooters.length) return null;
       const quick = (u) => u.form && u.form.fam === 'comete' && u.form.row === 0;
-      const order = able.filter(quick).concat(able.filter((u) => !quick(u)));
+      const order = able.filter(quick).concat(able.filter((u) => !quick(u)), shooters);
       let cand = order.find((u) => !u.attacked);
       if (!cand) {
         for (const u of alive(s)) u.attacked = false;
         cand = order[0];
       }
       return cand;
+    }
+
+    function applyPhenomenon(s, p) {
+      const u = p.unit, v = p.partner;
+      if (u.dead || u.hp <= 0) return;
+      log({ t: 'phenom', side: s, kind: p.kind, cid: u.cid, partner: v.cid });
+      switch (p.kind) {
+        case 'accretion': if (famOf(u) === 'mineral') c.buff(u, 3, 7); else c.buff(u, 2, 5); break;
+        case 'trounoir': u.blackhole = true; c.kw(u, 'rempart'); break;
+        case 'supernova': u.supernova = true; break;
+        case 'eclipse': { const t = facing(u, inRow(1 - s, 0)); if (t && t.atk > 0) c.buff(t, -Math.ceil(t.atk / 2), 0); break; }
+        case 'habitable': c.buff(u, 2, 3); c.kw(u, 'renaissance'); break;
+        case 'queue': c.kw(u, 'rafale'); c.buff(u, 2, 0); break;
+        case 'halo': c.kw(u, 'bouclier'); c.kw(v, 'bouclier'); break;
+        case 'jumeaux': c.kw(u, 'renaissance'); c.kw(v, 'renaissance'); break;
+        case 'prisme': c.buff(u, 4, 4); c.kw(u, 'bouclier'); break;
+        case 'cyclone': c.kw(u, u.kw.includes('rafale') ? 'megarafale' : 'rafale'); break;
+        default: break;
+      }
     }
 
     // Effets de formation au début du combat.
@@ -1385,20 +1494,21 @@
       if (!F.length) return;
       switch (f.fam + ':' + f.row) {
         case 'vie:0': for (const u of F) c.buff(u, L, L); break;
-        case 'envers:0': for (const u of F.slice(0, L)) c.kw(u, 'renaissance'); break;
+        case 'envers:0': for (const u of F) c.buff(u, L, L); for (const u of F.slice(0, L)) c.kw(u, 'renaissance'); break;
         case 'envers:1': for (const u of inRow(e, 0).filter((v) => v.atk > v.hp).sort((x, y) => y.atk - x.atk).slice(0, L)) c.swap(u); break;
-        case 'brasier:0': for (const u of F) c.dmg(u, facing(u, inRow(e, 0)), L); break;
+        case 'brasier:0': for (const u of F) c.dmg(u, facing(u, inRow(e, 0)), d); break;
         case 'brasier:1': { const t = inRow(e, 0).sort((x, y) => x.hp - y.hp)[0]; if (t) c.dmg(F[0], t, d); break; }
-        case 'glace:0': for (const u of F.slice(0, L)) c.kw(u, 'bouclier'); break;
-        case 'glace:1': for (const u of inRow(e, 0)) if (u.atk > 0) c.buff(u, -Math.min(L, u.atk), 0); break;
-        case 'tempete:1': for (const u of inRow(s, 0)) c.buff(u, L, 0); break;
-        case 'mineral:0': { for (const u of F) c.buff(u, 0, d); c.kw(F.slice().sort((x, y) => y.hp - x.hp)[0], 'rempart'); break; }
-        case 'mineral:1': for (const u of inRow(s, 0)) c.buff(u, 0, d); break;
+        case 'glace:0': for (const u of F) c.buff(u, L, L); for (const u of F.slice(0, L)) c.kw(u, 'bouclier'); break;
+        case 'glace:1': for (const u of inRow(e, 0)) if (u.atk > 0) c.buff(u, -Math.min(d, u.atk), 0); break;
+        case 'tempete:1': { const fr = inRow(s, 0); for (const u of fr) c.buff(u, L, d); if (fr[0]) c.kw(fr[0], 'rafale'); break; }
+        case 'mineral:0': { for (const u of F) c.buff(u, L, d); c.kw(F.slice().sort((x, y) => y.hp - x.hp)[0], 'rempart'); break; }
+        case 'mineral:1': for (const u of inRow(s, 0)) c.buff(u, L, d); break;
         case 'machine:0': for (const u of F) c.buff(u, d, 0); break;
         case 'machine:1': for (const u of F) { const t = ahead(u); if (!t) continue; for (const k of u.kw) if (k !== 'arrimage') c.kw(t, k); c.buff(t, L, L); } break;
         case 'lune:0': for (const u of F) for (const v of c.neighbors(u)) c.buff(v, L, L); break;
         case 'lune:1': for (const u of F) c.buff(ahead(u), d, d); break;
         case 'comete:0': for (const u of F) c.buff(u, L, 0); break;
+        case 'tempete:0': for (const u of F) c.buff(u, L, d); break;
         case 'cristal:0': { const k = forms[s].some((g) => g.fam === 'cristal' && g.row === 1) ? 2 * L : L; for (const u of F) c.buff(u, k, k); break; }
         case 'cristal:1': for (const u of c.alliesFam(s, 'cristal')) c.buff(u, L, L); break;
         case 'anomalie:0': for (const u of F) for (let i = 0; i < L; i++) c.randomKw(u); break;
@@ -1418,6 +1528,11 @@
       if (p.law === 'chaos') { log({ t: 'law', side: s, law: p.law }); c.randomKw(c.rnd(alive(s))); }
       if (p.law === 'stase' && first) { log({ t: 'law', side: s, law: p.law }); for (const u of alive(s).slice(0, 2)) c.kw(u, 'bouclier'); }
     }
+    // Phénomènes : repérés pour les deux camps, puis ils transforment leurs astres.
+    const phen = [0, 1].map((s) => findPhenomena(inRow(s, 0), inRow(s, 1)));
+    for (const s of [turn, 1 - turn]) for (const p of phen[s]) applyPhenomenon(s, p);
+    flush();
+    resolveDeaths();
     // Les formations sont comptées pour les deux camps avant d'agir.
     for (const s of [0, 1]) {
       forms[s] = groupForms(alive(s));
@@ -1559,6 +1674,9 @@
     if (u.kw.includes('bouclier')) v += 3;
     if (u.kw.includes('venin') || u.kw.includes('rafale') || u.kw.includes('megarafale')) v += 4;
     if (u.kw.includes('renaissance')) v += 2;
+    if (u.kw.includes('garde')) v += 5;
+    if (u.kw.includes('percee')) v += 2;
+    if (u.kw.includes('portee')) v -= 9;
     if (typeof c.allyDeath === 'function') v -= 6;
     return v;
   }
@@ -1584,10 +1702,26 @@
       out.push(build(rest, k));
     }
     const seen = new Set();
-    return out.filter((front) => { const key = front.map((u) => u.uid).sort().join(','); if (seen.has(key)) return false; seen.add(key); return true; });
+    return out.filter((front) => { const key = front.map((u) => u.uid).sort().join(','); if (seen.has(key)) return false; seen.add(key); return true; })
+      .map((front) => alignPhenomena(front, board.filter((u) => !front.includes(u))));
   }
-  function applyPlacement(p, front) {
-    const back = p.board.filter((u) => !front.includes(u));
+  // L'ordre des deux rangées qui déclenche le plus de phénomènes (à égalité : l'ordre d'origine).
+  function perms(list) {
+    if (list.length <= 1) return [list.slice()];
+    const out = [];
+    list.forEach((x, i) => { for (const p of perms(list.slice(0, i).concat(list.slice(i + 1)))) out.push([x].concat(p)); });
+    return out;
+  }
+  function alignPhenomena(front, back) {
+    let best = [front, back], top = findPhenomena(front, back).length;
+    for (const f of perms(front)) for (const b of perms(back)) {
+      const n = findPhenomena(f, b).length;
+      if (n > top) { top = n; best = [f, b]; }
+    }
+    return best;
+  }
+  function applyPlacement(p, place) {
+    const [front, back] = place;
     for (const u of front) u.row = 0;
     for (const u of back) u.row = 1;
     p.board = front.concat(back);
@@ -1601,11 +1735,11 @@
     if (expert(p) && state.round >= 2 && cands.length > 1) {
       const nOpp = state.players.length <= 2 ? 1 : 2;
       let top = -Infinity;
-      for (const front of cands) {
-        const back = p.board.filter((u) => !front.includes(u));
+      for (const place of cands) {
+        const [front, back] = place;
         const board = front.map((u) => Object.assign({}, u, { row: 0 })).concat(back.map((u) => Object.assign({}, u, { row: 1 })));
         const sc = simScore(state, p, board, nOpp);
-        if (sc > top + 1e-9) { top = sc; best = front; }
+        if (sc > top + 1e-9) { top = sc; best = place; }
       }
     }
     applyPlacement(p, best);
@@ -1919,7 +2053,7 @@
   }
 
   return {
-    rollCost, DUEL, isDuel, rewardsOf, ROW_MAX, FORM_MIN, FORMATIONS, formationsOf, formText, layout, arrange, rowOf, move, botArrange, LEGEND_SHOP, LEGEND_DISCOVER, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
+    rollCost, DUEL, isDuel, rewardsOf, ROW_MAX, FORM_MIN, FORMATIONS, formationsOf, formText, PHENOMENA, phenomenaOf, POSITION_KW, layout, arrange, rowOf, move, botArrange, LEGEND_SHOP, LEGEND_DISCOVER, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
     FAMILIES, FAMILY_KEYS, KEYWORDS, CARDS, CARD, LAWS, LAW,
     cardOf, famOf, cardText, upgradeCost, lawChoices, newGame, alivePlayers,
     buy, canBuy, play, canMagnet, sell, roll, freeze, upgrade, reorder, usePower, canUsePower, choose, endTurn,
