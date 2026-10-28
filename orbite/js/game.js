@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 76;
+  const VERSION = 77;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -78,7 +78,8 @@
     // Mots-clés de position : Portée (une cible), Percée (une flèche qui plonge), Garde (une tour).
     range: ['..X..', '.X.X.', 'X.X.X', '.X.X.', '..X..'],
     pierce: ['..X..', '..X..', 'X.X.X', '.XXX.', '..X..'],
-    guard: ['X.X.X', 'XXXXX', 'X...X', 'XX.XX', 'XXXXX']
+    guard: ['X.X.X', 'XXXXX', 'X...X', 'XX.XX', 'XXXXX'],
+    chat: ['.XXXXX.', 'X.....X', 'X.X.X.X', 'X.....X', '.XXXXX.', '.X.....', 'X......']
   };
   function icon(name, cls) {
     const g = ICONS[name];
@@ -748,6 +749,9 @@
   function stopAmbient() { if (ambient) clearInterval(ambient); ambient = null; }
 
   async function enterMenu(first) {
+    // Au menu, aucune action de partie n'est en cours (une partie en ligne coupée en plein combat
+    // ne doit pas bloquer les boutons des Paramètres).
+    ui.busy = false;
     applyWorld();
     renderMenu();
     layoutMenu();
@@ -778,6 +782,7 @@
   }
 
   async function backToMenu() {
+    ui.busy = false;
     renderMenu();
     applyWorld();
     layoutMenu();
@@ -2620,7 +2625,10 @@
     const b = e.target.closest('[data-act]');
     if (!b || b.disabled) return;
     const act = b.dataset.act;
-    if (ui.busy && act !== 'choose' && act !== 'close' && act !== 'rival') return;
+    // Pendant un combat (en ligne, on ne peut pas le passer), le son et l'aide restent accessibles ;
+    // quitter la partie attend la fin du combat. Les Paramètres ne dépendent jamais d'une partie.
+    const anytime = act === 'choose' || act === 'close' || act === 'rival' || act === 'set' || (act === 'menu' && (b.dataset.v === 'sound' || b.dataset.v === 'help'));
+    if (ui.busy && !anytime) { if (act === 'menu') toast(tr('Possible à la fin du combat.'), 1800); return; }
     if (act === 'buy') {
       const slot = Number(b.dataset.slot);
       const el = [...$('shop').children].find((x) => Number(x.dataset.slot) === slot);

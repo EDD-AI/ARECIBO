@@ -27,7 +27,18 @@
     const box = $('mpBody');
     if (!box) return;
     const typed = $('mpCode') ? $('mpCode').value : '';
-    const shadow = { set innerHTML(h) { if (h !== st.last) { st.last = h; box.innerHTML = h; if ($('mpCode') && typed) $('mpCode').value = typed; } } };
+    // Le message en cours d'écriture survit aux nouveaux messages reçus.
+    const chatIn = box.querySelector('.chat-input'), said = chatIn ? chatIn.value : '', focused = chatIn && document.activeElement === chatIn;
+    const shadow = { set innerHTML(h) {
+      if (h === st.last) return;
+      st.last = h;
+      box.innerHTML = h;
+      if ($('mpCode') && typed) $('mpCode').value = typed;
+      const c = box.querySelector('.chat-input');
+      if (c && said) c.value = said;
+      if (c && focused) c.focus();
+      if (window.OrbiteChat) window.OrbiteChat.scrollDown();
+    } };
     draw(shadow);
     // Invitation reçue par lien : une fois connecté et la progression en ligne réglée (sa récupération
     // recharge la page), on rejoint la partie de son ami tout seul. Le code ne quitte la session
@@ -87,7 +98,8 @@
     box.innerHTML = `<div class="mp-card">${head}</div>
       <div class="mp-seats">${seats}</div>
       <div class="sheet-actions">${host && m.mode === 'private' ? `<button class="btn primary" data-mp="start">${tr('LANCER LA PARTIE')} · ${m.uids.length}/${n}</button>` : ''}
-      <button class="btn" data-mp="leave">${tr('QUITTER')}</button></div>`;
+      <button class="btn" data-mp="leave">${tr('QUITTER')}</button></div>
+      ${window.OrbiteChat ? `<div class="mp-card"><b>${tr('DISCUSSION')}</b>${window.OrbiteChat.html(20)}</div>` : ''}`;
   }
   // Choix de la loi : trois lois parmi les familles de la partie ; 20 s pour choisir.
   function renderLaws(box) {

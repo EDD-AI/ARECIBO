@@ -38,7 +38,11 @@
   };
   const fire = () => { const f = ON.fire(); if (!f || !ON.uid()) throw new Error(tr('Connectez-vous avec Google pour jouer en ligne.')); return f; };
   const uid = () => ON.uid();
-  const notify = () => { if (M.onChange) try { M.onChange(M); } catch (err) { console.error(err); } };
+  const notify = () => {
+    if (M.onChange) try { M.onChange(M); } catch (err) { console.error(err); }
+    // La discussion (js/chat.js) suit aussi le salon.
+    try { window.dispatchEvent(new Event('orbite-match')); } catch (err) { /* sans importance */ }
+  };
   const now = () => Date.now();
   const pseudo = () => String(localStorage.getItem('orbite.pseudo') || tr('Créateur')).slice(0, 16);
   function myPoints() { try { const c = K.sanitize(JSON.parse(localStorage.getItem('orbite.classe') || 'null')); return K.placed(c) ? c.points : 0; } catch (err) { return 0; } }
@@ -174,6 +178,22 @@
     crypto.getRandomValues(a);
     const seed = (seatsOf(m) === 2 ? DUEL_MARK : '') + 'MP' + a[0].toString(16).toUpperCase() + a[1].toString(16).toUpperCase();
     try { const { fs } = fire(); await fs.updateDoc(ref(M.mid), { status: 'playing', seed, startAt: now() }); } catch (err) { A.refuse(err.message); }
+  }
+
+  // ─── Discussion ─────────────────────────────────────────────
+  // Les derniers messages vivent dans le salon (champ chat), que ses membres peuvent modifier : pas
+  // de nouvelle règle Firestore à publier. Un message : { id, uid, name, at, q } (message rapide,
+  // affiché dans la langue de chacun) ou { …, text } (texte libre, parties privées seulement).
+  const CHAT_MAX = 40;
+  async function say(msg) {
+    if (!M.mid) return;
+    const { db, fs } = fire();
+    const entry = Object.assign({ id: uid().slice(0, 6) + now().toString(36), uid: uid(), name: pseudo(), at: now() }, msg);
+    await fs.runTransaction(db, async (t) => {
+      const d = await t.get(ref(M.mid));
+      if (!d.exists()) return;
+      t.update(ref(M.mid), { chat: (d.data().chat || []).concat([entry]).slice(-CHAT_MAX) });
+    });
   }
 
   // ─── Partie ─────────────────────────────────────────────────
@@ -350,7 +370,7 @@
 
   window.OrbiteMulti = {
     get state() { return M; },
-    searchRanked, createPrivate, joinCode, start, leave, newState, lawChoices, endTurn, startRound, stopRound, isHost,
+    searchRanked, createPrivate, joinCode, start, leave, newState, lawChoices, endTurn, startRound, stopRound, isHost, say,
     SEATS, seatsOf, WAIT_MS, LAW_MS
   };
 })();

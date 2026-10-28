@@ -650,6 +650,16 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
   la v68. Si les règles publiées sont plus anciennes et refusent ce champ, le salon est recréé
   sans lui (v75) : la graine du duel commence par « D », ce qui suffit à le reconnaître. Le duel
   entre amis marche donc sans republier les règles.
+- **Discussion** (v77, `js/chat.js`) : dans le salon d’attente et pendant la partie (bouton bulle en
+  haut, à côté du minuteur, avec une pastille quand un message arrive et un aperçu en bas de
+  l’écran). Six messages rapides (« Bonne chance ! », « Bien joué ! », « Aïe ! », « Joli combo ! »,
+  « GG », « Revanche ? »), affichés dans la langue de chacun ; texte libre (120 caractères) seulement
+  entre amis, en partie privée. Un message par seconde au plus. Les 40 derniers messages vivent dans
+  le salon (champ `chat` de `matches/{id}`, que ses membres peuvent modifier) : aucune règle
+  Firestore à republier.
+- **Menu de la partie pendant un combat** (v77) : couper le son et « Comment jouer » marchent même
+  en plein combat (en ligne, on ne peut pas le passer) ; quitter attend la fin du combat. Au retour
+  au menu, plus rien ne reste « occupé » : les Paramètres répondent toujours.
 - **Mêlée à 8 hors ligne** : la carte en bas de l’écran Multijoueur, sans connexion.
 - **Mêlée classée** : recherche de créateurs de votre rang.
   - La tolérance s’élargit d’un rang toutes les 10 secondes ; on rejoint le salon en attente le
