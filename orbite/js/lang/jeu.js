@@ -280,7 +280,7 @@ window.OrbiteI18n.add({
     "Se déclenche quand vous vendez l’astre.": "Triggers when you sell the orb.",
     "Faire naître de nouveaux astres dans la Création avec le bouton d’actualisation.": "Bring new orbs to life in the Creation with the refresh button.",
     "Choisissez un astre parmi trois.": "Choose one orb out of three.",
-    "Bouclier, Rafale, Venin, Renaissance ou Rempart.": "Shield, Flurry, Venom, Rebirth or Bulwark.",
+    "Bouclier, Rafale, Toxique, Renaissance ou Rempart.": "Shield, Flurry, Toxic, Rebirth or Bulwark.",
     "Les astres juste à sa gauche et à sa droite.": "The orbs just to its left and right.",
     "Un astre juste à sa gauche ou à sa droite.": "An orb just to its left or right."
   },
@@ -564,7 +564,7 @@ window.OrbiteI18n.add({
     "Se déclenche quand vous vendez l’astre.": "Se activa cuando vendes el astro.",
     "Faire naître de nouveaux astres dans la Création avec le bouton d’actualisation.": "Hacer nacer nuevos astros en la Creación con el botón de renovar.",
     "Choisissez un astre parmi trois.": "Elige un astro entre tres.",
-    "Bouclier, Rafale, Venin, Renaissance ou Rempart.": "Escudo, Ráfaga, Veneno, Renacer o Baluarte.",
+    "Bouclier, Rafale, Toxique, Renaissance ou Rempart.": "Escudo, Ráfaga, Tóxico, Renacer o Baluarte.",
     "Les astres juste à sa gauche et à sa droite.": "Los astros justo a su izquierda y a su derecha.",
     "Un astre juste à sa gauche ou à sa droite.": "Un astro justo a su izquierda o a su derecha."
   },
@@ -848,7 +848,7 @@ window.OrbiteI18n.add({
     "Se déclenche quand vous vendez l’astre.": "Wird ausgelöst, wenn du das Gestirn verkaufst.",
     "Faire naître de nouveaux astres dans la Création avec le bouton d’actualisation.": "Mit der Erneuern-Taste neue Gestirne in der Schöpfung entstehen lassen.",
     "Choisissez un astre parmi trois.": "Wähle ein Gestirn aus dreien.",
-    "Bouclier, Rafale, Venin, Renaissance ou Rempart.": "Schild, Salve, Gift, Wiedergeburt oder Bollwerk.",
+    "Bouclier, Rafale, Toxique, Renaissance ou Rempart.": "Schild, Salve, Giftig, Wiedergeburt oder Bollwerk.",
     "Les astres juste à sa gauche et à sa droite.": "Die Gestirne direkt links und rechts daneben.",
     "Un astre juste à sa gauche ou à sa droite.": "Ein Gestirn direkt links oder rechts daneben."
   },
@@ -1132,7 +1132,7 @@ window.OrbiteI18n.add({
     "Se déclenche quand vous vendez l’astre.": "É ativado quando você vende o astro.",
     "Faire naître de nouveaux astres dans la Création avec le bouton d’actualisation.": "Fazer nascer novos astros na Criação com o botão de renovar.",
     "Choisissez un astre parmi trois.": "Escolha um astro entre três.",
-    "Bouclier, Rafale, Venin, Renaissance ou Rempart.": "Escudo, Rajada, Veneno, Renascer ou Baluarte.",
+    "Bouclier, Rafale, Toxique, Renaissance ou Rempart.": "Escudo, Rajada, Tóxico, Renascer ou Baluarte.",
     "Les astres juste à sa gauche et à sa droite.": "Os astros logo à esquerda e à direita dele.",
     "Un astre juste à sa gauche ou à sa droite.": "Um astro logo à esquerda ou à direita dele."
   }

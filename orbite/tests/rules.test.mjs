@@ -143,13 +143,13 @@ test('Arrimage : une Sonde se pose sur une Machine', () => {
   invariant(s);
 });
 
-test('mots-clés en combat : Bouclier, Venin, Renaissance, Rempart', () => {
+test('mots-clés en combat : Bouclier, Toxique, Renaissance, Rempart', () => {
   const s = gameWith('envers', 'a5');
   const mk = (id, extra = {}) => Object.assign({ uid: 'x' + Math.random(), id, golden: false, atk: R.CARD[id].atk, hp: R.CARD[id].hp, kw: (R.CARD[id].kw || []).slice(), att: [] }, extra);
   const A = { id: 'A', tier: 1, law: 'symbiose', board: [mk('spore')] };
   const B = { id: 'B', tier: 1, law: 'symbiose', board: [mk('colosse')] };
   const r1 = R.fight(s, A, B, 'venin', true);
-  assert.ok(r1.events.some((e) => e.t === 'venom'), 'le Venin détruit le Colosse');
+  assert.ok(r1.events.some((e) => e.t === 'venom'), 'le Toxique détruit le Colosse');
 
   const C = { id: 'C', tier: 1, law: 'symbiose', board: [mk('nive', { atk: 1, hp: 1 })] };
   const D = { id: 'D', tier: 1, law: 'symbiose', board: [mk('errante', { atk: 5, hp: 1 })] };
@@ -422,13 +422,13 @@ test('légendaires : une par niveau, un exemplaire, rares dans la Création et l
   }
   const rate = seen / slots;
   assert.ok(rate > 0.003 && rate < 0.06, 'taux en Création : ' + rate.toFixed(3));
-  // Ouroboros renaît plus fort, avec Venin.
+  // Ouroboros renaît plus fort, avec Toxique.
   const s = R.newGame('leg-ouro', 'symbiose');
   const mk = (id, extra = {}) => Object.assign({ uid: 'x' + Math.random(), id, golden: false, atk: R.CARD[id].atk, hp: R.CARD[id].hp, kw: (R.CARD[id].kw || []).slice(), att: [] }, extra);
   const A = { id: 'A', tier: 1, law: 'symbiose', board: [mk('ouroboros')] };
   const B = { id: 'B', tier: 1, law: 'symbiose', board: [mk('silex', { atk: 9, hp: 40 })] };
   const r = R.fight(s, A, B, 'ouro', true);
-  assert.ok(r.events.some((e) => e.t === 'kw' && e.k === 'venin'), 'Venin gagné à la renaissance');
+  assert.ok(r.events.some((e) => e.t === 'kw' && e.k === 'venin'), 'Toxique gagné à la renaissance');
   // L'Œil du Vide anéantit l'ennemi le plus faible dès le début du combat.
   const C = { id: 'C', tier: 1, law: 'symbiose', board: [mk('oeilvide')] };
   const D = { id: 'D', tier: 1, law: 'symbiose', board: [mk('silex', { atk: 1, hp: 50 }), mk('errante', { atk: 1, hp: 60 })] };

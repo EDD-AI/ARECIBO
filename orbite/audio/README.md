@@ -19,7 +19,7 @@ grotte et un placement gauche/droite selon la planète concernée.
 | `pluck1`, `pluck2` | Interface Sounds · pluck_001, pluck_002 | bonus, planète soulevée |
 | `glass1`–`glass6` | Interface Sounds · glass_001 à glass_006 | carillons (niveau, doré, victoire), gel, bouclier, cristaux de l’ambiance |
 | `confirm`, `down` | Interface Sounds · confirmation_004, minimize_008 | victoire, défaite |
-| `scratch` | Interface Sounds · scratch_005 | venin |
+| `scratch` | Interface Sounds · scratch_005 | toxique |
 | `roll` | Interface Sounds · scroll_002 (0,55 s) | actualiser la taverne |
 | `place1`–`place4` | Starter Kit City Builder · placement-a à d | planète posée, impacts, ouverture et fermeture des fiches (joués plus aigus) |
 | `crumble1`–`crumble4` | Starter Kit City Builder · removal-a à d | vente, gros impacts, destruction |
