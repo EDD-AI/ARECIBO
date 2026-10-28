@@ -13,7 +13,7 @@
   class Stage {
     constructor(canvas, catalog) {
       this.canvas = canvas;
-      this.r = new OP.Renderer(canvas, { transparent: true });
+      this.r = new OP.Renderer(canvas, { transparent: true, async: true });
       this.catalog = catalog;
       this.genomes = new Map();
       this.looks = {};
@@ -274,7 +274,7 @@
 
     restore() {
       try {
-        this.r = new OP.Renderer(this.canvas, { transparent: true });
+        this.r = new OP.Renderer(this.canvas, { transparent: true, async: true });
         this.fit();
         this.lost = false;
       } catch (err) { /* contexte encore indisponible : nouvel essai au prochain retour */ }

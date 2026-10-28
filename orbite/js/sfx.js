@@ -533,10 +533,17 @@
       play('glass4', { vol: 0.3, rate: 0.75, rev: 1.2, delay: 0.38 });
       if (big) { play('glass1', { vol: 0.26, rate: 0.6, rev: 1.4, delay: 0.55 }); chime([0.5, 0.75, 1], { vol: 0.22, rev: 1, delay: 0.7 }); }
     },
-    // Fusion dorée : un chœur d'âmes monte pendant que les trois astres convergent (« ou… »), s'ouvre
-    // sur l'éclat doré (« aah ») avec une couronne de cristaux et un halo aigu, puis s'éteint dans
-    // l'espace. Accord majeur sur la note du cristal (glass1 ≈ 1922 Hz, trois octaves plus bas).
+    // Récompense dorée (boosts, succès, campagne…) : carillon de cristal.
     golden() {
+      if (!buffers.glass1) { [784, 988, 1175, 1568, 1976].forEach((f, i) => tone(f, 0.16, { delay: i * 0.06, type: 'triangle', vol: 0.07 })); return; }
+      chime([1, 1.26, 1.5, 2, 2.52], { vol: 0.3, rev: 0.6, step: 0.065 });
+      play('glass4', { vol: 0.28, rate: 0.9, rev: 1, delay: 0.32 });
+    },
+    // Fusion dorée (trois exemplaires), et elle seule : un chœur d'âmes monte pendant que les trois
+    // astres convergent (« ou… »), s'ouvre sur l'éclat doré (« aah ») avec une couronne de cristaux
+    // et un halo aigu, puis s'éteint dans l'espace. Accord majeur sur la note du cristal (glass1 ≈
+    // 1922 Hz, trois octaves plus bas).
+    fusion() {
       const root = 240;
       choir([1, 1.25, 1.5, 2, 2.5].map((k) => root * k), { vol: 0.14, rise: 0.95, hold: 0.55, fall: 1.9, rev: 1.1 });
       choir([root * 4, root * 6], { vol: 0.035, delay: 0.9, rise: 0.25, hold: 0.4, fall: 1.6, rev: 1.4 });
