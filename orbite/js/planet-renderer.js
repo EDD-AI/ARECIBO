@@ -1218,7 +1218,13 @@ void main() {
   const FS_BLIT = HEAD + COMMON + `
 uniform sampler2D uTex;
 uniform vec2 uRes;
-void main() { outColor = fin(texture(uTex, gl_FragCoord.xy / uRes).rgb); }
+uniform float uSat;
+// uSat : saturation du fond (1 = couleurs d'origine, 0 = gris) ; en partie, on l'adoucit.
+void main() {
+  vec3 c = texture(uTex, gl_FragCoord.xy / uRes).rgb;
+  c = mix(vec3(dot(c, vec3(0.299, 0.587, 0.114))), c, uSat);
+  outColor = fin(c);
+}
 `;
 
   // ─── Utilitaires GL ──────────────────────────────────────────
@@ -1820,6 +1826,7 @@ void main() { outColor = fin(texture(uTex, gl_FragCoord.xy / uRes).rgb); }
       gl.bindTexture(gl.TEXTURE_2D, this.skyTex);
       gl.uniform1i(this.loc(pb, 'uTex'), 0);
       gl.uniform2f(this.loc(pb, 'uRes'), this.W, this.H);
+      gl.uniform1f(this.loc(pb, 'uSat'), st.sat == null ? 1 : st.sat);
       this.quad();
     }
 

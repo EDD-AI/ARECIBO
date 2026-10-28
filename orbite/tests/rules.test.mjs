@@ -435,3 +435,25 @@ test('légendaires : une par niveau, un exemplaire, rares dans la Création et l
   const r2 = R.fight(s, C, D, 'oeil', true);
   assert.ok(r2.events.some((e) => e.t === 'hit' && e.n >= 99), 'coup de 99');
 });
+
+test('appariements façon Battlegrounds : adversaire annoncé, pas de revanche immédiate', () => {
+  let fights = 0, rematch = 0;
+  for (let g = 0; g < 30; g++) {
+    const s = R.newGame('BG' + g, R.LAWS[g % R.LAWS.length].id, {});
+    const me = s.players[0];
+    let last = null, guard = 0;
+    while (!s.over && guard++ < 60) {
+      const next = R.nextOpponent(s);
+      const alive = R.alivePlayers(s).length;
+      R.botTurn(s, me);
+      const res = R.endTurn(s);
+      if (!res.battle) continue;
+      assert.equal(res.battle.opponent.id, next.id, 'le prochain adversaire annoncé est bien celui du combat');
+      fights++;
+      if (alive >= 4 && res.battle.opponent.id === last) rematch++;
+      last = res.battle.opponent.id;
+    }
+  }
+  assert.ok(fights > 100);
+  assert.equal(rematch, 0, 'jamais le même adversaire deux fois de suite tant que 4 univers ou plus sont en vie');
+});
