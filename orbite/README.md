@@ -1024,7 +1024,7 @@ découverte en glisse un parmi ses choix dans 7 % des cas. On en croise un dans 
 | Niveau | Légendaire | Famille | Stats | Pouvoir |
 |---|---|---|---|---|
 | 1 | Primordia | Vie | 2/3 | Fin de cycle : tous vos autres astres gagnent +1 PV |
-| 2 | Ouroboros | Envers | 3/3 | Renaissance ; en revenant, il gagne +3/+3 et Venin |
+| 2 | Ouroboros | Envers | 3/3 | Renaissance ; en revenant, il gagne +3/+3 et Toxique |
 | 3 | Œil du Vide | Néant | 4/6 | Début de combat et Effondrement : anéantit l’ennemi le plus faible (99 dégâts) |
 | 4 | Maelström | Tempête | 5/7 | Rafale ; après chacune de ses attaques, tous vos astres gagnent +1/+1 |
 | 5 | Grand Attracteur | Neutre | 5/7 | Début de combat : chaque ennemi perd 1/1, il gagne tout ce qu’il a volé |
@@ -1146,7 +1146,7 @@ astres au hasard passe de 45 % à 34 % de victoires.
 |---|---|
 | Vie | Les Soleils font grandir les mondes *Habitables* à chaque fin de cycle (le « système de vie ») |
 | Néant | Trous noirs et planètes mortes : chaque effondrement nourrit les autres |
-| Envers | Le monde à l’envers : Renaissance, Venin, inversion Attaque/PV (planètes retournées) |
+| Envers | Le monde à l’envers : Renaissance, Toxique, inversion Attaque/PV (planètes retournées) |
 | Brasier | Lave et étoiles rouges : dégâts dès le début du combat |
 | Glace | Boucliers, et de la force quand ils se brisent |
 | Tempête | Géantes gazeuses : Rafale et attaque qui monte |
@@ -1157,7 +1157,7 @@ astres au hasard passe de 45 % à 34 % de victoires.
 | Cristal | Résonance : chaque Cristal joué renforce les autres (loi de résonance) |
 | Anomalies | Le hasard : astres aléatoires en main ou invoqués, découvertes, mots-clés aléatoires (loi du chaos) |
 
-Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Venin, Arrimage.
+Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Toxique, Arrimage.
 
 ## Structure
 

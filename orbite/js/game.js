@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 77;
+  const VERSION = 78;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -2543,7 +2543,7 @@
     'actualisez': 'Faire naître de nouveaux astres dans la Création avec le bouton d’actualisation.',
     'actualisation': 'Faire naître de nouveaux astres dans la Création avec le bouton d’actualisation.',
     'découvrez': 'Choisissez un astre parmi trois.',
-    'mot-clé aléatoire': 'Bouclier, Rafale, Venin, Renaissance ou Rempart.',
+    'mot-clé aléatoire': 'Bouclier, Rafale, Toxique, Renaissance ou Rempart.',
     'voisins': 'Les astres juste à sa gauche et à sa droite.',
     'voisin': 'Un astre juste à sa gauche ou à sa droite.'
   };

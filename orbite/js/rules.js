@@ -58,7 +58,7 @@
   const FAMILIES = {
     vie: { name: 'Vie', color: '#5fd35a', text: 'Les Soleils font grandir les mondes Habitables à chaque fin de cycle.' },
     neant: { name: 'Néant', color: '#9a6bff', text: 'Trous noirs et planètes mortes : chaque effondrement nourrit les autres.' },
-    envers: { name: 'Envers', color: '#ff4f6d', text: 'Le monde à l’envers : Renaissance, Venin et inversion des statistiques.' },
+    envers: { name: 'Envers', color: '#ff4f6d', text: 'Le monde à l’envers : Renaissance, Toxique et inversion des statistiques.' },
     brasier: { name: 'Brasier', color: '#ff8a2a', text: 'Lave et étoiles rouges : des dégâts avant même le premier coup.' },
     glace: { name: 'Glace', color: '#8be6ff', text: 'Boucliers de glace, et de la force quand ils se brisent.' },
     tempete: { name: 'Tempête', color: '#2fd6b0', text: 'Géantes gazeuses : Rafale et attaque qui monte à chaque coup.' },
@@ -79,7 +79,7 @@
     rafale: { name: 'Rafale', text: 'Attaque deux fois.' },
     megarafale: { name: 'Méga-rafale', text: 'Attaque quatre fois.' },
     renaissance: { name: 'Renaissance', text: 'Revient une fois avec 1 PV après s’être effondré.' },
-    venin: { name: 'Venin', text: 'Détruit tout astre qu’il blesse en attaquant.' },
+    venin: { name: 'Toxique', text: 'Détruit tout astre qu’il blesse en attaquant.' },
     arrimage: { name: 'Arrimage', text: 'Peut se poser sur une Machine pour lui donner ses statistiques et ses mots-clés.' },
     // Mots-clés de position (v70) : l'arrière a son rôle.
     portee: { name: 'Portée', text: 'Attaque aussi depuis l’arrière, sans subir de riposte.' },
@@ -185,7 +185,7 @@
       text: 'Quand un allié revient avec Renaissance, vos astres de l’Envers gagnent +{2}/+{2} pour le combat.',
       allyReborn(c, u, m) { for (const v of c.alliesFam(u.side, 'envers')) c.buff(v, 2 * m, 2 * m); } },
     { id: 'spore', fam: 'envers', tier: 3, atk: 2, hp: 4, name: 'Spore', kw: ['venin'], look: { type: 'toxic', seed: 1717, mood: 'envers', flip: true, shape: 'amas' },
-      text: 'Venin.' },
+      text: 'Toxique.' },
     { id: 'outremonde', fam: 'envers', tier: 4, atk: 5, hp: 6, name: 'Outremonde', look: { type: 'portal', seed: 1818, flip: true },
       text: 'Début de combat : inverse l’Attaque et les PV de l’ennemi le plus fort.',
       textGold: 'Début de combat : inverse l’Attaque et les PV des deux ennemis les plus forts.',
@@ -328,7 +328,7 @@
       text: 'Début de combat : vos Machines gagnent Bouclier.',
       start(c, u) { for (const v of c.alliesFam(u.side, 'machine')) c.kw(v, 'bouclier'); } },
     { id: 'oeil', fam: 'machine', tier: 6, atk: 8, hp: 10, name: 'L’Œil', kw: ['arrimage', 'rafale', 'bouclier', 'venin'], look: { type: 'mecha', seed: 6969 },
-      text: 'Arrimage. Rafale. Bouclier. Venin.' },
+      text: 'Arrimage. Rafale. Bouclier. Toxique.' },
 
     // NEUTRES
     { id: 'errante', fam: 'neutre', tier: 1, atk: 3, hp: 2, name: 'Errante', look: { type: 'asteroid', seed: 7171 },
@@ -477,7 +477,7 @@
       text: 'Fin de cycle : tous vos autres astres gagnent +{1} PV.',
       endTurn(x, u, m) { for (const v of x.others(u)) x.buff(v, 0, m); } },
     { id: 'ouroboros', fam: 'envers', tier: 2, atk: 3, hp: 3, name: 'Ouroboros', legend: true, kw: ['renaissance'], look: { type: 'portal', seed: 8202, mood: 'envers', flip: true, ring: true },
-      text: 'Renaissance. Quand il revient, il gagne +{3}/+{3} et Venin.',
+      text: 'Renaissance. Quand il revient, il gagne +{3}/+{3} et Toxique.',
       reborn(c, u, m) { c.buff(u, 3 * m, 3 * m); c.kw(u, 'venin'); } },
     { id: 'oeilvide', fam: 'neant', tier: 3, atk: 4, hp: 6, name: 'Œil du Vide', legend: true, look: { type: 'blackhole', seed: 8303, pitch: 0.5, diskScale: 1.3, hot: [[0.3, 0.14, 160], [0.52, 0.2, 170], [0.72, 0.17, 180], [0.92, 0.07, 190]] },
       text: 'Début de combat et Effondrement : anéantit l’ennemi qui a le moins de PV (99 dégâts).',
