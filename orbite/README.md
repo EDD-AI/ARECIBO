@@ -848,7 +848,11 @@ déclics mécaniques, avec une touche sci-fi discrète. Les bruitages viennent d
   planète touchée.
 - **Interface** : un déclic tiré parmi cinq (jamais deux fois le même de suite, à hauteur variable,
   parfois mêlé d’un petit caillou), survol à la souris, feuilles qui s’ouvrent, carillons de verre pour
-  les niveaux et les astres dorés, petit refus quand une action est impossible.
+  les niveaux, petit refus quand une action est impossible.
+- **Fusion dorée** (v82) : un chœur d’âmes synthétisé (`choir`, js/sfx.js) monte pendant que les
+  trois astres convergent (« ou… »), s’ouvre sur l’éclat doré (« aah ») avec une couronne de
+  cristaux et un halo aigu, puis se perd dans la réverbération. Accord majeur sur la note du
+  cristal (glass1, environ 1922 Hz), trois octaves plus bas.
 
 Les sons se chargent quand la page est servie en HTTP(S). Ouverte directement depuis un fichier,
 la page garde les anciens sons synthétisés.
@@ -868,6 +872,8 @@ l’écran à une hauteur virtuelle de 800 px (1,35 en 1080p, 1,8 en 1440p ; jam
   sont agrandis du même zoom. Les tailles calculées en JavaScript pour un écran zoomé se comptent
   en pixels virtuels (`viewW`, `viewH`) ; les bulles posées sur la page (chiffres, aide d’un astre,
   tutoriel) prennent le même zoom (`placeAt`).
+- La toile 3D, elle, compte en pixels réels : ce qu’on lui donne en pixels virtuels est multiplié
+  par `ui.z` (v82 : la ligne où la planète du menu passe sous le sol, les poussières de l’horizon).
 - Sur téléphone, rien ne change.
 
 ## Lancer
@@ -960,7 +966,8 @@ vente et l’élimination les rendent. Quand un bot joue une famille, ses astres
 
 **Trois copies** d’un même astre fusionnent en un **astre doré** (statistiques et effets
 doublés). Quand vous en possédez déjà deux, la copie présente dans la Création scintille de
-petites étoiles dorées : l’acheter déclenche la fusion. Le placer ouvre une **découverte** : un astre au choix parmi trois du niveau supérieur.
+petites étoiles dorées : l’acheter déclenche la fusion. Un astre ajouté à la main par un effet
+(Fluctuation, Multivers) fusionne de la même façon s’il complète un trio (v82). Le placer ouvre une **découverte** : un astre au choix parmi trois du niveau supérieur.
 Chaque choix est encadré de la couleur de sa famille, avec son nom. Il indique aussi « Famille de
 votre loi », ou combien d’astres de cette famille sont déjà dans votre système.
 

@@ -36,6 +36,34 @@ function gameWith(fam, seed = 'test') {
   return R.newGame(seed, law.id);
 }
 
+test('un astre ajouté à la main par Fluctuation complète un trio et fusionne', () => {
+  const s = gameWith('anomalie', 'fluct');
+  const p = s.players[0];
+  p.gold = 30;
+  const id = 'paradoxe';
+  for (let i = 0; i < 2; i++) {
+    offer(s, id);
+    const r = R.buy(s, 0);
+    assert.equal(R.play(s, r.uid, p.board.length).ok, true);
+  }
+  offer(s, 'fluctuation');
+  const f = R.buy(s, 0);
+  // Seul Paradoxe reste au niveau 1 dans la réserve : Fluctuation le tire forcément.
+  const kept = {};
+  for (const k of Object.keys(s.pool)) if (k !== id && R.CARD[k].tier === 1 && !R.CARD[k].legend) { kept[k] = s.pool[k]; s.pool[k] = 0; }
+  const played = R.play(s, f.uid, p.board.length);
+  Object.assign(s.pool, kept);
+  assert.equal(played.ok, true);
+  const ev = played.events.find((e) => e.t === 'triple');
+  assert.ok(ev, 'la fusion est annoncée');
+  assert.equal(ev.merged.length, 3);
+  assert.equal(p.board.concat(p.hand).filter((u) => u.id === id && !u.golden).length, 0);
+  const gold = p.hand.find((u) => u.id === id && u.golden);
+  assert.ok(gold);
+  assert.equal(gold.uid, ev.uid);
+  invariant(s);
+});
+
 test('nouvelle partie : 8 univers, 5 familles dont celle de la loi, réserve cohérente', () => {
   const s = gameWith('vie', 'a1');
   assert.equal(s.players.length, 8);
