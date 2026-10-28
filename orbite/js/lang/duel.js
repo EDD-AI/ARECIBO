@@ -1,4 +1,5 @@
-/* ORBITE — traductions du duel, des rangées et des formations (v68). Clé : le texte français exact.
+/* ORBITE — traductions du duel, des rangées et des formations (v68), et des crédits d'ARECIBO (v69).
+ * Clé : le texte français exact.
  * Chaque ligne : français, anglais, espagnol, allemand, portugais. */
 (function () {
   'use strict';
@@ -105,7 +106,11 @@
     ['RECHERCHE D’UN RIVAL', 'LOOKING FOR A RIVAL', 'BUSCANDO UN RIVAL', 'SUCHE NACH EINEM RIVALEN', 'PROCURANDO UM RIVAL'],
     ['Si personne n’arrive dans {n} s, un univers rival prend la place.', 'If nobody arrives within {n} s, a rival universe takes the seat.', 'Si nadie llega en {n} s, un universo rival ocupa el lugar.', 'Wenn in {n} s niemand kommt, übernimmt ein rivalisierendes Universum den Platz.', 'Se ninguém chegar em {n} s, um universo rival assume o lugar.'],
     ['DUEL ENTRE AMIS', 'DUEL BETWEEN FRIENDS', 'DUELO ENTRE AMIGOS', 'DUELL UNTER FREUNDEN', 'DUELO ENTRE AMIGOS'],
-    ['Votre ami saisit ce code dans Multijoueur → Rejoindre un ami.', 'Your friend enters this code in Multiplayer → Join a friend.', 'Tu amigo introduce este código en Multijugador → Unirse a un amigo.', 'Dein Freund gibt diesen Code unter Mehrspieler → Einem Freund beitreten ein.', 'Seu amigo digita este código em Multijogador → Entrar na partida de um amigo.']
+    ['Votre ami saisit ce code dans Multijoueur → Rejoindre un ami.', 'Your friend enters this code in Multiplayer → Join a friend.', 'Tu amigo introduce este código en Multijugador → Unirse a un amigo.', 'Dein Freund gibt diesen Code unter Mehrspieler → Einem Freund beitreten ein.', 'Seu amigo digita este código em Multijogador → Entrar na partida de um amigo.'],
+    // Crédits : musiques et sons d'ARECIBO (v69)
+    ['Thèmes du menu, créés avec Suno.', 'Menu themes, created with Suno.', 'Temas del menú, creados con Suno.', 'Menüthemen, erstellt mit Suno.', 'Temas do menu, criados com Suno.'],
+    ['MUSIQUES ET SONS D’ARECIBO', 'ARECIBO MUSIC AND SOUNDS', 'MÚSICA Y SONIDOS DE ARECIBO', 'MUSIK UND KLÄNGE VON ARECIBO', 'MÚSICAS E SONS DE ARECIBO'],
+    ['Les deux thèmes d’ARECIBO, ses nappes d’espace et de vaisseau, et ses sons d’interface (déclic, survol, texte, démarrage, allumage, erreur, jingle, alarme).', 'The two ARECIBO themes, its space and ship ambiences, and its interface sounds (click, hover, text, start, power on, error, jingle, alarm).', 'Los dos temas de ARECIBO, sus ambientes de espacio y de nave, y sus sonidos de interfaz (clic, paso del cursor, texto, inicio, encendido, error, jingle, alarma).', 'Die beiden ARECIBO-Themen, seine Weltraum- und Schiffsatmosphären und seine Oberflächenklänge (Klick, Hover, Text, Start, Einschalten, Fehler, Jingle, Alarm).', 'Os dois temas de ARECIBO, seus ambientes de espaço e de nave, e seus sons de interface (clique, passagem do cursor, texto, início, ligar, erro, jingle, alarme).']
   ];
   const langs = ['en', 'es', 'de', 'pt'];
   window.OrbiteI18n.add(Object.fromEntries(langs.map((l, i) => [l, Object.fromEntries(rows.map((r) => [r[0], r[i + 1]]))])));

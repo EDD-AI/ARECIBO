@@ -1,6 +1,6 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
 // Garder ce numéro égal à VERSION dans js/game.js et à version.json.
-const CACHE = 'orbite-v68';
+const CACHE = 'orbite-v69';
 const SHELL = [
   './',
   './index.html',
@@ -106,7 +106,27 @@ const SHELL = [
   './audio/click2.mp3',
   './audio/click3.mp3',
   './audio/click4.mp3',
-  './audio/click5.mp3'
+  './audio/click5.mp3',
+  // Musiques et sons d'ARECIBO (Studio Edda).
+  './audio/arecibo1.mp3',
+  './audio/arecibo2.mp3',
+  './audio/space1.mp3',
+  './audio/space2.mp3',
+  './audio/space3.mp3',
+  './audio/ship1.mp3',
+  './audio/ship2.mp3',
+  './audio/ship3.mp3',
+  './audio/ui-click.mp3',
+  './audio/ui-hover1.mp3',
+  './audio/ui-hover2.mp3',
+  './audio/ui-hover3.mp3',
+  './audio/ui-text.mp3',
+  './audio/ui-start.mp3',
+  './audio/ui-on.mp3',
+  './audio/ui-off.mp3',
+  './audio/ui-wrong.mp3',
+  './audio/jingle.mp3',
+  './audio/alarm.mp3'
 ];
 
 self.addEventListener('install', (e) => {

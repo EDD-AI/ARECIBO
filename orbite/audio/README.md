@@ -1,6 +1,7 @@
 # Sons d’ORBITE
 
-Tous les sons viennent de packs de **Kenney** ([kenney.nl](https://kenney.nl)), libres de droits.
+Les bruitages viennent de packs de **Kenney** ([kenney.nl](https://kenney.nl)), libres de droits ;
+les musiques, nappes et sons d’interface d’ARECIBO sont de Studio Edda (voir plus bas).
 Ils ont été coupés, normalisés et encodés en MP3 mono (96 kbit/s ; 56 kbit/s pour le vent) avec
 ffmpeg. `js/sfx.js` les joue avec un léger hasard de hauteur et de volume, une réverbération de
 grotte et un placement gauche/droite selon la planète concernée.
@@ -25,6 +26,37 @@ grotte et un placement gauche/droite selon la planète concernée.
 | `blast` | Starter Kit FPS · enemy_destroy | éclat lointain |
 | `rise` | Interface Sounds · glass_004, réverbéré puis inversé | lancement du jeu, renaissance |
 | `wind` | Starter Kit City Builder · ambience, oiseaux retirés (passe-bas), descendue d’une quarte | ambiance |
+
+## Sons d’ARECIBO (Studio Edda)
+
+Créés par Studio Edda pour ARECIBO (`assets/audio/` à la racine du dépôt), repris dans ORBITE (v69).
+Encodés avec ffmpeg :
+- musiques : volume ramené à −16 LUFS, MP3 stéréo 112 kbit/s ;
+- nappes : −24 LUFS, MP3 stéréo 64 kbit/s, 32 kHz ;
+- effets : MP3 mono 96 kbit/s ;
+- l’alarme est réduite à ses 3 premières secondes, avec un fondu.
+
+| Fichier | Origine | Usage dans le jeu |
+|---|---|---|
+| `arecibo1`, `arecibo2` | Main Title 1, Main Title 2 | musique des menus, en alternance avec « Distant Earth » et « Orbiting Wonder » |
+| `space1` | SD_AMB_SPACE_01 | nappe de la partie (achats) |
+| `space3` | SD_AMB_SPACE_03 | nappe du combat |
+| `space2` | SD_AMB_SPACE_02 | écran de fin de partie |
+| `ship1` | SD_AMB_SHIP_01 | réveil et récits (comme l’intro d’ARECIBO) |
+| `ship2` | SD_AMB_SHIP_02 | Création (forge, colonies, exploration, système) |
+| `ship3` | SD_AMB_SHIP_03 | Multijoueur (salons) |
+| `ui-click` | SD_UI_CLICK | boutons |
+| `ui-hover1`–`3` | SD_UI_HOVER_01 à 03 | survol à la souris |
+| `ui-text` | SD_UI_TEXT | sous-titres tapés |
+| `ui-start` | SD_UI_START | « Touchez pour commencer » |
+| `ui-on`, `ui-off` | SD_UI_TurnON, SD_UI_TurnOFF | ouverture et fermeture des grands écrans (Marché, Création, Profil, Multijoueur) |
+| `ui-wrong` | SD_UI_WRONG | action refusée |
+| `jingle` | SD_Jingle_Moto | victoire (1re place ou duel gagné) |
+| `alarm` | SD_AMB_ALARM (3 s) | vos PV passent sous le quart, une fois par partie |
+
+Les nappes sont lues par deux éléments audio qui se relaient en fondu de 3 s avant la fin du fichier,
+sans être décodées en mémoire (`js/sfx.js`, `setBed`). Les sons de Kenney restent les secours et
+les bruitages du jeu (impacts, cristaux, gouttes…).
 
 ## Licences
 
