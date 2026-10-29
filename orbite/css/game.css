@@ -1870,90 +1870,43 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .ph-item b { color: var(--gold); }
 
 /* ─── Crédits : le même écran que dans ARECIBO ─────────────── */
-.credits-overlay { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.78); --cr-cream: #f7ffc3; --cr-orange: #fa5a1f; }
+/* ─── Crédits (v85) : aux couleurs d'ORBITE, titre en pixels, jamais de défilement ─── */
+.credits-overlay { position: fixed; inset: 0; z-index: 80; background: #000; opacity: 0; transition: opacity 0.3s ease; }
 .credits-overlay[hidden] { display: none; }
-.credits-panel {
-  position: relative;
-  width: min(940px, calc(100vw - 28px));
-  height: min(760px, calc(100vh - 42px));
-  height: min(760px, calc(100dvh - 42px));
-  overflow: hidden;
-  background: #000;
-  border: 1px solid rgba(247, 255, 195, 0.28);
-  border-radius: 4px;
-  opacity: 0;
-  transform: scale(0.94) translateY(12px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  box-shadow: 0 0 70px rgba(0, 0, 0, 0.86), inset 0 0 54px rgba(247, 255, 195, 0.035), inset 0 0 140px rgba(0, 0, 0, 0.72);
-}
-.credits-overlay.visible .credits-panel { opacity: 1; transform: none; }
-.credits-panel::before, .credits-panel::after { content: ''; position: absolute; inset: 0; pointer-events: none; }
-.credits-panel::before {
-  z-index: 3;
-  background:
-    radial-gradient(ellipse at 50% 20%, rgba(112, 137, 255, 0.16), transparent 18%),
-    radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.58) 100%),
-    repeating-linear-gradient(0deg, rgba(247, 255, 195, 0.038) 0 1px, transparent 1px 7px);
-  mix-blend-mode: screen;
-  opacity: 0.72;
-}
-.credits-panel::after { z-index: 4; border: 1px solid rgba(247, 255, 195, 0.08); box-shadow: inset 0 0 44px rgba(0, 0, 0, 0.76); }
-.credits-space { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
-.credits-moon-wrap {
-  position: absolute;
-  left: 50%;
-  top: 17%;
-  width: clamp(58px, 8vw, 86px);
-  aspect-ratio: 1;
-  z-index: 2;
-  transform: translate(-50%, -50%);
-  filter: drop-shadow(0 0 13px rgba(216, 226, 255, 0.82)) drop-shadow(0 0 42px rgba(84, 118, 255, 0.38)) drop-shadow(0 0 96px rgba(31, 59, 180, 0.24));
-  animation: creditsMoonPulse 5.8s ease-in-out infinite;
-}
-.credits-moon { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
-@keyframes creditsMoonPulse { 0%, 100% { opacity: 0.82; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.045); } }
+.credits-overlay.visible { opacity: 1; }
+.credits-panel { position: absolute; inset: 0; overflow: hidden; }
+.credits-space { position: absolute; inset: 0; width: 100%; height: 100%; }
+.credits-close { position: absolute; z-index: 2; top: calc(var(--safe-t) + 4px); left: max(4px, calc(50% - 300px)); }
+.credits-close:hover { color: var(--ink); }
 .credits-content {
   position: absolute;
-  left: clamp(20px, 5vw, 72px);
-  right: clamp(20px, 5vw, 72px);
-  top: 30%;
-  bottom: 0;
-  padding-bottom: clamp(24px, 5vh, 60px);
-  overflow-y: auto;
-  z-index: 5;
-  color: rgba(247, 255, 195, 0.88);
-  text-shadow: 0 0 14px rgba(247, 255, 195, 0.12);
-}
-.cr-kicker { font-size: 11px; letter-spacing: 0.2em; color: var(--cr-orange); margin-bottom: 10px; text-transform: uppercase; }
-.cr-title { margin: 0; font-size: clamp(38px, 11vw, 92px); font-weight: 600; line-height: 0.86; letter-spacing: 0.04em; color: var(--cr-cream); }
-.cr-body { margin-top: clamp(16px, 3vh, 34px); max-width: 640px; display: grid; gap: 8px; font-size: clamp(14px, 1.7vw, 19px); line-height: 1.25; }
-.cr-line { display: grid; grid-template-columns: minmax(110px, 180px) 1fr; gap: 14px; border-bottom: 1px solid rgba(247, 255, 195, 0.09); padding-bottom: 7px; }
-.cr-label { color: var(--cr-orange); text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.82em; padding-top: 0.12em; }
-.cr-value { color: rgba(247, 255, 195, 0.78); }
-.cr-note { margin-top: 16px; max-width: 540px; color: rgba(247, 255, 195, 0.54); font-size: 13px; line-height: 1.5; }
-.cr-legal { margin-top: 12px; max-width: 640px; color: rgba(247, 255, 195, 0.46); font-size: 11px; line-height: 1.5; }
-.cr-legal summary { cursor: pointer; letter-spacing: 0.2em; color: rgba(247, 255, 195, 0.62); }
-.cr-legal b { font-weight: 400; letter-spacing: 0.14em; }
-.credits-close {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  width: 42px;
-  height: 42px;
-  z-index: 6;
+  z-index: 1;
+  inset: calc(var(--safe-t) + 48px) 16px calc(var(--safe-b) + 16px);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(247, 255, 195, 0.34);
-  border-radius: 3px;
-  background: rgba(0, 0, 0, 0.42);
-  color: rgba(247, 255, 195, 0.74);
-  font: inherit;
-  font-size: 20px;
+  overflow: hidden;
 }
-.credits-close:hover { color: var(--cr-orange); border-color: var(--cr-orange); background: rgba(250, 90, 31, 0.08); }
+.cr-page { flex: none; width: min(560px, 100%); display: flex; flex-direction: column; gap: clamp(16px, 3vh, 28px); transform-origin: center; }
+.cr-page[hidden] { display: none; }
+.cr-head { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+.cr-sub { margin: 0; font-size: 10px; letter-spacing: 0.24em; line-height: 1.6; color: var(--dim); text-transform: uppercase; text-wrap: balance; }
+.cr-group h4 { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; font-size: 11px; font-weight: 400; letter-spacing: 0.24em; color: var(--ink); text-transform: uppercase; }
+.cr-group h4::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.cr-grid { display: grid; gap: 14px 20px; }
+.cr-group.team .cr-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cr-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.cr-item { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.cr-item small { font-size: 9px; letter-spacing: 0.22em; color: var(--dim); text-transform: uppercase; }
+.cr-item span { font-size: 14px; line-height: 1.35; color: var(--ink); }
+.cr-note { margin: 0; font-size: 11px; line-height: 1.5; color: var(--dim); text-align: center; text-wrap: balance; }
+.cr-switch { align-self: center; min-height: 40px; padding: 0 22px; font-size: 12px; letter-spacing: 0.22em; }
+.cr-group p { margin: 0 0 12px; font-size: 12px; line-height: 1.5; color: var(--dim); }
+.cr-group p.cr-mit { margin: 0; font-size: 10px; line-height: 1.5; opacity: 0.8; }
+.cr-mit b { display: inline-block; margin-bottom: 4px; font-weight: 400; letter-spacing: 0.2em; color: var(--ink); }
 @media (max-width: 560px) {
-  .cr-line { grid-template-columns: 1fr; gap: 2px; }
+  .cr-group.team .cr-grid { grid-template-columns: 1fr 1fr; }
+  .cr-cols { grid-template-columns: 1fr; gap: clamp(16px, 3vh, 28px); }
 }
 
 /* ─── v84 : événement cosmique, reliques, éveil des lois ─── */
