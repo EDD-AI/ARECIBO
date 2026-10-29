@@ -361,6 +361,17 @@ body.modal #gl { z-index: 35; }
 .mi-reward { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--gold); white-space: nowrap; }
 .mi-got { font-size: 11px; letter-spacing: 0.16em; color: var(--good); }
 .mi-swap { padding: 0; font-size: 11px; }
+/* Le rover rare du menu (v94, js/rover.js) : silhouette noire sur l'horizon, liseré de lumière. */
+.rover { position: absolute; left: 0; z-index: 1; pointer-events: none; filter: drop-shadow(0 -1px 0 rgba(241, 236, 218, 0.35)); }
+.rover svg { display: block; width: 100%; height: 100%; animation: roverBob 0.5s steps(2) infinite; }
+.rover .rv-hull, .rover .rv-tr { fill: #020407; }
+.rover .rv-eye { fill: #7fd8ff; opacity: 0.75; animation: roverEye 4s steps(1) infinite; }
+.rover .rv-tr.a { animation: roverTrA 0.24s steps(1, end) infinite; }
+.rover .rv-tr.b { animation: roverTrB 0.24s steps(1, end) infinite; }
+@keyframes roverBob { 50% { transform: translateY(-1px); } }
+@keyframes roverTrA { 0% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes roverTrB { 0% { opacity: 0; } 50%, 100% { opacity: 1; } }
+@keyframes roverEye { 92% { opacity: 0.75; } 96% { opacity: 0.1; } }
 /* Lecteur de musique du menu (v89). */
 .music-bar {
   position: absolute;
@@ -1670,6 +1681,12 @@ button.pf-rank { grid-template-columns: 56px 1fr auto; width: 100%; font: inheri
 .defi-txt b { color: var(--gold); font-weight: 600; }
 .defi-pop .btn { flex: none; width: auto; min-height: 38px; padding: 0 12px; }
 .defi-pop .btn.ghost { padding: 0 10px; font-size: 18px; }
+/* Un ami vient de se connecter (v94) : une petite bulle qui s'efface toute seule. */
+.ami-pop { pointer-events: auto; align-self: center; display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; font-size: 13px; color: var(--ink); background: rgba(8, 8, 10, 0.94); border: 1px solid rgba(110, 224, 122, 0.6); box-shadow: 0 0 16px rgba(110, 224, 122, 0.25); animation: chatPop 0.35s cubic-bezier(.2, 1.4, .4, 1) both; transition: opacity 0.5s, transform 0.5s; }
+.ami-pop.out { opacity: 0; transform: translateY(-8px); }
+.ami-pop .on-dot { margin: 0; }
+.ami-pop b { color: var(--good); font-weight: 600; }
+.ami-pop .btn { width: auto; min-height: 30px; padding: 0 10px; font-size: 11px; }
 .mp-defis { border-color: var(--gold); }
 .mp-defi { display: flex; align-items: center; gap: 10px; }
 .mp-defi span { flex: 1; min-width: 0; }

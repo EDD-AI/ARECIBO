@@ -408,8 +408,8 @@ reste équitable.
   une **offre de bienvenue** unique (40 graines pour 1,99 €, le double du tarif de base), puis
   quatre paquets illustrés en pixel art, de la graine à l’arbre : Poignée 10 (0,99 €), Bourgeon
   55 (4,99 €, +10 %, « populaire »), Jardin 120 (9,99 €, +20 %) et Forêt sacrée 260 (19,99 €,
-  +30 %, « meilleure offre », cadre doré animé). Suivent ce qu’elles permettent, avec leur prix, et
-  comment en gagner en jouant. Le paiement réel n’est pas encore branché : il faut un prestataire (Stripe,
+  +30 %, « meilleure offre », cadre doré animé). Suit comment en gagner en jouant (la liste de ce
+  qu’elles permettent a été retirée en v94). Le paiement réel n’est pas encore branché : il faut un prestataire (Stripe,
   Google Play) et un serveur qui crédite les graines. En attendant, le bouton l’annonce.
 - Stockées dans `orbite.graines` (synchronisées avec la sauvegarde en ligne).
 
@@ -698,6 +698,10 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
     d’un ami vu il y a moins de 5 minutes.
   - Le défi n’est publié que tant que le salon attend l’ami (`syncInvite`, js/multi-ui.js) : il tombe
     dès que l’ami arrive, que la partie commence ou que l’hôte s’en va.
+- **Un ami se connecte** (v94) : une petite bulle « NOM vient de se connecter » s’affiche, avec
+  **DÉFIER** (un duel tout de suite). Elle s’efface seule après 6 secondes. Seuls les vrais retours
+  comptent (vu il y a plus de 3 minutes, puis en ligne) : pas de bulle pour les amis déjà en ligne quand
+  la liste arrive, ni pendant une partie en ligne.
 - **Défier des amis** (v93) : la carte « Entre amis » ouvre la liste d’amis, où l’on en coche un ou
   plusieurs (7 au plus). Un ami : un duel, comme avant. Plusieurs : une **partie entre amis** jusqu’à 8
   joueurs. Chaque invité reçoit la bulle « NOM vous invite dans sa partie entre amis ! » avec REJOINDRE
@@ -934,6 +938,13 @@ déclics mécaniques, avec une touche sci-fi discrète. Les bruitages viennent d
 Les sons se chargent quand la page est servie en HTTP(S). Ouverte directement depuis un fichier,
 la page garde les anciens sons synthétisés.
 
+## Le rover du menu (v94)
+
+Très rarement, un petit rover traverse l’horizon du menu de droite à gauche (`js/rover.js`) : une
+silhouette noire de robot à chenilles, deux yeux qui luisent à peine, un liseré de lumière. Chaque
+minute passée au menu, il a 0,5 % de chance de passer (environ une fois toutes les trois heures de
+menu). La traversée dure 32 secondes. `OrbiteRover.go()` le fait passer tout de suite.
+
 ## Jeu caché : INVADERS (v89)
 
 Le code Konami ouvre un Space Invaders en pixels, aux couleurs d’ORBITE, au menu comme en pleine
@@ -1149,6 +1160,11 @@ montre déjà l’éveil de chacune.
 
 Les anciennes sauvegardes continuent : sans `relics`, `awake` ni `event`, rien ne casse
 (`freeRoll` est relu pour la loi du passage).
+
+## Codex sur PC (v94)
+
+Sur grand écran, le Codex est agrandi comme les autres écrans et élargi (jusqu’à 1 000 px) : les
+14 familles s’affichent d’un coup sur deux lignes, et les cartes sont plus grandes (`css/desk.css`).
 
 ## Missions du jour (v91)
 

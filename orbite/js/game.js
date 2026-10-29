@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 93;
+  const VERSION = 94;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -1147,16 +1147,6 @@
     { n: 120, price: 9.99, name: 'Jardin', art: 'jardin', bonus: 20 },
     { n: 260, price: 19.99, name: 'Forêt sacrée', art: 'foret', bonus: 30, badge: 'MEILLEURE OFFRE', best: true }
   ];
-  const SEED_USES = [
-    ['Booster un bâtiment', 'production ×2 pendant 24 h', 1],
-    ['Avancer la colonie de 6 h', 'touchez « SOL » à la surface', 1],
-    ['Avancer la colonie de 24 h', 'une journée de production d’un coup', 3],
-    ['Faire grandir une planète', 'une taille de plus dans la Forge', 1],
-    ['Recharger le rover', 'repartir aussitôt en expédition', 1],
-    ['Un fond animé', 'derrière toutes vos parties', SKY_SEEDS],
-    ['Un cadre de profil', 'autour de votre avatar et de votre nom', FRAME_SEEDS],
-    ['Une photo de profil', 'un astre, de l’astéroïde au trou noir', '5 – 650']
-  ];
   const euro = (v) => v.toLocaleString(I18N.lang, { style: 'currency', currency: 'EUR' });
   function renderSeedShop() {
     const n = seeds();
@@ -1182,8 +1172,6 @@
           <b>${icon('seed', 'seed')}${p.n}</b>
           <span class="seed-price">${euro(p.price)}</span>
         </button>`).join('')}</div>
-      <h4 class="fg-h">${tr('CE QU’ELLES FONT POUSSER')}</h4>
-      <div class="seed-uses">${SEED_USES.map(([a, b, c]) => `<div class="seed-use"><span><b>${tr(a)}</b><small>${tr(b)}</small></span><em>${c} ${icon('seed', 'seed')}</em></div>`).join('')}</div>
       <h4 class="fg-h">${tr('EN GAGNER EN JOUANT')}</h4>
       <div class="seed-earn">
         <span><b>+1</b>${tr('par victoire')}</span><span><b>+2</b>${tr('tous les 5 niveaux')}</span>
