@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 101;
+  const VERSION = 102;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -1335,6 +1335,22 @@
   ];
   RANKS.forEach((r) => stage.register('rank-' + r.id, r.look));
 
+  // Votre style (v102) : la famille la plus jouée, celle qui gagne le plus, et le combo gagnant.
+  function styleHtml(st) {
+    const fams = famStats(st), combos = st.combos || {};
+    const best = (o, k) => Object.entries(o).filter(([, v]) => v[k] > 0).sort((a, b) => b[1][k] - a[1][k] || b[1].g - a[1].g || (a[0] < b[0] ? -1 : 1))[0];
+    const chip = (f) => `<span class="fam-chip" style="--c:${famColor(f)}">${famName(f)}</span>`;
+    const games = (n) => (n > 1 ? tr('{n} parties', { n }) : tr('{n} partie', { n }));
+    const winsOf = (v) => (v.g <= 1 ? tr('{w} victoire sur {g} partie', { w: v.w, g: v.g }) : v.w <= 1 ? tr('{w} victoire sur {g} parties', { w: v.w, g: v.g }) : tr('{w} victoires sur {g} parties', { w: v.w, g: v.g }));
+    const rows = [];
+    const played = best(fams, 'g'), winner = best(fams, 'w');
+    if (played) rows.push([tr('Famille la plus jouée'), chip(played[0]), games(played[1].g)]);
+    if (winner) rows.push([tr('Famille qui gagne le plus'), chip(winner[0]), winsOf(winner[1])]);
+    const cw = best(combos, 'w'), cg = cw || best(combos, 'g');
+    if (cg) rows.push([cw ? tr('Combo le plus gagnant') : tr('Combo le plus joué'), cg[0].split('+').map(chip).join('<i class="pf-plus">+</i>'), cw ? winsOf(cg[1]) : games(cg[1].g)]);
+    if (!rows.length) return '';
+    return `<h3 class="pf-h">${tr('VOTRE STYLE')}</h3><div class="pf-style">${rows.map(([k, v, n]) => `<div><small>${k}</small><span>${v}</span><em>${n}</em></div>`).join('')}</div>`;
+  }
   function renderProfile() {
     const st = stats(), lv = levelInfo(xpTotal()), list = worldList();
     const hist = readJson(HIST_KEY, []);
@@ -1379,6 +1395,7 @@
       <h3 class="pf-h">${tr('STATISTIQUES')}</h3>
       <div class="pf-stats">${tiles.map(([k, v]) => `<div><b>${v}</b><small>${k}</small></div>`).join('')}</div>
       ${fav ? `<p class="muted">${tr('Loi favorite :')} <span style="color:${famColor(R.LAW[fav[0]].fam)}">${esc(R.LAW[fav[0]].name)}</span> · ${fav[1] > 1 ? tr('{n} parties', { n: fav[1] }) : tr('{n} partie', { n: fav[1] })}</p>` : ''}
+      ${styleHtml(st)}
       <h3 class="pf-h">${tr('DERNIÈRES PARTIES')}</h3>
       <div class="pf-hist">${hist.length ? hist.map((h) => `<div class="${(h.duel ? h.rank === 1 : h.rank <= 3) ? 'podium' : ''}"><b>${h.quit ? '–' : h.duel ? (h.rank === 1 ? tr('V') : tr('D')) : ordinal(h.rank)}</b><span style="color:${famColor(R.LAW[h.law] ? R.LAW[h.law].fam : 'neutre')}">${esc(R.LAW[h.law] ? R.LAW[h.law].name : '')}</span><small>${h.quit ? tr('abandon') : tr('{n} cycles', { n: h.cycles })} · ${new Date(h.t).toLocaleDateString(I18N.lang, { day: '2-digit', month: '2-digit' })}</small></div>`).join('') : `<p class="muted">${tr('Aucune partie terminée pour l’instant.')}</p>`}</div>
       </div>`;
@@ -1409,11 +1426,36 @@
   }
 
   // Une partie terminée s'ajoute aux statistiques et à l'historique.
+  // Le style d'une partie (v102) : la famille principale du système final (au moins 2 astres), et le
+  // combo, ses deux familles principales (au moins 2 astres chacune).
+  function styleOf(board) {
+    const n = {};
+    for (const u of board || []) { const f = R.CARD[u.id] ? R.famOf(u) : null; if (f && f !== 'neutre') n[f] = (n[f] || 0) + 1; }
+    const top = Object.entries(n).filter((e) => e[1] >= 2).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
+    return { fam: top[0] ? top[0][0] : null, combo: top.length >= 2 ? [top[0][0], top[1][0]].sort().join('+') : null };
+  }
+  // Parties et victoires par famille principale ; avant la v102, on part des compteurs des succès
+  // (parties avec une majorité d'une famille).
+  function famStats(st) {
+    if (st.fams) return st.fams;
+    const c = readJson('orbite.succes.c', {}) || {}, o = {};
+    for (const [f, g] of Object.entries(c.famGames || {})) if (R.FAMILIES[f]) o[f] = { g: g | 0, w: (c.famWins || {})[f] | 0 };
+    return o;
+  }
   function recordGame(s, rank, quit) {
     const st = stats();
     const p = s.players[0];
     const duel = R.isDuel(s);
     st.games++;
+    const sty = styleOf(p.board), won = !quit && rank === 1;
+    st.fams = famStats(st);
+    st.combos = st.combos || {};
+    for (const [o, k] of [[st.fams, sty.fam], [st.combos, sty.combo]]) {
+      if (!k) continue;
+      const e = o[k] || (o[k] = { g: 0, w: 0 });
+      e.g++;
+      if (won) e.w++;
+    }
     if (duel) {
       // Les duels comptent dans les parties et les victoires ; rang moyen et podiums restent ceux
       // des mêlées.
@@ -1432,7 +1474,7 @@
     st.laws[p.law] = (st.laws[p.law] || 0) + 1;
     store.set(STATS_KEY, JSON.stringify(st));
     const hist = readJson(HIST_KEY, []);
-    hist.unshift({ rank, law: p.law, cycles: Math.max(1, p.deadRound || s.round || 1), t: Date.now(), quit: !!quit, duel });
+    hist.unshift({ rank, law: p.law, cycles: Math.max(1, p.deadRound || s.round || 1), t: Date.now(), quit: !!quit, duel, fam: sty.fam, combo: sty.combo });
     store.set(HIST_KEY, JSON.stringify(hist.slice(0, 15)));
     if (window.OrbiteSucces) window.OrbiteSucces.record(s, rank, quit);
     if (window.OrbiteMissions && window.OrbiteMissions.record) window.OrbiteMissions.record(s, rank, quit);

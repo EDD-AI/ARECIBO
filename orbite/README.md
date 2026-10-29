@@ -356,6 +356,20 @@ en une phrase. Il avance quand le joueur fait l’action demandée, ou sur « SU
 Le coach se trouve dans `js/game.js` (`coachStart`, étapes `MENU_STEPS`, `LAW_STEPS`,
 `GAME_STEPS`). Le jeu lui signale ses actions par `tuto('fiche' | 'achat' | 'placer' | 'combat' | 'cycle'…)`.
 
+## Votre style (statistiques, v102)
+
+Dans le profil, sous les statistiques, **VOTRE STYLE** montre :
+- la **famille la plus jouée** ;
+- la **famille qui gagne le plus**, en victoires sur parties ;
+- le **combo le plus gagnant**, c’est-à-dire les deux familles principales (« le plus joué » tant qu’aucun n’a gagné).
+
+En fin de partie, `styleOf(board)` lit le système final. La famille principale est celle qui a le plus
+d’astres (au moins 2). Le combo réunit les deux premières familles (au moins 2 astres chacune). Les
+compteurs sont dans `orbite.stats` (`fams`, `combos` : `{ g, w }`), et chaque partie de l’historique
+garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteurs des succès (parties
+avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
+pas d’historique avant la v102.
+
 ## Regarder la suite (mode spectateur, v98)
 
 Éliminé d’une mêlée solo, l’écran de fin propose **REGARDER LA SUITE**, au-dessus de REJOUER. La table
