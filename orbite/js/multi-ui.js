@@ -289,7 +289,31 @@
   MP.state.onChange = () => { if (document.getElementById('multi').classList.contains('active')) render(); };
   MP.state.onStart = () => { if (document.getElementById('multi').classList.contains('active')) render(); };
   ON.on(() => { if (document.getElementById('multi').classList.contains('active')) render(); });
-  window.addEventListener('orbite-friends', () => { if (document.getElementById('multi').classList.contains('active')) render(); popInvites(); });
+  window.addEventListener('orbite-friends', () => { if (document.getElementById('multi').classList.contains('active')) render(); popInvites(); popOnline(); });
+
+  // ─── Un ami se connecte (v94) : une petite bulle, avec DÉFIER ───
+  // On compare la présence d'avant (vu il y a plus de 3 min = hors ligne) à la nouvelle. Les amis
+  // déjà en ligne quand la liste arrive ne s'annoncent pas.
+  const lastSeen = {};
+  function popOnline() {
+    const s = O.ui.state, now = Date.now();
+    for (const p of ON.friendProfiles ? ON.friendProfiles() : []) {
+      const prev = lastSeen[p.uid];
+      lastSeen[p.uid] = p.seen || 0;
+      if (prev === undefined || !p.seen || p.seen === prev) continue;
+      const was = now - prev < 180000, is = now - p.seen < 180000;
+      if (was || !is) continue;
+      // Pas pendant une partie en ligne : on ne la dérange pas.
+      if (O.ui.screen === 'game' && s && s.mp && !s.over) continue;
+      const d = document.createElement('div');
+      d.className = 'ami-pop';
+      d.innerHTML = `<i class="on-dot on"></i><span>${tr('{name} vient de se connecter', { name: `<b>${esc(p.pseudo || tr('Créateur'))}</b>` })}</span><button class="btn" data-ami="${esc(p.uid)}">${tr('DÉFIER')}</button>`;
+      pops.appendChild(d);
+      SFX.on();
+      setTimeout(() => d.classList.add('out'), 5500);
+      setTimeout(() => d.remove(), 6000);
+    }
+  }
 
   // ─── Défi reçu : une bulle en haut de l'écran, où que l'on soit (sauf en pleine partie en ligne) ───
   const pops = document.createElement('div');
@@ -318,6 +342,8 @@
     }
   }
   pops.addEventListener('click', async (e) => {
+    const ami = e.target.closest('[data-ami]');
+    if (ami) { ami.closest('.ami-pop').remove(); SFX.tap(); await challenge(ami.dataset.ami); return; }
     const b = e.target.closest('[data-defi]');
     if (!b) return;
     const el = b.closest('.defi-pop'), code = el.dataset.code;

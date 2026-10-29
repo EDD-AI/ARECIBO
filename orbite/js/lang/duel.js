@@ -134,6 +134,7 @@
     ['EFFETS', 'EFFECTS', 'EFECTOS', 'EFFEKTE', 'EFEITOS'],
     ['NOUVEAU', 'NEW', 'NUEVO', 'NEU', 'NOVO'],
     // Parties entre amis (v93)
+    ['{name} vient de se connecter', '{name} just came online', '{name} acaba de conectarse', '{name} ist gerade online gekommen', '{name} acabou de se conectar'],
     ['ENTRE AMIS', 'WITH FRIENDS', 'ENTRE AMIGOS', 'MIT FREUNDEN', 'ENTRE AMIGOS'],
     ['DÉFIER DES AMIS', 'CHALLENGE FRIENDS', 'DESAFIAR A AMIGOS', 'FREUNDE HERAUSFORDERN', 'DESAFIAR AMIGOS'],
     ['CHOISISSEZ DES AMIS', 'PICK FRIENDS', 'ELIGE AMIGOS', 'FREUNDE WÄHLEN', 'ESCOLHA AMIGOS'],
