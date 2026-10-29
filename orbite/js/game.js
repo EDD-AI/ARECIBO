@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 90;
+  const VERSION = 91;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -783,6 +783,7 @@
 
   function renderMenu() {
     renderMusicBar();
+    if (window.OrbiteMissions && window.OrbiteMissions.renderBtn) window.OrbiteMissions.renderBtn();
     applyFrame($('profileBtn'), myFrame());
     $('menuDust').innerHTML = icon('dust') + ' ' + dust();
     if (typeof renderCreationBtn === 'function') renderCreationBtn();
@@ -1000,9 +1001,11 @@
 
   // ─── Cosmétiques : fonds animés de partie ────────────────────
   const COS_KEY = 'orbite.cosmetiques';
-  // Prix d'un cosmétique (fond animé ou cadre de profil), relevés en v90.
+  // Prix d'un cosmétique : 2 000 poussières, ou en graines de vie 25 pour un fond animé et 15 pour
+  // un cadre de profil (v91).
   const COS_PRICE = 2000;
-  const COS_SEEDS = 10;
+  const SKY_SEEDS = 25, FRAME_SEEDS = 15;
+  const seedPrice = (k) => (k.frame ? FRAME_SEEDS : SKY_SEEDS);
   const SKIES = [
     { id: 'nebuleuse', mode: 1, name: tr('Nébuleuse pourpre'), text: tr('Des nuages roses et violets traversés de filaments sombres, autour d’un cœur brûlant.'), c: ['#c2457f', '#2a0a3c'] },
     { id: 'aurore', mode: 2, name: tr('Aurore boréale'), text: tr('Des voiles verts et roses dansent au-dessus des montagnes et se reflètent dans un lac.'), c: ['#2fd18a', '#071a22'] },
@@ -1043,7 +1046,7 @@
 
   function renderCosmetics() {
     const c = cosmetics();
-    const buyBtn = (k) => `<span class="cos-buy"><button class="btn primary" data-cos-buy="${k.id}" ${dust() < COS_PRICE ? 'disabled' : ''}>${icon('dust')} ${COS_PRICE}</button><button class="btn" data-cos-buy="${k.id}" data-seed="1" ${seeds() < COS_SEEDS ? 'disabled' : ''}>${icon('seed', 'seed')} ${COS_SEEDS}</button></span>`;
+    const buyBtn = (k) => `<span class="cos-buy"><button class="btn primary" data-cos-buy="${k.id}" ${dust() < COS_PRICE ? 'disabled' : ''}>${icon('dust')} ${COS_PRICE}</button><button class="btn" data-cos-buy="${k.id}" data-seed="1" ${seeds() < seedPrice(k) ? 'disabled' : ''}>${icon('seed', 'seed')} ${seedPrice(k)}</button></span>`;
     // Un cadre : aperçu sur une petite planète, puis acheter, équiper, ou « équipé ».
     const frameRow = (k) => {
       const owned = !k.id || c.owned.includes(k.id), on = (c.frame || '') === (k.id || '');
@@ -1057,7 +1060,7 @@
       let btn;
       if (on) btn = `<span class="cos-on">${tr('ÉQUIPÉ')}</span>`;
       else if (owned) btn = `<button class="btn" data-cos-equip="${k.id || ''}">${tr('ÉQUIPER')}</button>`;
-      else btn = `<span class="cos-buy"><button class="btn primary" data-cos-buy="${k.id}" ${dust() < COS_PRICE ? 'disabled' : ''}>${icon('dust')} ${COS_PRICE}</button><button class="btn" data-cos-buy="${k.id}" data-seed="1" ${seeds() < COS_SEEDS ? 'disabled' : ''}>${icon('seed', 'seed')} ${COS_SEEDS}</button></span>`;
+      else btn = buyBtn(k);
       const sw = k.id ? `background:radial-gradient(circle at 30% 35%, ${k.c[0]}, transparent 70%), radial-gradient(circle at 75% 70%, ${k.c[1]}, #000 80%)` : 'background:#000';
       return `<div class="cos-row ${sel ? 'sel' : ''}" data-cos="${k.id || ''}">
         <span class="cos-sw" style="${sw}"></span>
@@ -1115,7 +1118,8 @@
     ['Avancer la colonie de 24 h', 'une journée de production d’un coup', 3],
     ['Faire grandir une planète', 'une taille de plus dans la Forge', 1],
     ['Recharger le rover', 'repartir aussitôt en expédition', 1],
-    ['Un cosmétique', 'fond animé ou cadre de profil', COS_SEEDS]
+    ['Un fond animé', 'derrière toutes vos parties', SKY_SEEDS],
+    ['Un cadre de profil', 'autour de votre avatar et de votre nom', FRAME_SEEDS]
   ];
   const euro = (v) => v.toLocaleString(I18N.lang, { style: 'currency', currency: 'EUR' });
   function renderSeedShop() {
@@ -1177,8 +1181,8 @@
       const k = cosItem(buy.dataset.cosBuy);
       if (!k || c.owned.includes(k.id)) return;
       if (buy.dataset.seed) {
-        if (seeds() < COS_SEEDS) { refuse(tr('Il vous manque {n} graines de vie.', { n: COS_SEEDS - seeds() })); return; }
-        addSeeds(-COS_SEEDS);
+        if (seeds() < seedPrice(k)) { refuse(tr('Il vous manque {n} graines de vie.', { n: seedPrice(k) - seeds() })); return; }
+        addSeeds(-seedPrice(k));
       } else {
         if (dust() < COS_PRICE) { refuse(tr('Il vous manque {n} poussières d’étoiles.', { n: COS_PRICE - dust() })); return; }
         addDust(-COS_PRICE);
@@ -1352,6 +1356,7 @@
     hist.unshift({ rank, law: p.law, cycles: Math.max(1, p.deadRound || s.round || 1), t: Date.now(), quit: !!quit, duel });
     store.set(HIST_KEY, JSON.stringify(hist.slice(0, 15)));
     if (window.OrbiteSucces) window.OrbiteSucces.record(s, rank, quit);
+    if (window.OrbiteMissions && window.OrbiteMissions.record) window.OrbiteMissions.record(s, rank, quit);
   }
 
   // ─── Paramètres ─────────────────────────────────────────────
@@ -1837,6 +1842,7 @@
   ];
   const MENU_STEPS = [
     { id: 'jouer', target: '#playBtn', text: tr('<b>Jouer</b> : en <b>solo</b> contre l’IA (duel, mêlée contre sept univers, défi du jour) ou en <b>multijoueur</b>, en ligne et entre amis.'), next: tr('SUIVANT'), delay: 0 },
+    { id: 'missions', target: '#missionsBtn', text: tr('Les <b>missions du jour</b> : trois objectifs chaque jour, récompensés en <b>poussières d’étoiles</b>. Récupérez la récompense ici quand une mission est accomplie.'), next: tr('SUIVANT') },
     { id: 'codex', target: '#codexBtn', text: tr('Le <b>Codex</b> : tous les astres, lois, reliques et événements du jeu. Ceux que vous avez croisés en partie s’y dévoilent.'), next: tr('SUIVANT') },
     { id: 'creation', target: '#creationBtn', text: tr('La <b>Création</b> : votre planète a atteint la civilisation verte. Bâtissez-y votre civilisation : faites grandir des mondes, descendez à leur surface et fondez une colonie.'), next: tr('SUIVANT') },
     { id: 'marche', target: '#marketBtn', text: tr('Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées en duel et sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.'), next: tr('SUIVANT') },
@@ -2367,6 +2373,7 @@
     const golden = el ? el.classList.contains('golden') : false;
     const res = R.sell(ui.state, uid);
     if (!res.ok) { refuse(tr(res.reason)); return false; }
+    ui.state.qSold = (ui.state.qSold || 0) + 1;
     SFX.sell();
     vibrate(6);
     const before = rects($('board'));
@@ -2397,6 +2404,7 @@
   async function doRoll() {
     const res = R.roll(ui.state);
     if (!res.ok) { refuse(tr(res.reason)); return; }
+    ui.state.qRolls = (ui.state.qRolls || 0) + 1;
     SFX.roll();
     const old = [...$('shop').children].map((el) => ({ id: el.dataset.id, r: el.querySelector('.orb').getBoundingClientRect() }));
     const temps = old.map((o) => tempOrb(o.id, o.r, false));
