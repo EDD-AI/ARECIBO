@@ -336,9 +336,22 @@ en une phrase. Il avance quand le joueur fait l’action demandée, ou sur « SU
   - le calcul des dégâts, puis les formations ;
   - actualiser, geler, monter de niveau, vendre, le pouvoir, et le système du rival à contrer ;
   - enfin, les astres dorés et les poussières du duel gagné.
-- « Passer le tutoriel » est proposé à chaque étape. Paramètres → **Tutoriels et aide** les
-  relance : guide du menu, tutoriel de partie (la prochaine partie est alors guidée) et tutoriels
-  de campagne (premier combat et carte).
+- « Passer le tutoriel » est proposé à chaque étape, sauf dans le duel d’entraînement. Paramètres
+  → **Tutoriels et aide** les relance : guide du menu, tutoriel de partie (depuis le menu, il relance
+  le duel d’entraînement ; ailleurs, la prochaine partie est guidée) et tutoriels de campagne
+  (premier combat et carte).
+- **Duel d’entraînement obligatoire** (v97) : un nouveau joueur (aucune partie jouée, tutoriel pas
+  fini, `needTuto`) ne voit après la cinématique qu’une bulle « Votre premier duel vous attend :
+  touchez JOUER ». JOUER lance directement un duel contre la **Sentinelle** : 20 PV (le joueur en a
+  60), sans choix de loi (Loi de gravité, Minéral) ni événement cosmique. Le guide du premier duel
+  (17 étapes) ne se passe pas (`steps.locked`, pas de lien « Passer »). Ensuite, un conseil à chaque
+  cycle, du 3e au 7e (monter de niveau, dorés, avant et arrière, vendre, regarder la Sentinelle).
+  L’écran de fin a son texte ; REJOUER relance l’entraînement. Le guide du menu vient après.
+  - Règles (`newGame(…, { tutorial: true })`, `TUTOR` dans js/rules.js) : la Sentinelle prend une
+    loi simple de la partie (Tempête, sinon Glace, Cristal ou Néant), joue avec l’IA de base, n’achète
+    qu’un astre par cycle, ne dépasse pas 4 astres ni le niveau 2 de Création. Un débutant qui achète
+    le premier astre venu, sans jamais monter de niveau ni vendre, la bat 89 % du temps ; un joueur
+    qui monte de niveau, 93 % (`tests/tutoriel.test.mjs`).
 
 Le coach se trouve dans `js/game.js` (`coachStart`, étapes `MENU_STEPS`, `LAW_STEPS`,
 `GAME_STEPS`). Le jeu lui signale ses actions par `tuto('fiche' | 'achat' | 'placer' | 'combat' | 'cycle'…)`.
@@ -1004,6 +1017,20 @@ l’écran à une hauteur virtuelle de 800 px (1,35 en 1080p, 1,8 en 1440p ; jam
   10 px sous `zoom: 2`) détecte ce comportement ; on remet alors `getBoundingClientRect` en vrais
   pixels en le multipliant par le produit des zooms des parents (relus une fois par image).
   Reproduit et vérifié dans Chromium avec `--disable-blink-features=StandardizedBrowserZoom`.
+  - v97 : la v96 décalait cette fois vers la droite et le bas, en grossissant (Mac Retina, Safari).
+    Safari donne pour `zoom`, dans `getComputedStyle`, le zoom **cumulé** de l’élément : multiplier
+    ceux des parents zoomait plusieurs fois. Comme aucun écran zoomé n’est dans un autre, le zoom
+    d’un élément est maintenant le **plus grand** de sa chaîne, quelle que soit l’écriture du
+    navigateur. La sonde est un parent zoomé ×2 avec un carré de 10 px dedans ; la correction n’est
+    appliquée que si elle y retombe sur 20 px (`window.ORBITE_ZOOM`). Vérifié en simulant l’écriture
+    de Safari dans Chromium (la v96 y reproduit le bug signalé, la v97 le corrige).
+- **Carré de pixels colorés autour d’un astre** (rare, certains appareils, v97) : un carré de bruit
+  coloré dans la zone de dessin d’un astre (vu sur la Sonde). Pas reproduit ici ; trois protections
+  dans js/planet-renderer.js : chaque shader de fragment commence par `outColor = vec4(0.0)` (aucune
+  sortie indéfinie sur un chemin oublié), les tests de sortie du disque sont écrits « pas dedans »
+  (`!(d2 <= b²)`) pour écarter aussi une valeur NaN, et la toile n’est réallouée que si sa taille
+  change, puis vidée aussitôt (sur téléphone, la barre d’adresse qui se replie déclenche des
+  `resize` à répétition).
 
 ## Shaders sous Windows (v83)
 
