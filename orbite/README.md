@@ -400,7 +400,8 @@ reste équitable.
   | Accélérer le temps de la colonie : +24 h | 3 |
   | Faire grandir une planète de la Forge d’une taille | 1 |
   | Recharger le rover quand sa batterie est vide | 1 |
-  | Un cosmétique : fond animé ou cadre de profil (ou 2 000 poussières ; 1 200 et 6 graines avant la v90) | 10 |
+  | Un fond animé (ou 2 000 poussières) | 25 |
+  | Un cadre de profil (ou 2 000 poussières) | 15 |
 
 - **Boutique** (Marché stellaire → GRAINES) : une vitrine animée (la graine flotte dans son halo),
   une **offre de bienvenue** unique (40 graines pour 1,99 €, le double du tarif de base), puis
@@ -439,7 +440,7 @@ traductions : `js/lang/succes.js`, tests : `tests/succes.test.mjs`.
 
 Deux onglets : **Ma planète** (les 24 améliorations décrites plus haut) et **Cosmétiques**.
 
-**Cosmétiques** (prix relevés en v90 : **2 000 poussières d’étoiles ou 10 graines de vie** chacun) :
+**Cosmétiques** (2 000 poussières d’étoiles chacun, ou en graines de vie : **25 pour un fond animé, 15 pour un cadre**, v91) :
 - **Fonds animés** : six décors de partie (Nébuleuse pourpre, Aurore boréale, Galaxie spirale, Voie
   lactée, Trou noir, Piliers de la création).
 - **Cadres de profil** (v90) : Couronne d’or, Aurore, Braises, Givre, Néant et Cosmos. Un contour
@@ -1126,6 +1127,24 @@ montre déjà l’éveil de chacune.
 
 Les anciennes sauvegardes continuent : sans `relics`, `awake` ni `event`, rien ne casse
 (`freeRoll` est relu pour la loi du passage).
+
+## Missions du jour (v91)
+
+Bouton **MISSIONS DU JOUR** du menu principal (`js/missions.js`). Chaque jour, trois missions : une
+facile, une moyenne et une difficile, tirées pour chaque joueur (jour + tag) et renouvelées à minuit.
+
+| Niveau | Missions (récompense en poussières) |
+|---|---|
+| Facile | Jouer 3 parties (40) · Vendre 8 astres (40) · Actualiser 10 fois (40) · Gagner 8 combats (50) |
+| Moyenne | Faire 2 astres dorés (60) · Finir avec 4 astres d’une famille tirée (70) · Monter la Création au niveau 5 (60) · Infliger 40 dégâts (60) |
+| Difficile | Gagner 2 duels (90) · Podium d’une mêlée (80) · Gagner avec 2 astres dorés dans le système (100) |
+
+Elles avancent à la fin de chaque partie terminée (`recordGame` → `OrbiteMissions.record`) ; un
+abandon ne compte pas. Une annonce signale chaque mission accomplie ; la récompense se récupère dans
+la feuille des missions (le bouton du menu clignote en doré). Une mission non accomplie peut être
+changée une fois par jour (même niveau, jamais une mission déjà proposée). État dans
+`orbite.missions` (synchronisé avec la sauvegarde en ligne). Tests : `tests/missions.test.mjs`.
+Le nom « Défi du jour » reste celui du mode Solo (la même partie pour tous).
 
 ## Défi du jour (v84)
 
