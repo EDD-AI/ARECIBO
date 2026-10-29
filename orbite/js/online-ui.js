@@ -85,7 +85,7 @@
     let h = '';
     if (inc.length) h += `<h4 class="fg-h">${tr('DEMANDES REÇUES')}</h4>` + inc.map((f) => personRow(f, `<button class="btn primary" data-on="accept" data-pair="${f.pair}">${tr('ACCEPTER')}</button><button class="btn ghost" data-on="remove" data-pair="${f.pair}">${tr('REFUSER')}</button>`)).join('');
     h += `<h4 class="fg-h">${tr('VOS AMIS')} <small>${ok.length}</small></h4>`;
-    h += ok.length ? ok.map((f) => personRow(f, `${f.profile && f.profile.forge && f.profile.forge.star && f.profile.forge.star.lit ? `<button class="btn" data-on="visit" data-uid="${f.uid}">${tr('VISITER')}</button>` : ''}<button class="btn ghost on-x" data-on="remove" data-pair="${f.pair}" aria-label="${tr('Retirer')}">×</button>`)).join('')
+    h += ok.length ? ok.map((f) => personRow(f, `${window.OrbiteMultiUI ? `<button class="btn" data-on="duel" data-uid="${f.uid}">${tr('DÉFIER')}</button>` : ''}${f.profile && f.profile.forge && f.profile.forge.star && f.profile.forge.star.lit ? `<button class="btn" data-on="visit" data-uid="${f.uid}">${tr('VISITER')}</button>` : ''}<button class="btn ghost on-x" data-on="remove" data-pair="${f.pair}" aria-label="${tr('Retirer')}">×</button>`)).join('')
       : `<p class="muted">${tr('Partagez votre code ami, ou entrez celui d’un ami ci-dessus.')}</p>`;
     if (out.length) h += `<h4 class="fg-h">${tr('DEMANDES ENVOYÉES')}</h4>` + out.map((f) => personRow(f, `<button class="btn ghost" data-on="remove" data-pair="${f.pair}">${tr('ANNULER')}</button>`)).join('');
     return h;
@@ -171,7 +171,8 @@
       A.closeSheet();
       const p = await N.profileOf(b.dataset.uid).catch(() => null);
       if (p) await O.forge.visit(p);
-    } else if (k === 'scope') { scope = b.dataset.k; renderLeader(); }
+    } else if (k === 'duel') { if (window.OrbiteMultiUI) await window.OrbiteMultiUI.challenge(b.dataset.uid); }
+    else if (k === 'scope') { scope = b.dataset.k; renderLeader(); }
     else if (k === 'who') { SFX.tap(); whoSheet(b.dataset.uid); }
     else if (k === 'pick') { A.closeSheet(); conflictShown = false; await N.resolveConflict(b.dataset.v); }
   });

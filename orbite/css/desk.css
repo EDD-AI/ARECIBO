@@ -14,7 +14,8 @@ body.desk #creation,
 body.desk #system,
 body.desk .overlay,
 body.desk .toast,
-body.desk .chat-pops { zoom: var(--z); }
+body.desk .chat-pops,
+body.desk .defi-pops { zoom: var(--z); }
 
 /* ─── Partie : trois colonnes ─────────────────────────────── */
 body.desk #game {
