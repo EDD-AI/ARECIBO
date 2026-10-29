@@ -66,7 +66,18 @@
   const pseudo = () => String(localStorage.getItem('orbite.pseudo') || tr('Créateur')).slice(0, 16);
   function myPoints() { try { const c = K.sanitize(JSON.parse(localStorage.getItem('orbite.classe') || 'null')); return K.placed(c) ? c.points : 0; } catch (err) { return 0; } }
   const bracketOf = (pts) => K.tierOf(pts).idx;
-  const seatOf = () => ({ uid: uid(), name: pseudo(), points: myPoints() });
+  // Sa place au salon porte aussi sa police de pseudo, son cadre et sa photo (v96) : les autres
+  // joueurs les voient au salon et en partie. Le contenu des places n'est pas contrôlé par les règles
+  // Firestore : rien à republier.
+  function seatOf() {
+    const seat = { uid: uid(), name: pseudo(), points: myPoints() };
+    const api = O.api || {};
+    const font = api.myFont ? api.myFont() : '', frame = api.myFrame ? api.myFrame() : '', avatar = api.myAvatar ? api.myAvatar() : '';
+    if (font) seat.font = font;
+    if (frame) seat.frame = frame;
+    if (avatar) seat.avatar = avatar;
+    return seat;
+  }
   const isHost = () => M.match && M.match.host === uid();
   const ref = (...p) => { const { db, fs } = fire(); return fs.doc(db, 'matches', ...p); };
 

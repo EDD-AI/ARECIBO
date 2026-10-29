@@ -105,8 +105,10 @@
   const friendsSorted = () => (ON.friendProfiles ? ON.friendProfiles() : []).map((p) => ({ p, pr: presenceOf(p) }))
     .sort((a, b) => a.pr.rank - b.pr.rank || String(a.p.pseudo || '').localeCompare(String(b.p.pseudo || '')));
   const codeOfFriend = (p) => String(p.code || ON.codeOf(p.uid));
+  // Le pseudo d'un ami dans sa police (v96).
+  const pseudoOf = (p) => (A.nameHtml ? A.nameHtml(p.pseudo || tr('Créateur'), A.fontOf(p)) : esc(p.pseudo || tr('Créateur')));
   const friendRow = (p, pr, act, label, on, off) => `<button class="mp-friend ${on ? 'on' : ''}" data-mp="${act}" data-uid="${esc(p.uid)}" ${off}>
-      <i class="on-dot ${pr.cls}"></i><span><b>${esc(p.pseudo || tr('Créateur'))}<small>#${esc(p.tag || '')}</small></b><small>${esc(pr.txt)} · ${tr('Niveau {n}', { n: p.level || 1 })}</small></span>
+      <i class="on-dot ${pr.cls}"></i><span><b>${pseudoOf(p)}<small>#${esc(p.tag || '')}</small></b><small>${esc(pr.txt)} · ${tr('Niveau {n}', { n: p.level || 1 })}</small></span>
       <em>${label}</em></button>`;
   // Défier des amis (v93) : on en coche un ou plusieurs. Un ami : un duel ; plusieurs : une partie
   // entre amis (8 joueurs au plus). Le lien reste possible pour les autres.
@@ -124,7 +126,10 @@
       <div class="sheet-actions"><button class="btn" data-mp="create" data-size="2" ${off}>${tr('PAR UN LIEN')}</button>
       <button class="btn" data-mp="menu">${tr('RETOUR')}</button></div>`;
   }
-  const inviteText = (x) => (x.group ? tr('{name} vous invite dans sa partie entre amis !', { name: `<b>${esc(x.name)}</b>` }) : tr('{name} vous défie en duel !', { name: `<b>${esc(x.name)}</b>` }));
+  const inviteText = (x) => {
+    const f = friendOf(x.uid), name = `<b>${f ? pseudoOf(f) : esc(x.name)}</b>`;
+    return x.group ? tr('{name} vous invite dans sa partie entre amis !', { name }) : tr('{name} vous défie en duel !', { name });
+  };
   function renderLobby(box, m) {
     const host = m.host === ON.uid();
     const left = Math.max(0, Math.ceil((m.created + MP.WAIT_MS - Date.now()) / 1000));
@@ -133,7 +138,9 @@
     const nBots = m.mode === 'private' && !duel ? MP.botsOf(m) : 0;
     const seats = Array.from({ length: n }, (_, i) => {
       const s = m.seats[i];
-      return s ? `<div class="mp-seat on"><b>${esc(s.name)}</b><small>${s.uid === ON.uid() ? tr('vous') : s.uid === m.host ? tr('hôte') : ''} ${s.points ? s.points + ' pts' : ''}</small></div>`
+      // Chaque créateur avec sa photo, son cadre et la police de son pseudo (v96).
+      const lk = s && A.seatLook ? A.seatLook(s) : null;
+      return s ? `<div class="mp-seat on">${lk ? A.framed(`<span class="orb" data-planet="${lk.avatar}"></span>`, lk.frame) : ''}<span class="mp-seat-txt"><b>${A.nameHtml ? A.nameHtml(s.name, lk && lk.font) : esc(s.name)}</b><small>${s.uid === ON.uid() ? tr('vous') : s.uid === m.host ? tr('hôte') : ''} ${s.points ? s.points + ' pts' : ''}</small></span></div>`
         : i < m.seats.length + nBots ? `<div class="mp-seat bot"><b>${tr('BOT')}</b><small>${tr('univers rival')}</small></div>`
         : `<div class="mp-seat"><b>…</b><small>${m.mode === 'ranked' ? tr('en recherche') : tr('place libre')}</small></div>`;
     }).join('');
@@ -312,7 +319,7 @@
       if (O.ui.screen === 'game' && s && s.mp && !s.over) continue;
       const d = document.createElement('div');
       d.className = 'ami-pop';
-      d.innerHTML = `<i class="on-dot on"></i><span>${tr('{name} vient de se connecter', { name: `<b>${esc(p.pseudo || tr('Créateur'))}</b>` })}</span><button class="btn" data-ami="${esc(p.uid)}">${tr('DÉFIER')}</button>`;
+      d.innerHTML = `<i class="on-dot on"></i><span>${tr('{name} vient de se connecter', { name: `<b>${pseudoOf(p)}</b>` })}</span><button class="btn" data-ami="${esc(p.uid)}">${tr('DÉFIER')}</button>`;
       pops.appendChild(d);
       SFX.on();
       setTimeout(() => d.classList.add('out'), 5500);

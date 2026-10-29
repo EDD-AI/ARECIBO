@@ -2,3 +2,24 @@
 @font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 400; font-display: swap; src: url(../fonts/chakra-petch-400.woff2) format('woff2'); }
 @font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 500; font-display: swap; src: url(../fonts/chakra-petch-500.woff2) format('woff2'); }
 @font-face { font-family: 'Chakra Petch'; font-style: normal; font-weight: 600; font-display: swap; src: url(../fonts/chakra-petch-600.woff2) format('woff2'); }
+
+/* Polices pixel des pseudos (v96, SIL OFL 1.1, voir fonts/PIXEL-FONTS.txt). Le navigateur ne charge
+ * un fichier que si un pseudo l'utilise. Chaque police a sa taille, pour garder la hauteur des lettres
+ * de Chakra Petch : .nf entoure le nom, dans la taille de son parent. */
+@font-face { font-family: 'ORB Arcade'; font-display: swap; src: url(../fonts/px-arcade.woff2) format('woff2'); }
+@font-face { font-family: 'ORB Terminal'; font-display: swap; src: url(../fonts/px-terminal.woff2) format('woff2'); }
+@font-face { font-family: 'ORB Serigraphie'; font-display: swap; src: url(../fonts/px-serigraphie.woff2) format('woff2'); }
+@font-face { font-family: 'ORB Pixel'; font-display: swap; src: url(../fonts/px-pixel.woff2) format('woff2'); }
+@font-face { font-family: 'ORB Stade'; font-display: swap; src: url(../fonts/px-stade.woff2) format('woff2'); }
+@font-face { font-family: 'ORB Mini'; font-display: swap; src: url(../fonts/px-mini.woff2) format('woff2'); }
+@font-face { font-family: 'ORB Matrice'; font-display: swap; src: url(../fonts/px-matrice.woff2) format('woff2'); }
+@font-face { font-family: 'ORB Cathode'; font-display: swap; src: url(../fonts/px-cathode.woff2) format('woff2'); }
+.nf { font-weight: 400; font-style: normal; font-synthesis: none; letter-spacing: 0.04em; line-height: 1.1; }
+.nf[data-nf="arcade"] { font-family: 'ORB Arcade', monospace; font-size: 0.72em; letter-spacing: 0; }
+.nf[data-nf="terminal"] { font-family: 'ORB Terminal', monospace; font-size: 1.32em; letter-spacing: 0.02em; }
+.nf[data-nf="serigraphie"] { font-family: 'ORB Serigraphie', monospace; font-size: 0.92em; letter-spacing: 0.02em; }
+.nf[data-nf="pixel"] { font-family: 'ORB Pixel', monospace; font-size: 1.02em; }
+.nf[data-nf="stade"] { font-family: 'ORB Stade', monospace; font-size: 1.22em; }
+.nf[data-nf="mini"] { font-family: 'ORB Mini', monospace; font-size: 1em; }
+.nf[data-nf="matrice"] { font-family: 'ORB Matrice', monospace; font-size: 1.04em; }
+.nf[data-nf="cathode"] { font-family: 'ORB Cathode', monospace; font-size: 1em; letter-spacing: 0.02em; }

@@ -401,8 +401,8 @@
       text: 'Quand vous actualisez : vos autres Comètes gagnent +{1} PV.',
       roll(x, u, m) { for (const v of x.fam('comete', u)) x.buff(v, 0, m); } },
     { id: 'tchouri', fam: 'comete', tier: 3, atk: 4, hp: 6, name: 'Tchouri', look: { type: 'asteroid', seed: 9206, shape: 'double' },
-      text: 'Fin de cycle : gagne +{1}/+{1} par actualisation faite ce cycle (5 au plus).',
-      endTurn(x, u, m) { const n = Math.min(5, x.p.rolls || 0) * m; if (n) x.buff(u, n, n); } },
+      text: 'Fin de cycle : gagne +{1}/+{1} par actualisation faite ce cycle (3 au plus).',
+      endTurn(x, u, m) { const n = Math.min(3, x.p.rolls || 0) * m; if (n) x.buff(u, n, n); } },
     { id: 'ison', fam: 'comete', tier: 4, atk: 5, hp: 6, name: 'Ison', look: { type: 'comet', seed: 9213, warm: true, hueShift: -50, debris: true },
       text: 'Vendu : vos Comètes gagnent +{2}/+{2}.',
       sold(x, u, m) { for (const v of x.fam('comete', u)) x.buff(v, 2 * m, 2 * m); } },
@@ -410,8 +410,8 @@
       text: 'Début de combat : inflige {2} dégâts à un ennemi aléatoire pour chaque Comète.',
       start(c, u, m) { const n = c.alliesFam(u.side, 'comete').length; for (let i = 0; i < n; i++) c.dmg(u, c.rnd(c.allies(1 - u.side)), 2 * m); } },
     { id: 'hyakutake', fam: 'comete', tier: 6, atk: 8, hp: 9, name: 'Hyakutake', look: { type: 'comet', seed: 9209, hueShift: 100, debris: true },
-      text: 'Quand vous actualisez : vos Comètes gagnent +{1}/+{1}.',
-      roll(x, u, m) { for (const v of x.fam('comete')) x.buff(v, m, m); } },
+      text: 'Quand vous actualisez : deux Comètes aléatoires gagnent +{1}/+{1}.',
+      roll(x, u, m) { const l = x.fam('comete'), a = x.rnd(l); x.buff(a, m, m); x.buff(x.rnd(l.filter((v) => v !== a)), m, m); } },
 
     // CRISTAL : résonance, chaque Cristal joué renforce les autres. Allégés en v90 : un joueur « tout
     // Cristal » gagnait 73 % de ses duels contre l'IA experte (33 à 53 % pour les autres familles),

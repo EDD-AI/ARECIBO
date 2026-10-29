@@ -458,6 +458,20 @@ Deux onglets : **Ma planète** (les 24 améliorations décrites plus haut) et **
   compact pour tenir dans un petit avatar ; publiés dans `forge.avatar` du profil public, comme le
   cadre. « Ma planète » revient à l’avatar d’origine. La liste des cosmétiques est une zone de
   découpe (`data-clipbox`) : les astres qui défilent ne débordent plus sur l’en-tête.
+- **Polices du pseudo** (v96, 2 000 poussières ou 10 graines) : huit polices pixel libres (SIL OFL,
+  `fonts/PIXEL-FONTS.txt`) : Arcade (Press Start 2P), Terminal (VT323), Sérigraphie (Silkscreen),
+  Pixel (Pixelify Sans), Stade (Jersey 10), Minuscule (Tiny5), Matrice (Doto) et Cathodique
+  (Workbench). Chaque ligne du Marché écrit votre pseudo avec la police. Le pseudo s’affiche dans sa
+  police au menu, au profil, en partie (« VOUS » dans la liste des rivaux), et chez les autres
+  (`font` dans `orbite.cosmetiques`, publié dans `forge.font`). `nameHtml(nom, police)` entoure le nom
+  d’un `span.nf[data-nf]` ; chaque police a sa taille (css/fonts.css) pour garder la hauteur des
+  lettres. Un fichier n’est chargé que si un pseudo l’utilise.
+- **Vus par les autres joueurs** (v96) : police, cadre et photo voyagent aussi dans la place de chacun
+  au salon en ligne (`seatOf`, js/multi.js ; le contenu des places n’est pas contrôlé par les règles
+  Firestore). Les autres créateurs, amis ou non, les voient au salon d’attente, dans la liste des
+  rivaux (PC et téléphone), en tête du combat et dans la discussion ; vos amis les voient dans la
+  liste d’amis, le classement, la fiche, les bulles de défi et de connexion. Sans photo, l’avatar est
+  l’astre du rang classé (`seatLook`). Les bots n’en ont pas.
 
 ## Création
 
@@ -983,6 +997,13 @@ l’écran à une hauteur virtuelle de 800 px (1,35 en 1080p, 1,8 en 1440p ; jam
   par `ui.z` (v82 : la ligne où la planète du menu passe sous le sol, les poussières de l’horizon).
 - Sur téléphone, rien ne change.
 - Sur la pastille sombre du menu, les poussières restent lisibles devant une planète claire (v83).
+- **Safari et anciens Chrome** (v96, `js/zoom-fix.js`, chargé en premier) : sous `zoom`, ces
+  navigateurs renvoient des `getBoundingClientRect` divisés par le zoom de l’élément (Chrome 128+ et
+  Firefox 126+ comptent en vrais pixels). Les astres, le tutoriel et les animations étaient décalés
+  vers le haut et la gauche, surtout sur les grands écrans et les Mac Retina. Une sonde (un carré de
+  10 px sous `zoom: 2`) détecte ce comportement ; on remet alors `getBoundingClientRect` en vrais
+  pixels en le multipliant par le produit des zooms des parents (relus une fois par image).
+  Reproduit et vérifié dans Chromium avec `--disable-blink-features=StandardizedBrowserZoom`.
 
 ## Shaders sous Windows (v83)
 
@@ -1519,6 +1540,15 @@ la Loi de résonance. Changements : Quartz 3 fois au plus, Opale 4 fois au plus 
 Améthyste +1 PV ; Loi de résonance : +1 PV à un autre Cristal (éveillée : +1/+1 à un autre Cristal).
 Résultat : 57 % en duel (Minéral 54 %, Néant 50 %) ; en mêlée à 8 (`tools/bots-mono.js 20`), rang
 moyen 4,65 au lieu de 3,50.
+
+**Comètes allégées (v96).** Les joueurs les trouvaient fortes, alors que les bots les jouent mal
+(10 % des duels pour le joueur naïf, rang 5,6 en mêlée) : leur force vient des actualisations, que
+les bots font peu. Avec un joueur naïf qui actualise toute son énergie restante (200 à 300 duels par
+famille), les Comètes gagnaient 61 % (Cristal 61 %, Minéral 60 %, les autres de 8 à 47 %), le plus
+gros bond de toutes les familles. En retirer une carte : Hyakutake −16 points, Météore et Hale-Bopp
+−14, Encke −10, les autres moins de 6. Changements : **Hyakutake**, à chaque actualisation, donne
++1/+1 à deux Comètes aléatoires (au lieu de toutes) ; **Tchouri** compte 3 actualisations au plus
+(au lieu de 5). Résultat : 50 %. Plafonner Météore à 4 actualisations par cycle ne changeait rien.
 
 **Reliques et éveil des lois (v84).** Mesuré avec `node orbite/tools/equilibrage.js 240 --seed v84
 --json`, avant et après (sans événement cosmique, que les outils ne tirent pas) : le rang moyen des

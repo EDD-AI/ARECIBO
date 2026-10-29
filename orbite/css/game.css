@@ -1869,6 +1869,18 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .cos-av { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; }
 .cos-av .orb { width: 46px; height: 46px; }
 .cos-avatar-row.rare { border-left: 2px solid var(--gold); background: linear-gradient(90deg, rgba(246, 196, 83, 0.07), transparent 60%); }
+/* Polices du pseudo (v96) : votre pseudo écrit avec chaque police. */
+.cos-row.cos-font-row { grid-template-columns: minmax(0, 1fr) auto; }
+.cos-font-row .cos-font-name { font-size: 20px; font-weight: 500; letter-spacing: 0.04em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Photo et cadre des joueurs en ligne : au salon et dans la liste des rivaux. */
+.mp-seat.on { flex-direction: row; align-items: center; gap: 8px; }
+.mp-seat .orb { width: 28px; height: 28px; flex: none; }
+.mp-seat .pfw { margin: 3px 4px; }
+.mp-seat-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pl-av { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; }
+.pl-av .orb { width: 24px; height: 24px; }
+.pl-av .pfw { margin: 0; }
+.rival-list.av .rival-row { grid-template-columns: 22px 30px 1fr 110px; }
 .cos-buy { display: flex; flex-direction: column; gap: 4px; }
 .cos-buy .btn { min-height: 34px; padding: 0 10px; }
 .fg-seedfeed { margin-top: 6px; min-height: 36px; font-size: 12px; }
