@@ -1188,7 +1188,7 @@ En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 | Univers par partie | **duel : 2** (vous + 1 rival) · mêlée : 8 (vous + 7 bots) |
 | Familles | 13 au total (Nébuleuses en v107), **5 actives par partie** (dont celle de votre loi) + les neutres : 1 287 combinaisons |
 | Lois | 16 : 13 de famille + 3 lois de vie neutres (Sacrifice 22 PV et +1 énergie par cycle, Endurance 45 PV, Phénix 25 PV et une renaissance à 15 PV), 3 proposées au départ ; les bots ne prennent que des lois de famille |
-| Astres | 9 par famille + 8 neutres = **125**, + **15 légendaires** (une par famille, deux neutres) ; **53 achetables** dans une partie, plus les 7 légendaires de ses familles et neutres |
+| Astres | 9 par famille + 8 neutres = **125**, + **15 légendaires** (une par famille, deux pour les Nébuleuses, une neutre) ; **53 achetables** dans une partie, plus les 6 légendaires de ses familles et la neutre (7 avec les Nébuleuses) |
 | Copies par astre | niveau 1 : 16 · 2 : 15 · 3 : 13 · 4 : 11 · 5 : 9 · 6 : 7 |
 | Création | 3 / 4 / 4 / 5 / 5 / 6 astres selon le niveau (1 à 6) |
 | Énergie | 3 au premier cycle, +1 par cycle, maximum 10 |
@@ -1419,9 +1419,11 @@ auprès du moteur (`OrbiteBuildings.register`).
 
 ## Légendaires
 
-Quinze astres **légendaires** : **un par famille** (v98 ; Piliers de la Création pour les Nébuleuses, v107) et deux neutres. Chacun existe en **un seul
+Quinze astres **légendaires** : **un par famille** (v98), **deux pour les Nébuleuses** (Piliers de la Création, v107, et le Grand
+Attracteur, ancienne légendaire neutre devenue nébuleuse en v108 : son effet vole déjà des statistiques) et
+**une neutre** (Oméga). Chacun existe en **un seul
 exemplaire** par partie ; depuis la v98, une légendaire de famille n’est en jeu que si sa famille l’est
-(les deux neutres le sont toujours). Ils ne se montrent que rarement : chaque
+(la neutre l’est toujours). Ils ne se montrent que rarement : chaque
 emplacement de la Création a 1 chance sur 100 d’en proposer un (de votre niveau ou moins), et une
 découverte en glisse un parmi ses choix dans 7 % des cas. On en croise un dans environ 3 parties sur
 10, et on en possède un dans 1 partie sur 10 seulement. Ils ne fusionnent pas (un seul exemplaire).
@@ -1432,7 +1434,7 @@ découverte en glisse un parmi ses choix dans 7 % des cas. On en croise un dans 
 | 2 | Ouroboros | Envers | 3/3 | Renaissance ; en revenant, il gagne +3/+3 et Toxique |
 | 3 | Œil du Vide | Néant | 4/6 | Début de combat et Effondrement : anéantit l’ennemi le plus faible (99 dégâts) |
 | 4 | Maelström | Tempête | 5/7 | Rafale ; après chacune de ses attaques, tous vos astres gagnent +1/+1 |
-| 5 | Grand Attracteur | Neutre | 5/7 | Début de combat : chaque ennemi perd 1/1, il gagne tout ce qu’il a volé |
+| 5 | Grand Attracteur | Nébuleuses (v108 ; neutre avant) | 5/7 | Début de combat : chaque ennemi perd 1/1, il gagne tout ce qu’il a volé ; rendu de nébuleuse violette en oursin, 17 rayons |
 | 6 | Oméga | Neutre | 7/7 | Début de combat : vos autres astres gagnent +2/+2, les deux premiers Bouclier |
 | 1 | Lune de sang (v98) | Lunes | 2/3 | Fin de cycle : ses voisins gagnent +1/+1 |
 | 2 | Pangée (v98) | Minéral | 2/6 | Rempart ; fin de cycle : vos Remparts gagnent +1/+2 |
@@ -1608,8 +1610,8 @@ emboîtés). La loi a sa forme d’énergie : un nuage aplati qui aspire (js/ene
   voleur mis à 0 PV par la riposte peut s’en relever.
 - **Vol de PV** (`c.drain`) : la cible perd des PV, la Nébuleuse les gagne (pour le combat). Un filet de
   lumière violette va de la victime au voleur.
-- **Vol d’astres** (`x.steal`) : une copie d’un astre déjà affronté rejoint la main, **prise dans la
-  réserve partagée** (s’il n’en reste plus, un astre de la réserve à votre portée). Chaque joueur se
+- **Vol d’astres** (`x.steal`) : l’adversaire **garde** son astre ; c’est une **copie** qui rejoint votre
+  main (comme Murozond), **prise dans la réserve partagée** (s’il n’en reste plus, un astre de la réserve à votre portée). Chaque joueur se
   souvient des astres de son dernier adversaire (`lastFoe`) et de tous ceux affrontés (`foes`, 40 au plus).
 - **PV rendus à l’univers** (Sablier) : comptés pendant le combat (`heal`), appliqués après, avant les
   dégâts de fin de combat, sans dépasser le maximum ; « UNIVERS +n PV » s’affiche.
@@ -1626,6 +1628,7 @@ emboîtés). La loi a sa forme d’énergie : un nuage aplati qui aspire (js/ene
 | 5 | Sablier | 7/9 | Quand vos astres volent des PV, votre univers en récupère 1 (4 fois par combat) |
 | 6 | Tarentule | 9/10 | Vol de vie ; après son attaque, vole 2 PV à chaque ennemi |
 | 4 | Piliers de la Création (légendaire) | 4/8 | Fin de cycle : vole un astre aléatoire de votre dernier adversaire |
+| 5 | Grand Attracteur (légendaire, v108) | 5/7 | Début de combat : chaque ennemi perd 1/1, il gagne tout ce qu’il a volé |
 
 **Loi du siphon** (astre de départ : Voile) : début de combat, vos Nébuleuses gagnent Vol de vie
 (éveillée : et +1/+1). **Formation** : à l’avant, après leur attaque, elles volent n PV à un ennemi de

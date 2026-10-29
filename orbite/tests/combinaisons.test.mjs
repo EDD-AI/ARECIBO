@@ -54,30 +54,32 @@ test('le rapport distingue les identités ordinaires, légendaires, jetons et lo
   assert.equal(report.families.possibleSelections, '1287');
   assert.equal(report.families.selectionsWithSpecifiedNonNeutralFamily, '495');
   assert.ok(Object.values(report.catalogue.regularTypesByFamily).every((n) => n === 9));
-  assert.ok(Object.values(report.catalogue.legendaryTypesByFamily).every((n) => n === 1), 'une légendaire par famille');
-  assert.equal(report.catalogue.neutralLegendaryTypes, 2);
+  // Une légendaire par famille, deux pour les Nébuleuses (le Grand Attracteur les a rejointes, v108).
+  for (const [fam, n] of Object.entries(report.catalogue.legendaryTypesByFamily)) assert.equal(n, fam === 'nebuleuse' ? 2 : 1, 'légendaires ' + fam);
+  assert.equal(report.catalogue.neutralLegendaryTypes, 1);
 });
 
 test('le catalogue nominal ne garde que les légendaires des familles en jeu et exclut les jetons', () => {
   const report = computeCombinationsReport();
   const families = new Set(report.nominalPool.referenceFamilies);
   const expectedIds = R.CARDS.filter((c) => !c.token && (c.fam === 'neutre' || families.has(c.fam)));
-  assert.equal(expectedIds.length, 60);
+  assert.equal(expectedIds.length, 59);
   assert.equal(report.nominalPool.totalTypes, expectedIds.length);
   assert.equal(report.nominalPool.regularTypes, 53);
-  assert.equal(report.nominalPool.legendaryTypes, 7);
+  assert.equal(report.nominalPool.legendaryTypes, 6);
   assert.ok(!R.CARDS.some((c) => c.legend && report.nominalPool.referenceFamilies.length && c.fam !== 'neutre' && !families.has(c.fam) && expectedIds.includes(c)));
-  assert.equal(report.nominalPool.uniformSizeAcrossFamilySelections, true);
-  assert.equal(report.nominalPool.minTypesAcrossFamilySelections, 60);
+  // 60 identités quand les Nébuleuses (deux légendaires) sont en jeu, 59 sinon.
+  assert.equal(report.nominalPool.uniformSizeAcrossFamilySelections, false);
+  assert.equal(report.nominalPool.minTypesAcrossFamilySelections, 59);
   assert.equal(report.nominalPool.maxTypesAcrossFamilySelections, 60);
 });
 
 test('les dénombrements du sous-modèle à sept identités sont exacts et sérialisables', () => {
   const report = computeCombinationsReport();
   assert.equal(report.distinctIdentityModel.units, 7);
-  assert.equal(report.distinctIdentityModel.unorderedSelections, '386206920');
+  assert.equal(report.distinctIdentityModel.unorderedSelections, '341149446');
   assert.equal(report.distinctIdentityModel.ordersPerSelection, '5040');
-  assert.equal(report.distinctIdentityModel.orderedArrangements, '1946482876800');
+  assert.equal(report.distinctIdentityModel.orderedArrangements, '1719393207840');
   assert.deepEqual(JSON.parse(JSON.stringify(report)), report);
   assert.ok(report.limitations.some((s) => s.includes('états légalement atteignables')));
   assert.ok(report.limitations.some((s) => s.includes('placement')));
@@ -88,9 +90,9 @@ test('le modèle distingue une sélection vide, une paire et un nombre d’astre
   assert.equal(empty.unorderedSelections, '1');
   assert.equal(empty.orderedArrangements, '1');
   const pair = computeCombinationsReport({ units: 2 }).distinctIdentityModel;
-  assert.equal(pair.unorderedSelections, '1770');
+  assert.equal(pair.unorderedSelections, '1711');
   assert.equal(pair.ordersPerSelection, '2');
-  assert.equal(pair.orderedArrangements, '3540');
+  assert.equal(pair.orderedArrangements, '3422');
   assert.throws(() => computeCombinationsReport({ units: R.BOARD_MAX + 1 }), RangeError);
   assert.throws(() => computeCombinationsReport({ units: -1 }), RangeError);
   assert.throws(() => computeCombinationsReport({ units: 2.5 }), RangeError);
@@ -109,7 +111,7 @@ test('la CLI produit du JSON seul ou un rapport humain qui annonce les limites',
   assert.match(human.stdout, /profondeur/);
   const pair = run('--units=2', '--json');
   assert.equal(pair.status, 0, pair.stderr);
-  assert.equal(JSON.parse(pair.stdout).distinctIdentityModel.orderedArrangements, '3540');
+  assert.equal(JSON.parse(pair.stdout).distinctIdentityModel.orderedArrangements, '3422');
 });
 
 test('la CLI refuse les options inconnues et les nombres invalides avec un statut non nul', () => {

@@ -16,11 +16,11 @@ const unit = (id, row = 0, golden = false) => ({
 const duel = (seed) => R.newGame(seed, 'siphon', { size: 2 });
 const events = (r, t) => r.events.filter((e) => e.t === t);
 
-test('la famille, sa loi, ses neuf astres et sa légendaire existent', () => {
+test('la famille, sa loi, ses neuf astres et ses deux légendaires existent', () => {
   assert.ok(R.FAMILY_KEYS.includes('nebuleuse'));
   const cards = R.CARDS.filter((c) => c.fam === 'nebuleuse');
   assert.equal(cards.filter((c) => !c.legend).length, 9);
-  assert.equal(cards.filter((c) => c.legend).length, 1);
+  assert.deepEqual(cards.filter((c) => c.legend).map((c) => c.id).sort(), ['attracteur', 'piliers']);
   assert.deepEqual([1, 2, 3, 4, 5, 6].map((t) => cards.some((c) => !c.legend && c.tier === t)), [true, true, true, true, true, true]);
   assert.equal(R.LAW.siphon.fam, 'nebuleuse');
   for (const c of cards) assert.equal(c.look.type, 'nebula', c.id + ' : rendu nébuleuse');
