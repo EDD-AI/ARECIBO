@@ -145,6 +145,15 @@
     ['INVITÉ', 'INVITED', 'INVITADO', 'EINGELADEN', 'CONVIDADO'],
     ['INVITER', 'INVITE', 'INVITAR', 'EINLADEN', 'CONVIDAR'],
     ['LANCER · {n} JOUEURS', 'START · {n} PLAYERS', 'EMPEZAR · {n} JUGADORES', 'STARTEN · {n} SPIELER', 'COMEÇAR · {n} JOGADORES'],
+    // Votre style (v102)
+    ['VOTRE STYLE', 'YOUR STYLE', 'TU ESTILO', 'DEIN STIL', 'SEU ESTILO'],
+    ['Famille la plus jouée', 'Most played family', 'Familia más jugada', 'Meistgespielte Familie', 'Família mais jogada'],
+    ['Famille qui gagne le plus', 'Family that wins the most', 'Familia que más gana', 'Familie mit den meisten Siegen', 'Família que mais vence'],
+    ['Combo le plus gagnant', 'Winningest combo', 'Combo más ganador', 'Erfolgreichste Kombi', 'Combo mais vitorioso'],
+    ['Combo le plus joué', 'Most played combo', 'Combo más jugado', 'Meistgespielte Kombi', 'Combo mais jogado'],
+    ['{w} victoires sur {g} parties', '{w} wins in {g} games', '{w} victorias en {g} partidas', '{w} Siege in {g} Partien', '{w} vitórias em {g} partidas'],
+    ['{w} victoire sur {g} parties', '{w} win in {g} games', '{w} victoria en {g} partidas', '{w} Sieg in {g} Partien', '{w} vitória em {g} partidas'],
+    ['{w} victoire sur {g} partie', '{w} win in {g} game', '{w} victoria en {g} partida', '{w} Sieg in {g} Partie', '{w} vitória em {g} partida'],
     // Arrimage visible (v101)
     ['Aimant : glissez votre astre Arrimage sur une Machine, il s’y colle et lui donne ses statistiques.', 'Magnet: drag your Docking orb onto a Machine; it sticks to it and gives it its stats.', 'Imán: arrastra tu astro con Acoplamiento sobre una Máquina; se pega a ella y le da sus estadísticas.', 'Magnet: Ziehe dein Gestirn mit Andocken auf eine Maschine; es haftet daran und gibt ihr seine Werte.', 'Ímã: arraste seu astro com Acoplagem até uma Máquina; ele gruda nela e lhe dá seus atributos.'],
     // Cadres premium (v100)
