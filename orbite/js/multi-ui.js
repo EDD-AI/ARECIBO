@@ -9,7 +9,7 @@
   const $ = (id) => document.getElementById(id);
   const tr = window.tr || ((s) => s);
   const { esc } = A;
-  const st = { busy: false, law: null, lawTimer: 0, lawEnd: 0, view: 'menu', tick: 0, invite: null, target: null };
+  const st = { busy: false, law: null, lawTimer: 0, lawEnd: 0, view: 'menu', tick: 0, invite: null, target: null, pick: new Set() };
   const INVITE_KEY = 'orbite.invite';
   const dropInvite = () => { st.invite = null; try { sessionStorage.removeItem(INVITE_KEY); } catch (err) { /* sans importance */ } };
   // Le lien d'invitation : la page du jeu, avec le code de la partie après #rejoindre=.
@@ -29,10 +29,14 @@
     return { cls: 'on', txt: tr('En ligne'), rank: 0 };
   }
   // Défi lancé depuis la liste d'amis : il reste publié tant que notre salon attend l'ami.
+  // Partie entre amis (v93) : tant que le salon attend, sa présence annonce les invitations.
   function syncInvite() {
     const m = MP.state.match;
-    const live = st.target && m && m.status === 'waiting' && m.mode === 'private' && m.host === ON.uid() && m.uids.length < MP.seatsOf(m);
-    if (ON.setInvite) ON.setInvite(live ? m.code : '', live ? st.target.code : '');
+    const open = m && m.status === 'waiting' && m.mode === 'private' && m.host === ON.uid() && m.uids.length < MP.seatsOf(m);
+    const live = open && st.target;
+    const group = open && !live && MP.seatsOf(m) > 2 && Array.isArray(m.invited) && m.invited.length > 0;
+    if (group && ON.setGroupInvite) ON.setGroupInvite(m.code, m.invited.length);
+    else if (ON.setInvite) ON.setInvite(live ? m.code : '', live ? st.target.code : '');
     // Le salon vient d'être créé et pas encore reçu : le défi attend ; il tombe quand la partie commence.
     if (!MP.state.mid || (m && m.status !== 'waiting')) st.target = null;
   }
@@ -81,12 +85,13 @@
     if (st.view === 'friends') { renderFriends(box, off); return; }
     const inv = ON.invites ? ON.invites() : [];
     box.innerHTML = `
-      ${inv.length ? `<div class="mp-card mp-defis"><b>${tr('DÉFIS REÇUS')}</b>${inv.map((x) => `<div class="mp-defi"><span>${tr('{name} vous défie en duel !', { name: `<b>${esc(x.name)}</b>` })}</span><button class="btn primary" data-mp="join" data-code="${esc(x.code)}" ${off}>${tr('REJOINDRE')}</button></div>`).join('')}</div>` : ''}
+      ${inv.length ? `<div class="mp-card mp-defis"><b>${tr('DÉFIS REÇUS')}</b>${inv.map((x) => `<div class="mp-defi"><span>${inviteText(x)}</span><button class="btn primary" data-mp="join" data-code="${esc(x.code)}" ${off}>${tr('REJOINDRE')}</button></div>`).join('')}</div>` : ''}
+      <div class="mp-card"><b>${tr('ENTRE AMIS')}</b>
+        <button class="btn primary" data-mp="friends" ${off}>${tr('DÉFIER DES AMIS')}</button></div>
       <div class="mp-card"><b>${tr('DUEL EN LIGNE')}</b>
         <p>${tr('Un contre un, face à un créateur de votre rang. Personne au bout de 40 s ? Un univers rival prend la place.')}</p>
         <small class="mp-rank">${tr('Votre rang : {r}', { r: esc(myRank()) })}</small>
-        <button class="btn primary" data-mp="ranked" data-size="2" ${off}>${tr('RECHERCHER UN DUEL')}</button>
-        <button class="btn" data-mp="friends" ${off}>${tr('DÉFIER UN AMI')}</button></div>
+        <button class="btn primary" data-mp="ranked" data-size="2" ${off}>${tr('RECHERCHER UN DUEL')}</button></div>
       <div class="mp-card"><b>${tr('MÊLÉE À 8 EN LIGNE')}</b>
         <p>${tr('Affrontez des créateurs de votre rang. Les places libres sont tenues par des univers rivaux.')}</p>
         <button class="btn" data-mp="ranked" data-size="8" ${off}>${tr('RECHERCHER UNE MÊLÉE')}</button>
@@ -97,19 +102,29 @@
         <button class="btn" data-mp="join" ${off}>${tr('REJOINDRE')}</button></div></div>`;
   }
   // Défier un ami : sa liste d'amis, ceux en ligne d'abord. Le lien reste possible pour les autres.
+  const friendsSorted = () => (ON.friendProfiles ? ON.friendProfiles() : []).map((p) => ({ p, pr: presenceOf(p) }))
+    .sort((a, b) => a.pr.rank - b.pr.rank || String(a.p.pseudo || '').localeCompare(String(b.p.pseudo || '')));
+  const codeOfFriend = (p) => String(p.code || ON.codeOf(p.uid));
+  const friendRow = (p, pr, act, label, on, off) => `<button class="mp-friend ${on ? 'on' : ''}" data-mp="${act}" data-uid="${esc(p.uid)}" ${off}>
+      <i class="on-dot ${pr.cls}"></i><span><b>${esc(p.pseudo || tr('Créateur'))}<small>#${esc(p.tag || '')}</small></b><small>${esc(pr.txt)} · ${tr('Niveau {n}', { n: p.level || 1 })}</small></span>
+      <em>${label}</em></button>`;
+  // Défier des amis (v93) : on en coche un ou plusieurs. Un ami : un duel ; plusieurs : une partie
+  // entre amis (8 joueurs au plus). Le lien reste possible pour les autres.
   function renderFriends(box, off) {
-    const list = (ON.friendProfiles ? ON.friendProfiles() : []).map((p) => ({ p, pr: presenceOf(p) }))
-      .sort((a, b) => a.pr.rank - b.pr.rank || String(a.p.pseudo || '').localeCompare(String(b.p.pseudo || '')));
-    const rows = list.map(({ p, pr }) => `<button class="mp-friend" data-mp="challenge" data-uid="${esc(p.uid)}" ${off}>
-        <i class="on-dot ${pr.cls}"></i><span><b>${esc(p.pseudo || tr('Créateur'))}<small>#${esc(p.tag || '')}</small></b><small>${esc(pr.txt)} · ${tr('Niveau {n}', { n: p.level || 1 })}</small></span>
-        <em>${tr('DÉFIER')}</em></button>`).join('');
+    const list = friendsSorted();
+    for (const uid of [...st.pick]) if (!list.some((x) => x.p.uid === uid)) st.pick.delete(uid);
+    const rows = list.map(({ p, pr }) => friendRow(p, pr, 'pick', st.pick.has(p.uid) ? '✓' : '+', st.pick.has(p.uid), off)).join('');
     const empty = ON.friendsReady && !ON.friendsReady() ? `<p class="muted">${tr('Chargement…')}</p>`
       : `<p class="muted">${tr('Aucun ami pour l’instant. Ajoutez-en dans Profil → Amis avec leur code ami.')}</p>`;
-    box.innerHTML = `<div class="mp-card"><b>${tr('DÉFIER UN AMI')}</b><p>${tr('Choisissez un ami : votre défi s’affiche aussitôt dans son jeu.')}</p></div>
+    const n = st.pick.size;
+    const go = n === 0 ? tr('CHOISISSEZ DES AMIS') : n === 1 ? tr('DUEL') : tr('PARTIE À {n} JOUEURS', { n: Math.min(8, n + 1) });
+    box.innerHTML = `<div class="mp-card"><b>${tr('DÉFIER DES AMIS')}</b></div>
       <div class="mp-friends">${rows || empty}</div>
+      <button class="btn primary" data-mp="inviteGo" ${n && !st.busy ? '' : 'disabled'}>${go}</button>
       <div class="sheet-actions"><button class="btn" data-mp="create" data-size="2" ${off}>${tr('PAR UN LIEN')}</button>
       <button class="btn" data-mp="menu">${tr('RETOUR')}</button></div>`;
   }
+  const inviteText = (x) => (x.group ? tr('{name} vous invite dans sa partie entre amis !', { name: `<b>${esc(x.name)}</b>` }) : tr('{name} vous défie en duel !', { name: `<b>${esc(x.name)}</b>` }));
   function renderLobby(box, m) {
     const host = m.host === ON.uid();
     const left = Math.max(0, Math.ceil((m.created + MP.WAIT_MS - Date.now()) / 1000));
@@ -132,11 +147,23 @@
       : !host
         // L'invité attend : c'est l'hôte qui lance.
         ? `<b>${duel ? tr('DUEL ENTRE AMIS') : tr('CODE DE SESSION')}</b><div class="mp-code">${esc(m.code)}</div><p>${tr('En attente : {name} lance la partie.', { name: esc((m.seats.find((x) => x.uid === m.host) || {}).name || tr('l’hôte')) })}</p>`
-        : `<b>${duel ? tr('DUEL ENTRE AMIS') : tr('CODE DE SESSION')}</b><div class="mp-code">${esc(m.code)}</div><p>${duel ? tr('Envoyez le lien à votre ami : il ouvre le jeu directement dans votre partie. Il peut aussi saisir le code dans Multijoueur → Rejoindre un ami.') : tr('Vos amis le saisissent dans Multijoueur → Rejoindre. Les places libres seront tenues par des univers rivaux.')}</p>
+        : `<b>${duel ? tr('DUEL ENTRE AMIS') : tr('CODE DE SESSION')}</b><div class="mp-code">${esc(m.code)}</div><p>${duel ? tr('Envoyez le lien à votre ami : il ouvre le jeu directement dans votre partie. Il peut aussi saisir le code dans Multijoueur → Rejoindre un ami.') : tr('Ou partagez ce code avec vos amis.')}</p>
          <button class="btn" data-mp="share">${tr('ENVOYER LE LIEN')}</button>`;
+    // Partie entre amis à plusieurs : l'hôte invite depuis sa liste d'amis et choisit si des univers
+    // rivaux tiennent les places libres.
+    const group = host && m.mode === 'private' && !duel;
+    const bots = m.bots !== false;
+    const invited = Array.isArray(m.invited) ? m.invited : [];
+    const friends = group ? friendsSorted().map(({ p, pr }) => {
+      const here = m.uids.includes(p.uid), sent = invited.includes(codeOfFriend(p));
+      return friendRow(p, pr, here || sent ? 'noop' : 'invite', here ? tr('LÀ') : sent ? tr('INVITÉ') : tr('INVITER'), here || sent, m.uids.length >= n ? 'disabled' : '');
+    }).join('') : '';
+    const startLabel = !group || bots ? `${tr('LANCER LA PARTIE')} · ${m.uids.length}/${n}` : tr('LANCER · {n} JOUEURS', { n: m.uids.length });
     box.innerHTML = `<div class="mp-card">${head}</div>
       <div class="mp-seats">${seats}</div>
-      <div class="sheet-actions">${host && m.mode === 'private' ? `<button class="btn primary" data-mp="start">${tr('LANCER LA PARTIE')} · ${m.uids.length}/${n}</button>` : ''}
+      ${group ? `<button class="mp-toggle ${bots ? 'on' : ''}" data-mp="bots">${tr('Univers rivaux pour les places libres')}<b>${bots ? tr('OUI') : tr('NON')}</b></button>
+        ${friends ? `<div class="mp-card mp-invites"><b>${tr('INVITER DES AMIS')}</b><div class="mp-friends">${friends}</div></div>` : ''}` : ''}
+      <div class="sheet-actions">${host && m.mode === 'private' ? `<button class="btn primary" data-mp="start" ${group && !bots && m.uids.length < 2 ? 'disabled' : ''}>${startLabel}</button>` : ''}
       <button class="btn" data-mp="leave">${tr('QUITTER')}</button></div>
       ${window.OrbiteChat ? `<div class="mp-card"><b>${tr('DISCUSSION')}</b>${window.OrbiteChat.html(20)}</div>` : ''}`;
   }
@@ -186,7 +213,25 @@
       if (k === 'signin') { await ON.signIn(); }
       else if (k === 'ranked') { st.busy = true; render(); await MP.searchRanked(Number(b.dataset.size)); }
       else if (k === 'create') { st.target = null; st.view = 'menu'; st.busy = true; render(); await MP.createPrivate(Number(b.dataset.size)); }
-      else if (k === 'friends') { st.view = 'friends'; }
+      else if (k === 'friends') { st.view = 'friends'; st.pick.clear(); }
+      else if (k === 'pick') { const u = b.dataset.uid; if (st.pick.has(u)) st.pick.delete(u); else if (st.pick.size < 7) st.pick.add(u); }
+      else if (k === 'inviteGo') {
+        const picked = [...st.pick].map(friendOf).filter(Boolean);
+        if (!picked.length) return;
+        if (picked.length === 1) { st.pick.clear(); st.busy = false; return act('challenge', { dataset: { uid: picked[0].uid } }); }
+        st.busy = true;
+        render();
+        if (MP.state.match && MP.state.match.status === 'waiting') await MP.leave();
+        await MP.createPrivate(8);
+        await MP.setBots(false);
+        await MP.invite(picked.map(codeOfFriend));
+        st.target = null;
+        st.pick.clear();
+        st.view = 'menu';
+      }
+      else if (k === 'invite') { const p = friendOf(b.dataset.uid); if (p) await MP.invite([codeOfFriend(p)]); }
+      else if (k === 'bots') { const m = MP.state.match; if (m) await MP.setBots(m.bots === false); }
+      else if (k === 'noop') { return; }
       else if (k === 'menu') { st.view = 'menu'; }
       else if (k === 'challenge') {
         const p = friendOf(b.dataset.uid);
@@ -265,7 +310,7 @@
       const d = document.createElement('div');
       d.className = 'defi-pop';
       d.dataset.code = x.code;
-      d.innerHTML = `<span class="defi-txt">${tr('{name} vous défie en duel !', { name: `<b>${esc(x.name)}</b>` })}</span>
+      d.innerHTML = `<span class="defi-txt">${inviteText(x)}</span>
         <button class="btn primary" data-defi="join">${tr('REJOINDRE')}</button><button class="btn ghost" data-defi="no" aria-label="${tr('Fermer')}">×</button>`;
       pops.appendChild(d);
       SFX.level();

@@ -21,7 +21,15 @@
   // Places d'une partie : 2 en duel, 8 en mêlée. Un duel se reconnaît à size: 2 ou, si les règles
   // publiées dans Firebase sont plus anciennes que la v68 et refusent ce champ, à sa graine en « D ».
   const DUEL_MARK = 'D';
-  const seatsOf = (m) => (m && (m.size === 2 || String(m.seed || '').charAt(0) === DUEL_MARK) ? 2 : SEATS);
+  // Partie entre amis sans univers rivaux (v93) : la graine commence par « N » suivi du nombre de
+  // joueurs (3 à 8), fixé au lancement ; les règles Firestore n'ont pas à changer.
+  const seatsOf = (m) => {
+    if (!m) return SEATS;
+    const seed = String(m.seed || '');
+    if (m.size === 2 || seed.charAt(0) === DUEL_MARK) return 2;
+    const n = seed.charAt(0) === 'N' ? parseInt(seed.charAt(1), 10) : 0;
+    return n >= 3 && n <= SEATS ? n : SEATS;
+  };
   const denied = (err) => !!err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
   const WAIT_MS = F.wait || 40000; // recherche classée : délai avant de compléter avec des bots
   // Temps de boutique : court au début pour jouer vite (25 s, 35 s, 50 s), puis 60 s, 65 s, 70 s
@@ -179,8 +187,26 @@
     if (!m || m.host !== uid() || m.status !== 'waiting') return;
     const a = new Uint32Array(2);
     crypto.getRandomValues(a);
-    const seed = (seatsOf(m) === 2 ? DUEL_MARK : '') + 'MP' + a[0].toString(16).toUpperCase() + a[1].toString(16).toUpperCase();
+    // Sans univers rivaux (bots: false), la partie ne compte que les joueurs présents : deux font un duel.
+    const humans = m.uids.length;
+    const mark = seatsOf(m) === 2 ? DUEL_MARK : m.bots === false ? (humans <= 2 ? DUEL_MARK : 'N' + Math.min(SEATS, humans)) : '';
+    if (m.bots === false && humans < 2) return;
+    const seed = mark + 'MP' + a[0].toString(16).toUpperCase() + a[1].toString(16).toUpperCase();
     try { const { fs } = fire(); await fs.updateDoc(ref(M.mid), { status: 'playing', seed, startAt: now() }); } catch (err) { A.refuse(err.message); }
+  }
+
+  // ─── Invitations entre amis (v93) ───────────────────────────
+  // Le salon garde les codes amis invités (champ invited, que ses membres peuvent modifier) et le
+  // choix des univers rivaux pour les places libres (bots).
+  async function invite(codes) {
+    if (!M.mid || !codes.length) return;
+    const { fs } = fire();
+    await fs.updateDoc(ref(M.mid), { invited: fs.arrayUnion(...codes) });
+  }
+  async function setBots(on) {
+    if (!M.mid) return;
+    const { fs } = fire();
+    await fs.updateDoc(ref(M.mid), { bots: !!on });
   }
 
   // ─── Discussion ─────────────────────────────────────────────
@@ -380,7 +406,7 @@
 
   window.OrbiteMulti = {
     get state() { return M; },
-    searchRanked, createPrivate, joinCode, start, leave, newState, lawChoices, endTurn, startRound, stopRound, isHost, say,
+    searchRanked, createPrivate, joinCode, start, leave, invite, setBots, newState, lawChoices, endTurn, startRound, stopRound, isHost, say,
     SEATS, seatsOf, WAIT_MS, LAW_MS
   };
 })();

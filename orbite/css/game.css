@@ -1679,6 +1679,13 @@ button.pf-rank { grid-template-columns: 56px 1fr auto; width: 100%; font: inheri
 .mp-friend { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; font: inherit; color: var(--ink); text-align: left; background: rgba(241, 236, 218, 0.04); border: 1px solid var(--line); cursor: pointer; }
 .mp-friend:hover:not(:disabled) { border-color: var(--ink); }
 .mp-friend:disabled { opacity: 0.5; cursor: default; }
+/* Partie entre amis (v93) : amis cochés, invitations du salon, univers rivaux oui ou non. */
+.mp-friend.on { border-color: var(--gold); background: rgba(246, 196, 83, 0.08); }
+.mp-friend.on em { color: var(--good); }
+.mp-toggle { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; font: inherit; font-size: 13px; color: var(--ink); text-align: left; background: rgba(241, 236, 218, 0.04); border: 1px solid var(--line); cursor: pointer; }
+.mp-toggle b { flex: none; font-size: 12px; letter-spacing: 0.16em; color: var(--dim); }
+.mp-toggle.on b { color: var(--good); }
+.mp-invites .mp-friends { margin-top: 4px; }
 .mp-friend .on-dot { flex: none; margin: 0; }
 .mp-friend span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .mp-friend span b { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

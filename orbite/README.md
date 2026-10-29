@@ -698,6 +698,19 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
     d’un ami vu il y a moins de 5 minutes.
   - Le défi n’est publié que tant que le salon attend l’ami (`syncInvite`, js/multi-ui.js) : il tombe
     dès que l’ami arrive, que la partie commence ou que l’hôte s’en va.
+- **Défier des amis** (v93) : la carte « Entre amis » ouvre la liste d’amis, où l’on en coche un ou
+  plusieurs (7 au plus). Un ami : un duel, comme avant. Plusieurs : une **partie entre amis** jusqu’à 8
+  joueurs. Chaque invité reçoit la bulle « NOM vous invite dans sa partie entre amis ! » avec REJOINDRE
+  (et la carte « Défis reçus »). Dans le salon, l’hôte invite d’autres amis (INVITER, INVITÉ, LÀ) et
+  choisit si des **univers rivaux** tiennent les places libres (NON par défaut depuis la liste d’amis,
+  OUI pour « Créer une mêlée privée »). Sans univers rivaux, la partie compte exactement les joueurs
+  présents (« LANCER · 3 JOUEURS ») ; à deux, c’est un duel.
+  - Sans nouvelle règle Firestore : le salon garde les codes amis invités (`invited`) et le choix
+    `bots`, que ses membres peuvent modifier ; au lancement, la graine commence par « N » et le nombre
+    de joueurs (`MP.seatsOf`), comme le « D » des duels. La présence de l’hôte porte « I » + le code
+    de la partie + un compteur d’invités : les amis qui la voient lisent le salon et regardent si leur
+    code y est (`checkGroup`, js/online.js). 8 joueurs au plus : les règles publiées limitent un
+    salon à 8 places.
 - **Discussion** (v77, `js/chat.js`) : dans le salon d’attente et pendant la partie (bouton bulle en
   haut, à côté du minuteur, avec une pastille quand un message arrive). Depuis la v81, un message
   reçu s’affiche en grosse bulle en haut de l’écran de l’autre (nom en doré, texte en grand, trois

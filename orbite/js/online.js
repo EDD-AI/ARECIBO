@@ -263,12 +263,33 @@
   const INVITE_RE = /^[A-Z0-9]{12}$/;
   const INVITE_MS = 300000;
   let inviteTag = '';
-  function setInvite(matchCode, friendCode) {
-    const tag = matchCode && friendCode ? String(matchCode) + String(friendCode) : '';
+  function setInvite(matchCode, friendCode) { setPresenceTag(matchCode && friendCode ? String(matchCode) + String(friendCode) : ''); }
+  function setPresenceTag(tag) {
     if (tag === inviteTag) return;
     inviteTag = tag;
     presence.at = 0;
     beat();
+  }
+  // Partie entre amis (v93) : la présence de l'hôte porte « I » + le code de la partie + un compteur
+  // d'invités (8 caractères). Les amis qui la voient lisent le salon et regardent si leur code ami
+  // est dans sa liste d'invités ; le compteur change à chaque invitation, ce qui les fait relire.
+  const GROUP_RE = /^I[A-Z0-9]{7}$/;
+  const setGroupInvite = (matchCode, count) => setPresenceTag(matchCode && count ? 'I' + matchCode + (count % 36).toString(36).toUpperCase() : '');
+  const groupInv = {};
+  async function checkGroup(p) {
+    const tag = p && typeof p.where === 'string' && GROUP_RE.test(p.where) ? p.where : '';
+    const cur = groupInv[p.uid];
+    if (!tag) { if (cur) { delete groupInv[p.uid]; friendsChanged(); } return; }
+    if (cur && cur.tag === tag) return;
+    groupInv[p.uid] = { tag, ok: false, code: tag.slice(1, 7) };
+    try {
+      const { fs } = fb;
+      const res = await fs.getDocs(fs.query(fs.collection(db, 'matches'), fs.where('code', '==', tag.slice(1, 7)), fs.limit(1)));
+      const m = res.empty ? null : res.docs[0].data();
+      const g = groupInv[p.uid];
+      if (g && g.tag === tag) g.ok = !!m && m.status === 'waiting' && Array.isArray(m.invited) && m.invited.includes(codeOf(state.user.uid));
+    } catch (err) { /* salon illisible : pas d'invitation */ }
+    friendsChanged();
   }
   const live = { q: null, docs: {}, profiles: {}, ready: false };
   const friendsChanged = () => { try { window.dispatchEvent(new Event('orbite-friends')); } catch (err) { /* sans importance */ } };
@@ -286,7 +307,11 @@
       for (const uid of Object.keys(live.docs)) if (!ok.has(uid)) { live.docs[uid](); delete live.docs[uid]; delete live.profiles[uid]; }
       for (const uid of ok) {
         if (live.docs[uid]) continue;
-        live.docs[uid] = fs.onSnapshot(fs.doc(db, 'profiles', uid), (p) => { live.profiles[uid] = p.exists() ? Object.assign({ uid }, p.data()) : null; friendsChanged(); }, () => {});
+        live.docs[uid] = fs.onSnapshot(fs.doc(db, 'profiles', uid), (p) => {
+          live.profiles[uid] = p.exists() ? Object.assign({ uid }, p.data()) : null;
+          if (live.profiles[uid]) checkGroup(live.profiles[uid]);
+          friendsChanged();
+        }, () => {});
       }
       live.ready = true;
       if (incoming !== state.requests) set({ requests: incoming });
@@ -297,6 +322,7 @@
     if (live.q) live.q();
     for (const u of Object.values(live.docs)) u();
     Object.assign(live, { q: null, docs: {}, profiles: {}, ready: false });
+    for (const k of Object.keys(groupInv)) delete groupInv[k];
     inviteTag = '';
     friendsChanged();
   }
@@ -306,9 +332,14 @@
   function invites() {
     if (!state.user) return [];
     const mine = codeOf(state.user.uid);
-    return friendProfiles()
-      .filter((p) => typeof p.where === 'string' && INVITE_RE.test(p.where) && p.where.slice(6) === mine && Date.now() - (p.seen || 0) < INVITE_MS)
+    const fresh = (p) => Date.now() - (p.seen || 0) < INVITE_MS;
+    const duels = friendProfiles()
+      .filter((p) => typeof p.where === 'string' && INVITE_RE.test(p.where) && p.where.slice(6) === mine && fresh(p))
       .map((p) => ({ uid: p.uid, name: String(p.pseudo || tr('Créateur')), code: p.where.slice(0, 6) }));
+    const groups = friendProfiles()
+      .filter((p) => groupInv[p.uid] && groupInv[p.uid].ok && groupInv[p.uid].tag === p.where && fresh(p))
+      .map((p) => ({ uid: p.uid, name: String(p.pseudo || tr('Créateur')), code: groupInv[p.uid].code, group: true }));
+    return duels.concat(groups);
   }
 
   async function writeProfile() {
@@ -407,7 +438,7 @@
     syncNow: () => uploadNow(),
     myCode: () => (state.user ? codeOf(state.user.uid) : ''),
     friends, addByCode, accept, remove, leaderboard, profileOf, dailySubmit, dailyTop,
-    friendProfiles, friendsReady: () => live.ready, invites, setInvite,
+    friendProfiles, friendsReady: () => live.ready, invites, setInvite, setGroupInvite,
     codeOf,
     // Accès Firestore pour le multijoueur (js/multi.js).
     fire: () => (db && fb ? { db, fs: fb.fs } : null),
