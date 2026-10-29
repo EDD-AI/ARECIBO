@@ -116,6 +116,8 @@ body.desk #game .game-foot {
 body.desk #game .power { flex: none; min-height: 70px; padding: 10px 14px; font-size: 14px; line-height: 1.3; }
 body.desk #game .power b { font-size: 12px; }
 body.desk #game .fight { min-width: 0; min-height: 76px; font-size: 20px; }
+body.desk #game #fightBtn.mp-count b { font-size: 42px; }
+body.desk #game #fightBtn.mp-count small { font-size: 12px; }
 body.desk #game .battle-ctl { margin-left: 0; justify-content: stretch; }
 body.desk #game .battle-ctl .chip { width: 100%; justify-content: center; height: 52px; font-size: 16px; }
 body.desk.in-combat #game .game-foot { margin-top: 0; }

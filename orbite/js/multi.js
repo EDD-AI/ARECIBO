@@ -398,9 +398,16 @@
       if (st.round !== M.timerRound) { M.timerRound = st.round; M.deadline = deadlineOf(st.round); }
       const left = Math.max(0, M.deadline - now());
       const txt = Math.floor(left / 60000) + ':' + String(Math.ceil(left / 1000) % 60).padStart(2, '0');
-      if (el) { el.hidden = st.phase !== 'shop'; el.textContent = txt; el.classList.toggle('low', left < 10000); }
-      // Le bouton de combat devient le compte à rebours : on ne peut pas finir son tour en avance.
-      if (btn) { btn.disabled = true; btn.textContent = st.phase === 'shop' ? tr('COMBAT DANS {t}', { t: txt }) : tr('COMBAT'); }
+      // Un seul compte à rebours (v104) : en gros chiffres dans le bouton de combat, qu'on ne peut
+      // pas toucher (le tour ne se finit pas en avance). Le petit minuteur du haut reste caché.
+      if (el) el.hidden = true;
+      if (btn) {
+        const count = st.phase === 'shop';
+        btn.disabled = true;
+        btn.classList.toggle('mp-count', count);
+        btn.classList.toggle('low', count && left < 10000);
+        btn.innerHTML = count ? `<small>${tr('COMBAT DANS')}</small><b>${txt}</b>` : tr('COMBAT');
+      }
       // Les 5 dernières secondes : un cadre rouge léger palpite autour de l'écran, le téléphone vibre
       // et un tic d'horloge sonne à chaque seconde (v103).
       const hurry = st.phase === 'shop' && !O.ui.busy && left > 0 && left <= 5000;
@@ -420,7 +427,7 @@
     document.body.classList.remove('mp-game', 'mp-hurry');
     const el = document.getElementById('mpTimer'), btn = document.getElementById('fightBtn');
     if (el) el.hidden = true;
-    if (btn) { btn.disabled = false; btn.textContent = tr('COMBATTRE'); }
+    if (btn) { btn.disabled = false; btn.classList.remove('mp-count', 'low'); btn.textContent = tr('COMBATTRE'); }
   }
 
   window.OrbiteMulti = {

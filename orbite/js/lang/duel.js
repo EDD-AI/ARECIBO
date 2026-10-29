@@ -145,6 +145,8 @@
     ['INVITÉ', 'INVITED', 'INVITADO', 'EINGELADEN', 'CONVIDADO'],
     ['INVITER', 'INVITE', 'INVITAR', 'EINLADEN', 'CONVIDAR'],
     ['LANCER · {n} JOUEURS', 'START · {n} PLAYERS', 'EMPEZAR · {n} JUGADORES', 'STARTEN · {n} SPIELER', 'COMEÇAR · {n} JOGADORES'],
+    // Un seul compte à rebours (v104)
+    ['COMBAT DANS', 'FIGHT IN', 'COMBATE EN', 'KAMPF IN', 'COMBATE EM'],
     // Votre style (v102)
     ['VOTRE STYLE', 'YOUR STYLE', 'TU ESTILO', 'DEIN STIL', 'SEU ESTILO'],
     ['Famille la plus jouée', 'Most played family', 'Familia más jugada', 'Meistgespielte Familie', 'Família mais jogada'],
