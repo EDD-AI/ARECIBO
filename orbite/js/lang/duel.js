@@ -133,6 +133,22 @@
     // Volumes (v86)
     ['EFFETS', 'EFFECTS', 'EFECTOS', 'EFFEKTE', 'EFEITOS'],
     ['NOUVEAU', 'NEW', 'NUEVO', 'NEU', 'NOVO'],
+    // Parties entre amis (v93)
+    ['ENTRE AMIS', 'WITH FRIENDS', 'ENTRE AMIGOS', 'MIT FREUNDEN', 'ENTRE AMIGOS'],
+    ['DÉFIER DES AMIS', 'CHALLENGE FRIENDS', 'DESAFIAR A AMIGOS', 'FREUNDE HERAUSFORDERN', 'DESAFIAR AMIGOS'],
+    ['CHOISISSEZ DES AMIS', 'PICK FRIENDS', 'ELIGE AMIGOS', 'FREUNDE WÄHLEN', 'ESCOLHA AMIGOS'],
+    ['DUEL', 'DUEL', 'DUELO', 'DUELL', 'DUELO'],
+    ['PARTIE À {n} JOUEURS', '{n}-PLAYER GAME', 'PARTIDA DE {n} JUGADORES', 'PARTIE MIT {n} SPIELERN', 'PARTIDA DE {n} JOGADORES'],
+    ['{name} vous invite dans sa partie entre amis !', '{name} invites you to a game with friends!', '¡{name} te invita a su partida entre amigos!', '{name} lädt dich zu einer Partie unter Freunden ein!', '{name} convida você para uma partida entre amigos!'],
+    ['LÀ', 'HERE', 'AQUÍ', 'DA', 'AQUI'],
+    ['INVITÉ', 'INVITED', 'INVITADO', 'EINGELADEN', 'CONVIDADO'],
+    ['INVITER', 'INVITE', 'INVITAR', 'EINLADEN', 'CONVIDAR'],
+    ['LANCER · {n} JOUEURS', 'START · {n} PLAYERS', 'EMPEZAR · {n} JUGADORES', 'STARTEN · {n} SPIELER', 'COMEÇAR · {n} JOGADORES'],
+    ['Univers rivaux pour les places libres', 'Rival universes fill the empty seats', 'Universos rivales en los puestos libres', 'Rivalisierende Universen auf freien Plätzen', 'Universos rivais nos lugares vagos'],
+    ['OUI', 'YES', 'SÍ', 'JA', 'SIM'],
+    ['NON', 'NO', 'NO', 'NEIN', 'NÃO'],
+    ['INVITER DES AMIS', 'INVITE FRIENDS', 'INVITAR AMIGOS', 'FREUNDE EINLADEN', 'CONVIDAR AMIGOS'],
+    ['Ou partagez ce code avec vos amis.', 'Or share this code with your friends.', 'O comparte este código con tus amigos.', 'Oder teile diesen Code mit deinen Freunden.', 'Ou compartilhe este código com seus amigos.'],
     // Photos de profil (v92)
     ['PHOTOS DE PROFIL', 'PROFILE PICTURES', 'FOTOS DE PERFIL', 'PROFILBILDER', 'FOTOS DE PERFIL'],
     ['Un astre à la place de votre planète, au menu, au profil et chez vos amis. En graines de vie seulement.', 'A celestial body instead of your planet, in the menu, on your profile and on your friends’ screens. Life seeds only.', 'Un astro en lugar de tu planeta, en el menú, en el perfil y en las pantallas de tus amigos. Solo con semillas de vida.', 'Ein Gestirn statt deines Planeten, im Menü, im Profil und bei deinen Freunden. Nur mit Lebenssamen.', 'Um astro no lugar do seu planeta, no menu, no perfil e na tela dos seus amigos. Só com sementes de vida.'],
