@@ -472,7 +472,7 @@ Profil → **SUCCÈS** : 100 objectifs en 10 catégories, chacun rapporte de 1 �
 | Catégorie | Nombre | Exemples |
 |---|---|---|
 | Affrontement | 22 | parties jouées (1 → 500), victoires (1 → 100), podiums, combats gagnés, astres dorés |
-| Familles | 24 | « Champion » (gagner avec une majorité de la famille) et « Fidèle » (10 parties avec elle), pour les 12 familles |
+| Familles | 26 | « Champion » (gagner avec une majorité de la famille) et « Fidèle » (10 parties avec elle), pour les 13 familles (v107) |
 | Lois | 5 | jouer les 15 lois, gagner avec 5 lois, gagner avec la Loi du sacrifice, de l’endurance, du phénix après renaissance |
 | Légendaires | 7 | en posséder un, puis chacun des 6 en fin de partie |
 | Exploits | 7 | gagner sans perdre un combat, avec 3 PV ou moins, en 12 cycles ; 7 astres, 3 dorés, deux formations |
@@ -927,6 +927,11 @@ remplit en fin de partie. À chaque niveau franchi, une planète apparaît, trem
   que ce click ne la referme pas aussitôt. En combat, chez un rival ou en fin de partie, une fiche rapide s’affiche à côté.
 - Les astres qui laissent des **Débris** en s’effondrant (Cendre, Nyx, Ossuaire, et Relais qui
   laisse une Sonde) les projettent depuis leurs restes ; Linceul double ces effets.
+- **Astres dorés (v107)** : en plus de la barre de couleur en or, chaque doré a un halo d’or derrière
+  lui et une couronne de poussière d’or qui tourne (26 grains). Le halo était dessiné en premier :
+  l’atmosphère, la coque d’un Bouclier ou la lueur d’une étoile le recouvraient (un joueur l’a vu sur
+  ses astres de Glace). Il passe désormais après eux, plus large (1,7 rayon) et plus dense ; une
+  Nébuleuse dorée le garde derrière elle, son nuage étant ajouré.
 
 ## Formes des astres
 
@@ -1181,9 +1186,9 @@ En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 | Élément | Valeur |
 |---|---|
 | Univers par partie | **duel : 2** (vous + 1 rival) · mêlée : 8 (vous + 7 bots) |
-| Familles | 12 au total, **5 actives par partie** (dont celle de votre loi) + les neutres : 792 combinaisons |
-| Lois | 15 : 12 de famille + 3 lois de vie neutres (Sacrifice 22 PV et +1 énergie par cycle, Endurance 45 PV, Phénix 25 PV et une renaissance à 15 PV), 3 proposées au départ ; les bots ne prennent que des lois de famille |
-| Astres | 9 par famille + 8 neutres = **116**, + **14 légendaires** (une par famille, deux neutres) ; **53 achetables** dans une partie, plus les 7 légendaires de ses familles et neutres |
+| Familles | 13 au total (Nébuleuses en v107), **5 actives par partie** (dont celle de votre loi) + les neutres : 1 287 combinaisons |
+| Lois | 16 : 13 de famille + 3 lois de vie neutres (Sacrifice 22 PV et +1 énergie par cycle, Endurance 45 PV, Phénix 25 PV et une renaissance à 15 PV), 3 proposées au départ ; les bots ne prennent que des lois de famille |
+| Astres | 9 par famille + 8 neutres = **125**, + **15 légendaires** (une par famille, deux neutres) ; **53 achetables** dans une partie, plus les 7 légendaires de ses familles et neutres |
 | Copies par astre | niveau 1 : 16 · 2 : 15 · 3 : 13 · 4 : 11 · 5 : 9 · 6 : 7 |
 | Création | 3 / 4 / 4 / 5 / 5 / 6 astres selon le niveau (1 à 6) |
 | Énergie | 3 au premier cycle, +1 par cycle, maximum 10 |
@@ -1219,6 +1224,13 @@ Deux causes :
 
 Au passage, l’astre de départ d’une loi neutre venu d’une famille absente n’est plus retiré d’une
 réserve qui ne le contient pas (il y laissait une valeur `NaN`, sans effet en jeu).
+
+**Identifiants des plateaux en ligne (correctif v107).** Les astres publiés par les autres téléphones
+gardaient leurs identifiants d’origine. Quand l’hôte change (il est éliminé ou s’en va), ses bots jouent
+sur un autre téléphone, dont les astres neufs pouvaient porter les mêmes identifiants : une fusion
+dorée retirait alors un astre au hasard (une Cendre dorée disparaissait sans revenir à la réserve).
+`mpResolve` préfixe désormais ces identifiants (`r:<joueur>:`). Trouvé par le test de conservation
+de la réserve, qui vérifie chaque téléphone à chaque manche.
 
 **Montée de niveau (correctif v106).** Le libellé « CRÉATION ●●○○○○ » recevait la classe `pop`, celle
 des textes flottants (position fixe, animation vers le haut) : à chaque montée, il quittait sa place et
@@ -1407,7 +1419,7 @@ auprès du moteur (`OrbiteBuildings.register`).
 
 ## Légendaires
 
-Quatorze astres **légendaires** : **un par famille** (v98) et deux neutres. Chacun existe en **un seul
+Quinze astres **légendaires** : **un par famille** (v98 ; Piliers de la Création pour les Nébuleuses, v107) et deux neutres. Chacun existe en **un seul
 exemplaire** par partie ; depuis la v98, une légendaire de famille n’est en jeu que si sa famille l’est
 (les deux neutres le sont toujours). Ils ne se montrent que rarement : chaque
 emplacement de la Création a 1 chance sur 100 d’en proposer un (de votre niveau ou moins), et une
@@ -1430,6 +1442,7 @@ découverte en glisse un parmi ses choix dans 7 % des cas. On en croise un dans 
 | 4 | Zéro absolu (v98) | Glace | 4/6 | Bouclier ; début de combat : vos autres astres gagnent Bouclier |
 | 5 | Cerveau Matriochka (v98) | Machine | 6/8 | Bouclier ; début de cycle : gagnez 2 énergies |
 | 6 | Singularité nue (v98) | Anomalies | 8/8 | Début de combat : trois alliés gagnent un mot-clé aléatoire ; Effondrement : un astre de niveau 6 aléatoire |
+| 4 | Piliers de la Création (v107) | Nébuleuses | 4/8 | Fin de cycle : vole un astre aléatoire de votre dernier adversaire (il rejoint la main) |
 
 Les succès « Gardien » ne concernent que les six premières (la liste reste à 100 succès).
 
@@ -1476,6 +1489,7 @@ même rangée**. Niveau I à 2 astres, II à 3, III à 4. Chaque famille a un ef
 | Comètes | +n Attaque, elles attaquent avant le reste de l’avant | quand l’avant est tombé, elles avancent avec +2n/+n |
 | Cristal | +n/+n, le double avec une formation de Cristal à l’arrière | tous vos Cristaux +n/+n |
 | Anomalies | n mots-clés aléatoires chacun | n astres de l’avant gagnent un mot-clé aléatoire |
+| Nébuleuses | après leur attaque, ils volent n PV à un ennemi de l’avant | votre astre de l’avant le plus faible vole 2n PV à l’ennemi de l’avant le plus fort |
 
 À l’écran : étiquettes colorées à côté de « Votre système » (toucher pour la fiche « Vos formations »
 et les effets de chaque famille), un trait de la couleur de la famille sous chaque astre d’une
@@ -1559,8 +1573,9 @@ astres au hasard passe de 45 % à 34 % de victoires.
 | Comètes | Elles grandissent quand vous actualisez la Création et récompensent la vente (loi du passage : première actualisation gratuite) |
 | Cristal | Résonance : chaque Cristal joué renforce les autres (loi de résonance) |
 | Anomalies | Le hasard : astres aléatoires en main ou invoqués, découvertes, mots-clés aléatoires (loi du chaos) |
+| Nébuleuses | Nuages de gaz : Vol de vie, PV volés aux ennemis, astres volés à ceux qu’on a affrontés (loi du siphon, v107) |
 
-Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Toxique, Arrimage.
+Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Toxique, Arrimage, Vol de vie (v107).
 
 **Arrimage visible (v101).** Les joueurs ne devinaient pas qu’on peut cumuler les Machines. Tant qu’un
 astre Arrimage attend en main, chaque Machine du système où il peut s’aimanter porte un petit aimant
@@ -1569,6 +1584,58 @@ ces Machines s’entourent d’un champ magnétique qui pulse ; à moins d’une
 glissé est **attiré** à mi-chemin vers la plus proche (déclic et légère vibration) et s’entoure de
 bleu ; lâché, il s’y colle avec un « clac » : étincelles bleues, la Machine tressaute, ses
 statistiques montent.
+
+## Nébuleuses (v107)
+
+Treizième famille, demandée par un joueur : une composition qui **vole**, comme Murozond dans
+Hearthstone Battlegrounds (récupérer un astre d’un adversaire déjà affronté, même une grosse planète),
+et qui **draine la vie**. Couleur orchidée (`#e58bff`).
+
+**Rendu.** Les Nébuleuses ne sont pas des planètes : un nouveau type `nebula` (shader `NEBULA`,
+`nebulaColor` dans js/planet-renderer.js) dessine un nuage **plat**, sans relief ni lumière. Une coquille
+(palette 0, teinte `rim`) entoure un gaz intérieur (palette 1, teinte `gas`), une naine blanche brille au
+centre (palette 2) avec un petit éclat en croix. Le gaz s’effiloche en **grains** : sous un seuil tiré
+au hasard pour chaque pixel (pas une trame régulière), le pixel reste vide, si bien que les bords se
+défont en poussière ; il n’y a des grains que là où il y a du gaz (une première version laissait un
+disque de points autour, trop rond). Quelques grains scintillent, et une poussière (`fx.motes`) dérive
+lentement vers l’extérieur. Six formes (`look.neb.style`) inspirées des nébuleuses planétaires :
+anneau, bulle, papillon (deux lobes), oursin (rayons), toile (filaments croisés), œil (anneaux
+emboîtés). La loi a sa forme d’énergie : un nuage aplati qui aspire (js/energy.js).
+
+**Mécaniques.**
+- **Vol de vie** (nouveau mot-clé, cœur violet sur l’astre) : en attaquant, l’astre récupère autant de
+  PV que les dégâts infligés, sans dépasser son maximum. Le vol et la riposte sont simultanés : un
+  voleur mis à 0 PV par la riposte peut s’en relever.
+- **Vol de PV** (`c.drain`) : la cible perd des PV, la Nébuleuse les gagne (pour le combat). Un filet de
+  lumière violette va de la victime au voleur.
+- **Vol d’astres** (`x.steal`) : une copie d’un astre déjà affronté rejoint la main, **prise dans la
+  réserve partagée** (s’il n’en reste plus, un astre de la réserve à votre portée). Chaque joueur se
+  souvient des astres de son dernier adversaire (`lastFoe`) et de tous ceux affrontés (`foes`, 40 au plus).
+- **PV rendus à l’univers** (Sablier) : comptés pendant le combat (`heal`), appliqués après, avant les
+  dégâts de fin de combat, sans dépasser le maximum ; « UNIVERS +n PV » s’affiche.
+
+| Niveau | Astre | Stats | Effet |
+|---|---|---|---|
+| 1 | Voile | 3/4 | Vol de vie |
+| 1 | Hibou | 3/3 | Naissance : vole un astre de niveau 1 ou 2 déjà affronté |
+| 2 | Fourmi | 4/5 | Vol de vie ; après son attaque, vole 1 Attaque à un ennemi de l’avant |
+| 2 | Spirographe | 3/5 | Quand un allié vole des PV, il gagne +1 Attaque pour toujours (2 fois par combat) |
+| 3 | Œil-de-Chat | 5/6 | Naissance : vole un astre aléatoire déjà affronté, même un gros |
+| 3 | Hélice | 4/7 | Vol de vie ; quand vos Nébuleuses volent des PV, +2 PV pour toujours (3 fois par combat chacune) |
+| 4 | Crabe | 6/7 | Vol de vie ; après son attaque, vole 1 PV à chaque ennemi de l’avant |
+| 5 | Sablier | 7/9 | Quand vos astres volent des PV, votre univers en récupère 1 (4 fois par combat) |
+| 6 | Tarentule | 9/10 | Vol de vie ; après son attaque, vole 2 PV à chaque ennemi |
+| 4 | Piliers de la Création (légendaire) | 4/8 | Fin de cycle : vole un astre aléatoire de votre dernier adversaire |
+
+**Loi du siphon** (astre de départ : Voile) : début de combat, vos Nébuleuses gagnent Vol de vie
+(éveillée : et +1/+1). **Formation** : à l’avant, après leur attaque, elles volent n PV à un ennemi de
+l’avant ; à l’arrière, votre astre de l’avant le plus faible vole 2n PV à l’ennemi de l’avant le plus fort.
+
+**Équilibrage.** La première version (vol de 1 PV après l’attaque, sans gain durable) ne gagnait que 13 %
+de ses duels (joueur naïf) et 29 % avec l’IA experte : les PV volés ne duraient que le combat, quand les
+autres familles grandissent pour toujours. D’où le Vol de vie (la riposte ne tue plus forcément),
+l’Hélice qui garde les PV volés et le Spirographe qui garde l’Attaque, puis des statistiques plus hautes :
+48 % avec l’IA experte (voir Équilibrage).
 
 ## Structure
 
@@ -1703,6 +1770,33 @@ cristal à 4 fois ne changeait rien (il se déclenche rarement autant). Résulta
 Néant 52 %, **Cristal 51 %**, Anomalies 48 %, **Brasier 47 %**, Tempête 43 %, Glace 38 %, Lune 34 %,
 Comètes 32 %, Vie 31 %, Envers 11 %, Machine 8 % (ces deux-là se jouent mal naïvement). Avec un joueur
 qui actualise beaucoup : Cristal 56 % (Minéral 60 %), Brasier 43 % (36 % avant).
+
+**Toutes les familles vers 50 % (v107).** Demande d’un joueur : que chaque famille soit jouable, autour
+de 50 % de victoires. La bonne mesure est l’**IA experte qui joue chaque famille contre une IA experte**
+(50 % = exactement la moyenne) ; le joueur naïf, qui n’utilise pas toujours bien le pouvoir de sa loi ni
+l’arrimage, désavantage les familles complexes (il utilise désormais le pouvoir, comme l’IA). 200 duels
+par famille (incertitude d’environ ±3,5 points) :
+
+| Famille | Avant | Après | Changements |
+|---|---|---|---|
+| Machine | 30 % | 56 % | Sonde de la loi 4/4 (éveillée : avec Bouclier) ; Sonde 3/3, Relais 3/4 (sa Sonde 4/4), Foreuse 3/5 et +2/+2, Dyson 5/6, Forge : aussi +1/+1 aux autres Machines |
+| Envers | 33 % | 47 % | ses astres reviennent de Renaissance avec 3 PV (au lieu de 1) ; Antipode +3/+3 ; Renversement +2/+2 (éveillé +3/+3) |
+| Nébuleuses | — | 47 % | nouvelle famille (voir Nébuleuses) |
+| Brasier | 37 % | 49 % | Tison : vos effets infligent +2 dégâts (au lieu de +1), loi de combustion comprise |
+| Glace | 40 % | 45 % | Loi de stase : trois astres protégés (éveillée : quatre) ; Aurore +3/+3 |
+| Vie | 46 % | 50 % | Gaïa 2/3, Sylve 3/4, Terra 3/5, Genèse 4/6 |
+| Minéral | 61 % | 58 % | Monolithe +2/+2 (au lieu de +3/+3), Géode +0/+1, Agate +0/+1 |
+| Néant | 57 % | 59 % | Abysse +1/+1, Néant +2/+2 (sans eux : 62 % avec les autres changements) |
+| Cristal, Tempête, Lune, Comètes, Anomalies | 44 à 55 % | 42 à 54 % | inchangés |
+
+Écart entre familles : de 29–61 % à 42–59 %. Un pouvoir d’Ingénierie gratuit dès le départ, utilisé à
+chaque cycle, montait la Machine à 69 % : il coûte de nouveau 1 énergie (gratuit une fois éveillé).
+Mesure : `node orbite/tools/familles.js 200` (toutes les familles, environ 5 minutes par famille ;
+`node orbite/tools/familles.js 200 machine,envers` pour quelques-unes).
+
+**Hybrides (v107).** En mêlée à 8 (`tools/hybrides.js 200`), un joueur qui mêle deux familles finit en
+moyenne 4,38e (13,1 % de victoires), un joueur d’une seule famille 4,62e (11,9 %) : les hybrides
+restent intéressants.
 
 **Reliques et éveil des lois (v84).** Mesuré avec `node orbite/tools/equilibrage.js 240 --seed v84
 --json`, avant et après (sans événement cosmique, que les outils ne tirent pas) : le rang moyen des

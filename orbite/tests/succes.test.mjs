@@ -26,10 +26,10 @@ function load() {
   return { S: window.OrbiteSucces, mem, seeds: () => seeds };
 }
 
-test('cent succès, identifiants uniques, variables valides', () => {
+test('cent deux succès (deux de plus avec les Nébuleuses, v107), identifiants uniques, variables valides', () => {
   const { S } = load();
-  assert.equal(S.LIST.length, 100);
-  assert.equal(new Set(S.LIST.map((a) => a.id)).size, 100);
+  assert.equal(S.LIST.length, 102);
+  assert.equal(new Set(S.LIST.map((a) => a.id)).size, 102);
   const cats = new Set(S.CATS.map(([c]) => c));
   for (const a of S.LIST) {
     assert.ok(cats.has(a.cat), a.id);
@@ -39,7 +39,7 @@ test('cent succès, identifiants uniques, variables valides', () => {
       assert.ok(x != null && x !== '', `${a.id}.${k}`);
     }
   }
-  assert.equal(Object.keys(R.LAW).length, 15);
+  assert.equal(Object.keys(R.LAW).length, 16);
 });
 
 test('rien de débloqué sur un appareil neuf', () => {

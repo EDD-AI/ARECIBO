@@ -49,10 +49,10 @@ test('le rapport distingue les identités ordinaires, légendaires, jetons et lo
     families: report.catalogue.playableFamilies,
     laws: report.catalogue.laws,
     neutralRegular: report.catalogue.neutralRegularTypes,
-  }, { total: 132, regular: 116, legendary: 14, tokens: 2, families: 12, laws: 15, neutralRegular: 8 });
+  }, { total: 142, regular: 125, legendary: 15, tokens: 2, families: 13, laws: 16, neutralRegular: 8 });
   assert.equal(report.families.activePerGame, 5);
-  assert.equal(report.families.possibleSelections, '792');
-  assert.equal(report.families.selectionsWithSpecifiedNonNeutralFamily, '330');
+  assert.equal(report.families.possibleSelections, '1287');
+  assert.equal(report.families.selectionsWithSpecifiedNonNeutralFamily, '495');
   assert.ok(Object.values(report.catalogue.regularTypesByFamily).every((n) => n === 9));
   assert.ok(Object.values(report.catalogue.legendaryTypesByFamily).every((n) => n === 1), 'une légendaire par famille');
   assert.equal(report.catalogue.neutralLegendaryTypes, 2);

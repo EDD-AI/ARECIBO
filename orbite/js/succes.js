@@ -28,7 +28,7 @@
   tiers('combats', 'parties', ['Bagarreur', 'Guerrier', 'Seigneur de guerre', 'Fléau des univers'], [25, 100, 500, 1000], null, 'Gagner {n} combats.', (f) => f.st.fights, [1, 2, 3, 4]);
   tiers('dores', 'parties', ['Premier éclat d’or', 'Orfèvre', 'Alchimiste', 'Roi Midas'], [1, 10, 50, 200], 'Former un astre doré.', 'Former {n} astres dorés.', (f) => f.st.goldens, [1, 1, 2, 4]);
 
-  const FAMS = ['vie', 'neant', 'envers', 'brasier', 'glace', 'tempete', 'mineral', 'machine', 'lune', 'comete', 'cristal', 'anomalie'];
+  const FAMS = ['vie', 'neant', 'envers', 'brasier', 'glace', 'tempete', 'mineral', 'machine', 'lune', 'comete', 'cristal', 'anomalie', 'nebuleuse'];
   for (const fam of FAMS) add('champion-' + fam, 'familles', 'Champion : {fam}', 'Gagner une partie avec une majorité de {fam}.', 1, (f) => f.c.famWins[fam] || 0, 2, { fam: () => R.FAMILIES[fam].name });
   for (const fam of FAMS) add('fidele-' + fam, 'familles', 'Fidèle : {fam}', 'Jouer {n} parties avec une majorité de {fam}.', 10, (f) => f.c.famGames[fam] || 0, 1, { n: 10, fam: () => R.FAMILIES[fam].name });
 

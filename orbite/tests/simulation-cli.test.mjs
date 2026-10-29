@@ -49,9 +49,9 @@ test('CLI hybrides : groupes équilibrés, vraies familles et résultats reprodu
 
 test('CLI mono : nombre par famille, un résultat focal par partie et incertitude', () => {
   const report = json('bots-mono', ['1', '--skill', '0', '--seed', 'cli-mono']);
-  assert.equal(report.requestedGames, 12);
-  assert.equal(report.completedGames, 12);
-  assert.equal(Object.keys(report.families).length, 12);
+  assert.equal(report.requestedGames, 13);
+  assert.equal(report.completedGames, 13);
+  assert.equal(Object.keys(report.families).length, 13);
   for (const summary of Object.values(report.families)) {
     assert.equal(summary.n, 1);
     assert.ok(summary.meanRank >= 1 && summary.meanRank <= 8);

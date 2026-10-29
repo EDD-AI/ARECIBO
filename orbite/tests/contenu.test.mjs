@@ -151,9 +151,13 @@ test('éveil : au cycle 6, chaque loi s’éveille ; passage, ingénierie et sac
   assert.equal(R.rollCost(p), 0, 'deux actualisations gratuites'); R.roll(s);
   assert.equal(R.rollCost(p), 1);
   assert.equal(p.gold, 5);
-  const ing = { law: 'ingenierie', awake: true };
-  assert.equal(R.powerCost(ing), 0);
+  // Ingénierie : 1 énergie, gratuit une fois éveillée ; depuis la v107, la Sonde éveillée a Bouclier.
+  assert.equal(R.powerCost({ law: 'ingenierie', awake: true }), 0);
   assert.equal(R.powerCost({ law: 'ingenierie', awake: false }), 1);
+  const m = R.newGame('awk-ing', 'ingenierie', { size: 2 });
+  m.players[0].awake = true;
+  assert.ok(R.usePower(m, null, m.players[0]).ok);
+  assert.ok(m.players[0].hand.some((u) => u.id === 'sonde-t' && u.kw.includes('bouclier')), 'Sonde éveillée avec Bouclier');
   // Sacrifice éveillé : 2 énergies de plus, même au maximum.
   const t = R.newGame('awk2', 'sacrifice', { size: 2 });
   playRounds(t, 12);

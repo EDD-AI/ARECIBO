@@ -22,7 +22,7 @@
     { id: 'dorevic', tier: 2, n: 2, r: 100, kind: 'max', text: 'Gagner une partie avec {n} astres dorés dans votre système.' }
   ];
   const BY_ID = Object.fromEntries(LIST.map((m) => [m.id, m]));
-  const FAMS = ['vie', 'cristal', 'lune', 'tempete', 'glace', 'mineral', 'neant', 'brasier', 'machine', 'comete', 'envers', 'anomalie'];
+  const FAMS = ['vie', 'cristal', 'lune', 'tempete', 'glace', 'mineral', 'neant', 'brasier', 'machine', 'comete', 'envers', 'anomalie', 'nebuleuse'];
 
   // Tirage déterministe : le même jour, le même joueur retrouve les mêmes missions.
   function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }

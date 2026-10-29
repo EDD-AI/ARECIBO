@@ -194,13 +194,14 @@
     { key: 'blackhole', label: 'Trou noir', w: 3 },
     { key: 'mecha', label: 'Sphère artificielle', w: 2 },
     { key: 'comet', label: 'Comète', w: 3 },
-    { key: 'eclipse', label: 'Éclipse', w: 1 }
+    { key: 'eclipse', label: 'Éclipse', w: 1 },
+    { key: 'nebula', label: 'Nébuleuse', w: 2 }
   ];
   const TYPE_BY_KEY = Object.fromEntries(TYPES.map((t) => [t.key, t]));
-  const NO_FACET = new Set(['star', 'portal', 'blackhole', 'crystal', 'comet', 'eclipse']);
+  const NO_FACET = new Set(['star', 'portal', 'blackhole', 'crystal', 'comet', 'eclipse', 'nebula']);
 
   // Identifiants des programmes de surface (doivent correspondre au shader).
-  const SH = { TERRAN: 0, OCEAN: 1, ICE: 2, LAVA: 3, DESERT: 4, GAS: 5, ROCK: 6, ASTEROID: 7, STAR: 8, CRYSTAL: 9, PORTAL: 10, BLACKHOLE: 11, MECHA: 12 };
+  const SH = { TERRAN: 0, OCEAN: 1, ICE: 2, LAVA: 3, DESERT: 4, GAS: 5, ROCK: 6, ASTEROID: 7, STAR: 8, CRYSTAL: 9, PORTAL: 10, BLACKHOLE: 11, MECHA: 12, NEBULA: 13 };
 
   function newBody(shader, r) {
     return {
@@ -596,6 +597,33 @@
     return b;
   }
 
+  // Nébuleuse (v107) : un nuage plat de gaz, sans corps solide (shader NEBULA). Une coquille (pal 0,
+  // teinte rim) entoure un gaz intérieur (pal 1, teinte gas) ; une naine blanche brille au centre
+  // (pal 2). Styles : anneau (coquille fine, intérieur clair), bulle (remplie), papillon (deux lobes),
+  // oursin (rayons qui jaillissent), toile (filaments croisés), oeil (anneaux emboîtés).
+  // A : [allongement, angle, rayon de la coquille, épaisseur] ; B : [style, rayons, cœur, étoile
+  // décentrée] ; C : [remplissage, effilochage, 0, 0].
+  const NEB_STYLES = ['anneau', 'bulle', 'papillon', 'oursin', 'toile', 'oeil'];
+  function bodyNebula(r, o) {
+    o = o || {};
+    const b = newBody(SH.NEBULA, r);
+    const st = NEB_STYLES.indexOf(o.style);
+    const style = st >= 0 ? st : r.int(0, NEB_STYLES.length - 1);
+    const rim = o.rim != null ? o.rim : r.pick([25, 12, 350, 45, 320, 160]);
+    const gas = o.gas != null ? o.gas : r.pick([225, 200, 250, 175, 285, 300]);
+    b.pal[0] = gradRamp([[0.22, 0.07, rim - 18], [0.46, 0.15, rim], [0.7, 0.17, rim + 12], [0.92, 0.09, rim + 35]]);
+    b.pal[1] = gradRamp([[0.2, 0.06, gas + 12], [0.44, 0.12, gas], [0.68, 0.13, gas - 10], [0.9, 0.06, gas - 30]]);
+    b.pal[2] = gradRamp([[0.62, 0.05, gas], [0.8, 0.05, gas - 20], [0.94, 0.03, 95], [0.995, 0.01, 95]]);
+    b.A = [o.aspect || r.range(0.82, 1.18), o.angle != null ? o.angle : r.range(0, Math.PI), o.radius || r.range(0.62, 0.8), o.width || r.range(0.11, 0.2)];
+    b.B = [style, o.rays || r.int(7, 15), o.core != null ? o.core : r.range(0.045, 0.075), o.offset || 0];
+    b.C = [o.fill != null ? o.fill : r.range(0.25, 0.8), o.fray != null ? o.fray : r.range(0.25, 0.5), 0, 0];
+    b.roll = 0; b.pitch = 0;
+    b.bound = 1.3;
+    b.size = 1;
+    b.meta = { nebula: NEB_STYLES[style] };
+    return b;
+  }
+
   function buildBody(key, r, opts) {
     switch (key) {
       case 'earth': return bodyTerran(r, 'earth');
@@ -615,6 +643,7 @@
       case 'blackhole': return bodyBlackHole(r);
       case 'mecha': return bodyMecha(r);
       case 'comet': return bodyComet(r, opts && opts.warm);
+      case 'nebula': return bodyNebula(r, opts && opts.neb);
       case 'eclipse': {
         const b = bodyStar(r, (opts && opts.starClass) || 'étoile blanche');
         b.B = [0, 0, 0, 1];
@@ -713,7 +742,7 @@
   const RING_ODDS = {
     terran: [0.12, 0.15], earth: [0.08, 0.12], ocean: [0.1, 0.12], ice: [0.25, 0.2], lava: [0.08, 0.2],
     desert: [0.1, 0.2], gas: [0.6, 0.25], moon: [0.08, 0.25], asteroid: [0, 0.65], star: [0, 0.35],
-    crystal: [0.1, 0.5], toxic: [0.12, 0.15], dead: [0.06, 0.4], portal: [0, 0], blackhole: [0, 0], mecha: [0.1, 0.25]
+    crystal: [0.1, 0.5], toxic: [0.12, 0.15], dead: [0.06, 0.4], portal: [0, 0], blackhole: [0, 0], mecha: [0.1, 0.25], nebula: [0, 0]
   };
 
   const BG_THEMES = [
@@ -816,6 +845,11 @@
       beings: ['des signaux venus d’un autre temps', 'des vaisseaux disparus depuis des siècles', 'une lumière qui n’appartient à aucune étoile'],
       facts: ['Distorsion spatio-temporelle confirmée.', 'Aucune sonde n’en est revenue.', 'Ouverture imprévisible.']
     },
+    nebula: {
+      places: [['La coquille de gaz', 0], ['Le cœur ionisé', 0], ['Les filaments', 1], ['Le voile de poussière', 0]],
+      beings: ['une naine blanche qui s’éteint', 'des étoiles en train de naître', 'la lumière volée aux astres voisins', 'des nuées de poussière qui chantent'],
+      facts: ['Plus vaste que mille systèmes.', 'Elle aspire tout ce qui passe.', 'Ses couleurs trahissent l’oxygène et l’hydrogène.']
+    },
     blackhole: {
       places: [['Le disque d’accrétion', 0], ['L’horizon des événements', 0], ['La sphère de photons', 0]],
       beings: ['des étoiles déchiquetées', 'la lumière de mille soleils engloutis', 'une épave figée dans le temps'],
@@ -835,7 +869,7 @@
     lava: [2400, 11000, 350, 1400], dead: [3000, 9000, -190, -80], desert: [3000, 13000, 20, 85], gas: [38000, 170000, -210, -90],
     moon: [300, 4200, -180, 120], asteroid: [2, 950, -200, -40], star: [200000, 9000000, 2600, 32000], crystal: [900, 7000, -150, 20],
     toxic: [4000, 14000, 30, 140], portal: [40, 900, null, null], blackhole: [8, 300, null, null], mecha: [90, 1200, -120, -20],
-    comet: [1, 60, -240, -80], eclipse: [200000, 2000000, 4000, 9000]
+    comet: [1, 60, -240, -80], eclipse: [200000, 2000000, 4000, 9000], nebula: [9e12, 9e13, null, null]
   };
 
   const fmtNum = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -851,6 +885,7 @@
     if (g.type === 'blackhole') name = 'ABÎME ' + base.toUpperCase();
     if (g.type === 'portal') name = 'ANOMALIE ' + base.toUpperCase();
     if (g.type === 'comet') name = 'COMÈTE ' + base.toUpperCase();
+    if (g.type === 'nebula') name = 'NÉBULEUSE ' + base.toUpperCase();
     const code = 'ARC-' + String(r.int(1000, 9999)) + '-' + 'abcdefgh'[r.int(0, 7)];
     const lore = LORE[LORE_ALIAS[g.type] || g.type] || LORE.terran;
     const place = r.pick(lore.places);
@@ -863,7 +898,7 @@
     if (g.type === 'blackhole') stats.push(['HORIZON', fmtNum(diam) + ' KM']);
     else stats.push(['DIAMÈTRE', fmtNum(diam) + ' KM']);
     if (st[2] != null) stats.push(['TEMPÉRATURE', (g.type === 'star' ? fmtNum(r.range(st[2], st[3])) + ' K' : Math.round(r.range(st[2], st[3])) + ' °C')]);
-    if (g.type !== 'portal' && g.type !== 'blackhole' && g.type !== 'star') stats.push(['GRAVITÉ', r.range(0.05, 2.4).toFixed(2) + ' G']);
+    if (g.type !== 'portal' && g.type !== 'blackhole' && g.type !== 'star' && g.type !== 'nebula') stats.push(['GRAVITÉ', r.range(0.05, 2.4).toFixed(2) + ' G']);
     stats.push([g.type === 'star' ? 'PLANÈTES' : 'LUNES', String(g.moons.length)]);
     stats.push(['ANNEAUX', g.ring || g.debris ? 'OUI' : 'NON']);
     const signals = [['AUCUN', 45], ['BRUIT DE FOND', 25], ['FAIBLE, IRRÉGULIER', 15], ['RÉGULIER — ARTIFICIEL ?', 10], ['MESSAGE EN BOUCLE', 5]];
@@ -883,6 +918,7 @@
     if (b.corona) grow(1 + b.corona.len * 1.5, 1 + b.corona.len * 1.5);
     if (b.lens) grow(b.lens.outer, b.lens.outer);
     if (b.shader === SH.PORTAL) grow(1.25 * Math.max(b.A[0], 0.6), 1.25);
+    if (b.shader === SH.NEBULA) grow(1.3 * Math.max(b.A[0], 1), 1.3 * Math.max(1 / b.A[0], 1));
     const proj = (rad, N) => [rad * Math.sqrt(Math.max(0, 1 - N[0] * N[0])), rad * Math.sqrt(Math.max(0, 1 - N[1] * N[1]))];
     if (g.ring) { const e = proj(g.ring.outer, g.ringN); grow(e[0], e[1]); }
     if (b.disk) { const e = proj(b.disk.outer, g.ringN); grow(e[0], e[1]); }
@@ -997,6 +1033,12 @@
       const n = xr.int(18, 34);
       for (let i = 0; i < n; i++) g.fx.sparks.push({ a: xr.range(0, TAU), cyc: xr.int(1, 3), ph: xr.next(), spin: xr.range(0.6, 1.8) * xr.sign(), size: xr.pick([1, 1, 1, 2]) });
     }
+    // Nébuleuse : une poussière de grains qui dérive lentement vers l'extérieur et scintille.
+    if (key === 'nebula') {
+      g.fx.motes = [];
+      const n = xr.int(26, 44);
+      for (let i = 0; i < n; i++) g.fx.motes.push({ a: xr.range(0, TAU), r0: xr.range(0.15, 1.05), cyc: xr.int(1, 2), ph: xr.next(), drift: xr.range(0.08, 0.3), row: xr.chance(0.55) ? 0 : 1, size: xr.pick([1, 1, 1, 2]) });
+    }
     if (key === 'blackhole') {
       g.fx.infall = [];
       const n = xr.int(14, 26);
@@ -1007,7 +1049,7 @@
     const mr = makeRng(hashSeed(seed, 4));
     let nMoons;
     if (opts.moons != null) nMoons = opts.moons;
-    else if (key === 'portal' || key === 'blackhole') nMoons = 0;
+    else if (key === 'portal' || key === 'blackhole' || key === 'nebula') nMoons = 0;
     else if (key === 'star') nMoons = mr.int(0, compact ? 2 : 3);
     else if (key === 'asteroid' || key === 'moon') nMoons = mr.chance(0.3) ? 1 : 0;
     else nMoons = mr.weighted([{ v: 0, w: 30 }, { v: 1, w: 35 }, { v: 2, w: 20 }, { v: 3, w: 10 }, { v: 4, w: 5 }]).v;
@@ -1085,7 +1127,7 @@
   function accentOf(g) {
     const P = g.body.pal;
     switch (g.body.shader) {
-      case SH.STAR: case SH.PORTAL: return P[0][6];
+      case SH.STAR: case SH.PORTAL: case SH.NEBULA: return P[0][6];
       case SH.BLACKHOLE: return P[9][6];
       case SH.GAS: return P[0][5];
       case SH.LAVA: return P[9][6];

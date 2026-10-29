@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 106;
+  const VERSION = 107;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -296,6 +296,7 @@
     if (u.kw.includes('megarafale')) k += icon('wind') + icon('wind');
     else if (u.kw.includes('rafale')) k += icon('wind');
     if (u.kw.includes('venin')) k += `<span style="color:${famColor('envers')}">${icon('drop')}</span>`;
+    if (u.kw.includes('voldevie')) k += `<span style="color:${famColor('nebuleuse')}" title="${tr('Vol de vie')}">${icon('heart')}</span>`;
     if (u.kw.includes('arrimage') && (where === 'shop' || where === 'hand')) k += icon('magnet');
     if (u.kw.includes('portee')) k += `<span class="kw-pos" title="${tr('Portée')}">${icon('range')}</span>`;
     if (u.kw.includes('percee')) k += `<span class="kw-pos" title="${tr('Percée')}">${icon('pierce')}</span>`;
@@ -3555,7 +3556,9 @@
     const shooters = [...side.children].filter((el) => el.dataset.id && R.CARD[el.dataset.id]);
     const shots = shooters.map((el) => ({ el, n: R.CARD[el.dataset.id].tier }));
     shots.push({ el: null, n: winnerTier });
-    const hpFrom = won ? Math.max(0, b.before.opp) : Math.max(0, b.before.me);
+    // Sablier (v107) : les PV volés par vos Nébuleuses reviennent à votre univers avant les dégâts.
+    if (b.heal) popOn($('hudHp'), tr('UNIVERS +{n} PV', { n: b.heal }), 'good');
+    const hpFrom = won ? Math.max(0, b.before.opp) : Math.max(0, Math.min(me().maxHp || Infinity, b.before.me + (b.heal || 0)));
     // Loi du phénix : les PV tombent d'abord à zéro, la renaissance vient après.
     const hpTo = won ? Math.max(0, b.after.opp) : b.reborn ? 0 : Math.max(0, b.after.me);
 
@@ -3754,6 +3757,30 @@
           SFX.buff(panOf(el));
         }
         await sleep(160);
+        break;
+      }
+      // Nébuleuses (v107) : un filet de lumière violette part de la victime vers la Nébuleuse qui lui
+      // vole des PV (ou de l'Attaque) ; la suite (dégât, bonus) arrive avec les événements hit et buff.
+      case 'drain': {
+        const from = unitByCid(e.from), to = unitByCid(e.cid);
+        if (!from || !to) break;
+        const a = center(from.querySelector('.orb')), b = center(to.querySelector('.orb'));
+        SFX.buff(panOf(to));
+        await stage.beam(a, b, { ms: dur(300), color: e.atk ? [255, 190, 120] : [229, 139, 255], arc: 14, tail: 10, head: 2 });
+        stage.burst(b[0], b[1], { n: 14, colors: [[229, 139, 255], [255, 255, 255]], speed: 40, life: 0.5 });
+        popOn(to, e.atk ? tr('+{n} ATTAQUE VOLÉE', { n: e.n }) : tr('+{n} PV VOLÉS', { n: e.n }), 'good');
+        break;
+      }
+      case 'keep': {
+        const el = unitByCid(e.cid);
+        if (el) popOn(el, tr('GARDÉS POUR TOUJOURS'), 'info');
+        await sleep(dur(160));
+        break;
+      }
+      case 'uheal': {
+        // Sablier : l'univers récupère des PV (comptés après le combat).
+        popOn(combatRowEl(e.side), tr('UNIVERS +{n} PV', { n: e.n }), 'good');
+        await sleep(dur(220));
         break;
       }
       case 'law': {
