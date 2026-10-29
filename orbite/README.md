@@ -356,6 +356,20 @@ en une phrase. Il avance quand le joueur fait l’action demandée, ou sur « SU
 Le coach se trouve dans `js/game.js` (`coachStart`, étapes `MENU_STEPS`, `LAW_STEPS`,
 `GAME_STEPS`). Le jeu lui signale ses actions par `tuto('fiche' | 'achat' | 'placer' | 'combat' | 'cycle'…)`.
 
+## Regarder la suite (mode spectateur, v98)
+
+Éliminé d’une mêlée solo, l’écran de fin propose **REGARDER LA SUITE**, au-dessus de REJOUER. La table
+continue sans vous jusqu’au dernier survivant :
+- à chaque cycle, le combat du meneur (le plus de PV) est montré, avec les deux noms (le bas porte
+  le nom du joueur regardé) ;
+- puis vient le vainqueur et les PV perdus ; la liste des rivaux et les éliminations se mettent à jour ;
+- **PASSER** accélère un combat, **QUITTER** joue la fin d’un coup ;
+- l’écran de fin annonce alors le vainqueur (« ANDROMÈDE remporte la partie. Vous finissez 8e. »).
+Votre classement, vos poussières et votre expérience ne changent plus, et rien n’est sauvegardé.
+Pas en duel (il n’y a plus personne à regarder), ni en ligne, ni dans le duel d’entraînement.
+Règles : `R.spectate(state)` rouvre la partie finie, puis `endTurn(state, { observer: true, watch: true })`
+rend `watched`, le combat du meneur (`tests/spectateur.test.mjs`).
+
 ## Effets de fin de cycle
 
 **Bonus pendant la création.** Chaque bonus de statistiques (Naissance, fin de cycle, pouvoir…)
@@ -877,10 +891,10 @@ fiche de chaque astre les choisit avec `look.shape` dans `js/rules.js`.
 |---|---|
 | Comète (noyau de glace, queue soufflée à l’opposé de l’étoile) | Halley, Encke, Hale-Bopp, Hyakutake ; Météore en feu (orange), Ison rouge (v95) |
 | Planète brisée (morceaux écartés, cœur qui brûle dans les fissures) | Vestige (violet), Géode (vert), Forge stellaire (orange), Sérac (glace, cœur bleu) |
-| Astéroïde double (deux lobes soudés) | Tchouri, Agate, Écho, Ossuaire, Comète (glace) |
+| Astéroïde double (deux lobes soudés) | Tchouri, Agate, Écho, Ossuaire, Comète (glace) ; Scorie (lave, v98 : ne ressemble plus à Magma) |
 | Amas de cristaux (piquants) | Améthyste, Obsidienne (verre noir), Spore (Envers) |
 | Bipyramide | Diamant, Saphir, Émeraude, Foreuse, Sonde |
-| Bloc (cube arrondi) ou monolithe (dalle) | Basalte, Prisme, Sentinelle, Tesseract ; Monolithe, Quartz |
+| Bloc (cube arrondi) ou monolithe (dalle) | Basalte, Prisme, Sentinelle, Tesseract ; Monolithe, Quartz, Oumuamua (légendaire, v98) |
 | Anneau-monde (tore) | Station, Paradoxe |
 | Éclipse (disque noir et couronne) | Éclipse |
 | Croissant (éclairé par l’arrière) | Séléné, Luna, Nyx |
@@ -1117,7 +1131,7 @@ En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 | Univers par partie | **duel : 2** (vous + 1 rival) · mêlée : 8 (vous + 7 bots) |
 | Familles | 12 au total, **5 actives par partie** (dont celle de votre loi) + les neutres : 792 combinaisons |
 | Lois | 15 : 12 de famille + 3 lois de vie neutres (Sacrifice 22 PV et +1 énergie par cycle, Endurance 45 PV, Phénix 25 PV et une renaissance à 15 PV), 3 proposées au départ ; les bots ne prennent que des lois de famille |
-| Astres | 9 par famille + 8 neutres = **116**, + **6 légendaires** ; **53 achetables** dans une partie, plus les légendaires |
+| Astres | 9 par famille + 8 neutres = **116**, + **14 légendaires** (une par famille, deux neutres) ; **53 achetables** dans une partie, plus les 7 légendaires de ses familles et neutres |
 | Copies par astre | niveau 1 : 16 · 2 : 15 · 3 : 13 · 4 : 11 · 5 : 9 · 6 : 7 |
 | Création | 3 / 4 / 4 / 5 / 5 / 6 astres selon le niveau (1 à 6) |
 | Énergie | 3 au premier cycle, +1 par cycle, maximum 10 |
@@ -1153,19 +1167,23 @@ loi.
 ligne, tous les téléphones trouvent le même. Il est annoncé dès le choix de la loi, puis en grand au
 début de la partie.
 
-| Événement | Effet |
-|---|---|
-| Pluie de météores | les astres de niveau 1 achetés gagnent +1/+1 |
-| Abondance | +1 énergie à chaque cycle pour tous |
-| Création féconde | la Création propose un astre de plus |
-| Recyclage cosmique | vendre rapporte 1 énergie de plus |
-| Expansion | monter de niveau coûte 1 de moins |
-| Révélation | les découvertes proposent 4 astres |
-| Ère des légendes | légendaires 5 fois plus fréquentes dans la Création (3 fois dans les découvertes) |
-| Vent solaire | début de combat : chaque camp inflige 1 dégât à tout l’avant adverse |
-| Aurore | début de combat : le premier astre de chaque camp gagne Bouclier |
-| Grande marée | fin de cycle : l’astre le plus faible de chaque système gagne +1/+1 |
-| Instabilité | début de combat : deux astres de chaque camp gagnent un mot-clé aléatoire |
+Chaque événement a son **picto en pixels** (v98, 12 × 12, `EVENT_ART` et `eventIcon` dans js/game.js) :
+au choix de la loi, sur la grande carte du début, dans la fiche ✺ et son bouton en haut de la partie,
+au défi du jour et dans le Codex. Il flotte doucement (immobile si l’appareil réduit les animations).
+
+| Événement | Picto | Effet |
+|---|---|---|
+| Pluie de météores | boules de feu en diagonale | les astres de niveau 1 achetés gagnent +1/+1 |
+| Abondance | éclair d’énergie | +1 énergie à chaque cycle pour tous |
+| Création féconde | planète verte et « + » doré | la Création propose un astre de plus |
+| Recyclage cosmique | deux flèches en rond | vendre rapporte 1 énergie de plus |
+| Expansion | flèche dorée qui monte | monter de niveau coûte 1 de moins |
+| Révélation | œil | les découvertes proposent 4 astres |
+| Ère des légendes | couronne aux gemmes | légendaires 5 fois plus fréquentes dans la Création (3 fois dans les découvertes) |
+| Vent solaire | soleil et traits de vent | début de combat : chaque camp inflige 1 dégât à tout l’avant adverse |
+| Aurore | bouclier aux voiles vert et rose | début de combat : le premier astre de chaque camp gagne Bouclier |
+| Grande marée | vague | fin de cycle : l’astre le plus faible de chaque système gagne +1/+1 |
+| Instabilité | carré décalé, couleurs qui bavent | début de combat : deux astres de chaque camp gagnent un mot-clé aléatoire |
 
 **Reliques.** Au début des cycles 4 et 8, une fenêtre propose trois reliques ; le combat attend le
 choix (en ligne, la fin du temps prend la première). Les bots choisissent seuls (`botRelic`,
@@ -1312,8 +1330,9 @@ auprès du moteur (`OrbiteBuildings.register`).
 
 ## Légendaires
 
-Six astres **légendaires**, un par niveau, existent en **un seul exemplaire** par partie et sont présents
-dans toutes les parties, quelles que soient les familles tirées. Ils ne se montrent que rarement : chaque
+Quatorze astres **légendaires** : **un par famille** (v98) et deux neutres. Chacun existe en **un seul
+exemplaire** par partie ; depuis la v98, une légendaire de famille n’est en jeu que si sa famille l’est
+(les deux neutres le sont toujours). Ils ne se montrent que rarement : chaque
 emplacement de la Création a 1 chance sur 100 d’en proposer un (de votre niveau ou moins), et une
 découverte en glisse un parmi ses choix dans 7 % des cas. On en croise un dans environ 3 parties sur
 10, et on en possède un dans 1 partie sur 10 seulement. Ils ne fusionnent pas (un seul exemplaire).
@@ -1326,6 +1345,16 @@ découverte en glisse un parmi ses choix dans 7 % des cas. On en croise un dans 
 | 4 | Maelström | Tempête | 5/7 | Rafale ; après chacune de ses attaques, tous vos astres gagnent +1/+1 |
 | 5 | Grand Attracteur | Neutre | 5/7 | Début de combat : chaque ennemi perd 1/1, il gagne tout ce qu’il a volé |
 | 6 | Oméga | Neutre | 7/7 | Début de combat : vos autres astres gagnent +2/+2, les deux premiers Bouclier |
+| 1 | Lune de sang (v98) | Lunes | 2/3 | Fin de cycle : ses voisins gagnent +1/+1 |
+| 2 | Pangée (v98) | Minéral | 2/6 | Rempart ; fin de cycle : vos Remparts gagnent +1/+2 |
+| 2 | Oumuamua (v98) | Comètes | 2/3 | Quand vous actualisez, gagne +1/+1 (forme allongée) |
+| 3 | Bételgeuse (v98) | Brasier | 3/5 | Début de combat et Effondrement : 2 dégâts à tous les ennemis |
+| 3 | Prisme absolu (v98) | Cristal | 3/5 | Quand vous jouez un autre Cristal, il gagne +2/+2 |
+| 4 | Zéro absolu (v98) | Glace | 4/6 | Bouclier ; début de combat : vos autres astres gagnent Bouclier |
+| 5 | Cerveau Matriochka (v98) | Machine | 6/8 | Bouclier ; début de cycle : gagnez 2 énergies |
+| 6 | Singularité nue (v98) | Anomalies | 8/8 | Début de combat : trois alliés gagnent un mot-clé aléatoire ; Effondrement : un astre de niveau 6 aléatoire |
+
+Les succès « Gardien » ne concernent que les six premières (la liste reste à 100 succès).
 
 À l’écran : halo prismatique et deux anneaux d’étincelles arc-en-ciel qui tournent en sens contraires
 (moteur de rendu) et chiffres irisés. Quand une légendaire apparaît dans la

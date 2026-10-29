@@ -448,13 +448,15 @@ test('lois de vie : PV de départ, énergie du sacrifice, renaissance du phénix
   assert.ok(me.reborn && me.alive && me.hp === 15, 'renaît avec 15 PV au lieu d’être éliminé');
 });
 
-test('légendaires : une par niveau, un exemplaire, rares dans la Création et les découvertes', () => {
+test('légendaires : une par famille et deux neutres, un exemplaire, rares dans la Création et les découvertes', () => {
   const legends = R.CARDS.filter((c) => c.legend);
-  assert.deepEqual(legends.map((c) => c.tier).sort(), [1, 2, 3, 4, 5, 6]);
+  for (const f of R.FAMILY_KEYS) assert.equal(legends.filter((c) => c.fam === f).length, 1, 'une légendaire ' + f);
+  assert.equal(legends.filter((c) => c.fam === 'neutre').length, 2);
   let seen = 0, slots = 0, disc = 0, discN = 0;
   for (let g = 0; g < 300; g++) {
     const s = R.newGame('leg-' + g, R.LAWS[g % R.LAWS.length].id);
-    for (const l of legends) assert.equal(s.poolTotal[l.id], 1);
+    // Seules les légendaires des familles en jeu (et les neutres) sont dans la réserve.
+    for (const l of legends) assert.equal(s.poolTotal[l.id], l.fam === 'neutre' || s.families.includes(l.fam) ? 1 : undefined);
     for (const p of s.players) { slots += p.shop.length; seen += p.shop.filter((id) => R.CARD[id].legend).length; }
     invariant(s);
   }

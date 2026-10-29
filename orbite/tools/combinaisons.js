@@ -46,14 +46,19 @@ function computeCombinationsReport({ units = R.BOARD_MAX } = {}) {
   const regularByFamily = Object.fromEntries(R.FAMILY_KEYS.map((fam) => [
     fam, regular.filter((c) => c.fam === fam).length,
   ]));
+  // Depuis la v98, une légendaire n'entre dans la réserve que si sa famille est en jeu (ou neutre).
+  const legendaryByFamily = Object.fromEntries(R.FAMILY_KEYS.map((fam) => [
+    fam, legendary.filter((c) => c.fam === fam).length,
+  ]));
+  const neutralLegendary = legendary.filter((c) => c.fam === 'neutre').length;
   const neutralRegular = regular.filter((c) => c.fam === 'neutre').length;
   // Lire la sélection et les identités de réserve du moteur, sans simuler de partie.
   const reference = R.newGame('combinaisons-reference', R.LAWS[0].id);
   const active = reference.families.length;
   const poolIds = Object.keys(reference.pool);
-  const familySizes = Object.values(regularByFamily).sort((a, b) => a - b);
+  const familySizes = R.FAMILY_KEYS.map((fam) => regularByFamily[fam] + legendaryByFamily[fam]).sort((a, b) => a - b);
   const sum = (list) => list.reduce((total, n) => total + n, 0);
-  const commonTypes = neutralRegular + legendary.length;
+  const commonTypes = neutralRegular + neutralLegendary;
   const minPoolTypes = commonTypes + sum(familySizes.slice(0, active));
   const maxPoolTypes = commonTypes + sum(familySizes.slice(familySizes.length - active));
 
@@ -69,6 +74,8 @@ function computeCombinationsReport({ units = R.BOARD_MAX } = {}) {
       laws: R.LAWS.length,
       neutralRegularTypes: neutralRegular,
       regularTypesByFamily: regularByFamily,
+      legendaryTypesByFamily: legendaryByFamily,
+      neutralLegendaryTypes: neutralLegendary,
     },
     families: {
       activePerGame: active,
@@ -84,7 +91,7 @@ function computeCombinationsReport({ units = R.BOARD_MAX } = {}) {
       uniformSizeAcrossFamilySelections: minPoolTypes === maxPoolTypes,
       minTypesAcrossFamilySelections: minPoolTypes,
       maxTypesAcrossFamilySelections: maxPoolTypes,
-      description: 'Identités de la réserve nominale : familles retenues, neutres et toutes les légendaires ; jetons exclus.',
+      description: 'Identités de la réserve nominale : familles retenues et neutres, avec leurs légendaires ; jetons exclus.',
     },
     distinctIdentityModel: {
       units,

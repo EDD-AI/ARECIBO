@@ -145,6 +145,13 @@
     ['INVITÉ', 'INVITED', 'INVITADO', 'EINGELADEN', 'CONVIDADO'],
     ['INVITER', 'INVITE', 'INVITAR', 'EINLADEN', 'CONVIDAR'],
     ['LANCER · {n} JOUEURS', 'START · {n} PLAYERS', 'EMPEZAR · {n} JUGADORES', 'STARTEN · {n} SPIELER', 'COMEÇAR · {n} JOGADORES'],
+    // Mode spectateur (v98)
+    ['REGARDER LA SUITE', 'KEEP WATCHING', 'SEGUIR MIRANDO', 'WEITER ZUSCHAUEN', 'CONTINUAR ASSISTINDO'],
+    ['SPECTATEUR', 'SPECTATOR', 'ESPECTADOR', 'ZUSCHAUER', 'ESPECTADOR'],
+    ['La partie continue sans vous.', 'The game goes on without you.', 'La partida sigue sin ti.', 'Die Partie geht ohne dich weiter.', 'A partida continua sem você.'],
+    ['{name} L’EMPORTE', '{name} WINS', '{name} GANA', '{name} GEWINNT', '{name} VENCE'],
+    ['{name} perd {n} PV', '{name} loses {n} HP', '{name} pierde {n} PV', '{name} verliert {n} LP', '{name} perde {n} PV'],
+    ['{name} remporte la partie. Vous finissez {rank}.', '{name} wins the game. You finish {rank}.', '{name} gana la partida. Terminas {rank}.', '{name} gewinnt die Partie. Du wirst {rank}.', '{name} vence a partida. Você termina em {rank}.'],
     // Duel d'entraînement (v97)
     ['Votre premier <b>duel</b> vous attend : touchez <b>JOUER</b>.', 'Your first <b>duel</b> awaits: tap <b>PLAY</b>.', 'Tu primer <b>duelo</b> te espera: toca <b>JUGAR</b>.', 'Dein erstes <b>Duell</b> wartet: tippe auf <b>SPIELEN</b>.', 'Seu primeiro <b>duelo</b> te espera: toque em <b>JOGAR</b>.'],
     ['<b>Duel d’entraînement</b> contre la <b>Sentinelle</b> : elle n’a que <b>20 PV</b>, vous en avez 60. À chaque <b>cycle</b>, vous achetez des astres, vous les placez, puis votre système <b>combat tout seul</b>. Suivez le guide pour la battre !', '<b>Training duel</b> against the <b>Sentinel</b>: it only has <b>20 HP</b>, you have 60. Each <b>cycle</b>, you buy celestial bodies, place them, then your system <b>fights on its own</b>. Follow the guide to beat it!', '<b>Duelo de entrenamiento</b> contra la <b>Centinela</b>: solo tiene <b>20 PV</b>, tú tienes 60. En cada <b>ciclo</b> compras astros, los colocas y tu sistema <b>combate solo</b>. ¡Sigue la guía para vencerla!', '<b>Trainingsduell</b> gegen die <b>Wächterin</b>: Sie hat nur <b>20 LP</b>, du hast 60. In jedem <b>Zyklus</b> kaufst du Gestirne, platzierst sie, und dein System <b>kämpft von selbst</b>. Folge der Anleitung, um sie zu besiegen!', '<b>Duelo de treino</b> contra a <b>Sentinela</b>: ela só tem <b>20 PV</b>, você tem 60. A cada <b>ciclo</b>, você compra astros, posiciona-os e seu sistema <b>luta sozinho</b>. Siga o guia para vencê-la!'],
