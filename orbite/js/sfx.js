@@ -132,20 +132,33 @@
 
   // En HTTP(S), la musique passe par le graphe WebAudio (fondus fiables, même sur iPhone) ;
   // ouverte depuis un fichier, elle est lue directement (le navigateur refuserait le graphe).
-  // Quatre thèmes qui se suivent : le thème principal d'ARECIBO, « Distant Earth », le second thème
-  // d'ARECIBO, puis « Orbiting Wonder ».
-  const TRACKS = ['arecibo1.mp3', 'earth.mp3', 'arecibo2.mp3', 'menu.mp3'];
-  let track = 0;
+  // Quatre morceaux qui se suivent, nommés dans le lecteur du menu (v89) : le thème d'ARECIBO
+  // (l'ancien jeu), puis Odyssée, Space Marianne et Nuclear. Le morceau en cours est retenu.
+  const TRACKS = [
+    { file: 'arecibo1.mp3', name: 'ARECIBO' },
+    { file: 'earth.mp3', name: 'Odyssée' },
+    { file: 'arecibo2.mp3', name: 'Space Marianne' },
+    { file: 'menu.mp3', name: 'Nuclear' }
+  ];
+  const TRACK_KEY = 'orbite.piste';
+  let track = (() => { try { const n = Number(localStorage.getItem(TRACK_KEY)) | 0; return n >= 0 && n < TRACKS.length ? n : 0; } catch (err) { return 0; } })();
+  // Le lecteur du menu suit la musique : morceau, lecture ou pause.
+  const musicChanged = () => { try { window.dispatchEvent(new Event('orbite-music')); } catch (err) { /* sans importance */ } };
+  function setTrack(i) {
+    track = (i + TRACKS.length) % TRACKS.length;
+    try { localStorage.setItem(TRACK_KEY, String(track)); } catch (err) { /* stockage indisponible */ }
+    if (musicEl) {
+      musicEl.src = BASE + TRACKS[track].file;
+      if (musicWant && musicOn && !muted && !document.hidden) musicEl.play().catch(() => { /* reprendra au prochain toucher */ });
+    }
+    musicChanged();
+  }
   function musicNode() {
     if (musicEl || !ctx) return musicEl;
-    musicEl = new Audio(BASE + TRACKS[track]);
+    musicEl = new Audio(BASE + TRACKS[track].file);
     musicEl.loop = false;
     musicEl.preload = 'auto';
-    musicEl.addEventListener('ended', () => {
-      track = (track + 1) % TRACKS.length;
-      musicEl.src = BASE + TRACKS[track];
-      if (musicWant && musicOn && !muted && !document.hidden) musicEl.play().catch(() => { /* reprendra au prochain toucher */ });
-    });
+    musicEl.addEventListener('ended', () => setTrack(track + 1));
     if (location.protocol !== 'file:') {
       try {
         const src = ctx.createMediaElementSource(musicEl);
@@ -605,6 +618,9 @@
       play('glass4', { vol: 0.3, rate: 0.6, rev: 1, delay: 0.1, jit: 0 });
     },
     // Le jingle d'ARECIBO : la victoire d'une partie.
+    // Sons rétro du jeu caché (js/invaders.js) : bip carré et souffle, sur le bus des effets.
+    chip(freq, dur, o) { tone(freq, dur, Object.assign({ type: 'square', vol: 0.03 }, o)); },
+    hiss(dur, o) { noise(dur, o); },
     jingle() { if (!play('jingle', { vol: 0.5, jit: 0 })) SFX.win(); },
     // Alerte : vos PV passent sous le quart.
     alarm() { play('alarm', { vol: 0.22, jit: 0 }); },
@@ -622,6 +638,10 @@
     // Musique du menu : true sur les écrans hors partie.
     music(on) { if (on !== musicWant) setMusic(on); },
     get musicOn() { return musicOn; },
+    // Lecteur du menu : nom du morceau, morceau suivant ou précédent, lecture en cours.
+    get trackName() { return TRACKS[track].name; },
+    skip(dir) { setTrack(track + (dir < 0 ? -1 : 1)); },
+    get musicPlaying() { return musicOn && !muted && musicVol > 0; },
     get musicVol() { return musicVol; },
     get fxVol() { return fxVol; },
     // Volume de la musique (0 à 1) : à 0, la musique s'arrête ; elle reprend dès qu'on remonte.
@@ -643,6 +663,7 @@
       try { localStorage.setItem(MUSIC_KEY, musicOn ? '1' : '0'); } catch (err) { /* stockage indisponible */ }
       if (!ctx && musicOn) audio();
       setMusic(musicWant);
+      musicChanged();
     },
     // Nombre d'échantillons prêts (0 tant que le premier toucher n'a pas eu lieu).
     get loaded() { return Object.keys(buffers).length; },
@@ -650,9 +671,10 @@
     setMuted(v) {
       muted = !!v;
       try { localStorage.setItem(KEY, muted ? '1' : '0'); } catch (err) { /* stockage indisponible */ }
-      if (!ctx) { if (!muted) audio(); return; }
+      if (!ctx) { if (!muted) audio(); musicChanged(); return; }
       if (muted) { ctx.suspend(); if (musicEl) musicEl.pause(); pauseBeds(); bedName = null; }
       else { ctx.resume(); setMood(mood, true); setMusic(musicWant); }
+      musicChanged();
     }
   };
 

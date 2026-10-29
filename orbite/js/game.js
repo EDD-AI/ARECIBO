@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 88;
+  const VERSION = 89;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -710,7 +710,7 @@
     // L'horizon remonte si besoin pour que tous les boutons du menu tiennent sous lui.
     // Place réservée au dépliage de « Jouer solo » (une ligne de plus).
     const listH = ($('menuList').offsetHeight || 260) + 52;
-    const horizon = Math.round(Math.min(H * (W > H ? 0.66 : 0.6), H - listH - 64));
+    const horizon = Math.round(Math.min(H * (W > H ? 0.66 : 0.6), H - listH - 100));
     const R = Math.round(Math.min(W * 0.82, H * 0.6));
     const cy = horizon + R * 0.3;
     const pl = $('menuPlanet');
@@ -743,10 +743,46 @@
     ground.style.top = horizon - 4 + 'px';
     ground.style.height = gh + 'px';
     ground.innerHTML = `<path d="${path}" fill="#020407"/>${rims}`;
-    $('menuList').style.top = horizon + Math.max(14, Math.min((H - horizon) * 0.12, H - horizon - listH - 40)) + 'px';
+    $('menuList').style.top = horizon + Math.max(14, Math.min((H - horizon) * 0.12, H - horizon - listH - 76)) + 'px';
   }
 
+  // ─── Lecteur de musique du menu (v89) ───────────────────────
+  // Des icônes en pixels, comme le reste du jeu.
+  const pixIcon = (rows) => `<svg viewBox="0 0 ${rows[0].length} ${rows.length}" shape-rendering="crispEdges" aria-hidden="true">${rows.map((r, y) => [...r].map((c, x) => (c === '1' ? `<rect x="${x}" y="${y}" width="1" height="1"/>` : '')).join('')).join('')}</svg>`;
+  const MUS_ICONS = {
+    prev: ['0011', '0110', '1100', '0110', '0011'],
+    next: ['1100', '0110', '0011', '0110', '1100'],
+    play: ['1000', '1100', '1110', '1100', '1000'],
+    pause: ['11011', '11011', '11011', '11011', '11011']
+  };
+  function renderMusicBar() {
+    const bar = $('musicBar');
+    if (!bar) return;
+    const on = SFX.musicPlaying;
+    bar.classList.toggle('on', on);
+    bar.innerHTML = `<button class="mus-btn" data-mus="prev" aria-label="${tr('Morceau précédent')}">${pixIcon(MUS_ICONS.prev)}</button>
+      <button class="mus-btn mus-play" data-mus="play" aria-label="${on ? tr('Pause') : tr('Lecture')}">${pixIcon(on ? MUS_ICONS.pause : MUS_ICONS.play)}</button>
+      <span class="mus-name"><i class="mus-eq"><i></i><i></i><i></i></i>${esc(SFX.trackName)}</span>
+      <button class="mus-btn" data-mus="next" aria-label="${tr('Morceau suivant')}">${pixIcon(MUS_ICONS.next)}</button>`;
+  }
+  listen('musicBar', 'click', (e) => {
+    const b = e.target.closest('[data-mus]');
+    if (!b) return;
+    const k = b.dataset.mus;
+    if (k === 'prev' || k === 'next') { SFX.skip(k === 'prev' ? -1 : 1); if (!SFX.musicPlaying) SFX.tap(); }
+    else if (SFX.musicPlaying) SFX.setMusicOn(false);
+    else {
+      // Lecture : on rallume le son s'il était coupé, et la musique à mi-volume si elle était à zéro.
+      if (SFX.muted) SFX.setMuted(false);
+      if (SFX.musicVol === 0) SFX.setMusicVol(0.6);
+      else SFX.setMusicOn(true);
+    }
+    renderMusicBar();
+  });
+  window.addEventListener('orbite-music', renderMusicBar);
+
   function renderMenu() {
+    renderMusicBar();
     $('menuDust').innerHTML = icon('dust') + ' ' + dust();
     if (typeof renderCreationBtn === 'function') renderCreationBtn();
     const lv = levelInfo(xpTotal());
@@ -1983,11 +2019,14 @@
     const p = me();
     const max = Math.min(R.MAX_GOLD, ui.state.round + 2);
     const shown = Math.max(max, Math.min(p.gold, 12));
+    // L'énergie gagnée en vendant un doré brille en doré ; dépensée, elle s'en va la première.
+    p.goldE = Math.min(p.goldE || 0, p.gold);
     let html = '';
     for (let i = 0; i < shown; i++) {
       const on = i < p.gold;
       const wasOn = spent && i >= p.gold && i < p.gold + spent;
-      html += `<i class="${on ? 'on' : ''} ${wasOn ? 'spent' : ''}"></i>`;
+      const gold = on && i >= p.gold - p.goldE;
+      html += `<i class="${on ? 'on' : ''} ${gold ? 'gold' : ''} ${wasOn ? 'spent' : ''}"></i>`;
     }
     $('energy').innerHTML = icon('bolt') + html + `<b>${p.gold}</b>`;
   }
@@ -2301,7 +2340,7 @@
       const shop = $('shop').getBoundingClientRect();
       const tx = shop.left + shop.width / 2 - rect.width / 2, ty = shop.top + shop.height / 2 - rect.width / 2;
       stage.reveal(t, 1, 0, 420);
-      popAt(rect.left + rect.width / 2, rect.top, `+1 ${icon('bolt')}`, 'energy');
+      popAt(rect.left + rect.width / 2, rect.top, `+${res.gain || 1} ${icon('bolt')}`, res.golden ? 'energy gold' : 'energy');
       await t.animate([
         { transform: `translate(${rect.left}px, ${rect.top}px) scale(1)` },
         { transform: `translate(${tx}px, ${ty}px) scale(0.5)` }
@@ -2660,7 +2699,7 @@
       const i = mates.indexOf(u);
       const other = p.board.filter((v) => R.rowOf(v) !== R.rowOf(u)).length;
       actions = `<button class="btn" data-act="left" data-uid="${u.uid}" ${i === 0 ? 'disabled' : ''}>${icon('back')}</button>
-        <button class="btn primary" data-act="sell" data-uid="${u.uid}">${tr('VENDRE')} · +1 ${icon('bolt')}</button>
+        <button class="btn primary ${u.golden ? 'sell-gold' : ''}" data-act="sell" data-uid="${u.uid}">${tr('VENDRE')} · +${R.sellGain(ui.state, p, u)} ${icon('bolt')}</button>
         <button class="btn" data-act="right" data-uid="${u.uid}" ${i === mates.length - 1 ? 'disabled' : ''}><span style="display:inline-block;transform:scaleX(-1)">${icon('back')}</span></button>
         <button class="btn wide" data-act="row" data-uid="${u.uid}">${R.rowOf(u) ? tr('PASSER À L’AVANT') : tr('PASSER À L’ARRIÈRE')}${other >= R.ROW_MAX ? ' · ' + tr('ÉCHANGE') : ''}</button>`;
     }
@@ -3045,7 +3084,7 @@
     const ic = { sword: icon('sword'), heart: icon('heart'), skull: icon('skull'), spark: icon('spark') };
     return `<h3>${tr('COMMENT JOUER')}</h3><ul class="help">
       <li>${tr('En <b>duel</b>, vous affrontez un seul rival, cycle après cycle. Chaque cycle : vous achetez, vous placez, puis votre système combat seul. Le premier à 0 PV perd. La <b>mêlée à 8</b> (Multijoueur) suit les mêmes règles contre sept univers.')}</li>
-      <li>${tr('<b>Acheter</b> coûte 3 énergies (glissez un astre vers votre main ou directement dans le système). <b>Vendre</b> rend 1 énergie (glissez un astre du système vers la Création). <b>Actualiser</b> coûte 1.')}</li>
+      <li>${tr('<b>Acheter</b> coûte 3 énergies (glissez un astre vers votre main ou directement dans le système). <b>Vendre</b> rend 1 énergie, 2 pour un astre doré (glissez un astre du système vers la Création). <b>Actualiser</b> coûte 1.')}</li>
       <li>${tr('<b>Geler</b> garde les astres proposés pour le cycle suivant. <b>Monter de niveau</b> débloque des astres plus puissants ; le prix baisse à chaque cycle.')}</li>
       <li>${tr('Votre système a <b>deux rangées de 4</b> (7 astres au plus). L’<b>avant</b> attaque et encaisse ; l’<b>arrière</b> est à l’abri des attaques et <b>avance</b> quand l’avant est tombé. Les effets des astres agissent depuis les deux rangées.')}</li>
       <li>${tr('Chaque astre de l’avant frappe l’ennemi <b>en face</b> de lui (les Remparts d’abord), de gauche à droite. Aucun hasard dans les cibles : votre placement décide.')}</li>

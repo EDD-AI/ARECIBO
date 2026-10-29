@@ -140,17 +140,29 @@
       <button class="btn" data-mp="leave">${tr('QUITTER')}</button></div>
       ${window.OrbiteChat ? `<div class="mp-card"><b>${tr('DISCUSSION')}</b>${window.OrbiteChat.html(20)}</div>` : ''}`;
   }
-  // Choix de la loi : trois lois parmi les familles de la partie ; 20 s pour choisir.
+  // Choix de la loi : trois lois parmi les familles de la partie, avec la forme de leur énergie comme
+  // en solo ; 20 s pour choisir. La liste n'est dessinée qu'une fois : ensuite, seuls le compte à
+  // rebours et la loi choisie changent (les formes animées ne repartent pas de zéro).
   function renderLaws(box) {
     // Même échéance pour tous : l'heure du lancement par l'hôte + 20 s.
     if (!st.lawEnd) { st.lawEnd = (MP.state.match.startAt || Date.now()) + MP.LAW_MS; st.law = null; SFX.level(); }
     const left = Math.max(0, Math.ceil((st.lawEnd - Date.now()) / 1000));
-    box.innerHTML = `<div class="mp-card"><b>${tr('LA PARTIE COMMENCE')}</b><p>${tr('Choisissez votre loi · {n} s', { n: left })}</p></div>
-      <div class="mp-laws">${MP.lawChoices().map((id) => {
-        const l = R.LAW[id], f = R.FAMILIES[l.fam];
-        return `<button class="mp-law ${st.law === id ? 'on' : ''}" data-mp="law" data-law="${id}" style="--c:${f.color}"><span class="fam-chip">${l.fam === 'neutre' ? tr('POINTS DE VIE') : esc(f.name.toUpperCase())}</span><b>${esc(l.name)}</b><small>${esc(l.text)}</small></button>`;
-      }).join('')}</div>
-      <button class="btn primary" data-mp="go" ${st.law ? '' : 'disabled'}>${tr('PRÊT')}</button>`;
+    const body = $('mpBody'), list = body.querySelector('.mp-laws');
+    if (list && list.dataset.mid === String(MP.state.mid)) {
+      body.querySelector('[data-law-left]').textContent = tr('Choisissez votre loi · {n} s', { n: left });
+      for (const b of list.querySelectorAll('.mp-law')) b.classList.toggle('on', b.dataset.law === st.law);
+      body.querySelector('[data-mp="go"]').disabled = !st.law;
+    } else {
+      box.innerHTML = `<div class="mp-card"><b>${tr('LA PARTIE COMMENCE')}</b><p data-law-left>${tr('Choisissez votre loi · {n} s', { n: left })}</p></div>
+        <div class="mp-laws" data-mid="${esc(MP.state.mid)}">${MP.lawChoices().map((id) => {
+          const l = R.LAW[id], f = R.FAMILIES[l.fam];
+          return `<button class="mp-law ${st.law === id ? 'on' : ''}" data-mp="law" data-law="${id}" style="--c:${f.color}">
+            <canvas class="sphere" data-fam="${l.fam}" aria-hidden="true"></canvas>
+            <span class="mp-law-txt"><span class="fam-chip">${l.fam === 'neutre' ? tr('POINTS DE VIE') : esc(f.name.toUpperCase())}</span><b>${esc(l.name)}</b><small>${esc(l.text)}</small></span></button>`;
+        }).join('')}</div>
+        <button class="btn primary" data-mp="go" ${st.law ? '' : 'disabled'}>${tr('PRÊT')}</button>`;
+      A.mountEnergy(body);
+    }
     if (left <= 0) begin(st.law || MP.lawChoices()[0]);
   }
   async function begin(law) {
@@ -194,7 +206,7 @@
         if (navigator.share) navigator.share({ title: 'ORBITE', text, url }).catch(() => {});
         else if (navigator.clipboard) { await navigator.clipboard.writeText(text + ' ' + url); A.toast(tr('Lien copié.')); }
       }
-      else if (k === 'law') { st.law = b.dataset.law; }
+      else if (k === 'law') { st.law = b.dataset.law; if (window.OrbiteEnergy) window.OrbiteEnergy.pulse(b.querySelector('canvas.sphere')); }
       else if (k === 'go') { if (st.law) await begin(st.law); return; }
     } catch (err) {
       const denied = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));

@@ -129,6 +129,16 @@ test('trois exemplaires fusionnent en un astre doré qui ouvre une découverte',
   assert.equal(R.choose(s, 1).ok, true);
   assert.equal(p.discover.length, 0);
   invariant(s);
+  // Revendu, le doré rapporte une énergie de plus, marquée dorée (p.goldE) jusqu'au cycle suivant.
+  p.gold = 0;
+  p.goldE = 0;
+  const sold = R.sell(s, gold.uid);
+  assert.equal(sold.ok, true);
+  assert.equal(sold.gain, 2);
+  assert.equal(sold.golden, true);
+  assert.equal(p.gold, 2);
+  assert.equal(p.goldE, 1);
+  invariant(s);
 });
 
 test('geler : les astres restants sont gardés et les places vides complétées', () => {
