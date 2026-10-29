@@ -438,7 +438,7 @@
   }
 
   // Formes non sphériques (dessinées par marche de rayon dans le moteur de rendu).
-  const SHAPE_KEYS = ['double', 'brisee', 'amas', 'anneau', 'bloc', 'monolithe', 'diamant', 'foret', 'antenne'];
+  const SHAPE_KEYS = ['double', 'brisee', 'amas', 'anneau', 'bloc', 'monolithe', 'diamant', 'foret', 'antenne', 'fendu'];
   function makeShape(name, r, body) {
     const tumble = () => { body.roll = r.range(-1.2, 1.2); body.pitch = r.range(-0.9, 0.9); };
     switch (name) {
@@ -485,6 +485,14 @@
         body.roll = r.range(-0.15, 0.15);
         body.pitch = r.range(0.45, 0.6);
         return { kind: 8, P: [1.3, 0.42, 0.05, 0.1], Q: [0, 1, 1.3, 0] };
+      }
+      // Fendue en deux (v99) : deux moitiés bien écartées de part et d'autre de l'équateur, la fente
+      // en biais ; à peine penchées vers nous, on voit le vide entre elles et le bord de la cassure.
+      case 'fendu': {
+        const sep = r.range(0.22, 0.26);
+        body.roll = r.sign() * r.range(0.3, 0.5);
+        body.pitch = r.range(0.06, 0.12);
+        return { kind: 9, P: [sep, 0, 0, 0], Q: [0, 1, 1 + sep + 0.08, 0] };
       }
       case 'foret': {
         body.roll = r.range(-0.6, 0.6);
@@ -908,7 +916,7 @@
       body.bound = body.shape.Q[2];
       body.clouds = null;
       body.atmo = null;
-      if (shapeName === 'brisee') {
+      if (shapeName === 'brisee' || shapeName === 'fendu') {
         const hot = opts.coreHue != null ? opts.coreHue : 30;
         body.pal[14] = gradRamp([[0.3, 0.12, hot - 10], [0.55, 0.18, hot], [0.8, 0.15, hot + 25], [0.98, 0.05, hot + 50]]);
       }

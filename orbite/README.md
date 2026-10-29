@@ -892,9 +892,10 @@ fiche de chaque astre les choisit avec `look.shape` dans `js/rules.js`.
 | Comète (noyau de glace, queue soufflée à l’opposé de l’étoile) | Halley, Encke, Hale-Bopp, Hyakutake ; Météore en feu (orange), Ison rouge (v95) |
 | Planète brisée (morceaux écartés, cœur qui brûle dans les fissures) | Vestige (violet), Géode (vert), Forge stellaire (orange), Sérac (glace, cœur bleu) |
 | Astéroïde double (deux lobes soudés) | Tchouri, Agate, Écho, Ossuaire, Comète (glace) ; Scorie (lave, v98 : ne ressemble plus à Magma) |
-| Amas de cristaux (piquants) | Améthyste, Obsidienne (verre noir), Spore (Envers) |
+| Amas de cristaux (piquants) | Améthyste, Obsidienne (verre noir), Spore (Envers), Cœur de cristal (dans sa bulle, v99) |
 | Bipyramide | Diamant, Saphir, Émeraude, Foreuse, Sonde |
-| Bloc (cube arrondi) ou monolithe (dalle) | Basalte, Prisme, Sentinelle, Tesseract ; Monolithe, Quartz, Oumuamua (légendaire, v98) |
+| Bloc (cube arrondi) ou monolithe (dalle) | Basalte, Prisme, Sentinelle, Tesseract, Prisme absolu (légendaire, turquoise, v99) ; Monolithe, Quartz, Oumuamua (légendaire, v98) |
+| Fendue en deux (deux moitiés écartées en biais, la cassure brille ; forme 9, v99) | Antipode |
 | Anneau-monde (tore) | Station, Paradoxe |
 | Éclipse (disque noir et couronne) | Éclipse |
 | Croissant (éclairé par l’arrière) | Séléné, Luna, Nyx |
