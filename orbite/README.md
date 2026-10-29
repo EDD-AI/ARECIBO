@@ -380,7 +380,17 @@ continue sans vous jusqu’au dernier survivant :
 - **PASSER** accélère un combat, **QUITTER** joue la fin d’un coup ;
 - l’écran de fin annonce alors le vainqueur (« ANDROMÈDE remporte la partie. Vous finissez 8e. »).
 Votre classement, vos poussières et votre expérience ne changent plus, et rien n’est sauvegardé.
-Pas en duel (il n’y a plus personne à regarder), ni en ligne, ni dans le duel d’entraînement.
+Pas en duel (il n’y a plus personne à regarder), ni dans le duel d’entraînement.
+
+**En ligne aussi (v105).** Éliminé d’une partie en ligne (mêlée, entre amis ou classée), on suit les
+manches que l’hôte écrit, sans plus rien publier : `OrbiteMulti.watchNext` attend le document de la
+manche (« MANCHE EN COURS · Les autres créateurs jouent leur tour… ») puis la rejoue ici avec
+`mpResolve(state, snaps, [], { watch: true })`, exactement comme les autres téléphones (mêmes PV,
+mêmes éliminations, `tests/multi.test.mjs`). Le combat du meneur est montré, la discussion reste
+ouverte. S’il ne reste plus que des bots (le dernier humain clôt la partie), la suite se joue sur ce
+téléphone. QUITTER cesse simplement de regarder (en ligne, on ne peut pas jouer la fin d’avance).
+Un spectateur ne prend jamais la place de l’hôte. Vérifié aux émulateurs Firebase avec trois comptes
+et un bot : ALBA, éliminée 4e, voit ATLAS battre CHLOE puis BRUNO, manche après manche.
 Règles : `R.spectate(state)` rouvre la partie finie, puis `endTurn(state, { observer: true, watch: true })`
 rend `watched`, le combat du meneur (`tests/spectateur.test.mjs`).
 
