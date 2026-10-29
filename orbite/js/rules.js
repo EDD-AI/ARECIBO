@@ -32,6 +32,9 @@
   // Duel : le jeu principal, un contre un en plusieurs manches. La mêlée à huit reste un mode.
   // En duel, chaque univers a DUEL.hp fois plus de PV : la partie dure une douzaine de manches.
   const DUEL = { players: 2, hp: 2, rewards: { 1: 40, 2: 10 } };
+  // Duel d'entraînement des nouveaux joueurs (v97) : un rival à 20 PV, qui ne dépasse pas le niveau 2
+  // de Création ni 4 astres, et n'achète qu'un astre par cycle.
+  const TUTOR = { hp: 20, tier: 2, board: 4, laws: ['vents', 'stase', 'resonance', 'entropie'], gold: (p) => (p.board.length + p.hand.length >= 4 ? 0 : 3) };
   // Placement : deux rangées de ROW_MAX places. L'avant (rangée 0) attaque et encaisse ; l'arrière
   // (rangée 1) est à l'abri des attaques et avance dès que l'avant est tombé.
   const ROW_MAX = 4;
@@ -886,7 +889,9 @@
     const size = Math.max(2, Math.min(PLAYERS, opts.size || PLAYERS));
     // Outils de mesure : liste complète, en ordre de création des bots (pas leurs identifiants).
     // Les lois explicites sont validées avant de créer les astres et de réserver leurs copies.
-    const assignedBotLaws = opts.botLaws;
+    // Duel d'entraînement : la Sentinelle prend une loi simple de la partie (Tempête d'abord).
+    const tutorLaw = opts.tutorial && opts.botLaws === undefined ? TUTOR.laws.find((id) => LAW[id] && families.includes(LAW[id].fam)) : null;
+    const assignedBotLaws = opts.botLaws !== undefined ? opts.botLaws : tutorLaw && size === DUEL.players && !seats.length ? [tutorLaw] : undefined;
     if (assignedBotLaws !== undefined) {
       if (!Array.isArray(assignedBotLaws)) throw new TypeError('botLaws doit être une liste de lois.');
       if (assignedBotLaws.length !== size - 1 - seats.length) throw new RangeError('botLaws doit contenir une loi par bot.');
@@ -944,6 +949,12 @@
       if ((FAM_POWER[b.pref] || 0.5) < BOT.weak) b.pref2 = others.slice().sort((x, y) => (FAM_POWER[y] || 0) - (FAM_POWER[x] || 0))[0];
       else if (pairUp) b.pref2 = others[Math.floor(rng() * others.length)];
       state.players.push(b);
+    }
+    // Duel d'entraînement (v97) : la Sentinelle, 20 PV, joue avec l'IA de base et peu d'énergie.
+    if (opts.tutorial && size === DUEL.players && state.players[1] && state.players[1].bot) {
+      const t = state.players[1];
+      Object.assign(t, { name: 'SENTINELLE', hp: TUTOR.hp, maxHp: TUTOR.hp, skill: 0, tutor: true, greed: -1, pref2: null });
+      state.tutorial = true;
     }
     for (const p of state.players) if (!p.remote) rollShop(state, p);
     if (opts.mp) state.mp = Object.assign({}, opts.mp);
@@ -1958,6 +1969,8 @@
 
   function botTurn(state, p) {
     const rng = rngFor(state, 'bot:' + p.id);
+    // La Sentinelle du duel d'entraînement n'a qu'une partie de son énergie.
+    if (p.tutor) p.gold = Math.min(p.gold, TUTOR.gold(p));
     if (p.relicChoice && p.relicChoice.length) chooseRelic(state, botRelic(p), p);
     // IA experte : suit la famille qui domine déjà son système.
     if (expert(p) && state.round >= 4) {
@@ -1967,7 +1980,7 @@
     botDeploy(state, p);
     // L'IA experte monte de niveau plus tard : elle remplit d'abord son système, puis investit
     // l'énergie restante. C'est ce qui la rend nettement plus solide en début de partie.
-    const want = Math.min(6, 1 + Math.floor((state.round + p.greed - (expert(p) ? BOT.levelLag : 0)) / 2));
+    const want = Math.min(p.tutor ? TUTOR.tier : 6, 1 + Math.floor((state.round + p.greed - (expert(p) ? BOT.levelLag : 0)) / 2));
     if (p.tier < want && p.gold >= upgradeCost(p, state) && (state.round >= 3 || upgradeCost(p, state) <= p.gold - BUY_COST || p.gold >= 5)) upgrade(state, p);
     if (p.law === 'ingenierie' && p.gold >= 1 && p.gold % 3 === 1) usePower(state, null, p);
     if (p.law === 'renversement') {
@@ -1994,7 +2007,7 @@
       buy(state, best.i, p);
     }
     botDeploy(state, p);
-    if (p.gold >= 1 && p.tier < 6 && p.gold >= upgradeCost(p, state)) upgrade(state, p);
+    if (p.gold >= 1 && p.tier < (p.tutor ? TUTOR.tier : 6) && p.gold >= upgradeCost(p, state)) upgrade(state, p);
     if (expert(p) && !p.frozen) {
       // Garde le marché s'il contient une copie d'un astre déjà possédé ou un astre de sa famille.
       const keep = p.shop.some((id) => id && (ownedCopies(p, id).length >= 1 || (CARD[id].fam === p.pref && CARD[id].tier >= p.tier)));
@@ -2265,7 +2278,7 @@
   }
 
   return {
-    rollCost, DUEL, isDuel, rewardsOf, ROW_MAX, FORM_MIN, FORMATIONS, formationsOf, formText, PHENOMENA, phenomenaOf, POSITION_KW, layout, arrange, rowOf, move, botArrange, LEGEND_SHOP, LEGEND_DISCOVER, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
+    rollCost, DUEL, TUTOR, isDuel, rewardsOf, ROW_MAX, FORM_MIN, FORMATIONS, formationsOf, formText, PHENOMENA, phenomenaOf, POSITION_KW, layout, arrange, rowOf, move, botArrange, LEGEND_SHOP, LEGEND_DISCOVER, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
     FAMILIES, FAMILY_KEYS, KEYWORDS, CARDS, CARD, LAWS, LAW,
     EVENTS, EVENT, eventFor, RELICS, RELIC, RELIC_ROUNDS, AWAKE_ROUND, chooseRelic, hasRelic, powerCost, sellGain, shopSize,
     cardOf, famOf, cardText, upgradeCost, lawChoices, newGame, alivePlayers,

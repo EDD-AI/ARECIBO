@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 96;
+  const VERSION = 97;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -842,7 +842,11 @@
     const items = [...document.querySelectorAll('#menuList .menu-page.on .menu-item')];
     document.querySelectorAll('.menu-item').forEach((b) => { if (!items.includes(b)) b.classList.add('show'); });
     for (const b of items) { b.classList.add('show'); await wait(120); }
-    if (store.get(MENU_GUIDE_KEY, '') !== '1' && ui.screen === 'menu') {
+    if (needTuto() && ui.screen === 'menu') {
+      // Le guide du menu attend la fin du duel d'entraînement : d'abord, JOUER.
+      await wait(500);
+      if (ui.screen === 'menu' && !coach.steps) coachStart(TUTO_INVITE);
+    } else if (store.get(MENU_GUIDE_KEY, '') !== '1' && ui.screen === 'menu') {
       await wait(500);
       if (ui.screen === 'menu' && !coach.steps) coachStart(menuSteps(), () => store.set(MENU_GUIDE_KEY, '1'));
     }
@@ -1674,7 +1678,8 @@
     } else if (v === 'tuto') {
       store.set(TUTO_KEY, '');
       closeSheet();
-      toast(tr('Votre prochaine partie sera guidée pas à pas.'), 3000);
+      if (ui.screen === 'menu') startTutorial();
+      else toast(tr('Votre prochaine partie sera guidée pas à pas.'), 3000);
     } else if (v === 'tutoCamp') {
       for (const k of ['orbite.campagne.tuto', 'orbite.campagne.carte', 'orbite.campagne.glisse']) store.set(k, '');
       closeSheet();
@@ -1812,7 +1817,7 @@
     bubble.querySelector('.coach-count').textContent = st.extra ? '' : `${n} / ${total}`;
     const last = i === steps.length - 1;
     bubble.querySelector('.coach-actions').innerHTML =
-      (last ? '<span></span>' : `<button class="link" data-coach="skip">${tr('Passer le tutoriel')}</button>`) +
+      (last || steps.locked ? '<span></span>' : `<button class="link" data-coach="skip">${tr('Passer le tutoriel')}</button>`) +
       (st.next ? `<button class="btn primary" data-coach="next">${st.next}</button>` : '');
     bubble.classList.remove('in');
     void bubble.offsetWidth;
@@ -1907,6 +1912,41 @@
     { id: 'rivaux', target: '#rivals', text: tr('Votre <b>rival</b> : touchez ici pour voir le système qu’il a joué au dernier combat, et placez vos astres pour le contrer.'), next: tr('SUIVANT') },
     { id: 'fin', text: tr('Dernier secret : <b>trois copies</b> du même astre fusionnent en un astre <b>doré</b>, deux fois plus fort. Gagnez le duel pour remporter des poussières d’étoiles. À vous !'), next: tr('JOUER') }
   ];
+  // Duel d'entraînement (v97) : un nouveau joueur (aucune partie jouée, tutoriel pas fini) le joue
+  // avant tout le reste, contre la Sentinelle (20 PV, js/rules.js TUTOR). Le guide ne se passe pas.
+  const TUTO_LAW = 'gravite';
+  const needTuto = () => !tutoDone() && stats().games === 0;
+  const TUTO_INVITE = Object.assign([
+    { id: 'premier', target: '#playBtn', text: tr('Votre premier <b>duel</b> vous attend : touchez <b>JOUER</b>.'), gesture: { tap: '#playBtn', at: 0.5 }, wait: ['jouer'], delay: 0 }
+  ], { locked: true, menu: true });
+  const TUTO_STEPS = () => Object.assign([
+    { id: 'bienvenue', text: tr('<b>Duel d’entraînement</b> contre la <b>Sentinelle</b> : elle n’a que <b>20 PV</b>, vous en avez 60. À chaque <b>cycle</b>, vous achetez des astres, vous les placez, puis votre système <b>combat tout seul</b>. Suivez le guide pour la battre !'), next: tr('SUIVANT'), delay: 0 }
+  ].concat(GAME_STEPS.slice(1)), { locked: true });
+  // Un conseil (texte simple, pour toast) au début de chaque cycle du duel d'entraînement, une fois
+  // le guide terminé.
+  const TUTO_TIPS = {
+    3: tr('Conseil : montez de niveau (la flèche de la Création) pour faire naître des astres plus forts.'),
+    4: tr('Conseil : trois copies du même astre fusionnent en un astre doré, deux fois plus fort.'),
+    5: tr('Conseil : à l’avant, vos astres les plus solides : ils frappent et encaissent ; l’arrière prend le relais quand ils tombent.'),
+    6: tr('Conseil : système plein ? Vendez un astre faible (glissez-le vers la Création) pour en placer un meilleur.'),
+    7: tr('Conseil : touchez la Sentinelle en haut pour voir son système, et placez-vous pour la contrer.')
+  };
+  async function startTutorial() {
+    coachStop(false);
+    closeSheet();
+    ui.daily = null;
+    ui.size = 2;
+    ui.seed = 'tutoriel';
+    ui.state = R.newGame('tutoriel', TUTO_LAW, { size: 2, tutorial: true });
+    codexMark([R.LAW[TUTO_LAW].starter]);
+    ui.stamp++;
+    saveGame();
+    await show('game');
+    renderGame(true);
+    banner(tr('DUEL D’ENTRAÎNEMENT'), tr('Battez la Sentinelle : elle n’a que 20 PV.'));
+    store.set(HINT_KEY, '1');
+    setTimeout(() => { if (ui.state && ui.state.tutorial) coachStart(TUTO_STEPS(), () => store.set(TUTO_KEY, 'fini')); }, 1600);
+  }
   const MENU_STEPS = [
     { id: 'jouer', target: '#playBtn', text: tr('<b>Jouer</b> : en <b>solo</b> contre l’IA (duel, mêlée contre sept univers, défi du jour) ou en <b>multijoueur</b>, en ligne et entre amis.'), next: tr('SUIVANT'), delay: 0 },
     { id: 'missions', target: '#missionsBox', text: tr('Les <b>missions du jour</b> : trois objectifs chaque jour, récompensés en <b>poussières d’étoiles</b>. Récupérez la récompense ici quand une mission est accomplie.'), next: tr('SUIVANT') },
@@ -3790,6 +3830,7 @@
     renderEnergy();
     saveGame();
     tuto('cycle');
+    if (ui.state.tutorial && !coach.steps && TUTO_TIPS[ui.state.round]) setTimeout(() => toast(TUTO_TIPS[ui.state.round], 6000), 1200);
     if (me().relicChoice && me().relicChoice.length) await openRelics();
   }
 
@@ -3853,7 +3894,9 @@
     $('endRank').innerHTML = duel ? (rank === 1 ? tr('VICTOIRE') : tr('DÉFAITE')) : ordinal(rank);
     $('endRank').classList.toggle('podium', good);
     $('endRank').classList.toggle('duel', duel);
-    $('endText').textContent = duel
+    $('endText').textContent = s.tutorial
+      ? (rank === 1 ? tr('Bravo, la Sentinelle est vaincue ! Le vrai jeu commence : duels, mêlées et parties en ligne vous attendent.') : tr('La Sentinelle a tenu bon. Rejouez le duel d’entraînement : le guide vous attend.'))
+      : duel
       ? (rank === 1 ? tr('Votre système l’emporte sur {name}.', { name: s.players[1].name }) : tr('{name} l’emporte cette fois. Regardez son système et préparez la revanche.', { name: s.players[1].name }))
       : rank === 1 ? tr('Votre système domine l’univers.')
         : rank <= 3 ? tr('Sur le podium : les poussières d’étoiles sont à vous.')
@@ -4242,7 +4285,8 @@
   }
   // La planète du menu déborde en bas : l'écran ne doit jamais défiler (focus, clavier).
   listen('menu', 'scroll', () => { if ($('menu').scrollTop) $('menu').scrollTop = 0; });
-  listen('playBtn', 'click', () => { SFX.tap(); menuPage('play'); });
+  // Nouveau joueur : JOUER lance d'abord le duel d'entraînement (v97).
+  listen('playBtn', 'click', () => { SFX.tap(); if (needTuto()) { startTutorial(); return; } menuPage('play'); });
   listen('soloBtn', 'click', () => { SFX.tap(); menuPage('solo'); });
   listen('menuList', 'click', (e) => {
     const b = e.target.closest('[data-menu-back]');
@@ -4372,7 +4416,7 @@
     }
   });
   listen('skipBtn', 'click', () => { if (!(ui.state && ui.state.mp)) ui.skip = true; });
-  listen('againBtn', 'click', async () => { SFX.tap(); ui.size = ui.state && !R.isDuel(ui.state) ? 8 : 2; ui.daily = null; renderLaws(); await show('laws'); });
+  listen('againBtn', 'click', async () => { SFX.tap(); if (ui.state && ui.state.tutorial) { startTutorial(); return; } ui.size = ui.state && !R.isDuel(ui.state) ? 8 : 2; ui.daily = null; renderLaws(); await show('laws'); });
   listen('endHome', 'click', async () => { SFX.tap(); await backToMenu(); });
 
   window.addEventListener('resize', () => {

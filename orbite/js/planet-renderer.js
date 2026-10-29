@@ -596,6 +596,7 @@ float shadowAt(vec3 P, float dth) {
 }
 
 void main() {
+  outColor = vec4(0.0); // aucune sortie indéfinie, même sur un chemin oublié (v97)
   vec2 fc = gl_FragCoord.xy;
   float dth = bayer4(fc);
   if (dth > uReveal) discard;
@@ -609,7 +610,8 @@ void main() {
   if (ast) {
     float bound = uType == 7 && uShape == 0 ? uD.z : uSh2.z;
     float d2 = dot(xy, xy);
-    if (d2 > bound * bound) discard;
+    // Écrit « pas à l'intérieur » plutôt que « dehors » : une valeur NaN est aussi écartée (v97).
+    if (!(d2 <= bound * bound)) discard;
     float z = sqrt(max(bound * bound - d2, 0.0));
     bool hit = false;
     for (int i = 0; i < 72; i++) {
@@ -622,7 +624,7 @@ void main() {
     pv = vec3(xy, z);
   } else {
     float r2 = dot(xy, xy);
-    if (r2 > 1.0) discard;
+    if (!(r2 <= 1.0)) discard;
     pv = vec3(xy, sqrt(1.0 - r2));
   }
   if (uType == 11) { outColor = fin(vec3(0.0)); return; }
@@ -713,6 +715,7 @@ uniform vec3 uSeed;
 vec3 pal(int row, int sh) { return texelFetch(uPal, ivec2(clamp(sh, 0, 7), clamp(row, 0, 15)), 0).rgb; }
 
 void main() {
+  outColor = vec4(0.0); // aucune sortie indéfinie, même sur un chemin oublié (v97)
   vec2 fc = gl_FragCoord.xy;
   float dth = bayer4(fc);
   if (dth > uReveal) discard;
@@ -869,6 +872,7 @@ uniform sampler2D uPal;
 vec3 pal(int row, int sh) { return texelFetch(uPal, ivec2(clamp(sh, 0, 7), clamp(row, 0, 15)), 0).rgb; }
 
 void main() {
+  outColor = vec4(0.0); // aucune sortie indéfinie, même sur un chemin oublié (v97)
   vec2 fc = gl_FragCoord.xy;
   float dth = bayer4(fc);
   if (dth > uReveal) discard;
@@ -930,6 +934,7 @@ in vec4 vCol;
 flat in int vShape;
 flat in int vSize;
 void main() {
+  outColor = vec4(0.0); // aucune sortie indéfinie, même sur un chemin oublié (v97)
   float d = bayer4(gl_FragCoord.xy);
   if (d > uReveal) discard;
   int h = vSize / 2;
@@ -954,6 +959,7 @@ uniform vec3 uNebA;
 uniform vec3 uNebB;
 uniform vec3 uSeed;
 void main() {
+  outColor = vec4(0.0); // aucune sortie indéfinie, même sur un chemin oublié (v97)
   vec2 fc = gl_FragCoord.xy;
   float dth = bayer4(fc);
   float g = clamp(fc.y / uRes.y + (dth - 0.5) * 0.18, 0.0, 1.0);
@@ -1048,6 +1054,7 @@ vec3 aurora(vec2 q, float t) {
 }
 
 void main() {
+  outColor = vec4(0.0); // aucune sortie indéfinie, même sur un chemin oublié (v97)
   vec2 fc = gl_FragCoord.xy;
   float dth = bayer4(fc);
   vec2 uv = fc / uRes.y;
@@ -1221,6 +1228,7 @@ uniform vec2 uRes;
 uniform float uSat;
 // uSat : saturation du fond (1 = couleurs d'origine, 0 = gris) ; en partie, on l'adoucit.
 void main() {
+  outColor = vec4(0.0); // aucune sortie indéfinie, même sur un chemin oublié (v97)
   vec3 c = texture(uTex, gl_FragCoord.xy / uRes).rgb;
   c = mix(vec3(dot(c, vec3(0.299, 0.587, 0.114))), c, uSat);
   outColor = fin(c);
@@ -1379,11 +1387,14 @@ void main() {
       return l;
     }
 
+    // La toile n'est réallouée que si sa taille change (sur téléphone, la barre d'adresse qui se
+    // replie déclenche des resize à répétition), et elle est vidée tout de suite (v97).
     resize(w, h) {
-      this.canvas.width = w;
-      this.canvas.height = h;
+      if (this.canvas.width !== w) this.canvas.width = w;
+      if (this.canvas.height !== h) this.canvas.height = h;
       this.W = w;
       this.H = h;
+      if (this.gl && !this.gl.isContextLost()) this.clear();
     }
 
     paletteTex(rows) {
