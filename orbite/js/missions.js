@@ -114,23 +114,14 @@
   const famName = (m) => (m.fam && R.FAMILIES[m.fam] ? R.FAMILIES[m.fam].name : '');
   const claimable = (st) => st.list.filter((m) => m.p >= m.n && !m.claimed);
 
-  // Le bouton du menu : où en sont les missions, et une pastille quand une récompense attend.
-  function renderBtn() {
-    const b = $('missionsBtn');
-    if (!b) return;
-    const st = load();
-    const ready = claimable(st).length, done = st.list.filter((m) => m.claimed).length;
-    b.classList.toggle('mi-ready', ready > 0);
-    b.innerHTML = tr('MISSIONS DU JOUR') + `<small>${ready ? tr('RÉCOMPENSE À PRENDRE') : done === 3 ? tr('TOUTES ACCOMPLIES') : tr('{a} / {b} ACCOMPLIES', { a: done, b: 3 })}</small>`;
-  }
   function untilMidnight() {
     const d = new Date(), m = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
     const min = Math.max(1, Math.round((m - d) / 60000));
     return Math.floor(min / 60) ? tr('{h} h {m} min', { h: Math.floor(min / 60), m: min % 60 }) : tr('{m} min', { m: min });
   }
-  function sheetHtml() {
-    const st = load();
-    const rows = st.list.map((m, i) => {
+  // Les trois missions : texte, barre, récompense (ou RÉCUPÉRER), et « Changer » une fois par jour.
+  function rowsHtml(st) {
+    return st.list.map((m, i) => {
       const done = m.p >= m.n;
       const act = m.claimed ? `<span class="mi-got">${tr('REÇU')}</span>`
         : done ? `<button class="btn primary" data-mi="claim" data-i="${i}">${tr('RÉCUPÉRER')} · ${A.icon('dust')} ${m.r}</button>`
@@ -142,12 +133,25 @@
           <small>${m.p} / ${m.n}${sw ? ' · ' + sw : ''}</small></span>
         <span class="mi-act">${act}</span></div>`;
     }).join('');
-    return `<h3>${tr('MISSIONS DU JOUR')}</h3>
-      <p class="sheet-text">${tr('Trois missions chaque jour, récompensées en poussières d’étoiles. Elles avancent à la fin de chaque partie.')}</p>
-      <div class="mi-list">${rows}</div>
-      <p class="muted center">${st.swapped ? tr('Mission déjà changée aujourd’hui.') : tr('Vous pouvez changer une mission par jour.')} ${tr('Nouvelles missions dans {t}.', { t: untilMidnight() })}</p>
-      <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button></div>`;
   }
+  const head = () => `<b>${tr('MISSIONS DU JOUR')}</b><small class="mi-clock">${untilMidnight()}</small>`;
+  // En haut à gauche du menu : un petit encart sur téléphone (il ouvre la feuille), les missions
+  // dépliées en permanence sur PC.
+  const deskMode = () => document.body.classList.contains('desk');
+  function renderBox() {
+    const b = $('missionsBox');
+    if (!b) return;
+    const st = load();
+    const ready = claimable(st).length, done = st.list.filter((m) => m.claimed).length;
+    const open = deskMode();
+    b.classList.toggle('open', open);
+    b.classList.toggle('mi-ready', ready > 0);
+    b.innerHTML = open ? `<div class="mb-head">${head()}</div><div class="mi-list">${rowsHtml(st)}</div>`
+      : `<b>${tr('MISSIONS')}</b><small>${done} / 3</small>`;
+  }
+  const sheetHtml = () => `<h3 class="mi-sheet-head">${head()}</h3><div class="mi-list">${rowsHtml(load())}</div>
+      <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button></div>`;
+  const sheetOpen = () => !$('overlay').hidden && !!document.querySelector('#sheet .mi-list');
   function open() { A.openSheet(sheetHtml()); }
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-mi]');
@@ -172,13 +176,14 @@
       save(st);
       SFX.tap();
     }
-    A.openSheet(sheetHtml());
-    renderBtn();
+    if (sheetOpen()) A.openSheet(sheetHtml());
+    renderBox();
     const md = $('menuDust');
     if (md) md.innerHTML = A.icon('dust') + ' ' + A.dust();
   });
-  const btn = $('missionsBtn');
-  if (btn) btn.addEventListener('click', () => { SFX.tap(); open(); });
+  const box = $('missionsBox');
+  if (box) box.addEventListener('click', (e) => { if (deskMode() || e.target.closest('[data-mi]')) return; SFX.tap(); open(); });
+  window.addEventListener('resize', () => setTimeout(renderBox, 50));
 
   // Fin de partie (appelé par recordGame) : les missions avancent, une annonce par mission accomplie.
   function record(s, rank, quit) {
@@ -186,9 +191,9 @@
     const done = advance(st.list, factsOf(R, s, rank, quit));
     save(st);
     done.forEach((m, k) => setTimeout(() => A.toast(tr('Mission accomplie : {t} Récompense au menu.', { t: textOf(m, famName(m)) }), 3600), 2600 + k * 3800));
-    renderBtn();
+    renderBox();
   }
 
-  Object.assign(root.OrbiteMissions, { renderBtn, open, record, load });
-  renderBtn();
+  Object.assign(root.OrbiteMissions, { renderBox, open, record, load });
+  renderBox();
 })(typeof window !== 'undefined' ? window : globalThis);

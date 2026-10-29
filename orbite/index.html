@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="orbite-version" content="91">
+<meta name="orbite-version" content="92">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -110,13 +110,14 @@
         <span class="pf-txt"><b id="pfName">Créateur</b><small id="pfLvl"></small></span>
         <span class="orb pf-avatar" data-planet="world-mini"></span>
       </button>
+      <!-- Missions du jour (v91) : encart en haut à gauche, déplié sur PC (js/missions.js). -->
+      <div class="mission-box" id="missionsBox" role="button" tabindex="0"></div>
       <p class="subtitle center" id="menuLine"></p>
       <nav class="menu-list" id="menuList" aria-label="Menu principal" data-t-attr="aria-label">
         <!-- Trois pages : le menu principal, Jouer (solo ou multijoueur), puis les modes solo. -->
         <div class="menu-page on" data-page="main">
           <button class="menu-item" id="playBtn" data-t>JOUER <small>SOLO · MULTIJOUEUR</small></button>
-          <button class="menu-item" id="missionsBtn">MISSIONS DU JOUR</button>
-          <button class="menu-item" id="codexBtn" data-t>CODEX <small>TOUS LES ASTRES</small></button>
+          <button class="menu-item" id="codexBtn" data-t>CODEX</button>
           <button class="menu-item" id="creationBtn" data-t>CRÉATION</button>
           <button class="menu-item" id="marketBtn" data-t>MARCHÉ STELLAIRE</button>
           <button class="menu-item" id="settingsBtn" data-t>PARAMÈTRES</button>
@@ -343,7 +344,7 @@
         <div class="mk-next" id="mkNext"></div>
         <div class="mk-list" id="mkList"></div>
       </div>
-      <div class="mk-scroll mk-pane" data-pane="cosmetiques" hidden>
+      <div class="mk-scroll mk-pane" data-pane="cosmetiques" data-clipbox hidden>
         <p class="mk-intro" data-t>Des fonds animés qui remplacent le noir pendant vos parties. Touchez-en un pour l’essayer derrière cet écran.</p>
         <div class="cos-list" id="cosList"></div>
       </div>

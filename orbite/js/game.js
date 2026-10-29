@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 91;
+  const VERSION = 92;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -783,8 +783,10 @@
 
   function renderMenu() {
     renderMusicBar();
-    if (window.OrbiteMissions && window.OrbiteMissions.renderBtn) window.OrbiteMissions.renderBtn();
+    if (window.OrbiteMissions && window.OrbiteMissions.renderBox) window.OrbiteMissions.renderBox();
     applyFrame($('profileBtn'), myFrame());
+    const pfa = document.querySelector('#profileBtn .pf-avatar');
+    if (pfa) pfa.dataset.planet = myAvatar() || 'world-mini';
     $('menuDust').innerHTML = icon('dust') + ' ' + dust();
     if (typeof renderCreationBtn === 'function') renderCreationBtn();
     const lv = levelInfo(xpTotal());
@@ -1005,7 +1007,7 @@
   // un cadre de profil (v91).
   const COS_PRICE = 2000;
   const SKY_SEEDS = 25, FRAME_SEEDS = 15;
-  const seedPrice = (k) => (k.frame ? FRAME_SEEDS : SKY_SEEDS);
+  const seedPrice = (k) => (k.avatar ? k.seeds : k.frame ? FRAME_SEEDS : SKY_SEEDS);
   const SKIES = [
     { id: 'nebuleuse', mode: 1, name: tr('Nébuleuse pourpre'), text: tr('Des nuages roses et violets traversés de filaments sombres, autour d’un cœur brûlant.'), c: ['#c2457f', '#2a0a3c'] },
     { id: 'aurore', mode: 2, name: tr('Aurore boréale'), text: tr('Des voiles verts et roses dansent au-dessus des montagnes et se reflètent dans un lac.'), c: ['#2fd18a', '#071a22'] },
@@ -1026,7 +1028,29 @@
     { id: 'cadre-cosmos', frame: true, name: tr('Cosmos'), text: tr('Toutes les couleurs de l’univers, qui tournent sans fin.') }
   ];
   const FRAME_BY_ID = Object.fromEntries(FRAMES.map((k) => [k.id, k]));
-  const cosItem = (id) => SKY_BY_ID[id] || FRAME_BY_ID[id] || null;
+  // Photos de profil (v92) : des astres achetés en graines de vie, de 5 à 650. Sans photo, l'avatar
+  // est votre planète. Publiée dans forge.avatar du profil public, comme le cadre.
+  const AVATARS = [
+    { id: 'av-asteroide', avatar: true, seeds: 5, name: tr('Astéroïde'), look: { type: 'asteroid', seed: 6101 } },
+    { id: 'av-lune', avatar: true, seeds: 10, name: tr('Lune grise'), look: { type: 'moon', seed: 6102 } },
+    { id: 'av-desert', avatar: true, seeds: 20, name: tr('Planète désertique'), look: { type: 'desert', seed: 6103, moons: 1 } },
+    { id: 'av-tellurique', avatar: true, seeds: 30, name: tr('Monde tellurique'), look: { type: 'terran', seed: 6104 } },
+    { id: 'av-ocean', avatar: true, seeds: 50, name: tr('Monde océan'), look: { type: 'ocean', seed: 6105 } },
+    { id: 'av-glace', avatar: true, seeds: 75, name: tr('Monde de glace'), look: { type: 'ice', seed: 6106, ring: true } },
+    { id: 'av-gazeuse', avatar: true, seeds: 110, name: tr('Géante gazeuse'), look: { type: 'gas', seed: 6107, ring: true, moons: 1 } },
+    { id: 'av-lave', avatar: true, seeds: 160, name: tr('Monde de lave'), look: { type: 'lava', seed: 6108 } },
+    { id: 'av-terre', avatar: true, seeds: 230, name: tr('Monde habitable'), look: { type: 'earth', seed: 6109, moons: 1 } },
+    { id: 'av-cristal', avatar: true, seeds: 320, name: tr('Monde cristallin'), look: { type: 'crystal', seed: 6110, ring: true } },
+    { id: 'av-etoile', avatar: true, seeds: 450, name: tr('Géante bleue'), look: { type: 'star', seed: 6111, starClass: 'géante bleue' } },
+    { id: 'av-eclipse', avatar: true, seeds: 550, name: tr('Éclipse'), look: { type: 'eclipse', seed: 6112 } },
+    { id: 'av-trou-noir', avatar: true, seeds: 650, name: tr('Trou noir'), look: { type: 'blackhole', seed: 6113 } }
+  ];
+  const AVATAR_BY_ID = Object.fromEntries(AVATARS.map((k) => [k.id, k]));
+  // Compact : anneaux et disques restent près de l'astre, qui tient dans un petit avatar.
+  for (const a of AVATARS) stage.register(a.id, a.look);
+  const myAvatar = () => { const a = cosmetics().avatar; return AVATAR_BY_ID[a] ? a : ''; };
+  const avatarOf = (p) => { const a = p && p.forge && p.forge.avatar; return AVATAR_BY_ID[a] ? a : ''; };
+  const cosItem = (id) => SKY_BY_ID[id] || FRAME_BY_ID[id] || AVATAR_BY_ID[id] || null;
   // Le cadre porté par un joueur (le nôtre, ou celui du profil public d'un ami) ; '' sans cadre.
   const myFrame = () => { const f = cosmetics().frame; return FRAME_BY_ID[f] ? f : ''; };
   const frameOf = (p) => { const f = p && p.forge && p.forge.frame; return FRAME_BY_ID[f] ? f : ''; };
@@ -1055,6 +1079,15 @@
         <span class="cos-fr"><i class="${k.id ? 'pframe' : ''}" ${k.id ? `data-frame="${k.id}"` : ''}></i></span>
         <span class="cos-txt"><b>${esc(k.name)}</b><small>${esc(k.text)}</small></span>${btn}</div>`;
     };
+    // Une photo de profil : l'astre lui-même, puis acheter (graines), équiper, ou « équipé ».
+    const avatarRow = (k) => {
+      const owned = !k.id || c.owned.includes(k.id), on = (c.avatar || '') === (k.id || '');
+      const btn = on ? `<span class="cos-on">${tr('ÉQUIPÉ')}</span>` : owned ? `<button class="btn" data-cos-equip="${k.id || ''}" data-kind="avatar">${tr('ÉQUIPER')}</button>`
+        : `<span class="cos-buy"><button class="btn primary" data-cos-buy="${k.id}" data-seed="1" ${seeds() < k.seeds ? 'disabled' : ''}>${icon('seed', 'seed')} ${k.seeds}</button></span>`;
+      return `<div class="cos-row cos-avatar-row ${k.seeds >= 450 ? 'rare' : ''}">
+        <span class="cos-av"><span class="orb" data-planet="${k.id || 'world-mini'}"></span></span>
+        <span class="cos-txt"><b>${esc(k.name)}</b>${k.id ? '' : `<small>${tr('Votre planète, celle du Marché stellaire.')}</small>`}</span>${btn}</div>`;
+    };
     const row = (k) => {
       const owned = !k.id || c.owned.includes(k.id), on = (c.on || '') === (k.id || ''), sel = ui.cosPick === (k.id || '');
       let btn;
@@ -1069,6 +1102,8 @@
     $('cosList').innerHTML = `<h4>${tr('FONDS ANIMÉS')}</h4>` + row({ id: '', name: tr('Noir'), text: tr('Le fond sobre d’origine.') }) + SKIES.map(row).join('') +
       `<h4>${tr('CADRES DE PROFIL')}</h4><p class="mk-note cos-note">${tr('Autour de votre avatar et de votre nom, au menu, au profil et chez vos amis.')}</p>` +
       frameRow({ id: '', name: tr('Sans cadre'), text: tr('Votre profil tel qu’au premier jour.') }) + FRAMES.map(frameRow).join('') +
+      `<h4>${tr('PHOTOS DE PROFIL')}</h4><p class="mk-note cos-note">${tr('Un astre à la place de votre planète, au menu, au profil et chez vos amis. En graines de vie seulement.')}</p>` +
+      avatarRow({ id: '', name: tr('Ma planète') }) + AVATARS.map(avatarRow).join('') +
       (dust() < COS_PRICE ? `<p class="mk-note">${tr('Vous avez {n} poussières d’étoiles. Un duel gagné ou un podium en rapporte.', { n: dust() })}</p>` : '');
   }
   // Aperçu de l'onglet Création : une planète détaillée qui change à chaque visite.
@@ -1119,7 +1154,8 @@
     ['Faire grandir une planète', 'une taille de plus dans la Forge', 1],
     ['Recharger le rover', 'repartir aussitôt en expédition', 1],
     ['Un fond animé', 'derrière toutes vos parties', SKY_SEEDS],
-    ['Un cadre de profil', 'autour de votre avatar et de votre nom', FRAME_SEEDS]
+    ['Un cadre de profil', 'autour de votre avatar et de votre nom', FRAME_SEEDS],
+    ['Une photo de profil', 'un astre, de l’astéroïde au trou noir', '5 – 650']
   ];
   const euro = (v) => v.toLocaleString(I18N.lang, { style: 'currency', currency: 'EUR' });
   function renderSeedShop() {
@@ -1183,21 +1219,30 @@
       if (buy.dataset.seed) {
         if (seeds() < seedPrice(k)) { refuse(tr('Il vous manque {n} graines de vie.', { n: seedPrice(k) - seeds() })); return; }
         addSeeds(-seedPrice(k));
+      } else if (k.avatar) {
+        return;
       } else {
         if (dust() < COS_PRICE) { refuse(tr('Il vous manque {n} poussières d’étoiles.', { n: COS_PRICE - dust() })); return; }
         addDust(-COS_PRICE);
       }
       c.owned.push(k.id);
-      if (k.frame) c.frame = k.id; else c.on = k.id;
+      if (k.avatar) c.avatar = k.id; else if (k.frame) c.frame = k.id; else c.on = k.id;
       saveCosmetics(c);
       SFX.golden();
       const [x, y] = center(buy);
       stage.burst(x, y, { n: 40, colors: [[246, 196, 83], [255, 255, 255]], speed: 90, life: 0.8 });
       $('marketDust').innerHTML = wallet();
-      toast(k.frame ? tr('{name} : votre nouveau cadre.', { name: k.name }) : tr('{name} : équipé pour vos parties.', { name: k.name }), 2600);
-      if (k.frame) { renderCosmetics(); return; }
+      toast(k.avatar ? tr('{name} : votre nouvelle photo de profil.', { name: k.name }) : k.frame ? tr('{name} : votre nouveau cadre.', { name: k.name }) : tr('{name} : équipé pour vos parties.', { name: k.name }), 2600);
+      if (k.frame || k.avatar) { renderCosmetics(); $('marketDust').innerHTML = wallet(); return; }
     } else if (eq) {
       SFX.place();
+      if (eq.dataset.kind === 'avatar') {
+        c.avatar = eq.dataset.cosEquip;
+        saveCosmetics(c);
+        toast(c.avatar ? tr('{name} : équipé.', { name: AVATAR_BY_ID[c.avatar].name }) : tr('Votre planète redevient votre photo.'), 2000);
+        renderCosmetics();
+        return;
+      }
       if (eq.dataset.kind === 'frame') {
         c.frame = eq.dataset.cosEquip;
         saveCosmetics(c);
@@ -1278,7 +1323,7 @@
       <div class="pf-pane" data-pfpane="profil" ${tab === 'profil' ? '' : 'hidden'}>
       <div id="pfOnline"></div>
       <div class="pf-id ${myFrame() ? 'pframe' : ''}" ${myFrame() ? `data-frame="${myFrame()}"` : ''}>
-        <div class="orb pf-planet" data-planet="world-mini"></div>
+        <div class="orb pf-planet" data-planet="${myAvatar() || 'world-mini'}"></div>
         <div class="pf-who">
           <div class="pf-name-row" id="pfNameRow"><button class="pf-name" data-pf="rename">${esc(pseudo())}<span>#${playerTag()}</span></button></div>
           <span class="pf-lvl">${tr('NIVEAU {n}', { n: lv.lvl })} · ${esc(W.stageName(list))}</span>
@@ -1842,7 +1887,7 @@
   ];
   const MENU_STEPS = [
     { id: 'jouer', target: '#playBtn', text: tr('<b>Jouer</b> : en <b>solo</b> contre l’IA (duel, mêlée contre sept univers, défi du jour) ou en <b>multijoueur</b>, en ligne et entre amis.'), next: tr('SUIVANT'), delay: 0 },
-    { id: 'missions', target: '#missionsBtn', text: tr('Les <b>missions du jour</b> : trois objectifs chaque jour, récompensés en <b>poussières d’étoiles</b>. Récupérez la récompense ici quand une mission est accomplie.'), next: tr('SUIVANT') },
+    { id: 'missions', target: '#missionsBox', text: tr('Les <b>missions du jour</b> : trois objectifs chaque jour, récompensés en <b>poussières d’étoiles</b>. Récupérez la récompense ici quand une mission est accomplie.'), next: tr('SUIVANT') },
     { id: 'codex', target: '#codexBtn', text: tr('Le <b>Codex</b> : tous les astres, lois, reliques et événements du jeu. Ceux que vous avez croisés en partie s’y dévoilent.'), next: tr('SUIVANT') },
     { id: 'creation', target: '#creationBtn', text: tr('La <b>Création</b> : votre planète a atteint la civilisation verte. Bâtissez-y votre civilisation : faites grandir des mondes, descendez à leur surface et fondez une colonie.'), next: tr('SUIVANT') },
     { id: 'marche', target: '#marketBtn', text: tr('Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées en duel et sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.'), next: tr('SUIVANT') },
@@ -4309,7 +4354,7 @@
   // Outils partagés avec le mode Campagne (js/campagne-ui.js).
   window.__orbite.api = {
     show, openSheet, closeSheet, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
-    pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH, frameOf, framed,
+    pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH, frameOf, framed, avatarOf,
     coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation,
     seeds, addSeeds, wallet
   };
