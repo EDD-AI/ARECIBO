@@ -1,6 +1,6 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
 // Garder ce numéro égal à VERSION dans js/game.js et à version.json.
-const CACHE = 'orbite-v99';
+const CACHE = 'orbite-v100';
 const SHELL = [
   './',
   './index.html',
@@ -9,6 +9,8 @@ const SHELL = [
   './manifest.webmanifest',
   './version.json',
   './css/fonts.css',
+  './icons/cursor-arrow.png',
+  './icons/cursor-hand.png',
   './css/game.css',
   './css/desk.css',
   './fonts/chakra-petch-400.woff2',

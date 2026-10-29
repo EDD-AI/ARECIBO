@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 99;
+  const VERSION = 100;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -1012,7 +1012,9 @@
   // un cadre de profil (v91) et 10 pour une police de pseudo (v96).
   const COS_PRICE = 2000;
   const SKY_SEEDS = 25, FRAME_SEEDS = 15, FONT_SEEDS = 10;
-  const seedPrice = (k) => (k.avatar ? k.seeds : k.frame ? FRAME_SEEDS : k.font ? FONT_SEEDS : SKY_SEEDS);
+  const seedPrice = (k) => (k.seeds ? k.seeds : k.frame ? FRAME_SEEDS : k.font ? FONT_SEEDS : SKY_SEEDS);
+  // Les cadres premium (v100) coûtent plus cher en poussières aussi.
+  const dustPrice = (k) => k.dust || COS_PRICE;
   const SKIES = [
     { id: 'nebuleuse', mode: 1, name: tr('Nébuleuse pourpre'), text: tr('Des nuages roses et violets traversés de filaments sombres, autour d’un cœur brûlant.'), c: ['#c2457f', '#2a0a3c'] },
     { id: 'aurore', mode: 2, name: tr('Aurore boréale'), text: tr('Des voiles verts et roses dansent au-dessus des montagnes et se reflètent dans un lac.'), c: ['#2fd18a', '#071a22'] },
@@ -1030,7 +1032,12 @@
     { id: 'cadre-braise', frame: true, name: tr('Braises'), text: tr('Un cadre de feu qui crépite et rougeoie.') },
     { id: 'cadre-givre', frame: true, name: tr('Givre'), text: tr('Un cadre de glace bleue, nimbé de froid.') },
     { id: 'cadre-neant', frame: true, name: tr('Néant'), text: tr('Une ombre violette qui respire autour de vous.') },
-    { id: 'cadre-cosmos', frame: true, name: tr('Cosmos'), text: tr('Toutes les couleurs de l’univers, qui tournent sans fin.') }
+    { id: 'cadre-cosmos', frame: true, name: tr('Cosmos'), text: tr('Toutes les couleurs de l’univers, qui tournent sans fin.') },
+    // Cadres premium (v100) : des particules en pixels tout autour, plus chers.
+    { id: 'cadre-p-feu', frame: true, premium: true, dust: 6000, seeds: 40, name: tr('Flammes éternelles'), text: tr('Des braises montent sans fin autour de vous.') },
+    { id: 'cadre-p-brume', frame: true, premium: true, dust: 6000, seeds: 40, name: tr('Brume'), text: tr('Une brume pâle qui dérive lentement.') },
+    { id: 'cadre-p-orage', frame: true, premium: true, dust: 6000, seeds: 40, name: tr('Orage'), text: tr('Des éclairs crépitent tout autour.') },
+    { id: 'cadre-p-etoiles', frame: true, premium: true, dust: 6000, seeds: 40, name: tr('Pluie d’étoiles'), text: tr('Des étoiles qui scintillent et tombent doucement.') }
   ];
   const FRAME_BY_ID = Object.fromEntries(FRAMES.map((k) => [k.id, k]));
   // Photos de profil (v92) : des astres achetés en graines de vie, de 5 à 650. Sans photo, l'avatar
@@ -1092,14 +1099,14 @@
 
   function renderCosmetics() {
     const c = cosmetics();
-    const buyBtn = (k) => `<span class="cos-buy"><button class="btn primary" data-cos-buy="${k.id}" ${dust() < COS_PRICE ? 'disabled' : ''}>${icon('dust')} ${COS_PRICE}</button><button class="btn" data-cos-buy="${k.id}" data-seed="1" ${seeds() < seedPrice(k) ? 'disabled' : ''}>${icon('seed', 'seed')} ${seedPrice(k)}</button></span>`;
+    const buyBtn = (k) => `<span class="cos-buy"><button class="btn primary" data-cos-buy="${k.id}" ${dust() < dustPrice(k) ? 'disabled' : ''}>${icon('dust')} ${dustPrice(k)}</button><button class="btn" data-cos-buy="${k.id}" data-seed="1" ${seeds() < seedPrice(k) ? 'disabled' : ''}>${icon('seed', 'seed')} ${seedPrice(k)}</button></span>`;
     // Un cadre : aperçu sur une petite planète, puis acheter, équiper, ou « équipé ».
     const frameRow = (k) => {
       const owned = !k.id || c.owned.includes(k.id), on = (c.frame || '') === (k.id || '');
       const btn = on ? `<span class="cos-on">${tr('ÉQUIPÉ')}</span>` : owned ? `<button class="btn" data-cos-equip="${k.id || ''}" data-kind="frame">${tr('ÉQUIPER')}</button>` : buyBtn(k);
-      return `<div class="cos-row cos-frame-row">
+      return `<div class="cos-row cos-frame-row ${k.premium ? 'premium' : ''}">
         <span class="cos-fr"><i class="${k.id ? 'pframe' : ''}" ${k.id ? `data-frame="${k.id}"` : ''}></i></span>
-        <span class="cos-txt"><b>${esc(k.name)}</b><small>${esc(k.text)}</small></span>${btn}</div>`;
+        <span class="cos-txt"><b>${esc(k.name)}${k.premium ? ` <em class="cos-prem">${tr('PREMIUM')}</em>` : ''}</b><small>${esc(k.text)}</small></span>${btn}</div>`;
     };
     // Une photo de profil : l'astre lui-même, puis acheter (graines), équiper, ou « équipé ».
     const avatarRow = (k) => {
@@ -1241,8 +1248,8 @@
       } else if (k.avatar) {
         return;
       } else {
-        if (dust() < COS_PRICE) { refuse(tr('Il vous manque {n} poussières d’étoiles.', { n: COS_PRICE - dust() })); return; }
-        addDust(-COS_PRICE);
+        if (dust() < dustPrice(k)) { refuse(tr('Il vous manque {n} poussières d’étoiles.', { n: dustPrice(k) - dust() })); return; }
+        addDust(-dustPrice(k));
       }
       c.owned.push(k.id);
       if (k.avatar) c.avatar = k.id; else if (k.frame) c.frame = k.id; else if (k.font) c.font = k.id; else c.on = k.id;

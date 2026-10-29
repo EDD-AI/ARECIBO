@@ -485,6 +485,13 @@ Deux onglets : **Ma planète** (les 24 améliorations décrites plus haut) et **
   compact pour tenir dans un petit avatar ; publiés dans `forge.avatar` du profil public, comme le
   cadre. « Ma planète » revient à l’avatar d’origine. La liste des cosmétiques est une zone de
   découpe (`data-clipbox`) : les astres qui défilent ne débordent plus sur l’en-tête.
+- **Cadres premium** (v100, **6 000 poussières ou 40 graines**, liseré doré et « PREMIUM » au Marché) :
+  Flammes éternelles (braises qui montent), Brume (nappes pâles qui dérivent), Orage (étincelles en
+  zigzag qui crépitent) et Pluie d’étoiles (croix dorées qui tombent en scintillant). En plus du
+  contour et des rivets, une couche de particules en pixels (`::before`, tuiles SVG de 2 × 2 px par
+  particule, découpée en anneau autour du contour par un masque) défile sans fin ; immobile si
+  l’appareil réduit les animations. Vus partout comme les autres cadres (menu, profil, amis, salon,
+  rivaux). Prix par objet : `dust` et `seeds` dans la liste (`dustPrice`, `seedPrice`).
 - **Polices du pseudo** (v96, 2 000 poussières ou 10 graines) : huit polices pixel libres (SIL OFL,
   `fonts/PIXEL-FONTS.txt`) : Arcade (Press Start 2P), Terminal (VT323), Sérigraphie (Silkscreen),
   Pixel (Pixelify Sans), Stade (Jersey 10), Minuscule (Tiny5), Matrice (Doto) et Cathodique
@@ -897,7 +904,7 @@ fiche de chaque astre les choisit avec `look.shape` dans `js/rules.js`.
 | Bloc (cube arrondi) ou monolithe (dalle) | Basalte, Prisme, Sentinelle, Tesseract, Prisme absolu (légendaire, turquoise, v99) ; Monolithe, Quartz, Oumuamua (légendaire, v98) |
 | Fendue en deux (deux moitiés écartées en biais, la cassure brille ; forme 9, v99) | Antipode |
 | Anneau-monde (tore) | Station, Paradoxe |
-| Éclipse (disque noir et couronne) | Éclipse |
+| Éclipse (disque noir et couronne) | Éclipse ; Linceul (couronne rouge sang, classe d’étoile « rouge sang » jamais tirée au hasard, v100) |
 | Croissant (éclairé par l’arrière) | Séléné, Luna, Nyx |
 | Radiotélescope (parabole tournée vers le ciel, récepteur, pile) | Arecibo |
 | Sphère et anneau, sphère dans une coque | Relais ; Dyson |
@@ -1025,6 +1032,10 @@ l’écran à une hauteur virtuelle de 800 px (1,35 en 1080p, 1,8 en 1440p ; jam
   par `ui.z` (v82 : la ligne où la planète du menu passe sous le sol, les poussières de l’horizon).
 - Sur téléphone, rien ne change.
 - Sur la pastille sombre du menu, les poussières restent lisibles devant une planète claire (v83).
+- **Curseur en pixel art** (v100) : sur les appareils à souris (`hover: hover` et `pointer: fine`),
+  une flèche et une main blanches au contour noir (`icons/cursor-arrow.png`, `cursor-hand.png`,
+  2 × 2 px par pixel) ; la main sur tout ce qui se clique (`var(--cur-hand)`), le curseur texte dans les
+  champs. Sur téléphone, rien ne change.
 - **Safari et anciens Chrome** (v96, `js/zoom-fix.js`, chargé en premier) : sous `zoom`, ces
   navigateurs renvoient des `getBoundingClientRect` divisés par le zoom de l’élément (Chrome 128+ et
   Firefox 126+ comptent en vrais pixels). Les astres, le tutoriel et les animations étaient décalés
