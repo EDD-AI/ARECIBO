@@ -10,6 +10,10 @@
   const KEY = 'orbite.mute';
   const MUSIC_KEY = 'orbite.musique';
   const MUSIC_VOL = 0.42;
+  // Volumes réglés par le joueur (0 à 1) : la musique d'un côté, les effets et l'ambiance de l'autre.
+  const VOL_MUSIC_KEY = 'orbite.volMusique', VOL_FX_KEY = 'orbite.volSons';
+  const readVol = (k) => { try { const v = Number(localStorage.getItem(k)); return localStorage.getItem(k) == null || !Number.isFinite(v) ? 1 : Math.max(0, Math.min(1, v)); } catch (err) { return 1; } };
+  let musicVol = readVol(VOL_MUSIC_KEY), fxVol = readVol(VOL_FX_KEY);
   const BASE = 'audio/';
   const NAMES = [
     'hover', 'tap', 'type', 'back', 'error', 'roll', 'confirm', 'down', 'scratch', 'coin',
@@ -42,7 +46,7 @@
     atelier: { wind: 0.1, cut: 700, drips: [6, 14], bed: 'ship2', bedVol: 0.45 }
   };
 
-  let ctx = null, master, sfxBus, revIn, ambBus, windFilter, bedBus;
+  let ctx = null, master, fxMaster, sfxBus, revIn, ambBus, windFilter, bedBus;
   let muted = false;
   try { muted = localStorage.getItem(KEY) === '1'; } catch (err) { muted = false; }
   const raw = {};
@@ -87,23 +91,28 @@
     master = ctx.createGain();
     master.gain.value = 0.9;
     master.connect(comp).connect(ctx.destination);
+    // Effets, réverbération, vent et nappes passent par fxMaster (volume des effets) ; la musique,
+    // par son propre gain (volume de la musique).
+    fxMaster = ctx.createGain();
+    fxMaster.gain.value = fxVol;
+    fxMaster.connect(master);
     sfxBus = ctx.createGain();
-    sfxBus.connect(master);
+    sfxBus.connect(fxMaster);
     const verb = ctx.createConvolver();
     verb.buffer = impulse(3.2, 2.6);
     revIn = ctx.createGain();
     revIn.gain.value = 0.55;
-    revIn.connect(verb).connect(master);
+    revIn.connect(verb).connect(fxMaster);
     windFilter = ctx.createBiquadFilter();
     windFilter.type = 'lowpass';
     windFilter.frequency.value = 600;
     ambBus = ctx.createGain();
     ambBus.gain.value = 0;
     windFilter.connect(ambBus);
-    ambBus.connect(master);
+    ambBus.connect(fxMaster);
     bedBus = ctx.createGain();
     bedBus.gain.value = 0;
-    bedBus.connect(master);
+    bedBus.connect(fxMaster);
     for (const n of NAMES) {
       if (!raw[n]) continue;
       raw[n].then((data) => (data ? decode(data) : null)).then((b) => {
@@ -157,8 +166,8 @@
     clearTimeout(musicPause);
     if (play) {
       if (el.paused) el.play().catch(() => { /* lecture refusée : elle reprendra au prochain toucher */ });
-      if (musicGain) { musicGain.gain.cancelScheduledValues(ctx.currentTime); musicGain.gain.setTargetAtTime(MUSIC_VOL, ctx.currentTime, 1.1); }
-      else fadeElement(el, MUSIC_VOL);
+      if (musicGain) { musicGain.gain.cancelScheduledValues(ctx.currentTime); musicGain.gain.setTargetAtTime(MUSIC_VOL * musicVol, ctx.currentTime, 1.1); }
+      else fadeElement(el, MUSIC_VOL * musicVol);
     } else {
       if (musicGain) { musicGain.gain.cancelScheduledValues(ctx.currentTime); musicGain.gain.setTargetAtTime(0, ctx.currentTime, 0.5); }
       else fadeElement(el, 0);
@@ -613,6 +622,22 @@
     // Musique du menu : true sur les écrans hors partie.
     music(on) { if (on !== musicWant) setMusic(on); },
     get musicOn() { return musicOn; },
+    get musicVol() { return musicVol; },
+    get fxVol() { return fxVol; },
+    // Volume de la musique (0 à 1) : à 0, la musique s'arrête ; elle reprend dès qu'on remonte.
+    setMusicVol(v) {
+      musicVol = Math.max(0, Math.min(1, Number(v) || 0));
+      try { localStorage.setItem(VOL_MUSIC_KEY, String(musicVol)); } catch (err) { /* stockage indisponible */ }
+      if ((musicVol > 0) !== musicOn) { SFX.setMusicOn(musicVol > 0); return; }
+      if (ctx && musicGain && musicWant && musicOn && !muted) { musicGain.gain.cancelScheduledValues(ctx.currentTime); musicGain.gain.setTargetAtTime(MUSIC_VOL * musicVol, ctx.currentTime, 0.08); }
+      else if (musicEl && !musicGain) musicEl.volume = MUSIC_VOL * musicVol;
+    },
+    // Volume des effets et de l'ambiance (0 à 1).
+    setFxVol(v) {
+      fxVol = Math.max(0, Math.min(1, Number(v) || 0));
+      try { localStorage.setItem(VOL_FX_KEY, String(fxVol)); } catch (err) { /* stockage indisponible */ }
+      if (ctx && fxMaster) { fxMaster.gain.cancelScheduledValues(ctx.currentTime); fxMaster.gain.setTargetAtTime(fxVol, ctx.currentTime, 0.05); }
+    },
     setMusicOn(v) {
       musicOn = !!v;
       try { localStorage.setItem(MUSIC_KEY, musicOn ? '1' : '0'); } catch (err) { /* stockage indisponible */ }

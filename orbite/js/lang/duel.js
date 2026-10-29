@@ -130,6 +130,8 @@
     ['En partie classée, seuls les messages rapides sont proposés.', 'In ranked games, only quick messages are available.', 'En partidas clasificatorias, solo hay mensajes rápidos.', 'In Ranglistenpartien gibt es nur Schnellnachrichten.', 'Em partidas ranqueadas, só há mensagens rápidas.'],
     ['Message non envoyé.', 'Message not sent.', 'Mensaje no enviado.', 'Nachricht nicht gesendet.', 'Mensagem não enviada.'],
     ['{name} : {text}', '{name}: {text}', '{name}: {text}', '{name}: {text}', '{name}: {text}'],
+    // Volumes (v86)
+    ['EFFETS', 'EFFECTS', 'EFECTOS', 'EFFEKTE', 'EFEITOS'],
     // Version PC (v81)
     ['Touchez pour les détails', 'Tap for details', 'Toca para ver los detalles', 'Für Details tippen', 'Toque para ver os detalhes'],
     // Appariements façon Battlegrounds (v79)
