@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="orbite-version" content="97">
+<meta name="orbite-version" content="98">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -418,7 +418,7 @@
       <div class="energy" id="energy"></div>
 
       <section class="zone system" id="systemZone">
-        <div class="zone-label"><span data-t>VOTRE SYSTÈME</span> <button class="alliance-tag" id="allianceTag" hidden></button></div>
+        <div class="zone-label"><span data-t>VOTRE SYSTÈME</span><span id="sysName"></span> <button class="alliance-tag" id="allianceTag" hidden></button></div>
         <div class="row board" id="board"></div>
       </section>
 
@@ -431,6 +431,7 @@
         <button class="btn primary fight" id="fightBtn" data-t>COMBATTRE</button>
         <div class="battle-ctl" id="battleCtl">
           <button class="chip" id="skipBtn" data-t>PASSER</button>
+          <button class="chip" id="watchEndBtn" data-t>QUITTER</button>
         </div>
       </footer>
       <div class="banner" id="banner" aria-live="polite"></div>
@@ -453,6 +454,7 @@
         <small id="xpDetail"></small>
       </div>
       <p class="end-ranked" id="endRanked"></p>
+      <button class="btn" id="watchBtn" data-t hidden>REGARDER LA SUITE</button>
       <button class="btn primary" id="againBtn" data-t>REJOUER</button>
       <button class="link" id="endHome" data-t>Accueil</button>
     </section>

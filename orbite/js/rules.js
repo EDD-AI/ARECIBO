@@ -204,7 +204,7 @@
     { id: 'braise', fam: 'brasier', tier: 1, atk: 2, hp: 3, name: 'Braise', look: { type: 'lava', seed: 2121 },
       text: 'Début de combat : inflige {1} dégât à un ennemi aléatoire.',
       start(c, u, m) { c.dmg(u, c.rnd(c.allies(1 - u.side)), m); } },
-    { id: 'scorie', fam: 'brasier', tier: 1, atk: 3, hp: 3, name: 'Scorie', look: { type: 'lava', seed: 2222, moons: 1 },
+    { id: 'scorie', fam: 'brasier', tier: 1, atk: 3, hp: 3, name: 'Scorie', look: { type: 'lava', seed: 2222, shape: 'double' },
       text: 'Effondrement : inflige {2} dégâts à un ennemi aléatoire.',
       death(c, u, m) { c.dmg(u, c.rnd(c.allies(1 - u.side)), 2 * m); } },
     { id: 'vulcain', fam: 'brasier', tier: 2, atk: 3, hp: 3, name: 'Vulcain', look: { type: 'lava', seed: 2323, ring: true },
@@ -480,7 +480,7 @@
     // JETONS (hors réserve)
     { id: 'debris', fam: 'neant', tier: 1, atk: 1, hp: 1, name: 'Débris', token: true, look: { type: 'asteroid', seed: 8181 },
       text: 'Fragment d’un monde effondré.' },
-    // ─── Légendaires : une par niveau, un seul exemplaire par partie, rares dans la Création et les découvertes.
+    // ─── Légendaires : un seul exemplaire par partie, rares dans la Création et les découvertes.
     { id: 'primordia', fam: 'vie', tier: 1, atk: 2, hp: 3, name: 'Primordia', legend: true, look: { type: 'ocean', seed: 8101, ring: true, moons: 2, hueShift: 120 },
       text: 'Fin de cycle : tous vos autres astres gagnent +{1} PV.',
       endTurn(x, u, m) { for (const v of x.others(u)) x.buff(v, 0, m); } },
@@ -507,6 +507,33 @@
     { id: 'omega', fam: 'neutre', tier: 6, atk: 7, hp: 7, name: 'Oméga', legend: true, look: { type: 'star', seed: 8606, starClass: 'étoile blanche', ring: true, moons: 3 },
       text: 'Début de combat : vos autres astres gagnent +2/+2, et les deux premiers Bouclier.',
       start(c, u) { c.allies(u.side).filter((v) => v !== u).forEach((v, i) => { c.buff(v, 2, 2); if (i < 2) c.kw(v, 'bouclier'); }); } },
+    // Légendaires de famille (v98) : une par famille, en jeu seulement si leur famille l'est.
+    { id: 'lunesang', fam: 'lune', tier: 1, atk: 2, hp: 3, name: 'Lune de sang', legend: true, look: { type: 'desert', seed: 8707, hueShift: -35 },
+      text: 'Fin de cycle : ses voisins gagnent +{1}/+{1}.',
+      endTurn(x, u, m) { for (const v of x.neighbors(u)) x.buff(v, m, m); } },
+    { id: 'pangee', fam: 'mineral', tier: 2, atk: 2, hp: 6, name: 'Pangée', legend: true, kw: ['rempart'], look: { type: 'earth', seed: 8808, moons: 1, hueShift: -25 },
+      text: 'Rempart. Fin de cycle : vos Remparts gagnent +{1}/+{2}.',
+      endTurn(x, u, m) { for (const v of x.board().filter((v) => v.kw.includes('rempart'))) x.buff(v, m, 2 * m); } },
+    { id: 'oumuamua', fam: 'comete', tier: 2, atk: 2, hp: 3, name: 'Oumuamua', legend: true, look: { type: 'asteroid', seed: 8909, shape: 'monolithe', hueShift: 25 },
+      text: 'Quand vous actualisez, gagne +{1}/+{1}.',
+      roll(x, u, m) { x.buff(u, m, m); } },
+    { id: 'betelgeuse', fam: 'brasier', tier: 3, atk: 3, hp: 5, name: 'Bételgeuse', legend: true, look: { type: 'star', seed: 9010, starClass: 'naine rouge', shell: true, debris: true },
+      text: 'Début de combat et Effondrement : inflige {2} dégâts à tous les ennemis.',
+      start(c, u, m) { for (const v of c.allies(1 - u.side)) c.dmg(u, v, 2 * m); },
+      death(c, u, m) { for (const v of c.allies(1 - u.side)) c.dmg(u, v, 2 * m); } },
+    { id: 'prismeabsolu', fam: 'cristal', tier: 3, atk: 3, hp: 5, name: 'Prisme absolu', legend: true, look: { type: 'crystal', seed: 9111, ring: true, shape: 'amas', hueShift: 40 },
+      text: 'Quand vous jouez un autre Cristal, il gagne +{2}/+{2}.',
+      allyPlay(x, u, m, b) { if (b !== u && famOf(b) === 'cristal') x.buff(b, 2 * m, 2 * m); } },
+    { id: 'zeroabsolu', fam: 'glace', tier: 4, atk: 4, hp: 6, name: 'Zéro absolu', legend: true, kw: ['bouclier'], look: { type: 'ice', seed: 9212, shell: true, ring: true, moons: 1 },
+      text: 'Bouclier. Début de combat : vos autres astres gagnent Bouclier.',
+      start(c, u) { for (const v of c.allies(u.side)) if (v !== u) c.kw(v, 'bouclier'); } },
+    { id: 'matriochka', fam: 'machine', tier: 5, atk: 6, hp: 8, name: 'Cerveau Matriochka', legend: true, kw: ['bouclier'], look: { type: 'star', seed: 9313, starClass: 'naine jaune', shell: true, ring: true },
+      text: 'Bouclier. Début de cycle : gagnez {2} énergie.',
+      startTurn(x, u, m) { x.gold(2 * m); } },
+    { id: 'singnue', fam: 'anomalie', tier: 6, atk: 8, hp: 8, name: 'Singularité nue', legend: true, look: { type: 'portal', seed: 9414, ring: true, moons: 2 },
+      text: 'Début de combat : trois alliés aléatoires gagnent un mot-clé aléatoire. Effondrement : invoque un astre de niveau 6 aléatoire.',
+      start(c, u) { for (const v of c.pickAllies(u.side, 3)) c.randomKw(v); },
+      death(c, u, m, i) { for (let k = 0; k < m; k++) c.summonRandom(u.side, 6, i); } },
     { id: 'sonde-t', fam: 'machine', tier: 1, atk: 3, hp: 3, name: 'Sonde', token: true, kw: ['arrimage'], look: { type: 'mecha', seed: 6161, shape: 'diamant' },
       text: 'Arrimage.' }
   ];
@@ -909,7 +936,8 @@
     };
     for (const c of CARDS) {
       if (c.token) continue;
-      if (c.legend) state.pool[c.id] = 1;
+      // Légendaires : une seule de chaque, et seulement celles des familles en jeu (v98).
+      if (c.legend) { if (c.fam === 'neutre' || families.includes(c.fam)) state.pool[c.id] = 1; }
       else if (c.fam === 'neutre' || families.includes(c.fam)) state.pool[c.id] = COPIES[c.tier];
     }
     state.poolTotal = Object.assign({}, state.pool);
@@ -2047,9 +2075,14 @@
 
     const results = [];
     let battle = null;
+    // Mode spectateur : le combat du meneur (le plus de PV) est gardé pour être montré.
+    const lead = !me.alive && opts && opts.watch ? players.slice().sort((x, y) => y.hp - x.hp)[0] : null;
+    const feat = lead ? pairs.find(([A, B]) => A === lead || B === lead) : null;
+    let watched = null;
     for (const [A, B] of pairs) {
       const isMine = A === me;
-      const r = fight(state, A, B, state.round + ':' + A.id + ':' + B.id, isMine);
+      const isFeat = !!feat && A === feat[0] && B === feat[1];
+      const r = fight(state, A, B, state.round + ':' + A.id + ':' + B.id, isMine || isFeat);
       r.damage = Math.min(cap, r.damage);
       const res = { a: A.id, b: B.id, winner: r.winner, damage: r.damage, ghost: !!B.ghost };
       results.push(res);
@@ -2061,8 +2094,16 @@
         };
         me.lastOpp = B.id;
       }
+      if (isFeat) {
+        watched = {
+          events: r.events, winner: r.winner, damage: r.damage, cap: Number.isFinite(cap) ? cap : null,
+          a: { id: A.id, name: A.name, tier: A.tier, hp: A.hp },
+          b: { id: B.id, name: B.name, law: B.law, tier: B.tier, hp: B.hp, ghost: !!B.ghost }
+        };
+      }
       if (r.winner === 0 && !B.ghost) B.hp -= r.damage;
       if (r.winner === 1) A.hp -= r.damage;
+      if (isFeat) watched.after = { a: A.hp, b: B.ghost ? null : B.hp };
     }
     // Loi du phénix : la première chute ramène à la vie au lieu d'éliminer.
     for (const p of players) if (p.hp <= 0 && p.law === 'phenix' && !p.reborn) {
@@ -2101,7 +2142,7 @@
       state.phase = 'over';
       state.rank = me.rank;
       state.reward = rewardsOf(state)[me.rank] || 0;
-      return { ok: true, battle, results, fallen: fallen.map((p) => p.id), endEvents: myEndEvents, over: true, rank: me.rank, reward: state.reward };
+      return { ok: true, battle, watched, results, fallen: fallen.map((p) => p.id), endEvents: myEndEvents, over: true, rank: me.rank, reward: state.reward, winner: (still[0] || me).id };
     }
 
     state.round++;
@@ -2111,7 +2152,24 @@
       const evs = startTurn(state, p);
       if (p === me) startEvents = evs;
     }
-    return { ok: true, battle, results, fallen: fallen.map((p) => p.id), endEvents: myEndEvents, startEvents, over: false };
+    return { ok: true, battle, watched, results, fallen: fallen.map((p) => p.id), endEvents: myEndEvents, startEvents, over: false };
+  }
+
+  // Mode spectateur (v98) : en solo, après l'élimination du joueur, la table continue jusqu'au
+  // dernier survivant. endTurn(state, { observer: true, watch: true }) rend alors le combat du
+  // meneur (watched). Le classement et les récompenses du joueur ne changent plus.
+  function spectate(state) {
+    const me = you(state);
+    if (!state.over || me.alive || state.mp || state.watching) return fail('Rien à regarder.');
+    const still = alivePlayers(state);
+    if (still.length < 2) return fail('La partie est finie.');
+    state.over = false;
+    state.phase = 'shop';
+    state.watching = true;
+    state.round++;
+    ensurePlan(state);
+    for (const p of still) startTurn(state, p);
+    return { ok: true };
   }
 
   // ─── Multijoueur ────────────────────────────────────────────
@@ -2278,7 +2336,7 @@
   }
 
   return {
-    rollCost, DUEL, TUTOR, isDuel, rewardsOf, ROW_MAX, FORM_MIN, FORMATIONS, formationsOf, formText, PHENOMENA, phenomenaOf, POSITION_KW, layout, arrange, rowOf, move, botArrange, LEGEND_SHOP, LEGEND_DISCOVER, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
+    rollCost, DUEL, TUTOR, spectate, isDuel, rewardsOf, ROW_MAX, FORM_MIN, FORMATIONS, formationsOf, formText, PHENOMENA, phenomenaOf, POSITION_KW, layout, arrange, rowOf, move, botArrange, LEGEND_SHOP, LEGEND_DISCOVER, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
     FAMILIES, FAMILY_KEYS, KEYWORDS, CARDS, CARD, LAWS, LAW,
     EVENTS, EVENT, eventFor, RELICS, RELIC, RELIC_ROUNDS, AWAKE_ROUND, chooseRelic, hasRelic, powerCost, sellGain, shopSize,
     cardOf, famOf, cardText, upgradeCost, lawChoices, newGame, alivePlayers,

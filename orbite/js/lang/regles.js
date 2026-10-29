@@ -1871,3 +1871,79 @@ window.OrbiteI18n.add({
     'Début de combat : vos autres astres gagnent +2/+2, et les deux premiers Bouclier.': 'Início do combate: seus outros astros ganham +2/+2, e os dois primeiros Escudo.'
   }
 });
+
+// Légendaires de famille (v98).
+window.OrbiteI18n.add({
+  en: {
+    'Lune de sang': 'Blood Moon',
+    'Pangée': 'Pangaea',
+    'Oumuamua': 'Oumuamua',
+    'Bételgeuse': 'Betelgeuse',
+    'Prisme absolu': 'Absolute Prism',
+    'Zéro absolu': 'Absolute Zero',
+    'Cerveau Matriochka': 'Matrioshka Brain',
+    'Singularité nue': 'Naked Singularity',
+    'Fin de cycle : ses voisins gagnent +{1}/+{1}.': 'End of cycle: its neighbors gain +{1}/+{1}.',
+    'Rempart. Fin de cycle : vos Remparts gagnent +{1}/+{2}.': 'Bulwark. End of cycle: your Bulwarks gain +{1}/+{2}.',
+    'Quand vous actualisez, gagne +{1}/+{1}.': 'When you refresh, gains +{1}/+{1}.',
+    'Début de combat et Effondrement : inflige {2} dégâts à tous les ennemis.': 'Start of combat and Collapse: deal {2} damage to all enemies.',
+    'Quand vous jouez un autre Cristal, il gagne +{2}/+{2}.': 'When you play another Crystal, it gains +{2}/+{2}.',
+    'Bouclier. Début de combat : vos autres astres gagnent Bouclier.': 'Shield. Start of combat: your other orbs gain Shield.',
+    'Bouclier. Début de cycle : gagnez {2} énergie.': 'Shield. Start of cycle: gain {2} energy.',
+    'Début de combat : trois alliés aléatoires gagnent un mot-clé aléatoire. Effondrement : invoque un astre de niveau 6 aléatoire.': 'Start of combat: three random allies gain a random keyword. Collapse: summon a random level 6 orb.'
+  },
+  es: {
+    'Lune de sang': 'Luna de sangre',
+    'Pangée': 'Pangea',
+    'Oumuamua': 'Oumuamua',
+    'Bételgeuse': 'Betelgeuse',
+    'Prisme absolu': 'Prisma absoluto',
+    'Zéro absolu': 'Cero absoluto',
+    'Cerveau Matriochka': 'Cerebro Matrioshka',
+    'Singularité nue': 'Singularidad desnuda',
+    'Fin de cycle : ses voisins gagnent +{1}/+{1}.': 'Fin de ciclo: sus vecinos ganan +{1}/+{1}.',
+    'Rempart. Fin de cycle : vos Remparts gagnent +{1}/+{2}.': 'Baluarte. Fin de ciclo: tus Baluartes ganan +{1}/+{2}.',
+    'Quand vous actualisez, gagne +{1}/+{1}.': 'Cuando renuevas, gana +{1}/+{1}.',
+    'Début de combat et Effondrement : inflige {2} dégâts à tous les ennemis.': 'Inicio del combate y Colapso: inflige {2} de daño a todos los enemigos.',
+    'Quand vous jouez un autre Cristal, il gagne +{2}/+{2}.': 'Cuando juegas otro Cristal, gana +{2}/+{2}.',
+    'Bouclier. Début de combat : vos autres astres gagnent Bouclier.': 'Escudo. Inicio del combate: tus otros astros ganan Escudo.',
+    'Bouclier. Début de cycle : gagnez {2} énergie.': 'Escudo. Inicio del ciclo: ganas {2} de energía.',
+    'Début de combat : trois alliés aléatoires gagnent un mot-clé aléatoire. Effondrement : invoque un astre de niveau 6 aléatoire.': 'Inicio del combate: tres aliados aleatorios ganan una palabra clave aleatoria. Colapso: invoca un astro aleatorio de nivel 6.'
+  },
+  de: {
+    'Lune de sang': 'Blutmond',
+    'Pangée': 'Pangäa',
+    'Oumuamua': 'Oumuamua',
+    'Bételgeuse': 'Beteigeuze',
+    'Prisme absolu': 'Absolutes Prisma',
+    'Zéro absolu': 'Absoluter Nullpunkt',
+    'Cerveau Matriochka': 'Matrjoschka-Gehirn',
+    'Singularité nue': 'Nackte Singularität',
+    'Fin de cycle : ses voisins gagnent +{1}/+{1}.': 'Zyklusende: Seine Nachbarn erhalten +{1}/+{1}.',
+    'Rempart. Fin de cycle : vos Remparts gagnent +{1}/+{2}.': 'Bollwerk. Zyklusende: Deine Bollwerke erhalten +{1}/+{2}.',
+    'Quand vous actualisez, gagne +{1}/+{1}.': 'Wenn du erneuerst, erhält es +{1}/+{1}.',
+    'Début de combat et Effondrement : inflige {2} dégâts à tous les ennemis.': 'Kampfbeginn und Kollaps: Fügt allen Gegnern {2} Schaden zu.',
+    'Quand vous jouez un autre Cristal, il gagne +{2}/+{2}.': 'Wenn du einen anderen Kristall spielst, erhält er +{2}/+{2}.',
+    'Bouclier. Début de combat : vos autres astres gagnent Bouclier.': 'Schild. Kampfbeginn: Deine anderen Gestirne erhalten Schild.',
+    'Bouclier. Début de cycle : gagnez {2} énergie.': 'Schild. Zyklusbeginn: Erhalte {2} Energie.',
+    'Début de combat : trois alliés aléatoires gagnent un mot-clé aléatoire. Effondrement : invoque un astre de niveau 6 aléatoire.': 'Kampfbeginn: Drei zufällige Verbündete erhalten ein zufälliges Schlüsselwort. Kollaps: Beschwört ein zufälliges Gestirn der Stufe 6.'
+  },
+  pt: {
+    'Lune de sang': 'Lua de sangue',
+    'Pangée': 'Pangeia',
+    'Oumuamua': 'Oumuamua',
+    'Bételgeuse': 'Betelgeuse',
+    'Prisme absolu': 'Prisma absoluto',
+    'Zéro absolu': 'Zero absoluto',
+    'Cerveau Matriochka': 'Cérebro Matrioska',
+    'Singularité nue': 'Singularidade nua',
+    'Fin de cycle : ses voisins gagnent +{1}/+{1}.': 'Fim do ciclo: seus vizinhos ganham +{1}/+{1}.',
+    'Rempart. Fin de cycle : vos Remparts gagnent +{1}/+{2}.': 'Baluarte. Fim do ciclo: seus Baluartes ganham +{1}/+{2}.',
+    'Quand vous actualisez, gagne +{1}/+{1}.': 'Quando você renova, ganha +{1}/+{1}.',
+    'Début de combat et Effondrement : inflige {2} dégâts à tous les ennemis.': 'Início do combate e Colapso: causa {2} de dano a todos os inimigos.',
+    'Quand vous jouez un autre Cristal, il gagne +{2}/+{2}.': 'Quando você joga outro Cristal, ele ganha +{2}/+{2}.',
+    'Bouclier. Début de combat : vos autres astres gagnent Bouclier.': 'Escudo. Início do combate: seus outros astros ganham Escudo.',
+    'Bouclier. Début de cycle : gagnez {2} énergie.': 'Escudo. Início do ciclo: ganhe {2} de energia.',
+    'Début de combat : trois alliés aléatoires gagnent un mot-clé aléatoire. Effondrement : invoque un astre de niveau 6 aléatoire.': 'Início do combate: três aliados aleatórios ganham uma palavra-chave aleatória. Colapso: invoca um astro aleatório de nível 6.'
+  }
+});

@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 97;
+  const VERSION = 98;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -235,14 +235,15 @@
     try {
       // Une partie finie reste sauvegardée tant que ses récompenses n'ont pas été données :
       // si l'appli est fermée pendant le dernier combat, l'écran de fin s'ouvre au retour.
-      if (ui.state.over && ui.state.xpGiven) localStorage.removeItem(SAVE_KEY);
+      // Mode spectateur : la partie du joueur est finie, rien à reprendre.
+      if ((ui.state.over && ui.state.xpGiven) || ui.state.watching) localStorage.removeItem(SAVE_KEY);
       else localStorage.setItem(SAVE_KEY, JSON.stringify(ui.state));
     } catch (err) { /* stockage indisponible */ }
   }
   function loadGame() {
     try {
       const s = JSON.parse(localStorage.getItem(SAVE_KEY));
-      if (s && s.v === 1 && Array.isArray(s.players) && !s.over && s.phase === 'shop' && !s.mp) return s;
+      if (s && s.v === 1 && Array.isArray(s.players) && !s.over && s.phase === 'shop' && !s.mp && !s.watching) return s;
     } catch (err) { /* sauvegarde illisible */ }
     return null;
   }
@@ -1965,7 +1966,7 @@
     $('hudHp').innerHTML = icon('heart') + `<b>${Math.max(0, p.hp)}</b>`;
     $('hudRound').textContent = tr('CYCLE {n}', { n: ui.state.round });
     $('famsBtn').innerHTML = ui.state.families.map((f) => `<span style="--c:${famColor(f)}"></span>`).join('');
-    $('cosmosBtn').innerHTML = `<span class="cz-ev">✺</span>${(p.relics || []).map((id) => `<i>${RELIC_GLYPH[id] || '✦'}</i>`).join('')}`;
+    $('cosmosBtn').innerHTML = `<span class="cz-ev">${ui.state.event ? eventIcon(ui.state.event) : '✺'}</span>${(p.relics || []).map((id) => `<i>${RELIC_GLYPH[id] || '✦'}</i>`).join('')}`;
     $('menuBtn').innerHTML = icon('menu');
   }
 
@@ -3174,9 +3175,30 @@
     const r = R.RELIC[id], tag = attrs ? 'button' : 'div';
     return `<${tag} class="relic-item" ${attrs || ''}><span class="relic-glyph">${RELIC_GLYPH[id] || '✦'}</span><span><b>${esc(r.name).toUpperCase()}</b><p>${esc(r.text)}</p></span></${tag}>`;
   }
+  // Pictos des événements cosmiques (v98) : un dessin en pixels 12 × 12 par événement.
+  const EVENT_ART = {
+    meteores: { pal: { w: '#ffffff', y: '#ffe08a', o: '#ff9a3c', r: '#b8432c' }, rows: ['............', '..........rr', '.........oo.', '........oo..', '.....rywo...', '....rrww....', '...oo.....rr', '..oo.....rr.', 'ywo.....oo..', 'ww.....oo...', '.....ywo....', '.....ww.....'] },
+    abondance: { pal: { c: '#5ee7ff', w: '#ffffff', s: '#b8f6ff' }, rows: ['......cc....', '.s...cw.....', '....cc......', '...ccwwcc...', '......cc....', '.....cc.....', '....wc......', '...cc....s..', '..cc....s.s.', '.........s..', '............', '............'] },
+    feconde: { pal: { g: '#5fd35a', d: '#2f7a3a', l: '#b6f5a8', y: '#ffd447' }, rows: ['............', '.........y..', '........yyy.', '....gg...y..', '..gglggg....', '..glgggg....', '.ggggggdd...', '.gggggddd...', '..gggddd....', '..ggdddd....', '....dd......', '............'] },
+    recyclage: { pal: { g: '#3fbf7f', l: '#a8ffcf' }, rows: ['............', '....gggg....', '...gg..gg...', '..g......g..', '.gg.....llll', '.l.......ll.', '.ll.......l.', 'llll.....gg.', '..g......g..', '...gg..gg...', '....gggg....', '............'] },
+    expansion: { pal: { y: '#ffd447', w: '#fff6c8', o: '#f0a830', r: '#a8661a' }, rows: ['.....ww.....', '....yyyy....', '...yyyyyy...', '..yyyyyyyy..', '.yyyyyyyyyy.', '....yyyy....', '....yyyy....', '....yyyy....', '....yyyy....', '..oooooooo..', '.rrrrrrrrrr.', '.rrrrrrrrrr.'] },
+    revelation: { pal: { v: '#b48cff', c: '#5ee7ff', k: '#1a1030', w: '#ffffff' }, rows: ['............', '............', '............', '....vvvv....', '..vv.cc.vv..', '.v..ckkw..v.', 'v...ckkc...v', '.v..cccc..v.', '..vv.cc.vv..', '....vvvv....', '............', '............'] },
+    legendes: { pal: { y: '#ffd447', o: '#c98a1a', r: '#ff5a7a', b: '#5ee7ff', g: '#7dff8a' }, rows: ['............', '............', '.....bb.....', '.r........g.', '.y...yy...y.', '.y...yy...y.', '.yy.yyyy.yy.', '.yyyyyyyyyy.', '.yyyyyyyyyy.', '.yyryybygyy.', '.oooooooooo.', '............'] },
+    vent: { pal: { y: '#fff2a8', o: '#ffb347', p: '#ffe08a', w: '#ffffff' }, rows: ['............', '............', '......ppppw.', '............', '..oyo.......', '.oyyyo.ppppw', '.oyyyo......', '..oyo.......', '......pppw..', '............', '.....pppw...', '............'] },
+    aurore: { pal: { e: '#e6ffff', g: '#2fd18a', p: '#c2457f', c: '#7fd8ff' }, rows: ['............', '.eeeeeeeeee.', '.egcggppgce.', '.ecggppgcge.', '.eggppgcgge.', '.egppgcggpe.', '..epgcggpe..', '...ecggpe...', '....egpe....', '.....ee.....', '............', '............'] },
+    maree: { pal: { b: '#2f6fd6', l: '#7fd8ff', w: '#ffffff' }, rows: ['............', '............', '............', '......ww....', '.....lll....', '....lbbblw..', '...lbbbll...', '..wlbbl....l', 'l...bbbl..lb', 'blllbbbbllbb', 'bbbbbbbbbbbb', 'bbbbbbbbbbbb'] },
+    instable: { pal: { l: '#c8ff3a', m: '#ff4fd8', c: '#5ee7ff' }, rows: ['............', '.m........m.', '..mllllllc..', '...mllllllc.', '...mllllllc.', '.mllllllc...', '....mllllllc', '..mllllllc..', 'mllllllc....', '...mllllllc.', 'm..........m', '......m.....'] }
+  };
+  function eventIcon(id, cls) {
+    const a = EVENT_ART[id];
+    if (!a) return `<span class="ev-ico ${cls || ''}">✺</span>`;
+    let rects = '';
+    a.rows.forEach((row, y) => [...row].forEach((c, x) => { if (a.pal[c]) rects += `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${a.pal[c]}"/>`; }));
+    return `<svg class="ev-ico ${cls || ''}" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
+  }
   function eventHtml(id) {
     const e = R.EVENT[id];
-    return e ? `<div class="event-item"><span class="event-glyph">✺</span><span><small>${tr('ÉVÉNEMENT COSMIQUE')}</small><b>${esc(e.name).toUpperCase()}</b><p>${esc(e.text)}</p></span></div>` : '';
+    return e ? `<div class="event-item"><span class="event-glyph">${eventIcon(id)}</span><span><small>${tr('ÉVÉNEMENT COSMIQUE')}</small><b>${esc(e.name).toUpperCase()}</b><p>${esc(e.text)}</p></span></div>` : '';
   }
   function lawHtml(p) {
     const law = R.LAW[p.law];
@@ -3201,7 +3223,7 @@
   function openEventCard(done) {
     const e = R.EVENT[ui.state.event];
     SFX.legend(false);
-    openSheet(`<div class="event-card"><span class="event-glyph big">✺</span><h3>${tr('ÉVÉNEMENT COSMIQUE')}</h3><h2>${esc(e.name)}</h2><p>${esc(e.text)}</p>
+    openSheet(`<div class="event-card"><span class="event-glyph big">${eventIcon(ui.state.event)}</span><h3>${tr('ÉVÉNEMENT COSMIQUE')}</h3><h2>${esc(e.name)}</h2><p>${esc(e.text)}</p>
       <p class="muted">${tr('Il s’applique à tous les univers, pendant toute la partie.')}</p>
       <div class="sheet-actions"><button class="btn primary" data-act="close">${tr('C’EST PARTI')}</button></div></div>`, { center: true, onClose: done });
   }
@@ -3284,6 +3306,7 @@
   async function menuAction(v) {
     if (v === 'sound') { SFX.setMuted(!SFX.muted); closeSheet(); toast(SFX.muted ? tr('Son coupé') : tr('Son activé')); }
     else if (v === 'help') openSheet(helpHtml());
+    else if ((v === 'home' || v === 'quit') && ui.state && ui.state.watching) { closeSheet(); ui.watchStop = true; ui.skip = true; }
     else if (v === 'home' && !(ui.state && ui.state.mp)) { closeSheet(); saveGame(); await backToMenu(); }
     else if (v === 'quit' || v === 'home') {
       closeSheet();
@@ -3305,7 +3328,7 @@
 
   // ─── Combat ─────────────────────────────────────────────────
   async function fight() {
-    if (ui.busy || !ui.state || ui.state.phase !== 'shop') return;
+    if (ui.busy || !ui.state || ui.state.phase !== 'shop' || ui.state.watching) return;
     // En ligne, personne ne passe : c'est le minuteur commun qui termine le tour.
     if (ui.state.mp && !ui.mpAuto) { toast(tr('En ligne, le tour se termine pour tous à la fin du temps.'), 1800); return; }
     const p = me();
@@ -3393,6 +3416,15 @@
     ui.time = 1;
     hidePeek();
     SFX.ambience('game');
+    if (b.watch) {
+      // Spectateur : le vainqueur et les dégâts, sans la scène des comètes.
+      const win = b.winner === 0 ? b.a : b.winner === 1 ? b.opponent : null;
+      const lose = b.winner === 0 ? b.opponent : b.winner === 1 ? b.a : null;
+      if (win) { SFX.win(); banner(tr('{name} L’EMPORTE', { name: esc(win.name) }), b.damage && !lose.ghost ? tr('{name} perd {n} PV', { name: esc(lose.name), n: b.damage }) : ''); }
+      else banner(tr('ÉGALITÉ'), tr('Aucun dégât'));
+      await sleep(ui.skip ? 500 : 1500);
+      return;
+    }
     const won = b.winner === 0, lost = b.winner === 1;
     if (won) {
       SFX.win();
@@ -3834,6 +3866,64 @@
     if (me().relicChoice && me().relicChoice.length) await openRelics();
   }
 
+  // ─── Mode spectateur (v98) ──────────────────────────────────
+  // Éliminé d'une mêlée solo, on peut regarder la suite : la table continue sans nous (R.spectate),
+  // un combat par cycle (celui du meneur), les rivaux et leurs PV à jour, puis le vainqueur. Rien
+  // n'est sauvegardé ni compté de plus.
+  const canWatch = (s) => !!s && s.over && !s.mp && !s.watching && !s.tutorial && s.xpGiven !== 'abandon' && !R.isDuel(s) && !me().alive && R.alivePlayers(s).length >= 2;
+  async function startWatching() {
+    const s = ui.state;
+    if (!canWatch(s) || !R.spectate(s).ok) return;
+    SFX.tap();
+    ui.busy = true;
+    ui.watchStop = false;
+    document.body.classList.add('watching');
+    await show('game');
+    for (const id of ['shop', 'hand', 'board', 'enemy']) $(id).innerHTML = '';
+    renderHud();
+    renderRivals();
+    banner(tr('SPECTATEUR'), tr('La partie continue sans vous.'));
+    await sleep(1600);
+    await watchLoop();
+  }
+  async function watchLoop() {
+    while (ui.state && ui.state.watching && !ui.state.over) {
+      // Quitter : la fin se joue d'un coup, pour connaître le vainqueur.
+      if (ui.watchStop) {
+        for (let g = 0; g < 80 && !ui.state.over; g++) if (!R.endTurn(ui.state, { observer: true }).ok) break;
+        break;
+      }
+      ui.prevHp = Object.fromEntries(ui.state.players.map((x) => [x.id, x.hp]));
+      const res = R.endTurn(ui.state, { observer: true, watch: true });
+      if (!res.ok) break;
+      if (res.watched && !ui.watchStop) {
+        const w = res.watched;
+        $('sysName').innerHTML = playerName(ui.state.players.find((x) => x.id === w.a.id) || w.a, w.a.name);
+        await playBattle({ watch: true, events: w.events, winner: w.winner, damage: w.damage, a: w.a, opponent: w.b, before: { opp: w.b.hp } });
+      }
+      const out = [...$('enemy').children, ...$('board').children].map((el) => stage.reveal(el.querySelector('.orb'), 1, 0, 260));
+      await Promise.all(out);
+      clearBanner();
+      document.body.classList.remove('in-combat');
+      $('enemy').innerHTML = '';
+      $('board').innerHTML = '';
+      renderHud();
+      renderRivals();
+      for (const id of res.fallen || []) {
+        const p = ui.state.players.find((x) => x.id === id);
+        if (p && p.bot) toast(tr('{name} est éliminé · {rank}', { name: p.name, rank: ordinal(p.rank, true) }), 2200);
+      }
+      if (res.over || ui.watchStop) continue;
+      banner(tr('CYCLE {n}', { n: ui.state.round }), tr('{n} univers en lice', { n: R.alivePlayers(ui.state).length }));
+      await sleep(1200);
+    }
+    document.body.classList.remove('watching', 'in-combat');
+    ui.busy = false;
+    if (ui.state && ui.state.over) await endScreen();
+  }
+  listen('watchBtn', 'click', () => startWatching());
+  listen('watchEndBtn', 'click', () => { ui.watchStop = true; ui.skip = true; });
+
   // ─── Fin de partie ──────────────────────────────────────────
   async function endScreen() {
     const s = ui.state;
@@ -3894,7 +3984,11 @@
     $('endRank').innerHTML = duel ? (rank === 1 ? tr('VICTOIRE') : tr('DÉFAITE')) : ordinal(rank);
     $('endRank').classList.toggle('podium', good);
     $('endRank').classList.toggle('duel', duel);
-    $('endText').textContent = s.tutorial
+    $('watchBtn').hidden = !canWatch(s);
+    const champ = s.watching ? s.players.find((p) => p.rank === 1) : null;
+    $('endText').textContent = champ
+      ? tr('{name} remporte la partie. Vous finissez {rank}.', { name: champ.name, rank: ordinal(rank, true) })
+      : s.tutorial
       ? (rank === 1 ? tr('Bravo, la Sentinelle est vaincue ! Le vrai jeu commence : duels, mêlées et parties en ligne vous attendent.') : tr('La Sentinelle a tenu bon. Rejouez le duel d’entraînement : le guide vous attend.'))
       : duel
       ? (rank === 1 ? tr('Votre système l’emporte sur {name}.', { name: s.players[1].name }) : tr('{name} l’emporte cette fois. Regardez son système et préparez la revanche.', { name: s.players[1].name }))

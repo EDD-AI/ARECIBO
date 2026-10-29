@@ -847,6 +847,14 @@ body.in-combat .power,
 body.in-combat .fight { display: none; }
 body.in-combat .versus { display: block; }
 body.in-combat .battle-ctl { display: flex; }
+/* Mode spectateur (v98) : pas de boutique ni de main ; le système du bas porte le nom du joueur
+   regardé ; QUITTER reste à portée. */
+#watchEndBtn, #sysName { display: none; }
+body.watching .tavern, body.watching .energy, body.watching .hand, body.watching .power, body.watching .fight { display: none; }
+body.watching .battle-ctl, body.watching #watchEndBtn { display: flex; }
+body.watching #sysName { display: inline; color: var(--ink); }
+body.watching #systemZone .zone-label > span[data-t] { display: none; }
+#watchBtn { margin-bottom: 10px; }
 body.in-combat .system { flex: 1; justify-content: flex-start; padding-top: 34px; border-top: 0; }
 body.in-combat .versus { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 34px; }
 body.in-combat .versus-head { position: absolute; top: 10px; left: 0; right: 0; }
@@ -2126,9 +2134,12 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .event-item small { display: block; font-size: 9px; letter-spacing: 0.22em; color: #c7b4ff; }
 .event-item b { display: block; margin: 2px 0 3px; font-weight: 600; letter-spacing: 0.12em; font-size: 13px; }
 .event-item p { margin: 0; font-size: 12px; line-height: 1.35; color: var(--dim); }
-.event-glyph { flex: none; font-size: 22px; line-height: 1; color: #c7b4ff; text-shadow: 0 0 12px rgba(186, 150, 255, 0.8); animation: ev-spin 9s linear infinite; }
-.event-glyph.big { display: block; margin: 0 auto 10px; font-size: 54px; width: 54px; }
-@keyframes ev-spin { to { transform: rotate(360deg); } }
+/* Pictos des événements (v98) : un dessin en pixels par événement, qui flotte doucement. */
+.event-glyph { flex: none; width: 26px; height: 26px; line-height: 1; font-size: 22px; color: #c7b4ff; text-shadow: 0 0 12px rgba(186, 150, 255, 0.8); animation: ev-float 3.2s ease-in-out infinite; }
+.event-glyph.big { display: block; margin: 0 auto 12px; width: 72px; height: 72px; font-size: 54px; }
+.ev-ico { display: block; width: 100%; height: 100%; image-rendering: pixelated; filter: drop-shadow(0 0 6px rgba(186, 150, 255, 0.55)); }
+@keyframes ev-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { .event-glyph { animation: none; } }
 .event-card { text-align: center; }
 .event-card h3 { color: #c7b4ff; }
 .event-card h2 { margin: 4px 0 10px; letter-spacing: 0.06em; }
@@ -2143,6 +2154,7 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .relic-list.pick .relic-item:active { transform: scale(0.98); }
 .hud-cosmos { display: flex; align-items: center; gap: 5px; height: 28px; padding: 0 9px; border: 1px solid rgba(186, 150, 255, 0.45); background: rgba(120, 80, 220, 0.12); color: var(--gold); font-size: 13px; line-height: 1; }
 .hud-cosmos .cz-ev { color: #d9ccff; font-size: 17px; text-shadow: 0 0 8px rgba(186, 150, 255, 0.9); }
+.hud-cosmos .cz-ev .ev-ico { width: 18px; height: 18px; }
 .hud-cosmos i { font-style: normal; text-shadow: 0 0 6px rgba(246, 196, 83, 0.6); }
 .hud-cosmos:active { transform: scale(0.95); }
 .cx-about { font-size: 13px; }
