@@ -810,7 +810,9 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
   dernier système déjà ouvert. En ligne, elles ne dépendent que de la graine, du cycle, des univers
   en vie et des rencontres passées (`state.met`) : tous les téléphones trouvent les mêmes.
 - **Les 5 dernières secondes** (en ligne, v79) : un cadre rouge léger palpite et tremble autour de
-  l’écran, le téléphone vibre à chaque seconde, jusqu’au combat.
+  l’écran, le téléphone vibre à chaque seconde, jusqu’au combat. Depuis la v103, un **tic d’horloge**
+  sonne à chaque seconde (`SFX.tick`) : « tic » et « tac » alternent, la dernière seconde sonne plus
+  fort. Même tic-tac dans les 5 dernières secondes du choix de la loi.
 - **Déroulement** :
   - Chacun choisit une loi parmi trois, en 20 secondes, dans les familles de la partie (les mêmes
     pour tous). Depuis la v89, chaque loi montre la forme de son énergie, comme en solo ; la liste

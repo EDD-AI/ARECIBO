@@ -620,6 +620,13 @@
     // Le jingle d'ARECIBO : la victoire d'une partie.
     // Sons rétro du jeu caché (js/invaders.js) : bip carré et souffle, sur le bus des effets.
     chip(freq, dur, o) { tone(freq, dur, Object.assign({ type: 'square', vol: 0.03 }, o)); },
+    // Compte à rebours (v103) : un « tic » d'horloge par seconde dans les 5 dernières ; tic et tac
+    // alternent, la dernière seconde sonne plus fort.
+    tick(n) {
+      const last = n <= 1;
+      tone(n % 2 ? 1760 : 1320, 0.04, { type: 'square', vol: last ? 0.08 : 0.05 });
+      noise(0.03, { vol: last ? 0.2 : 0.12, cut: 6000 });
+    },
     hiss(dur, o) { noise(dur, o); },
     jingle() { if (!play('jingle', { vol: 0.5, jit: 0 })) SFX.win(); },
     // Alerte : vos PV passent sous le quart.
