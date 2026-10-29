@@ -781,7 +781,7 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
     code y est (`checkGroup`, js/online.js). 8 joueurs au plus : les règles publiées limitent un
     salon à 8 places.
 - **Discussion** (v77, `js/chat.js`) : dans le salon d’attente et pendant la partie (bouton bulle en
-  haut, à côté du minuteur, avec une pastille quand un message arrive). Depuis la v81, un message
+  haut, avec une pastille quand un message arrive). Depuis la v81, un message
   reçu s’affiche en grosse bulle en haut de l’écran de l’autre (nom en doré, texte en grand, trois
   au plus, 4,5 s) ; la toucher ouvre la discussion. Six messages rapides (« Bonne chance ! », « Bien joué ! », « Aïe ! », « Joli combo ! »,
   « GG », « Revanche ? »), affichés dans la langue de chacun ; texte libre (120 caractères) seulement
@@ -820,7 +820,9 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
   - Personne ne peut passer : un minuteur commun cadence la partie. La boutique est courte au
     début pour jouer vite (v80) : 25 s au cycle 1, 35 s au cycle 2, 50 s au cycle 3, puis 60 s,
     65 s, 70 s et 75 s au plus ; le bouton de combat affiche le compte à rebours et le tour
-    se termine pour tous à zéro. Les combats ne se passent pas ; 25 s leur sont réservées avant la
+    se termine pour tous à zéro. Depuis la v104, c’est le **seul** compte à rebours : en gros
+    chiffres (« COMBAT DANS » au-dessus), sur fond sombre comme un afficheur, rouge sous 10 secondes,
+    qui bat pendant les 5 dernières ; le petit minuteur du haut de l’écran (`#mpTimer`) reste caché. Les combats ne se passent pas ; 25 s leur sont réservées avant la
     boutique suivante. On ne peut passer qu’en solo, contre les bots.
 - **Sous le capot** (`js/multi.js`, règles dans `js/rules.js`) :
   - Chaque téléphone joue sa propre boutique. À la fin du tour, il publie son plateau.
