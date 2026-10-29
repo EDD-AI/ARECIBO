@@ -82,11 +82,11 @@
   add('distance', 'expedition', 'Grand voyageur', 'Aller à {n} cases de la base.', 200, (f) => f.ex.maxDist, 2, { n: 200 });
   add('troncons', 'expedition', 'Cartographe', 'Explorer {n} tronçons de terrain.', 100, (f) => f.ex.seen, 2, { n: 100 });
 
-  add('arbre', 'divers', 'Graine plantée', 'Planter la graine d’étoile.', 1, (f) => (f.tree.planted ? 1 : 0), 1);
-  add('chene', 'divers', 'Chêne millénaire', 'Faire de l’arbre d’étoiles un chêne massif.', 59, (f) => f.tree.water, 3, { n: 59 });
+  add('civilisation', 'divers', 'Civilisation verte', 'Mener votre planète jusqu’à la civilisation verte.', 1, (f) => (f.civil ? 1 : 0), 3);
   add('niveau-10', 'divers', 'Apprenti créateur', 'Atteindre le niveau {n}.', 10, (f) => f.lvl, 1, { n: 10 });
   add('niveau-25', 'divers', 'Maître créateur', 'Atteindre le niveau {n}.', 25, (f) => f.lvl, 2, { n: 25 });
   add('niveau-50', 'divers', 'Divinité', 'Atteindre le niveau {n}.', 50, (f) => f.lvl, 4, { n: 50 });
+  add('niveau-75', 'divers', 'Démiurge', 'Atteindre le niveau {n}.', 75, (f) => f.lvl, 5, { n: 75 });
 
   // ─── État du jeu ────────────────────────────────────────────
   const json = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (err) { return d; } };
@@ -119,13 +119,13 @@
         }
       }
     }
-    const tree = Object.assign({ planted: false, water: 0 }, json('orbite.arbre', {}));
+    const world = json('orbite.monde', []), Wd = window.OrbiteWorld;
     return {
       st, c, lvl: A.levelInfo(A.xpTotal()).lvl,
       ranked: { placed: K.placed(cl), tier: K.tierOf(cl.points).idx },
       forge: { n: planets.length, maxMass: Math.max(0, ...planets.map((p) => p.mass | 0)), lit: !!(forge.star && forge.star.lit), orbits: planets.filter((p) => p.orbit != null).length },
       creation: localStorage.getItem('orbite.creation') === '1',
-      col, ex, tree
+      col, ex, civil: !!(Wd && Array.isArray(world) && Wd.civil(world))
     };
   }
 

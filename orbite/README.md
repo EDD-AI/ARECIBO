@@ -377,6 +377,9 @@ joueur) et fait varier la roche, la lave sur la face de nuit, le niveau des mers
 nuages, l’atmosphère, la végétation, les lumières des villes, puis ajoute lune, satellites et
 anneau (`livingWorld` dans `js/planet-engine.js`). Au niveau 120 elle ressemble à la Terre.
 
+Quand les trois premières ères sont faites (dernière amélioration : Lune capturée), la planète arrive à la
+**civilisation verte** (`OrbiteWorld.civil`) : le bouton **Création** apparaît alors au menu (v87).
+
 ## Graines de vie
 
 La monnaie rare du jeu (icône de graine verte), à côté des poussières d’étoiles dans les en-têtes.
@@ -396,7 +399,6 @@ reste équitable.
   | Accélérer le temps de la colonie (toucher « SOL n ») : +6 h | 1 |
   | Accélérer le temps de la colonie : +24 h | 3 |
   | Faire grandir une planète de la Forge d’une taille | 1 |
-  | Arroser l’arbre d’étoiles 5 fois d’un coup | 1 |
   | Recharger le rover quand sa batterie est vide | 1 |
   | Un fond animé (ou 1 200 poussières au lieu de 650 avant) | 6 |
 
@@ -412,7 +414,7 @@ reste équitable.
 ## Succès
 
 Profil → **SUCCÈS** : 100 objectifs en 10 catégories, chacun rapporte de 1 à 5 graines de vie
-(202 en tout). Une annonce animée s’affiche au déblocage.
+(206 en tout). Une annonce animée s’affiche au déblocage.
 
 | Catégorie | Nombre | Exemples |
 |---|---|---|
@@ -425,9 +427,9 @@ Profil → **SUCCÈS** : 100 objectifs en 10 catégories, chacun rapporte de 1 �
 | Création | 5 | débloquer, semer 3 graines, taille 15, allumer l’étoile, 6 mondes en orbite |
 | Colonie | 9 | tour de contrôle, 10 / 25 bâtiments, 10 / 25 / 50 colons, 400 de recherche, tout le terrain, 20 arbres |
 | Expédition | 6 | partir, 5 / 25 découvertes, ruines, 200 cases de la base, 100 tronçons |
-| Divers | 5 | planter l’arbre d’étoiles, le chêne massif, niveaux 10 / 25 / 50 |
+| Divers | 5 | mener sa planète à la civilisation verte, niveaux 10 / 25 / 50 / 75 |
 
-La plupart se lisent dans les données déjà enregistrées (statistiques, Forge, colonies, arbre,
+La plupart se lisent dans les données déjà enregistrées (statistiques, Forge, colonies, planète,
 classement) : un joueur existant débloque d’un coup ce qu’il a déjà accompli. Ce que le jeu ne
 gardait pas (famille majoritaire, exploits d’une partie) est compté en fin de partie, dans
 `orbite.succes.c` ; les succès obtenus sont dans `orbite.succes`. Code : `js/succes.js`,
@@ -439,10 +441,13 @@ Deux onglets : **Ma planète** (les 24 améliorations décrites plus haut) et **
 
 ## Création
 
-Bouton du menu principal, juste au-dessus du Marché stellaire. Elle se **débloque une fois pour toutes
-contre 1 000 poussières d’étoiles** : une cinématique s’ouvre alors (le vide, une étincelle qui devient
-une étoile, « Créateur, des mondes n’attendent que vous »), puis l’écran Création, où l’on sème sa graine
-dans la **Forge des mondes**.
+Bouton du menu principal, juste au-dessus du Marché stellaire. Il **n’apparaît qu’une fois la planète
+arrivée à la civilisation verte** au Marché stellaire (v87 ; avant, la Création s’achetait 1 000 poussières
+d’étoiles). Le Marché l’annonce sur l’ère Civilisation verte, un message salue l’ouverture, et le bouton porte
+« NOUVEAU » jusqu’à la première visite. Celle-ci ouvre une cinématique (le vide, une étincelle qui devient une
+étoile, « Créateur, des mondes n’attendent que vous »), puis l’écran Création, où l’on bâtit sa civilisation :
+on sème sa graine dans la **Forge des mondes**. Le guide du menu ne présente la Création que si le bouton
+est là.
 
 C’est un jeu en plusieurs étapes : faire grandir sa planète, descendre à sa surface, voir la vie y
 apparaître (« un colonisateur »), puis bâtir une colonie autonome en temps réel (voir **Colonie**).
@@ -1144,35 +1149,6 @@ auprès du moteur (`OrbiteBuildings.register`).
 - **Sols** : Mars, Lune, Glace, Soufre, Volcan ; **couleurs d’accent** : orange, rouge, sarcelle, jaune, bleu.
 - **Moteur** (`js/building-engine.js`) : pur et déterministe, testé sous Node (`tests/batiments.test.mjs`) ;
   `OrbiteBuildings.generate(type, graine)` renvoie le modèle en voxels, réutilisable plus tard dans le jeu.
-
-## Arbre d’étoiles
-
-Terminer l’ère I de la Genèse (ou avoir vaincu Kronos dans l’ancienne campagne) donne une **graine
-d’étoile**. Au premier retour au menu, elle
-tombe du ciel et se plante dans le sol noir, au premier plan devant la planète : la terre jaillit, une
-lumière sort du sol, puis de petites étincelles en montent. La toucher ouvre sa fiche : **arroser coûte
-100 poussières d’étoiles**, et chaque arrosage la fait grandir. Après **59 arrosages**, c’est un chêne
-massif qui occupe le premier plan.
-
-| Arrosages | Stade |
-|---|---|
-| 0 | Graine d’étoile (noyau doré qui palpite) |
-| 1 à 5 | Petite pousse |
-| 6 à 12 | Pousse |
-| 13 à 20 | Buisson |
-| 21 à 29 | Arbrisseau |
-| 30 à 39 | Petit arbre |
-| 40 à 49 | Arbre |
-| 50 à 58 | Grand arbre |
-| 59 | Chêne massif |
-
-`js/arbre.js` dessine l’arbre en **silhouette noire comme le sol**, à contre-jour devant la planète : tronc
-noueux évasé avec ses racines, branches qui se tordent segment par segment, feuillage au contour déchiqueté
-(bruit), quelques trouées dans la couronne, un liseré et un halo de lumière seulement sur le contour
-extérieur. Chaque branche dépend de son chemin dans l’arbre (pas d’un tirage au hasard), si bien qu’il garde
-sa forme en grandissant ; le dessin de chaque stade est mis en cache. À l’arrosage, une pluie de poussières tombe sur l’arbre,
-qui grandit en douceur ; un nouveau stade s’annonce par une bannière. L’état (`orbite.arbre`) suit la
-sauvegarde en ligne. Ceux qui avaient déjà vaincu Kronos reçoivent la graine à leur prochain passage au menu.
 
 ## Légendaires
 

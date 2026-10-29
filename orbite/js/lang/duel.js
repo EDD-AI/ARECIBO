@@ -132,6 +132,10 @@
     ['{name} : {text}', '{name}: {text}', '{name}: {text}', '{name}: {text}', '{name}: {text}'],
     // Volumes (v86)
     ['EFFETS', 'EFFECTS', 'EFECTOS', 'EFFEKTE', 'EFEITOS'],
+    ['NOUVEAU', 'NEW', 'NUEVO', 'NEU', 'NOVO'],
+    ['Ouvre la Création au menu.', 'Opens the Creation in the menu.', 'Abre la Creación en el menú.', 'Öffnet die Schöpfung im Menü.', 'Abre a Criação no menu.'],
+    ['La Création est ouverte : bâtissez votre civilisation depuis le menu.', 'The Creation is open: build your civilization from the menu.', 'La Creación está abierta: construye tu civilización desde el menú.', 'Die Schöpfung ist offen: Baue deine Zivilisation im Menü auf.', 'A Criação está aberta: construa sua civilização pelo menu.'],
+    ['La <b>Création</b> : votre planète a atteint la civilisation verte. Bâtissez-y votre civilisation : faites grandir des mondes, descendez à leur surface et fondez une colonie.', 'The <b>Creation</b>: your planet has reached the green civilization. Build your civilization there: grow worlds, land on their surface and found a colony.', 'La <b>Creación</b>: tu planeta ha llegado a la civilización verde. Construye allí tu civilización: haz crecer mundos, desciende a su superficie y funda una colonia.', 'Die <b>Schöpfung</b>: Dein Planet hat die grüne Zivilisation erreicht. Baue dort deine Zivilisation auf: Lass Welten wachsen, lande auf ihrer Oberfläche und gründe eine Kolonie.', 'A <b>Criação</b>: seu planeta chegou à civilização verde. Construa ali sua civilização: faça mundos crescerem, desça à superfície deles e funde uma colônia.'],
     // Version PC (v81)
     ['Touchez pour les détails', 'Tap for details', 'Toca para ver los detalles', 'Für Details tippen', 'Toque para ver os detalhes'],
     // Appariements façon Battlegrounds (v79)

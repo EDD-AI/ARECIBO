@@ -55,8 +55,7 @@ window.OrbiteI18n.add({
     "Les anciens": "The Ancients", "Trouver des ruines anciennes.": "Find ancient ruins.",
     "Grand voyageur": "Great Traveller", "Aller à {n} cases de la base.": "Travel {n} tiles from the base.",
     "Cartographe": "Cartographer", "Explorer {n} tronçons de terrain.": "Explore {n} chunks of terrain.",
-    "Graine plantée": "Seed Planted", "Planter la graine d’étoile.": "Plant the star seed.",
-    "Chêne millénaire": "Ancient Oak", "Faire de l’arbre d’étoiles un chêne massif.": "Grow the star tree into a mighty oak.",
+    "Civilisation verte": "Green Civilization", "Mener votre planète jusqu’à la civilisation verte.": "Bring your planet to the green civilization.", "Démiurge": "Demiurge",
     "Apprenti créateur": "Apprentice Creator", "Atteindre le niveau {n}.": "Reach level {n}.", "Maître créateur": "Master Creator", "Divinité": "Deity"
   },
   es: {
@@ -114,8 +113,7 @@ window.OrbiteI18n.add({
     "Les anciens": "Los antiguos", "Trouver des ruines anciennes.": "Encuentra ruinas antiguas.",
     "Grand voyageur": "Gran viajero", "Aller à {n} cases de la base.": "Llega a {n} casillas de la base.",
     "Cartographe": "Cartógrafo", "Explorer {n} tronçons de terrain.": "Explora {n} sectores de terreno.",
-    "Graine plantée": "Semilla plantada", "Planter la graine d’étoile.": "Planta la semilla de estrella.",
-    "Chêne millénaire": "Roble milenario", "Faire de l’arbre d’étoiles un chêne massif.": "Convierte el árbol de estrellas en un roble colosal.",
+    "Civilisation verte": "Civilización verde", "Mener votre planète jusqu’à la civilisation verte.": "Lleva tu planeta hasta la civilización verde.", "Démiurge": "Demiurgo",
     "Apprenti créateur": "Creador aprendiz", "Atteindre le niveau {n}.": "Alcanza el nivel {n}.", "Maître créateur": "Maestro creador", "Divinité": "Divinidad"
   },
   de: {
@@ -173,8 +171,7 @@ window.OrbiteI18n.add({
     "Les anciens": "Die Alten", "Trouver des ruines anciennes.": "Finde uralte Ruinen.",
     "Grand voyageur": "Weltenbummler", "Aller à {n} cases de la base.": "Entferne dich {n} Felder von der Basis.",
     "Cartographe": "Kartograf", "Explorer {n} tronçons de terrain.": "Erkunde {n} Geländeabschnitte.",
-    "Graine plantée": "Samen gepflanzt", "Planter la graine d’étoile.": "Pflanze den Sternensamen.",
-    "Chêne millénaire": "Uralte Eiche", "Faire de l’arbre d’étoiles un chêne massif.": "Lass den Sternenbaum zur mächtigen Eiche wachsen.",
+    "Civilisation verte": "Grüne Zivilisation", "Mener votre planète jusqu’à la civilisation verte.": "Führe deinen Planeten bis zur grünen Zivilisation.", "Démiurge": "Demiurg",
     "Apprenti créateur": "Schöpferlehrling", "Atteindre le niveau {n}.": "Erreiche Stufe {n}.", "Maître créateur": "Schöpfermeister", "Divinité": "Gottheit"
   },
   pt: {
@@ -232,8 +229,7 @@ window.OrbiteI18n.add({
     "Les anciens": "Os antigos", "Trouver des ruines anciennes.": "Encontre ruínas antigas.",
     "Grand voyageur": "Grande viajante", "Aller à {n} cases de la base.": "Vá a {n} casas da base.",
     "Cartographe": "Cartógrafo", "Explorer {n} tronçons de terrain.": "Explore {n} setores de terreno.",
-    "Graine plantée": "Semente plantada", "Planter la graine d’étoile.": "Plante a semente de estrela.",
-    "Chêne millénaire": "Carvalho milenar", "Faire de l’arbre d’étoiles un chêne massif.": "Transforme a árvore de estrelas em um carvalho colossal.",
+    "Civilisation verte": "Civilização verde", "Mener votre planète jusqu’à la civilisation verte.": "Leve seu planeta até a civilização verde.", "Démiurge": "Demiurgo",
     "Apprenti créateur": "Criador aprendiz", "Atteindre le niveau {n}.": "Alcance o nível {n}.", "Maître créateur": "Mestre criador", "Divinité": "Divindade"
   }
 });

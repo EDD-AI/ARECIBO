@@ -52,6 +52,10 @@
     return c;
   }
 
+  // La planète arrive à la civilisation verte quand les trois premières ères sont faites :
+  // la Création (bâtir sa civilisation) s'ouvre alors au menu.
+  function civil(list) { return UPGRADES.every((u) => u.stage >= 3 || list.includes(u.id)); }
+
   function stageName(list) {
     const o = owned(list);
     if (!o.length) return tr('Planète morte');
@@ -59,5 +63,5 @@
     return STAGES[o[o.length - 1].stage].name;
   }
 
-  root.OrbiteWorld = { STAGES, UPGRADES, BY_ID, owned, next, channels, stageName };
+  root.OrbiteWorld = { STAGES, UPGRADES, BY_ID, owned, next, channels, civil, stageName };
 })(typeof window !== 'undefined' ? window : globalThis);
