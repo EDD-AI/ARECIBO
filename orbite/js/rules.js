@@ -531,7 +531,8 @@
     { id: 'maelstrom', fam: 'tempete', tier: 4, atk: 5, hp: 7, name: 'Maelström', legend: true, kw: ['rafale'], look: { type: 'gas', seed: 8404, ring: true, moons: 1, hueShift: 250 },
       text: 'Rafale. Après chacune de ses attaques, tous vos astres gagnent +{1}/+{1}.',
       attack(c, u, m) { for (const v of c.allies(u.side)) c.buff(v, m, m); } },
-    { id: 'attracteur', fam: 'neutre', tier: 5, atk: 5, hp: 7, name: 'Grand Attracteur', legend: true, look: { type: 'star', seed: 8505, starClass: 'étoile exotique', shell: true, debris: true },
+        // Grand Attracteur : légendaire neutre devenue Nébuleuse (v108), son effet vole déjà des statistiques.
+{ id: 'attracteur', fam: 'nebuleuse', tier: 5, atk: 5, hp: 7, name: 'Grand Attracteur', legend: true, look: { type: 'nebula', seed: 8505, neb: { style: 'oursin', rim: 278, gas: 52, rays: 17, aspect: 1 } },
       text: 'Début de combat : chaque ennemi perd 1/1 ; le Grand Attracteur gagne tout ce qu’il a volé.',
       start(c, u) {
         let a = 0, h = 0;

@@ -448,10 +448,10 @@ test('lois de vie : PV de départ, énergie du sacrifice, renaissance du phénix
   assert.ok(me.reborn && me.alive && me.hp === 15, 'renaît avec 15 PV au lieu d’être éliminé');
 });
 
-test('légendaires : une par famille et deux neutres, un exemplaire, rares dans la Création et les découvertes', () => {
+test('légendaires : une par famille (deux pour les Nébuleuses) et une neutre, un exemplaire, rares dans la Création et les découvertes', () => {
   const legends = R.CARDS.filter((c) => c.legend);
-  for (const f of R.FAMILY_KEYS) assert.equal(legends.filter((c) => c.fam === f).length, 1, 'une légendaire ' + f);
-  assert.equal(legends.filter((c) => c.fam === 'neutre').length, 2);
+  for (const f of R.FAMILY_KEYS) assert.equal(legends.filter((c) => c.fam === f).length, f === 'nebuleuse' ? 2 : 1, 'légendaires ' + f);
+  assert.equal(legends.filter((c) => c.fam === 'neutre').length, 1);
   let seen = 0, slots = 0, disc = 0, discN = 0;
   for (let g = 0; g < 300; g++) {
     const s = R.newGame('leg-' + g, R.LAWS[g % R.LAWS.length].id);
