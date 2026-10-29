@@ -403,7 +403,7 @@
     { id: 'tchouri', fam: 'comete', tier: 3, atk: 4, hp: 6, name: 'Tchouri', look: { type: 'asteroid', seed: 9206, shape: 'double' },
       text: 'Fin de cycle : gagne +{1}/+{1} par actualisation faite ce cycle (5 au plus).',
       endTurn(x, u, m) { const n = Math.min(5, x.p.rolls || 0) * m; if (n) x.buff(u, n, n); } },
-    { id: 'ison', fam: 'comete', tier: 4, atk: 5, hp: 6, name: 'Ison', look: { type: 'comet', seed: 9207, warm: true, debris: true },
+    { id: 'ison', fam: 'comete', tier: 4, atk: 5, hp: 6, name: 'Ison', look: { type: 'comet', seed: 9213, warm: true, hueShift: -50, debris: true },
       text: 'Vendu : vos Comètes gagnent +{2}/+{2}.',
       sold(x, u, m) { for (const v of x.fam('comete', u)) x.buff(v, 2 * m, 2 * m); } },
     { id: 'perseides', fam: 'comete', tier: 5, atk: 6, hp: 8, name: 'Perséides', look: { type: 'asteroid', seed: 9208, debris: true },
@@ -912,7 +912,9 @@
     if (law.fam === 'neutre') you.pref = families[0];
     state.players.push(you);
     const botLaws = LAWS.filter((l) => families.includes(l.fam));
-    const names = shuffle(BOT_NAMES.slice(), rng);
+    // En ligne, les noms des bots ne dépendent que de la graine (pas de la loi choisie) : les mêmes
+    // sur tous les téléphones.
+    const names = shuffle(BOT_NAMES.slice(), opts.mp ? mulberry(hashStr(seed + '|names')) : rng);
     // Sièges des autres joueurs humains (multijoueur) : ni boutique ni décisions locales, leur
     // plateau arrive du réseau à chaque manche.
     for (const seat of seats) {

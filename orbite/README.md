@@ -706,12 +706,15 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
   plusieurs (7 au plus). Un ami : un duel, comme avant. Plusieurs : une **partie entre amis** jusqu’à 8
   joueurs. Chaque invité reçoit la bulle « NOM vous invite dans sa partie entre amis ! » avec REJOINDRE
   (et la carte « Défis reçus »). Dans le salon, l’hôte invite d’autres amis (INVITER, INVITÉ, LÀ) et
-  choisit si des **univers rivaux** tiennent les places libres (NON par défaut depuis la liste d’amis,
-  OUI pour « Créer une mêlée privée »). Sans univers rivaux, la partie compte exactement les joueurs
-  présents (« LANCER · 3 JOUEURS ») ; à deux, c’est un duel.
-  - Sans nouvelle règle Firestore : le salon garde les codes amis invités (`invited`) et le choix
-    `bots`, que ses membres peuvent modifier ; au lancement, la graine commence par « N » et le nombre
-    de joueurs (`MP.seatsOf`), comme le « D » des duels. La présence de l’hôte porte « I » + le code
+  choisit le **nombre de bots** (univers rivaux) avec − et + (v95) : 0 par défaut depuis la liste
+  d’amis, toutes les places libres pour « Créer une mêlée privée ». Les places des bots s’affichent
+  après celles des joueurs (« BOT · univers rival ») ; un ami qui arrive passe avant les bots. La
+  partie compte les joueurs présents et les bots (« LANCER · 5 JOUEURS ») ; à deux places, c’est un
+  duel (même un seul joueur contre un bot). En ligne, les noms des bots ne dépendent que de la graine :
+  tous les joueurs voient les mêmes (avant la v95, ils changeaient selon la loi choisie).
+  - Sans nouvelle règle Firestore : le salon garde les codes amis invités (`invited`) et le nombre
+    `bots` (`MP.botsOf`), que ses membres peuvent modifier ; au lancement, la graine commence par
+    « N » et la taille de la table (`MP.seatsOf`), comme le « D » des duels. La présence de l’hôte porte « I » + le code
     de la partie + un compteur d’invités : les amis qui la voient lisent le salon et regardent si leur
     code y est (`checkGroup`, js/online.js). 8 joueurs au plus : les règles publiées limitent un
     salon à 8 places.
@@ -845,7 +848,7 @@ fiche de chaque astre les choisit avec `look.shape` dans `js/rules.js`.
 
 | Forme | Astres |
 |---|---|
-| Comète (noyau de glace, queue soufflée à l’opposé de l’étoile) | Halley, Encke, Hale-Bopp, Hyakutake ; Météore et Ison en feu |
+| Comète (noyau de glace, queue soufflée à l’opposé de l’étoile) | Halley, Encke, Hale-Bopp, Hyakutake ; Météore en feu (orange), Ison rouge (v95) |
 | Planète brisée (morceaux écartés, cœur qui brûle dans les fissures) | Vestige (violet), Géode (vert), Forge stellaire (orange), Sérac (glace, cœur bleu) |
 | Astéroïde double (deux lobes soudés) | Tchouri, Agate, Écho, Ossuaire, Comète (glace) |
 | Amas de cristaux (piquants) | Améthyste, Obsidienne (verre noir), Spore (Envers) |
