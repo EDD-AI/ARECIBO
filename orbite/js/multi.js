@@ -30,6 +30,14 @@
     const n = seed.charAt(0) === 'N' ? parseInt(seed.charAt(1), 10) : 0;
     return n >= 3 && n <= SEATS ? n : SEATS;
   };
+  // Bots d'une partie privée : le nombre choisi par l'hôte (v95), borné aux places libres ; false
+  // (v93) : aucun ; absent : toutes les places libres (recherche classée, mêlée privée).
+  const botsOf = (m) => {
+    const free = Math.max(0, SEATS - ((m && m.uids) || []).length);
+    if (!m || m.bots === false) return 0;
+    if (typeof m.bots === 'number') return Math.max(0, Math.min(free, Math.floor(m.bots)));
+    return free;
+  };
   const denied = (err) => !!err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
   const WAIT_MS = F.wait || 40000; // recherche classée : délai avant de compléter avec des bots
   // Temps de boutique : court au début pour jouer vite (25 s, 35 s, 50 s), puis 60 s, 65 s, 70 s
@@ -187,26 +195,26 @@
     if (!m || m.host !== uid() || m.status !== 'waiting') return;
     const a = new Uint32Array(2);
     crypto.getRandomValues(a);
-    // Sans univers rivaux (bots: false), la partie ne compte que les joueurs présents : deux font un duel.
-    const humans = m.uids.length;
-    const mark = seatsOf(m) === 2 ? DUEL_MARK : m.bots === false ? (humans <= 2 ? DUEL_MARK : 'N' + Math.min(SEATS, humans)) : '';
-    if (m.bots === false && humans < 2) return;
+    // La table compte les joueurs présents et les bots choisis par l'hôte : deux places font un duel.
+    const total = seatsOf(m) === 2 ? 2 : Math.min(SEATS, m.uids.length + botsOf(m));
+    if (total < 2) return;
+    const mark = total === 2 ? DUEL_MARK : total < SEATS ? 'N' + total : '';
     const seed = mark + 'MP' + a[0].toString(16).toUpperCase() + a[1].toString(16).toUpperCase();
     try { const { fs } = fire(); await fs.updateDoc(ref(M.mid), { status: 'playing', seed, startAt: now() }); } catch (err) { A.refuse(err.message); }
   }
 
   // ─── Invitations entre amis (v93) ───────────────────────────
   // Le salon garde les codes amis invités (champ invited, que ses membres peuvent modifier) et le
-  // choix des univers rivaux pour les places libres (bots).
+  // nombre de bots choisi par l'hôte (champ bots).
   async function invite(codes) {
     if (!M.mid || !codes.length) return;
     const { fs } = fire();
     await fs.updateDoc(ref(M.mid), { invited: fs.arrayUnion(...codes) });
   }
-  async function setBots(on) {
+  async function setBots(n) {
     if (!M.mid) return;
     const { fs } = fire();
-    await fs.updateDoc(ref(M.mid), { bots: !!on });
+    await fs.updateDoc(ref(M.mid), { bots: Math.max(0, Math.min(SEATS - 1, Math.floor(Number(n) || 0))) });
   }
 
   // ─── Discussion ─────────────────────────────────────────────
@@ -407,6 +415,6 @@
   window.OrbiteMulti = {
     get state() { return M; },
     searchRanked, createPrivate, joinCode, start, leave, invite, setBots, newState, lawChoices, endTurn, startRound, stopRound, isHost, say,
-    SEATS, seatsOf, WAIT_MS, LAW_MS
+    SEATS, seatsOf, botsOf, WAIT_MS, LAW_MS
   };
 })();

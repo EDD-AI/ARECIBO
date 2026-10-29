@@ -145,7 +145,11 @@
     ['INVITÉ', 'INVITED', 'INVITADO', 'EINGELADEN', 'CONVIDADO'],
     ['INVITER', 'INVITE', 'INVITAR', 'EINLADEN', 'CONVIDAR'],
     ['LANCER · {n} JOUEURS', 'START · {n} PLAYERS', 'EMPEZAR · {n} JUGADORES', 'STARTEN · {n} SPIELER', 'COMEÇAR · {n} JOGADORES'],
-    ['Univers rivaux pour les places libres', 'Rival universes fill the empty seats', 'Universos rivales en los puestos libres', 'Rivalisierende Universen auf freien Plätzen', 'Universos rivais nos lugares vagos'],
+    // Bots entre amis (v95)
+    ['BOT', 'BOT', 'BOT', 'BOT', 'BOT'],
+    ['BOTS', 'BOTS', 'BOTS', 'BOTS', 'BOTS'],
+    ['univers rival', 'rival universe', 'universo rival', 'rivalisierendes Universum', 'universo rival'],
+    ['univers rivaux', 'rival universes', 'universos rivales', 'rivalisierende Universen', 'universos rivais'],
     ['OUI', 'YES', 'SÍ', 'JA', 'SIM'],
     ['NON', 'NO', 'NO', 'NEIN', 'NÃO'],
     ['INVITER DES AMIS', 'INVITE FRIENDS', 'INVITAR AMIGOS', 'FREUNDE EINLADEN', 'CONVIDAR AMIGOS'],

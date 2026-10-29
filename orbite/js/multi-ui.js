@@ -129,9 +129,12 @@
     const host = m.host === ON.uid();
     const left = Math.max(0, Math.ceil((m.created + MP.WAIT_MS - Date.now()) / 1000));
     const n = MP.seatsOf(m), duel = n === 2;
+    // Partie privée : les places des bots choisis par l'hôte suivent celles des joueurs.
+    const nBots = m.mode === 'private' && !duel ? MP.botsOf(m) : 0;
     const seats = Array.from({ length: n }, (_, i) => {
       const s = m.seats[i];
       return s ? `<div class="mp-seat on"><b>${esc(s.name)}</b><small>${s.uid === ON.uid() ? tr('vous') : s.uid === m.host ? tr('hôte') : ''} ${s.points ? s.points + ' pts' : ''}</small></div>`
+        : i < m.seats.length + nBots ? `<div class="mp-seat bot"><b>${tr('BOT')}</b><small>${tr('univers rival')}</small></div>`
         : `<div class="mp-seat"><b>…</b><small>${m.mode === 'ranked' ? tr('en recherche') : tr('place libre')}</small></div>`;
     }).join('');
     const head = m.mode === 'ranked'
@@ -149,21 +152,23 @@
         ? `<b>${duel ? tr('DUEL ENTRE AMIS') : tr('CODE DE SESSION')}</b><div class="mp-code">${esc(m.code)}</div><p>${tr('En attente : {name} lance la partie.', { name: esc((m.seats.find((x) => x.uid === m.host) || {}).name || tr('l’hôte')) })}</p>`
         : `<b>${duel ? tr('DUEL ENTRE AMIS') : tr('CODE DE SESSION')}</b><div class="mp-code">${esc(m.code)}</div><p>${duel ? tr('Envoyez le lien à votre ami : il ouvre le jeu directement dans votre partie. Il peut aussi saisir le code dans Multijoueur → Rejoindre un ami.') : tr('Ou partagez ce code avec vos amis.')}</p>
          <button class="btn" data-mp="share">${tr('ENVOYER LE LIEN')}</button>`;
-    // Partie entre amis à plusieurs : l'hôte invite depuis sa liste d'amis et choisit si des univers
-    // rivaux tiennent les places libres.
+    // Partie entre amis à plusieurs : l'hôte invite depuis sa liste d'amis et choisit combien de bots
+    // (univers rivaux) complètent la table ; les amis qui arrivent passent avant les bots.
     const group = host && m.mode === 'private' && !duel;
-    const bots = m.bots !== false;
+    const free = MP.SEATS - m.uids.length, total = m.uids.length + nBots;
     const invited = Array.isArray(m.invited) ? m.invited : [];
     const friends = group ? friendsSorted().map(({ p, pr }) => {
       const here = m.uids.includes(p.uid), sent = invited.includes(codeOfFriend(p));
       return friendRow(p, pr, here || sent ? 'noop' : 'invite', here ? tr('LÀ') : sent ? tr('INVITÉ') : tr('INVITER'), here || sent, m.uids.length >= n ? 'disabled' : '');
     }).join('') : '';
-    const startLabel = !group || bots ? `${tr('LANCER LA PARTIE')} · ${m.uids.length}/${n}` : tr('LANCER · {n} JOUEURS', { n: m.uids.length });
+    const startLabel = group ? tr('LANCER · {n} JOUEURS', { n: total }) : `${tr('LANCER LA PARTIE')} · ${m.uids.length}/${n}`;
     box.innerHTML = `<div class="mp-card">${head}</div>
       <div class="mp-seats">${seats}</div>
-      ${group ? `<button class="mp-toggle ${bots ? 'on' : ''}" data-mp="bots">${tr('Univers rivaux pour les places libres')}<b>${bots ? tr('OUI') : tr('NON')}</b></button>
+      ${group ? `<div class="mp-bots"><span>${tr('BOTS')}<small>${tr('univers rivaux')}</small></span>
+          <button class="btn" data-mp="botsDown" ${nBots <= 0 ? 'disabled' : ''} aria-label="−">−</button><b>${nBots}</b>
+          <button class="btn" data-mp="botsUp" ${nBots >= free ? 'disabled' : ''} aria-label="+">+</button></div>
         ${friends ? `<div class="mp-card mp-invites"><b>${tr('INVITER DES AMIS')}</b><div class="mp-friends">${friends}</div></div>` : ''}` : ''}
-      <div class="sheet-actions">${host && m.mode === 'private' ? `<button class="btn primary" data-mp="start" ${group && !bots && m.uids.length < 2 ? 'disabled' : ''}>${startLabel}</button>` : ''}
+      <div class="sheet-actions">${host && m.mode === 'private' ? `<button class="btn primary" data-mp="start" ${group && total < 2 ? 'disabled' : ''}>${startLabel}</button>` : ''}
       <button class="btn" data-mp="leave">${tr('QUITTER')}</button></div>
       ${window.OrbiteChat ? `<div class="mp-card"><b>${tr('DISCUSSION')}</b>${window.OrbiteChat.html(20)}</div>` : ''}`;
   }
@@ -223,14 +228,14 @@
         render();
         if (MP.state.match && MP.state.match.status === 'waiting') await MP.leave();
         await MP.createPrivate(8);
-        await MP.setBots(false);
+        await MP.setBots(0);
         await MP.invite(picked.map(codeOfFriend));
         st.target = null;
         st.pick.clear();
         st.view = 'menu';
       }
       else if (k === 'invite') { const p = friendOf(b.dataset.uid); if (p) await MP.invite([codeOfFriend(p)]); }
-      else if (k === 'bots') { const m = MP.state.match; if (m) await MP.setBots(m.bots === false); }
+      else if (k === 'botsUp' || k === 'botsDown') { const m = MP.state.match; if (m) await MP.setBots(MP.botsOf(m) + (k === 'botsUp' ? 1 : -1)); }
       else if (k === 'noop') { return; }
       else if (k === 'menu') { st.view = 'menu'; }
       else if (k === 'challenge') {
