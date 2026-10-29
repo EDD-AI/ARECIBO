@@ -2155,12 +2155,13 @@
     return { ok: true, battle, watched, results, fallen: fallen.map((p) => p.id), endEvents: myEndEvents, startEvents, over: false };
   }
 
-  // Mode spectateur (v98) : en solo, après l'élimination du joueur, la table continue jusqu'au
-  // dernier survivant. endTurn(state, { observer: true, watch: true }) rend alors le combat du
-  // meneur (watched). Le classement et les récompenses du joueur ne changent plus.
+  // Mode spectateur (v98, en ligne depuis la v105) : après l'élimination du joueur, la table
+  // continue jusqu'au dernier survivant. En solo, endTurn(state, { observer: true, watch: true }) ;
+  // en ligne, mpResolve(state, snaps, [], { watch: true }) sur les manches que l'hôte écrit. Les deux
+  // rendent le combat du meneur (watched). Le classement et les récompenses du joueur ne changent plus.
   function spectate(state) {
     const me = you(state);
-    if (!state.over || me.alive || state.mp || state.watching) return fail('Rien à regarder.');
+    if (!state.over || me.alive || state.watching) return fail('Rien à regarder.');
     const still = alivePlayers(state);
     if (still.length < 2) return fail('La partie est finie.');
     state.over = false;
@@ -2168,7 +2169,9 @@
     state.watching = true;
     state.round++;
     ensurePlan(state);
-    for (const p of still) startTurn(state, p);
+    // En ligne (v105), les univers des autres joueurs n'ont pas de boutique ici : leur plateau arrive
+    // avec la manche suivante.
+    for (const p of still) if (!p.remote) startTurn(state, p);
     return { ok: true };
   }
 
@@ -2225,9 +2228,13 @@
     });
   }
   // Résolution d'une manche à partir des plateaux publiés (snaps : identifiant → instantané).
-  function mpResolve(state, snaps, endEvents) {
+  // opts.watch (v105) : éliminé, le joueur regarde la suite ; le combat du meneur est gardé (watched).
+  function mpResolve(state, snaps, endEvents, opts) {
     const me = you(state);
     const players = alivePlayers(state);
+    const lead = !me.alive && state.watching && opts && opts.watch
+      ? players.slice().sort((x, y) => y.hp - x.hp || (gidOf(state, x) < gidOf(state, y) ? -1 : 1))[0] : null;
+    let watched = null;
     const byGid = new Map(players.map((p) => [gidOf(state, p), p]));
     // Plateaux des autres (humains et bots) tels qu'ils ont été publiés.
     for (const [gid, p] of byGid) {
@@ -2261,8 +2268,9 @@
       const A = byGid.get(ga), B = gb === 'ghost' ? state.ghost : byGid.get(gb);
       const isMe = (x) => x === me || (x && x.__real === me);
       const mineFight = isMe(A) || isMe(B);
+      const isFeat = !!lead && !watched && (A === lead || B === lead);
       const fs = { seed: state.seed, rc: 0, families: state.families, uidc: 1000000, pool: {}, event: state.event };
-      const r = fight(fs, A, B, state.round + ':' + ga + ':' + gb, mineFight);
+      const r = fight(fs, A, B, state.round + ':' + ga + ':' + gb, mineFight || isFeat);
       r.damage = Math.min(cap, r.damage);
       results.push({ a: ga, b: gb, winner: r.winner, damage: r.damage, ghost: !!B.ghost });
       if (mineFight) {
@@ -2278,9 +2286,17 @@
         };
         me.lastOpp = opp.id;
       }
+      if (isFeat) {
+        watched = {
+          events: r.events, winner: r.winner, damage: r.damage, cap: Number.isFinite(cap) ? cap : null,
+          a: { id: A.id, name: A.name, tier: A.tier, hp: A.hp },
+          b: { id: B.id, name: B.name, law: B.law, tier: B.tier, hp: B.hp, ghost: !!B.ghost }
+        };
+      }
       const hurt = (x, d) => { (x.__real || x).hp -= d; };
       if (r.winner === 0 && !B.ghost) hurt(B, r.damage);
       if (r.winner === 1) hurt(A, r.damage);
+      if (isFeat) watched.after = { a: A.hp, b: B.ghost ? null : B.hp };
     }
     for (const p of players) if (p.hp <= 0 && p.law === 'phenix' && !p.reborn) {
       p.reborn = true;
@@ -2304,13 +2320,14 @@
     }
     const still = alivePlayers(state);
     state.history.push({ round: state.round, results, fallen: fallen.map((p) => gidOf(state, p)) });
-    if (!me.alive || still.length <= 1) {
-      if (me.alive) me.rank = 1;
+    // Spectateur : la partie continue tant qu'il reste au moins deux univers.
+    if ((!me.alive && !state.watching) || still.length <= 1) {
+      if (still.length === 1) still[0].rank = 1;
       state.over = true;
       state.phase = 'over';
       state.rank = me.rank;
       state.reward = rewardsOf(state)[me.rank] || 0;
-      return { ok: true, battle, results, fallen: fallen.map((p) => p.id), endEvents: endEvents || [], over: true, rank: me.rank, reward: state.reward };
+      return { ok: true, battle, watched, results, fallen: fallen.map((p) => p.id), endEvents: endEvents || [], over: true, rank: me.rank, reward: state.reward, winner: still[0] ? still[0].id : null };
     }
     state.round++;
     state.phase = 'shop';
@@ -2321,7 +2338,7 @@
       const evs = startTurn(state, p);
       if (p === me) startEvents = evs;
     }
-    return { ok: true, battle, results, fallen: fallen.map((p) => p.id), endEvents: endEvents || [], startEvents, over: false };
+    return { ok: true, battle, watched, results, fallen: fallen.map((p) => p.id), endEvents: endEvents || [], startEvents, over: false };
   }
 
   // ─── Contrôle (tests) ───────────────────────────────────────

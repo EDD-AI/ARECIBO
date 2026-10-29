@@ -145,6 +145,9 @@
     ['INVITÉ', 'INVITED', 'INVITADO', 'EINGELADEN', 'CONVIDADO'],
     ['INVITER', 'INVITE', 'INVITAR', 'EINLADEN', 'CONVIDAR'],
     ['LANCER · {n} JOUEURS', 'START · {n} PLAYERS', 'EMPEZAR · {n} JUGADORES', 'STARTEN · {n} SPIELER', 'COMEÇAR · {n} JOGADORES'],
+    // Spectateur en ligne (v105)
+    ['MANCHE EN COURS', 'ROUND IN PROGRESS', 'RONDA EN CURSO', 'RUNDE LÄUFT', 'RODADA EM ANDAMENTO'],
+    ['Les autres créateurs jouent leur tour…', 'The other creators are playing their turn…', 'Los demás creadores juegan su turno…', 'Die anderen Schöpfer spielen ihren Zug…', 'Os outros criadores estão jogando o turno…'],
     // Un seul compte à rebours (v104)
     ['COMBAT DANS', 'FIGHT IN', 'COMBATE EN', 'KAMPF IN', 'COMBATE EM'],
     // Votre style (v102)

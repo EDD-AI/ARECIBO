@@ -373,6 +373,18 @@
       else await fs.updateDoc(ref(M.mid), { status: 'done' });
     } catch (err) { /* sans importance */ }
   }
+  // Mode spectateur en ligne (v105) : éliminé, on suit les manches que l'hôte écrit et on les rejoue
+  // ici, comme les autres téléphones. S'il ne reste plus que des bots (plus personne n'écrit de
+  // manche), la suite se joue sur ce téléphone. Rend null si l'on a cessé de regarder entre-temps.
+  async function watchNext(st) {
+    const humans = st.players.some((p) => p.alive && p.remote);
+    if (!humans || !M.mid || (M.match && M.match.status === 'done')) return R.endTurn(st, { observer: true, watch: true });
+    const r = st.round;
+    const doc = M.roundDocs[r] || await waitRound(r);
+    if (st.over || !st.watching || st.round !== r) return null;
+    M.lastSnaps = Object.assign({}, M.lastSnaps, doc.snaps);
+    return R.mpResolve(st, doc.snaps, [], { watch: true });
+  }
   // Éliminé : l'hôte passe la main à un humain encore en lice (ou clôt la partie).
   function finished() {
     stopRound();
@@ -432,7 +444,7 @@
 
   window.OrbiteMulti = {
     get state() { return M; },
-    searchRanked, createPrivate, joinCode, start, leave, invite, setBots, newState, lawChoices, endTurn, startRound, stopRound, isHost, say,
+    searchRanked, createPrivate, joinCode, start, leave, invite, setBots, newState, lawChoices, endTurn, startRound, stopRound, isHost, say, watchNext,
     SEATS, seatsOf, botsOf, WAIT_MS, LAW_MS
   };
 })();

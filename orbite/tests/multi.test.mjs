@@ -70,3 +70,46 @@ test('les familles et les lois proposées sont communes à la partie', () => {
   assert.deepEqual(f, R.mpFamilies('ABC'));
   for (const id of R.mpLawChoices('ABC', f, 'u1')) assert.ok(R.LAW[id].fam === 'neutre' || f.includes(R.LAW[id].fam));
 });
+
+test('spectateur en ligne (v105) : l’éliminé rejoue les manches et voit les mêmes PV que les autres', () => {
+  const seed = 'M-spect', laws = { a: R.LAWS[0].id, b: R.LAWS[1].id, c: R.LAWS[2].id };
+  const humans = Object.keys(laws), fam = R.mpFamilies(seed);
+  const states = {};
+  for (const h of humans) states[h] = R.newGame(seed, laws[h], { families: fam, seats: humans.filter((x) => x !== h).map((x) => ({ id: x, name: x, law: null })), mp: { me: h } });
+  // « a » ne joue pas : il tombe le premier, puis regarde.
+  states.a.players[0].hp = 1;
+  for (const h of humans.slice(1)) states[h].players.find((p) => p.id === 'a').hp = 1;
+  let watchedFights = 0, compared = 0;
+  for (let round = 0; round < 60; round++) {
+    const snaps = {};
+    const alive = humans.filter((h) => !states[h].over && !states[h].watching);
+    if (!alive.length) break;
+    for (const h of alive) {
+      const st = states[h];
+      if (h !== 'a') R.botTurn(st, st.players[0]);
+      else st.players[0].board = [];
+      assert.ok(R.mpLock(st, h === alive[0]).ok);
+      snaps[h] = R.snapshotOf(st, st.players[0]);
+    }
+    const host = alive[0];
+    for (const p of states[host].players) if (p.bot && p.alive) snaps[p.id] = R.snapshotOf(states[host], p);
+    for (const h of alive) assert.ok(R.mpResolve(states[h], snaps, []).ok);
+    const sa = states.a;
+    if (sa.watching && !sa.over) {
+      const res = R.mpResolve(sa, snaps, [], { watch: true });
+      assert.ok(res.ok);
+      if (res.watched) { watchedFights++; assert.ok(res.watched.events.length > 0); }
+      // Le spectateur voit les mêmes PV que les joueurs encore en lice.
+      const ref = states[alive.find((h) => h !== 'a')];
+      if (ref) {
+        const hp = (st, id) => { const p = st.players.find((x) => (x.id === 'you' ? st.mp.me : x.id) === id); return p ? p.hp : null; };
+        for (const id of ['b', 'c']) assert.equal(hp(sa, id), hp(ref, id), 'PV de ' + id);
+        compared++;
+      }
+    } else if (sa.over && !sa.watching && R.alivePlayers(sa).length >= 2) {
+      assert.ok(R.spectate(sa).ok);
+    }
+  }
+  assert.ok(states.a.watching, 'a a regardé la suite');
+  assert.ok(watchedFights > 0 && compared > 0);
+});

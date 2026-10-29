@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 104;
+  const VERSION = 105;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -3405,7 +3405,7 @@
   async function menuAction(v) {
     if (v === 'sound') { SFX.setMuted(!SFX.muted); closeSheet(); toast(SFX.muted ? tr('Son coupé') : tr('Son activé')); }
     else if (v === 'help') openSheet(helpHtml());
-    else if ((v === 'home' || v === 'quit') && ui.state && ui.state.watching) { closeSheet(); ui.watchStop = true; ui.skip = true; }
+    else if ((v === 'home' || v === 'quit') && ui.state && ui.state.watching) { closeSheet(); ui.watchStop = true; ui.skip = true; if (ui.watchAbort) ui.watchAbort(); }
     else if (v === 'home' && !(ui.state && ui.state.mp)) { closeSheet(); saveGame(); await backToMenu(); }
     else if (v === 'quit' || v === 'home') {
       closeSheet();
@@ -3680,7 +3680,8 @@
   async function combatEvent(e, quick) {
     switch (e.t) {
       case 'first': {
-        banner(e.side === 0 ? tr('VOUS ATTAQUEZ') : esc(ui.opp.name), e.side === 0 ? tr('en premier') : tr('attaque en premier'));
+        if (ui.state && ui.state.watching) banner(esc(e.side === 0 ? (ui.watchA || '') : ui.opp.name), tr('attaque en premier'));
+        else banner(e.side === 0 ? tr('VOUS ATTAQUEZ') : esc(ui.opp.name), e.side === 0 ? tr('en premier') : tr('attaque en premier'));
         await sleep(900);
         break;
       }
@@ -3969,7 +3970,8 @@
   // Éliminé d'une mêlée solo, on peut regarder la suite : la table continue sans nous (R.spectate),
   // un combat par cycle (celui du meneur), les rivaux et leurs PV à jour, puis le vainqueur. Rien
   // n'est sauvegardé ni compté de plus.
-  const canWatch = (s) => !!s && s.over && !s.mp && !s.watching && !s.tutorial && s.xpGiven !== 'abandon' && !R.isDuel(s) && !me().alive && R.alivePlayers(s).length >= 2;
+  // En ligne aussi (v105) : on suit les manches des autres créateurs (OrbiteMulti.watchNext).
+  const canWatch = (s) => !!s && s.over && (!s.mp || !!window.OrbiteMulti) && !s.watching && !s.tutorial && s.xpGiven !== 'abandon' && !R.isDuel(s) && !me().alive && R.alivePlayers(s).length >= 2;
   async function startWatching() {
     const s = ui.state;
     if (!canWatch(s) || !R.spectate(s).ok) return;
@@ -3986,18 +3988,30 @@
     await watchLoop();
   }
   async function watchLoop() {
+    const MPx = ui.state && ui.state.mp && window.OrbiteMulti;
     while (ui.state && ui.state.watching && !ui.state.over) {
-      // Quitter : la fin se joue d'un coup, pour connaître le vainqueur.
+      // Quitter : en solo, la fin se joue d'un coup, pour connaître le vainqueur ; en ligne, on
+      // cesse simplement de regarder.
       if (ui.watchStop) {
-        for (let g = 0; g < 80 && !ui.state.over; g++) if (!R.endTurn(ui.state, { observer: true }).ok) break;
+        if (MPx) { ui.state.over = true; ui.state.phase = 'over'; }
+        else for (let g = 0; g < 80 && !ui.state.over; g++) if (!R.endTurn(ui.state, { observer: true }).ok) break;
         break;
       }
       ui.prevHp = Object.fromEntries(ui.state.players.map((x) => [x.id, x.hp]));
-      const res = R.endTurn(ui.state, { observer: true, watch: true });
+      let res;
+      if (MPx) {
+        // En ligne : on attend la manche des autres créateurs (QUITTER interrompt l'attente).
+        banner(tr('MANCHE EN COURS'), tr('Les autres créateurs jouent leur tour…'), null, true);
+        res = await Promise.race([MPx.watchNext(ui.state), new Promise((ok) => { ui.watchAbort = () => ok(null); })]);
+        ui.watchAbort = null;
+        clearBanner();
+        if (!res) continue;
+      } else res = R.endTurn(ui.state, { observer: true, watch: true });
       if (!res.ok) break;
       if (res.watched && !ui.watchStop) {
         const w = res.watched;
         $('sysName').innerHTML = playerName(ui.state.players.find((x) => x.id === w.a.id) || w.a, w.a.name);
+        ui.watchA = w.a.name;
         await playBattle({ watch: true, events: w.events, winner: w.winner, damage: w.damage, a: w.a, opponent: w.b, before: { opp: w.b.hp } });
       }
       const out = [...$('enemy').children, ...$('board').children].map((el) => stage.reveal(el.querySelector('.orb'), 1, 0, 260));
@@ -4021,7 +4035,7 @@
     if (ui.state && ui.state.over) await endScreen();
   }
   listen('watchBtn', 'click', () => startWatching());
-  listen('watchEndBtn', 'click', () => { ui.watchStop = true; ui.skip = true; });
+  listen('watchEndBtn', 'click', () => { ui.watchStop = true; ui.skip = true; if (ui.watchAbort) ui.watchAbort(); });
 
   // ─── Fin de partie ──────────────────────────────────────────
   async function endScreen() {
