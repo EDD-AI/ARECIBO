@@ -400,7 +400,7 @@ reste équitable.
   | Accélérer le temps de la colonie : +24 h | 3 |
   | Faire grandir une planète de la Forge d’une taille | 1 |
   | Recharger le rover quand sa batterie est vide | 1 |
-  | Un fond animé (ou 1 200 poussières au lieu de 650 avant) | 6 |
+  | Un cosmétique : fond animé ou cadre de profil (ou 2 000 poussières ; 1 200 et 6 graines avant la v90) | 10 |
 
 - **Boutique** (Marché stellaire → GRAINES) : une vitrine animée (la graine flotte dans son halo),
   une **offre de bienvenue** unique (40 graines pour 1,99 €, le double du tarif de base), puis
@@ -438,6 +438,16 @@ traductions : `js/lang/succes.js`, tests : `tests/succes.test.mjs`.
 ## Marché stellaire
 
 Deux onglets : **Ma planète** (les 24 améliorations décrites plus haut) et **Cosmétiques**.
+
+**Cosmétiques** (prix relevés en v90 : **2 000 poussières d’étoiles ou 10 graines de vie** chacun) :
+- **Fonds animés** : six décors de partie (Nébuleuse pourpre, Aurore boréale, Galaxie spirale, Voie
+  lactée, Trou noir, Piliers de la création).
+- **Cadres de profil** (v90) : Couronne d’or, Aurore, Braises, Givre, Néant et Cosmos. Un contour
+  animé (outline et lueur, sans décaler la mise en page) et quatre rivets en pixels aux coins, autour
+  du bouton profil du menu et de l’en-tête du profil. Le cadre équipé (`frame` dans
+  `orbite.cosmetiques`) est publié dans `forge.frame` du profil public, que les règles Firestore
+  laissent libre : vos amis le voient dans leur liste d’amis, le classement et votre fiche, sans
+  règle à republier. « Sans cadre » le retire.
 
 ## Création
 
@@ -1436,6 +1446,17 @@ environ 40 ms.
 
 Pistes essayées puis écartées, car neutres ou nuisibles : monter de niveau plus tôt (nettement
 plus faible) et réordonner le système.
+
+**Cristaux allégés (v90).** Les joueurs trouvaient la composition « tout Cristal » au-dessus. Mesuré en
+duel (joueur naïf qui n’achète qu’une famille contre l’IA experte, 200 à 300 duels par famille) : les
+Cristaux gagnaient 73 % de leurs duels, les autres familles de 33 à 53 % (sauf Machine, Comètes et
+Envers, plus difficiles à jouer naïvement). Aucune carte seule n’en était responsable (en couper une
+ne changeait que 1 à 3 points) : c’est l’empilement des bonus permanents à chaque Cristal joué, avec
+la Loi de résonance. Changements : Quartz 3 fois au plus, Opale 4 fois au plus (`u.res`), Rubis
++1/+1, Émeraude +1 Attaque, Cœur de cristal +1/+1, Diamant +1/+1, Saphir 3 Cristaux au plus,
+Améthyste +1 PV ; Loi de résonance : +1 PV à un autre Cristal (éveillée : +1/+1 à un autre Cristal).
+Résultat : 57 % en duel (Minéral 54 %, Néant 50 %) ; en mêlée à 8 (`tools/bots-mono.js 20`), rang
+moyen 4,65 au lieu de 3,50.
 
 **Reliques et éveil des lois (v84).** Mesuré avec `node orbite/tools/equilibrage.js 240 --seed v84
 --json`, avant et après (sans événement cosmique, que les outils ne tirent pas) : le rang moyen des

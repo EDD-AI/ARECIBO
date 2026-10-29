@@ -76,7 +76,7 @@
     const p = f.profile || {};
     const pr = f.status === 'accepted' ? presenceOf(p) : null;
     return `<div class="on-row">
-      <span class="orb" data-planet="${tierOrb(p)}"></span>
+      ${A.framed ? A.framed(`<span class="orb" data-planet="${tierOrb(p)}"></span>`, A.frameOf(p)) : `<span class="orb" data-planet="${tierOrb(p)}"></span>`}
       <span class="on-row-txt"><b>${pr ? `<i class="on-dot ${pr.cls}"></i>` : ''}${esc(p.pseudo || tr('Créateur'))}<small>#${esc(p.tag || '')}</small></b><small>${pr && pr.cls !== 'off' ? `<em class="on-pres ${pr.cls}">${esc(pr.txt)}</em> · ` : ''}${tr('Niveau {n}', { n: p.level || 1 })} · ${esc(tierText(p))}${pr && pr.cls === 'off' ? ' · ' + esc(pr.txt) : ''}</small></span>
       <span class="on-row-act">${actions}</span></div>`;
   }
@@ -108,7 +108,7 @@
     const me = N.state.user && N.state.user.uid;
     if (!rows.length) return `<p class="muted">${tr('Personne n’est encore classé ici : terminez vos 5 parties de placement !')}</p>`;
     return `<ol class="on-board">${rows.map((p, i) => `<li class="${p.uid === me ? 'me' : ''}" data-on="who" data-uid="${p.uid}">
-      <span class="on-pos">${i + 1}</span><span class="orb" data-planet="${tierOrb(p)}"></span>
+      <span class="on-pos">${i + 1}</span>${A.framed ? A.framed(`<span class="orb" data-planet="${tierOrb(p)}"></span>`, A.frameOf(p)) : `<span class="orb" data-planet="${tierOrb(p)}"></span>`}
       <span class="on-row-txt"><b>${esc(p.pseudo)}<small>#${esc(p.tag || '')}</small></b><small>${esc(K.tierOf(p.points).label)} · ${tr('niveau {n}', { n: p.level })}</small></span>
       <b class="on-pts">${p.points}</b></li>`).join('')}</ol>`;
   }
@@ -116,7 +116,7 @@
     const p = await N.profileOf(uid).catch(() => null);
     if (!p) return;
     const lit = p.forge && p.forge.star && p.forge.star.lit;
-    A.openSheet(`<div class="sheet-top"><div class="orb sheet-orb" data-planet="${tierOrb(p)}"></div><div>
+    A.openSheet(`<div class="sheet-top">${A.framed ? A.framed(`<div class="orb sheet-orb" data-planet="${tierOrb(p)}"></div>`, A.frameOf(p)) : `<div class="orb sheet-orb" data-planet="${tierOrb(p)}"></div>`}<div>
       <span class="fam-chip" style="--c:var(--gold)">${esc(tierText(p).toUpperCase())}</span>
       <h2>${esc(p.pseudo)}<small class="muted"> #${esc(p.tag || '')}</small></h2>
       <p class="muted">${tr('Niveau {n} · {p} parties · {v} victoires', { n: p.level, p: p.games, v: p.wins })}</p></div></div>
