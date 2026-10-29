@@ -1352,8 +1352,6 @@
 
   // ─── Fin d'expédition ───────────────────────────────────────
   async function bossWin() {
-    // Récompense de la démo : la graine de l'Arbre d'étoiles (une seule fois).
-    ui.seed = !!(window.OrbiteArbre && window.OrbiteArbre.grant());
     lookWorld();
     await wait(600);
     await openStory();
@@ -1391,8 +1389,7 @@
     $('ceTitle').textContent = won ? tr('Kronos est tombé') : tr('Étage {n}', { n: r.floor });
     $('ceText').textContent = won ? tr('Ses lunes tournent désormais autour de votre monde, et la vie y est apparue. La suite de l’aventure arrive bientôt.') : tr('Votre monde s’est disloqué. Chaque expédition est différente : recommencez, avec d’autres cartes et d’autres chemins.');
     $('ceStats').innerHTML = `<span><b>${r.floor}</b>${tr('étages')}</span><span><b>${r.stats.fights}</b>${tr('combats gagnés')}</span><span><b>${r.stats.elites}</b>${tr('astres puissants')}</span><span><b>${r.deck.length}</b>${tr('cartes')}</span>`;
-    $('ceGain').innerHTML = `<b>+${pay.xp} XP</b>${pay.dust ? ` · ${icon('dust')} +${pay.dust}` : ''}` +
-      (won && ui.seed ? `<span class="ce-seed"><i class="seed-dot"></i>${tr('Graine d’étoile : elle vous attend au menu.')}</span>` : '');
+    $('ceGain').innerHTML = `<b>+${pay.xp} XP</b>${pay.dust ? ` · ${icon('dust')} +${pay.dust}` : ''}`;
     $('cEnd').classList.toggle('won', won);
     await A.show('cEnd');
     if (!r.paid) {

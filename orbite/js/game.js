@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 86;
+  const VERSION = 87;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -412,7 +412,7 @@
     stage.skyOff = name === 'cMap' ? stage.skyOff : null;
     if (coach.steps === GAME_STEPS && name !== 'game') coachStop(false);
     if (coach.steps === LAW_STEPS && name !== 'laws') coachStop(false);
-    if (coach.steps === MENU_STEPS && name !== 'menu') coachStop(true);
+    if (coach.steps && coach.steps.menu && name !== 'menu') coachStop(true);
     const cur = document.querySelector('.screen.active');
     if (cur && cur.id !== name) {
       const orbs = [...cur.querySelectorAll('[data-planet]')];
@@ -744,7 +744,6 @@
     ground.style.height = gh + 'px';
     ground.innerHTML = `<path d="${path}" fill="#020407"/>${rims}`;
     $('menuList').style.top = horizon + Math.max(14, Math.min((H - horizon) * 0.12, H - horizon - listH - 40)) + 'px';
-    if (window.OrbiteArbre) window.OrbiteArbre.layout();
   }
 
   function renderMenu() {
@@ -787,7 +786,6 @@
     $('menuWord').parentElement.classList.add('menu-fade');
     $('menuGround').style.opacity = 0;
     await show('menu');
-    if (window.OrbiteArbre) window.OrbiteArbre.onMenu();
     const pl = $('menuPlanet');
     pl.animate([{ transform: `translateY(${Math.round(ui.menuR * 0.8)}px)` }, { transform: 'translateY(0)' }], { duration: first ? 5200 : 2400, easing: 'cubic-bezier(.16,.7,.2,1)' });
     $('menuGround').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 900, fill: 'forwards' });
@@ -806,7 +804,7 @@
     for (const b of items) { b.classList.add('show'); await wait(120); }
     if (store.get(MENU_GUIDE_KEY, '') !== '1' && ui.screen === 'menu') {
       await wait(500);
-      if (ui.screen === 'menu' && !coach.steps) coachStart(MENU_STEPS, () => store.set(MENU_GUIDE_KEY, '1'));
+      if (ui.screen === 'menu' && !coach.steps) coachStart(menuSteps(), () => store.set(MENU_GUIDE_KEY, '1'));
     }
   }
 
@@ -816,7 +814,6 @@
     applyWorld();
     layoutMenu();
     await show('menu');
-    if (window.OrbiteArbre) window.OrbiteArbre.onMenu();
     $('menuWord').parentElement.classList.remove('menu-fade');
     $('menuGround').style.opacity = 1;
     document.querySelectorAll('.menu-item').forEach((b) => b.classList.add('show'));
@@ -923,7 +920,7 @@
     // Chaque ère a sa couleur : lave, eau, vie, lumière des villes. Un carré pixel plein marque ce
     // qui est fait, un carré qui clignote la prochaine étape, un carré vide le reste.
     const ERA = ['#ff8a3d', '#5fb8ff', '#8fdc6e', '#f6c453'];
-    $('mkList').innerHTML = W.STAGES.map((st, i) => `<h4 style="--era:${ERA[i]}">${st.name.toUpperCase()}<small>${esc(st.text)}</small></h4>` +
+    $('mkList').innerHTML = W.STAGES.map((st, i) => `<h4 style="--era:${ERA[i]}">${st.name.toUpperCase()}<small>${esc(st.text)}</small>${st.id === 'civil' ? `<small class="mk-unlock">${tr('Ouvre la Création au menu.')}</small>` : ''}</h4>` +
       W.UPGRADES.filter((u) => u.stage === i).map((u) => {
         const has = list.includes(u.id), isNext = nxt && nxt.id === u.id;
         return `<div class="mk-row ${has ? 'owned' : isNext ? 'next' : lvl < u.lvl ? 'locked' : ''}" style="--era:${ERA[u.stage]}">
@@ -939,6 +936,7 @@
     if (levelInfo(xpTotal()).lvl < u.lvl) { refuse(tr('Atteignez le niveau {n}.', { n: u.lvl })); return; }
     if (dust() < u.price) { refuse(tr('Il vous manque {n} poussières d’étoiles.', { n: u.price - dust() })); return; }
     ui.busy = true;
+    const wasCivil = W.civil(list);
     addDust(-u.price);
     list.push(u.id);
     store.set(WORLD_KEY, JSON.stringify(list));
@@ -956,7 +954,9 @@
     stage.ring(x, y, R * 0.95, { n: 50, colors: [[255, 255, 255], [246, 196, 83]], speed: 90, life: 0.7 });
     pl.animate([{ transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 600, easing: 'cubic-bezier(.2,.8,.2,1)' });
     renderMarket();
-    toast(tr('{name} : {text}', { name: u.name, text: u.text }), 3200);
+    // Arrivée à la civilisation verte : la Création apparaît au menu.
+    if (!wasCivil && W.civil(list)) toast(tr('La Création est ouverte : bâtissez votre civilisation depuis le menu.'), 4200);
+    else toast(tr('{name} : {text}', { name: u.name, text: u.text }), 3200);
     ui.busy = false;
   });
 
@@ -1043,7 +1043,6 @@
     ['Avancer la colonie de 6 h', 'touchez « SOL » à la surface', 1],
     ['Avancer la colonie de 24 h', 'une journée de production d’un coup', 3],
     ['Faire grandir une planète', 'une taille de plus dans la Forge', 1],
-    ['Arroser l’arbre d’étoiles', 'cinq arrosages d’un coup', 1],
     ['Recharger le rover', 'repartir aussitôt en expédition', 1],
     ['Un fond animé', 'derrière toutes vos parties', 6]
   ];
@@ -1520,7 +1519,7 @@
     else if (v === 'install') install();
     else if (v === 'guide') {
       closeSheet();
-      if (ui.screen === 'menu') setTimeout(() => coachStart(MENU_STEPS, () => store.set(MENU_GUIDE_KEY, '1')), 250);
+      if (ui.screen === 'menu') setTimeout(() => coachStart(menuSteps(), () => store.set(MENU_GUIDE_KEY, '1')), 250);
     } else if (v === 'tuto') {
       store.set(TUTO_KEY, '');
       closeSheet();
@@ -1760,11 +1759,13 @@
   const MENU_STEPS = [
     { id: 'jouer', target: '#playBtn', text: tr('<b>Jouer</b> : en <b>solo</b> contre l’IA (duel, mêlée contre sept univers, défi du jour) ou en <b>multijoueur</b>, en ligne et entre amis.'), next: tr('SUIVANT'), delay: 0 },
     { id: 'codex', target: '#codexBtn', text: tr('Le <b>Codex</b> : tous les astres, lois, reliques et événements du jeu. Ceux que vous avez croisés en partie s’y dévoilent.'), next: tr('SUIVANT') },
-    { id: 'creation', target: '#creationBtn', text: tr('La <b>Création</b> : devenez Créateur. Semez une graine d’étoile et faites grandir votre propre planète. Elle se débloque avec des <b>poussières d’étoiles</b>.'), next: tr('SUIVANT') },
+    { id: 'creation', target: '#creationBtn', text: tr('La <b>Création</b> : votre planète a atteint la civilisation verte. Bâtissez-y votre civilisation : faites grandir des mondes, descendez à leur surface et fondez une colonie.'), next: tr('SUIVANT') },
     { id: 'marche', target: '#marketBtn', text: tr('Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées en duel et sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.'), next: tr('SUIVANT') },
     { id: 'profil', target: '#profileBtn', text: tr('Votre <b>profil</b> : pseudo, niveau, statistiques et historique. Chaque partie rapporte de l’expérience.'), next: tr('SUIVANT') },
     { id: 'reglages', target: '#settingsBtn', text: tr('<b>Paramètres</b> : son, musique, règles du jeu, et ce guide si vous voulez le revoir.'), next: tr('C’EST PARTI') }
   ];
+  // Le bouton Création n'est présenté que s'il est au menu (civilisation verte atteinte).
+  const menuSteps = () => Object.assign(MENU_STEPS.filter((st) => st.id !== 'creation' || !$('creationBtn').hidden), { menu: true });
 
   // ─── Rendu de la partie ─────────────────────────────────────
   function renderHud() {
@@ -4101,32 +4102,16 @@
     await show('creation');
     if (window.__orbite.forge) window.__orbite.forge.render();
   }
-  // La Création se débloque une fois pour toutes contre des poussières d'étoiles, avec une cinématique.
+  // La Création n'apparaît au menu qu'une fois la planète arrivée à la civilisation verte (Marché
+  // stellaire). La première visite passe par une cinématique.
   const CREATION_KEY = 'orbite.creation';
-  const CREATION_PRICE = 1000;
   const creationOpen = () => store.get(CREATION_KEY, '') === '1';
+  const creationReady = () => W.civil(worldList());
   function renderCreationBtn() {
     const b = $('creationBtn');
     if (!b) return;
-    b.innerHTML = tr('CRÉATION') + (creationOpen() ? '' : `<small>${tr('VERROUILLÉE')} · ${CREATION_PRICE} ${icon('dust')}</small>`);
-  }
-  function unlockSheet() {
-    const have = dust(), ok = have >= CREATION_PRICE;
-    openSheet(`<h3>${tr('CRÉATION')}</h3><h2>${tr('Devenez Créateur')}</h2>
-      <p class="sheet-text">${tr('Semez une graine d’étoile, faites grandir votre planète, puis descendez à sa surface : un jour, la vie y apparaîtra.')}</p>
-      <div class="sheet-actions"><button class="btn primary" id="creationBuy" ${ok ? '' : 'disabled'}>${tr('DÉBLOQUER')} · ${CREATION_PRICE} ${icon('dust')}</button>
-      <button class="btn" data-act="close">${tr('FERMER')}</button></div>
-      ${ok ? '' : `<p class="muted center">${tr('Il vous manque {n} poussières d’étoiles.', { n: CREATION_PRICE - have })}</p>`}`);
-    const b = $('creationBuy');
-    if (b) b.addEventListener('click', async () => {
-      if (dust() < CREATION_PRICE || creationOpen()) return;
-      addDust(-CREATION_PRICE);
-      store.set(CREATION_KEY, '1');
-      closeSheet();
-      renderMenu();
-      await creationCinematic();
-      await openCreation();
-    });
+    b.hidden = !creationReady();
+    b.innerHTML = tr('CRÉATION') + (creationOpen() ? '' : `<small>${tr('NOUVEAU')}</small>`);
   }
   // Cinématique : le vide, une étincelle qui devient un monde, et l'appel au Créateur.
   stage.register('cine-graine', { type: 'star', seed: 7777, starClass: 'naine jaune', compact: true });
@@ -4167,8 +4152,13 @@
     SFX.music(true);
   }
   listen('creationBtn', 'click', async () => {
+    if (!creationReady()) return;
     SFX.tap();
-    if (!creationOpen()) { unlockSheet(); return; }
+    if (!creationOpen()) {
+      store.set(CREATION_KEY, '1');
+      renderMenu();
+      await creationCinematic();
+    }
     await openCreation();
   });
   $('creationBack').innerHTML = icon('back');

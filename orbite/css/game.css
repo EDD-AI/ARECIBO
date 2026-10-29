@@ -301,7 +301,7 @@ body.modal #gl { z-index: 35; }
 @keyframes menu-page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .menu-item.back { font-size: 12px; color: var(--dim); padding: 10px 0; }
 .menu-item.back::before { content: '‹'; margin-right: 10px; }
-#campBtn[hidden] { display: none; }
+#campBtn[hidden], #creationBtn[hidden] { display: none; }
 .title-version {
   position: absolute;
   bottom: calc(var(--safe-b) + 14px);
@@ -343,6 +343,7 @@ body.modal #gl { z-index: 35; }
 .mk-req span:last-child { color: var(--gold); }
 .mk-list h4 { margin: 16px 0 6px; font-size: 11px; font-weight: 400; letter-spacing: 0.24em; color: var(--ink); display: flex; flex-direction: column; gap: 2px; }
 .mk-list h4 small { letter-spacing: 0.02em; color: var(--dim); font-size: 11px; }
+.mk-list h4 small.mk-unlock { color: var(--gold); }
 .mk-row { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(241, 236, 218, 0.06); font-size: 14px; }
 .mk-pip { width: 8px; height: 8px; border: 1px solid rgba(241, 236, 218, 0.28); }
 .mk-row.owned .mk-pip { background: var(--era); border-color: var(--era); box-shadow: 0 0 6px var(--era); }
@@ -1459,22 +1460,6 @@ body.in-combat .banner { top: calc(50% - 34px); }
 .discover-item.legend .fam-chip { color: #faf078; }
 @media (prefers-reduced-motion: reduce) { .unit.legend-in { animation: none; } }
 
-/* ─── Arbre d'étoiles (menu) ─── */
-.star-tree { position: absolute; z-index: 1; pointer-events: none; image-rendering: pixelated; image-rendering: crisp-edges; }
-/* Copie de l'arbre au-dessus de la toile 3D quand une fiche est ouverte (voir arbre.js). */
-.star-tree-mirror { position: fixed; z-index: 36; pointer-events: none; filter: brightness(0.45); image-rendering: pixelated; image-rendering: crisp-edges; }
-.star-tree-mirror[hidden] { display: none; }
-.star-tree-hit { position: absolute; z-index: 3; background: transparent; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.seed-fall {
-  position: fixed; left: -5px; top: -5px; z-index: 40; width: 10px; height: 10px; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(circle, #fff6c8 0 30%, #ffd36a 45%, rgba(255, 200, 90, 0) 72%);
-  box-shadow: 0 0 14px 4px rgba(255, 210, 110, 0.55);
-}
-.tree-bar { height: 6px; margin: 14px 0 6px; background: rgba(241, 236, 218, 0.1); }
-.tree-bar i { display: block; height: 100%; background: linear-gradient(90deg, #4ea84a, #d7f59a); }
-.tree-count { font-size: 12px; color: var(--dim); letter-spacing: 0.04em; }
-.ce-seed { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; font-size: 13px; color: #ffe27a; }
-.seed-dot { width: 8px; height: 8px; border-radius: 50%; background: #ffd36a; box-shadow: 0 0 8px 2px rgba(255, 210, 110, 0.6); }
 .code-input { width: 100%; margin: 12px 0 4px; padding: 12px; font: inherit; font-size: 18px; letter-spacing: 0.14em; text-align: center; text-transform: uppercase; color: var(--ink); background: rgba(241, 236, 218, 0.06); border: 1px solid var(--faint); border-radius: 0; }
 .code-input:focus { outline: none; border-color: var(--ink); }
 
