@@ -166,7 +166,7 @@
     { id: 'ossuaire', fam: 'neant', tier: 4, atk: 3, hp: 6, name: 'Ossuaire', kw: ['rempart'], look: { type: 'dead', seed: 777, debris: true, shape: 'double' },
       text: 'Rempart. Effondrement : invoque deux Débris {2}/{2}.',
       death(c, u, m, i) { c.summon(u.side, 'debris', i, 2 * m); c.summon(u.side, 'debris', i, 2 * m); } },
-    { id: 'linceul', fam: 'neant', tier: 5, atk: 5, hp: 6, name: 'Linceul', look: { type: 'dead', seed: 888, shell: true },
+    { id: 'linceul', fam: 'neant', tier: 5, atk: 5, hp: 6, name: 'Linceul', look: { type: 'eclipse', seed: 888, starClass: 'rouge sang' },
       text: 'Vos effets d’Effondrement se déclenchent {1} fois de plus.' },
     { id: 'neant', fam: 'neant', tier: 6, atk: 8, hp: 8, name: 'Néant', look: { type: 'blackhole', seed: 999, pitch: 0.16, diskScale: 1.5, hot: [[0.38, 0.15, 35], [0.62, 0.2, 52], [0.8, 0.17, 70], [0.95, 0.08, 88]] },
       text: 'Quand un autre allié s’effondre, gagne +{3}/+{3} pour le combat.',

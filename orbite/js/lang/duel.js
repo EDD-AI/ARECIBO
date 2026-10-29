@@ -145,6 +145,16 @@
     ['INVITÉ', 'INVITED', 'INVITADO', 'EINGELADEN', 'CONVIDADO'],
     ['INVITER', 'INVITE', 'INVITAR', 'EINLADEN', 'CONVIDAR'],
     ['LANCER · {n} JOUEURS', 'START · {n} PLAYERS', 'EMPEZAR · {n} JUGADORES', 'STARTEN · {n} SPIELER', 'COMEÇAR · {n} JOGADORES'],
+    // Cadres premium (v100)
+    ['PREMIUM', 'PREMIUM', 'PREMIUM', 'PREMIUM', 'PREMIUM'],
+    ['Flammes éternelles', 'Eternal Flames', 'Llamas eternas', 'Ewige Flammen', 'Chamas eternas'],
+    ['Des braises montent sans fin autour de vous.', 'Embers rise endlessly around you.', 'Brasas que suben sin fin a tu alrededor.', 'Glut steigt endlos um dich herum auf.', 'Brasas sobem sem fim ao seu redor.'],
+    ['Brume', 'Mist', 'Bruma', 'Nebel', 'Bruma'],
+    ['Une brume pâle qui dérive lentement.', 'A pale mist slowly drifting by.', 'Una bruma pálida que deriva lentamente.', 'Ein blasser Nebel, der langsam vorbeizieht.', 'Uma bruma pálida que deriva lentamente.'],
+    ['Orage', 'Storm', 'Tormenta', 'Gewitter', 'Tempestade'],
+    ['Des éclairs crépitent tout autour.', 'Lightning crackles all around.', 'Los relámpagos crepitan alrededor.', 'Blitze knistern ringsum.', 'Relâmpagos estalam ao redor.'],
+    ['Pluie d’étoiles', 'Starfall', 'Lluvia de estrellas', 'Sternenregen', 'Chuva de estrelas'],
+    ['Des étoiles qui scintillent et tombent doucement.', 'Twinkling stars gently falling.', 'Estrellas que titilan y caen suavemente.', 'Funkelnde Sterne, die sanft fallen.', 'Estrelas que cintilam e caem suavemente.'],
     // Mode spectateur (v98)
     ['REGARDER LA SUITE', 'KEEP WATCHING', 'SEGUIR MIRANDO', 'WEITER ZUSCHAUEN', 'CONTINUAR ASSISTINDO'],
     ['SPECTATEUR', 'SPECTATOR', 'ESPECTADOR', 'ZUSCHAUER', 'ESPECTADOR'],

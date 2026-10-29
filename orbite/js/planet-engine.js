@@ -509,7 +509,9 @@
     { label: 'naine jaune', w: 3, stops: [[0.5, 0.14, 55], [0.74, 0.16, 75], [0.9, 0.12, 95], [0.995, 0.03, 105]] },
     { label: 'étoile blanche', w: 1.5, stops: [[0.55, 0.06, 260], [0.78, 0.05, 240], [0.92, 0.03, 220], [1, 0, 0]] },
     { label: 'géante bleue', w: 1.5, stops: [[0.38, 0.14, 265], [0.6, 0.14, 255], [0.82, 0.09, 235], [0.98, 0.02, 220]] },
-    { label: 'étoile exotique', w: 1, stops: null }
+    { label: 'étoile exotique', w: 1, stops: null },
+    // Rouge sang (v100) : jamais tirée au hasard (w: 0) ; l'éclipse rouge du Linceul.
+    { label: 'rouge sang', w: 0, stops: [[0.24, 0.13, 22], [0.42, 0.2, 26], [0.58, 0.22, 30], [0.74, 0.17, 38]] }
   ];
 
   function bodyStar(r, cls) {
