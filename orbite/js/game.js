@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 85;
+  const VERSION = 86;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -1277,10 +1277,18 @@
   }
 
   // ─── Paramètres ─────────────────────────────────────────────
+  // Curseurs de volume : la musique, et les effets (sons du jeu et ambiance), de 0 à 100 %.
+  function volumesHtml() {
+    const row = (k, label, v) => {
+      const p = Math.round(v * 100);
+      return `<label class="vol"><span>${label}</span><input type="range" min="0" max="100" step="5" value="${p}" data-vol="${k}" style="--p:${p}%" aria-label="${label}"><b>${p} %</b></label>`;
+    };
+    return `<div class="vols">${row('music', tr('MUSIQUE'), SFX.musicOn ? SFX.musicVol : 0)}${row('fx', tr('EFFETS'), SFX.fxVol)}</div>`;
+  }
   function settingsHtml() {
     return `<h3>${tr('PARAMÈTRES')}</h3><div class="menu-list-sheet">
       <button class="btn" data-act="set" data-v="sound">${SFX.muted ? tr('SON : COUPÉ') : tr('SON : ACTIVÉ')}</button>
-      <button class="btn" data-act="set" data-v="music">${SFX.musicOn ? tr('MUSIQUE : ACTIVÉE') : tr('MUSIQUE : COUPÉE')}</button>
+      ${volumesHtml()}
       <button class="btn" data-act="set" data-v="lang">${tr('LANGUE : {lang}', { lang: I18N.LANGS.find((l) => l.id === I18N.lang).name.toUpperCase() })}</button>
       <button class="btn" data-act="set" data-v="tutos">${tr('TUTORIELS ET AIDE')}</button>
       ${installed() ? '' : `<button class="btn" data-act="set" data-v="install">${tr('INSTALLER SUR LE TÉLÉPHONE')}</button>`}
@@ -2609,6 +2617,19 @@
     if (cb) cb();
     tuto('fermer');
   }
+  // Les curseurs de volume agissent pendant qu'on les fait glisser ; lâcher celui des effets fait
+  // entendre le nouveau niveau.
+  listen('sheet', 'input', (e) => {
+    const r = e.target.closest('[data-vol]');
+    if (!r) return;
+    const v = Number(r.value) / 100;
+    if (r.dataset.vol === 'music') SFX.setMusicVol(v); else SFX.setFxVol(v);
+    r.style.setProperty('--p', r.value + '%');
+    const out = r.parentElement.querySelector('b');
+    if (out) out.textContent = r.value + ' %';
+  });
+  listen('sheet', 'change', (e) => { if (e.target.closest('[data-vol="fx"]')) SFX.tap(); });
+
   listen('overlay', 'click', (e) => {
     if (e.target === $('overlay') && !ui.sheetLocked) { SFX.tap(); closeSheet(); }
   });
@@ -3012,6 +3033,7 @@
   function openMenu() {
     openSheet(`<h3>${tr('MENU')}</h3><div class="menu-list-sheet">
       <button class="btn" data-act="menu" data-v="sound">${SFX.muted ? tr('ACTIVER LE SON') : tr('COUPER LE SON')}</button>
+      ${volumesHtml()}
       <button class="btn" data-act="menu" data-v="help">${tr('COMMENT JOUER')}</button>
       <button class="btn" data-act="menu" data-v="home">${tr('MENU PRINCIPAL (PARTIE SAUVEGARDÉE)')}</button>
       <button class="btn ghost" data-act="menu" data-v="quit">${tr('ABANDONNER LA PARTIE')}</button>

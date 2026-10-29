@@ -831,7 +831,13 @@ Quatre thèmes, qui se suivent l’un après l’autre :
 « Distant Earth » et « Orbiting Wonder » (Studio EDDA) ont été créés avec Suno. La musique démarre au toucher sur
 le titre et accompagne l’accueil, le marché, le profil et le choix de la loi. Elle s’efface en
 fondu au début d’une partie, et l’ambiance spatiale reprend. Elle passe par le graphe WebAudio pour
-des fondus fiables, y compris sur iPhone. Paramètres → Musique la coupe sans couper les bruitages.
+des fondus fiables, y compris sur iPhone.
+
+**Volumes** (v86) : Paramètres et le menu de partie ont deux curseurs, **Musique** et **Effets**
+(0 à 100 %, par pas de 5). La musique passe par `musicGain`, réglé à `MUSIC_VOL × volume` ; les
+bruitages, la réverbération, l’ambiance et les nappes passent par `fxMaster` (js/sfx.js). Les deux
+réglages sont gardés sur l’appareil (`orbite.volMusique`, `orbite.volSons`). Mettre la musique à 0
+la coupe, comme l’ancien bouton Musique ; la remonter la relance. Le bouton Son coupe tout.
 
 ## Sons
 

@@ -101,6 +101,17 @@ body.modal #gl { z-index: 35; }
   transition: transform 0.12s, border-color 0.2s, color 0.2s, background 0.2s;
 }
 .chip:active { transform: scale(0.95); }
+/* Curseurs de volume (Paramètres, menu de la partie). */
+.vols { display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; border: 1px solid var(--line); }
+.vol { display: grid; grid-template-columns: 84px minmax(0, 1fr) 50px; align-items: center; gap: 12px; font-size: 13px; letter-spacing: 0.14em; }
+.vol b { font-weight: 400; text-align: right; color: var(--dim); letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+.vol input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 30px; margin: 0; background: transparent; cursor: pointer; touch-action: pan-x; }
+.vol input[type=range]::-webkit-slider-runnable-track { height: 4px; background: linear-gradient(to right, var(--ink) var(--p, 100%), var(--faint) var(--p, 100%)); }
+.vol input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6px; background: var(--ink); border: 0; box-shadow: 0 0 0 3px #000; }
+.vol input[type=range]::-moz-range-track { height: 4px; background: var(--faint); }
+.vol input[type=range]::-moz-range-progress { height: 4px; background: var(--ink); }
+.vol input[type=range]::-moz-range-thumb { width: 16px; height: 16px; background: var(--ink); border: 0; border-radius: 0; }
+.vol input[type=range]:focus-visible { outline: 1px solid var(--ink); outline-offset: 2px; }
 .chip i { font-style: normal; color: var(--energy); }
 .chip.on { border-color: var(--energy); color: var(--energy); background: rgba(127, 216, 255, 0.08); }
 
