@@ -402,11 +402,11 @@
       // Le bouton de combat devient le compte à rebours : on ne peut pas finir son tour en avance.
       if (btn) { btn.disabled = true; btn.textContent = st.phase === 'shop' ? tr('COMBAT DANS {t}', { t: txt }) : tr('COMBAT'); }
       // Les 5 dernières secondes : un cadre rouge léger palpite autour de l'écran, le téléphone vibre
-      // à chaque seconde.
+      // et un tic d'horloge sonne à chaque seconde (v103).
       const hurry = st.phase === 'shop' && !O.ui.busy && left > 0 && left <= 5000;
       document.body.classList.toggle('mp-hurry', hurry);
       const sec = Math.ceil(left / 1000);
-      if (hurry && sec !== M.hurrySec) { M.hurrySec = sec; A.vibrate(25); }
+      if (hurry && sec !== M.hurrySec) { M.hurrySec = sec; A.vibrate(25); if (window.OrbiteSfx && window.OrbiteSfx.tick) window.OrbiteSfx.tick(sec); }
       if (st.phase !== 'shop' || O.ui.busy || left > 0) return;
       const me = st.players[0];
       if (me.discover.length) R.choose(st, 0, me);
