@@ -663,6 +663,21 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
   la v68. Si les règles publiées sont plus anciennes et refusent ce champ, le salon est recréé
   sans lui (v75) : la graine du duel commence par « D », ce qui suffit à le reconnaître. Le duel
   entre amis marche donc sans republier les règles.
+- **Défier un ami depuis sa liste** (v88) : « Défier un ami » ouvre la liste de vos amis (Profil →
+  Amis), ceux en ligne d’abord. En toucher un crée le duel privé et lui envoie le défi : chez lui,
+  une bulle « NOM vous défie en duel ! » s’affiche en haut de l’écran, où qu’il soit (sauf en pleine
+  partie en ligne), avec **REJOINDRE** ; le défi est aussi listé en tête de l’écran Multijoueur
+  (« Défis reçus »). Une bulle fermée ne revient pas. Le salon de l’hôte annonce « Défi envoyé »,
+  puis « NOM est là : lancez la partie ! ». « Par un lien » garde l’ancienne invitation, et le lien
+  reste proposé si l’ami est hors ligne. Le bouton **DÉFIER** existe aussi dans Profil → Amis.
+  - **Sans nouvelle règle Firestore** : l’hôte publie le défi dans sa présence (`profiles/{uid}.where`,
+    12 caractères au plus, permis depuis la v52) : le code de la partie suivi du code ami de l’invité.
+    Les autres présences sont des mots en minuscules (`menu`, `game`, `lobby`, `multi`). Chaque
+    joueur suit en direct ses amis (`onSnapshot` sur `friends` puis sur le profil de chacun,
+    `OrbiteOnline.friendProfiles`) ; `OrbiteOnline.invites()` rend les défis qui portent son code,
+    d’un ami vu il y a moins de 5 minutes.
+  - Le défi n’est publié que tant que le salon attend l’ami (`syncInvite`, js/multi-ui.js) : il tombe
+    dès que l’ami arrive, que la partie commence ou que l’hôte s’en va.
 - **Discussion** (v77, `js/chat.js`) : dans le salon d’attente et pendant la partie (bouton bulle en
   haut, à côté du minuteur, avec une pastille quand un message arrive). Depuis la v81, un message
   reçu s’affiche en grosse bulle en haut de l’écran de l’autre (nom en doré, texte en grand, trois

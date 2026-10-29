@@ -90,7 +90,7 @@
         a.getRedirectResult(auth).catch((err) => set({ error: messageOf(err) }));
         a.onAuthStateChanged(auth, (u) => {
           if (u) onSignedIn(u);
-          else { clearInterval(timer); set({ status: 'signedOut', user: null, conflict: null, requests: 0, synced: false }); }
+          else { clearInterval(timer); stopFriends(); set({ status: 'signedOut', user: null, conflict: null, requests: 0, synced: false }); }
         });
         return true;
       } catch (err) {
@@ -140,6 +140,7 @@
       set({ synced: true });
       await refreshRequests();
     } catch (err) { set({ error: messageOf(err), synced: true }); }
+    watchFriends();
     clearInterval(timer);
     timer = setInterval(() => { uploadIfChanged().catch(() => {}); }, 20000);
   }
@@ -238,7 +239,7 @@
     const st = O && O.ui ? O.ui.state : null;
     if ((scr === 'game' || scr === 'end') && st && st.mp && !st.over) return 'multi';
     if (scr === 'game') return 'game';
-    if (scr === 'multi') return 'lobby';
+    if (scr === 'multi') return inviteTag || 'lobby';
     return 'menu';
   }
   let presence = { at: 0, where: '' };
@@ -251,6 +252,61 @@
   }
   setInterval(beat, 15000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) beat(); });
+  // ─── Défis entre amis (v88) ─────────────────────────────────
+  // Sans nouvelle règle Firestore : celui qui défie publie dans sa présence le code de sa partie suivi
+  // du code ami de l'invité (12 caractères ; les autres présences sont des mots en minuscules). Chacun
+  // suit en direct sa liste d'amis et leur profil : le défi s'affiche aussitôt chez l'invité.
+  const INVITE_RE = /^[A-Z0-9]{12}$/;
+  const INVITE_MS = 300000;
+  let inviteTag = '';
+  function setInvite(matchCode, friendCode) {
+    const tag = matchCode && friendCode ? String(matchCode) + String(friendCode) : '';
+    if (tag === inviteTag) return;
+    inviteTag = tag;
+    presence.at = 0;
+    beat();
+  }
+  const live = { q: null, docs: {}, profiles: {}, ready: false };
+  const friendsChanged = () => { try { window.dispatchEvent(new Event('orbite-friends')); } catch (err) { /* sans importance */ } };
+  function watchFriends() {
+    if (live.q || !fb || state.status !== 'signedIn') return;
+    const { fs } = fb, me = state.user.uid;
+    live.q = fs.onSnapshot(fs.query(fs.collection(db, 'friends'), fs.where('members', 'array-contains', me)), (snap) => {
+      const ok = new Set();
+      let incoming = 0;
+      snap.docs.forEach((d) => {
+        const x = d.data();
+        if (x.status === 'accepted') ok.add(x.members.find((m) => m !== me));
+        else if (x.from !== me) incoming++;
+      });
+      for (const uid of Object.keys(live.docs)) if (!ok.has(uid)) { live.docs[uid](); delete live.docs[uid]; delete live.profiles[uid]; }
+      for (const uid of ok) {
+        if (live.docs[uid]) continue;
+        live.docs[uid] = fs.onSnapshot(fs.doc(db, 'profiles', uid), (p) => { live.profiles[uid] = p.exists() ? Object.assign({ uid }, p.data()) : null; friendsChanged(); }, () => {});
+      }
+      live.ready = true;
+      if (incoming !== state.requests) set({ requests: incoming });
+      friendsChanged();
+    }, () => { live.ready = true; friendsChanged(); });
+  }
+  function stopFriends() {
+    if (live.q) live.q();
+    for (const u of Object.values(live.docs)) u();
+    Object.assign(live, { q: null, docs: {}, profiles: {}, ready: false });
+    inviteTag = '';
+    friendsChanged();
+  }
+  // Les amis acceptés, avec leur profil public (présence comprise).
+  const friendProfiles = () => Object.values(live.profiles).filter(Boolean);
+  // Les défis reçus : un ami dont la présence porte notre code ami, vu il y a moins de 5 minutes.
+  function invites() {
+    if (!state.user) return [];
+    const mine = codeOf(state.user.uid);
+    return friendProfiles()
+      .filter((p) => typeof p.where === 'string' && INVITE_RE.test(p.where) && p.where.slice(6) === mine && Date.now() - (p.seen || 0) < INVITE_MS)
+      .map((p) => ({ uid: p.uid, name: String(p.pseudo || tr('Créateur')), code: p.where.slice(0, 6) }));
+  }
+
   async function writeProfile() {
     const { fs } = fb;
     await fs.setDoc(fs.doc(db, 'profiles', state.user.uid), Object.assign(publicProfile(), { updatedAt: fs.serverTimestamp() }));
@@ -347,6 +403,7 @@
     syncNow: () => uploadNow(),
     myCode: () => (state.user ? codeOf(state.user.uid) : ''),
     friends, addByCode, accept, remove, leaderboard, profileOf, dailySubmit, dailyTop,
+    friendProfiles, friendsReady: () => live.ready, invites, setInvite,
     codeOf,
     // Accès Firestore pour le multijoueur (js/multi.js).
     fire: () => (db && fb ? { db, fs: fb.fs } : null),
