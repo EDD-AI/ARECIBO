@@ -1,5 +1,5 @@
 /* ORBITE — traductions du menu rangé, des événements cosmiques, des reliques, de l'éveil des lois,
- * du défi du jour et du Codex (v84).
+ * du défi du jour et du Codex (v84), et des crédits (v85).
  * Clé : le texte français exact.
  * Chaque ligne : français, anglais, espagnol, allemand, portugais. */
 (function () {
@@ -118,7 +118,11 @@
     ['Un seul exemplaire par partie, et rares : 1 chance sur 100 par emplacement de la Création.', 'One copy per game, and rare: a 1 in 100 chance per Creation slot.', 'Un solo ejemplar por partida, y raros: 1 posibilidad entre 100 por casilla de la Creación.', 'Ein Exemplar pro Spiel, und selten: 1 zu 100 pro Platz der Schöpfung.', 'Um único exemplar por partida, e raros: 1 chance em 100 por espaço da Criação.'],
     ['Les astres se dévoilent quand vous les croisez en partie : dans la Création, une découverte ou chez un rival.', 'Orbs are revealed when you meet them in a game: in the Creation, a discovery or a rival’s system.', 'Los astros se revelan cuando los ves en partida: en la Creación, en un descubrimiento o en el sistema de un rival.', 'Gestirne werden enthüllt, wenn du ihnen im Spiel begegnest: in der Schöpfung, in einer Entdeckung oder bei einem Rivalen.', 'Os astros são revelados quando você os encontra em partida: na Criação, numa descoberta ou no sistema de um rival.'],
     ['Au début des cycles {a} et {b}, chaque univers choisit une relique parmi trois. Elle dure toute la partie.', 'At the start of cycles {a} and {b}, every universe picks one relic out of three. It lasts the whole game.', 'Al inicio de los ciclos {a} y {b}, cada universo elige una reliquia entre tres. Dura toda la partida.', 'Zu Beginn der Zyklen {a} und {b} wählt jedes Universum ein Relikt aus dreien. Es hält das ganze Spiel.', 'No início dos ciclos {a} e {b}, cada universo escolhe uma relíquia entre três. Ela dura a partida toda.'],
-    ['Chaque partie tire un événement cosmique. Il s’applique à tous les univers, du premier au dernier cycle.', 'Every game draws a cosmic event. It applies to every universe, from the first cycle to the last.', 'Cada partida sortea un evento cósmico. Se aplica a todos los universos, del primer ciclo al último.', 'Jedes Spiel zieht ein kosmisches Ereignis. Es gilt für alle Universen, vom ersten bis zum letzten Zyklus.', 'Cada partida sorteia um evento cósmico. Ele vale para todos os universos, do primeiro ao último ciclo.']
+    ['Chaque partie tire un événement cosmique. Il s’applique à tous les univers, du premier au dernier cycle.', 'Every game draws a cosmic event. It applies to every universe, from the first cycle to the last.', 'Cada partida sortea un evento cósmico. Se aplica a todos los universos, del primer ciclo al último.', 'Jedes Spiel zieht ein kosmisches Ereignis. Es gilt für alle Universen, vom ersten bis zum letzten Zyklus.', 'Cada partida sorteia um evento cósmico. Ele vale para todos os universos, do primeiro ao último ciclo.'],
+    // Crédits (v85)
+    ['Équipe', 'Team', 'Equipo', 'Team', 'Equipe'],
+    ['Musique et son', 'Music and sound', 'Música y sonido', 'Musik und Ton', 'Música e som'],
+    ['Technique', 'Technology', 'Técnica', 'Technik', 'Técnica']
   ];
   const langs = ['en', 'es', 'de', 'pt'];
   window.OrbiteI18n.add(Object.fromEntries(langs.map((l, i) => [l, Object.fromEntries(rows.map((r) => [r[0], r[i + 1]]))])));

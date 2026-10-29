@@ -1343,10 +1343,13 @@
     p.relicChoice = [];
     return { ok: true, id };
   }
-  // Le bot préfère l'énergie tôt, puis ce qui renforce son système tel qu'il est.
+  // Préférences du bot tirées de 1 200 mêlées où les reliques étaient tirées au hasard (v85) :
+  // Dard, Comptoir, Égide et Réserve (au cycle 4) gagnent le plus de places ; Lance, Élan et
+  // Longue-vue le moins. Bastion ne vaut que si le système a déjà des Remparts.
   function botRelic(p) {
     const golden = p.board.some((u) => u.golden), walls = p.board.some((u) => u.kw.includes('rempart'));
-    const score = (id) => ({ tresor: 5, lance: 4, banniere: 3.5, egide: 3, dard: 3, braise: 2.5, reserve: 2.5, elan: p.tier < 5 ? 3 : 0, longuevue: 2, comptoir: 1.5, bastion: walls ? 4 : 0.5, alchimie: golden ? 4 : 1 }[id] || 1);
+    const late = (p.relics || []).length > 0;
+    const score = (id) => ({ dard: 5, comptoir: 4.5, reserve: late ? 3 : 4.5, egide: 4, banniere: 3, braise: 3, tresor: late ? 2.5 : 3, alchimie: golden ? 4 : 2, bastion: walls ? 4.5 : late ? 2.5 : 1, lance: 2, elan: p.tier < 5 ? 2 : 0, longuevue: 1.5 }[id] || 1);
     let best = 0;
     p.relicChoice.forEach((id, i) => { if (score(id) > score(p.relicChoice[best])) best = i; });
     return best;

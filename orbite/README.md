@@ -804,16 +804,18 @@ lunes, cristaux, machines…), et « Comète » et « Éclipse » rejoignent la 
 
 ## Crédits
 
-Paramètres → **Crédits** ouvre le même écran que dans ARECIBO (v70) : un ciel où les étoiles
-scintillent et des poussières montent, une lune en pixels qui luit, puis la fiche d’archive
-« STUDIO EDDA // ARCHIVE CREDIT ».
+Paramètres → **Crédits** ouvre un écran plein aux couleurs d’ORBITE (v85, auparavant copié
+d’ARECIBO) : le même ciel où les étoiles scintillent et des poussières montent, le titre
+« CRÉDITS » en pixels comme sur l’écran titre, la police Chakra Petch et les teintes du jeu. Rien
+ne défile jamais : si la page dépasse (petit téléphone, langue plus longue), elle se réduit juste
+assez pour tenir (`creditsFit`).
 
-- **L’équipe d’ARECIBO** : Direction Studio EDDA, Design Corentin Flatres, Sound design et
-  Compositeur Victor Desrat.
-- **Statut** : prototype jouable en construction, avec la version (« PRE.ALPHA n »).
-- **Ce qu’apporte ORBITE** : les musiques, nappes et sons d’ARECIBO, les thèmes du menu, le moteur
-  de planètes, les bruitages de Kenney (CC0, MIT) et la police Chakra Petch (SIL OFL).
-- **Licences** : l’avis MIT et le détail des licences sont repliés en bas (« LICENCES »).
+- **Sous le titre** : ORBITE, prototype jouable en construction, avec la version (« PRE.ALPHA n »).
+- **Équipe** : Direction Studio EDDA, Design Corentin Flatres, Sound design et Compositeur
+  Victor Desrat.
+- **Musique et son** : les musiques, nappes et sons d’ARECIBO, les thèmes du menu et les bruitages
+  de Kenney (CC0, MIT). **Technique** : le moteur de planètes et la police Chakra Petch (SIL OFL).
+- **Licences** : un bouton en bas ouvre une seconde page avec l’avis MIT et le détail des licences.
 
 Détail des sons dans `audio/README.md`. Le numéro de version s’affiche toujours « PRE.ALPHA n »
 (titre, bas du menu, Paramètres).
@@ -1020,7 +1022,8 @@ début de la partie.
 | Instabilité | début de combat : deux astres de chaque camp gagnent un mot-clé aléatoire |
 
 **Reliques.** Au début des cycles 4 et 8, une fenêtre propose trois reliques ; le combat attend le
-choix (en ligne, la fin du temps prend la première). Les bots choisissent seuls (`botRelic`). Les
+choix (en ligne, la fin du temps prend la première). Les bots choisissent seuls (`botRelic`,
+d’après les mesures de la v85, voir plus bas). Les
 reliques de combat voyagent avec le plateau publié en ligne (`snapshotOf`), comme l’éveil.
 
 | Relique | Effet |
@@ -1417,3 +1420,14 @@ plus faible) et réordonner le système.
 lois va de 3,17 (Résonance) à 5,62 (Sacrifice) avant, de 3,43 (Entropie) à 5,50 (Sacrifice) après.
 L’écart ne se creuse pas ; une partie dure 14,9 cycles au lieu de 14,8. Avec environ 100 parties
 par loi, les écarts de moins de 0,3 rang restent dans le bruit.
+
+**Force des reliques et choix des bots (v85).** 1 200 mêlées avec événements, où chaque relique
+était tirée au hasard (script à part, hors du dépôt) : aucune relique n’est trop forte. Au cycle 4,
+le rang moyen va de 4,24 (Réserve, Dard) à 4,79 (Bastion) pour 4,50 attendu ; au cycle 8, de 4,14
+(Comptoir) à 4,48 (Élan) pour 4,29 ; la marge est d’environ ±0,16. Aucun événement ne change
+l’ordre des lois (Résonance et Entropie en tête, Sacrifice dernière) ni la durée des parties
+(14,2 à 15,0 cycles). Les bots prenaient surtout Trésor (24 %) et Fer de lance (18 %), moyennes,
+et presque jamais Comptoir ni Réserve. Leur table suit maintenant ces mesures (Dard, Comptoir,
+Égide, puis Réserve au cycle 4 ; Bastion seulement avec des Remparts). Sur 1 800 mêlées où la
+moitié des places garde l’ancienne table, la nouvelle finit 0,18 rang plus haut (±0,08) et gagne
+13,2 % des parties contre 11,8 %.

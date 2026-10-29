@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 84;
+  const VERSION = 85;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -1370,42 +1370,72 @@
       <div class="sheet-actions"><button class="btn" data-act="set" data-v="settings">${icon('back')} ${tr('PARAMÈTRES')}</button></div>`);
   }
 
-  // Crédits : le même écran que dans ARECIBO (ciel animé, lune en pixels, fiche d'archive), avec
-  // l'équipe d'ARECIBO, ce qu'apporte ORBITE et les licences des ressources libres.
+  // Crédits aux couleurs d'ORBITE : ciel animé, titre en pixels comme sur l'écran titre, l'équipe,
+  // la musique et la technique, puis une seconde page pour les licences. Rien ne défile.
   const MIT_KENNEY = `Copyright (c) 2025 Kenney. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`;
   const credits = { raf: 0, stars: [], dust: [], w: 0, h: 0 };
   function creditsLines() {
-    const line = (label, value) => `<div class="cr-line"><span class="cr-label">${label}</span><span class="cr-value">${value}</span></div>`;
-    return [
-      line(tr('Projet'), 'ORBITE'),
-      line(tr('Direction'), 'Studio EDDA'),
-      line(tr('Design'), 'Corentin Flatres'),
-      line(tr('Statut'), tr('prototype jouable en construction') + ' · ' + VERSION_LABEL),
-      line(tr('Sound design'), 'Victor Desrat'),
-      line(tr('Compositeur'), 'Victor Desrat'),
-      line(tr('Archives'), tr('Musiques, nappes et sons d’ARECIBO // Salvage Protocol')),
-      line(tr('Thèmes du menu'), '« Distant Earth », « Orbiting Wonder » · Studio EDDA (Suno)'),
-      line(tr('Planètes'), tr('Moteur de planètes d’ORBITE, pixel art calculé en direct (WebGL2)')),
-      line(tr('Bruitages'), 'Kenney · kenney.nl · CC0, MIT'),
-      line(tr('Police'), 'Chakra Petch · Cadson Demak · SIL Open Font License')
-    ].join('');
+    const item = (label, value) => `<div class="cr-item"><small>${label}</small><span>${value}</span></div>`;
+    const group = (title, items, cls) => `<section class="cr-group ${cls}"><h4>${title}</h4><div class="cr-grid">${items.join('')}</div></section>`;
+    return group(tr('Équipe'), [
+      item(tr('Direction'), 'Studio EDDA'),
+      item(tr('Design'), 'Corentin Flatres'),
+      item(tr('Sound design'), 'Victor Desrat'),
+      item(tr('Compositeur'), 'Victor Desrat')
+    ], 'team') + `<div class="cr-cols">${group(tr('Musique et son'), [
+      item(tr('Archives'), tr('Musiques, nappes et sons d’ARECIBO // Salvage Protocol')),
+      item(tr('Thèmes du menu'), '« Distant Earth », « Orbiting Wonder » · Studio EDDA (Suno)'),
+      item(tr('Bruitages'), 'Kenney · kenney.nl · CC0, MIT')
+    ], 'list')}${group(tr('Technique'), [
+      item(tr('Planètes'), tr('Moteur de planètes d’ORBITE, pixel art calculé en direct (WebGL2)')),
+      item(tr('Police'), 'Chakra Petch · Cadson Demak · SIL Open Font License')
+    ], 'list')}</div>`;
   }
   function openCredits() {
     closeSheet();
     const ov = $('credits');
-    $('creditsContent').innerHTML = `<div class="cr-kicker">STUDIO EDDA // ARCHIVE CREDIT</div>
-      <h2 class="cr-title">${tr('CRÉDITS')}</h2>
-      <div class="cr-body">${creditsLines()}</div>
-      <p class="cr-note">${tr('Cette fenêtre recevra les crédits complets, les contributeurs et les archives du projet au fil du développement.')}</p>
-      <details class="cr-legal"><summary>${tr('LICENCES')}</summary>
-        <p>${tr('Interface Sounds et UI Audio (CC0), sons des Starter Kits FPS et 3D Platformer (CC0) et du Starter Kit City Builder (licence MIT). Copies issues des portages de Hugo Locurcio.')}</p>
-        <p>${tr('SIL Open Font License, embarquée dans le jeu.')}</p>
-        <p><b>${tr('LICENCE MIT · STARTER KIT CITY BUILDER')}</b><br>${MIT_KENNEY}</p></details>`;
+    $('creditsClose').innerHTML = icon('back');
+    $('creditsContent').innerHTML = `<div class="cr-page" data-cr-page="credits">
+        <header class="cr-head"><div id="creditsWord"></div>
+          <p class="cr-sub">ORBITE · ${tr('prototype jouable en construction')} · ${VERSION_LABEL}</p></header>
+        ${creditsLines()}
+        <p class="cr-note">${tr('Cette fenêtre recevra les crédits complets, les contributeurs et les archives du projet au fil du développement.')}</p>
+        <button class="btn cr-switch" type="button" data-cr="licences">${tr('LICENCES')}</button>
+      </div>
+      <div class="cr-page" data-cr-page="licences" hidden>
+        <section class="cr-group"><h4>${tr('LICENCES')}</h4>
+          <p>${tr('Interface Sounds et UI Audio (CC0), sons des Starter Kits FPS et 3D Platformer (CC0) et du Starter Kit City Builder (licence MIT). Copies issues des portages de Hugo Locurcio.')}</p>
+          <p>${tr('SIL Open Font License, embarquée dans le jeu.')}</p>
+          <p class="cr-mit"><b>${tr('LICENCE MIT · STARTER KIT CITY BUILDER')}</b><br>${MIT_KENNEY}</p></section>
+        <button class="btn cr-switch" type="button" data-cr="credits">${icon('back')} ${tr('CRÉDITS')}</button>
+      </div>`;
+    creditsTitle();
     ov.hidden = false;
     document.body.classList.add('credits-open');
     SFX.on();
-    requestAnimationFrame(() => ov.classList.add('visible'));
+    creditsFit();
+    requestAnimationFrame(() => { ov.classList.add('visible'); pixelsIn($('creditsWord')); });
     creditsSpace(true);
+  }
+  // Le titre en pixels suit la largeur de l'écran (recalculé quand la fenêtre change de taille).
+  function creditsTitle(shown) {
+    const w = $('creditsWord');
+    if (!w) return;
+    pixelWord(w, tr('CRÉDITS'), pixelSize(5));
+    if (shown) w.classList.add('shown');
+  }
+  function creditsPage(name) {
+    for (const p of $('creditsContent').querySelectorAll('.cr-page')) p.hidden = p.dataset.crPage !== name;
+    creditsFit();
+  }
+  // Jamais de barre de défilement : si la page dépasse (petit téléphone, texte traduit plus long),
+  // elle se réduit juste assez pour tenir.
+  function creditsFit() {
+    const box = $('creditsContent'), page = box.querySelector('.cr-page:not([hidden])');
+    if (!page) return;
+    page.style.transform = '';
+    const k = Math.min(1, box.clientHeight / page.offsetHeight, box.clientWidth / page.offsetWidth);
+    if (k < 1) page.style.transform = `scale(${Math.floor(k * 1000) / 1000})`;
   }
   function closeCredits() {
     const ov = $('credits');
@@ -1463,6 +1493,11 @@
     draw(0);
   }
   listen('creditsClose', 'click', () => closeCredits());
+  listen('creditsContent', 'click', (e) => {
+    const b = e.target.closest('[data-cr]');
+    if (b) { SFX.tap(); creditsPage(b.dataset.cr); }
+  });
+  window.addEventListener('resize', () => { if (!$('credits').hidden) { creditsTitle(true); creditsFit(); creditsSpace(true); } });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCredits(); });
 
   async function settingsAction(v, btn) {
