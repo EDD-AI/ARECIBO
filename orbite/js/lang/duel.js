@@ -133,6 +133,25 @@
     // Volumes (v86)
     ['EFFETS', 'EFFECTS', 'EFECTOS', 'EFFEKTE', 'EFEITOS'],
     ['NOUVEAU', 'NEW', 'NUEVO', 'NEU', 'NOVO'],
+    // Lecteur de musique (v89)
+    ['Musique', 'Music', 'Música', 'Musik', 'Música'],
+    ['Morceau précédent', 'Previous track', 'Canción anterior', 'Vorheriger Titel', 'Faixa anterior'],
+    ['Morceau suivant', 'Next track', 'Canción siguiente', 'Nächster Titel', 'Próxima faixa'],
+    ['Lecture', 'Play', 'Reproducir', 'Abspielen', 'Tocar'],
+    ['Pause', 'Pause', 'Pausa', 'Pause', 'Pausa'],
+    // Astre de Glace renommé (v89)
+    ['Sérac', 'Serac', 'Serac', 'Serac', 'Serac'],
+    // Jeu caché (v89)
+    ['SCORE', 'SCORE', 'PUNTOS', 'PUNKTE', 'PONTOS'],
+    ['MEILLEUR', 'BEST', 'MEJOR', 'REKORD', 'RECORDE'],
+    ['VAGUE', 'WAVE', 'OLEADA', 'WELLE', 'ONDA'],
+    ['VAGUE {n}', 'WAVE {n}', 'OLEADA {n}', 'WELLE {n}', 'ONDA {n}'],
+    ['Glissez le doigt pour bouger : le tir est automatique.', 'Slide your finger to move: firing is automatic.', 'Desliza el dedo para moverte: el disparo es automático.', 'Wische mit dem Finger, um dich zu bewegen: Geschossen wird automatisch.', 'Deslize o dedo para mover: o tiro é automático.'],
+    ['← → pour bouger · Espace pour tirer · P pour la pause · Échap pour quitter', '← → to move · Space to fire · P to pause · Esc to quit', '← → para moverte · Espacio para disparar · P para pausar · Esc para salir', '← → zum Bewegen · Leertaste zum Schießen · P für Pause · Esc zum Beenden', '← → para mover · Espaço para atirar · P para pausar · Esc para sair'],
+    ['Défendez votre système !', 'Defend your system!', '¡Defiende tu sistema!', 'Verteidige dein System!', 'Defenda seu sistema!'],
+    ['PARTIE TERMINÉE', 'GAME OVER', 'FIN DE LA PARTIDA', 'SPIEL VORBEI', 'FIM DE JOGO'],
+    ['NOUVEAU RECORD !', 'NEW RECORD!', '¡NUEVO RÉCORD!', 'NEUER REKORD!', 'NOVO RECORDE!'],
+    ['PAUSE', 'PAUSE', 'PAUSA', 'PAUSE', 'PAUSA'],
     // Défier un ami depuis sa liste (v88)
     ['Hors ligne', 'Offline', 'Desconectado', 'Offline', 'Offline'],
     ['DÉFIS REÇUS', 'CHALLENGES RECEIVED', 'DESAFÍOS RECIBIDOS', 'ERHALTENE HERAUSFORDERUNGEN', 'DESAFIOS RECEBIDOS'],

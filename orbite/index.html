@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="orbite-version" content="88">
+<meta name="orbite-version" content="89">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -134,6 +134,8 @@
         <!-- La campagne (la Genèse) est masquée ; son bouton reste pour campagne-ui.js. -->
         <button class="menu-item" id="campBtn" hidden data-t>CAMPAGNE <small>LA GENÈSE</small></button>
       </nav>
+      <!-- Petit lecteur de musique (v89) : morceau précédent, lecture ou pause, nom, morceau suivant. -->
+      <div class="music-bar" id="musicBar" role="group" aria-label="Musique" data-t-attr="aria-label"></div>
       <p class="menu-foot" id="menuFoot">STUDIO EDDA</p>
     </section>
 
@@ -580,5 +582,6 @@
   <script src="js/multi-ui.js"></script>
   <script src="js/chat.js"></script>
   <script src="js/succes.js"></script>
+  <script src="js/invaders.js"></script>
 </body>
 </html>

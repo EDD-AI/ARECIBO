@@ -325,6 +325,34 @@ body.modal #gl { z-index: 35; }
   color: rgba(241, 236, 218, 0.28);
 }
 .menu-fade { opacity: 0; }
+/* Lecteur de musique du menu (v89). */
+.music-bar {
+  position: absolute;
+  bottom: calc(var(--safe-b) + 34px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100% - 32px);
+  color: var(--dim);
+}
+.mus-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0; background: none; border: 0; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mus-btn svg { width: 9px; height: 11px; fill: currentColor; }
+.mus-btn:hover, .mus-btn:focus-visible { color: var(--ink); }
+.mus-play { width: 30px; height: 30px; border: 1px solid var(--line); }
+.mus-play svg { width: 9px; height: 10px; }
+.music-bar.on .mus-play { color: var(--ink); border-color: var(--dim); }
+.mus-name { display: inline-flex; align-items: center; gap: 8px; min-width: 128px; justify-content: center; padding: 0 6px; font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.music-bar.on .mus-name { color: var(--ink); }
+/* Petit égaliseur en pixels, qui ne bouge que pendant la lecture. */
+.mus-eq { display: inline-flex; align-items: flex-end; gap: 1px; height: 8px; }
+.mus-eq i { display: block; width: 2px; height: 2px; background: currentColor; }
+.music-bar.on .mus-eq i { animation: musEq 0.9s steps(4) infinite; }
+.music-bar.on .mus-eq i:nth-child(2) { animation-delay: -0.3s; }
+.music-bar.on .mus-eq i:nth-child(3) { animation-delay: -0.6s; }
+@keyframes musEq { 0%, 100% { height: 2px; } 50% { height: 8px; } }
+@media (prefers-reduced-motion: reduce) { .music-bar.on .mus-eq i { animation: none; height: 6px; } }
 
 /* ─── Marché stellaire ────────────────────────────────────── */
 .screen-head .dust { margin-left: auto; font-size: 13px; }
@@ -657,6 +685,11 @@ canvas.sphere { display: block; image-rendering: pixelated; image-rendering: cri
 .energy i { width: 9px; height: 9px; border: 1px solid rgba(127, 216, 255, 0.35); }
 .energy i.on { background: var(--energy); border-color: var(--energy); box-shadow: 0 0 6px rgba(127, 216, 255, 0.5); }
 .energy i.spent { animation: spend 0.4s; }
+/* Énergie gagnée en vendant un astre doré (v89). */
+.energy i.on.gold { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 7px rgba(246, 196, 83, 0.75); animation: goldE 1.6s ease-in-out infinite; }
+@keyframes goldE { 50% { box-shadow: 0 0 11px rgba(246, 196, 83, 0.95); } }
+.pop.energy.gold { color: var(--gold); }
+.btn.sell-gold { border-color: var(--gold); }
 @keyframes spend { from { background: #fff; transform: scale(1.6); } }
 .energy b { margin-left: 8px; font-weight: 400; letter-spacing: 0.08em; }
 
@@ -1565,6 +1598,35 @@ button.pf-rank { grid-template-columns: 56px 1fr auto; width: 100%; font: inheri
 .chat-pop span { font-size: 17px; line-height: 1.3; color: var(--ink); overflow-wrap: anywhere; }
 .chat-pop.out { opacity: 0; transform: translateY(-8px); transition: opacity 0.5s, transform 0.5s; }
 @keyframes chatPop { from { opacity: 0; transform: translateY(-14px) scale(0.92); } }
+/* Jeu caché (v89, js/invaders.js) : un Space Invaders en pixels, au-dessus de tout. */
+.inv { position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center; padding: calc(var(--safe-t) + 8px) 12px calc(var(--safe-b) + 8px); background: rgba(0, 0, 0, 0.9); }
+.inv[hidden] { display: none; }
+.inv-box { display: flex; flex-direction: column; gap: 8px; max-width: 100%; animation: chatPop 0.3s cubic-bezier(.2, 1.3, .4, 1) both; }
+.inv-hud { display: flex; align-items: center; gap: 14px; font-size: 10px; letter-spacing: 0.2em; color: var(--dim); }
+.inv-hud b { margin-left: 6px; font-size: 13px; font-weight: 500; letter-spacing: 0.08em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.inv-hud .inv-best b { color: var(--gold); }
+.inv-x { margin-left: auto; width: 34px; height: 34px; font: inherit; font-size: 20px; line-height: 1; color: var(--ink); background: none; border: 1px solid var(--line); cursor: pointer; }
+.inv-timer { font-size: 11px; letter-spacing: 0.2em; text-align: center; color: var(--energy); }
+.inv-timer[hidden] { display: none; }
+.inv-timer.hurry { color: var(--hp); animation: invBlink 0.5s steps(2) infinite; }
+@keyframes invBlink { 50% { opacity: 0.4; } }
+.inv-screen { position: relative; border: 1px solid var(--line); touch-action: none; user-select: none; -webkit-user-select: none; }
+.inv-screen canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+/* Lignes d'écran discrètes, comme une vieille borne. */
+.inv-screen::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, 0.16) 2px 3px); }
+.inv-msg { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; text-align: center; }
+.inv-msg[hidden] { display: none; }
+.inv-msg.title { justify-content: flex-start; padding: 12% 16px 14%; }
+.inv-msg.over, .inv-msg.pause { background: rgba(0, 0, 0, 0.62); }
+.inv-msg h3 { margin: 0; font-size: 14px; font-weight: 500; letter-spacing: 0.3em; color: var(--ink); }
+.inv-msg p { margin: 0; font-size: 12px; letter-spacing: 0.08em; color: var(--dim); }
+.inv-msg .inv-score { font-size: 30px; font-weight: 600; letter-spacing: 0.1em; color: var(--ink); }
+.inv-msg .inv-record { color: var(--gold); letter-spacing: 0.2em; }
+.inv-msg .btn { width: auto; padding: 0 22px; }
+.inv-gap { flex: 1; }
+.inv-acts { display: flex; gap: 8px; }
+.inv-title rect { fill: var(--gold); }
+.inv-help { margin: 0; font-size: 11px; letter-spacing: 0.04em; text-align: center; color: var(--dim); }
 /* Défi d'un ami (v88) : une bulle qui reste jusqu'à la réponse, et la liste d'amis à défier. */
 .defi-pops { position: fixed; top: calc(var(--safe-t) + 12px); left: 50%; transform: translateX(-50%); z-index: 47; display: flex; flex-direction: column; gap: 6px; width: min(92vw, 460px); pointer-events: none; }
 .defi-pop { pointer-events: auto; display: flex; align-items: center; gap: 8px; padding: 10px 10px 10px 14px; background: rgba(8, 8, 10, 0.96); border: 1px solid var(--gold); box-shadow: 0 0 26px rgba(246, 196, 83, 0.3); animation: chatPop 0.35s cubic-bezier(.2, 1.4, .4, 1) both; }
@@ -1595,7 +1657,9 @@ body.mp-game .chat-btn { display: inline-flex; }
 .mp-seat b { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mp-seat small { font-size: 10px; letter-spacing: 0.08em; color: var(--dim); }
 .mp-laws { display: flex; flex-direction: column; gap: 8px; }
-.mp-law { display: flex; flex-direction: column; gap: 4px; padding: 12px; font: inherit; color: var(--ink); text-align: left; background: rgba(241, 236, 218, 0.03); border: 1px solid var(--faint); border-left: 3px solid var(--c); }
+.mp-law { display: flex; align-items: center; gap: 12px; padding: 12px; font: inherit; color: var(--ink); text-align: left; background: rgba(241, 236, 218, 0.03); border: 1px solid var(--faint); border-left: 3px solid var(--c); }
+.mp-law .sphere { flex: none; width: 64px; height: 64px; }
+.mp-law-txt { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .mp-law.on { border-color: var(--c); background: rgba(241, 236, 218, 0.08); }
 .mp-law b { font-size: 15px; font-weight: 600; }
 .mp-law small { font-size: 12px; color: var(--dim); line-height: 1.4; }

@@ -237,7 +237,9 @@
     { id: 'comete', fam: 'glace', tier: 2, atk: 3, hp: 3, name: 'Comète', kw: ['bouclier'], look: { type: 'ice', seed: 3434, shape: 'double' },
       text: 'Bouclier. Effondrement : un allié aléatoire gagne Bouclier.',
       death(c, u) { c.kw(c.rnd(c.allies(u.side).filter((v) => !v.kw.includes('bouclier'))), 'bouclier'); } },
-    { id: 'cristal', fam: 'glace', tier: 3, atk: 4, hp: 5, name: 'Cristal', kw: ['bouclier'], look: { type: 'crystal', seed: 3535, hueShift: -60 },
+    // Sérac (v89, ex-« Cristal », trop proche de la famille Cristal) : un monde de glace fracturé au cœur
+    // bleu. L'identifiant « cristal » reste pour les sauvegardes et les parties en ligne.
+    { id: 'cristal', fam: 'glace', tier: 3, atk: 4, hp: 5, name: 'Sérac', kw: ['bouclier'], look: { type: 'ice', seed: 3536, shape: 'brisee', coreHue: 195 },
       text: 'Bouclier. Début de combat : vos astres de Glace gagnent +{1} Attaque.',
       start(c, u, m) { for (const v of c.alliesFam(u.side, 'glace')) c.buff(v, m, 0); } },
     { id: 'banquise', fam: 'glace', tier: 3, atk: 3, hp: 6, name: 'Banquise', kw: ['rempart', 'bouclier'], look: { type: 'ice', seed: 3636, ring: true },
@@ -727,7 +729,8 @@
     return (state.event === 'abondance' ? 1 : 0) + (hasRelic(p, 'tresor') ? 1 : 0) + (p.law === 'sacrifice' && p.awake ? 1 : 0);
   }
   const shopSize = (state, p) => Math.min(7, SHOP_SIZE[p.tier] + (state.event === 'feconde' ? 1 : 0) + (hasRelic(p, 'longuevue') ? 1 : 0));
-  const sellGain = (state, p) => 1 + (state.event === 'recyclage' ? 1 : 0) + (hasRelic(p, 'comptoir') ? 1 : 0);
+  // Un astre doré se revend une énergie de plus (v89).
+  const sellGain = (state, p, u) => 1 + (u && u.golden ? 1 : 0) + (state.event === 'recyclage' ? 1 : 0) + (hasRelic(p, 'comptoir') ? 1 : 0);
   const powerCost = (p) => (p.law === 'ingenierie' && p.awake ? 0 : (LAW[p.law].active || {}).cost || 0);
 
   // ─── Contexte de création ────────────────────────────────────
@@ -1128,8 +1131,12 @@
     const x = shopCtx(state, p);
     hook(u, 'sold', x);
     releaseUnit(state, u);
-    p.gold = Math.min(99, p.gold + sellGain(state, p));
-    return { ok: true, events: x.events };
+    const gain = sellGain(state, p, u);
+    // L'énergie en plus d'un doré s'affiche en doré (p.goldE) tant qu'elle n'est pas dépensée :
+    // on ne garde d'abord que celle qui reste, puis on ajoute la nouvelle.
+    if (u.golden) p.goldE = Math.min(p.goldE || 0, p.gold) + 1;
+    p.gold = Math.min(99, p.gold + gain);
+    return { ok: true, events: x.events, gain, golden: !!u.golden };
   }
 
   function roll(state, p) {
@@ -1280,6 +1287,7 @@
   // ─── Début et fin de cycle ──────────────────────────────────
   function startTurn(state, p) {
     p.gold = Math.min(MAX_GOLD, state.round + 2 + (p.law === 'sacrifice' ? 1 : 0));
+    p.goldE = 0;
     p.discount += 1;
     p.powerUsed = false;
     p.rolls = 0;

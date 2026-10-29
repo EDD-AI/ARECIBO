@@ -711,7 +711,8 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
   l’écran, le téléphone vibre à chaque seconde, jusqu’au combat.
 - **Déroulement** :
   - Chacun choisit une loi parmi trois, en 20 secondes, dans les familles de la partie (les mêmes
-    pour tous).
+    pour tous). Depuis la v89, chaque loi montre la forme de son énergie, comme en solo ; la liste
+    n’est dessinée qu’une fois, seul le compte à rebours change (`renderLaws`, js/multi-ui.js).
   - Personne ne peut passer : un minuteur commun cadence la partie. La boutique est courte au
     début pour jouer vite (v80) : 25 s au cycle 1, 35 s au cycle 2, 50 s au cycle 3, puis 60 s,
     65 s, 70 s et 75 s au plus ; le bouton de combat affiche le compte à rebours et le tour
@@ -808,7 +809,7 @@ fiche de chaque astre les choisit avec `look.shape` dans `js/rules.js`.
 | Forme | Astres |
 |---|---|
 | Comète (noyau de glace, queue soufflée à l’opposé de l’étoile) | Halley, Encke, Hale-Bopp, Hyakutake ; Météore et Ison en feu |
-| Planète brisée (morceaux écartés, cœur qui brûle dans les fissures) | Vestige (violet), Géode (vert), Forge stellaire (orange) |
+| Planète brisée (morceaux écartés, cœur qui brûle dans les fissures) | Vestige (violet), Géode (vert), Forge stellaire (orange), Sérac (glace, cœur bleu) |
 | Astéroïde double (deux lobes soudés) | Tchouri, Agate, Écho, Ossuaire, Comète (glace) |
 | Amas de cristaux (piquants) | Améthyste, Obsidienne (verre noir), Spore (Envers) |
 | Bipyramide | Diamant, Saphir, Émeraude, Foreuse, Sonde |
@@ -841,6 +842,14 @@ Détail des sons dans `audio/README.md`. Le numéro de version s’affiche toujo
 (titre, bas du menu, Paramètres).
 
 ## Musique
+
+**Lecteur du menu** (v89) : en bas du menu, ◀ et ▶ changent de morceau, le bouton du milieu lance ou
+met en pause, et le nom du morceau s’affiche (un petit égaliseur en pixels bouge pendant la lecture).
+Les quatre morceaux s’appellent **ARECIBO** (le thème de l’ancien jeu), **Odyssée**, **Space Marianne**
+et **Nuclear** (`TRACKS` dans js/sfx.js, dans cet ordre : arecibo1, earth, arecibo2, menu). Le morceau
+choisi est retenu (`orbite.piste`). Lancer la lecture rallume le son s’il était coupé, et remet la
+musique à 60 % si son curseur était à zéro.
+
 
 Quatre thèmes, qui se suivent l’un après l’autre :
 1. le **thème principal d’ARECIBO** (`audio/arecibo1.mp3`), composé par **Victor Desrat** ;
@@ -891,6 +900,22 @@ déclics mécaniques, avec une touche sci-fi discrète. Les bruitages viennent d
 
 Les sons se chargent quand la page est servie en HTTP(S). Ouverte directement depuis un fichier,
 la page garde les anciens sons synthétisés.
+
+## Jeu caché : INVADERS (v89)
+
+Le code Konami ouvre un Space Invaders en pixels, aux couleurs d’ORBITE, au menu comme en pleine
+partie (`js/invaders.js`) :
+- au clavier : ↑ ↑ ↓ ↓ ← → ← → B A ;
+- au doigt : glisser vers le haut, le haut, le bas, le bas, la gauche, la droite, la gauche, la
+  droite, puis toucher deux fois l’écran (2,5 s au plus entre deux gestes).
+
+Cinq rangées de huit envahisseurs (30, 20 et 10 points), une soucoupe mystère (50 à 300), quatre
+abris qui s’effritent, trois vies, des vagues de plus en plus rapides. Au clavier : ← → (ou A/Q et
+D) pour bouger, Espace pour tirer, P pour la pause, Échap pour quitter. Au doigt : glisser bouge le
+vaisseau, le tir part tout seul. Les sons sont synthétisés (`SFX.chip`, `SFX.hiss`) et suivent le
+curseur des effets. Le terrain fait 192 × 240 pixels, agrandis d’un nombre entier de pixels de la
+toile pour rester nets. En partie en ligne, le temps de boutique reste affiché en haut. Le meilleur
+score est gardé dans `orbite.invaders`.
 
 ## Sur un écran de PC (16:9, v81)
 
@@ -1001,7 +1026,7 @@ En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 | Copies par astre | niveau 1 : 16 · 2 : 15 · 3 : 13 · 4 : 11 · 5 : 9 · 6 : 7 |
 | Création | 3 / 4 / 4 / 5 / 5 / 6 astres selon le niveau (1 à 6) |
 | Énergie | 3 au premier cycle, +1 par cycle, maximum 10 |
-| Coûts | acheter 3 · vendre +1 · actualiser 1 · geler gratuit |
+| Coûts | acheter 3 · vendre +1 (+2 pour un astre doré, v89) · actualiser 1 · geler gratuit |
 | Montée de niveau | 5 / 7 / 8 / 9 / 10, −1 à chaque cycle sans monter |
 | Système / main | **2 rangées de 4** (7 astres au plus) / 10 astres |
 | PV de départ | 30, **doublés en duel** (60 ; les lois de vie aussi : 44, 90, 50 et renaissance à 30) |
