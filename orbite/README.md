@@ -402,6 +402,7 @@ reste équitable.
   | Recharger le rover quand sa batterie est vide | 1 |
   | Un fond animé (ou 2 000 poussières) | 25 |
   | Un cadre de profil (ou 2 000 poussières) | 15 |
+  | Une photo de profil (graines seulement) | 5 à 650 |
 
 - **Boutique** (Marché stellaire → GRAINES) : une vitrine animée (la graine flotte dans son halo),
   une **offre de bienvenue** unique (40 graines pour 1,99 €, le double du tarif de base), puis
@@ -449,6 +450,14 @@ Deux onglets : **Ma planète** (les 24 améliorations décrites plus haut) et **
   `orbite.cosmetiques`) est publié dans `forge.frame` du profil public, que les règles Firestore
   laissent libre : vos amis le voient dans leur liste d’amis, le classement et votre fiche, sans
   règle à republier. « Sans cadre » le retire.
+- **Photos de profil** (v92, graines de vie seulement) : un astre remplace votre planète comme avatar,
+  au bouton profil du menu, en tête du profil et chez vos amis (liste d’amis, classement, fiche).
+  Astéroïde 5, Lune grise 10, Planète désertique 20, Monde tellurique 30, Monde océan 50, Monde de
+  glace 75, Géante gazeuse 110, Monde de lave 160, Monde habitable 230, Monde cristallin 320, Géante
+  bleue 450, Éclipse 550, Trou noir 650 (les trois plus chères ont un liseré doré). Dessinés en mode
+  compact pour tenir dans un petit avatar ; publiés dans `forge.avatar` du profil public, comme le
+  cadre. « Ma planète » revient à l’avatar d’origine. La liste des cosmétiques est une zone de
+  découpe (`data-clipbox`) : les astres qui défilent ne débordent plus sur l’en-tête.
 
 ## Création
 
@@ -1130,7 +1139,9 @@ Les anciennes sauvegardes continuent : sans `relics`, `awake` ni `event`, rien n
 
 ## Missions du jour (v91)
 
-Bouton **MISSIONS DU JOUR** du menu principal (`js/missions.js`). Chaque jour, trois missions : une
+Encart **MISSIONS** en haut à gauche du menu (`js/missions.js`, v92) : sur téléphone il affiche « 0 / 3 » et
+ouvre la feuille des missions ; sur PC les missions y sont dépliées en permanence, avec leurs boutons.
+Sans texte d’explication : le titre, le temps restant avant minuit et les missions. Chaque jour, trois missions : une
 facile, une moyenne et une difficile, tirées pour chaque joueur (jour + tag) et renouvelées à minuit.
 
 | Niveau | Missions (récompense en poussières) |
@@ -1141,7 +1152,7 @@ facile, une moyenne et une difficile, tirées pour chaque joueur (jour + tag) et
 
 Elles avancent à la fin de chaque partie terminée (`recordGame` → `OrbiteMissions.record`) ; un
 abandon ne compte pas. Une annonce signale chaque mission accomplie ; la récompense se récupère dans
-la feuille des missions (le bouton du menu clignote en doré). Une mission non accomplie peut être
+la feuille des missions ou l’encart déplié (l’encart s’entoure d’or quand une récompense attend). Une mission non accomplie peut être
 changée une fois par jour (même niveau, jamais une mission déjà proposée). État dans
 `orbite.missions` (synchronisé avec la sauvegarde en ligne). Tests : `tests/missions.test.mjs`.
 Le nom « Défi du jour » reste celui du mode Solo (la même partie pour tous).

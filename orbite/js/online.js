@@ -218,7 +218,8 @@
     const star = forge && forge.star ? { seed: forge.star.seed >>> 0, lit: !!forge.star.lit, cls: String(forge.star.cls || ''), size: forge.star.size | 0 } : null;
     // Le cadre de profil (v90) voyage dans « forge », que les règles Firestore laissent libre : pas
     // de règle à republier pour que les amis le voient.
-    const frame = String((read('orbite.cosmetiques', {}) || {}).frame || '').slice(0, 16);
+    const cos = read('orbite.cosmetiques', {}) || {};
+    const frame = String(cos.frame || '').slice(0, 16), avatar = String(cos.avatar || '').slice(0, 16);
     return {
       pseudo: String(localStorage.getItem('orbite.pseudo') || 'Créateur').slice(0, 16),
       tag: String(localStorage.getItem('orbite.tag') || '').slice(0, 6),
@@ -229,7 +230,7 @@
       games: st.games | 0,
       wins: st.wins | 0,
       world: (read('orbite.monde', []) || []).slice(0, 30),
-      forge: { star, planets, frame },
+      forge: { star, planets, frame, avatar },
       seen: Date.now(),
       where: whereNow()
     };

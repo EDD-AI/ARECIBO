@@ -8,6 +8,7 @@
     // Menu
     ['JOUER <small>SOLO · MULTIJOUEUR</small>', 'PLAY <small>SOLO · MULTIPLAYER</small>', 'JUGAR <small>SOLO · MULTIJUGADOR</small>', 'SPIELEN <small>SOLO · MEHRSPIELER</small>', 'JOGAR <small>SOLO · MULTIJOGADOR</small>'],
     ['CODEX <small>TOUS LES ASTRES</small>', 'CODEX <small>EVERY ORB</small>', 'CÓDICE <small>TODOS LOS ASTROS</small>', 'KODEX <small>ALLE GESTIRNE</small>', 'CÓDICE <small>TODOS OS ASTROS</small>'],
+    ['CODEX', 'CODEX', 'CÓDICE', 'KODEX', 'CÓDICE'],
     ['SOLO <small>CONTRE L’IA</small>', 'SOLO <small>AGAINST THE AI</small>', 'SOLO <small>CONTRA LA IA</small>', 'SOLO <small>GEGEN DIE KI</small>', 'SOLO <small>CONTRA A IA</small>'],
     ['RETOUR', 'BACK', 'VOLVER', 'ZURÜCK', 'VOLTAR'],
     ['DUEL <small>1 CONTRE 1</small>', 'DUEL <small>1 VS 1</small>', 'DUELO <small>1 CONTRA 1</small>', 'DUELL <small>1 GEGEN 1</small>', 'DUELO <small>1 CONTRA 1</small>'],

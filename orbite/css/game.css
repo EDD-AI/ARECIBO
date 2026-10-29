@@ -326,8 +326,27 @@ body.modal #gl { z-index: 35; }
 }
 .menu-fade { opacity: 0; }
 /* Missions du jour (v91). */
-#missionsBtn.mi-ready small { color: var(--gold); }
-#missionsBtn.mi-ready::after { content: ''; position: absolute; top: 10px; right: calc(50% - 96px); width: 6px; height: 6px; background: var(--gold); box-shadow: 0 0 8px var(--gold); animation: invBlink 1s steps(2) infinite; }
+.mission-box {
+  position: absolute; top: calc(var(--safe-t) + 12px); left: 12px; z-index: 2;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  padding: 6px 10px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.5); cursor: pointer;
+  transition: opacity 1.2s ease;
+}
+.mission-box > b, .mission-box .mb-head b { font-size: 11px; font-weight: 500; letter-spacing: 0.2em; }
+.mission-box > small { font-size: 9px; letter-spacing: 0.2em; color: var(--dim); }
+.mission-box.mi-ready { border-color: var(--gold); box-shadow: 0 0 10px rgba(246, 196, 83, 0.35); }
+.mission-box.mi-ready > small { color: var(--gold); }
+.menu-top.menu-fade ~ .mission-box { opacity: 0; pointer-events: none; }
+/* Sur PC, les missions sont dépliées en permanence. */
+.mission-box.open { width: 290px; padding: 10px 12px; cursor: default; }
+.mission-box.open .mb-head { display: flex; justify-content: space-between; align-items: baseline; width: 100%; }
+.mission-box.open .mi-list { width: 100%; margin: 6px 0 0; gap: 6px; }
+.mission-box.open .mi-row { padding: 8px; gap: 8px; }
+.mission-box.open .mi-txt b { font-size: 12px; }
+.mission-box.open .mi-act .btn { min-height: 30px; padding: 0 8px; font-size: 10px; }
+.mi-sheet-head { display: flex; justify-content: space-between; align-items: baseline; }
+.mi-sheet-head b { font-weight: inherit; }
+.mi-clock { font-size: 11px; letter-spacing: 0.08em; color: var(--dim); }
 .mi-list { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
 .mi-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--faint); border-left: 3px solid var(--t); }
 .mi-row.done { border-color: var(--gold); border-left-color: var(--gold); background: rgba(246, 196, 83, 0.06); }
@@ -1818,6 +1837,10 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .cos-fr { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; }
 .cos-fr i { position: relative; display: block; width: 30px; height: 30px; background: radial-gradient(circle at 35% 35%, #8fb7d8, #2a4a6a 55%, #0a1420 75%); border: 1px solid var(--faint); }
 .cos-note { margin: 0 0 6px; }
+/* Photos de profil (v92) : l'astre lui-même ; les plus chères ont un liseré doré. */
+.cos-av { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; }
+.cos-av .orb { width: 46px; height: 46px; }
+.cos-avatar-row.rare { border-left: 2px solid var(--gold); background: linear-gradient(90deg, rgba(246, 196, 83, 0.07), transparent 60%); }
 .cos-buy { display: flex; flex-direction: column; gap: 4px; }
 .cos-buy .btn { min-height: 34px; padding: 0 10px; }
 .fg-seedfeed { margin-top: 6px; min-height: 36px; font-size: 12px; }
