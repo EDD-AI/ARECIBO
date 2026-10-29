@@ -439,7 +439,8 @@ float asteroidR(vec3 dir) {
 
 // Silhouettes non sphériques, tracées par marche de rayon dans le repère de l'astre :
 // 1 astéroïde, 2 double (deux lobes soudés), 3 planète brisée, 4 amas de cristaux,
-// 5 anneau-monde, 6 bloc (cube, monolithe), 7 bipyramide (diamant, foret).
+// 5 anneau-monde, 6 bloc (cube, monolithe), 7 bipyramide (diamant, foret), 8 radiotélescope,
+// 9 fendue en deux.
 int shapeKind() { return uShape > 0 ? uShape : (uType == 7 ? 1 : 0); }
 float smin(float a, float b, float k) { float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0); return mix(b, a, h) - k * h * (1.0 - h); }
 vec3 spikeDir(int i) { return normalize(hash33(uSeed + float(i) * 7.31) * 2.0 - 1.0); }
@@ -470,6 +471,15 @@ float shapeSDF(vec3 q, out float cut) {
   }
   vec3 b = rotY(uTilt * q, -uSpin);
   if (k == 3) return brokenSDF(b, cut);
+  if (k == 9) {
+    // Fendue en deux : deux hémisphères écartés de part et d'autre de l'équateur ; cut > 0.5 sur la cassure.
+    float sd = b.y >= 0.0 ? 1.0 : -1.0;
+    vec3 l = b - vec3(0.0, sd * uSh.x, 0.0);
+    float ds = length(l) - 1.0;
+    float dp = -sd * l.y - 0.012;
+    cut = dp > ds ? 1.0 : 0.0;
+    return max(ds, dp);
+  }
   float lump = uSh2.x > 0.0 ? uSh2.x * fbm(normalize(b) * uSh2.y + uSeed + 11.0, 3) : 0.0;
   if (k == 2) {
     float a = length(b - vec3(uSh.x, 0.0, 0.0)) - uSh.y;
