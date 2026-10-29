@@ -17,12 +17,17 @@
   const msgs = () => (match() && Array.isArray(match().chat) ? match().chat : []);
   const free = () => !!match() && match().mode === 'private';
   const textOf = (m) => (m.q != null && QUICK[m.q] ? tr(QUICK[m.q]) : String(m.text || ''));
+  // Le nom de l'auteur dans la police de son pseudo, lue à sa place du salon (v96).
+  const who = (m) => {
+    const seat = match() && Array.isArray(match().seats) ? match().seats.find((x) => x && x.uid === m.uid) : null;
+    return seat && A.seatLook ? A.nameHtml(m.name || '?', A.seatLook(seat).font) : esc(m.name || '?');
+  };
   const clean = (s) => String(s || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
 
   function listHtml(n) {
     const list = msgs().slice(-n);
     if (!list.length) return `<p class="chat-empty">${tr('Aucun message pour l’instant.')}</p>`;
-    return list.map((m) => `<p class="chat-msg ${m.uid === ON.uid() ? 'me' : ''}"><b>${esc(m.name || '?')}</b> ${esc(textOf(m))}</p>`).join('');
+    return list.map((m) => `<p class="chat-msg ${m.uid === ON.uid() ? 'me' : ''}"><b>${who(m)}</b> ${esc(textOf(m))}</p>`).join('');
   }
   // Le bloc complet : la liste, les messages rapides et, entre amis, la saisie libre.
   function html(n) {
@@ -84,7 +89,7 @@
   function popMsg(m) {
     const d = document.createElement('div');
     d.className = 'chat-pop';
-    d.innerHTML = `<b>${esc(m.name || '?')}</b><span>${esc(textOf(m))}</span>`;
+    d.innerHTML = `<b>${who(m)}</b><span>${esc(textOf(m))}</span>`;
     pops.appendChild(d);
     while (pops.children.length > 3) pops.firstChild.remove();
     setTimeout(() => d.classList.add('out'), 4500);

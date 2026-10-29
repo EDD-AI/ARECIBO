@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 95;
+  const VERSION = 96;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -790,7 +790,7 @@
     $('menuDust').innerHTML = icon('dust') + ' ' + dust();
     if (typeof renderCreationBtn === 'function') renderCreationBtn();
     const lv = levelInfo(xpTotal());
-    $('pfName').textContent = pseudo();
+    $('pfName').innerHTML = nameHtml(pseudo(), myFont());
     $('pfLvl').innerHTML = `${tr('NIV. {n}', { n: lv.lvl })}<i class="xp-mini"><i style="width:${(lv.rest / lv.need * 100).toFixed(1)}%"></i></i>`;
     pixelWord($('menuWord'), 'ORBITE', pixelSize(4));
     $('menuWord').classList.add('shown');
@@ -1003,11 +1003,11 @@
 
   // ─── Cosmétiques : fonds animés de partie ────────────────────
   const COS_KEY = 'orbite.cosmetiques';
-  // Prix d'un cosmétique : 2 000 poussières, ou en graines de vie 25 pour un fond animé et 15 pour
-  // un cadre de profil (v91).
+  // Prix d'un cosmétique : 2 000 poussières, ou en graines de vie 25 pour un fond animé, 15 pour
+  // un cadre de profil (v91) et 10 pour une police de pseudo (v96).
   const COS_PRICE = 2000;
-  const SKY_SEEDS = 25, FRAME_SEEDS = 15;
-  const seedPrice = (k) => (k.avatar ? k.seeds : k.frame ? FRAME_SEEDS : SKY_SEEDS);
+  const SKY_SEEDS = 25, FRAME_SEEDS = 15, FONT_SEEDS = 10;
+  const seedPrice = (k) => (k.avatar ? k.seeds : k.frame ? FRAME_SEEDS : k.font ? FONT_SEEDS : SKY_SEEDS);
   const SKIES = [
     { id: 'nebuleuse', mode: 1, name: tr('Nébuleuse pourpre'), text: tr('Des nuages roses et violets traversés de filaments sombres, autour d’un cœur brûlant.'), c: ['#c2457f', '#2a0a3c'] },
     { id: 'aurore', mode: 2, name: tr('Aurore boréale'), text: tr('Des voiles verts et roses dansent au-dessus des montagnes et se reflètent dans un lac.'), c: ['#2fd18a', '#071a22'] },
@@ -1050,7 +1050,24 @@
   for (const a of AVATARS) stage.register(a.id, a.look);
   const myAvatar = () => { const a = cosmetics().avatar; return AVATAR_BY_ID[a] ? a : ''; };
   const avatarOf = (p) => { const a = p && p.forge && p.forge.avatar; return AVATAR_BY_ID[a] ? a : ''; };
-  const cosItem = (id) => SKY_BY_ID[id] || FRAME_BY_ID[id] || AVATAR_BY_ID[id] || null;
+  // Polices du pseudo (v96) : des polices pixel (css/fonts.css), au menu, au profil, en partie, et
+  // chez les autres joueurs (forge.font du profil public, et la place de chacun au salon en ligne).
+  const FONTS = [
+    { id: 'arcade', font: true, name: tr('Arcade'), text: tr('Les grosses lettres carrées des bornes d’arcade.') },
+    { id: 'terminal', font: true, name: tr('Terminal'), text: tr('Un vieil écran vert de console.') },
+    { id: 'serigraphie', font: true, name: tr('Sérigraphie'), text: tr('Des capitales nettes et serrées.') },
+    { id: 'pixel', font: true, name: tr('Pixel'), text: tr('Des lettres rondes, en gros pixels.') },
+    { id: 'stade', font: true, name: tr('Stade'), text: tr('Comme un nom floqué sur un maillot.') },
+    { id: 'mini', font: true, name: tr('Minuscule'), text: tr('De petits pixels bien alignés.') },
+    { id: 'matrice', font: true, name: tr('Matrice'), text: tr('Des points lumineux, comme un panneau d’affichage.') },
+    { id: 'cathode', font: true, name: tr('Cathodique'), text: tr('Les lignes d’un écran à tube.') }
+  ];
+  const FONT_BY_ID = Object.fromEntries(FONTS.map((k) => [k.id, k]));
+  const myFont = () => { const f = cosmetics().font; return FONT_BY_ID[f] ? f : ''; };
+  const fontOf = (p) => { const f = p && p.forge && p.forge.font; return FONT_BY_ID[f] ? f : ''; };
+  // Un pseudo dans sa police ; texte échappé, sans police : le texte seul.
+  const nameHtml = (name, f) => (FONT_BY_ID[f] ? `<span class="nf" data-nf="${f}">${esc(name)}</span>` : esc(name));
+  const cosItem = (id) => SKY_BY_ID[id] || FRAME_BY_ID[id] || AVATAR_BY_ID[id] || FONT_BY_ID[id] || null;
   // Le cadre porté par un joueur (le nôtre, ou celui du profil public d'un ami) ; '' sans cadre.
   const myFrame = () => { const f = cosmetics().frame; return FRAME_BY_ID[f] ? f : ''; };
   const frameOf = (p) => { const f = p && p.forge && p.forge.frame; return FRAME_BY_ID[f] ? f : ''; };
@@ -1088,6 +1105,13 @@
         <span class="cos-av"><span class="orb" data-planet="${k.id || 'world-mini'}"></span></span>
         <span class="cos-txt"><b>${esc(k.name)}</b>${k.id ? '' : `<small>${tr('Votre planète, celle du Marché stellaire.')}</small>`}</span>${btn}</div>`;
     };
+    // Une police : votre pseudo écrit avec elle, puis acheter, équiper, ou « équipé ».
+    const fontRow = (k) => {
+      const owned = !k.id || c.owned.includes(k.id), on = (c.font || '') === (k.id || '');
+      const btn = on ? `<span class="cos-on">${tr('ÉQUIPÉ')}</span>` : owned ? `<button class="btn" data-cos-equip="${k.id || ''}" data-kind="font">${tr('ÉQUIPER')}</button>` : buyBtn(k);
+      return `<div class="cos-row cos-font-row">
+        <span class="cos-txt"><b class="cos-font-name">${nameHtml(pseudo(), k.id)}</b><small>${esc(k.name)} · ${esc(k.text)}</small></span>${btn}</div>`;
+    };
     const row = (k) => {
       const owned = !k.id || c.owned.includes(k.id), on = (c.on || '') === (k.id || ''), sel = ui.cosPick === (k.id || '');
       let btn;
@@ -1104,6 +1128,8 @@
       frameRow({ id: '', name: tr('Sans cadre'), text: tr('Votre profil tel qu’au premier jour.') }) + FRAMES.map(frameRow).join('') +
       `<h4>${tr('PHOTOS DE PROFIL')}</h4><p class="mk-note cos-note">${tr('Un astre à la place de votre planète, au menu, au profil et chez vos amis. En graines de vie seulement.')}</p>` +
       avatarRow({ id: '', name: tr('Ma planète') }) + AVATARS.map(avatarRow).join('') +
+      `<h4>${tr('POLICES DU PSEUDO')}</h4><p class="mk-note cos-note">${tr('Votre pseudo écrit en pixels, au menu, au profil, en partie, et chez les autres joueurs.')}</p>` +
+      fontRow({ id: '', name: tr('Classique'), text: tr('La police du jeu.') }) + FONTS.map(fontRow).join('') +
       (dust() < COS_PRICE ? `<p class="mk-note">${tr('Vous avez {n} poussières d’étoiles. Un duel gagné ou un podium en rapporte.', { n: dust() })}</p>` : '');
   }
   // Aperçu de l'onglet Création : une planète détaillée qui change à chaque visite.
@@ -1214,14 +1240,15 @@
         addDust(-COS_PRICE);
       }
       c.owned.push(k.id);
-      if (k.avatar) c.avatar = k.id; else if (k.frame) c.frame = k.id; else c.on = k.id;
+      if (k.avatar) c.avatar = k.id; else if (k.frame) c.frame = k.id; else if (k.font) c.font = k.id; else c.on = k.id;
       saveCosmetics(c);
       SFX.golden();
       const [x, y] = center(buy);
       stage.burst(x, y, { n: 40, colors: [[246, 196, 83], [255, 255, 255]], speed: 90, life: 0.8 });
       $('marketDust').innerHTML = wallet();
-      toast(k.avatar ? tr('{name} : votre nouvelle photo de profil.', { name: k.name }) : k.frame ? tr('{name} : votre nouveau cadre.', { name: k.name }) : tr('{name} : équipé pour vos parties.', { name: k.name }), 2600);
-      if (k.frame || k.avatar) { renderCosmetics(); $('marketDust').innerHTML = wallet(); return; }
+      toast(k.avatar ? tr('{name} : votre nouvelle photo de profil.', { name: k.name }) : k.frame ? tr('{name} : votre nouveau cadre.', { name: k.name })
+        : k.font ? tr('{name} : la nouvelle police de votre pseudo.', { name: k.name }) : tr('{name} : équipé pour vos parties.', { name: k.name }), 2600);
+      if (k.frame || k.avatar || k.font) { renderCosmetics(); $('marketDust').innerHTML = wallet(); return; }
     } else if (eq) {
       SFX.place();
       if (eq.dataset.kind === 'avatar') {
@@ -1235,6 +1262,13 @@
         c.frame = eq.dataset.cosEquip;
         saveCosmetics(c);
         toast(c.frame ? tr('{name} : équipé.', { name: FRAME_BY_ID[c.frame].name }) : tr('Cadre retiré.'), 2000);
+        renderCosmetics();
+        return;
+      }
+      if (eq.dataset.kind === 'font') {
+        c.font = eq.dataset.cosEquip;
+        saveCosmetics(c);
+        toast(c.font ? tr('{name} : équipé.', { name: FONT_BY_ID[c.font].name }) : tr('Votre pseudo reprend la police du jeu.'), 2000);
         renderCosmetics();
         return;
       }
@@ -1313,7 +1347,7 @@
       <div class="pf-id ${myFrame() ? 'pframe' : ''}" ${myFrame() ? `data-frame="${myFrame()}"` : ''}>
         <div class="orb pf-planet" data-planet="${myAvatar() || 'world-mini'}"></div>
         <div class="pf-who">
-          <div class="pf-name-row" id="pfNameRow"><button class="pf-name" data-pf="rename">${esc(pseudo())}<span>#${playerTag()}</span></button></div>
+          <div class="pf-name-row" id="pfNameRow"><button class="pf-name" data-pf="rename">${nameHtml(pseudo(), myFont())}<span>#${playerTag()}</span></button></div>
           <span class="pf-lvl">${tr('NIVEAU {n}', { n: lv.lvl })} · ${esc(W.stageName(list))}</span>
           <div class="xp-bar"><i style="width:${(lv.rest / lv.need * 100).toFixed(1)}%"></i></div>
           <small>${tr('{a} / {b} XP vers le niveau {n}', { a: lv.rest, b: lv.need, n: lv.lvl + 1 })}</small>
@@ -1895,6 +1929,28 @@
     $('menuBtn').innerHTML = icon('menu');
   }
 
+  // Cosmétiques d'un joueur de la partie (v96) : les nôtres, ou ceux qu'un créateur en ligne a
+  // apportés à sa place du salon (seatOf, js/multi.js). Les bots et les fantômes n'en ont pas.
+  function lookOf(p) {
+    if (!p || p.bot || p.ghost) return null;
+    // Nous-mêmes : comme les autres nous voient (sans photo, l'astre de notre rang).
+    if (p.id === 'you') { const c = classe(); return seatLook({ font: myFont(), frame: myFrame(), avatar: myAvatar(), points: K.placed(c) ? c.points : 0 }); }
+    const MP = window.OrbiteMulti, m = MP && MP.state.match;
+    const seat = p.remote && m && Array.isArray(m.seats) ? m.seats.find((x) => x && x.uid === p.id) : null;
+    return seat ? seatLook(seat) : null;
+  }
+  // Les cosmétiques d'une place du salon, vérifiés ; sans photo, l'astre de son rang classé.
+  function seatLook(seat) {
+    return {
+      font: FONT_BY_ID[seat.font] ? seat.font : '',
+      frame: FRAME_BY_ID[seat.frame] ? seat.frame : '',
+      avatar: AVATAR_BY_ID[seat.avatar] ? seat.avatar : 'rank-' + RANKS[seat.points > 0 ? K.tierOf(seat.points).idx : 0].id
+    };
+  }
+  // Le nom d'un joueur dans sa police, et sa photo dans son cadre (rien pour un bot).
+  const playerName = (p, label) => { const l = lookOf(p); return nameHtml(label == null ? p.name : label, l ? l.font : ''); };
+  const playerAv = (p) => { const l = lookOf(p); return l ? framed(`<span class="orb" data-planet="${l.avatar}"></span>`, l.frame) : ''; };
+
   // PC : la colonne de gauche montre les rivaux en permanence, comme le classement de Battlegrounds,
   // avec le système du rival (duel) ou du prochain adversaire (mêlée) sous les yeux.
   function rivalsPanel(s) {
@@ -1908,8 +1964,8 @@
       // En duel, le rival est toujours le même : pas d'étiquette.
       const tag = duel ? '' : isNext ? tr('PROCHAIN ADVERSAIRE') : !mine && p.id === last ? tr('DERNIER ADVERSAIRE') : '';
       return `<span class="dr-row ${mine ? 'me' : ''} ${isNext ? 'next' : ''} ${p.alive ? '' : 'dead'}">
-        <i class="dr-rk">${p.alive ? i + 1 : p.rank}</i>
-        <span class="dr-who"><b>${esc(mine ? tr('VOUS') : p.name)}</b>${tag ? `<em>${tag}</em>` : `<small>${tr('niveau {n}', { n: p.tier })}</small>`}</span>
+        <i class="dr-rk">${p.alive ? i + 1 : p.rank}</i>${s.mp ? `<span class="pl-av">${playerAv(p)}</span>` : ''}
+        <span class="dr-who"><b>${playerName(p, mine ? tr('VOUS') : p.name)}</b>${tag ? `<em>${tag}</em>` : `<small>${tr('niveau {n}', { n: p.tier })}</small>`}</span>
         <span class="dr-hp"><b>${p.alive ? hp : '–'}</b><i class="hp-bar"><i style="width:${p.alive ? Math.min(100, hp / (p.maxHp || R.START_HP) * 100) : 0}%"></i></i></span>
       </span>`;
     }).join('');
@@ -1918,7 +1974,7 @@
       ? `<span class="dr-scout"><small>${duel ? tr('Système joué au dernier combat') : tr('Prochain adversaire : {name}', { name: esc(opp.ghost ? tr('{name} (fantôme)', { name: opp.name }) : opp.name) })}</small>${staticRows(opp.ghost ? opp.board : opp.seen || [])}</span>`
       : '';
     return `<span class="dr-head">${duel ? tr('DUEL') : tr('UNIVERS EN LICE · {n}', { n: R.alivePlayers(s).length })}</span>
-      <span class="dr-list">${rows}</span>${scout}<span class="dr-more">${tr('Touchez pour les détails')}</span>`;
+      <span class="dr-list ${s.mp ? 'av' : ''}">${rows}</span>${scout}<span class="dr-more">${tr('Touchez pour les détails')}</span>`;
   }
 
   function renderRivals() {
@@ -1930,13 +1986,13 @@
     if (R.isDuel(s)) {
       // Duel : le rival, ses PV, et son dernier système d'un geste.
       const o = s.players[1];
-      $('rivals').innerHTML = `<span class="rv-label">${tr('DUEL')}</span><span class="rv-info"><b>${esc(o.name)}</b> · ${icon('heart')} ${Math.max(0, o.hp)}${s.round > 1 ? ' · ' + tr('voir son système') : ''}</span><span class="rv-open">${icon('back', 'down')}</span>`;
+      $('rivals').innerHTML = `<span class="rv-label">${tr('DUEL')}</span><span class="rv-info"><b>${playerName(o)}</b> · ${icon('heart')} ${Math.max(0, o.hp)}${s.round > 1 ? ' · ' + tr('voir son système') : ''}</span><span class="rv-open">${icon('back', 'down')}</span>`;
       return;
     }
     // Mêlée : le prochain adversaire est connu dès la boutique, comme dans Battlegrounds.
     const nx = s.phase === 'shop' ? R.nextOpponent(s) : null;
     const info = nx
-      ? tr('Prochain : {name}', { name: `<b>${esc(nx.ghost ? tr('{name} (fantôme)', { name: nx.name }) : nx.name)}</b>` }) + ' · ' + tr('vous êtes {rank}', { rank: ordinal(rank) })
+      ? tr('Prochain : {name}', { name: `<b>${nx.ghost ? esc(tr('{name} (fantôme)', { name: nx.name })) : playerName(nx)}</b>` }) + ' · ' + tr('vous êtes {rank}', { rank: ordinal(rank) })
       : tr('{n} univers en lice', { n: alive }) + (me().alive ? ' · ' + tr('vous êtes {rank}', { rank: ordinal(rank) }) : '');
     $('rivals').innerHTML = `<span class="rv-label">${tr('RIVAUX')}</span><span class="rv-info">${info}</span><span class="rv-open">${icon('back', 'down')}</span>`;
   }
@@ -3030,8 +3086,8 @@
       const lost = ui.prevHp && ui.prevHp[p.id] != null && p.hp < ui.prevHp[p.id] ? ui.prevHp[p.id] - p.hp : 0;
       const tag = isNext ? `<em class="next">${tr('PROCHAIN ADVERSAIRE')}</em>` : !mine && p.id === last ? `<em>${tr('DERNIER ADVERSAIRE')}</em>` : '';
       return `<button class="rival-row ${p.alive ? '' : 'dead'} ${mine ? 'me' : ''} ${isNext ? 'next' : ''}" data-act="rival">
-          <span class="rk">${p.alive ? i + 1 : p.rank}</span>
-          <span class="rv-who"><span class="n">${esc(mine ? tr('VOUS') : p.name)}</span>${tag}<span class="l">${tr('niveau {n}', { n: p.tier })}${p.alive ? '' : ' · ' + tr('éliminé {rank}', { rank: ordinal(p.rank) })}</span></span>
+          <span class="rk">${p.alive ? i + 1 : p.rank}</span>${s.mp ? `<span class="pl-av">${playerAv(p)}</span>` : ''}
+          <span class="rv-who"><span class="n">${playerName(p, mine ? tr('VOUS') : p.name)}</span>${tag}<span class="l">${tr('niveau {n}', { n: p.tier })}${p.alive ? '' : ' · ' + tr('éliminé {rank}', { rank: ordinal(p.rank) })}</span></span>
           <span class="rv-hp">${lost ? `<small>−${lost}</small>` : ''}<b>${p.alive ? hp : '–'}</b><i class="hp-bar"><i style="width:${p.alive ? Math.min(100, hp / (p.maxHp || R.START_HP) * 100) : 0}%"></i></i></span>
         </button>
         <div class="rival-board" ${(duel && p !== me()) || isNext ? '' : 'hidden'}><p class="rv-last">${p.bot || p.remote ? tr('Système joué au dernier combat') : tr('Votre système')}</p>${board}</div>`;
@@ -3040,7 +3096,7 @@
       ? tr('Voici le système que votre rival a joué au dernier combat. Préparez votre placement : chaque astre de l’avant frappe celui d’en face.')
       : tr('Vous affrontez d’abord ceux que vous n’avez pas croisés depuis le plus longtemps, jamais deux fois de suite : votre prochain adversaire est annoncé pendant la boutique, son dernier système est déjà ouvert. Touchez un univers pour voir le sien. Dégâts plafonnés à {n} tant que plus de trois univers sont en vie.', { n: R.DAMAGE_CAP });
     const ghostNext = nx && nx.ghost ? `<p class="rv-ghost">${tr('Prochain adversaire : {name}', { name: `<b>${esc(tr('{name} (fantôme)', { name: nx.name }))}</b>` })}</p>${staticRows(nx.board)}` : '';
-    openSheet(`<h3>${duel ? tr('DUEL') : tr('UNIVERS EN LICE · {n}', { n: R.alivePlayers(s).length })}</h3>${ghostNext}<div class="rival-list">${rows}</div>
+    openSheet(`<h3>${duel ? tr('DUEL') : tr('UNIVERS EN LICE · {n}', { n: R.alivePlayers(s).length })}</h3>${ghostNext}<div class="rival-list ${s.mp ? 'av' : ''}">${rows}</div>
       <p class="muted">${note}</p>`, { top: true });
     tuto('repere');
   }
@@ -3267,7 +3323,7 @@
     ui.skip = false;
     const opp = b.opponent;
     ui.opp = opp;
-    $('oppName').textContent = opp.name + (opp.ghost ? ' · ' + tr('FANTÔME') : '');
+    $('oppName').innerHTML = opp.ghost ? esc(opp.name + ' · ' + tr('FANTÔME')) : playerName(ui.state.players.find((x) => x.id === opp.id) || opp, opp.name);
     $('oppHp').innerHTML = opp.ghost ? '' : icon('heart') + ' ' + Math.max(0, b.before.opp);
     document.body.classList.add('in-combat');
     SFX.ambience('battle');
@@ -4342,7 +4398,7 @@
   // Outils partagés avec le mode Campagne (js/campagne-ui.js).
   window.__orbite.api = {
     show, openSheet, closeSheet, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
-    pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH, frameOf, framed, avatarOf,
+    pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH, frameOf, framed, avatarOf, fontOf, nameHtml, myFont, myFrame, myAvatar, seatLook,
     coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation,
     seeds, addSeeds, wallet
   };

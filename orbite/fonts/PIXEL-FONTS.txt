@@ -1,0 +1,11 @@
+Polices pixel des pseudos (ORBITE v96), sous licence SIL Open Font License 1.1 (texte complet : OFL.txt).
+Fichiers « latin » repris des paquets @fontsource (version 5.3.0), renommés.
+
+px-arcade.woff2       Press Start 2P   Copyright 2012 The Press Start 2P Project Authors (cody@zone38.net), with Reserved Font Name "Press Start 2P"
+px-terminal.woff2     VT323            Copyright 2011, The VT323 Project Authors (peter.hull@oikoi.com)
+px-serigraphie.woff2  Silkscreen       Copyright 2001 The Silkscreen Project Authors (https://github.com/googlefonts/silkscreen)
+px-pixel.woff2        Pixelify Sans    Copyright 2021 The Pixelify Sans Project Authors (https://github.com/eifetx/Pixelify-Sans)
+px-stade.woff2        Jersey 10        Copyright 2023 The Soft Type Project Authors (https://github.com/scfried/soft-type-jersey)
+px-mini.woff2         Tiny5            Copyright 2022-2024 The Tiny5 Project Authors (https://github.com/Gissio/font_tiny5)
+px-matrice.woff2      Doto (800)       Copyright 2024-2024 The Doto Project Authors (https://github.com/oliverlalan/Doto)
+px-cathode.woff2      Workbench        Copyright 2021 The Workbench Project Authors (https://github.com/jenskutilek/homecomputer-fonts)
