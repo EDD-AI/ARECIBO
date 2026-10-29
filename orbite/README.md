@@ -7,9 +7,11 @@ encaisse, l’arrière reste à l’abri et avance quand l’avant tombe. Chaque
 l’ennemi **en face** de lui, sans hasard : le placement décide. Deux astres d’une même famille dans la
 même rangée forment une **formation**. Le système combat ensuite seul ; le premier à 0 PV perd.
 
-La **mêlée à 8** (contre 7 univers rivaux) suit les mêmes règles ; elle est rangée dans
-**Multijoueur**, hors ligne ou en ligne, avec les duels en ligne. La campagne (la Genèse) est masquée
-au menu ; son code et sa progression sont conservés.
+La **mêlée à 8** (contre 7 univers rivaux) suit les mêmes règles ; hors ligne, elle est dans
+**Jouer → Solo**, et en ligne dans **Jouer → Multijoueur**, avec les duels en ligne. Chaque partie a
+son **événement cosmique**, on choisit des **reliques** aux cycles 4 et 8, et les **lois s’éveillent**
+au cycle 6 (v84). La campagne (la Genèse) est masquée au menu ; son code et sa progression sont
+conservés.
 
 > **Vers le Play Store** : les règles à respecter dans chaque version et la checklist de lancement
 > sont dans [`LANCEMENT.md`](LANCEMENT.md).
@@ -38,11 +40,15 @@ au menu ; son code et sa progression sont conservés.
 4. **Menu** : **votre planète** se lève sur l’horizon et tourne très lentement, des poussières
    montent du sol, des étoiles filantes passent. La première fois, « Voilà votre terrain de jeu. »
    s’écrit au centre.
-5. Menu : **Jouer · Duel 1 contre 1**, **Multijoueur · En ligne · Mêlée à 8**, **Création**,
-   **Marché stellaire**, **Paramètres**, et en haut à droite le **profil** (pseudo, niveau, avatar =
-   votre planète). **Jouer** lance un duel contre l’IA (ou reprend la partie en cours, quel que soit
-   son mode). **Multijoueur** propose les duels en ligne, la mêlée à 8 en ligne et la mêlée à 8 hors
-   ligne.
+5. Menu (v84), rangé en pages, chacune avec son bouton **Retour** :
+   - page principale : **Jouer**, **Codex**, **Création**, **Marché stellaire**, **Paramètres**, et en
+     haut à droite le **profil** (pseudo, niveau, avatar = votre planète) ;
+   - **Jouer** → **Solo** (contre l’IA) ou **Multijoueur** (en ligne, entre amis : duels et mêlée à 8) ;
+   - **Solo** → **Duel** (1 contre 1), **Mêlée** (contre 7 univers) et **Défi du jour**. Duel et mêlée
+     reprennent la partie solo en cours, quel que soit son mode.
+
+   L’écran du menu ne défile jamais (la planète déborde en bas) : le focus suit la page sans le faire
+   glisser.
 
 Les **Paramètres** restent courts : son, musique, **Tutoriels et aide**, installation et crédits.
 La progression (niveau, poussières, planète, historique) ne peut pas être effacée depuis le jeu. **Tutoriels et aide** regroupe en un seul bouton :
@@ -974,6 +980,9 @@ En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 | Dégâts du perdant | niveau du gagnant + niveaux des astres survivants, **plafonnés à 10 en mêlée tant que plus de 3 univers sont en vie** |
 | Poussières d’étoiles | duel gagné : 40 · perdu : 10 · mêlée : 1er 100 · 2e 60 · 3e 30 · ensuite 0 |
 | Expérience | duel : 80 (victoire) ou 25, + 5 par cycle · mêlée : selon la place, + 5 par cycle |
+| Événement cosmique (v84) | 1 par partie parmi 11, tiré de la graine, le même pour tous les univers |
+| Reliques (v84) | 1 au choix parmi 3 au début des cycles 4 et 8 (12 reliques, jamais deux fois la même) |
+| Éveil des lois (v84) | au début du cycle 6, chaque loi passe à sa version éveillée |
 
 La **réserve est partagée** : les vitrines réservent les copies, les achats les retirent, la
 vente et l’élimination les rendent. Quand un bot joue une famille, ses astres se raréfient.
@@ -984,6 +993,97 @@ petites étoiles dorées : l’acheter déclenche la fusion. Un astre ajouté à
 (Fluctuation, Multivers) fusionne de la même façon s’il complète un trio (v82). Le placer ouvre une **découverte** : un astre au choix parmi trois du niveau supérieur.
 Chaque choix est encadré de la couleur de sa famille, avec son nom. Il indique aussi « Famille de
 votre loi », ou combien d’astres de cette famille sont déjà dans votre système.
+
+## Événements, reliques et éveil des lois (v84)
+
+Trois couches qui font qu’aucune partie ne ressemble à la précédente. Tout est dans `js/rules.js`
+(`EVENTS`, `RELICS`, `AWAKE_ROUND`), testé dans `tests/contenu.test.mjs`. Le bouton **✺** du haut de
+l’écran (à côté des familles) montre l’événement, vos reliques (et celles du rival en duel) et votre
+loi.
+
+**Événement cosmique.** Une règle spéciale par partie, tirée de la graine (`eventFor(seed)`) : en
+ligne, tous les téléphones trouvent le même. Il est annoncé dès le choix de la loi, puis en grand au
+début de la partie.
+
+| Événement | Effet |
+|---|---|
+| Pluie de météores | les astres de niveau 1 achetés gagnent +1/+1 |
+| Abondance | +1 énergie à chaque cycle pour tous |
+| Création féconde | la Création propose un astre de plus |
+| Recyclage cosmique | vendre rapporte 1 énergie de plus |
+| Expansion | monter de niveau coûte 1 de moins |
+| Révélation | les découvertes proposent 4 astres |
+| Ère des légendes | légendaires 5 fois plus fréquentes dans la Création (3 fois dans les découvertes) |
+| Vent solaire | début de combat : chaque camp inflige 1 dégât à tout l’avant adverse |
+| Aurore | début de combat : le premier astre de chaque camp gagne Bouclier |
+| Grande marée | fin de cycle : l’astre le plus faible de chaque système gagne +1/+1 |
+| Instabilité | début de combat : deux astres de chaque camp gagnent un mot-clé aléatoire |
+
+**Reliques.** Au début des cycles 4 et 8, une fenêtre propose trois reliques ; le combat attend le
+choix (en ligne, la fin du temps prend la première). Les bots choisissent seuls (`botRelic`). Les
+reliques de combat voyagent avec le plateau publié en ligne (`snapshotOf`), comme l’éveil.
+
+| Relique | Effet |
+|---|---|
+| Trésor | +1 énergie à chaque cycle |
+| Longue-vue | la Création propose un astre de plus (7 au plus) |
+| Comptoir | vendre rapporte 1 énergie de plus |
+| Élan | monter de niveau coûte 1 de moins |
+| Bannière | fin de cycle : un astre de votre famille la plus nombreuse gagne +1/+1 |
+| Fer de lance | début de combat : l’avant gagne +1/+0 |
+| Bastion | début de combat : les Remparts gagnent +0/+3 |
+| Réserve | quand l’arrière avance, ses astres gagnent +2/+2 |
+| Égide | début de combat : le premier astre gagne Bouclier |
+| Dard | début de combat : l’astre le plus fort gagne Toxique |
+| Braise d’étoile | début de combat : l’astre le plus faible gagne Renaissance |
+| Alchimie | début de combat : les astres dorés gagnent +2/+2 |
+
+**Éveil des lois.** Au début du cycle 6, chaque loi s’éveille (`p.awake`) : bannière « LOI
+ÉVEILLÉE », gerbe d’étincelles, et le bouton de la loi passe en doré. L’écran du choix de la loi
+montre déjà l’éveil de chacune.
+
+| Loi | Éveillée |
+|---|---|
+| Symbiose | les deux astres les plus faibles gagnent +1/+1 (au lieu de +0/+1 pour un seul) |
+| Entropie | les astres du Néant gagnent +1/+1 (au lieu de +1/+0) |
+| Renversement | le pouvoir donne +2/+2 |
+| Combustion | 3 dégâts à deux ennemis |
+| Stase | Bouclier aux trois premiers astres |
+| Vents | l’attaquant gagne +2/+1 |
+| Gravité | les Remparts gagnent +1/+2 |
+| Marées | les deux voisins de chaque Lune gagnent +1 PV |
+| Passage | deux actualisations gratuites par cycle |
+| Résonance | tous les autres Cristaux gagnent +1/+1 |
+| Chaos | deux alliés gagnent un mot-clé |
+| Ingénierie | le pouvoir devient gratuit |
+| Sacrifice | 2 énergies de plus par cycle, même au maximum |
+| Endurance | début de combat : l’avant gagne +0/+2 |
+| Phénix | début de combat : l’astre le plus faible gagne Renaissance |
+
+Les anciennes sauvegardes continuent : sans `relics`, `awake` ni `event`, rien ne casse
+(`freeRoll` est relu pour la loi du passage).
+
+## Défi du jour (v84)
+
+**Jouer → Solo → Défi du jour** : un duel avec la même graine pour tout le monde ce jour-là
+(`DEFI-AAAA-MM-JJ`) : mêmes familles, mêmes trois lois proposées, même rival et même événement. Une
+seule tentative : la partie commencée compte, même abandonnée. Score : victoire 1000 + 5 par PV
+restant + 10 par cycle d’avance sur le 30e ; défaite 20 par cycle tenu + 3 par PV pris au rival.
+Bonus : +50 poussières pour une victoire, +10 sinon.
+
+Connecté avec Google, le score part dans Firestore (`daily/{date}_{uid}`, écrit une seule fois) et
+« Classement du jour » montre les 50 meilleurs. Hors ligne, il repart à la prochaine ouverture du
+défi. **Les règles Firestore doivent être republiées** (`firebase/firestore.rules`, bloc
+`match /daily/{id}`) pour que le classement fonctionne ; sans elles, le défi reste jouable et le score
+reste sur l’appareil.
+
+## Codex (v84)
+
+**Codex** au menu principal : quatre onglets.
+- **Astres** : les 122 astres par famille (et les légendaires), du niveau 1 au 6. Un astre se dévoile
+  quand on le croise en partie (Création, découverte, système d’un rival) ; on le touche pour lire sa
+  fiche. Le compteur en haut montre la progression (`orbite.codex`).
+- **Lois**, **Reliques**, **Événements** : tout le contenu, avec l’éveil de chaque loi.
 
 ## Bâtisseur de colonies
 
@@ -1311,3 +1411,9 @@ environ 40 ms.
 
 Pistes essayées puis écartées, car neutres ou nuisibles : monter de niveau plus tôt (nettement
 plus faible) et réordonner le système.
+
+**Reliques et éveil des lois (v84).** Mesuré avec `node orbite/tools/equilibrage.js 240 --seed v84
+--json`, avant et après (sans événement cosmique, que les outils ne tirent pas) : le rang moyen des
+lois va de 3,17 (Résonance) à 5,62 (Sacrifice) avant, de 3,43 (Entropie) à 5,50 (Sacrifice) après.
+L’écart ne se creuse pas ; une partie dure 14,9 cycles au lieu de 14,8. Avec environ 100 parties
+par loi, les écarts de moins de 0,3 rang restent dans le bruit.

@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 83;
+  const VERSION = 84;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -23,7 +23,9 @@
   const FX_TEXT = new Set(R.CARDS.filter((c) => /Vos effets/.test(c.text || '')).map((c) => c.id));
   // Les données des règles (astres, lois, familles, mots-clés) passent dans la langue choisie.
   I18N.localize(R.CARDS, ['name', 'text', 'textGold']);
-  I18N.localize(R.LAWS, ['name', 'tagline', 'text']);
+  I18N.localize(R.LAWS, ['name', 'tagline', 'text', 'awake']);
+  I18N.localize(R.EVENTS, ['name', 'text']);
+  I18N.localize(R.RELICS, ['name', 'text']);
   I18N.localize(R.FAMILIES, ['name', 'text']);
   I18N.localize(R.KEYWORDS, ['name', 'text']);
   const $ = (id) => document.getElementById(id);
@@ -396,7 +398,7 @@
   // ─── Écrans ─────────────────────────────────────────────────
   async function show(name) {
     rememberScreen(name);
-    if (name !== 'menu' && $('menuList')) $('menuList').classList.remove('solo-open');
+    if (name !== 'menu') menuPage('main', true);
     // Une mise à jour en attente ne recharge la page qu'au retour au menu : jamais pendant une partie,
     // une campagne ou l'écran de fin (gain d'expérience, passage de niveau).
     if (ui.updatePending && name === 'menu') { saveGame(); ui.updatePending = false; setTimeout(() => updateReady(true), 0); }
@@ -798,7 +800,9 @@
       await wait(900);
     }
     $('menuWord').parentElement.classList.remove('menu-fade');
-    const items = [...document.querySelectorAll('.menu-item')];
+    // Les boutons de la page visible s'allument un à un ; ceux des autres pages sont prêts d'emblée.
+    const items = [...document.querySelectorAll('#menuList .menu-page.on .menu-item')];
+    document.querySelectorAll('.menu-item').forEach((b) => { if (!items.includes(b)) b.classList.add('show'); });
     for (const b of items) { b.classList.add('show'); await wait(120); }
     if (store.get(MENU_GUIDE_KEY, '') !== '1' && ui.screen === 'menu') {
       await wait(500);
@@ -1499,8 +1503,8 @@
     return a[0].toString(16).toUpperCase().padStart(8, '0');
   }
 
-  function renderLaws() {
-    ui.seed = randomSeed();
+  function renderLaws(seed) {
+    ui.seed = seed || randomSeed();
     ui.lawOptions = R.lawChoices(ui.seed);
     ui.lawPick = null;
     $('lawGo').disabled = true;
@@ -1514,11 +1518,16 @@
           <h3>${esc(l.name)}</h3>
           <p class="tag">${esc(l.tagline)}</p>
           <p class="txt">${esc(l.text)}</p>
+          <p class="awk"><b>${tr('ÉVEIL AU CYCLE {n}', { n: R.AWAKE_ROUND })}</b> ${esc(l.awake)}</p>
           <p class="starter">${tr('PREMIER ASTRE : {name}', { name: esc(st.name).toUpperCase() })} ${st.atk}/${st.hp} · ${tr('{n} PV', { n: (l.hp || R.START_HP) * (ui.size === 8 ? 1 : R.DUEL.hp) })}</p>
         </div>
       </button>`;
     }).join('');
     mountEnergy($('lawList'));
+    // L'événement cosmique de la partie est connu dès le choix de la loi (il vient de la graine).
+    const ev = R.EVENT[R.eventFor(ui.seed)];
+    $('lawEvent').hidden = false;
+    $('lawEvent').innerHTML = `${ui.daily ? `<span class="law-daily">${tr('DÉFI DU JOUR · {d}', { d: esc(dailyLabel(ui.daily)) })}</span>` : ''}${eventHtml(ev.id)}`;
   }
   // Les lois sont des sphères d'énergie animées, colorées selon le pouvoir de leur famille.
   function mountEnergy(root) {
@@ -1542,11 +1551,15 @@
   listen('lawGo', 'click', async () => {
     if (!ui.lawPick) return;
     SFX.level();
-    ui.state = R.newGame(ui.seed, ui.lawPick, { size: ui.size || 2 });
+    ui.state = R.newGame(ui.seed, ui.lawPick, { size: ui.size || 2, event: 'auto', daily: ui.daily || undefined });
+    if (ui.daily) dailyStart(ui.daily);
+    ui.daily = null;
+    codexMark([R.LAW[ui.lawPick].starter]);
     ui.stamp++;
     saveGame();
     await show('game');
     renderGame(true);
+    if (ui.state.event) await new Promise((done) => openEventCard(done));
     banner(R.isDuel(ui.state) ? tr('DUEL · {name}', { name: esc(ui.state.players[1].name) }) : tr('CYCLE {n}', { n: 1 }), tr('Achetez des astres, placez-les, puis lancez le combat.'));
     if (!tutoDone()) {
       store.set(HINT_KEY, '1');
@@ -1702,8 +1715,8 @@
     { id: 'fin', text: tr('Dernier secret : <b>trois copies</b> du même astre fusionnent en un astre <b>doré</b>, deux fois plus fort. Gagnez le duel pour remporter des poussières d’étoiles. À vous !'), next: tr('JOUER') }
   ];
   const MENU_STEPS = [
-    { id: 'jouer', target: '#soloBtn', text: tr('<b>Jouer</b> lance un <b>duel</b> contre l’IA : un rival, plusieurs cycles. Achetez, placez vos astres sur deux rangées, formez des familles.'), next: tr('SUIVANT'), delay: 0 },
-    { id: 'multi', target: '#multiBtn', text: tr('<b>Multijoueur</b> : des duels en ligne, et la <b>mêlée à 8</b> contre sept univers, en ligne ou hors ligne.'), next: tr('SUIVANT') },
+    { id: 'jouer', target: '#playBtn', text: tr('<b>Jouer</b> : en <b>solo</b> contre l’IA (duel, mêlée contre sept univers, défi du jour) ou en <b>multijoueur</b>, en ligne et entre amis.'), next: tr('SUIVANT'), delay: 0 },
+    { id: 'codex', target: '#codexBtn', text: tr('Le <b>Codex</b> : tous les astres, lois, reliques et événements du jeu. Ceux que vous avez croisés en partie s’y dévoilent.'), next: tr('SUIVANT') },
     { id: 'creation', target: '#creationBtn', text: tr('La <b>Création</b> : devenez Créateur. Semez une graine d’étoile et faites grandir votre propre planète. Elle se débloque avec des <b>poussières d’étoiles</b>.'), next: tr('SUIVANT') },
     { id: 'marche', target: '#marketBtn', text: tr('Le <b>Marché stellaire</b> : dépensez vos <b>poussières d’étoiles</b> (gagnées en duel et sur le podium). <b>Ma planète</b> : faites renaître le monde qui tourne derrière le menu. <b>Cosmétiques</b> : des fonds animés pour vos parties.'), next: tr('SUIVANT') },
     { id: 'profil', target: '#profileBtn', text: tr('Votre <b>profil</b> : pseudo, niveau, statistiques et historique. Chaque partie rapporte de l’expérience.'), next: tr('SUIVANT') },
@@ -1716,6 +1729,7 @@
     $('hudHp').innerHTML = icon('heart') + `<b>${Math.max(0, p.hp)}</b>`;
     $('hudRound').textContent = tr('CYCLE {n}', { n: ui.state.round });
     $('famsBtn').innerHTML = ui.state.families.map((f) => `<span style="--c:${famColor(f)}"></span>`).join('');
+    $('cosmosBtn').innerHTML = `<span class="cz-ev">✺</span>${(p.relics || []).map((id) => `<i>${RELIC_GLYPH[id] || '✦'}</i>`).join('')}`;
     $('menuBtn').innerHTML = icon('menu');
   }
 
@@ -1770,7 +1784,7 @@
     const pips = Array.from({ length: 6 }, (_, i) => `<i class="${i < p.tier ? 'on' : ''}"></i>`).join('');
     $('tier').innerHTML = `${tr('CRÉATION')} <span class="pips">${pips}</span>`;
     $('tier').classList.toggle('pop', !!pop);
-    const cost = R.upgradeCost(p);
+    const cost = R.upgradeCost(p, ui.state);
     $('upBtn').innerHTML = p.tier >= 6 ? tr('MAX') : `${icon('up')} <i>${cost}</i>`;
     $('upBtn').disabled = p.tier >= 6 || p.gold < cost;
     const rc = R.rollCost(p);
@@ -1793,6 +1807,7 @@
       return el;
     }, (el, it) => { el.dataset.slot = it.slot; });
     sizeRow($('shop'), 'shop', 92);
+    codexMark(p.shop);
     $('shop').classList.toggle('frozen', p.frozen);
     if (!ui.frostStagger) for (const orb of $('shop').querySelectorAll('.orb')) orb.dataset.frozen = p.frozen ? '1' : '0';
     markTriples();
@@ -1941,9 +1956,10 @@
     const can = active && R.canUsePower(ui.state).ok;
     b.classList.toggle('active', can);
     b.classList.toggle('armed', ui.targeting);
+    b.classList.toggle('awake', !!p.awake);
     const label = p.law === 'renversement' ? tr('INVERSER') : p.law === 'ingenierie' ? tr('+ SONDE') : law.name.toUpperCase();
-    const cost = active ? ` · ${law.active.cost} ${icon('bolt')}` : '';
-    const txt = `<b>${active ? tr('POUVOIR') : tr('LOI')}${active && p.powerUsed ? ' · ' + tr('UTILISÉ') : ''}</b>${label}${cost}`;
+    const cost = active ? ` · ${R.powerCost(p)} ${icon('bolt')}` : '';
+    const txt = `<b>${active ? tr('POUVOIR') : tr('LOI')}${active && p.powerUsed ? ' · ' + tr('UTILISÉ') : p.awake ? ' · ' + tr('ÉVEILLÉE') : ''}</b>${label}${cost}`;
     const cv = b.querySelector('canvas.sphere');
     if (cv && cv.dataset.fam === law.fam) b.querySelector('.power-txt').innerHTML = txt;
     else {
@@ -2059,6 +2075,12 @@
       } else if (e.t === 'law') {
         const b = $('powerBtn');
         b.animate([{ borderColor: 'var(--ink)' }, { borderColor: 'var(--faint)' }], { duration: 600 });
+      } else if (e.t === 'awake') {
+        await awakenScene();
+      } else if (e.t === 'relic' || e.t === 'event') {
+        const item = e.t === 'relic' ? R.RELIC[e.id] : R.EVENT[ui.state.event];
+        if (item) popOn($('cosmosBtn'), item.name.toUpperCase(), 'info');
+        await sleep(300);
       } else if (e.t === 'triple' && !units) {
         // Un astre ajouté à la main (Fluctuation, Multivers) complète un trio : fusion dorée.
         renderBoard();
@@ -2705,7 +2727,7 @@
     const act = b.dataset.act;
     // Pendant un combat (en ligne, on ne peut pas le passer), le son et l'aide restent accessibles ;
     // quitter la partie attend la fin du combat. Les Paramètres ne dépendent jamais d'une partie.
-    const anytime = act === 'choose' || act === 'close' || act === 'rival' || act === 'set' || (act === 'menu' && (b.dataset.v === 'sound' || b.dataset.v === 'help'));
+    const anytime = act === 'choose' || act === 'relic' || act === 'close' || act === 'rival' || act === 'set' || (act === 'menu' && (b.dataset.v === 'sound' || b.dataset.v === 'help'));
     if (ui.busy && !anytime) { if (act === 'menu') toast(tr('Possible à la fin du combat.'), 1800); return; }
     if (act === 'buy') {
       const slot = Number(b.dataset.slot);
@@ -2737,6 +2759,8 @@
       closeSheet();
     } else if (act === 'choose') {
       await chooseDiscover(Number(b.dataset.i), b);
+    } else if (act === 'relic') {
+      pickRelic(Number(b.dataset.i), b);
     } else if (act === 'close') {
       closeSheet();
     } else if (act === 'menu') {
@@ -2744,6 +2768,8 @@
     } else if (act === 'set') {
       const v = b.dataset.v;
       if (v === 'resume') { closeSheet(); await resumeGame(); }
+      else if (v === 'daily-go') { closeSheet(); await dailyGo(); }
+      else if (v === 'daily-board') { await openDailyBoard(); }
       else if (v === 'new') { closeSheet(); await newGameFlow(Number(b.dataset.size) || 2); }
       else await settingsAction(v, b);
     } else if (act === 'rival') {
@@ -2756,6 +2782,7 @@
   function openDiscover() {
     const p = me();
     if (!p.discover.length) return Promise.resolve();
+    codexMark(p.discover);
     return new Promise((resolve) => {
       ui.discoverDone = resolve;
       const items = p.discover.map((id, i) => {
@@ -2772,7 +2799,7 @@
           <small>${esc(R.cardText(id, false))}</small>
         </button>`;
       }).join('');
-      openSheet(`<h3>${tr('DÉCOUVERTE · NIVEAU {n}', { n: R.CARD[p.discover[0]].tier })}</h3><h2>${tr('Choisissez un astre')}</h2><div class="discover-list">${items}</div>`, { center: true, locked: true });
+      openSheet(`<h3>${tr('DÉCOUVERTE · NIVEAU {n}', { n: R.CARD[p.discover[0]].tier })}</h3><h2>${tr('Choisissez un astre')}</h2><div class="discover-list${p.discover.length > 3 ? ' four' : ''}">${items}</div>`, { center: true, locked: true });
     });
   }
 
@@ -2861,7 +2888,90 @@
       <div class="fam-list">${phenHtml}</div>
       <h3 style="margin-top:18px">${tr('L’ARRIÈRE AU COMBAT')}</h3><div class="fam-list">${posHtml}</div>
       <h3 style="margin-top:18px">${tr('FAMILLES DE CET UNIVERS')}</h3><div class="fam-list">${items}</div>
-      <h3 style="margin-top:18px">${tr('VOTRE LOI')}</h3><div class="fam-item" style="--c:${famColor(law.fam)}"><b>${esc(law.name).toUpperCase()}</b><p>${esc(law.text)}</p></div>`);
+      <h3 style="margin-top:18px">${tr('VOTRE LOI')}</h3>${lawHtml(p)}`);
+  }
+
+  // ─── Événement cosmique, reliques, éveil des lois (v84) ─────
+  const RELIC_GLYPH = { tresor: '◆', longuevue: '◎', comptoir: '⇄', elan: '⇑', banniere: '⚑', lance: '➶', bastion: '▣', reserve: '⇡', egide: '⬡', dard: '✶', braise: '✹', alchimie: '✦' };
+  // tag : 'button' pour un choix (attrs : data-act…), sinon une simple fiche.
+  function relicHtml(id, attrs) {
+    const r = R.RELIC[id], tag = attrs ? 'button' : 'div';
+    return `<${tag} class="relic-item" ${attrs || ''}><span class="relic-glyph">${RELIC_GLYPH[id] || '✦'}</span><span><b>${esc(r.name).toUpperCase()}</b><p>${esc(r.text)}</p></span></${tag}>`;
+  }
+  function eventHtml(id) {
+    const e = R.EVENT[id];
+    return e ? `<div class="event-item"><span class="event-glyph">✺</span><span><small>${tr('ÉVÉNEMENT COSMIQUE')}</small><b>${esc(e.name).toUpperCase()}</b><p>${esc(e.text)}</p></span></div>` : '';
+  }
+  function lawHtml(p) {
+    const law = R.LAW[p.law];
+    const body = p.awake
+      ? `<p class="awk on"><b>${tr('ÉVEILLÉE')}</b> ${esc(law.awake)}</p>`
+      : `<p>${esc(law.text)}</p><p class="awk"><b>${tr('ÉVEIL AU CYCLE {n}', { n: R.AWAKE_ROUND })}</b> ${esc(law.awake)}</p>`;
+    return `<div class="fam-item${p.awake ? ' awake' : ''}" style="--c:${famColor(law.fam)}"><b>${esc(law.name).toUpperCase()}</b>${body}</div>`;
+  }
+  // Le bouton ✺ du haut : l'événement de la partie, vos reliques (et celles du rival en duel), votre loi.
+  function openCosmos() {
+    const s = ui.state, p = me();
+    const list = (rels) => `<div class="relic-list">${rels.map((id) => relicHtml(id)).join('')}</div>`;
+    const mine = (p.relics || []).length ? list(p.relics)
+      : `<p class="muted">${tr('Aucune relique pour l’instant. Vous en choisirez une au début des cycles {a} et {b}.', { a: R.RELIC_ROUNDS[0], b: R.RELIC_ROUNDS[1] })}</p>`;
+    const rival = R.isDuel(s) ? s.players[1] : null;
+    const theirs = rival && (rival.relics || []).length ? `<h3 style="margin-top:18px">${tr('RELIQUES DE {name}', { name: esc(rival.name) })}</h3>${list(rival.relics)}` : '';
+    openSheet(`${s.event ? eventHtml(s.event) : `<h3>${tr('ÉVÉNEMENT COSMIQUE')}</h3><p class="muted">${tr('Aucun événement dans cette partie.')}</p>`}
+      <h3 style="margin-top:18px">${tr('VOS RELIQUES')}</h3>${mine}${theirs}
+      <h3 style="margin-top:18px">${tr('VOTRE LOI')}</h3>${lawHtml(p)}`);
+  }
+  // Au début de la partie : l'événement cosmique, en grand.
+  function openEventCard(done) {
+    const e = R.EVENT[ui.state.event];
+    SFX.legend(false);
+    openSheet(`<div class="event-card"><span class="event-glyph big">✺</span><h3>${tr('ÉVÉNEMENT COSMIQUE')}</h3><h2>${esc(e.name)}</h2><p>${esc(e.text)}</p>
+      <p class="muted">${tr('Il s’applique à tous les univers, pendant toute la partie.')}</p>
+      <div class="sheet-actions"><button class="btn primary" data-act="close">${tr('C’EST PARTI')}</button></div></div>`, { center: true, onClose: done });
+  }
+  // Début des cycles 4 et 8 : une relique parmi trois.
+  function openRelics() {
+    const p = me();
+    if (!p.relicChoice || !p.relicChoice.length) return Promise.resolve();
+    return new Promise((resolve) => {
+      ui.relicDone = resolve;
+      const items = p.relicChoice.map((id, i) => relicHtml(id, `data-act="relic" data-i="${i}"`)).join('');
+      openSheet(`<h3>${tr('RELIQUE · CYCLE {n}', { n: ui.state.round })}</h3><h2>${tr('Choisissez une relique')}</h2><p class="muted">${tr('Elle reste avec vous jusqu’à la fin de la partie.')}</p><div class="relic-list pick">${items}</div>`, { center: true, locked: true });
+    });
+  }
+  function pickRelic(i, btn) {
+    const res = R.chooseRelic(ui.state, i);
+    if (!res.ok) { closeSheet(); return; }
+    if (btn) { const [x, y] = center(btn); stage.burst(x, y, { n: 26, colors: [[255, 226, 140], [255, 255, 255]], speed: 90, life: 0.6 }); }
+    SFX.golden();
+    closeSheet();
+    toast(tr('Relique : {name}', { name: R.RELIC[res.id].name }), 2200);
+    renderHud();
+    renderTavernHead();
+    renderEnergy();
+    saveGame();
+    const done = ui.relicDone;
+    ui.relicDone = null;
+    if (done) done();
+  }
+  // En ligne, la fin du temps choisit la première relique.
+  function autoRelic() {
+    const p = me();
+    if (!p || !p.relicChoice || !p.relicChoice.length) return;
+    pickRelic(0, null);
+  }
+  // Cycle 6 : la loi s'éveille.
+  async function awakenScene() {
+    const p = me(), law = R.LAW[p.law];
+    renderPower();
+    const b = $('powerBtn');
+    const [x, y] = center(b);
+    stage.burst(x, y, { n: 46, colors: [hexRgb(famColor(law.fam)), [255, 255, 255]], speed: 130, life: 0.9 });
+    b.animate([{ transform: 'scale(1)', filter: 'brightness(1)' }, { transform: 'scale(1.18)', filter: 'brightness(2.2)' }, { transform: 'scale(1)', filter: 'brightness(1)' }], { duration: 1000, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    SFX.level();
+    banner(tr('LOI ÉVEILLÉE'), `<b>${esc(law.name)}</b> · ${esc(law.awake)}`, 'awake', true);
+    await sleep(2800);
+    clearBanner();
   }
 
   function openMenu() {
@@ -2923,6 +3033,7 @@
     if (ui.state.mp && !ui.mpAuto) { toast(tr('En ligne, le tour se termine pour tous à la fin du temps.'), 1800); return; }
     const p = me();
     if (p.discover.length) { await openDiscover(); return; }
+    if (p.relicChoice && p.relicChoice.length) { await openRelics(); return; }
     ui.busy = true;
     SFX.tap();
     ui.prevHp = Object.fromEntries(ui.state.players.map((x) => [x.id, x.hp]));
@@ -2956,6 +3067,7 @@
   function combatRowEl(side) { return side === 0 ? $('board') : $('enemy'); }
 
   function buildCombatRows(boards) {
+    codexMark(boards[1].map((u) => u.id));
     const make = (u) => { const el = makeUnit(u, 'combat'); return el; };
     syncList($('board'), boards[0], (u) => u.cid, make, (el, u) => updateUnit(el, u, 'combat'));
     syncList($('enemy'), boards[1], (u) => u.cid, make, (el, u) => updateUnit(el, u, 'combat'));
@@ -3235,6 +3347,16 @@
         await sleep(450);
         break;
       }
+      case 'relic': {
+        if (R.RELIC[e.id]) popOn(combatRowEl(e.side), (RELIC_GLYPH[e.id] || '✦') + ' ' + R.RELIC[e.id].name.toUpperCase(), 'info');
+        await sleep(380);
+        break;
+      }
+      case 'event': {
+        if (R.EVENT[e.id]) popOn($('versus'), '✺ ' + R.EVENT[e.id].name.toUpperCase(), 'info');
+        await sleep(480);
+        break;
+      }
       case 'fx': {
         const el = unitByCid(e.cid);
         if (el) {
@@ -3431,6 +3553,7 @@
     renderEnergy();
     saveGame();
     tuto('cycle');
+    if (me().relicChoice && me().relicChoice.length) await openRelics();
   }
 
   // ─── Fin de partie ──────────────────────────────────────────
@@ -3441,6 +3564,12 @@
     const gain = quit ? { rank: 0, cycles: 0, total: 0 } : xpFor(s, rank);
     const xpFrom = xpTotal();
     let xpTo = xpFrom;
+    // Défi du jour : un score unique, et un bonus de poussières (victoire 50, sinon 10).
+    if (s.daily && s.dailyScore == null) {
+      s.dailyScore = dailyScore(s, rank, quit);
+      s.reward = (s.reward || 0) + (rank === 1 && !quit ? DAILY_WIN : DAILY_PLAY);
+      dailyFinish(s, rank, quit);
+    }
     if (!s.rewarded) {
       s.rewarded = true;
       addDust(s.reward || 0);
@@ -3458,7 +3587,7 @@
       // Un duel classé compte comme une 2e place (victoire) ou une 6e (défaite) : ±18 points.
       else { s.rankedRes = K.record(c, quit ? 8 : R.isDuel(s) ? (rank === 1 ? 2 : 6) : rank, s.mp.lobby); store.set(CLASSE_KEY, JSON.stringify(c)); }
     }
-    $('endRanked').innerHTML = rankedLine(s.rankedRes);
+    $('endRanked').innerHTML = rankedLine(s.rankedRes) + dailyLine(s);
     if (!s.xpGiven) {
       s.xpGiven = true;
       xpTo = xpFrom + gain.total;
@@ -3671,6 +3800,154 @@
     if (!stage.modal) document.body.classList.remove('modal');
   }
 
+  // ─── Défi du jour (v84) ─────────────────────────────────────
+  // La même partie pour tous, un jour : même graine (familles, lois proposées, rival, événement).
+  // Une seule tentative par jour ; le score part au classement du jour si l'on est connecté.
+  const DAILY_KEY = 'orbite.defi';
+  const DAILY_WIN = 50, DAILY_PLAY = 10;
+  function dailyKey(d) {
+    d = d || new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  const dailySeed = (d) => 'DEFI-' + d;
+  function dailyLabel(d) {
+    try { return new Date(d + 'T12:00:00').toLocaleDateString(document.documentElement.lang || 'fr', { day: 'numeric', month: 'long' }); } catch (err) { return d; }
+  }
+  const dailyRec = () => readJson(DAILY_KEY, {});
+  function dailyStart(d) { store.set(DAILY_KEY, JSON.stringify({ d, started: true })); }
+  // Victoire : 1000 + 5 par PV restant + 10 par cycle d'avance sur le 30e. Défaite : 20 par cycle
+  // tenu + 3 par PV pris au rival.
+  function dailyScore(s, rank, quit) {
+    const mine = s.players[0], opp = s.players[1];
+    if (rank === 1 && !quit) return 1000 + 5 * Math.max(0, mine.hp) + 10 * Math.max(0, 30 - s.round);
+    return 20 * s.round + 3 * Math.max(0, opp.maxHp - Math.max(0, opp.hp));
+  }
+  function dailyFinish(s, rank, quit) {
+    const rec = { d: s.daily, started: true, done: true, score: s.dailyScore, win: rank === 1 && !quit, rounds: s.round, law: s.players[0].law, sent: false };
+    store.set(DAILY_KEY, JSON.stringify(rec));
+    dailySend();
+  }
+  // Envoie le score du jour (une fois) ; hors ligne, il repartira à la prochaine ouverture du défi.
+  async function dailySend() {
+    const rec = dailyRec(), ON = window.OrbiteOnline;
+    if (!rec.done || rec.sent || rec.d !== dailyKey() || !ON || !ON.dailySubmit) return;
+    try {
+      if (await ON.dailySubmit(rec.d, rec)) { rec.sent = true; store.set(DAILY_KEY, JSON.stringify(rec)); }
+    } catch (err) {
+      // Déjà enregistré (une seule tentative) : rien à renvoyer.
+      if (err && err.code === 'permission-denied') { rec.sent = true; store.set(DAILY_KEY, JSON.stringify(rec)); }
+    }
+  }
+  function dailyLine(s) {
+    if (!s.daily || s.dailyScore == null) return '';
+    return `<span class="end-daily">${tr('DÉFI DU JOUR · {n} points', { n: s.dailyScore })}</span><button class="link" data-daily-board>${tr('Classement du jour')}</button>`;
+  }
+  async function openDaily() {
+    SFX.tap();
+    const d = dailyKey(), rec = dailyRec(), s = loadGame();
+    if (s && s.daily === d && !s.over) {
+      openSheet(`<h3>${tr('DÉFI DU JOUR')}</h3><h2>${tr('Votre défi vous attend')}</h2><p class="muted">${tr('Cycle {c} · {hp} PV', { c: s.round, hp: Math.max(0, s.players[0].hp) })}</p>
+        <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="resume">${tr('REPRENDRE')}</button></div>`);
+      return;
+    }
+    if (rec.d === d && rec.started) { await openDailyBoard(); return; }
+    const ev = R.EVENT[R.eventFor(dailySeed(d))];
+    const warn = s && !s.over ? `<p class="muted">${tr('Une partie solo est en cours : le défi la remplacera.')}</p>` : '';
+    openSheet(`<h3>${tr('DÉFI DU JOUR · {d}', { d: esc(dailyLabel(d)) })}</h3><h2>${tr('La même partie pour tous')}</h2>
+      <p>${tr('Mêmes familles, mêmes lois proposées, même rival et même événement pour tous les créateurs aujourd’hui. Une seule tentative.')}</p>
+      ${eventHtml(ev.id)}
+      <p class="muted">${tr('Victoire : +{a} poussières · sinon +{b}. Votre score rejoint le classement du jour si vous êtes connecté.', { a: DAILY_WIN, b: DAILY_PLAY })}</p>${warn}
+      <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="daily-go">${tr('RELEVER LE DÉFI')}</button><button class="btn" data-act="set" data-v="daily-board">${tr('CLASSEMENT')}</button></div>`);
+  }
+  async function dailyGo() {
+    ui.size = 2;
+    ui.daily = dailyKey();
+    stopAmbient();
+    renderLaws(dailySeed(ui.daily));
+    await show('laws');
+  }
+  async function openDailyBoard() {
+    const d = dailyKey(), rec = dailyRec();
+    const mine = rec.d === d && rec.done
+      ? `<p class="daily-mine"><b>${tr('{n} points', { n: rec.score })}</b> · ${rec.win ? tr('VICTOIRE') : tr('DÉFAITE')} · ${tr('{n} cycles', { n: rec.rounds })}</p>`
+      : rec.d === d && rec.started ? `<p class="muted">${tr('Défi abandonné aujourd’hui.')}</p>` : '';
+    const later = rec.d === d && rec.started ? `<p class="muted">${tr('Un nouveau défi vous attend demain.')}</p>` : '';
+    openSheet(`<h3>${tr('DÉFI DU JOUR · {d}', { d: esc(dailyLabel(d)) })}</h3><h2>${tr('Classement du jour')}</h2>${mine}<div class="daily-board" id="dailyBoard"><p class="muted">${tr('Chargement…')}</p></div>${later}`);
+    const box = () => document.getElementById('dailyBoard');
+    const ON = window.OrbiteOnline;
+    if (!ON || !ON.dailyTop || !ON.state || ON.state.status !== 'signedIn') {
+      if (box()) box().innerHTML = `<p class="muted">${tr('Connectez-vous avec Google (Multijoueur) pour voir le classement du jour.')}</p>`;
+      return;
+    }
+    await dailySend();
+    let rows = null;
+    try { rows = await ON.dailyTop(d); } catch (err) { rows = null; }
+    if (!box()) return;
+    if (!rows) { box().innerHTML = `<p class="muted">${tr('Classement indisponible pour le moment.')}</p>`; return; }
+    if (!rows.length) { box().innerHTML = `<p class="muted">${tr('Personne n’a encore relevé le défi aujourd’hui.')}</p>`; return; }
+    const me_ = ON.uid && ON.uid();
+    box().innerHTML = rows.map((r, i) => `<div class="daily-row${r.uid === me_ ? ' me' : ''}"><i>${i + 1}</i><b>${esc(r.pseudo || '?')}</b><span>${r.win ? '✦' : ''} ${r.score}</span></div>`).join('');
+  }
+
+  // ─── Codex (v84) ────────────────────────────────────────────
+  // Tous les astres (ceux déjà croisés se dévoilent), les lois, les reliques et les événements.
+  const CODEX_KEY = 'orbite.codex';
+  let codexSet = null;
+  function codexSeen() {
+    if (!codexSet) { const raw = readJson(CODEX_KEY, []); codexSet = new Set(Array.isArray(raw) ? raw : []); }
+    return codexSet;
+  }
+  function codexMark(ids) {
+    const seen = codexSeen(), n = seen.size;
+    for (const id of ids || []) if (id && R.CARD[id] && !R.CARD[id].token) seen.add(id);
+    if (seen.size !== n) store.set(CODEX_KEY, JSON.stringify([...seen]));
+  }
+  const codexCards = () => R.CARDS.filter((c) => !c.token);
+  async function openCodex() {
+    SFX.tap();
+    stopAmbient();
+    $('codexBack').innerHTML = icon('back');
+    ui.cxTab = ui.cxTab || 'astres';
+    ui.cxFam = ui.cxFam || R.FAMILY_KEYS[0];
+    renderCodex();
+    await show('codex');
+  }
+  function renderCodex() {
+    const tab = ui.cxTab || 'astres', seen = codexSeen(), cards = codexCards();
+    for (const b of $('codexTabs').children) b.classList.toggle('on', b.dataset.cx === tab);
+    $('codexCount').textContent = tr('{a} / {b}', { a: cards.filter((c) => seen.has(c.id)).length, b: cards.length });
+    $('codexFams').hidden = tab !== 'astres';
+    let html = '';
+    if (tab === 'astres') {
+      const g = ui.cxFam;
+      const groups = R.FAMILY_KEYS.concat(['neutre', 'legend']);
+      $('codexFams').innerHTML = groups.map((k) => {
+        const list = cards.filter((c) => (k === 'legend' ? c.legend : c.fam === k && !c.legend));
+        const got = list.filter((c) => seen.has(c.id)).length;
+        const name = k === 'legend' ? tr('LÉGENDAIRES') : R.FAMILIES[k].name.toUpperCase();
+        return `<button class="cx-fam${k === g ? ' on' : ''}" data-cxf="${k}" style="--c:${k === 'legend' ? '#ffe28c' : famColor(k)}"><span>${name}</span><small>${got}/${list.length}</small></button>`;
+      }).join('');
+      const list = cards.filter((c) => (g === 'legend' ? c.legend : c.fam === g && !c.legend)).sort((a, b) => a.tier - b.tier || (a.name < b.name ? -1 : 1));
+      const about = g === 'legend' ? tr('Un seul exemplaire par partie, et rares : 1 chance sur 100 par emplacement de la Création.') : R.FAMILIES[g].text;
+      html = `<p class="muted cx-about">${esc(about)}</p><div class="cx-grid">${list.map((c) => (seen.has(c.id)
+        ? `<button class="cx-card" data-cxid="${c.id}" style="--c:${famColor(c.fam)}"><div class="orb" data-planet="${c.id}"></div><b>${esc(c.name)}</b><small>${tr('NIVEAU {n}', { n: c.tier })} · ${c.atk}/${c.hp}</small></button>`
+        : `<div class="cx-card unknown"><div class="cx-q">?</div><b>???</b><small>${tr('NIVEAU {n}', { n: c.tier })}</small></div>`)).join('')}</div>
+        <p class="muted cx-hint">${tr('Les astres se dévoilent quand vous les croisez en partie : dans la Création, une découverte ou chez un rival.')}</p>`;
+    } else if (tab === 'lois') {
+      html = `<div class="fam-list">${R.LAWS.map((l) => {
+        const st = R.CARD[l.starter];
+        return `<div class="fam-item" style="--c:${famColor(l.fam)}"><b>${esc(l.name).toUpperCase()}</b> <small>· ${l.fam === 'neutre' ? tr('POINTS DE VIE') : R.FAMILIES[l.fam].name.toUpperCase()}</small><p>${esc(l.text)}</p><p class="awk"><b>${tr('ÉVEIL AU CYCLE {n}', { n: R.AWAKE_ROUND })}</b> ${esc(l.awake)}</p><p class="muted">${tr('PREMIER ASTRE : {name}', { name: esc(st.name).toUpperCase() })}</p></div>`;
+      }).join('')}</div>`;
+    } else if (tab === 'reliques') {
+      html = `<p class="muted">${tr('Au début des cycles {a} et {b}, chaque univers choisit une relique parmi trois. Elle dure toute la partie.', { a: R.RELIC_ROUNDS[0], b: R.RELIC_ROUNDS[1] })}</p><div class="relic-list">${R.RELICS.map((r) => relicHtml(r.id)).join('')}</div>`;
+    } else {
+      html = `<p class="muted">${tr('Chaque partie tire un événement cosmique. Il s’applique à tous les univers, du premier au dernier cycle.')}</p><div class="relic-list">${R.EVENTS.map((e) => eventHtml(e.id)).join('')}</div>`;
+    }
+    $('codexBody').innerHTML = html;
+    $('codexBody').scrollTop = 0;
+    [...$('codexBody').querySelectorAll('[data-planet]')].forEach((orb, i) => revealIn(orb, i * 40));
+  }
+
   // ─── Commandes ──────────────────────────────────────────────
   const guard = (fn) => async () => {
     if (ui.busy) return;
@@ -3680,6 +3957,7 @@
 
   async function newGameFlow(size) {
     ui.size = size === 8 ? 8 : 2;
+    ui.daily = null;
     stopAmbient();
     renderLaws();
     await show('laws');
@@ -3695,6 +3973,7 @@
     renderGame(true);
     // Partie reprise au milieu d'une découverte : elle revient tout de suite.
     if (me() && me().discover.length) setTimeout(() => { if (!ui.discoverDone) openDiscover(); }, 700);
+    else if (me() && me().relicChoice && me().relicChoice.length) setTimeout(() => { if (!ui.relicDone) openRelics(); }, 700);
   }
   // Jouer : le duel contre l'IA, le cœur du jeu. La mêlée à 8 est rangée dans Multijoueur.
   // Une seule partie solo à la fois : celle en cours se reprend, quel que soit son mode.
@@ -3710,9 +3989,39 @@
       <p class="muted">${info}</p>
       <div class="sheet-actions"><button class="btn primary" data-act="set" data-v="resume">${tr('REPRENDRE')}</button><button class="btn" data-act="set" data-v="new" data-size="${size}">${size === 2 ? tr('NOUVEAU DUEL') : tr('NOUVELLE MÊLÉE')}</button></div>`);
   }
-  listen('soloBtn', 'click', () => openMode(2));
+  // Le menu se range en pages : principal → Jouer (solo ou multijoueur) → modes solo.
+  function menuPage(name, quiet) {
+    const list = $('menuList');
+    if (!list) return;
+    for (const pg of list.querySelectorAll('.menu-page')) {
+      const on = pg.dataset.page === name;
+      pg.classList.toggle('enter', on && !quiet && !pg.classList.contains('on'));
+      pg.classList.toggle('on', on);
+    }
+    list.dataset.page = name;
+    // Le focus suit la page (clavier), sans faire défiler l'écran du menu.
+    if (!quiet) { const first = list.querySelector('.menu-page.on .menu-item'); if (first) first.focus({ preventScroll: true }); }
+    $('menu').scrollTop = 0;
+  }
+  // La planète du menu déborde en bas : l'écran ne doit jamais défiler (focus, clavier).
+  listen('menu', 'scroll', () => { if ($('menu').scrollTop) $('menu').scrollTop = 0; });
+  listen('playBtn', 'click', () => { SFX.tap(); menuPage('play'); });
+  listen('soloBtn', 'click', () => { SFX.tap(); menuPage('solo'); });
+  listen('menuList', 'click', (e) => {
+    const b = e.target.closest('[data-menu-back]');
+    if (!b) return;
+    SFX.tap();
+    menuPage(b.dataset.menuBack);
+  });
+  listen('duelBtn', 'click', () => openMode(2));
+  listen('dailyBtn', 'click', () => openDaily());
+  listen('codexBtn', 'click', () => openCodex());
+  listen('codexBack', 'click', async () => { SFX.tap(); await backToMenu(); });
+  listen('codexTabs', 'click', (e) => { const b = e.target.closest('[data-cx]'); if (!b) return; SFX.tap(); ui.cxTab = b.dataset.cx; renderCodex(); });
+  listen('codexFams', 'click', (e) => { const b = e.target.closest('[data-cxf]'); if (!b) return; SFX.tap(); ui.cxFam = b.dataset.cxf; renderCodex(); });
+  listen('codexBody', 'click', (e) => { const b = e.target.closest('[data-cxid]'); if (!b) return; SFX.tap(); openSheet(unitSheet(shopUnit(b.dataset.cxid))); });
+  listen('endRanked', 'click', (e) => { if (e.target.closest('[data-daily-board]')) { SFX.tap(); openDailyBoard(); } });
   listen('quickBtn', 'click', () => openMode(8));
-  listen('meleeBtn', 'click', () => openMode(8));
   listen('multiBtn', 'click', async () => {
     SFX.tap();
     if (window.OrbiteMultiUI) { stopAmbient(); window.OrbiteMultiUI.open(); return; }
@@ -3811,7 +4120,7 @@
   listen('profileBtn', 'click', async () => { SFX.tap(); stopAmbient(); renderProfile(); await show('profile'); });
   listen('profileBack', 'click', async () => { SFX.tap(); await backToMenu(); });
   listen('settingsBtn', 'click', () => { SFX.tap(); openSheet(settingsHtml()); });
-  listen('lawsBack', 'click', async () => { SFX.tap(); await backToMenu(); });
+  listen('lawsBack', 'click', async () => { SFX.tap(); ui.daily = null; await backToMenu(); });
   listen('upBtn', 'click', guard(doUpgrade));
   listen('rollBtn', 'click', guard(doRoll));
   listen('freezeBtn', 'click', () => { if (!ui.busy) doFreeze(); });
@@ -3819,6 +4128,7 @@
   listen('rivals', 'click', () => { if (!ui.busy) { SFX.tap(); openRivals(); } });
   listen('famsBtn', 'click', () => { SFX.tap(); openFamilies(); });
   listen('menuBtn', 'click', () => { SFX.tap(); openMenu(); });
+  listen('cosmosBtn', 'click', () => { if (ui.state) { SFX.tap(); openCosmos(); } });
   listen('powerBtn', 'click', () => {
     if (ui.busy) return;
     const p = me(), law = R.LAW[p.law];
@@ -3836,7 +4146,7 @@
     }
   });
   listen('skipBtn', 'click', () => { if (!(ui.state && ui.state.mp)) ui.skip = true; });
-  listen('againBtn', 'click', async () => { SFX.tap(); ui.size = ui.state && !R.isDuel(ui.state) ? 8 : 2; renderLaws(); await show('laws'); });
+  listen('againBtn', 'click', async () => { SFX.tap(); ui.size = ui.state && !R.isDuel(ui.state) ? 8 : 2; ui.daily = null; renderLaws(); await show('laws'); });
   listen('endHome', 'click', async () => { SFX.tap(); await backToMenu(); });
 
   window.addEventListener('resize', () => {
@@ -3858,7 +4168,7 @@
     SFX.hover();
   });
 
-  window.__orbite = { ui, rules: R, stage, show, renderGame, fight, enterMenu, backToMenu, endScreen };
+  window.__orbite = { ui, rules: R, stage, show, renderGame, fight, enterMenu, backToMenu, endScreen, autoRelic };
   // Outils partagés avec le mode Campagne (js/campagne-ui.js).
   window.__orbite.api = {
     show, openSheet, closeSheet, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,

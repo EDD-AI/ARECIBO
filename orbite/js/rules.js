@@ -512,24 +512,67 @@
   }
 
   const LAWS = [
-    { id: 'symbiose', fam: 'vie', name: 'Loi de symbiose', starter: 'aube', tagline: 'Tout commence par une étoile.', text: 'Fin de cycle : votre astre le plus faible gagne +1 PV.' },
-    { id: 'entropie', fam: 'neant', name: 'Loi de l’entropie', starter: 'cendre', tagline: 'Rien ne meurt en vain.', text: 'Quand un de vos astres s’effondre, vos astres du Néant gagnent +1 Attaque pour le combat.' },
-    { id: 'renversement', fam: 'envers', name: 'Loi du renversement', starter: 'reflet', tagline: 'Le haut est en bas.', text: 'Pouvoir (gratuit, une fois par cycle) : inverse l’Attaque et les PV d’un de vos astres, puis il gagne +1/+1.', active: { cost: 0, target: true } },
-    { id: 'combustion', fam: 'brasier', name: 'Loi de combustion', starter: 'braise', tagline: 'Brûler avant de disparaître.', text: 'Début de combat : inflige 3 dégâts à un ennemi aléatoire.' },
-    { id: 'stase', fam: 'glace', name: 'Loi de stase', starter: 'nive', tagline: 'Le silence est une forteresse.', text: 'Début de combat : vos deux premiers astres gagnent Bouclier.' },
-    { id: 'vents', fam: 'tempete', name: 'Loi des vents', starter: 'brume', tagline: 'Tout ce qui bouge frappe.', text: 'Après chaque attaque, l’astre attaquant gagne +1/+1 pour le combat.' },
-    { id: 'gravite', fam: 'mineral', name: 'Loi de gravité', starter: 'silex', tagline: 'Ce qui pèse dure.', text: 'Fin de cycle : vos Remparts gagnent +0/+1.' },
-    { id: 'marees', fam: 'lune', name: 'Loi des marées', starter: 'phobos', tagline: 'Rien ne tourne seul.', text: 'Fin de cycle : l’astre à droite de chaque Lune gagne +1 PV.' },
-    { id: 'passage', fam: 'comete', name: 'Loi du passage', starter: 'meteore', tagline: 'Tout repasse un jour.', text: 'Votre première actualisation de chaque cycle est gratuite.' },
-    { id: 'resonance', fam: 'cristal', name: 'Loi de résonance', starter: 'quartz', tagline: 'Une note, et tout vibre.', text: 'Quand vous jouez un Cristal, un autre Cristal aléatoire gagne +1/+1.' },
-    { id: 'chaos', fam: 'anomalie', name: 'Loi du chaos', starter: 'fluctuation', tagline: 'Le hasard a toujours raison.', text: 'Début de combat : un allié aléatoire gagne un mot-clé aléatoire.' },
-    { id: 'ingenierie', fam: 'machine', name: 'Loi d’ingénierie', starter: 'sonde', tagline: 'Assembler les mondes.', text: 'Pouvoir (1 énergie, une fois par cycle) : ajoute une Sonde 3/3 Arrimage à votre main.', active: { cost: 1, target: false } },
+    { id: 'symbiose', fam: 'vie', name: 'Loi de symbiose', starter: 'aube', tagline: 'Tout commence par une étoile.', text: 'Fin de cycle : votre astre le plus faible gagne +1 PV.', awake: 'Fin de cycle : vos deux astres les plus faibles gagnent +1/+1.' },
+    { id: 'entropie', fam: 'neant', name: 'Loi de l’entropie', starter: 'cendre', tagline: 'Rien ne meurt en vain.', text: 'Quand un de vos astres s’effondre, vos astres du Néant gagnent +1 Attaque pour le combat.', awake: 'Quand un de vos astres s’effondre, vos astres du Néant gagnent +1/+1 pour le combat.' },
+    { id: 'renversement', fam: 'envers', name: 'Loi du renversement', starter: 'reflet', tagline: 'Le haut est en bas.', text: 'Pouvoir (gratuit, une fois par cycle) : inverse l’Attaque et les PV d’un de vos astres, puis il gagne +1/+1.', awake: 'Pouvoir (gratuit, une fois par cycle) : inverse l’Attaque et les PV d’un de vos astres, puis il gagne +2/+2.', active: { cost: 0, target: true } },
+    { id: 'combustion', fam: 'brasier', name: 'Loi de combustion', starter: 'braise', tagline: 'Brûler avant de disparaître.', text: 'Début de combat : inflige 3 dégâts à un ennemi aléatoire.', awake: 'Début de combat : inflige 3 dégâts à deux ennemis aléatoires.' },
+    { id: 'stase', fam: 'glace', name: 'Loi de stase', starter: 'nive', tagline: 'Le silence est une forteresse.', text: 'Début de combat : vos deux premiers astres gagnent Bouclier.', awake: 'Début de combat : vos trois premiers astres gagnent Bouclier.' },
+    { id: 'vents', fam: 'tempete', name: 'Loi des vents', starter: 'brume', tagline: 'Tout ce qui bouge frappe.', text: 'Après chaque attaque, l’astre attaquant gagne +1/+1 pour le combat.', awake: 'Après chaque attaque, l’astre attaquant gagne +2/+1 pour le combat.' },
+    { id: 'gravite', fam: 'mineral', name: 'Loi de gravité', starter: 'silex', tagline: 'Ce qui pèse dure.', text: 'Fin de cycle : vos Remparts gagnent +0/+1.', awake: 'Fin de cycle : vos Remparts gagnent +1/+2.' },
+    { id: 'marees', fam: 'lune', name: 'Loi des marées', starter: 'phobos', tagline: 'Rien ne tourne seul.', text: 'Fin de cycle : l’astre à droite de chaque Lune gagne +1 PV.', awake: 'Fin de cycle : les deux voisins de chaque Lune gagnent +1 PV.' },
+    { id: 'passage', fam: 'comete', name: 'Loi du passage', starter: 'meteore', tagline: 'Tout repasse un jour.', text: 'Votre première actualisation de chaque cycle est gratuite.', awake: 'Vos deux premières actualisations de chaque cycle sont gratuites.' },
+    { id: 'resonance', fam: 'cristal', name: 'Loi de résonance', starter: 'quartz', tagline: 'Une note, et tout vibre.', text: 'Quand vous jouez un Cristal, un autre Cristal aléatoire gagne +1/+1.', awake: 'Quand vous jouez un Cristal, tous vos autres Cristaux gagnent +1/+1.' },
+    { id: 'chaos', fam: 'anomalie', name: 'Loi du chaos', starter: 'fluctuation', tagline: 'Le hasard a toujours raison.', text: 'Début de combat : un allié aléatoire gagne un mot-clé aléatoire.', awake: 'Début de combat : deux alliés aléatoires gagnent un mot-clé aléatoire.' },
+    { id: 'ingenierie', fam: 'machine', name: 'Loi d’ingénierie', starter: 'sonde', tagline: 'Assembler les mondes.', text: 'Pouvoir (1 énergie, une fois par cycle) : ajoute une Sonde 3/3 Arrimage à votre main.', awake: 'Pouvoir (gratuit, une fois par cycle) : ajoute une Sonde 3/3 Arrimage à votre main.', active: { cost: 1, target: false } },
     // Lois de vie : neutres, elles ne choisissent pas de famille et changent les PV de départ.
-    { id: 'sacrifice', fam: 'neutre', name: 'Loi du sacrifice', starter: 'errante', hp: 22, tagline: 'Tout se paie, même l’élan.', text: 'Vous commencez avec 22 PV, mais gagnez 1 énergie de plus à chaque cycle.' },
-    { id: 'endurance', fam: 'neutre', name: 'Loi d’endurance', starter: 'echo', hp: 45, tagline: 'Durer, c’est déjà vaincre.', text: 'Vous commencez avec 45 PV au lieu de 30.' },
-    { id: 'phenix', fam: 'neutre', name: 'Loi du phénix', starter: 'errante', hp: 25, tagline: 'Des cendres, un monde.', text: 'Vous commencez avec 25 PV. La première fois que vous tombez à 0 PV, vous renaissez avec 15 PV.' }
+    { id: 'sacrifice', fam: 'neutre', name: 'Loi du sacrifice', starter: 'errante', hp: 22, tagline: 'Tout se paie, même l’élan.', text: 'Vous commencez avec 22 PV, mais gagnez 1 énergie de plus à chaque cycle.', awake: 'Vous gagnez 2 énergies de plus à chaque cycle, même au maximum.' },
+    { id: 'endurance', fam: 'neutre', name: 'Loi d’endurance', starter: 'echo', hp: 45, tagline: 'Durer, c’est déjà vaincre.', text: 'Vous commencez avec 45 PV au lieu de 30.', awake: 'Début de combat : vos astres de l’avant gagnent +0/+2.' },
+    { id: 'phenix', fam: 'neutre', name: 'Loi du phénix', starter: 'errante', hp: 25, tagline: 'Des cendres, un monde.', text: 'Vous commencez avec 25 PV. La première fois que vous tombez à 0 PV, vous renaissez avec 15 PV.', awake: 'Début de combat : votre astre le plus faible gagne Renaissance.' }
   ];
   const LAW = Object.fromEntries(LAWS.map((l) => [l.id, l]));
+  // Éveil des lois (v84) : au début de ce cycle, la loi de chaque univers devient plus forte (awake).
+  const AWAKE_ROUND = 6;
+
+  // ─── Événements cosmiques (v84) ─────────────────────────────
+  // Une règle spéciale par partie, la même pour tous les univers, tirée de la graine.
+  const EVENTS = [
+    { id: 'meteores', name: 'Pluie de météores', text: 'Les astres de niveau 1 achetés gagnent +1/+1.' },
+    { id: 'abondance', name: 'Abondance', text: 'Chaque univers reçoit 1 énergie de plus à chaque cycle.' },
+    { id: 'feconde', name: 'Création féconde', text: 'La Création propose un astre de plus.' },
+    { id: 'recyclage', name: 'Recyclage cosmique', text: 'Vendre un astre rapporte 1 énergie de plus.' },
+    { id: 'expansion', name: 'Expansion', text: 'Monter de niveau coûte 1 énergie de moins.' },
+    { id: 'revelation', name: 'Révélation', text: 'Les découvertes proposent 4 astres au lieu de 3.' },
+    { id: 'legendes', name: 'Ère des légendes', text: 'Les légendaires se montrent 5 fois plus souvent.' },
+    { id: 'vent', name: 'Vent solaire', text: 'Début de combat : chaque camp inflige 1 dégât à tous les astres de l’avant adverse.' },
+    { id: 'aurore', name: 'Aurore', text: 'Début de combat : le premier astre de chaque camp gagne Bouclier.' },
+    { id: 'maree', name: 'Grande marée', text: 'Fin de cycle : l’astre le plus faible de chaque système gagne +1/+1.' },
+    { id: 'instable', name: 'Instabilité', text: 'Début de combat : deux astres aléatoires de chaque camp gagnent un mot-clé aléatoire.' }
+  ];
+  const EVENT = Object.fromEntries(EVENTS.map((e) => [e.id, e]));
+  function eventFor(seed) {
+    return EVENTS[Math.floor(mulberry(hashStr(String(seed) + '|event'))() * EVENTS.length)].id;
+  }
+
+  // ─── Reliques (v84) ─────────────────────────────────────────
+  // Au début des cycles RELIC_ROUNDS, chaque univers choisit une relique parmi trois. Elle dure
+  // toute la partie.
+  const RELIC_ROUNDS = [4, 8];
+  const RELICS = [
+    { id: 'tresor', name: 'Trésor', text: 'Vous gagnez 1 énergie de plus à chaque cycle.' },
+    { id: 'longuevue', name: 'Longue-vue', text: 'La Création vous propose un astre de plus.' },
+    { id: 'comptoir', name: 'Comptoir', text: 'Vendre un astre rapporte 1 énergie de plus.' },
+    { id: 'elan', name: 'Élan', text: 'Monter de niveau coûte 1 énergie de moins.' },
+    { id: 'banniere', name: 'Bannière', text: 'Fin de cycle : un astre de votre famille la plus nombreuse gagne +1/+1.' },
+    { id: 'lance', name: 'Fer de lance', text: 'Début de combat : vos astres de l’avant gagnent +1/+0.' },
+    { id: 'bastion', name: 'Bastion', text: 'Début de combat : vos Remparts gagnent +0/+3.' },
+    { id: 'reserve', name: 'Réserve', text: 'Quand votre arrière avance, ses astres gagnent +2/+2.' },
+    { id: 'egide', name: 'Égide', text: 'Début de combat : votre premier astre gagne Bouclier.' },
+    { id: 'dard', name: 'Dard', text: 'Début de combat : votre astre le plus fort gagne Toxique.' },
+    { id: 'braise', name: 'Braise d’étoile', text: 'Début de combat : votre astre le plus faible gagne Renaissance.' },
+    { id: 'alchimie', name: 'Alchimie', text: 'Début de combat : vos astres dorés gagnent +2/+2.' }
+  ];
+  const RELIC = Object.fromEntries(RELICS.map((r) => [r.id, r]));
+  const hasRelic = (p, id) => !!(p && p.relics && p.relics.includes(id));
 
   const BOT_NAMES = ['NOX-7', 'KEPLER', 'VESPER', 'ANDROMÈDE', 'ORION', 'CASSIOPÉE', 'ATLAS', 'LYRA', 'HYDRA', 'VÉGA', 'DRACO', 'PHÉNIX'];
 
@@ -673,7 +716,19 @@
     for (const id of copiesOf(u)) if (state.pool[id] !== undefined) state.pool[id]++;
   }
 
-  function upgradeCost(p) { return p.tier >= 6 ? 0 : Math.max(0, UPGRADE[p.tier] - p.discount); }
+  // state : facultatif (l'événement Expansion), la relique Élan suffit sans lui.
+  function upgradeCost(p, state) {
+    if (p.tier >= 6) return 0;
+    const off = (state && state.event === 'expansion' ? 1 : 0) + (hasRelic(p, 'elan') ? 1 : 0);
+    return Math.max(0, UPGRADE[p.tier] - p.discount - off);
+  }
+  // Énergie de plus à chaque cycle, au-delà du maximum : événement, relique, loi éveillée.
+  function bonusGold(state, p) {
+    return (state.event === 'abondance' ? 1 : 0) + (hasRelic(p, 'tresor') ? 1 : 0) + (p.law === 'sacrifice' && p.awake ? 1 : 0);
+  }
+  const shopSize = (state, p) => Math.min(7, SHOP_SIZE[p.tier] + (state.event === 'feconde' ? 1 : 0) + (hasRelic(p, 'longuevue') ? 1 : 0));
+  const sellGain = (state, p) => 1 + (state.event === 'recyclage' ? 1 : 0) + (hasRelic(p, 'comptoir') ? 1 : 0);
+  const powerCost = (p) => (p.law === 'ingenierie' && p.awake ? 0 : (LAW[p.law].active || {}).cost || 0);
 
   // ─── Contexte de création ────────────────────────────────────
   function shopCtx(state, p) {
@@ -782,8 +837,8 @@
   function refillShop(state, p) {
     const rng = rngFor(state, 'roll:' + p.id);
     p.shop = p.shop.filter(Boolean);
-    while (p.shop.length < SHOP_SIZE[p.tier]) {
-      const id = (rng() < LEGEND_SHOP && drawLegend(state, p.tier, rng)) || drawFromPool(state, p.tier, rng);
+    while (p.shop.length < shopSize(state, p)) {
+      const id = (rng() < LEGEND_SHOP * (state.event === 'legendes' ? 5 : 1) && drawLegend(state, p.tier, rng)) || drawFromPool(state, p.tier, rng);
       if (!id) break;
       p.shop.push(id);
     }
@@ -800,9 +855,9 @@
     const hpMult = state.size === DUEL.players ? DUEL.hp : 1;
     const p = {
       id, name, bot, law: lawId, pref: law.fam, hpMult,
-      hp: (law.hp || START_HP) * hpMult, maxHp: (law.hp || START_HP) * hpMult, tier: 1, gold: 3, discount: 0,
+      hp: (law.hp || START_HP) * hpMult, maxHp: (law.hp || START_HP) * hpMult, tier: 1, gold: 3 + (state.event === 'abondance' ? 1 : 0), discount: 0,
       board: [], hand: [], shop: [], discover: [],
-      frozen: false, powerUsed: false, alive: true, rank: null,
+      frozen: false, powerUsed: false, alive: true, rank: null, relics: [], relicChoice: [], awake: false,
       lastOpp: null, deadRound: 0, greed: 0
     };
     const starter = makeUnit(state, law.starter);
@@ -837,6 +892,8 @@
     const state = {
       v: 1, seed, size, round: 1, phase: 'shop', rc: 0, uidc: 1,
       families, pool: {}, poolTotal: {},
+      // Événement cosmique : opts.event = 'auto' (tiré de la graine), un identifiant, ou rien.
+      event: opts.event === 'auto' ? eventFor(seed) : EVENT[opts.event] ? opts.event : null,
       players: [], history: [], ghost: null, over: false, rank: null, reward: 0
     };
     for (const c of CARDS) {
@@ -882,6 +939,7 @@
     }
     for (const p of state.players) if (!p.remote) rollShop(state, p);
     if (opts.mp) state.mp = Object.assign({}, opts.mp);
+    if (opts.daily) state.daily = String(opts.daily);
     state.met = {};
     ensurePlan(state);
     return state;
@@ -997,6 +1055,7 @@
     p.gold -= BUY_COST;
     p.shop[slot] = null;
     const u = makeUnit(state, id);
+    if (state.event === 'meteores' && CARD[id].tier === 1) { u.atk++; u.hp++; }
     p.hand.push(u);
     const x = shopCtx(state, p);
     for (const v of p.board.slice()) hook(v, 'buy', x, u);
@@ -1045,7 +1104,10 @@
     p.board.splice((r ? count(0) : 0) + at, 0, u);
     hook(u, 'play', x, at);
     for (const v of p.board.slice()) if (v !== u) hook(v, 'allyPlay', x, u);
-    if (p.law === 'resonance' && famOf(u) === 'cristal') x.buff(x.rnd(x.fam('cristal', u)), 1, 1);
+    if (p.law === 'resonance' && famOf(u) === 'cristal') {
+      if (p.awake) for (const v of x.fam('cristal', u)) x.buff(v, 1, 1);
+      else x.buff(x.rnd(x.fam('cristal', u)), 1, 1);
+    }
     let discover = false;
     if (u.dtier) {
       const t = u.dtier;
@@ -1066,7 +1128,7 @@
     const x = shopCtx(state, p);
     hook(u, 'sold', x);
     releaseUnit(state, u);
-    p.gold = Math.min(99, p.gold + 1);
+    p.gold = Math.min(99, p.gold + sellGain(state, p));
     return { ok: true, events: x.events };
   }
 
@@ -1077,7 +1139,7 @@
     const cost = rollCost(p);
     if (p.gold < cost) return fail('Il faut 1 énergie.');
     p.gold -= cost;
-    if (p.law === 'passage') p.freeRoll = true;
+    if (p.law === 'passage' && cost === 0) p.freeRolls = freeRollsUsed(p) + 1;
     p.frozen = false;
     rollShop(state, p);
     p.rolls = (p.rolls || 0) + 1;
@@ -1085,7 +1147,9 @@
     for (const v of p.board.slice()) hook(v, 'roll', x);
     return { ok: true, events: x.events };
   }
-  const rollCost = (p) => (p.law === 'passage' && !p.freeRoll ? 0 : ROLL_COST);
+  // Les anciennes sauvegardes n'ont que freeRoll (vrai : la gratuite est déjà prise).
+  const freeRollsUsed = (p) => (p.freeRolls != null ? p.freeRolls : p.freeRoll ? 1 : 0);
+  const rollCost = (p) => (p.law === 'passage' && freeRollsUsed(p) < (p.awake ? 2 : 1) ? 0 : ROLL_COST);
 
   function freeze(state, p) {
     p = p || you(state);
@@ -1098,7 +1162,7 @@
     p = p || you(state);
     if (state.phase !== 'shop' || !p.alive) return fail('Le marché est fermé.');
     if (p.tier >= 6) return fail('Niveau maximal atteint.');
-    const cost = upgradeCost(p);
+    const cost = upgradeCost(p, state);
     if (p.gold < cost) return fail(tr('Il faut {n} énergies.', { n: cost }));
     p.gold -= cost;
     p.tier++;
@@ -1146,7 +1210,7 @@
     if (!law.active) return fail('Cette loi agit seule.');
     if (state.phase !== 'shop' || !p.alive) return fail('Le marché est fermé.');
     if (p.powerUsed) return fail('Déjà utilisé ce cycle.');
-    if (p.gold < law.active.cost) return fail(tr('Il faut {n} énergie.', { n: law.active.cost }));
+    if (p.gold < powerCost(p)) return fail(tr('Il faut {n} énergie.', { n: powerCost(p) }));
     if (p.discover.length) return fail('Choisissez d’abord votre découverte.');
     return { ok: true };
   }
@@ -1155,21 +1219,20 @@
     p = p || you(state);
     const check = canUsePower(state, p);
     if (!check.ok) return check;
-    const law = LAW[p.law];
     const x = shopCtx(state, p);
     if (p.law === 'renversement') {
       const t = p.board.find((u) => u.uid === targetUid);
       if (!t) return fail('Choisissez un astre de votre système.');
       if (t.atk <= 0) return fail('Cet astre n’a pas d’Attaque à inverser.');
       x.swap(t);
-      x.buff(t, 1, 1);
+      x.buff(t, p.awake ? 2 : 1, p.awake ? 2 : 1);
     } else if (p.law === 'ingenierie') {
       if (p.hand.length >= HAND_MAX) return fail('Votre main est pleine.');
       const u = makeUnit(state, 'sonde-t');
       p.hand.push(u);
       x.events.push({ t: 'gain', uid: u.uid });
     }
-    p.gold -= law.active.cost;
+    p.gold -= powerCost(p);
     p.powerUsed = true;
     return { ok: true, events: x.events };
   }
@@ -1178,9 +1241,10 @@
     const rng = rngFor(state, 'discover:' + p.id);
     p.discover = [];
     // Parfois, une légendaire se glisse parmi les choix.
-    if (rng() < LEGEND_DISCOVER) { const l = drawLegend(state, tier, rng); if (l) p.discover.push(l); }
-    for (let t = tier; t >= 1 && p.discover.length < 3; t--) {
-      while (p.discover.length < 3) {
+    const n = state.event === 'revelation' ? 4 : 3;
+    if (rng() < LEGEND_DISCOVER * (state.event === 'legendes' ? 3 : 1)) { const l = drawLegend(state, tier, rng); if (l) p.discover.push(l); }
+    for (let t = tier; t >= 1 && p.discover.length < n; t--) {
+      while (p.discover.length < n) {
         const avail = Object.keys(state.pool).filter((id) => CARD[id].tier === t && !CARD[id].legend && state.pool[id] > 0 && !p.discover.includes(id));
         if (!avail.length) break;
         const total = avail.reduce((s, id) => s + state.pool[id], 0);
@@ -1220,7 +1284,12 @@
     p.powerUsed = false;
     p.rolls = 0;
     p.freeRoll = false;
+    p.freeRolls = 0;
     const x = shopCtx(state, p);
+    if (state.round === AWAKE_ROUND && !p.awake) { p.awake = true; x.events.push({ t: 'awake', law: p.law }); }
+    // L'éveil de Sacrifice compte dès ce cycle.
+    p.gold += bonusGold(state, p);
+    if (RELIC_ROUNDS.includes(state.round)) offerRelics(state, p);
     for (const u of p.board.slice()) hook(u, 'startTurn', x);
     if (p.frozen) { p.frozen = false; refillShop(state, p); }
     else rollShop(state, p);
@@ -1230,22 +1299,57 @@
   function endTurnEffects(state, p) {
     const x = shopCtx(state, p);
     for (const u of p.board.slice()) hook(u, 'endTurn', x);
+    const weakest = () => p.board.slice().sort((a, b) => a.atk + a.hp - (b.atk + b.hp));
     if (p.law === 'symbiose' && p.board.length) {
-      const weak = p.board.slice().sort((a, b) => a.atk + a.hp - (b.atk + b.hp))[0];
       x.events.push({ t: 'law' });
-      x.buff(weak, 0, 1);
+      if (p.awake) for (const u of weakest().slice(0, 2)) x.buff(u, 1, 1);
+      else x.buff(weakest()[0], 0, 1);
     }
     if (p.law === 'marees') {
       const moons = p.board.filter((u) => famOf(u) === 'lune');
       if (moons.length) x.events.push({ t: 'law' });
-      for (const l of moons) x.buff(x.right(l), 0, 1);
+      for (const l of moons) {
+        if (p.awake) for (const v of x.neighbors(l)) x.buff(v, 0, 1);
+        else x.buff(x.right(l), 0, 1);
+      }
     }
     if (p.law === 'gravite') {
       const walls = p.board.filter((u) => u.kw.includes('rempart'));
       if (walls.length) x.events.push({ t: 'law' });
-      for (const u of walls) x.buff(u, 0, 1);
+      for (const u of walls) x.buff(u, p.awake ? 1 : 0, p.awake ? 2 : 1);
     }
+    if (hasRelic(p, 'banniere')) {
+      const top = FAMILY_KEYS.map((fam) => [fam, x.fam(fam).length]).sort((a, b) => b[1] - a[1])[0];
+      if (top && top[1]) { x.events.push({ t: 'relic', id: 'banniere' }); x.buff(x.rnd(x.fam(top[0])), 1, 1); }
+    }
+    if (state.event === 'maree' && p.board.length) { x.events.push({ t: 'event' }); x.buff(weakest()[0], 1, 1); }
     return x.events;
+  }
+
+  // ─── Reliques : le choix ────────────────────────────────────
+  function offerRelics(state, p) {
+    const rng = rngFor(state, 'relic:' + p.id);
+    p.relics = p.relics || [];
+    p.relicChoice = shuffle(RELICS.filter((r) => !p.relics.includes(r.id)), rng).slice(0, 3).map((r) => r.id);
+    // Les bots choisissent aussitôt.
+    if (p.bot && p.relicChoice.length) chooseRelic(state, botRelic(p), p);
+  }
+  function chooseRelic(state, index, p) {
+    p = p || you(state);
+    const list = p.relicChoice || [];
+    if (index < 0 || index >= list.length) return fail('Aucune relique à choisir.');
+    const id = list[index];
+    p.relics = (p.relics || []).concat([id]);
+    p.relicChoice = [];
+    return { ok: true, id };
+  }
+  // Le bot préfère l'énergie tôt, puis ce qui renforce son système tel qu'il est.
+  function botRelic(p) {
+    const golden = p.board.some((u) => u.golden), walls = p.board.some((u) => u.kw.includes('rempart'));
+    const score = (id) => ({ tresor: 5, lance: 4, banniere: 3.5, egide: 3, dard: 3, braise: 2.5, reserve: 2.5, elan: p.tier < 5 ? 3 : 0, longuevue: 2, comptoir: 1.5, bastion: walls ? 4 : 0.5, alchimie: golden ? 4 : 1 }[id] || 1);
+    let best = 0;
+    p.relicChoice.forEach((id, i) => { if (score(id) > score(p.relicChoice[best])) best = i; });
+    return best;
   }
 
   // ─── Combat ─────────────────────────────────────────────────
@@ -1290,6 +1394,8 @@
       }
       return best;
     }
+    // L'astre le plus faible d'un camp (Attaque + PV).
+    const weakestOf = (s) => alive(s).slice().sort((x, y) => x.atk + x.hp - (y.atk + y.hp))[0] || null;
     // L'astre de l'avant juste devant u (même camp).
     const ahead = (u) => facing(u, inRow(u.side, 0).filter((v) => v !== u));
 
@@ -1432,6 +1538,7 @@
         const moved = inRow(s, 1);
         for (const u of moved) { u.row = 0; u.attacked = false; }
         log({ t: 'advance', side: s, cids: moved.map((u) => u.cid) });
+        if (hasRelic(players[s], 'reserve')) { log({ t: 'relic', side: s, id: 'reserve' }); for (const u of moved) c.buff(u, 2, 2); }
         for (const f of forms[s]) {
           if (f.fam !== 'comete' || f.row !== 1) continue;
           for (const u of f.units) if (!u.dead && u.hp > 0) c.buff(u, 2 * f.lvl, f.lvl);
@@ -1460,7 +1567,7 @@
               for (let k = 0; k < times; k++) { log({ t: 'fx', cid: u.cid }); card.death(c, u, u.m, idx); }
             }
             for (const v of alive(s)) fire(v, 'allyDeath', u);
-            if (players[s].law === 'entropie') for (const v of alive(s)) if (famOf(v) === 'neant') c.buff(v, 1, 0);
+            if (players[s].law === 'entropie') for (const v of alive(s)) if (famOf(v) === 'neant') c.buff(v, 1, players[s].awake ? 1 : 0);
             formDeath(s, u);
             // Trou noir : il grossit à chaque astre qui s'effondre, d'un camp comme de l'autre.
             for (let w = 0; w < 2; w++) for (const v of alive(w)) if (v.blackhole) c.buff(v, 1, 1);
@@ -1505,7 +1612,7 @@
       flush();
       fire(att, 'attack', t);
       for (const v of alive(att.side)) fire(v, 'allyAttack', att, t);
-      if (players[att.side].law === 'vents' && !att.dead) c.buff(att, 1, 1);
+      if (players[att.side].law === 'vents' && !att.dead) c.buff(att, players[att.side].awake ? 2 : 1, 1);
       if (!att.dead && att.hp > 0) {
         const f = att.form;
         if (f && f.fam === 'tempete' && f.row === 0) c.buff(att, f.lvl, 0);
@@ -1588,9 +1695,33 @@
     log({ t: 'first', side: turn });
     for (const s of [turn, 1 - turn]) {
       const p = players[s], first = alive(s)[0];
-      if (p.law === 'combustion') { log({ t: 'law', side: s, law: p.law }); const t = c.rnd(alive(1 - s)); if (t) hit(t, 3 + countOf(s, 'tison'), null, 'effect'); }
-      if (p.law === 'chaos') { log({ t: 'law', side: s, law: p.law }); c.randomKw(c.rnd(alive(s))); }
-      if (p.law === 'stase' && first) { log({ t: 'law', side: s, law: p.law }); for (const u of alive(s).slice(0, 2)) c.kw(u, 'bouclier'); }
+      if (p.law === 'combustion') {
+        log({ t: 'law', side: s, law: p.law });
+        const ts = p.awake ? shuffle(alive(1 - s), rng).slice(0, 2) : [c.rnd(alive(1 - s))];
+        for (const t of ts) if (t) hit(t, 3 + countOf(s, 'tison'), null, 'effect');
+      }
+      if (p.law === 'chaos') { log({ t: 'law', side: s, law: p.law }); for (const u of p.awake ? c.pickAllies(s, 2) : [c.rnd(alive(s))]) c.randomKw(u); }
+      if (p.law === 'stase' && first) { log({ t: 'law', side: s, law: p.law }); for (const u of alive(s).slice(0, p.awake ? 3 : 2)) c.kw(u, 'bouclier'); }
+      if (p.law === 'endurance' && p.awake && first) { log({ t: 'law', side: s, law: p.law }); for (const u of inRow(s, 0)) c.buff(u, 0, 2); }
+      if (p.law === 'phenix' && p.awake && first) { log({ t: 'law', side: s, law: p.law }); c.kw(weakestOf(s), 'renaissance'); }
+      // Reliques de début de combat.
+      const relic = (id, fn) => { if (hasRelic(p, id) && first) { log({ t: 'relic', side: s, id }); fn(); } };
+      relic('lance', () => { for (const u of inRow(s, 0)) c.buff(u, 1, 0); });
+      relic('bastion', () => { for (const u of alive(s)) if (u.kw.includes('rempart')) c.buff(u, 0, 3); });
+      relic('egide', () => c.kw(alive(s)[0], 'bouclier'));
+      relic('dard', () => c.kw(c.ranked(s)[0], 'venin'));
+      relic('braise', () => c.kw(weakestOf(s), 'renaissance'));
+      relic('alchimie', () => { for (const u of alive(s)) if (u.golden) c.buff(u, 2, 2); });
+    }
+    // Événement cosmique de début de combat, pour les deux camps.
+    const cosmic = state.event;
+    if (cosmic === 'vent' || cosmic === 'aurore' || cosmic === 'instable') {
+      log({ t: 'event', id: cosmic });
+      for (const s of [turn, 1 - turn]) {
+        if (cosmic === 'vent') for (const t of inRow(1 - s, 0)) hit(t, 1, null, 'effect');
+        if (cosmic === 'aurore') c.kw(alive(s)[0], 'bouclier');
+        if (cosmic === 'instable') for (const u of c.pickAllies(s, 2)) c.randomKw(u);
+      }
     }
     // Phénomènes : repérés pour les deux camps, puis ils transforment leurs astres.
     const phen = [0, 1].map((s) => findPhenomena(inRow(s, 0), inRow(s, 1)));
@@ -1701,9 +1832,9 @@
     for (let k = 0; k < Math.min(nOpp || BOT.simOpp, opps.length); k++) {
       const op = opps[(k + state.round) % opps.length];
       for (let t = 0; t < 2; t++) {
-        const fs = { seed: state.seed, rc: 0, families: state.families, uidc: 1000000, pool: {} };
-        const me = { id: 'sim', law: p.law, tier: p.tier, board: JSON.parse(JSON.stringify(board)) };
-        const them = { id: 'opp', law: op.law, tier: op.tier, board: JSON.parse(JSON.stringify(op.seen)) };
+        const fs = { seed: state.seed, rc: 0, families: state.families, uidc: 1000000, pool: {}, event: state.event };
+        const me = { id: 'sim', law: p.law, tier: p.tier, relics: p.relics, awake: p.awake, board: JSON.parse(JSON.stringify(board)) };
+        const them = { id: 'opp', law: op.law, tier: op.tier, relics: op.relics, awake: op.awake, board: JSON.parse(JSON.stringify(op.seen)) };
         const r = fight(fs, me, them, 'sim:' + p.id + ':' + state.round + ':' + k + ':' + t, false);
         score += r.winner === 0 ? 1 + r.damage * 0.05 : r.winner === 1 ? -1 - r.damage * 0.05 : 0;
       }
@@ -1811,6 +1942,7 @@
 
   function botTurn(state, p) {
     const rng = rngFor(state, 'bot:' + p.id);
+    if (p.relicChoice && p.relicChoice.length) chooseRelic(state, botRelic(p), p);
     // IA experte : suit la famille qui domine déjà son système.
     if (expert(p) && state.round >= 4) {
       const top = FAMILY_KEYS.map((f) => [f, famCount(p, f)]).sort((a, b) => b[1] - a[1])[0];
@@ -1820,7 +1952,7 @@
     // L'IA experte monte de niveau plus tard : elle remplit d'abord son système, puis investit
     // l'énergie restante. C'est ce qui la rend nettement plus solide en début de partie.
     const want = Math.min(6, 1 + Math.floor((state.round + p.greed - (expert(p) ? BOT.levelLag : 0)) / 2));
-    if (p.tier < want && p.gold >= upgradeCost(p) && (state.round >= 3 || upgradeCost(p) <= p.gold - BUY_COST || p.gold >= 5)) upgrade(state, p);
+    if (p.tier < want && p.gold >= upgradeCost(p, state) && (state.round >= 3 || upgradeCost(p, state) <= p.gold - BUY_COST || p.gold >= 5)) upgrade(state, p);
     if (p.law === 'ingenierie' && p.gold >= 1 && p.gold % 3 === 1) usePower(state, null, p);
     if (p.law === 'renversement') {
       const t = p.board.filter((u) => u.atk > 0 && u.hp > u.atk && !u.kw.includes('rempart')).sort((a, b) => b.hp - b.atk - (a.hp - a.atk))[0];
@@ -1846,7 +1978,7 @@
       buy(state, best.i, p);
     }
     botDeploy(state, p);
-    if (p.gold >= 1 && p.tier < 6 && p.gold >= upgradeCost(p)) upgrade(state, p);
+    if (p.gold >= 1 && p.tier < 6 && p.gold >= upgradeCost(p, state)) upgrade(state, p);
     if (expert(p) && !p.frozen) {
       // Garde le marché s'il contient une copie d'un astre déjà possédé ou un astre de sa famille.
       const keep = p.shop.some((id) => id && (ownedCopies(p, id).length >= 1 || (CARD[id].fam === p.pref && CARD[id].tier >= p.tier)));
@@ -1863,6 +1995,7 @@
     const me = you(state);
     if (state.phase !== 'shop' || state.over) return fail('Le combat est déjà lancé.');
     if (me.alive && me.discover.length) return fail('Choisissez d’abord votre découverte.');
+    if (me.alive && me.relicChoice && me.relicChoice.length) return fail('Choisissez d’abord votre relique.');
     const players = alivePlayers(state);
     for (const p of players) if (p.bot) botTurn(state, p);
     const myEndEvents = me.alive ? endTurnEffects(state, me) : [];
@@ -1921,7 +2054,7 @@
       for (const id of p.discover) state.pool[id]++;
       releaseShop(state, p);
       p.discover = [];
-      state.ghost = { id: 'ghost', name: p.name, law: p.law, tier: p.tier, board: JSON.parse(JSON.stringify(p.board)), ghost: true };
+      state.ghost = { id: 'ghost', name: p.name, law: p.law, tier: p.tier, relics: p.relics, awake: p.awake, board: JSON.parse(JSON.stringify(p.board)), ghost: true };
       p.hand = [];
     }
     const still = alivePlayers(state);
@@ -1966,7 +2099,7 @@
   const MP_SEAT_LAW = LAWS.find((l) => !l.hp).id;
   const gidOf = (state, p) => (p.id === 'you' && state.mp ? state.mp.me : p.id);
   function snapshotOf(state, p) {
-    return { id: gidOf(state, p), name: p.name, law: p.law, tier: p.tier, hp: p.hp, alive: p.alive, board: JSON.parse(JSON.stringify(p.board)) };
+    return { id: gidOf(state, p), name: p.name, law: p.law, tier: p.tier, hp: p.hp, alive: p.alive, relics: (p.relics || []).slice(), awake: !!p.awake, board: JSON.parse(JSON.stringify(p.board)) };
   }
   // Fin du tour local : effets de fin de tour (et tour des bots chez l'hôte). Le plateau à publier
   // est alors figé.
@@ -1974,6 +2107,7 @@
     const me = you(state);
     if (state.phase !== 'shop' || state.over) return fail('Le combat est déjà lancé.');
     if (me.discover.length) return fail('Choisissez d’abord votre découverte.');
+    if (me.relicChoice && me.relicChoice.length) return fail('Choisissez d’abord votre relique.');
     const endEvents = endTurnEffects(state, me);
     if (host) for (const p of alivePlayers(state)) if (p.bot) { botTurn(state, p); endTurnEffects(state, p); }
     arrange(me);
@@ -2015,6 +2149,8 @@
       if (!sn) continue;
       p.board = JSON.parse(JSON.stringify(sn.board || []));
       p.tier = sn.tier || p.tier;
+      if (Array.isArray(sn.relics)) p.relics = sn.relics.filter((id) => RELIC[id]);
+      p.awake = !!sn.awake;
       mpSeatLaw(p, sn.law);
     }
     for (const [gid, p] of byGid) p.seen = JSON.parse(JSON.stringify(snaps[gid] && p !== me ? snaps[gid].board || [] : p.board));
@@ -2024,8 +2160,10 @@
     // Si l'hôte a retenu un autre plateau pour nous (publication en retard), on combat avec
     // celui-là, comme les autres téléphones.
     const mine = snaps[gidOf(state, me)];
-    if (mine && JSON.stringify(mine.board) !== JSON.stringify(me.board)) {
-      const proxy = Object.assign({}, me, { board: JSON.parse(JSON.stringify(mine.board)), tier: mine.tier || me.tier });
+    // Les reliques et l'éveil publiés voyagent avec ce plateau.
+    const kept = (sn) => JSON.stringify([sn.board, sn.relics || [], !!sn.awake]);
+    if (mine && kept(mine) !== kept(me)) {
+      const proxy = Object.assign({}, me, { board: JSON.parse(JSON.stringify(mine.board)), tier: mine.tier || me.tier, relics: (mine.relics || []).slice(), awake: !!mine.awake });
       byGid.set(gidOf(state, me), proxy);
       proxy.__real = me;
     }
@@ -2036,7 +2174,7 @@
       const A = byGid.get(ga), B = gb === 'ghost' ? state.ghost : byGid.get(gb);
       const isMe = (x) => x === me || (x && x.__real === me);
       const mineFight = isMe(A) || isMe(B);
-      const fs = { seed: state.seed, rc: 0, families: state.families, uidc: 1000000, pool: {} };
+      const fs = { seed: state.seed, rc: 0, families: state.families, uidc: 1000000, pool: {}, event: state.event };
       const r = fight(fs, A, B, state.round + ':' + ga + ':' + gb, mineFight);
       r.damage = Math.min(cap, r.damage);
       results.push({ a: ga, b: gb, winner: r.winner, damage: r.damage, ghost: !!B.ghost });
@@ -2074,7 +2212,7 @@
       for (const id of p.discover) state.pool[id]++;
       releaseShop(state, p);
       p.discover = [];
-      state.ghost = { id: 'ghost', name: p.name, law: p.law, tier: p.tier, board: JSON.parse(JSON.stringify(p.board)), ghost: true };
+      state.ghost = { id: 'ghost', name: p.name, law: p.law, tier: p.tier, relics: p.relics, awake: p.awake, board: JSON.parse(JSON.stringify(p.board)), ghost: true };
       p.hand = [];
     }
     const still = alivePlayers(state);
@@ -2113,6 +2251,7 @@
   return {
     rollCost, DUEL, isDuel, rewardsOf, ROW_MAX, FORM_MIN, FORMATIONS, formationsOf, formText, PHENOMENA, phenomenaOf, POSITION_KW, layout, arrange, rowOf, move, botArrange, LEGEND_SHOP, LEGEND_DISCOVER, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
     FAMILIES, FAMILY_KEYS, KEYWORDS, CARDS, CARD, LAWS, LAW,
+    EVENTS, EVENT, eventFor, RELICS, RELIC, RELIC_ROUNDS, AWAKE_ROUND, chooseRelic, hasRelic, powerCost, sellGain, shopSize,
     cardOf, famOf, cardText, upgradeCost, lawChoices, newGame, alivePlayers,
     buy, canBuy, play, canMagnet, sell, roll, freeze, upgrade, reorder, usePower, canUsePower, choose, endTurn,
     fight, poolAudit, copiesOf, botTurn, botDeploy,
