@@ -1497,6 +1497,14 @@ astres au hasard passe de 45 % à 34 % de victoires.
 
 Mots-clés : Rempart, Bouclier, Rafale, Méga-rafale, Renaissance, Toxique, Arrimage.
 
+**Arrimage visible (v101).** Les joueurs ne devinaient pas qu’on peut cumuler les Machines. Tant qu’un
+astre Arrimage attend en main, chaque Machine du système où il peut s’aimanter porte un petit aimant
+bleu qui rebondit (`markDocks`) ; la première fois, un conseil l’explique. Pendant le glisser, toutes
+ces Machines s’entourent d’un champ magnétique qui pulse ; à moins d’une largeur d’astre, l’astre
+glissé est **attiré** à mi-chemin vers la plus proche (déclic et légère vibration) et s’entoure de
+bleu ; lâché, il s’y colle avec un « clac » : étincelles bleues, la Machine tressaute, ses
+statistiques montent.
+
 ## Structure
 
 | Fichier | Rôle |

@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 100;
+  const VERSION = 101;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -2147,6 +2147,28 @@
     $('board').dataset.back = tr('ARRIÈRE');
     layoutRows($('board'));
     renderFormations();
+    markDocks();
+  }
+
+  // Arrimage (v101) : tant qu'un astre Arrimage attend en main, chaque Machine du système où il
+  // peut s'aimanter montre un petit aimant qui rebondit. Sinon, personne ne devine qu'on les cumule.
+  function markDocks() {
+    const p = me();
+    if (!p || document.body.classList.contains('in-combat')) return;
+    const docks = p.hand.filter((u) => u.kw.includes('arrimage'));
+    for (const el of $('board').children) {
+      const u = p.board.find((v) => v.uid === el.dataset.uid);
+      const on = !!u && docks.some((d) => R.canMagnet(d, u));
+      el.classList.toggle('can-dock', on);
+      // La première fois, un mot d'explication.
+      if (on && store.get('orbite.aimant', '') !== '1' && !coach.steps) {
+        store.set('orbite.aimant', '1');
+        setTimeout(() => toast(tr('Aimant : glissez votre astre Arrimage sur une Machine, il s’y colle et lui donne ses statistiques.'), 5600), 900);
+      }
+      let tag = el.querySelector('.dock-tag');
+      if (on && !tag) { tag = document.createElement('i'); tag.className = 'dock-tag'; tag.innerHTML = icon('magnet'); el.appendChild(tag); }
+      else if (!on && tag) tag.remove();
+    }
   }
 
   // Formations : deux astres (ou plus) d'une même famille dans la même rangée.
@@ -2199,6 +2221,7 @@
       return el;
     }, (el, u) => updateUnit(el, u, 'hand'));
     sizeRow($('hand'), 'hand', 54);
+    markDocks();
   }
 
   function renderEnergy(spent) {
@@ -2489,6 +2512,12 @@
       const b = orb.getBoundingClientRect();
       stage.flash(orb, res.magnet ? 0.9 : 0.55);
       stage.ring(x, y, b.width * 0.42, { n: 40, colors: [hexRgb(famColor(R.CARD[landed.dataset.id].fam)), [255, 255, 255]], speed: 55, life: 0.55, flat: 0.45 });
+      if (res.magnet) {
+        stage.burst(x, y, { n: 46, colors: [[127, 216, 255], [200, 240, 255], [255, 255, 255]], speed: 110, life: 0.6 });
+        landed.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.18) rotate(-4deg)' }, { transform: 'scale(0.94) rotate(3deg)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'ease-out' });
+        SFX.golden();
+        vibrate([14, 30, 14]);
+      }
       if (res.magnet) { popOn(landed, kwName('arrimage'), 'info'); setStats(landed, me().board.find((u) => u.uid === res.magnet).atk, me().board.find((u) => u.uid === res.magnet).hp, true); }
     }
     await playShopEvents(res.events, null, pre);
@@ -2659,15 +2688,19 @@
     return { row, index };
   }
 
+  // La Machine où l'astre Arrimage glissé s'aimante : la plus proche, à moins d'une largeur d'astre
+  // de son centre (l'aimant l'attire, inutile de viser juste).
   function magnetTargetAt(x, y, unit) {
     if (!unit || !unit.kw.includes('arrimage')) return null;
+    let best = null, bd = Infinity;
     for (const el of $('board').children) {
       const u = me().board.find((v) => v.uid === el.dataset.uid);
       if (!u || !R.canMagnet(unit, u)) continue;
-      const b = el.getBoundingClientRect();
-      if (x >= b.left && x <= b.right && y >= b.top && y <= b.bottom) return el;
+      const b = el.querySelector('.orb').getBoundingClientRect();
+      const d = Math.hypot(x - (b.left + b.width / 2), y - (b.top + b.height / 2));
+      if (d < Math.max(b.width, 40) * 1.05 && d < bd) { best = el; bd = d; }
     }
-    return null;
+    return best;
   }
 
   // Aperçu de la pose : la rangée visée s'éclaire et ses astres s'écartent. Rangée pleine : un
@@ -2731,10 +2764,26 @@
       drag.el.classList.add('lifted');
       drag.el.querySelector('.orb').dataset.hide = '1';
       drag.unit = drag.src === 'hand' ? me().hand.find((u) => u.uid === drag.key) : null;
+      if (drag.unit && drag.unit.kw.includes('arrimage')) {
+        for (const el of $('board').children) {
+          const u = me().board.find((v) => v.uid === el.dataset.uid);
+          if (u && R.canMagnet(drag.unit, u)) el.classList.add('magnetable');
+        }
+      }
       SFX.tap();
     }
     const scale = drag.src === 'hand' ? 1.35 : 1.12;
-    drag.ghost.style.transform = `translate(${e.clientX - drag.w / 2}px, ${e.clientY - drag.h * 0.42}px) scale(${scale})`;
+    let gx = e.clientX, gy = e.clientY;
+    const pull = drag.src === 'hand' ? magnetTargetAt(e.clientX, e.clientY, drag.unit) : null;
+    if (pull) {
+      // L'aimant attire l'astre : il glisse à mi-chemin vers le centre de la Machine.
+      const b = pull.querySelector('.orb').getBoundingClientRect();
+      gx += (b.left + b.width / 2 - gx) * 0.55;
+      gy += (b.top + b.height / 2 - drag.h * 0.08 - gy) * 0.55;
+      if (drag.pulled !== pull.dataset.uid) { drag.pulled = pull.dataset.uid; SFX.slot(); vibrate(8); }
+    } else drag.pulled = null;
+    drag.ghost.classList.toggle('pulled', !!pull);
+    drag.ghost.style.transform = `translate(${gx - drag.w / 2}px, ${gy - drag.h * 0.42}px) scale(${scale})`;
     const zone = zoneAt(e.clientX, e.clientY);
     clearPreview();
     drag.zone = zone;
@@ -2761,6 +2810,7 @@
     const d = drag;
     drag = null;
     clearPreview();
+    document.querySelectorAll('.unit.magnetable').forEach((el) => el.classList.remove('magnetable'));
     if (!d.moved) {
       // La fiche s'ouvre au « click » qui suit : l'ouvrir dès le relâchement laisserait ce click
       // tomber sur le fond de la feuille (et la refermer aussitôt) ou sur l'un de ses boutons.

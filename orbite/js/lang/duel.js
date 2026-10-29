@@ -145,6 +145,8 @@
     ['INVITÉ', 'INVITED', 'INVITADO', 'EINGELADEN', 'CONVIDADO'],
     ['INVITER', 'INVITE', 'INVITAR', 'EINLADEN', 'CONVIDAR'],
     ['LANCER · {n} JOUEURS', 'START · {n} PLAYERS', 'EMPEZAR · {n} JUGADORES', 'STARTEN · {n} SPIELER', 'COMEÇAR · {n} JOGADORES'],
+    // Arrimage visible (v101)
+    ['Aimant : glissez votre astre Arrimage sur une Machine, il s’y colle et lui donne ses statistiques.', 'Magnet: drag your Docking orb onto a Machine; it sticks to it and gives it its stats.', 'Imán: arrastra tu astro con Acoplamiento sobre una Máquina; se pega a ella y le da sus estadísticas.', 'Magnet: Ziehe dein Gestirn mit Andocken auf eine Maschine; es haftet daran und gibt ihr seine Werte.', 'Ímã: arraste seu astro com Acoplagem até uma Máquina; ele gruda nela e lhe dá seus atributos.'],
     // Cadres premium (v100)
     ['PREMIUM', 'PREMIUM', 'PREMIUM', 'PREMIUM', 'PREMIUM'],
     ['Flammes éternelles', 'Eternal Flames', 'Llamas eternas', 'Ewige Flammen', 'Chamas eternas'],

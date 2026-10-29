@@ -946,6 +946,19 @@ body.in-combat .game-foot { margin-top: auto; }
   translate: none;
   transition: none;
 }
+/* Arrimage (v101) : l'aimant des Machines. Un petit aimant rebondit au-dessus de chaque Machine
+   où l'astre Arrimage en main peut s'aimanter ; pendant le glisser, un champ magnétique pulse
+   autour de toutes ces Machines ; l'astre glissé, attiré, s'entoure de bleu. */
+.dock-tag { position: absolute; top: -8px; left: 50%; z-index: 3; display: inline-flex; color: var(--energy); pointer-events: none; filter: drop-shadow(0 0 4px rgba(127, 216, 255, 0.95)); animation: dockBob 1.1s ease-in-out infinite; }
+.dock-tag svg { width: 12px; height: 12px; }
+@keyframes dockBob { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -4px); } }
+.unit.can-dock::before { content: ''; position: absolute; left: 50%; top: calc(var(--u) * -0.06); width: calc(var(--u) * 1.12); height: calc(var(--u) * 1.12); transform: translateX(-50%); border-radius: 50%; pointer-events: none; box-shadow: 0 0 12px rgba(127, 216, 255, 0.35); }
+.unit.magnetable::before { border: 2px solid rgba(127, 216, 255, 0.8); box-shadow: 0 0 16px rgba(127, 216, 255, 0.7), inset 0 0 12px rgba(127, 216, 255, 0.35); animation: magField 0.9s ease-in-out infinite; }
+@keyframes magField { 0%, 100% { transform: translateX(-50%) scale(0.92); opacity: 0.55; } 50% { transform: translateX(-50%) scale(1.08); opacity: 1; } }
+.unit.magnetable .dock-tag { animation-duration: 0.45s; }
+.unit.magnet::before { border-color: #ffffff; box-shadow: 0 0 26px rgba(170, 235, 255, 1), inset 0 0 16px rgba(170, 235, 255, 0.6); }
+.unit.ghost.pulled { filter: drop-shadow(0 0 10px rgba(127, 216, 255, 0.95)); }
+@media (prefers-reduced-motion: reduce) { .dock-tag, .unit.magnetable::before { animation: none; } }
 .unit.magnet .orb::before {
   content: '';
   position: absolute;
