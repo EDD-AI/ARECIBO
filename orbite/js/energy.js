@@ -49,6 +49,8 @@
     comete: { color: '#4f7bff', sparks: 9, surf(p, t) { const s = fbm(p[0] * 2 - t * 2.2, p[1] * 7, p[2] * 2); return s * 1.1 + Math.max(0, p[0]) * 0.25; } },
     cristal: { color: '#ff6fd8', sparks: 5, surf(p, t) { const q = p.map((v) => Math.round(v * 2.5) / 2.5); const res = 0.5 + 0.5 * Math.sin(t * 3 + (q[0] + q[1] * 2) * 4); return fbm(q[0] * 2, q[1] * 2, q[2] * 2 + t * 0.2) * 0.7 + res * 0.4; } },
     anomalie: { color: '#c8ff3a', sparks: 6, surf(p, t) { const g = Math.floor(t * 6) % 7 === 0 ? 0.4 : 0; return fbm(p[0] * 3 + g * 9, p[1] * 3 + Math.sin(t * 5) * 0.3, p[2] * 3 + t) + g; } },
+    // Nébuleuses (v107) : un gaz qui tourbillonne et aspire, plus dense au bord qu'au centre.
+    nebuleuse: { color: '#e58bff', alt: '#5fc8ff', sparks: 8, inward: true, surf(p, t, r) { return fbm(p[0] * 2.2 + t * 0.25, p[1] * 2.2 - t * 0.2, p[2] * 2.2) * 0.75 + Math.pow(r || 0, 2) * 0.4; } },
     neutre: { color: '#f2efe6', sparks: 3, surf(p, t) { return fbm(p[0] * 2.5 + t * 0.2, p[1] * 2.5, p[2] * 2.5); } }
   };
 
@@ -67,7 +69,9 @@
     machine: (x, y) => Math.hypot(x, y) / (1 + 0.1 * (Math.cos(8 * Math.atan2(y, x)) > 0 ? 1 : -0.4)),
     comete: (x, y) => Math.hypot(x * 1.1, y * 1.1) / (1 + 1.1 * Math.pow(Math.max(0, -x / (Math.hypot(x, y) || 1)), 6)),
     cristal: (x, y) => Math.abs(x) / 0.78 + Math.abs(y) / 1.12,
-    anomalie: (x, y, t) => { const a = Math.atan2(y, x); return Math.hypot(x, y) / (1 + 0.2 * Math.sin(3 * a + t * 1.3) + 0.12 * Math.sin(5 * a - t * 2.1)); }
+    anomalie: (x, y, t) => { const a = Math.atan2(y, x); return Math.hypot(x, y) / (1 + 0.2 * Math.sin(3 * a + t * 1.3) + 0.12 * Math.sin(5 * a - t * 2.1)); },
+    // Nébuleuse : un nuage aplati aux bords effilochés.
+    nebuleuse: (x, y, t) => { const a = Math.atan2(y, x); return Math.hypot(x / 1.15, y / 0.82) / (1 + 0.1 * Math.sin(7 * a + t * 0.8) + 0.06 * Math.sin(11 * a - t)); }
   };
   // La Lune est un croissant : on retire un disque décalé.
   const cutOf = { lune: (x, y) => Math.hypot(x - 0.42, y + 0.18) < 0.82 };

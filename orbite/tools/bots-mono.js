@@ -1,7 +1,7 @@
 // Politique d'achat naïve contre la population choisie, parties terminées jusqu'au vainqueur.
 const { R, parseArguments, argumentHelp, simulateGame, runCli } = require('./lib/simulation.js');
 const { summarizeRanks } = require('./lib/statistiques.js');
-const LAWS = { vie: 'symbiose', cristal: 'resonance', lune: 'marees', tempete: 'vents', glace: 'stase', mineral: 'gravite', neant: 'entropie', brasier: 'combustion', machine: 'ingenierie', comete: 'passage', envers: 'renversement', anomalie: 'chaos' };
+const LAWS = { vie: 'symbiose', cristal: 'resonance', lune: 'marees', tempete: 'vents', glace: 'stase', mineral: 'gravite', neant: 'entropie', brasier: 'combustion', machine: 'ingenierie', comete: 'passage', envers: 'renversement', anomalie: 'chaos', nebuleuse: 'siphon' };
 function naive(st, p, fam) {
   const val = (u) => u.atk + u.hp + R.CARD[u.id].tier * 2 + (R.famOf(u) === fam ? 10 : 0) + (u.golden ? 6 : 0);
   const deploy = () => {

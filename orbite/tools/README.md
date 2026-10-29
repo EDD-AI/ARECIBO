@@ -21,9 +21,13 @@ node orbite/tools/combinaisons.js --units 2 --json
 node orbite/tools/bots-duel.js 120 --seed bots-1 --json
 node orbite/tools/hybrides.js 120 --seed compositions-1 --detail
 node orbite/tools/bots-mono.js 10 --seed mono-1 --json
+
+# Duel : l'IA experte joue chaque famille contre une IA experte (50 % = la moyenne, v107).
+node orbite/tools/familles.js 200
+node orbite/tools/familles.js 200 machine,envers
 ```
 
-Pour `bots-mono`, le nombre est répété pour chacune des douze familles : 10 signifie 120 parties. Les autres commandes prennent un nombre total de parties. Les valeurs par défaut sont exploratoires, sans verdict automatique sur les familles.
+Pour `bots-mono`, le nombre est répété pour chacune des treize familles : 10 signifie 130 parties. Les autres commandes prennent un nombre total de parties. Les valeurs par défaut sont exploratoires, sans verdict automatique sur les familles.
 
 ## Ce qui est mesuré
 

@@ -564,6 +564,68 @@ vec3 portalColor(vec2 xy, float dth) {
   return pal(0, clamp(int(v * 7.0 + (dth - 0.5) * 0.9), 0, 7));
 }
 
+// Nébuleuse (v107) : un nuage plat, sans relief ni lumière. Une coquille (pal 0) entoure un gaz
+// intérieur (pal 1) ; au centre, une naine blanche (pal 2). Le gaz s'effiloche en particules : sous
+// un seuil tramé, le pixel est vide, d'où des bords en poussière. Quelques grains scintillent.
+vec3 nebulaColor(vec2 xy, float dth, vec2 fc) {
+  float c = cos(uA.y), s = sin(uA.y);
+  vec2 e = vec2(c * xy.x + s * xy.y, -s * xy.x + c * xy.y);
+  e.x /= uA.x;
+  float r = length(e);
+  float ang = atan(e.y, e.x);
+  int style = int(uB.x + 0.5);
+  vec3 drift = vec3(cos(TAU * uPhase), sin(TAU * uPhase), 0.0) * 0.3;
+  float n1 = fbm(vec3(e * 2.1, 0.0) + uSeed + drift, 4);
+  float n2 = fbm(vec3(e * 4.6, 3.1) + uSeed * 1.7 - drift, 3);
+  float R = uA.z * (1.0 + n1 * 0.13), W = uA.w;
+  float shell = exp(-pow((r - R) / W, 2.0));
+  float fill = uC.x * (1.0 - smoothstep(R * 0.15, R, r));
+  float extra = 0.0;
+  if (style == 0) fill *= 0.45;
+  else if (style == 2) {
+    // Papillon : deux lobes de part et d'autre de l'étoile, serrés en leur milieu.
+    vec2 lb = vec2(abs(e.x) - R * 0.7, e.y * (1.1 + 1.2 * smoothstep(0.4, 0.0, abs(e.x))));
+    float lobe = exp(-dot(lb, lb) / (R * R * 0.42));
+    shell = max(shell * 0.2, lobe * (0.95 + 0.6 * n2));
+    fill *= 0.25;
+  } else if (style == 3) {
+    // Oursin : des rayons de gaz jaillissent de la coquille.
+    float k = pow(0.5 + 0.5 * sin(ang * uB.y + n1 * 2.5), 3.0);
+    extra = k * smoothstep(R * 0.5, R * 0.9, r) * (1.0 - smoothstep(R + 0.08, R + 0.62, r)) * 1.25;
+    shell *= 0.75;
+  } else if (style == 4) {
+    // Toile : des filaments qui se croisent, comme un dessin au spirographe.
+    float web = abs(sin(ang * uB.y + r * 14.0 + n1 * 1.5)) * abs(sin(-ang * uB.y + r * 14.0));
+    web = smoothstep(0.25, 0.75, web);
+    fill = (0.15 + 0.95 * web) * (1.0 - smoothstep(R * 0.2, R * 1.05, r));
+    shell *= 0.55 + web * 0.6;
+  } else if (style == 5) {
+    // Œil : des anneaux emboîtés autour du cœur.
+    extra = exp(-pow((r - R * 0.45) / (W * 0.6), 2.0)) * 0.8 + exp(-pow((r - R * 0.75) / (W * 0.5), 2.0)) * 0.5;
+    fill *= 0.4;
+  }
+  float halo = exp(-pow(max(r - R, 0.0) / (W * 1.7 + 0.1), 2.0)) * 0.5 * smoothstep(-0.35, 0.55, n1);
+  float dens = shell * (0.7 + 0.6 * n2) + fill * (0.55 + 0.6 * n2) + extra * (0.7 + 0.5 * n2) + halo * (0.45 + 0.55 * n1);
+  // Naine blanche (décalée si uB.w) : un point vif et son petit éclat en croix.
+  vec2 cs = e - vec2(uB.w, -uB.w * 0.6);
+  float rc = length(cs);
+  if (rc < uB.z) return pal(2, 7);
+  if (rc < uB.z * 2.3 && (abs(cs.x) < uB.z * 0.45 || abs(cs.y) < uB.z * 0.45)) return pal(2, 6);
+  if (rc < uB.z * 1.8 && dth > 0.35) return pal(2, 5);
+  // Grains de poussière qui scintillent dans le gaz.
+  float g = hash12(floor(fc) + uSeed.xy * 13.0);
+  if (g > 0.982 && dens > 0.05 && sin(TAU * (uPhase * 2.0 + g * 9.0)) > 0.2) return pal(g > 0.991 ? 2 : 0, 7);
+  // Effilochage : sous un seuil tiré au hasard pour chaque pixel, il reste vide : les bords du nuage
+  // se défont en grains épars (et non en trame régulière).
+  float jit = hash12(floor(fc) * 1.37 + uSeed.yz * 7.0);
+  if (dens * (0.55 + jit * (0.6 + uC.y * 1.6)) < 0.2) discard;
+  // Couleur : le gaz intérieur près du centre, la coquille au bord, et une frange mêlée entre les deux.
+  float t = smoothstep(R * 0.4, R * 0.95, r + n2 * 0.12);
+  int idx = clamp(int(dens * 6.2 + (jit - 0.5) * 1.6), 1, 7);
+  if (style == 2) t = max(t, 0.6);
+  return t + (dth - 0.5) * 0.45 > 0.5 ? pal(0, idx) : pal(1, idx);
+}
+
 float cloudDens(vec3 p) {
   if (uD.w > 0.0) {
     vec3 sd = uD.xyz;
@@ -613,6 +675,7 @@ void main() {
   vec2 xy = (fc - uCenter) / uRadius;
   xy.y *= uFlip;
   if (uType == 10) { outColor = fin(portalColor(xy, dth)); return; }
+  if (uType == 13) { if (!(dot(xy, xy) <= 2.0)) discard; outColor = fin(nebulaColor(xy, dth, fc)); return; }
 
   bool ast = (shapeKind() > 0 && uLayer == 0);
   vec3 pv;
@@ -1636,7 +1699,10 @@ void main() {
       moons.filter((ms) => ms.pos[2] < 0).sort((a, c) => a.pos[2] - c.pos[2]).forEach((ms) => this.moonPass(g, ms, P, isStar));
 
       if (o.legend) this.haloPass(4, cx, cy, R, 1.75, [1.75, 1.1, 0, 0], this.legendRows, 0, b.seed, light, st);
-      if (o.golden) this.haloPass(4, cx, cy, R, 1.5, [1.5, 0.95, 0, 0], this.goldRows, 0, b.seed, light, st);
+      // Doré (v107) : le halo d'or, plus large et plus dense, passe désormais après l'atmosphère, la
+      // coque et le bouclier, qui le cachaient. Une nébuleuse le garde derrière elle (le nuage est ajouré).
+      const goldLate = o.golden && b.shader !== OP.SH.NEBULA;
+      if (o.golden && !goldLate) this.haloPass(4, cx, cy, R, 1.7, [1.7, 1.25, 0, 0], this.goldRows, 0, b.seed, light, st);
       if (o.ghost) this.haloPass(4, cx, cy, R, 1.45, [1.45, 0.8, 0, 0], this.ghostRows, 0, b.seed, light, st);
       if (b.tail) {
         const tl = b.tail;
@@ -1657,6 +1723,7 @@ void main() {
       if (b.atmo) this.haloPass(0, cx, cy, R, 1 + b.atmo.w, [b.atmo.w, b.atmo.inner, b.atmo.pow, b.atmo.outer], b.pal, 12, b.seed, light, st);
       if (b.shell) this.haloPass(1, cx, cy, R, b.shell.rs * (1 + b.shell.glow), [b.shell.rs, b.shell.rim, b.shell.glow, b.shell.cycles], b.pal, 13, b.seed, light, st);
       if (o.shield) this.haloPass(1, cx, cy, R, 1.3, [1.2, 1.1, 0.08, 1], b.pal, 13, b.seed, light, st);
+      if (goldLate) this.haloPass(4, cx, cy, R, 1.7, [1.7, 1.25, 0, 0], this.goldRows, 0, b.seed, light, st);
       if (o.frost > 0.01) {
         const rs = Math.min(1.25, Math.max(1.12, (b.bound || 1) + 0.12));
         this.haloPass(6, cx, cy, R, rs + 0.05, [o.frost, rs, 0, 0], b.pal, 0, b.seed, light, Object.assign({}, st, { frost: 0 }));
@@ -1777,6 +1844,19 @@ void main() {
         }
       }
 
+      // Nébuleuse : des grains qui dérivent lentement vers l'extérieur en s'éteignant.
+      if (g.fx.motes) {
+        const b = g.body, c = Math.cos(b.A[1]), s = Math.sin(b.A[1]), asp = b.A[0];
+        for (const m of g.fx.motes) {
+          const u = (m.ph + m.cyc * phase) % 1;
+          const r = m.r0 + m.drift * u;
+          const ex = Math.cos(m.a) * r * asp, ey = Math.sin(m.a) * r;
+          const X = c * ex - s * ey, Y = s * ex + c * ey;
+          const tw = 0.5 + 0.5 * Math.sin(TAU * (u * 3 + m.ph));
+          put('top', X, Y, Math.max(1, Math.round(m.size * sizeK)), 0, b.pal[m.row][tw > 0.6 ? 7 : 6], (1 - u) * (0.45 + 0.55 * tw));
+        }
+      }
+
       if (g.fx.infall && g.body.disk) {
         const d = g.body.disk, U = g.ringU, V = g.ringV;
         const hot = g.ring.pal[0];
@@ -1823,11 +1903,13 @@ void main() {
         }
       }
       if (P.golden) {
-        const k = 1.32;
-        for (let i = 0; i < 14; i++) {
-          const ang = TAU * (i / 14 + phase * 2);
+        // Une couronne de poussière d'or qui tourne : plus dense depuis la v107, pour qu'un doré se
+        // reconnaisse même quand son halo se mêle à celui d'une étoile.
+        const k = 1.34;
+        for (let i = 0; i < 26; i++) {
+          const ang = TAU * (i / 26 + phase * 2);
           const X = Math.cos(ang) * k, Z = Math.sin(ang) * k, Y = Z * -0.28 + X * 0.08;
-          put(Z > 0 ? 'front' : 'back', X, Y, i % 3 === 0 ? 2 : 1, 0, GOLD[i % 3 === 0 ? 7 : 6], 1);
+          put(Z > 0 ? 'front' : 'back', X, Y, i % 2 === 0 ? 2 : 1, 0, GOLD[i % 2 === 0 ? 7 : 6], 1);
         }
         for (let i = 0; i < 3; i++) {
           const tw = Math.sin(TAU * (phase * 3 + i / 3));

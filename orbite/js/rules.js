@@ -55,13 +55,14 @@
     lune: { front: 'Leurs voisins de rangée gagnent +{n}/+{n}.', back: 'L’astre de l’avant juste devant chacune gagne +{d}/+{d}.' },
     comete: { front: 'Ils gagnent +{n} Attaque et attaquent avant le reste de l’avant.', back: 'Quand votre avant est tombé, ils avancent avec +{d}/+{n}.' },
     cristal: { front: 'Ils gagnent +{n}/+{n}, le double si l’arrière a aussi une formation de Cristal.', back: 'Tous vos Cristaux gagnent +{n}/+{n}.' },
-    anomalie: { front: 'Chacun gagne {n} mots-clés aléatoires.', front1: 'Chacun gagne un mot-clé aléatoire.', back: '{n} astres de votre avant gagnent un mot-clé aléatoire.', back1: 'Un astre de votre avant gagne un mot-clé aléatoire.' }
+    anomalie: { front: 'Chacun gagne {n} mots-clés aléatoires.', front1: 'Chacun gagne un mot-clé aléatoire.', back: '{n} astres de votre avant gagnent un mot-clé aléatoire.', back1: 'Un astre de votre avant gagne un mot-clé aléatoire.' },
+    nebuleuse: { front: 'Après leur attaque, ils volent {n} PV à un ennemi de l’avant.', back: 'Début de combat : votre astre de l’avant le plus faible vole {d} PV à l’ennemi de l’avant le plus fort.' }
   };
 
   const FAMILIES = {
     vie: { name: 'Vie', color: '#5fd35a', text: 'Les Soleils font grandir les mondes Habitables à chaque fin de cycle.' },
     neant: { name: 'Néant', color: '#9a6bff', text: 'Trous noirs et planètes mortes : chaque effondrement nourrit les autres.' },
-    envers: { name: 'Envers', color: '#ff4f6d', text: 'Le monde à l’envers : Renaissance, Toxique et inversion des statistiques.' },
+    envers: { name: 'Envers', color: '#ff4f6d', text: 'Le monde à l’envers : Renaissance (ses astres reviennent avec 3 PV), Toxique et inversion des statistiques.' },
     brasier: { name: 'Brasier', color: '#ff8a2a', text: 'Lave et étoiles rouges : des dégâts avant même le premier coup.' },
     glace: { name: 'Glace', color: '#8be6ff', text: 'Boucliers de glace, et de la force quand ils se brisent.' },
     tempete: { name: 'Tempête', color: '#2fd6b0', text: 'Géantes gazeuses : Rafale et attaque qui monte à chaque coup.' },
@@ -71,9 +72,10 @@
     comete: { name: 'Comètes', color: '#4f7bff', text: 'Elles grandissent quand vous actualisez la Création et récompensent la vente.' },
     cristal: { name: 'Cristal', color: '#ff6fd8', text: 'Résonance : chaque Cristal joué renforce les autres.' },
     anomalie: { name: 'Anomalies', color: '#c8ff3a', text: 'Le chaos : astres aléatoires, découvertes et mots-clés imprévus.' },
+    nebuleuse: { name: 'Nébuleuses', color: '#e58bff', text: 'Nuages de gaz qui aspirent la vie des ennemis et volent les astres qu’ils ont croisés.' },
     neutre: { name: 'Neutre', color: '#f2efe6', text: 'Présents dans toutes les parties.' }
   };
-  const FAMILY_KEYS = ['vie', 'neant', 'envers', 'brasier', 'glace', 'tempete', 'mineral', 'machine', 'lune', 'comete', 'cristal', 'anomalie'];
+  const FAMILY_KEYS = ['vie', 'neant', 'envers', 'brasier', 'glace', 'tempete', 'mineral', 'machine', 'lune', 'comete', 'cristal', 'anomalie', 'nebuleuse'];
   const RANDOM_KW = ['bouclier', 'rafale', 'venin', 'renaissance', 'rempart'];
 
   const KEYWORDS = {
@@ -81,9 +83,11 @@
     bouclier: { name: 'Bouclier', text: 'Ignore la première source de dégâts.' },
     rafale: { name: 'Rafale', text: 'Attaque deux fois.' },
     megarafale: { name: 'Méga-rafale', text: 'Attaque quatre fois.' },
-    renaissance: { name: 'Renaissance', text: 'Revient une fois avec 1 PV après s’être effondré.' },
+    renaissance: { name: 'Renaissance', text: 'Revient une fois avec 1 PV (3 pour l’Envers) après s’être effondré.' },
     venin: { name: 'Toxique', text: 'Détruit tout astre qu’il blesse en attaquant.' },
     arrimage: { name: 'Arrimage', text: 'Peut se poser sur une Machine pour lui donner ses statistiques et ses mots-clés.' },
+    // Nébuleuses (v107).
+    voldevie: { name: 'Vol de vie', text: 'En attaquant, récupère autant de PV que les dégâts infligés.' },
     // Mots-clés de position (v70) : l'arrière a son rôle.
     portee: { name: 'Portée', text: 'Attaque aussi depuis l’arrière, sans subir de riposte.' },
     percee: { name: 'Percée', text: 'Frappe l’arrière ennemi en priorité, sauf si une Garde tient l’avant ennemi.' },
@@ -121,21 +125,21 @@
     { id: 'aube', fam: 'vie', tier: 1, atk: 1, hp: 3, name: 'Aube', sun: true, look: { type: 'star', seed: 101, starClass: 'étoile orange' },
       text: 'Soleil. Fin de cycle : un autre astre de Vie gagne +{1} PV.',
       endTurn(x, u, m) { x.buff(x.rnd(x.fam('vie', u)), 0, m); } },
-    { id: 'gaia', fam: 'vie', tier: 1, atk: 2, hp: 2, name: 'Gaïa', look: { type: 'desert', seed: 404, hueShift: 70 },
+    { id: 'gaia', fam: 'vie', tier: 1, atk: 2, hp: 3, name: 'Gaïa', look: { type: 'desert', seed: 404, hueShift: 70 },
       text: 'Habitable : fin de cycle, avec un Soleil, gagne +{1}/+{1}.',
       endTurn(x, u, m) { x.habitable((b) => x.buff(u, m + b, m + b)); } },
     { id: 'pelagia', fam: 'vie', tier: 2, atk: 2, hp: 4, name: 'Pélagia', look: { type: 'ocean', seed: 313 },
       text: 'Naissance : vos autres astres de Vie gagnent +{1}/+{1}.',
       play(x, u, m) { for (const v of x.fam('vie', u)) x.buff(v, m, m); } },
-    { id: 'sylve', fam: 'vie', tier: 2, atk: 3, hp: 3, name: 'Sylve', look: { type: 'terran', seed: 404, hueShift: 40 },
+    { id: 'sylve', fam: 'vie', tier: 2, atk: 3, hp: 4, name: 'Sylve', look: { type: 'terran', seed: 404, hueShift: 40 },
       text: 'Habitable : fin de cycle, avec un Soleil, ses voisins de Vie gagnent +{1}/+{1}.',
       endTurn(x, u, m) { x.habitable((b) => { for (const v of x.neighbors(u)) if (famOf(v) === 'vie') x.buff(v, m + b, m + b); }); } },
     { id: 'sol', fam: 'vie', tier: 3, atk: 3, hp: 5, name: 'Sol', sun: true, look: { type: 'star', seed: 505, starClass: 'naine jaune' },
       text: 'Soleil. Vos effets Habitable donnent +{1}/+{1} de plus.' },
-    { id: 'terra', fam: 'vie', tier: 3, atk: 3, hp: 4, name: 'Terra', look: { type: 'earth', seed: 606, moons: 1 },
+    { id: 'terra', fam: 'vie', tier: 3, atk: 3, hp: 5, name: 'Terra', look: { type: 'earth', seed: 606, moons: 1 },
       text: 'Habitable : fin de cycle, avec un Soleil, 2 autres astres de Vie gagnent +{1}/+{1}.',
       endTurn(x, u, m) { x.habitable((b) => { for (const v of x.pick(x.fam('vie', u), 2)) x.buff(v, m + b, m + b); }); } },
-    { id: 'genese', fam: 'vie', tier: 4, atk: 3, hp: 5, name: 'Genèse', look: { type: 'ocean', seed: 707, shell: true },
+    { id: 'genese', fam: 'vie', tier: 4, atk: 4, hp: 6, name: 'Genèse', look: { type: 'ocean', seed: 707, shell: true },
       text: 'Fin de cycle : vos autres astres de Vie gagnent +{1} PV, ou +{1}/+{1} avec un Soleil.',
       endTurn(x, u, m) { const sun = x.hasSun(); for (const v of x.fam('vie', u)) x.buff(v, sun ? m : 0, m); } },
     { id: 'helios', fam: 'vie', tier: 5, atk: 6, hp: 8, name: 'Hélios', sun: true, look: { type: 'star', seed: 808, starClass: 'étoile blanche' },
@@ -158,8 +162,8 @@
       text: 'Effondrement : invoque deux Débris {1}/{1}.',
       death(c, u, m, i) { c.summon(u.side, 'debris', i, m); c.summon(u.side, 'debris', i, m); } },
     { id: 'abysse', fam: 'neant', tier: 3, atk: 3, hp: 5, name: 'Abysse', look: { type: 'blackhole', seed: 555, disk: false, lens: 1.95, hot: [[0.28, 0.13, 305], [0.48, 0.2, 300], [0.66, 0.19, 295], [0.82, 0.12, 290]] },
-      text: 'Quand un autre allié s’effondre, gagne +{2}/+{1} pour le combat.',
-      allyDeath(c, u, m) { c.buff(u, 2 * m, m); } },
+      text: 'Quand un autre allié s’effondre, gagne +{1}/+{1} pour le combat.',
+      allyDeath(c, u, m) { c.buff(u, m, m); } },
     { id: 'eclipse', fam: 'neant', tier: 3, atk: 4, hp: 3, name: 'Éclipse', look: { type: 'eclipse', seed: 666 },
       text: 'Effondrement : un allié aléatoire gagne +{3}/+{3} pour le combat.',
       death(c, u, m) { c.buff(c.rnd(c.allies(u.side)), 3 * m, 3 * m); } },
@@ -169,8 +173,8 @@
     { id: 'linceul', fam: 'neant', tier: 5, atk: 5, hp: 6, name: 'Linceul', look: { type: 'eclipse', seed: 888, starClass: 'rouge sang' },
       text: 'Vos effets d’Effondrement se déclenchent {1} fois de plus.' },
     { id: 'neant', fam: 'neant', tier: 6, atk: 8, hp: 8, name: 'Néant', look: { type: 'blackhole', seed: 999, pitch: 0.16, diskScale: 1.5, hot: [[0.38, 0.15, 35], [0.62, 0.2, 52], [0.8, 0.17, 70], [0.95, 0.08, 88]] },
-      text: 'Quand un autre allié s’effondre, gagne +{3}/+{3} pour le combat.',
-      allyDeath(c, u, m) { c.buff(u, 3 * m, 3 * m); } },
+      text: 'Quand un autre allié s’effondre, gagne +{2}/+{2} pour le combat.',
+      allyDeath(c, u, m) { c.buff(u, 2 * m, 2 * m); } },
 
     // ENVERS
     { id: 'reflet', fam: 'envers', tier: 1, atk: 3, hp: 2, name: 'Reflet', kw: ['renaissance'], look: { type: 'terran', seed: 1212, mood: 'envers', flip: true },
@@ -185,8 +189,8 @@
       text: 'Renaissance. Quand il revient, gagne +{3}/+{3}.',
       reborn(c, u, m) { c.buff(u, 3 * m, 3 * m); } },
     { id: 'antipode', fam: 'envers', tier: 3, atk: 4, hp: 4, name: 'Antipode', look: { type: 'toxic', seed: 1616, mood: 'envers', flip: true, shape: 'fendu' },
-      text: 'Quand un allié revient avec Renaissance, vos astres de l’Envers gagnent +{2}/+{2} pour le combat.',
-      allyReborn(c, u, m) { for (const v of c.alliesFam(u.side, 'envers')) c.buff(v, 2 * m, 2 * m); } },
+      text: 'Quand un allié revient avec Renaissance, vos astres de l’Envers gagnent +{3}/+{3} pour le combat.',
+      allyReborn(c, u, m) { for (const v of c.alliesFam(u.side, 'envers')) c.buff(v, 3 * m, 3 * m); } },
     { id: 'spore', fam: 'envers', tier: 3, atk: 2, hp: 4, name: 'Spore', kw: ['venin'], look: { type: 'toxic', seed: 1717, mood: 'envers', flip: true, shape: 'amas' },
       text: 'Toxique.' },
     { id: 'outremonde', fam: 'envers', tier: 4, atk: 5, hp: 6, name: 'Outremonde', look: { type: 'portal', seed: 1818, flip: true },
@@ -211,7 +215,7 @@
       text: 'Après son attaque : inflige {1} dégât à tous les ennemis.',
       attack(c, u, m) { for (const v of c.allies(1 - u.side)) c.dmg(u, v, m); } },
     { id: 'tison', fam: 'brasier', tier: 2, atk: 2, hp: 4, name: 'Tison', look: { type: 'star', seed: 2424, starClass: 'naine rouge', debris: true },
-      text: 'Vos effets infligent +{1} dégât.' },
+      text: 'Vos effets infligent +{2} dégâts.' },
     { id: 'magma', fam: 'brasier', tier: 3, atk: 4, hp: 5, name: 'Magma', look: { type: 'lava', seed: 2525, moons: 1 },
       text: 'Début de combat : inflige {3} dégâts à l’ennemi le plus fort.',
       start(c, u, m) { c.dmg(u, c.ranked(1 - u.side)[0], 3 * m); } },
@@ -251,8 +255,8 @@
       text: 'Début de combat : vos autres astres de Glace gagnent Bouclier.',
       start(c, u) { for (const v of c.alliesFam(u.side, 'glace')) if (v !== u) c.kw(v, 'bouclier'); } },
     { id: 'aurore', fam: 'glace', tier: 5, atk: 6, hp: 7, name: 'Aurore', look: { type: 'ice', seed: 3838, moons: 2 },
-      text: 'Quand un Bouclier allié se brise, vos astres de Glace gagnent +{2}/+{2} pour le combat.',
-      shieldBreak(c, u, m) { for (const v of c.alliesFam(u.side, 'glace')) c.buff(v, 2 * m, 2 * m); } },
+      text: 'Quand un Bouclier allié se brise, vos astres de Glace gagnent +{3}/+{3} pour le combat.',
+      shieldBreak(c, u, m) { for (const v of c.alliesFam(u.side, 'glace')) c.buff(v, 3 * m, 3 * m); } },
     { id: 'hiver', fam: 'glace', tier: 6, atk: 8, hp: 10, name: 'Hiver éternel', kw: ['rempart', 'bouclier'], look: { type: 'ice', seed: 3939, ring: true, moons: 1 },
       text: 'Rempart. Bouclier. Quand un allié de Glace détruit un ennemi, il regagne Bouclier.',
       allyKill(c, u, m, killer) { if (famOf(killer) === 'glace') c.kw(killer, 'bouclier'); } },
@@ -291,8 +295,8 @@
       text: 'Naissance : l’astre à sa gauche gagne +{0}/+{2}.',
       play(x, u, m) { x.buff(x.left(u), 0, 2 * m); } },
     { id: 'agate', fam: 'mineral', tier: 2, atk: 2, hp: 4, name: 'Agate', kw: ['rempart'], look: { type: 'moon', seed: 5353, shape: 'double' },
-      text: 'Rempart. Naissance : vos autres Remparts gagnent +{1}/+{1}.',
-      play(x, u, m) { for (const v of x.board().filter((v) => v !== u && v.kw.includes('rempart'))) x.buff(v, m, m); } },
+      text: 'Rempart. Naissance : vos autres Remparts gagnent +{0}/+{1}.',
+      play(x, u, m) { for (const v of x.board().filter((v) => v !== u && v.kw.includes('rempart'))) x.buff(v, 0, m); } },
     { id: 'ocre', fam: 'mineral', tier: 2, atk: 3, hp: 3, name: 'Ocre', look: { type: 'desert', seed: 5454, moons: 1 },
       text: 'Fin de cycle : un autre allié aléatoire gagne +{1}/+{2}.',
       endTurn(x, u, m) { x.buff(x.rnd(x.others(u)), m, 2 * m); } },
@@ -300,29 +304,29 @@
       text: 'Rempart. Quand il survit à des dégâts, gagne +{2} Attaque pour le combat.',
       damaged(c, u, m) { c.buff(u, 2 * m, 0); } },
     { id: 'geode', fam: 'mineral', tier: 3, atk: 4, hp: 4, name: 'Géode', look: { type: 'moon', seed: 5656, shape: 'brisee', coreHue: 150 },
-      text: 'Fin de cycle : vos Remparts gagnent +{0}/+{2}.',
-      endTurn(x, u, m) { for (const v of x.board().filter((v) => v.kw.includes('rempart'))) x.buff(v, 0, 2 * m); } },
+      text: 'Fin de cycle : vos Remparts gagnent +{0}/+{1}.',
+      endTurn(x, u, m) { for (const v of x.board().filter((v) => v.kw.includes('rempart'))) x.buff(v, 0, m); } },
     { id: 'obsidienne', fam: 'mineral', tier: 4, atk: 4, hp: 7, name: 'Obsidienne', kw: ['rempart', 'bouclier'], look: { type: 'crystal', seed: 5757, debris: true, shape: 'amas', mood: 'obsidienne' },
       text: 'Rempart. Bouclier.' },
     { id: 'monolithe', fam: 'mineral', tier: 5, atk: 5, hp: 9, name: 'Monolithe', kw: ['rempart'], look: { type: 'desert', seed: 5858, ring: true, shape: 'monolithe' },
-      text: 'Rempart. Début de combat : vos autres Remparts gagnent +{3}/+{3}.',
-      start(c, u, m) { for (const v of c.allies(u.side)) if (v !== u && v.kw.includes('rempart')) c.buff(v, 3 * m, 3 * m); } },
+      text: 'Rempart. Début de combat : vos autres Remparts gagnent +{2}/+{2}.',
+      start(c, u, m) { for (const v of c.allies(u.side)) if (v !== u && v.kw.includes('rempart')) c.buff(v, 2 * m, 2 * m); } },
     { id: 'colosse', fam: 'mineral', tier: 6, atk: 8, hp: 14, name: 'Colosse', kw: ['rempart'], look: { type: 'asteroid', seed: 5959, debris: true },
       text: 'Rempart. Fin de cycle : vos Remparts gagnent +{1}/+{1}.',
       endTurn(x, u, m) { for (const v of x.board().filter((v) => v.kw.includes('rempart'))) x.buff(v, m, m); } },
 
     // MACHINE
-    { id: 'sonde', fam: 'machine', tier: 1, atk: 2, hp: 3, name: 'Sonde', kw: ['arrimage'], look: { type: 'mecha', seed: 6161, shape: 'diamant' },
+    { id: 'sonde', fam: 'machine', tier: 1, atk: 3, hp: 3, name: 'Sonde', kw: ['arrimage'], look: { type: 'mecha', seed: 6161, shape: 'diamant' },
       text: 'Arrimage.' },
-    { id: 'relais', fam: 'machine', tier: 1, atk: 2, hp: 4, name: 'Relais', look: { type: 'mecha', seed: 6262, ring: true },
-      text: 'Effondrement : invoque une Sonde {3}/{3} avec Arrimage.',
+    { id: 'relais', fam: 'machine', tier: 1, atk: 3, hp: 4, name: 'Relais', look: { type: 'mecha', seed: 6262, ring: true },
+      text: 'Effondrement : invoque une Sonde {4}/{4} avec Arrimage.',
       death(c, u, m, i) { c.summon(u.side, 'sonde-t', i, m); } },
     { id: 'station', fam: 'machine', tier: 2, atk: 3, hp: 4, name: 'Station', kw: ['arrimage', 'bouclier'], look: { type: 'mecha', seed: 6363, shape: 'anneau' },
       text: 'Arrimage. Bouclier.' },
-    { id: 'foreuse', fam: 'machine', tier: 2, atk: 3, hp: 4, name: 'Foreuse', look: { type: 'mecha', seed: 6464, shape: 'foret' },
-      text: 'Naissance : vos autres Machines gagnent +{1}/+{2}.',
-      play(x, u, m) { for (const v of x.fam('machine', u)) x.buff(v, m, 2 * m); } },
-    { id: 'dyson', fam: 'machine', tier: 3, atk: 4, hp: 6, name: 'Dyson', look: { type: 'mecha', seed: 6565, shell: true },
+    { id: 'foreuse', fam: 'machine', tier: 2, atk: 3, hp: 5, name: 'Foreuse', look: { type: 'mecha', seed: 6464, shape: 'foret' },
+      text: 'Naissance : vos autres Machines gagnent +{2}/+{2}.',
+      play(x, u, m) { for (const v of x.fam('machine', u)) x.buff(v, 2 * m, 2 * m); } },
+    { id: 'dyson', fam: 'machine', tier: 3, atk: 5, hp: 6, name: 'Dyson', look: { type: 'mecha', seed: 6565, shell: true },
       text: 'Début de cycle : gagnez {1} énergie.',
       startTurn(x, u, m) { x.gold(m); } },
     { id: 'arecibo', fam: 'machine', tier: 3, atk: 4, hp: 6, name: 'Arecibo', kw: ['arrimage', 'rempart'], look: { type: 'mecha', seed: 6666, shape: 'antenne' },
@@ -330,8 +334,8 @@
     { id: 'sentinelle', fam: 'machine', tier: 4, atk: 5, hp: 8, name: 'Sentinelle', kw: ['arrimage', 'bouclier', 'rempart'], look: { type: 'mecha', seed: 6767, ring: true, shape: 'bloc' },
       text: 'Arrimage. Bouclier. Rempart.' },
     { id: 'forge', fam: 'machine', tier: 5, atk: 7, hp: 8, name: 'Forge stellaire', look: { type: 'mecha', seed: 6868, shape: 'brisee', coreHue: 30, moons: 1 },
-      text: 'Début de combat : vos Machines gagnent Bouclier.',
-      start(c, u) { for (const v of c.alliesFam(u.side, 'machine')) c.kw(v, 'bouclier'); } },
+      text: 'Début de combat : vos Machines gagnent Bouclier, et les autres +{1}/+{1}.',
+      start(c, u, m) { for (const v of c.alliesFam(u.side, 'machine')) { c.kw(v, 'bouclier'); if (v !== u) c.buff(v, m, m); } } },
     { id: 'oeil', fam: 'machine', tier: 6, atk: 8, hp: 10, name: 'L’Œil', kw: ['arrimage', 'rafale', 'bouclier', 'venin'], look: { type: 'mecha', seed: 6969 },
       text: 'Arrimage. Rafale. Bouclier. Toxique.' },
 
@@ -482,6 +486,34 @@
       text: 'Effondrement : remplit votre système d’astres de niveau 2 aléatoires.',
       death(c, u, m, i) { for (let k = 0; k < 7; k++) if (!c.summonRandom(u.side, 2, i)) break; } },
 
+    // NÉBULEUSES (v107) : des nuages de gaz qui volent des PV en combat (le drain : la cible les perd,
+    // la Nébuleuse les gagne) et volent des astres déjà affrontés (une copie prise dans la réserve).
+    { id: 'voile', fam: 'nebuleuse', tier: 1, atk: 3, hp: 4, name: 'Voile', look: { type: 'nebula', seed: 7111, neb: { style: 'bulle', rim: 230, gas: 212, offset: 0.28, fill: 0.85 } },
+      kw: ['voldevie'], text: 'Vol de vie.' },
+    { id: 'hibou', fam: 'nebuleuse', tier: 1, atk: 3, hp: 3, name: 'Hibou', look: { type: 'nebula', seed: 7112, neb: { style: 'anneau', rim: 28, gas: 222 } },
+      text: 'Naissance : volez un astre de niveau 1 ou 2 déjà affronté (il rejoint votre main).',
+      play(x, u, m) { for (let i = 0; i < m; i++) x.steal(2); } },
+    { id: 'fourmi', fam: 'nebuleuse', tier: 2, atk: 4, hp: 5, name: 'Fourmi', look: { type: 'nebula', seed: 7113, neb: { style: 'papillon', rim: 8, gas: 300, aspect: 1.15 } },
+      kw: ['voldevie'], text: 'Vol de vie. Après son attaque : vole {1} Attaque à un ennemi de l’avant.',
+      attack(c, u, m, t) { c.drainAtk(u, t, m); } },
+    { id: 'spirographe', fam: 'nebuleuse', tier: 2, atk: 3, hp: 5, name: 'Spirographe', look: { type: 'nebula', seed: 7114, neb: { style: 'toile', rim: 32, gas: 285, aspect: 0.85 } },
+      text: 'Quand un allié vole des PV, il gagne +{1} Attaque pour toujours (2 fois par combat au plus).',
+      allyDrain(c, u, m, src) { if ((u.n || 0) < 2) { u.n = (u.n || 0) + 1; c.buff(src, m, 0, true); } } },
+    { id: 'oeilchat', fam: 'nebuleuse', tier: 3, atk: 5, hp: 6, name: 'Œil-de-Chat', look: { type: 'nebula', seed: 7115, neb: { style: 'oeil', rim: 300, gas: 232 } },
+      text: 'Naissance : volez un astre aléatoire déjà affronté, même un gros (il rejoint votre main).',
+      play(x, u, m) { for (let i = 0; i < m; i++) x.steal(6); } },
+    { id: 'helice', fam: 'nebuleuse', tier: 3, atk: 4, hp: 7, name: 'Hélice', look: { type: 'nebula', seed: 7116, neb: { style: 'anneau', rim: 18, gas: 198, width: 0.22, fill: 0.7 } },
+      kw: ['voldevie'], text: 'Vol de vie. Quand vos Nébuleuses volent des PV, elles gagnent +{2} PV pour toujours (3 fois par combat au plus chacune).' },
+    { id: 'crabe', fam: 'nebuleuse', tier: 4, atk: 6, hp: 7, name: 'Crabe', look: { type: 'nebula', seed: 7117, neb: { style: 'oursin', rim: 42, gas: 210, rays: 13 } },
+      kw: ['voldevie'], text: 'Vol de vie. Après son attaque : vole {1} PV à chaque ennemi de l’avant.',
+      attack(c, u, m) { for (const v of c.front(1 - u.side)) c.drain(u, v, m); } },
+    { id: 'sablier', fam: 'nebuleuse', tier: 5, atk: 7, hp: 9, name: 'Sablier', look: { type: 'nebula', seed: 7118, neb: { style: 'papillon', rim: 165, gas: 330, aspect: 0.9 } },
+      text: 'Quand vos astres volent des PV, votre univers en récupère {1} (4 fois par combat au plus).',
+      allyDrain(c, u, m) { if ((u.n || 0) < 4) { u.n = (u.n || 0) + 1; c.healUniverse(u.side, m); } } },
+    { id: 'tarentule', fam: 'nebuleuse', tier: 6, atk: 9, hp: 10, name: 'Tarentule', look: { type: 'nebula', seed: 7119, neb: { style: 'bulle', rim: 150, gas: 338, fill: 0.6, width: 0.2 } },
+      kw: ['voldevie'], text: 'Vol de vie. Après son attaque : vole {2} PV à chaque ennemi.',
+      attack(c, u, m) { for (const v of c.allies(1 - u.side)) c.drain(u, v, 2 * m); } },
+
     // JETONS (hors réserve)
     { id: 'debris', fam: 'neant', tier: 1, atk: 1, hp: 1, name: 'Débris', token: true, look: { type: 'asteroid', seed: 8181 },
       text: 'Fragment d’un monde effondré.' },
@@ -539,7 +571,10 @@
       text: 'Début de combat : trois alliés aléatoires gagnent un mot-clé aléatoire. Effondrement : invoque un astre de niveau 6 aléatoire.',
       start(c, u) { for (const v of c.pickAllies(u.side, 3)) c.randomKw(v); },
       death(c, u, m, i) { for (let k = 0; k < m; k++) c.summonRandom(u.side, 6, i); } },
-    { id: 'sonde-t', fam: 'machine', tier: 1, atk: 3, hp: 3, name: 'Sonde', token: true, kw: ['arrimage'], look: { type: 'mecha', seed: 6161, shape: 'diamant' },
+    { id: 'piliers', fam: 'nebuleuse', tier: 4, atk: 4, hp: 8, name: 'Piliers de la Création', legend: true, look: { type: 'nebula', seed: 7120, neb: { style: 'oursin', rim: 48, gas: 272, aspect: 0.82, rays: 7 } },
+      text: 'Fin de cycle : volez un astre aléatoire de votre dernier adversaire (il rejoint votre main).',
+      endTurn(x, u, m) { for (let i = 0; i < m; i++) x.steal(6, true); } },
+    { id: 'sonde-t', fam: 'machine', tier: 1, atk: 4, hp: 4, name: 'Sonde', token: true, kw: ['arrimage'], look: { type: 'mecha', seed: 6161, shape: 'diamant' },
       text: 'Arrimage.' }
   ];
   const CARD = Object.fromEntries(CARDS.map((c) => [c.id, c]));
@@ -554,16 +589,17 @@
   const LAWS = [
     { id: 'symbiose', fam: 'vie', name: 'Loi de symbiose', starter: 'aube', tagline: 'Tout commence par une étoile.', text: 'Fin de cycle : votre astre le plus faible gagne +1 PV.', awake: 'Fin de cycle : vos deux astres les plus faibles gagnent +1/+1.' },
     { id: 'entropie', fam: 'neant', name: 'Loi de l’entropie', starter: 'cendre', tagline: 'Rien ne meurt en vain.', text: 'Quand un de vos astres s’effondre, vos astres du Néant gagnent +1 Attaque pour le combat.', awake: 'Quand un de vos astres s’effondre, vos astres du Néant gagnent +1/+1 pour le combat.' },
-    { id: 'renversement', fam: 'envers', name: 'Loi du renversement', starter: 'reflet', tagline: 'Le haut est en bas.', text: 'Pouvoir (gratuit, une fois par cycle) : inverse l’Attaque et les PV d’un de vos astres, puis il gagne +1/+1.', awake: 'Pouvoir (gratuit, une fois par cycle) : inverse l’Attaque et les PV d’un de vos astres, puis il gagne +2/+2.', active: { cost: 0, target: true } },
+    { id: 'renversement', fam: 'envers', name: 'Loi du renversement', starter: 'reflet', tagline: 'Le haut est en bas.', text: 'Pouvoir (gratuit, une fois par cycle) : inverse l’Attaque et les PV d’un de vos astres, puis il gagne +2/+2.', awake: 'Pouvoir (gratuit, une fois par cycle) : inverse l’Attaque et les PV d’un de vos astres, puis il gagne +3/+3.', active: { cost: 0, target: true } },
     { id: 'combustion', fam: 'brasier', name: 'Loi de combustion', starter: 'braise', tagline: 'Brûler avant de disparaître.', text: 'Début de combat : inflige 4 dégâts à un ennemi aléatoire.', awake: 'Début de combat : inflige 4 dégâts à deux ennemis aléatoires.' },
-    { id: 'stase', fam: 'glace', name: 'Loi de stase', starter: 'nive', tagline: 'Le silence est une forteresse.', text: 'Début de combat : vos deux premiers astres gagnent Bouclier.', awake: 'Début de combat : vos trois premiers astres gagnent Bouclier.' },
+    { id: 'stase', fam: 'glace', name: 'Loi de stase', starter: 'nive', tagline: 'Le silence est une forteresse.', text: 'Début de combat : vos trois premiers astres gagnent Bouclier.', awake: 'Début de combat : vos quatre premiers astres gagnent Bouclier.' },
     { id: 'vents', fam: 'tempete', name: 'Loi des vents', starter: 'brume', tagline: 'Tout ce qui bouge frappe.', text: 'Après chaque attaque, l’astre attaquant gagne +1/+1 pour le combat.', awake: 'Après chaque attaque, l’astre attaquant gagne +2/+1 pour le combat.' },
     { id: 'gravite', fam: 'mineral', name: 'Loi de gravité', starter: 'silex', tagline: 'Ce qui pèse dure.', text: 'Fin de cycle : vos Remparts gagnent +0/+1.', awake: 'Fin de cycle : vos Remparts gagnent +1/+2.' },
     { id: 'marees', fam: 'lune', name: 'Loi des marées', starter: 'phobos', tagline: 'Rien ne tourne seul.', text: 'Fin de cycle : l’astre à droite de chaque Lune gagne +1 PV.', awake: 'Fin de cycle : les deux voisins de chaque Lune gagnent +1 PV.' },
     { id: 'passage', fam: 'comete', name: 'Loi du passage', starter: 'meteore', tagline: 'Tout repasse un jour.', text: 'Votre première actualisation de chaque cycle est gratuite.', awake: 'Vos deux premières actualisations de chaque cycle sont gratuites.' },
     { id: 'resonance', fam: 'cristal', name: 'Loi de résonance', starter: 'quartz', tagline: 'Une note, et tout vibre.', text: 'Quand vous jouez un Cristal, un autre Cristal aléatoire gagne +1 PV.', awake: 'Quand vous jouez un Cristal, un autre Cristal aléatoire gagne +1/+1.' },
     { id: 'chaos', fam: 'anomalie', name: 'Loi du chaos', starter: 'fluctuation', tagline: 'Le hasard a toujours raison.', text: 'Début de combat : un allié aléatoire gagne un mot-clé aléatoire.', awake: 'Début de combat : deux alliés aléatoires gagnent un mot-clé aléatoire.' },
-    { id: 'ingenierie', fam: 'machine', name: 'Loi d’ingénierie', starter: 'sonde', tagline: 'Assembler les mondes.', text: 'Pouvoir (1 énergie, une fois par cycle) : ajoute une Sonde 3/3 Arrimage à votre main.', awake: 'Pouvoir (gratuit, une fois par cycle) : ajoute une Sonde 3/3 Arrimage à votre main.', active: { cost: 1, target: false } },
+    { id: 'siphon', fam: 'nebuleuse', name: 'Loi du siphon', starter: 'voile', tagline: 'Rien ne se perd, tout se prend.', text: 'Début de combat : vos Nébuleuses gagnent Vol de vie.', awake: 'Début de combat : vos Nébuleuses gagnent Vol de vie et +1/+1.' },
+    { id: 'ingenierie', fam: 'machine', name: 'Loi d’ingénierie', starter: 'sonde', tagline: 'Assembler les mondes.', text: 'Pouvoir (1 énergie, une fois par cycle) : ajoute une Sonde 4/4 Arrimage à votre main.', awake: 'Pouvoir (gratuit, une fois par cycle) : ajoute une Sonde 4/4 Arrimage avec Bouclier à votre main.', active: { cost: 1, target: false } },
     // Lois de vie : neutres, elles ne choisissent pas de famille et changent les PV de départ.
     { id: 'sacrifice', fam: 'neutre', name: 'Loi du sacrifice', starter: 'errante', hp: 22, tagline: 'Tout se paie, même l’élan.', text: 'Vous commencez avec 22 PV, mais gagnez 1 énergie de plus à chaque cycle.', awake: 'Vous gagnez 2 énergies de plus à chaque cycle, même au maximum.' },
     { id: 'endurance', fam: 'neutre', name: 'Loi d’endurance', starter: 'echo', hp: 45, tagline: 'Durer, c’est déjà vaincre.', text: 'Vous commencez avec 45 PV au lieu de 30.', awake: 'Début de combat : vos astres de l’avant gagnent +0/+2.' },
@@ -823,6 +859,22 @@
         p.hand.push(nu);
         x.events.push({ t: 'hand', uid: nu.uid, id });
         // Troisième exemplaire : fusion dorée, comme à l'achat.
+        const triple = checkTriple(state, p, id);
+        if (triple) x.events.push({ t: 'triple', id, uid: triple.uid, merged: triple.merged });
+      },
+      // Vol (Nébuleuses, v107) : une copie d'un astre déjà affronté (lastOnly : du dernier adversaire),
+      // de niveau maxTier au plus, prise dans la réserve partagée, rejoint la main. Faute de copie
+      // disponible, un astre de la réserve à votre portée.
+      steal(maxTier, lastOnly) {
+        if (p.hand.length >= HAND_MAX) return;
+        const seen = (lastOnly ? p.lastFoe : p.foes) || [];
+        let id = x.rnd(seen.filter((k) => CARD[k] && !CARD[k].token && CARD[k].tier <= maxTier && state.pool[k] > 0));
+        if (id) state.pool[id]--;
+        else id = drawFromPool(state, Math.max(1, Math.min(maxTier, p.tier)), rng);
+        if (!id) return;
+        const nu = makeUnit(state, id);
+        p.hand.push(nu);
+        x.events.push({ t: 'hand', uid: nu.uid, id, stolen: true });
         const triple = checkTriple(state, p, id);
         if (triple) x.events.push({ t: 'triple', id, uid: triple.uid, merged: triple.merged });
       }
@@ -1290,10 +1342,12 @@
       if (!t) return fail('Choisissez un astre de votre système.');
       if (t.atk <= 0) return fail('Cet astre n’a pas d’Attaque à inverser.');
       x.swap(t);
-      x.buff(t, p.awake ? 2 : 1, p.awake ? 2 : 1);
+      x.buff(t, p.awake ? 3 : 2, p.awake ? 3 : 2);
     } else if (p.law === 'ingenierie') {
       if (p.hand.length >= HAND_MAX) return fail('Votre main est pleine.');
       const u = makeUnit(state, 'sonde-t');
+      // Éveillée : le pouvoir devient gratuit et, depuis la v107, la Sonde arrive avec Bouclier.
+      if (p.awake && !u.kw.includes('bouclier')) u.kw.push('bouclier');
       p.hand.push(u);
       x.events.push({ t: 'gain', uid: u.uid });
     }
@@ -1448,6 +1502,8 @@
     const pendingBreak = [], pendingHurt = [];
     const countOf = (s, id) => alive(s).filter((u) => u.id === id).reduce((n, u) => n + u.m, 0);
     const forms = [[], []];
+    // PV rendus à chaque univers pendant ce combat (Sablier, v107).
+    const heals = [0, 0];
     let curRow = null;
 
     // Position d'un astre, en largeurs d'astre depuis le centre : les rangées sont centrées à
@@ -1517,7 +1573,50 @@
       },
       dmg(src, t, n) {
         if (!t || n <= 0) return;
-        hit(t, n + countOf(src.side, 'tison'), src, 'effect');
+        hit(t, n + 2 * countOf(src.side, 'tison'), src, 'effect');
+      },
+      // Vol de PV (Nébuleuses, v107) : la cible les perd, le voleur les gagne. Si la cible est
+      // tombée, un autre ennemi de l'avant. Le vol a lieu pendant
+      // l'attaque : un voleur mis à 0 PV par la riposte peut s'en relever.
+      drain(src, t, n) {
+        if (!src || src.dead || n <= 0) return 0;
+        const foe = 1 - src.side;
+        if (!t || t.dead || t.hp <= 0) t = facing(src, inRow(foe, 0)) || c.rnd(alive(foe));
+        if (!t) return 0;
+        const k = hit(t, n, src, 'effect');
+        if (k <= 0) return 0;
+        log({ t: 'drain', cid: src.cid, from: t.cid, n: k });
+        c.buff(src, 0, k);
+        stolen(src, k);
+        return k;
+      },
+      // Vol de vie : l'attaquant récupère les PV infligés, sans dépasser son maximum.
+      lifesteal(u, n) {
+        if (!u || u.dead || n <= 0) return 0;
+        const k = Math.min(n, u.maxHp - u.hp);
+        if (k <= 0) return 0;
+        u.hp += k;
+        log({ t: 'heal', cid: u.cid, n: k, hp: u.hp, steal: true });
+        stolen(u, k);
+        return k;
+      },
+      // Vol d'Attaque (Fourmi) : pour le combat.
+      drainAtk(src, t, n) {
+        if (!src || src.dead || n <= 0) return 0;
+        const foe = 1 - src.side;
+        if (!t || t.dead || t.hp <= 0) t = facing(src, inRow(foe, 0)) || c.rnd(alive(foe));
+        if (!t || t.atk <= 0) return 0;
+        const k = Math.min(n, t.atk);
+        log({ t: 'drain', cid: src.cid, from: t.cid, n: k, atk: true });
+        c.buff(t, -k, 0);
+        c.buff(src, k, 0);
+        return k;
+      },
+      // Votre univers récupère des PV (appliqués après le combat, sans dépasser le maximum).
+      healUniverse(s, n) {
+        if (n <= 0) return;
+        heals[s] += n;
+        log({ t: 'uheal', side: s, n });
       },
       kw(u, k) {
         if (!u || u.dead || u.kw.includes(k)) return;
@@ -1541,7 +1640,8 @@
         const row = o.row != null ? o.row : curRow != null ? curRow : 0;
         const u = {
           cid: 'c' + cidc++, ref: o.ref || null, id, golden: !!o.golden, m: o.golden ? 2 : 1,
-          atk: card.atk * k, hp: o.reborn ? 1 : card.hp * k, maxHp: o.reborn ? 1 : card.hp * k,
+          // Renaissance : 1 PV, 3 pour un astre de l'Envers (v107).
+          atk: card.atk * k, hp: o.reborn ? (card.fam === 'envers' ? 3 * k : 1) : card.hp * k, maxHp: o.reborn ? (card.fam === 'envers' ? 3 * k : 1) : card.hp * k,
           kw: (card.kw || []).filter((kk) => !(o.reborn && kk === 'renaissance')), side: s, row,
           dead: false, attacked: false, rebornUsed: !!o.reborn, killer: null, form: null
         };
@@ -1554,6 +1654,19 @@
         return u;
       }
     };
+
+    // Après chaque vol de PV : Hélice (+2 PV pour toujours, 3 fois par combat et par voleur) et les
+    // effets « quand un allié vole des PV » (Spirographe, Sablier).
+    function stolen(src, k) {
+      const hx = countOf(src.side, 'helice');
+      if (hx && famOf(src) === 'nebuleuse' && (src.kept || 0) < 3) {
+        const ref = players[src.side].board.find((v) => v.uid === src.ref);
+        src.kept = (src.kept || 0) + 1;
+        c.buff(src, 0, 2 * hx);
+        if (ref) { ref.hp += 2 * hx; log({ t: 'keep', cid: src.cid, n: 2 * hx }); }
+      }
+      for (const v of alive(src.side)) fire(v, 'allyDrain', src, k);
+    }
 
     function fire(u, name, ...args) {
       const card = cardOf(u);
@@ -1676,15 +1789,22 @@
       const ranged = att.row === 1;
       log({ t: 'attack', cid: att.cid, target: t.cid, ranged, pierce: !!pierce });
       const da = att.atk, dt = t.atk;
-      hit(t, da, att, 'attack');
+      const dealt = hit(t, da, att, 'attack');
       if (!ranged) hit(att, dt, t, 'attack');
+      // Vol de vie (v107) : l'attaquant récupère les PV qu'il vient d'infliger, même s'il est tombé à 0
+      // sous la riposte (le vol et la riposte sont simultanés).
+      if (dealt > 0 && att.kw.includes('voldevie')) c.lifesteal(att, dealt);
       flush();
       fire(att, 'attack', t);
+      // Nébuleuses (v107) : formation de l'avant et Loi du siphon volent des PV pendant l'attaque.
+      const nf = att.form;
+      if (nf && nf.fam === 'nebuleuse' && nf.row === 0) c.drain(att, t, nf.lvl);
       for (const v of alive(att.side)) fire(v, 'allyAttack', att, t);
       if (players[att.side].law === 'vents' && !att.dead) c.buff(att, players[att.side].awake ? 2 : 1, 1);
       if (!att.dead && att.hp > 0) {
         const f = att.form;
         if (f && f.fam === 'tempete' && f.row === 0) c.buff(att, f.lvl, 0);
+
         const vie = forms[att.side].find((g) => g.fam === 'vie' && g.row === 1);
         if (vie && att.row === 0) c.heal(att, 2 * vie.lvl);
       }
@@ -1753,6 +1873,12 @@
         case 'cristal:1': for (const u of c.alliesFam(s, 'cristal')) c.buff(u, L, L); break;
         case 'anomalie:0': for (const u of F) for (let i = 0; i < L; i++) c.randomKw(u); break;
         case 'anomalie:1': for (const u of shuffle(inRow(s, 0), rng).slice(0, L)) c.randomKw(u); break;
+        case 'nebuleuse:1': {
+          const t = inRow(e, 0).sort((x, y) => y.atk - x.atk || y.hp - x.hp)[0];
+          const w = inRow(s, 0).sort((x, y) => x.atk + x.hp - (y.atk + y.hp))[0];
+          if (t && w) c.drain(w, t, d);
+          break;
+        }
         default: break; // vie:1, neant, tempete:0 et comete:1 agissent pendant le combat.
       }
     }
@@ -1767,10 +1893,11 @@
       if (p.law === 'combustion') {
         log({ t: 'law', side: s, law: p.law });
         const ts = p.awake ? shuffle(alive(1 - s), rng).slice(0, 2) : [c.rnd(alive(1 - s))];
-        for (const t of ts) if (t) hit(t, 4 + countOf(s, 'tison'), null, 'effect');
+        for (const t of ts) if (t) hit(t, 4 + 2 * countOf(s, 'tison'), null, 'effect');
       }
+      if (p.law === 'siphon') { log({ t: 'law', side: s, law: p.law }); for (const u of c.alliesFam(s, 'nebuleuse')) { c.kw(u, 'voldevie'); if (p.awake) c.buff(u, 1, 1); } }
       if (p.law === 'chaos') { log({ t: 'law', side: s, law: p.law }); for (const u of p.awake ? c.pickAllies(s, 2) : [c.rnd(alive(s))]) c.randomKw(u); }
-      if (p.law === 'stase' && first) { log({ t: 'law', side: s, law: p.law }); for (const u of alive(s).slice(0, p.awake ? 3 : 2)) c.kw(u, 'bouclier'); }
+      if (p.law === 'stase' && first) { log({ t: 'law', side: s, law: p.law }); for (const u of alive(s).slice(0, p.awake ? 4 : 3)) c.kw(u, 'bouclier'); }
       if (p.law === 'endurance' && p.awake && first) { log({ t: 'law', side: s, law: p.law }); for (const u of inRow(s, 0)) c.buff(u, 0, 2); }
       if (p.law === 'phenix' && p.awake && first) { log({ t: 'law', side: s, law: p.law }); c.kw(weakestOf(s), 'renaissance'); }
       // Reliques de début de combat.
@@ -1838,7 +1965,7 @@
     const surv = winner === 0 ? l0 : winner === 1 ? l1 : [];
     const damage = winner < 0 ? 0 : players[winner].tier + surv.reduce((s, u) => s + cardOf(u).tier, 0);
     log({ t: 'end', winner, damage });
-    return { events: ev, winner, damage, survivors: surv.length };
+    return { events: ev, winner, damage, survivors: surv.length, heal: heals };
   }
 
   // ─── Bots ───────────────────────────────────────────────────
@@ -1849,7 +1976,7 @@
   const BOT = { randPref: 0, pref2: 0.1, famBase: 6, famPer: 2, levelLag: 3, sim: 2, simOpp: 3, simCand: 4, famWeight: 6, weak: 0.5, crowd: 0.1 };
   // Force d'une famille jouée seule (part de victoires d'un joueur « tout dans une famille »
   // contre les bots, orbite/tools/bots-mono.js), ramenée entre 0 et 1.
-  const FAM_POWER = { vie: 1, cristal: 0.8, lune: 0.8, tempete: 0.75, glace: 0.7, mineral: 0.55, neant: 0.5, brasier: 0.3, machine: 0.3, comete: 0.25, envers: 0.25, anomalie: 0.2 };
+  const FAM_POWER = { vie: 1, cristal: 0.8, lune: 0.8, tempete: 0.75, glace: 0.7, mineral: 0.55, neant: 0.5, brasier: 0.3, machine: 0.3, comete: 0.25, envers: 0.25, anomalie: 0.2, nebuleuse: 0.5 };
   const famBonus = (p, fam) => {
     if (fam === p.pref) return BOT.famBase + (expert(p) ? BOT.famPer * famCount(p, fam) : 0);
     if (fam === p.pref2) return BOT.famBase + (expert(p) ? BOT.famPer * 0.5 * famCount(p, fam) : 0);
@@ -2024,7 +2151,7 @@
     // l'énergie restante. C'est ce qui la rend nettement plus solide en début de partie.
     const want = Math.min(p.tutor ? TUTOR.tier : 6, 1 + Math.floor((state.round + p.greed - (expert(p) ? BOT.levelLag : 0)) / 2));
     if (p.tier < want && p.gold >= upgradeCost(p, state) && (state.round >= 3 || upgradeCost(p, state) <= p.gold - BUY_COST || p.gold >= 5)) upgrade(state, p);
-    if (p.law === 'ingenierie' && p.gold >= 1 && p.gold % 3 === 1) usePower(state, null, p);
+    if (p.law === 'ingenierie' && p.hand.length < HAND_MAX) usePower(state, null, p);
     if (p.law === 'renversement') {
       const t = p.board.filter((u) => u.atk > 0 && u.hp > u.atk && !u.kw.includes('rempart')).sort((a, b) => b.hp - b.atk - (a.hp - a.atk))[0];
       if (t) usePower(state, t.uid, p);
@@ -2115,6 +2242,11 @@
           b: { id: B.id, name: B.name, law: B.law, tier: B.tier, hp: B.hp, ghost: !!B.ghost }
         };
       }
+      rememberFoe(A, B);
+      rememberFoe(B, A);
+      healAfter(A, r.heal[0]);
+      if (!B.ghost) healAfter(B, r.heal[1]);
+      if (isMine && r.heal[0]) battle.heal = r.heal[0];
       if (r.winner === 0 && !B.ghost) B.hp -= r.damage;
       if (r.winner === 1) A.hp -= r.damage;
       if (isFeat) watched.after = { a: A.hp, b: B.ghost ? null : B.hp };
@@ -2187,6 +2319,20 @@
     // avec la manche suivante.
     for (const p of still) if (!p.remote) startTurn(state, p);
     return { ok: true };
+  }
+
+  // Vol (Nébuleuses, v107) : chacun se souvient des astres affrontés, ceux du dernier adversaire et
+  // tous les autres (40 au plus). Un fantôme ne se souvient de rien.
+  function rememberFoe(p, foe) {
+    if (!p || p.ghost || !foe) return;
+    const ids = (foe.board || []).map((u) => u.id).filter((id) => CARD[id] && !CARD[id].token);
+    p.lastFoe = ids;
+    p.foes = (p.foes || []).concat(ids).slice(-40);
+  }
+  // PV rendus à un univers par ses Nébuleuses (Sablier), avant les dégâts de fin de combat.
+  function healAfter(p, n) {
+    if (!p || p.ghost || !(n > 0) || p.hp <= 0) return;
+    p.hp = Math.min(p.maxHp, p.hp + n);
   }
 
   // ─── Multijoueur ────────────────────────────────────────────
@@ -2262,7 +2408,11 @@
       if (!sn) continue;
       const was = held(p.board), now = held(sn.board || []);
       for (const id of Object.keys(Object.assign({}, was, now))) if (state.pool[id] !== undefined) state.pool[id] -= (now[id] || 0) - (was[id] || 0);
+      // Les identifiants viennent d'un autre téléphone : préfixés, ils ne peuvent plus croiser ceux
+      // créés ici (v107). Sinon, quand l'hôte change et que ses bots jouent ici, une fusion dorée
+      // retirait un astre au hasard qui portait le même identifiant.
       p.board = JSON.parse(JSON.stringify(sn.board || []));
+      for (const u of p.board) if (!String(u.uid).startsWith('r:')) u.uid = 'r:' + gid + ':' + u.uid;
       p.tier = sn.tier || p.tier;
       if (Array.isArray(sn.relics)) p.relics = sn.relics.filter((id) => RELIC[id]);
       p.awake = !!sn.awake;
@@ -2315,6 +2465,11 @@
         };
       }
       const hurt = (x, d) => { (x.__real || x).hp -= d; };
+      rememberFoe(A.__real || A, B);
+      rememberFoe(B.__real || B, A);
+      healAfter(A.__real || A, r.heal[0]);
+      if (!B.ghost) healAfter(B.__real || B, r.heal[1]);
+      if (battle && mineFight) { const h = isMe(B) ? r.heal[1] : r.heal[0]; if (h) battle.heal = h; }
       if (r.winner === 0 && !B.ghost) hurt(B, r.damage);
       if (r.winner === 1) hurt(A, r.damage);
       if (isFeat) watched.after = { a: A.hp, b: B.ghost ? null : B.hp };

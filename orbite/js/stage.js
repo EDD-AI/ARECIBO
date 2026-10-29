@@ -69,7 +69,7 @@
           ring: !!look.ring, debris: !!look.debris, moons: look.moons || 0, shell: !!look.shell,
           starClass: look.starClass, hueShift: look.hueShift, mood: look.mood,
           caps: look.caps, light: look.light, shape: look.shape || 'aucune', warm: look.warm, coreHue: look.coreHue,
-          disk: look.disk, hot: look.hot, pitch: look.pitch, lens: look.lens, diskScale: look.diskScale
+          disk: look.disk, hot: look.hot, pitch: look.pitch, lens: look.lens, diskScale: look.diskScale, neb: look.neb
         });
         g.flip = !!look.flip;
         this.genomes.set(id, g);
@@ -80,7 +80,7 @@
     colors(id) {
       const g = this.genome(id), P = g.body.pal;
       const acc = OP.accentOf(g);
-      const rows = g.body.shader === OP.SH.GAS ? [0, 1, 2] : g.body.shader === OP.SH.STAR || g.body.shader === OP.SH.PORTAL ? [0, 0, 0] : [4, 5, 1];
+      const rows = g.body.shader === OP.SH.GAS || g.body.shader === OP.SH.NEBULA ? [0, 1, 2] : g.body.shader === OP.SH.STAR || g.body.shader === OP.SH.PORTAL ? [0, 0, 0] : [4, 5, 1];
       return [acc, P[rows[1]][4], P[rows[2]][5], P[rows[0]][3]];
     }
 
