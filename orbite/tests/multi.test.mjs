@@ -29,6 +29,8 @@ function play(seed, laws, late) {
     last = Object.assign({}, last, snaps);
     const playing = humans.filter((h) => states[h].phase === 'lock');
     for (const h of playing) assert.ok(R.mpResolve(states[h], snaps, []).ok);
+    // La réserve partagée reste conservée sur chaque téléphone (v106) : plateaux des autres compris.
+    for (const h of playing) assert.deepEqual(R.poolAudit(states[h]), states[h].poolTotal, 'réserve de ' + h + ', manche ' + round);
     const view = (h) => states[h].players.map((p) => (p.id === 'you' ? h : p.id) + ':' + p.hp + ':' + p.alive).sort().join(' ');
     views.push(playing.map(view));
     if (humans.every((h) => states[h].over)) break;
@@ -42,6 +44,29 @@ test('tous les téléphones voient les mêmes PV à chaque manche, même avec de
   assert.ok(Object.values(states).every((s) => s.over));
   const ranks = Object.values(states).map((s) => s.rank);
   assert.equal(new Set(ranks).size, ranks.length, 'des places différentes');
+});
+
+test('réserve partagée en ligne (v106) : les astres des autres sortent de la réserve de chaque téléphone', () => {
+  const seed = 'POOL1', fam = R.mpFamilies(seed);
+  const law = R.LAWS.find((l) => fam.includes(l.fam)).id;
+  const mk = (me, other) => R.newGame(seed, law, { families: fam, seats: [{ id: other, name: other, law: null }], mp: { me } });
+  const a = mk('a', 'b'), b = mk('b', 'a');
+  // a garde quatre copies d'un astre de niveau 1 (un doré et un simple) ; b ne l'a jamais vu.
+  const starters = new Set(R.LAWS.map((l) => l.starter));
+  const id = Object.keys(a.pool).find((k) => R.CARD[k].tier === 1 && !R.CARD[k].legend && !starters.has(k));
+  // Copies encore disponibles chez b : réserve + vitrines (les vitrines se renouvellent à la manche).
+  const avail = (st) => st.pool[id] + st.players.reduce((n, p) => n + p.shop.concat(p.discover).filter((x) => x === id).length, 0);
+  const before = avail(b);
+  a.pool[id] -= 4;
+  a.players[0].board = [{ uid: 'x1', id, golden: true, atk: 4, hp: 4, kw: [], att: [], row: 0 }, { uid: 'x2', id, golden: false, atk: 2, hp: 2, kw: [], att: [], row: 0 }];
+  for (const st of [a, b]) assert.ok(R.mpLock(st, st === a).ok);
+  const snaps = { a: R.snapshotOf(a, a.players[0]), b: R.snapshotOf(b, b.players[0]) };
+  for (const p of a.players) if (p.bot && p.alive) snaps[p.id] = R.snapshotOf(a, p);
+  assert.ok(R.mpResolve(b, snaps, []).ok);
+  assert.equal(avail(b), before - 4, 'les 4 copies de a ne sont plus disponibles chez b');
+  assert.deepEqual(R.poolAudit(b), b.poolTotal);
+  const held = b.players.find((p) => p.id === 'a').board.reduce((n, u) => n + R.copiesOf(u).filter((x) => x === id).length, 0);
+  assert.equal(held, 4, 'le plateau de a compte 4 copies chez b');
 });
 
 test('un plateau publié en retard ne crée pas d’écart', () => {

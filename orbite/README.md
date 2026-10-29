@@ -822,7 +822,10 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
 - **Les 5 dernières secondes** (en ligne, v79) : un cadre rouge léger palpite et tremble autour de
   l’écran, le téléphone vibre à chaque seconde, jusqu’au combat. Depuis la v103, un **tic d’horloge**
   sonne à chaque seconde (`SFX.tick`) : « tic » et « tac » alternent, la dernière seconde sonne plus
-  fort. Même tic-tac dans les 5 dernières secondes du choix de la loi.
+  fort. Même tic-tac dans les 5 dernières secondes du choix de la loi. Le bip carré de la v103 était
+  trop dur : depuis la v106, c’est un petit claquement boisé de balancier (souffle très bref dans un
+  filtre résonant, `knock`, avec un corps rond), et la dernière seconde ajoute une clochette douce.
+  Même volume qu’avant, moitié moins d’aigus.
 - **Déroulement** :
   - Chacun choisit une loi parmi trois, en 20 secondes, dans les familles de la partie (les mêmes
     pour tous). Depuis la v89, chaque loi montre la forme de son énergie, comme en solo ; la liste
@@ -832,8 +835,17 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
     65 s, 70 s et 75 s au plus ; le bouton de combat affiche le compte à rebours et le tour
     se termine pour tous à zéro. Depuis la v104, c’est le **seul** compte à rebours : en gros
     chiffres (« COMBAT DANS » au-dessus), sur fond sombre comme un afficheur, rouge sous 10 secondes,
-    qui bat pendant les 5 dernières ; le petit minuteur du haut de l’écran (`#mpTimer`) reste caché. Les combats ne se passent pas ; 25 s leur sont réservées avant la
-    boutique suivante. On ne peut passer qu’en solo, contre les bots.
+    qui bat pendant les 5 dernières ; le petit minuteur du haut de l’écran (`#mpTimer`) reste caché. Les combats ne se passent pas.
+    **Le minuteur ne tourne pas pendant le combat (v106)** : avant, le temps de boutique partait du
+    document de la manche plus 25 s réservées au combat, si bien qu’un long combat mangeait le temps
+    d’achat. Désormais chaque téléphone lance son compte à rebours quand la boutique revient à l’écran,
+    après son propre combat : on a toujours tout son temps (vérifié aux émulateurs : 9 s sur 9 après
+    chaque combat, pour les deux joueurs). L’hôte n’attend un retardataire que jusqu’au document de la
+    manche + 60 s (le plus long combat, `BATTLE_MS`) + le temps de boutique + 20 s ; au-delà, le
+    retardataire garde son plateau précédent. On ne peut passer qu’en solo, contre les bots. Depuis la v106, le bouton
+    PASSER n’apparaît plus du tout en ligne (classe `no-skip`, posée au début de chaque combat et du
+    mode spectateur selon `state.mp`) : il se montrait encore au combat qui vous élimine (la classe
+    `mp-game` tombe dès l’élimination, avant ce dernier combat) et en regardant la suite, sans rien faire.
 - **Sous le capot** (`js/multi.js`, règles dans `js/rules.js`) :
   - Chaque téléphone joue sa propre boutique. À la fin du tour, il publie son plateau.
   - L’hôte rassemble les plateaux des humains et ceux des bots dans un document de manche, écrit
@@ -928,7 +940,7 @@ fiche de chaque astre les choisit avec `look.shape` dans `js/rules.js`.
 | Planète brisée (morceaux écartés, cœur qui brûle dans les fissures) | Vestige (violet), Géode (vert), Forge stellaire (orange), Sérac (glace, cœur bleu) |
 | Astéroïde double (deux lobes soudés) | Tchouri, Agate, Écho, Ossuaire, Comète (glace) ; Scorie (lave, v98 : ne ressemble plus à Magma) |
 | Amas de cristaux (piquants) | Améthyste, Obsidienne (verre noir), Spore (Envers), Cœur de cristal (dans sa bulle, v99) |
-| Bipyramide | Diamant, Saphir, Émeraude, Foreuse, Sonde |
+| Bipyramide | Diamant, Saphir, Émeraude, Foreuse, Sonde, Pangée (légendaire en pierre taillée, anneau de poussière, v106 : c’était une planète façon Terre, trop peu minérale) |
 | Bloc (cube arrondi) ou monolithe (dalle) | Basalte, Prisme, Sentinelle, Tesseract, Prisme absolu (légendaire, turquoise, v99) ; Monolithe, Quartz, Oumuamua (légendaire, v98) |
 | Fendue en deux (deux moitiés écartées en biais, la cassure brille ; forme 9, v99) | Antipode |
 | Anneau-monde (tore) | Station, Paradoxe |
@@ -1189,6 +1201,31 @@ En local avec un serveur : `python3 -m http.server 8080` dans `orbite/`, puis
 La **réserve est partagée** : les vitrines réservent les copies, les achats les retirent, la
 vente et l’élimination les rendent. Quand un bot joue une famille, ses astres se raréfient.
 
+**Réserve vraiment partagée (v106).** Un joueur a vu une partie où presque tout le monde jouait Néant.
+Deux causes :
+- **En ligne**, chaque téléphone tient sa propre réserve, et seuls ses propres achats en sortaient :
+  les astres des autres humains, et ceux des bots (joués chez l’hôte), n’étaient jamais retirés. Pire,
+  l’élimination d’un autre joueur « rendait » ses astres à une réserve qui ne les avait jamais donnés.
+  Désormais, à chaque manche, `mpResolve` retire de la réserve locale ce qui a changé sur les plateaux
+  publiés des autres (copies d’un doré et des astres arrimés comprises) ; vente et élimination les
+  rendent. Un test vérifie, manche après manche et sur chaque téléphone, que la réserve se conserve
+  (`poolAudit`), et qu’un astre gardé par un autre joueur n’est plus disponible chez vous.
+- **Les bots s’entassaient** : ils tirent leur loi avec un poids `FAM_POWER^6`, si bien que la famille
+  la plus forte de la partie écrasait les autres (Néant pèse 21 fois Brasier). Sur 2 000 parties, en
+  moyenne **5,2 bots sur 7** jouaient la même famille, et tous les 7 dans une partie sur cinq. Chaque
+  bot (et votre loi, en solo) déjà sur une famille divise désormais son poids par 10 (`BOT.crowd`) :
+  au plus 3 bots en moyenne sur la même famille. En ligne, seule la loi des bots compte, pour que tous
+  les téléphones tirent les mêmes.
+
+Au passage, l’astre de départ d’une loi neutre venu d’une famille absente n’est plus retiré d’une
+réserve qui ne le contient pas (il y laissait une valeur `NaN`, sans effet en jeu).
+
+**Montée de niveau (correctif v106).** Le libellé « CRÉATION ●●○○○○ » recevait la classe `pop`, celle
+des textes flottants (position fixe, animation vers le haut) : à chaque montée, il quittait sa place et
+les boutons glissaient de la droite vers la gauche. Seul le nouveau pion porte désormais une classe
+(`new`) : il s’allume en doré et grossit, rien d’autre ne bouge. Même erreur corrigée sur le compteur
+d’étincelles de la Genèse (classe `bump`).
+
 **Trois copies** d’un même astre fusionnent en un **astre doré** (statistiques et effets
 doublés). Quand vous en possédez déjà deux, la copie présente dans la Création scintille de
 petites étoiles dorées : l’acheter déclenche la fusion. Un astre ajouté à la main par un effet
@@ -1254,7 +1291,7 @@ montre déjà l’éveil de chacune.
 | Symbiose | les deux astres les plus faibles gagnent +1/+1 (au lieu de +0/+1 pour un seul) |
 | Entropie | les astres du Néant gagnent +1/+1 (au lieu de +1/+0) |
 | Renversement | le pouvoir donne +2/+2 |
-| Combustion | 3 dégâts à deux ennemis |
+| Combustion | 4 dégâts à deux ennemis (3 avant la v106) |
 | Stase | Bouclier aux trois premiers astres |
 | Vents | l’attaquant gagne +2/+1 |
 | Gravité | les Remparts gagnent +1/+2 |
@@ -1653,6 +1690,19 @@ gros bond de toutes les familles. En retirer une carte : Hyakutake −16 points,
 −14, Encke −10, les autres moins de 6. Changements : **Hyakutake**, à chaque actualisation, donne
 +1/+1 à deux Comètes aléatoires (au lieu de toutes) ; **Tchouri** compte 3 actualisations au plus
 (au lieu de 5). Résultat : 50 %. Plafonner Météore à 4 actualisations par cycle ne changeait rien.
+
+**Cristaux encore allégés, Brasier renforcé (v106).** Les joueurs trouvaient toujours le Cristal trop
+fort, le Brasier un peu faible. Même mesure (joueur naïf contre l’IA experte, 300 duels) : Cristal 57 %,
+Brasier 38 % ; en mêlée contre 7 IA expertes (`tools/equilibrage.js 300 --skill 1`), le Cristal était la
+famille dominante qui gagnait le plus (27 % des parties). En retirer une carte : Quartz −9 points,
+Émeraude −6, Prisme −4, les autres 0 à 2 ; avec un joueur qui actualise beaucoup, Cœur de cristal −7.
+Changements : **Quartz** 2 fois au plus (au lieu de 3), **Émeraude** donne +1 Attaque à deux Cristaux
+aléatoires (au lieu de tous), **Prisme** 4 fois au plus (`u.res`) ; **Braise** inflige 2 dégâts (au lieu
+de 1), **Loi de combustion** 4 dégâts (au lieu de 3, éveillée : 4 à deux ennemis). Plafonner Cœur de
+cristal à 4 fois ne changeait rien (il se déclenche rarement autant). Résultat en duel : Minéral 55 %,
+Néant 52 %, **Cristal 51 %**, Anomalies 48 %, **Brasier 47 %**, Tempête 43 %, Glace 38 %, Lune 34 %,
+Comètes 32 %, Vie 31 %, Envers 11 %, Machine 8 % (ces deux-là se jouent mal naïvement). Avec un joueur
+qui actualise beaucoup : Cristal 56 % (Minéral 60 %), Brasier 43 % (36 % avant).
 
 **Reliques et éveil des lois (v84).** Mesuré avec `node orbite/tools/equilibrage.js 240 --seed v84
 --json`, avant et après (sans événement cosmique, que les outils ne tirent pas) : le rang moyen des

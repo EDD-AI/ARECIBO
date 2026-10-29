@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 105;
+  const VERSION = 106;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -2089,9 +2089,10 @@
 
   function renderTavernHead(pop) {
     const p = me();
-    const pips = Array.from({ length: 6 }, (_, i) => `<i class="${i < p.tier ? 'on' : ''}"></i>`).join('');
+    // Au passage de niveau, seul le nouveau pion s'allume en grand (la classe « pop » est réservée
+    // aux textes flottants : posée ici, elle faisait glisser toute la ligne vers la gauche).
+    const pips = Array.from({ length: 6 }, (_, i) => `<i class="${i < p.tier ? 'on' : ''}${pop && i === p.tier - 1 ? ' new' : ''}"></i>`).join('');
     $('tier').innerHTML = `${tr('CRÉATION')} <span class="pips">${pips}</span>`;
-    $('tier').classList.toggle('pop', !!pop);
     const cost = R.upgradeCost(p, ui.state);
     $('upBtn').innerHTML = p.tier >= 6 ? tr('MAX') : `${icon('up')} <i>${cost}</i>`;
     $('upBtn').disabled = p.tier >= 6 || p.gold < cost;
@@ -3479,6 +3480,10 @@
   const relayout = (row) => layoutRows(row, row === $('enemy'));
 
   const unitByCid = (cid) => document.querySelector(`#board .unit[data-cid="${cid}"], #enemy .unit[data-cid="${cid}"]`);
+  // En ligne contre de vrais joueurs, les combats ne se passent pas (v106) : PASSER disparaît pour toute
+  // la partie, y compris au combat qui vous élimine et en regardant la suite (la classe mp-game tombe
+  // dès l'élimination, avant ce dernier combat).
+  const noSkipOnline = () => document.body.classList.toggle('no-skip', !!(ui.state && ui.state.mp));
 
   async function playBattle(b) {
     ui.time = 1;
@@ -3488,6 +3493,7 @@
     $('oppName').innerHTML = opp.ghost ? esc(opp.name + ' · ' + tr('FANTÔME')) : playerName(ui.state.players.find((x) => x.id === opp.id) || opp, opp.name);
     $('oppHp').innerHTML = opp.ghost ? '' : icon('heart') + ' ' + Math.max(0, b.before.opp);
     document.body.classList.add('in-combat');
+    noSkipOnline();
     SFX.ambience('battle');
     const evs = b.events;
     buildCombatRows(evs[0].boards);
@@ -3979,6 +3985,7 @@
     ui.busy = true;
     ui.watchStop = false;
     document.body.classList.add('watching');
+    noSkipOnline();
     await show('game');
     for (const id of ['shop', 'hand', 'board', 'enemy']) $(id).innerHTML = '';
     renderHud();

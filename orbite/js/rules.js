@@ -202,8 +202,8 @@
 
     // BRASIER
     { id: 'braise', fam: 'brasier', tier: 1, atk: 2, hp: 3, name: 'Braise', look: { type: 'lava', seed: 2121 },
-      text: 'Début de combat : inflige {1} dégât à un ennemi aléatoire.',
-      start(c, u, m) { c.dmg(u, c.rnd(c.allies(1 - u.side)), m); } },
+      text: 'Début de combat : inflige {2} dégâts à un ennemi aléatoire.',
+      start(c, u, m) { c.dmg(u, c.rnd(c.allies(1 - u.side)), 2 * m); } },
     { id: 'scorie', fam: 'brasier', tier: 1, atk: 3, hp: 3, name: 'Scorie', look: { type: 'lava', seed: 2222, shape: 'double' },
       text: 'Effondrement : inflige {2} dégâts à un ennemi aléatoire.',
       death(c, u, m) { c.dmg(u, c.rnd(c.allies(1 - u.side)), 2 * m); } },
@@ -421,14 +421,14 @@
     // 57 % après (scratch cristal-sim : naïf une famille contre IA experte, 300 duels).
     // u.res compte les résonances déjà reçues par Quartz et Opale.
     { id: 'quartz', fam: 'cristal', tier: 1, atk: 2, hp: 2, name: 'Quartz', look: { type: 'crystal', seed: 9301, shape: 'monolithe' },
-      text: 'Quand vous jouez un autre Cristal, gagne +{1}/+{1} (3 fois au plus).',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < 3) { u.res = (u.res || 0) + 1; x.buff(u, m, m); } } },
+      text: 'Quand vous jouez un autre Cristal, gagne +{1}/+{1} (2 fois au plus).',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < 2) { u.res = (u.res || 0) + 1; x.buff(u, m, m); } } },
     { id: 'amethyste', fam: 'cristal', tier: 1, atk: 2, hp: 3, name: 'Améthyste', look: { type: 'crystal', seed: 9302, hueShift: 60, shape: 'amas' },
       text: 'Naissance : un autre Cristal aléatoire gagne +{1} PV.',
       play(x, u, m) { x.buff(x.rnd(x.fam('cristal', u)), 0, m); } },
     { id: 'prisme', fam: 'cristal', tier: 2, atk: 2, hp: 4, name: 'Prisme', look: { type: 'crystal', seed: 9303, shell: true, shape: 'bloc' },
-      text: 'Quand vous jouez un Cristal, vos Cristaux gagnent +{1} PV.',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') for (const v of x.fam('cristal')) x.buff(v, 0, m); } },
+      text: 'Quand vous jouez un Cristal, vos Cristaux gagnent +{1} PV (4 fois au plus).',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < 4) { u.res = (u.res || 0) + 1; for (const v of x.fam('cristal')) x.buff(v, 0, m); } } },
     { id: 'saphir', fam: 'cristal', tier: 2, atk: 3, hp: 3, name: 'Saphir', look: { type: 'crystal', seed: 9304, hueShift: 180, shape: 'diamant' },
       text: 'Début de combat : gagne +{1}/+{1} par autre Cristal (3 au plus).',
       start(c, u, m) { const n = Math.min(3, c.alliesFam(u.side, 'cristal').length - 1) * m; if (n > 0) c.buff(u, n, n); } },
@@ -439,8 +439,13 @@
       text: 'Bouclier. Quand vous jouez un Cristal, gagne +{1}/+{1} (4 fois au plus).',
       allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < 4) { u.res = (u.res || 0) + 1; x.buff(u, m, m); } } },
     { id: 'emeraude', fam: 'cristal', tier: 4, atk: 5, hp: 5, name: 'Émeraude', look: { type: 'crystal', seed: 9307, hueShift: 120, shape: 'foret' },
-      text: 'Quand vous jouez un Cristal, vos Cristaux gagnent +{1} Attaque.',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') for (const v of x.fam('cristal')) x.buff(v, m, 0); } },
+      text: 'Quand vous jouez un Cristal, deux Cristaux aléatoires gagnent +{1} Attaque.',
+      allyPlay(x, u, m, b) {
+        if (famOf(b) !== 'cristal') return;
+        const l = x.fam('cristal'), a = x.rnd(l);
+        x.buff(a, m, 0);
+        x.buff(x.rnd(l.filter((v) => v !== a)), m, 0);
+      } },
     { id: 'diamant', fam: 'cristal', tier: 5, atk: 6, hp: 8, name: 'Diamant', look: { type: 'crystal', seed: 9308, ring: true, shape: 'diamant' },
       text: 'Début de combat : vos autres Cristaux gagnent +{1}/+{1}.',
       start(c, u, m) { for (const v of c.alliesFam(u.side, 'cristal')) if (v !== u) c.buff(v, m, m); } },
@@ -511,7 +516,7 @@
     { id: 'lunesang', fam: 'lune', tier: 1, atk: 2, hp: 3, name: 'Lune de sang', legend: true, look: { type: 'desert', seed: 8707, hueShift: -35 },
       text: 'Fin de cycle : ses voisins gagnent +{1}/+{1}.',
       endTurn(x, u, m) { for (const v of x.neighbors(u)) x.buff(v, m, m); } },
-    { id: 'pangee', fam: 'mineral', tier: 2, atk: 2, hp: 6, name: 'Pangée', legend: true, kw: ['rempart'], look: { type: 'earth', seed: 8808, moons: 1, hueShift: -25 },
+    { id: 'pangee', fam: 'mineral', tier: 2, atk: 2, hp: 6, name: 'Pangée', legend: true, kw: ['rempart'], look: { type: 'moon', seed: 8833, shape: 'diamant', ring: true, moons: 1, hueShift: -15 },
       text: 'Rempart. Fin de cycle : vos Remparts gagnent +{1}/+{2}.',
       endTurn(x, u, m) { for (const v of x.board().filter((v) => v.kw.includes('rempart'))) x.buff(v, m, 2 * m); } },
     { id: 'oumuamua', fam: 'comete', tier: 2, atk: 2, hp: 3, name: 'Oumuamua', legend: true, look: { type: 'asteroid', seed: 8909, shape: 'monolithe', hueShift: 25 },
@@ -550,7 +555,7 @@
     { id: 'symbiose', fam: 'vie', name: 'Loi de symbiose', starter: 'aube', tagline: 'Tout commence par une étoile.', text: 'Fin de cycle : votre astre le plus faible gagne +1 PV.', awake: 'Fin de cycle : vos deux astres les plus faibles gagnent +1/+1.' },
     { id: 'entropie', fam: 'neant', name: 'Loi de l’entropie', starter: 'cendre', tagline: 'Rien ne meurt en vain.', text: 'Quand un de vos astres s’effondre, vos astres du Néant gagnent +1 Attaque pour le combat.', awake: 'Quand un de vos astres s’effondre, vos astres du Néant gagnent +1/+1 pour le combat.' },
     { id: 'renversement', fam: 'envers', name: 'Loi du renversement', starter: 'reflet', tagline: 'Le haut est en bas.', text: 'Pouvoir (gratuit, une fois par cycle) : inverse l’Attaque et les PV d’un de vos astres, puis il gagne +1/+1.', awake: 'Pouvoir (gratuit, une fois par cycle) : inverse l’Attaque et les PV d’un de vos astres, puis il gagne +2/+2.', active: { cost: 0, target: true } },
-    { id: 'combustion', fam: 'brasier', name: 'Loi de combustion', starter: 'braise', tagline: 'Brûler avant de disparaître.', text: 'Début de combat : inflige 3 dégâts à un ennemi aléatoire.', awake: 'Début de combat : inflige 3 dégâts à deux ennemis aléatoires.' },
+    { id: 'combustion', fam: 'brasier', name: 'Loi de combustion', starter: 'braise', tagline: 'Brûler avant de disparaître.', text: 'Début de combat : inflige 4 dégâts à un ennemi aléatoire.', awake: 'Début de combat : inflige 4 dégâts à deux ennemis aléatoires.' },
     { id: 'stase', fam: 'glace', name: 'Loi de stase', starter: 'nive', tagline: 'Le silence est une forteresse.', text: 'Début de combat : vos deux premiers astres gagnent Bouclier.', awake: 'Début de combat : vos trois premiers astres gagnent Bouclier.' },
     { id: 'vents', fam: 'tempete', name: 'Loi des vents', starter: 'brume', tagline: 'Tout ce qui bouge frappe.', text: 'Après chaque attaque, l’astre attaquant gagne +1/+1 pour le combat.', awake: 'Après chaque attaque, l’astre attaquant gagne +2/+1 pour le combat.' },
     { id: 'gravite', fam: 'mineral', name: 'Loi de gravité', starter: 'silex', tagline: 'Ce qui pèse dure.', text: 'Fin de cycle : vos Remparts gagnent +0/+1.', awake: 'Fin de cycle : vos Remparts gagnent +1/+2.' },
@@ -897,7 +902,8 @@
       lastOpp: null, deadRound: 0, greed: 0
     };
     const starter = makeUnit(state, law.starter);
-    state.pool[law.starter]--;
+    // L'astre de départ d'une loi neutre peut venir d'une famille absente : hors réserve (sinon NaN).
+    if (state.pool[law.starter] !== undefined) state.pool[law.starter]--;
     starter.row = 0;
     p.board.push(starter);
     return p;
@@ -956,16 +962,24 @@
       h.remote = true;
       state.players.push(h);
     }
+    // Familles déjà prises (la vôtre comprise) : les bots évitent de s'y entasser (v106). Sans cela,
+    // FAM_POWER^6 envoyait presque tous les bots sur la famille la plus forte de la partie (six
+    // Néant sur huit), et la réserve partagée ne suffisait plus à les départager.
+    // En ligne, la loi de chacun diffère d'un téléphone à l'autre : seule celle des bots compte, pour
+    // que tous les téléphones tirent les mêmes.
+    const crowd = {};
+    if (law.fam !== 'neutre' && !opts.mp) crowd[law.fam] = 1;
     for (let i = state.players.length - 1, botIndex = 0; i < size - 1; i++, botIndex++) {
       // Les bots préfèrent les familles fortes en solo (FAM_POWER), sans s'y limiter.
       let bl = LAWS[0];
       if (assignedBotLaws) bl = LAW[assignedBotLaws[botIndex]];
       else if (botLaws.length) {
-        const ws = botLaws.map((l) => Math.pow(FAM_POWER[l.fam] || 0.5, BOT.famWeight));
+        const ws = botLaws.map((l) => Math.pow(FAM_POWER[l.fam] || 0.5, BOT.famWeight) * Math.pow(BOT.crowd, crowd[l.fam] || 0));
         let x = rng() * ws.reduce((a, b) => a + b, 0);
         bl = botLaws[botLaws.length - 1];
         for (let k = 0; k < botLaws.length; k++) { if (x < ws[k]) { bl = botLaws[k]; break; } x -= ws[k]; }
       }
+      if (bl.fam !== 'neutre') crowd[bl.fam] = (crowd[bl.fam] || 0) + 1;
       const b = newPlayer(state, 'bot' + i, names[i], bl.id, true);
       b.greed = Math.floor(rng() * 4) - 1;
       b.skill = 1;
@@ -1753,7 +1767,7 @@
       if (p.law === 'combustion') {
         log({ t: 'law', side: s, law: p.law });
         const ts = p.awake ? shuffle(alive(1 - s), rng).slice(0, 2) : [c.rnd(alive(1 - s))];
-        for (const t of ts) if (t) hit(t, 3 + countOf(s, 'tison'), null, 'effect');
+        for (const t of ts) if (t) hit(t, 4 + countOf(s, 'tison'), null, 'effect');
       }
       if (p.law === 'chaos') { log({ t: 'law', side: s, law: p.law }); for (const u of p.awake ? c.pickAllies(s, 2) : [c.rnd(alive(s))]) c.randomKw(u); }
       if (p.law === 'stase' && first) { log({ t: 'law', side: s, law: p.law }); for (const u of alive(s).slice(0, p.awake ? 3 : 2)) c.kw(u, 'bouclier'); }
@@ -1832,7 +1846,7 @@
   // mesurer l'écart (orbite/tools/bots-duel.js).
   const expert = (p) => p.skill > 0;
   // Réglages de l'IA experte (choisis par simulation : orbite/tools/bots-mono.js).
-  const BOT = { randPref: 0, pref2: 0.1, famBase: 6, famPer: 2, levelLag: 3, sim: 2, simOpp: 3, simCand: 4, famWeight: 6, weak: 0.5 };
+  const BOT = { randPref: 0, pref2: 0.1, famBase: 6, famPer: 2, levelLag: 3, sim: 2, simOpp: 3, simCand: 4, famWeight: 6, weak: 0.5, crowd: 0.1 };
   // Force d'une famille jouée seule (part de victoires d'un joueur « tout dans une famille »
   // contre les bots, orbite/tools/bots-mono.js), ramenée entre 0 et 1.
   const FAM_POWER = { vie: 1, cristal: 0.8, lune: 0.8, tempete: 0.75, glace: 0.7, mineral: 0.55, neant: 0.5, brasier: 0.3, machine: 0.3, comete: 0.25, envers: 0.25, anomalie: 0.2 };
@@ -2236,11 +2250,18 @@
       ? players.slice().sort((x, y) => y.hp - x.hp || (gidOf(state, x) < gidOf(state, y) ? -1 : 1))[0] : null;
     let watched = null;
     const byGid = new Map(players.map((p) => [gidOf(state, p), p]));
-    // Plateaux des autres (humains et bots) tels qu'ils ont été publiés.
+    // Plateaux des autres (humains et bots) tels qu'ils ont été publiés. La réserve est partagée en
+    // ligne aussi (v106) : les astres publiés sortent de la réserve de ce téléphone (ce qui a changé
+    // depuis leur dernier plateau), et y reviennent quand ils sont vendus ou que leur univers tombe.
+    // Avant, chaque téléphone ne retirait que ses propres achats, et l'élimination d'un autre joueur
+    // y « rendait » des copies jamais prises.
+    const held = (board) => { const n = {}; for (const u of board) for (const id of copiesOf(u)) n[id] = (n[id] || 0) + 1; return n; };
     for (const [gid, p] of byGid) {
       if (p === me) continue;
       const sn = snaps[gid];
       if (!sn) continue;
+      const was = held(p.board), now = held(sn.board || []);
+      for (const id of Object.keys(Object.assign({}, was, now))) if (state.pool[id] !== undefined) state.pool[id] -= (now[id] || 0) - (was[id] || 0);
       p.board = JSON.parse(JSON.stringify(sn.board || []));
       p.tier = sn.tier || p.tier;
       if (Array.isArray(sn.relics)) p.relics = sn.relics.filter((id) => RELIC[id]);
@@ -2347,7 +2368,8 @@
     for (const p of state.players) {
       if (!p.alive) continue;
       for (const id of p.shop.concat(p.discover)) if (id) total[id]++;
-      for (const u of p.board.concat(p.hand)) for (const id of copiesOf(u)) total[id]++;
+      // Comme releaseUnit : un astre hors réserve (astre de départ d'une famille absente) ne compte pas.
+      for (const u of p.board.concat(p.hand)) for (const id of copiesOf(u)) if (total[id] !== undefined) total[id]++;
     }
     return total;
   }
