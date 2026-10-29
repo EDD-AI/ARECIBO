@@ -413,34 +413,37 @@
       text: 'Quand vous actualisez : vos Comètes gagnent +{1}/+{1}.',
       roll(x, u, m) { for (const v of x.fam('comete')) x.buff(v, m, m); } },
 
-    // CRISTAL : résonance, chaque Cristal joué renforce les autres.
+    // CRISTAL : résonance, chaque Cristal joué renforce les autres. Allégés en v90 : un joueur « tout
+    // Cristal » gagnait 73 % de ses duels contre l'IA experte (33 à 53 % pour les autres familles),
+    // 57 % après (scratch cristal-sim : naïf une famille contre IA experte, 300 duels).
+    // u.res compte les résonances déjà reçues par Quartz et Opale.
     { id: 'quartz', fam: 'cristal', tier: 1, atk: 2, hp: 2, name: 'Quartz', look: { type: 'crystal', seed: 9301, shape: 'monolithe' },
-      text: 'Quand vous jouez un autre Cristal, gagne +{1}/+{1}.',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') x.buff(u, m, m); } },
+      text: 'Quand vous jouez un autre Cristal, gagne +{1}/+{1} (3 fois au plus).',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < 3) { u.res = (u.res || 0) + 1; x.buff(u, m, m); } } },
     { id: 'amethyste', fam: 'cristal', tier: 1, atk: 2, hp: 3, name: 'Améthyste', look: { type: 'crystal', seed: 9302, hueShift: 60, shape: 'amas' },
-      text: 'Naissance : un autre Cristal aléatoire gagne +{1}/+{1}.',
-      play(x, u, m) { x.buff(x.rnd(x.fam('cristal', u)), m, m); } },
+      text: 'Naissance : un autre Cristal aléatoire gagne +{1} PV.',
+      play(x, u, m) { x.buff(x.rnd(x.fam('cristal', u)), 0, m); } },
     { id: 'prisme', fam: 'cristal', tier: 2, atk: 2, hp: 4, name: 'Prisme', look: { type: 'crystal', seed: 9303, shell: true, shape: 'bloc' },
       text: 'Quand vous jouez un Cristal, vos Cristaux gagnent +{1} PV.',
       allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') for (const v of x.fam('cristal')) x.buff(v, 0, m); } },
     { id: 'saphir', fam: 'cristal', tier: 2, atk: 3, hp: 3, name: 'Saphir', look: { type: 'crystal', seed: 9304, hueShift: 180, shape: 'diamant' },
-      text: 'Début de combat : gagne +{1}/+{1} par autre Cristal.',
-      start(c, u, m) { const n = (c.alliesFam(u.side, 'cristal').length - 1) * m; if (n > 0) c.buff(u, n, n); } },
+      text: 'Début de combat : gagne +{1}/+{1} par autre Cristal (3 au plus).',
+      start(c, u, m) { const n = Math.min(3, c.alliesFam(u.side, 'cristal').length - 1) * m; if (n > 0) c.buff(u, n, n); } },
     { id: 'rubis', fam: 'cristal', tier: 3, atk: 4, hp: 4, name: 'Rubis', look: { type: 'crystal', seed: 9305, hueShift: 300 },
-      text: 'Quand vous jouez un Cristal, il gagne +{2}/+{1}.',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') x.buff(b, 2 * m, m); } },
+      text: 'Quand vous jouez un Cristal, il gagne +{1}/+{1}.',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') x.buff(b, m, m); } },
     { id: 'opale', fam: 'cristal', tier: 3, atk: 3, hp: 5, name: 'Opale', kw: ['bouclier'], look: { type: 'crystal', seed: 9306, shell: true },
-      text: 'Bouclier. Quand vous jouez un Cristal, gagne +{1}/+{1}.',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') x.buff(u, m, m); } },
+      text: 'Bouclier. Quand vous jouez un Cristal, gagne +{1}/+{1} (4 fois au plus).',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < 4) { u.res = (u.res || 0) + 1; x.buff(u, m, m); } } },
     { id: 'emeraude', fam: 'cristal', tier: 4, atk: 5, hp: 5, name: 'Émeraude', look: { type: 'crystal', seed: 9307, hueShift: 120, shape: 'foret' },
+      text: 'Quand vous jouez un Cristal, vos Cristaux gagnent +{1} Attaque.',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') for (const v of x.fam('cristal')) x.buff(v, m, 0); } },
+    { id: 'diamant', fam: 'cristal', tier: 5, atk: 6, hp: 8, name: 'Diamant', look: { type: 'crystal', seed: 9308, ring: true, shape: 'diamant' },
+      text: 'Début de combat : vos autres Cristaux gagnent +{1}/+{1}.',
+      start(c, u, m) { for (const v of c.alliesFam(u.side, 'cristal')) if (v !== u) c.buff(v, m, m); } },
+    { id: 'coeurcristal', fam: 'cristal', tier: 6, atk: 8, hp: 8, name: 'Cœur de cristal', look: { type: 'crystal', seed: 9309, shell: true, moons: 1 },
       text: 'Quand vous jouez un Cristal, vos Cristaux gagnent +{1}/+{1}.',
       allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') for (const v of x.fam('cristal')) x.buff(v, m, m); } },
-    { id: 'diamant', fam: 'cristal', tier: 5, atk: 6, hp: 8, name: 'Diamant', look: { type: 'crystal', seed: 9308, ring: true, shape: 'diamant' },
-      text: 'Début de combat : vos autres Cristaux gagnent +{2}/+{2}.',
-      start(c, u, m) { for (const v of c.alliesFam(u.side, 'cristal')) if (v !== u) c.buff(v, 2 * m, 2 * m); } },
-    { id: 'coeurcristal', fam: 'cristal', tier: 6, atk: 8, hp: 8, name: 'Cœur de cristal', look: { type: 'crystal', seed: 9309, shell: true, moons: 1 },
-      text: 'Quand vous jouez un Cristal, vos Cristaux gagnent +{2}/+{2}.',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') for (const v of x.fam('cristal')) x.buff(v, 2 * m, 2 * m); } },
 
     // ANOMALIES : le hasard, des astres qui surgissent de nulle part.
     { id: 'fluctuation', fam: 'anomalie', tier: 1, atk: 2, hp: 2, name: 'Fluctuation', look: { type: 'portal', seed: 9401, hueShift: 90 },
@@ -523,7 +526,7 @@
     { id: 'gravite', fam: 'mineral', name: 'Loi de gravité', starter: 'silex', tagline: 'Ce qui pèse dure.', text: 'Fin de cycle : vos Remparts gagnent +0/+1.', awake: 'Fin de cycle : vos Remparts gagnent +1/+2.' },
     { id: 'marees', fam: 'lune', name: 'Loi des marées', starter: 'phobos', tagline: 'Rien ne tourne seul.', text: 'Fin de cycle : l’astre à droite de chaque Lune gagne +1 PV.', awake: 'Fin de cycle : les deux voisins de chaque Lune gagnent +1 PV.' },
     { id: 'passage', fam: 'comete', name: 'Loi du passage', starter: 'meteore', tagline: 'Tout repasse un jour.', text: 'Votre première actualisation de chaque cycle est gratuite.', awake: 'Vos deux premières actualisations de chaque cycle sont gratuites.' },
-    { id: 'resonance', fam: 'cristal', name: 'Loi de résonance', starter: 'quartz', tagline: 'Une note, et tout vibre.', text: 'Quand vous jouez un Cristal, un autre Cristal aléatoire gagne +1/+1.', awake: 'Quand vous jouez un Cristal, tous vos autres Cristaux gagnent +1/+1.' },
+    { id: 'resonance', fam: 'cristal', name: 'Loi de résonance', starter: 'quartz', tagline: 'Une note, et tout vibre.', text: 'Quand vous jouez un Cristal, un autre Cristal aléatoire gagne +1 PV.', awake: 'Quand vous jouez un Cristal, un autre Cristal aléatoire gagne +1/+1.' },
     { id: 'chaos', fam: 'anomalie', name: 'Loi du chaos', starter: 'fluctuation', tagline: 'Le hasard a toujours raison.', text: 'Début de combat : un allié aléatoire gagne un mot-clé aléatoire.', awake: 'Début de combat : deux alliés aléatoires gagnent un mot-clé aléatoire.' },
     { id: 'ingenierie', fam: 'machine', name: 'Loi d’ingénierie', starter: 'sonde', tagline: 'Assembler les mondes.', text: 'Pouvoir (1 énergie, une fois par cycle) : ajoute une Sonde 3/3 Arrimage à votre main.', awake: 'Pouvoir (gratuit, une fois par cycle) : ajoute une Sonde 3/3 Arrimage à votre main.', active: { cost: 1, target: false } },
     // Lois de vie : neutres, elles ne choisissent pas de famille et changent les PV de départ.
@@ -1108,8 +1111,8 @@
     hook(u, 'play', x, at);
     for (const v of p.board.slice()) if (v !== u) hook(v, 'allyPlay', x, u);
     if (p.law === 'resonance' && famOf(u) === 'cristal') {
-      if (p.awake) for (const v of x.fam('cristal', u)) x.buff(v, 1, 1);
-      else x.buff(x.rnd(x.fam('cristal', u)), 1, 1);
+      if (p.awake) x.buff(x.rnd(x.fam('cristal', u)), 1, 1);
+      else x.buff(x.rnd(x.fam('cristal', u)), 0, 1);
     }
     let discover = false;
     if (u.dtier) {

@@ -1757,6 +1757,50 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .seed-earn { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .seed-earn span { display: grid; gap: 3px; padding: 10px 4px; border: 1px solid var(--line); font-size: 10px; line-height: 1.3; color: var(--dim); text-align: center; }
 .seed-earn b { font-size: 18px; font-weight: 600; color: var(--sg2); }
+/* Cadres de profil (v90) : un contour animé (outline, sans décaler la mise en page) et quatre
+   rivets en pixels aux coins. --fc : couleur du cadre et des rivets. */
+.pframe { outline: 2px solid var(--fc, var(--gold)); outline-offset: 2px; box-shadow: 0 0 10px var(--fg, rgba(246, 196, 83, 0.4)); }
+.pframe::after {
+  content: ''; position: absolute; inset: -6px; pointer-events: none;
+  background:
+    linear-gradient(var(--fc), var(--fc)) left top / 4px 4px no-repeat,
+    linear-gradient(var(--fc), var(--fc)) right top / 4px 4px no-repeat,
+    linear-gradient(var(--fc), var(--fc)) left bottom / 4px 4px no-repeat,
+    linear-gradient(var(--fc), var(--fc)) right bottom / 4px 4px no-repeat;
+}
+.pfw { position: relative; display: inline-flex; flex: none; margin: 4px 6px; }
+.pf-id.pframe { position: relative; padding: 8px; margin: 14px 8px 10px; }
+.pframe[data-frame="cadre-or"] { --fc: #f6c453; animation: frOr 2.4s ease-in-out infinite; }
+@keyframes frOr { 0%, 100% { box-shadow: 0 0 5px rgba(246, 196, 83, 0.3); } 50% { box-shadow: 0 0 16px rgba(246, 196, 83, 0.85); } }
+.pframe[data-frame="cadre-aurore"] { --fc: #b8ffd9; animation: frAurore 5s linear infinite; }
+@keyframes frAurore {
+  0%, 100% { outline-color: #2fd18a; box-shadow: 0 0 12px rgba(47, 209, 138, 0.6); }
+  33% { outline-color: #c2457f; box-shadow: 0 0 12px rgba(194, 69, 127, 0.6); }
+  66% { outline-color: #7fd8ff; box-shadow: 0 0 12px rgba(127, 216, 255, 0.6); }
+}
+.pframe[data-frame="cadre-braise"] { --fc: #ffd36b; animation: frBraise 0.9s steps(3) infinite; }
+@keyframes frBraise {
+  0%, 100% { outline-color: #ff7a2f; box-shadow: 0 0 10px rgba(255, 90, 30, 0.7), 0 -4px 12px rgba(255, 160, 60, 0.4); }
+  50% { outline-color: #ffb347; box-shadow: 0 0 16px rgba(255, 120, 40, 0.9), 0 -6px 16px rgba(255, 200, 90, 0.5); }
+}
+.pframe[data-frame="cadre-givre"] { --fc: #e6f7ff; outline-color: #9fdcff; animation: frGivre 3.2s ease-in-out infinite; }
+@keyframes frGivre { 0%, 100% { box-shadow: 0 0 8px rgba(160, 220, 255, 0.45), inset 0 0 8px rgba(160, 220, 255, 0.25); } 50% { box-shadow: 0 0 16px rgba(190, 235, 255, 0.8), inset 0 0 12px rgba(190, 235, 255, 0.45); } }
+.pframe[data-frame="cadre-neant"] { --fc: #b48cff; outline-color: #6a3fd1; animation: frNeant 3.6s ease-in-out infinite; }
+@keyframes frNeant { 0%, 100% { box-shadow: 0 0 4px rgba(90, 40, 200, 0.4); } 50% { box-shadow: 0 0 22px 2px rgba(110, 50, 230, 0.75); } }
+.pframe[data-frame="cadre-cosmos"] { --fc: #ffffff; animation: frCosmos 4s linear infinite; }
+@keyframes frCosmos {
+  0%, 100% { outline-color: #ff6f6f; box-shadow: 0 0 12px rgba(255, 111, 111, 0.6); }
+  17% { outline-color: #f6c453; box-shadow: 0 0 12px rgba(246, 196, 83, 0.6); }
+  33% { outline-color: #9ff09a; box-shadow: 0 0 12px rgba(159, 240, 154, 0.6); }
+  50% { outline-color: #7fd8ff; box-shadow: 0 0 12px rgba(127, 216, 255, 0.6); }
+  67% { outline-color: #8a7dff; box-shadow: 0 0 12px rgba(138, 125, 255, 0.6); }
+  83% { outline-color: #ff7fd8; box-shadow: 0 0 12px rgba(255, 127, 216, 0.6); }
+}
+@media (prefers-reduced-motion: reduce) { .pframe { animation: none !important; } }
+/* Aperçu d'un cadre au Marché : une petite planète dans son cadre. */
+.cos-fr { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; }
+.cos-fr i { position: relative; display: block; width: 30px; height: 30px; background: radial-gradient(circle at 35% 35%, #8fb7d8, #2a4a6a 55%, #0a1420 75%); border: 1px solid var(--faint); }
+.cos-note { margin: 0 0 6px; }
 .cos-buy { display: flex; flex-direction: column; gap: 4px; }
 .cos-buy .btn { min-height: 34px; padding: 0 10px; }
 .fg-seedfeed { margin-top: 6px; min-height: 36px; font-size: 12px; }

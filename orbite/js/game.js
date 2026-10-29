@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 89;
+  const VERSION = 90;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -783,6 +783,7 @@
 
   function renderMenu() {
     renderMusicBar();
+    applyFrame($('profileBtn'), myFrame());
     $('menuDust').innerHTML = icon('dust') + ' ' + dust();
     if (typeof renderCreationBtn === 'function') renderCreationBtn();
     const lv = levelInfo(xpTotal());
@@ -999,8 +1000,9 @@
 
   // ─── Cosmétiques : fonds animés de partie ────────────────────
   const COS_KEY = 'orbite.cosmetiques';
-  const COS_PRICE = 1200;
-  const COS_SEEDS = 6;
+  // Prix d'un cosmétique (fond animé ou cadre de profil), relevés en v90.
+  const COS_PRICE = 2000;
+  const COS_SEEDS = 10;
   const SKIES = [
     { id: 'nebuleuse', mode: 1, name: tr('Nébuleuse pourpre'), text: tr('Des nuages roses et violets traversés de filaments sombres, autour d’un cœur brûlant.'), c: ['#c2457f', '#2a0a3c'] },
     { id: 'aurore', mode: 2, name: tr('Aurore boréale'), text: tr('Des voiles verts et roses dansent au-dessus des montagnes et se reflètent dans un lac.'), c: ['#2fd18a', '#071a22'] },
@@ -1010,6 +1012,28 @@
     { id: 'piliers', mode: 6, name: tr('Piliers de la création'), text: tr('Des colonnes de gaz sombre aux bords embrasés, dans un ciel d’or et de turquoise.'), c: ['#e8a44a', '#0f4a50'] }
   ];
   const SKY_BY_ID = Object.fromEntries(SKIES.map((k) => [k.id, k]));
+  // Cadres de profil (v90) : un contour animé et des rivets en pixels autour de l'avatar et du nom,
+  // au menu, au profil, et chez vos amis (publié dans forge.frame du profil public, js/online.js).
+  const FRAMES = [
+    { id: 'cadre-or', frame: true, name: tr('Couronne d’or'), text: tr('Un cadre doré qui scintille, avec ses rivets en pixels.') },
+    { id: 'cadre-aurore', frame: true, name: tr('Aurore'), text: tr('Les couleurs d’une aurore boréale glissent tout autour.') },
+    { id: 'cadre-braise', frame: true, name: tr('Braises'), text: tr('Un cadre de feu qui crépite et rougeoie.') },
+    { id: 'cadre-givre', frame: true, name: tr('Givre'), text: tr('Un cadre de glace bleue, nimbé de froid.') },
+    { id: 'cadre-neant', frame: true, name: tr('Néant'), text: tr('Une ombre violette qui respire autour de vous.') },
+    { id: 'cadre-cosmos', frame: true, name: tr('Cosmos'), text: tr('Toutes les couleurs de l’univers, qui tournent sans fin.') }
+  ];
+  const FRAME_BY_ID = Object.fromEntries(FRAMES.map((k) => [k.id, k]));
+  const cosItem = (id) => SKY_BY_ID[id] || FRAME_BY_ID[id] || null;
+  // Le cadre porté par un joueur (le nôtre, ou celui du profil public d'un ami) ; '' sans cadre.
+  const myFrame = () => { const f = cosmetics().frame; return FRAME_BY_ID[f] ? f : ''; };
+  const frameOf = (p) => { const f = p && p.forge && p.forge.frame; return FRAME_BY_ID[f] ? f : ''; };
+  // Un avatar entouré du cadre (span.pfw), pour les listes d'amis et le classement.
+  const framed = (inner, f) => (f ? `<span class="pfw pframe" data-frame="${f}">${inner}</span>` : inner);
+  function applyFrame(el, f) {
+    if (!el) return;
+    el.classList.toggle('pframe', !!f);
+    if (f) el.dataset.frame = f; else delete el.dataset.frame;
+  }
   function cosmetics() {
     try { const c = JSON.parse(store.get(COS_KEY, '')); if (c && Array.isArray(c.owned)) return c; } catch (err) { /* aucun achat */ }
     return { owned: [], on: '' };
@@ -1019,6 +1043,15 @@
 
   function renderCosmetics() {
     const c = cosmetics();
+    const buyBtn = (k) => `<span class="cos-buy"><button class="btn primary" data-cos-buy="${k.id}" ${dust() < COS_PRICE ? 'disabled' : ''}>${icon('dust')} ${COS_PRICE}</button><button class="btn" data-cos-buy="${k.id}" data-seed="1" ${seeds() < COS_SEEDS ? 'disabled' : ''}>${icon('seed', 'seed')} ${COS_SEEDS}</button></span>`;
+    // Un cadre : aperçu sur une petite planète, puis acheter, équiper, ou « équipé ».
+    const frameRow = (k) => {
+      const owned = !k.id || c.owned.includes(k.id), on = (c.frame || '') === (k.id || '');
+      const btn = on ? `<span class="cos-on">${tr('ÉQUIPÉ')}</span>` : owned ? `<button class="btn" data-cos-equip="${k.id || ''}" data-kind="frame">${tr('ÉQUIPER')}</button>` : buyBtn(k);
+      return `<div class="cos-row cos-frame-row">
+        <span class="cos-fr"><i class="${k.id ? 'pframe' : ''}" ${k.id ? `data-frame="${k.id}"` : ''}></i></span>
+        <span class="cos-txt"><b>${esc(k.name)}</b><small>${esc(k.text)}</small></span>${btn}</div>`;
+    };
     const row = (k) => {
       const owned = !k.id || c.owned.includes(k.id), on = (c.on || '') === (k.id || ''), sel = ui.cosPick === (k.id || '');
       let btn;
@@ -1031,6 +1064,8 @@
         <span class="cos-txt"><b>${esc(k.name)}</b><small>${esc(k.text)}</small></span>${btn}</div>`;
     };
     $('cosList').innerHTML = `<h4>${tr('FONDS ANIMÉS')}</h4>` + row({ id: '', name: tr('Noir'), text: tr('Le fond sobre d’origine.') }) + SKIES.map(row).join('') +
+      `<h4>${tr('CADRES DE PROFIL')}</h4><p class="mk-note cos-note">${tr('Autour de votre avatar et de votre nom, au menu, au profil et chez vos amis.')}</p>` +
+      frameRow({ id: '', name: tr('Sans cadre'), text: tr('Votre profil tel qu’au premier jour.') }) + FRAMES.map(frameRow).join('') +
       (dust() < COS_PRICE ? `<p class="mk-note">${tr('Vous avez {n} poussières d’étoiles. Un duel gagné ou un podium en rapporte.', { n: dust() })}</p>` : '');
   }
   // Aperçu de l'onglet Création : une planète détaillée qui change à chaque visite.
@@ -1080,7 +1115,7 @@
     ['Avancer la colonie de 24 h', 'une journée de production d’un coup', 3],
     ['Faire grandir une planète', 'une taille de plus dans la Forge', 1],
     ['Recharger le rover', 'repartir aussitôt en expédition', 1],
-    ['Un fond animé', 'derrière toutes vos parties', 6]
+    ['Un cosmétique', 'fond animé ou cadre de profil', COS_SEEDS]
   ];
   const euro = (v) => v.toLocaleString(I18N.lang, { style: 'currency', currency: 'EUR' });
   function renderSeedShop() {
@@ -1139,7 +1174,7 @@
     const c = cosmetics();
     if (buy) {
       if (buy.disabled) return;
-      const k = SKY_BY_ID[buy.dataset.cosBuy];
+      const k = cosItem(buy.dataset.cosBuy);
       if (!k || c.owned.includes(k.id)) return;
       if (buy.dataset.seed) {
         if (seeds() < COS_SEEDS) { refuse(tr('Il vous manque {n} graines de vie.', { n: COS_SEEDS - seeds() })); return; }
@@ -1149,17 +1184,25 @@
         addDust(-COS_PRICE);
       }
       c.owned.push(k.id);
-      c.on = k.id;
+      if (k.frame) c.frame = k.id; else c.on = k.id;
       saveCosmetics(c);
       SFX.golden();
       const [x, y] = center(buy);
       stage.burst(x, y, { n: 40, colors: [[246, 196, 83], [255, 255, 255]], speed: 90, life: 0.8 });
       $('marketDust').innerHTML = wallet();
-      toast(tr('{name} : équipé pour vos parties.', { name: k.name }), 2600);
+      toast(k.frame ? tr('{name} : votre nouveau cadre.', { name: k.name }) : tr('{name} : équipé pour vos parties.', { name: k.name }), 2600);
+      if (k.frame) { renderCosmetics(); return; }
     } else if (eq) {
+      SFX.place();
+      if (eq.dataset.kind === 'frame') {
+        c.frame = eq.dataset.cosEquip;
+        saveCosmetics(c);
+        toast(c.frame ? tr('{name} : équipé.', { name: FRAME_BY_ID[c.frame].name }) : tr('Cadre retiré.'), 2000);
+        renderCosmetics();
+        return;
+      }
       c.on = eq.dataset.cosEquip;
       saveCosmetics(c);
-      SFX.place();
       toast(c.on ? tr('{name} : équipé.', { name: SKY_BY_ID[c.on].name }) : tr('Fond noir équipé.'), 2000);
     } else if (row) {
       SFX.tap();
@@ -1230,7 +1273,7 @@
       <div class="pf-pane" data-pfpane="succes" id="pfSucces" ${tab === 'succes' ? '' : 'hidden'}></div>
       <div class="pf-pane" data-pfpane="profil" ${tab === 'profil' ? '' : 'hidden'}>
       <div id="pfOnline"></div>
-      <div class="pf-id">
+      <div class="pf-id ${myFrame() ? 'pframe' : ''}" ${myFrame() ? `data-frame="${myFrame()}"` : ''}>
         <div class="orb pf-planet" data-planet="world-mini"></div>
         <div class="pf-who">
           <div class="pf-name-row" id="pfNameRow"><button class="pf-name" data-pf="rename">${esc(pseudo())}<span>#${playerTag()}</span></button></div>
@@ -4258,7 +4301,7 @@
   // Outils partagés avec le mode Campagne (js/campagne-ui.js).
   window.__orbite.api = {
     show, openSheet, closeSheet, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
-    pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH,
+    pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH, frameOf, framed,
     coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation,
     seeds, addSeeds, wallet
   };
