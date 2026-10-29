@@ -46,7 +46,9 @@
   const shopMs = (r) => F.shop || (r <= SHOP_START.length ? SHOP_START[Math.max(1, r) - 1] : Math.min(75000, 40000 + 5000 * r));
   const GRACE_MS = F.grace || 20000; // retard toléré après la fin du temps de boutique
   const LAW_MS = F.law || 20000; // choix de la loi
-  const BATTLE_MS = F.battle || 25000; // le temps des combats, avant la boutique suivante
+  // Le plus long combat attendu (v106) : le temps de boutique ne part qu'à la fin de son propre combat,
+  // et l'hôte n'attend un retardataire que jusqu'à BATTLE_MS + boutique + GRACE_MS après la manche.
+  const BATTLE_MS = F.battle || 60000;
   const STALE_MS = F.stale || 30000; // hôte silencieux depuis : un autre prend le relais
   const BEAT_MS = 10000;
   const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -391,8 +393,9 @@
     if (isHost()) handOver();
   }
 
-  // Fin de la boutique de la manche r : la même pour tous (horloge de l'hôte). La manche 1 suit
-  // le choix des lois ; les suivantes, le document de la manche précédente et le temps des combats.
+  // Fin de la boutique de la manche r, au plus tard : la même pour tous (horloge de l'hôte). La manche 1
+  // suit le choix des lois ; les suivantes, le document de la manche précédente et le plus long combat.
+  // Chaque téléphone compte ensuite son propre temps d'achat depuis la fin de son combat (startRound).
   function deadlineOf(r) {
     if (r <= 1) return (M.match && M.match.startAt ? M.match.startAt : now()) + LAW_MS + shopMs(1);
     const prev = M.roundDocs[r - 1];
@@ -407,7 +410,14 @@
     M.tick = setInterval(() => {
       const st = O.ui.state, el = document.getElementById('mpTimer'), btn = document.getElementById('fightBtn');
       if (!st || !st.mp || st.mp.mid !== M.mid) { stopRound(); return; }
-      if (st.round !== M.timerRound) { M.timerRound = st.round; M.deadline = deadlineOf(st.round); }
+      if (st.round !== M.timerRound) {
+        // Le minuteur ne tourne pas pendant le combat (v106) : le temps d'achat part quand la boutique
+        // revient à l'écran, sans dépasser l'échéance commune (un combat de plus d'une minute en mange
+        // le surplus).
+        if (st.round > 1 && (O.ui.busy || document.body.classList.contains('in-combat'))) return;
+        M.timerRound = st.round;
+        M.deadline = st.round <= 1 ? deadlineOf(1) : Math.min(now() + shopMs(st.round), deadlineOf(st.round));
+      }
       const left = Math.max(0, M.deadline - now());
       const txt = Math.floor(left / 60000) + ':' + String(Math.ceil(left / 1000) % 60).padStart(2, '0');
       // Un seul compte à rebours (v104) : en gros chiffres dans le bouton de combat, qu'on ne peut

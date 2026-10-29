@@ -699,7 +699,7 @@ canvas.sphere { display: block; image-rendering: pixelated; image-rendering: cri
 .tier .pips { display: flex; gap: 3px; }
 .tier .pips i { width: 7px; height: 7px; border: 1px solid var(--dim); }
 .tier .pips i.on { background: var(--ink); border-color: var(--ink); }
-.tier.pop .pips i.on:last-child { animation: pipPop 0.6s; }
+.tier .pips i.new { animation: pipPop 0.6s; }
 @keyframes pipPop { 40% { transform: scale(2); background: var(--gold); } }
 .tavern-actions { display: flex; gap: 6px; }
 
@@ -1775,7 +1775,7 @@ body.mp-game .chat-btn { display: inline-flex; }
 body.mp-hurry #fightBtn.mp-count b { animation: countBeat 1s ease-in-out infinite; }
 @keyframes countBeat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.18); } }
 @media (prefers-reduced-motion: reduce) { body.mp-hurry #fightBtn.mp-count b { animation: none; } }
-body.mp-game #skipBtn { display: none; }
+body.mp-game #skipBtn, body.no-skip #skipBtn { display: none; }
 /* En ligne, les 5 dernières secondes avant le combat : un cadre rouge léger qui palpite et tremble. */
 body.mp-hurry::after {
   content: ''; position: fixed; inset: 0; z-index: 60; pointer-events: none;
@@ -2014,7 +2014,7 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .gn-hp i.low { background: #ff5a4a; animation: gnBlink 0.5s steps(2) infinite; }
 @keyframes gnBlink { 50% { opacity: 0.4; } }
 .gn-sparks { min-width: 54px; padding: 6px 10px; font-size: 15px; font-weight: 600; text-align: right; color: #fff6d8; background: rgba(5, 4, 10, 0.6); border: 1px solid rgba(255, 224, 138, 0.35); transition: transform 0.12s; }
-.gn-sparks.pop { transform: scale(1.18); }
+.gn-sparks.bump { transform: scale(1.18); }
 .gn-star { font-style: normal; color: #ffe08a; margin-right: 5px; }
 .gn-diet { position: absolute; left: 12px; bottom: calc(var(--safe-b) + 16px); display: flex; align-items: flex-end; gap: 4px; padding: 8px 10px; background: rgba(5, 4, 10, 0.6); border: 1px solid var(--line); pointer-events: none; }
 .gn-mat { position: relative; width: 8px; height: 38px; background: rgba(255, 255, 255, 0.08); }

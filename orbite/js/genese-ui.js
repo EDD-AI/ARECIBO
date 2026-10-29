@@ -489,11 +489,11 @@
         const col = (RAMP[e.k] || RAMP.roche)[2];
         for (let i = 0; i < 6; i++) ui.parts.push({ x: e.x + (Math.random() - 0.5) * e.r * 2, y: e.y + (Math.random() - 0.5) * e.r * 2, to: true, life: 0.5, c: col });
         if (performance.now() - eatSfx > 90) { eatSfx = performance.now(); SFX.place(); }
-        if (e.sparks) $('gnSparks').classList.add('pop');
+        if (e.sparks) $('gnSparks').classList.add('bump');
       } else if (e.t === 'spark') {
         for (let i = 0; i < 10; i++) ui.parts.push({ x: e.x, y: e.y, vx: (Math.random() - 0.5) * 8 * r, vy: (Math.random() - 0.5) * 8 * r, life: 0.6, c: '#ffffff' });
         SFX.coin();
-        $('gnSparks').classList.add('pop');
+        $('gnSparks').classList.add('bump');
       } else if (e.t === 'hit') {
         ui.shake = 6; ui.flash = 1;
         SFX.hit(Math.min(3, e.dmg / 10));
@@ -562,7 +562,7 @@
     $('gnHp').style.width = (Math.max(0, g.me.hp) / G.maxHp(g) * 100).toFixed(1) + '%';
     $('gnHp').classList.toggle('low', g.me.hp < G.maxHp(g) * 0.3);
     $('gnSparks').innerHTML = `<i class="gn-star">✦</i>${g.sparks}`;
-    setTimeout(() => $('gnSparks').classList.remove('pop'), 200);
+    setTimeout(() => $('gnSparks').classList.remove('bump'), 200);
     const sh = G.shares(g), nat = G.nature(g);
     $('gnDiet').innerHTML = G.MATTERS.map((k) => `<span class="gn-mat ${k}"><i style="height:${Math.round(sh[k] * 100)}%"></i></span>`).join('') +
       `<small>${tr('Vers')}<b>${esc(tr(G.NATURES[nat].name))}</b></small>`;

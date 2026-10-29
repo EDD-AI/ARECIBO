@@ -391,6 +391,27 @@
     src.start(t);
   }
 
+  // Petit claquement boisé (balancier d'horloge) : un souffle très bref passé dans un filtre résonant.
+  function knock(freq, dur, o) {
+    const a = audio();
+    if (!a) return;
+    o = o || {};
+    const t = a.currentTime + (o.delay || 0);
+    const buf = a.createBuffer(1, Math.max(1, Math.floor(a.sampleRate * dur)), a.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 4);
+    const src = a.createBufferSource();
+    src.buffer = buf;
+    const f = a.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.value = freq;
+    f.Q.value = o.q || 6;
+    const g = a.createGain();
+    g.gain.value = o.vol || 0.5;
+    src.connect(f).connect(g).connect(sfxBus);
+    src.start(t);
+  }
+
   // Chœur d'âmes : chaque note est chantée par trois voix un peu désaccordées (dents de scie) qui
   // passent par les formants d'une voyelle. La bouche s'ouvre pendant la montée (« ou » → « a »),
   // le vibrato arrive avec elle, et la fin se perd dans la réverbération.
@@ -620,12 +641,16 @@
     // Le jingle d'ARECIBO : la victoire d'une partie.
     // Sons rétro du jeu caché (js/invaders.js) : bip carré et souffle, sur le bus des effets.
     chip(freq, dur, o) { tone(freq, dur, Object.assign({ type: 'square', vol: 0.03 }, o)); },
-    // Compte à rebours (v103) : un « tic » d'horloge par seconde dans les 5 dernières ; tic et tac
-    // alternent, la dernière seconde sonne plus fort.
+    // Compte à rebours : un tic-tac de balancier par seconde dans les 5 dernières (v106 : claquement
+    // boisé et rond au lieu du bip carré, trop dur) ; la dernière seconde ajoute une clochette douce.
     tick(n) {
-      const last = n <= 1;
-      tone(n % 2 ? 1760 : 1320, 0.04, { type: 'square', vol: last ? 0.08 : 0.05 });
-      noise(0.03, { vol: last ? 0.2 : 0.12, cut: 6000 });
+      const tic = n % 2 === 1, last = n <= 1;
+      knock(tic ? 2100 : 1500, 0.04, { vol: last ? 1.1 : 0.8, q: 5 });
+      tone(tic ? 1050 : 800, 0.06, { vol: last ? 0.042 : 0.03 });
+      if (last) {
+        tone(1568, 0.9, { vol: 0.055, delay: 0.03 });
+        tone(3152, 0.45, { vol: 0.014, delay: 0.03 });
+      }
     },
     hiss(dur, o) { noise(dur, o); },
     jingle() { if (!play('jingle', { vol: 0.5, jit: 0 })) SFX.win(); },
