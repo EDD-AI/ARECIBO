@@ -87,7 +87,7 @@
     let h = '';
     if (inc.length) h += `<h4 class="fg-h">${tr('DEMANDES REÇUES')}</h4>` + inc.map((f) => personRow(f, `<button class="btn primary" data-on="accept" data-pair="${f.pair}">${tr('ACCEPTER')}</button><button class="btn ghost" data-on="remove" data-pair="${f.pair}">${tr('REFUSER')}</button>`)).join('');
     h += `<h4 class="fg-h">${tr('VOS AMIS')} <small>${ok.length}</small></h4>`;
-    h += ok.length ? ok.map((f) => personRow(f, `${window.OrbiteMultiUI ? `<button class="btn" data-on="duel" data-uid="${f.uid}">${tr('DÉFIER')}</button>` : ''}${f.profile && f.profile.forge && f.profile.forge.star && f.profile.forge.star.lit ? `<button class="btn" data-on="visit" data-uid="${f.uid}">${tr('VISITER')}</button>` : ''}<button class="btn ghost on-x" data-on="remove" data-pair="${f.pair}" aria-label="${tr('Retirer')}">×</button>`)).join('')
+    h += ok.length ? ok.map((f) => personRow(f, `${window.OrbiteMultiUI ? `<button class="btn" data-on="duel" data-uid="${f.uid}">${tr('DÉFIER')}</button>` : ''}<button class="btn" data-on="visit" data-uid="${f.uid}">${tr('VISITER')}</button><button class="btn ghost on-x" data-on="remove" data-pair="${f.pair}" aria-label="${tr('Retirer')}">×</button>`)).join('')
       : `<p class="muted">${tr('Partagez votre code ami, ou entrez celui d’un ami ci-dessus.')}</p>`;
     if (out.length) h += `<h4 class="fg-h">${tr('DEMANDES ENVOYÉES')}</h4>` + out.map((f) => personRow(f, `<button class="btn ghost" data-on="remove" data-pair="${f.pair}">${tr('ANNULER')}</button>`)).join('');
     return h;
@@ -117,12 +117,11 @@
   async function whoSheet(uid) {
     const p = await N.profileOf(uid).catch(() => null);
     if (!p) return;
-    const lit = p.forge && p.forge.star && p.forge.star.lit;
     A.openSheet(`<div class="sheet-top">${A.framed ? A.framed(`<div class="orb sheet-orb" data-planet="${(A.avatarOf && A.avatarOf(p)) || tierOrb(p)}"></div>`, A.frameOf(p)) : `<div class="orb sheet-orb" data-planet="${(A.avatarOf && A.avatarOf(p)) || tierOrb(p)}"></div>`}<div>
       <span class="fam-chip" style="--c:var(--gold)">${esc(tierText(p).toUpperCase())}</span>
       <h2>${nameOf(p)}<small class="muted"> #${esc(p.tag || '')}</small></h2>
       <p class="muted">${tr('Niveau {n} · {p} parties · {v} victoires', { n: p.level, p: p.games, v: p.wins })}</p></div></div>
-      <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button>${lit ? `<button class="btn primary" data-on="visit" data-uid="${uid}">${tr('VISITER SON SYSTÈME')}</button>` : ''}</div>`);
+      <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button><button class="btn primary" data-on="visit" data-uid="${uid}">${tr('VISITER SON SYSTÈME')}</button></div>`);
   }
 
   // ─── Sauvegardes en désaccord ───────────────────────────────
@@ -172,7 +171,8 @@
     else if (k === 'visit') {
       A.closeSheet();
       const p = await N.profileOf(b.dataset.uid).catch(() => null);
-      if (p) await O.forge.visit(p);
+      // Tout le monde a une planète : on visite son système (sa planète et ses astres, v120).
+      if (p && O.systeme) await O.systeme.visit(p);
     } else if (k === 'duel') { if (window.OrbiteMultiUI) await window.OrbiteMultiUI.challenge(b.dataset.uid); }
     else if (k === 'scope') { scope = b.dataset.k; renderLeader(); }
     else if (k === 'who') { SFX.tap(); whoSheet(b.dataset.uid); }

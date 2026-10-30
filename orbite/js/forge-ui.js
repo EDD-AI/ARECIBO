@@ -25,6 +25,8 @@
       if (d && Array.isArray(d.planets)) {
         d.planets = d.planets.slice(0, F.MAX_PLANETS).map(F.sanitize);
         d.sel = Math.max(0, Math.min(d.sel | 0, d.planets.length - 1));
+        // L'étoile de l'ancien « Mon système » (avant la v120) reste dans la sauvegarde et le profil
+        // public, pour les anciens clients ; elle ne s'affiche plus.
         d.star = F.sanitizeStar(d.star, randomSeed());
         return d;
       }
@@ -108,10 +110,7 @@
     html += `<h4 class="fg-h">${tr('VOTRE COLLECTION')} <small>${data.planets.length} / ${F.MAX_PLANETS}</small></h4>
       <div class="fg-coll">${data.planets.map((q, i) => `<button class="fg-thumb ${i === data.sel ? 'on' : ''}" data-forge="sel" data-i="${i}">
         <span class="orb" data-planet="${lookId(q)}"></span><small>${esc(q.name)}</small></button>`).join('')}
-        ${data.planets.length < F.MAX_PLANETS ? `<button class="fg-thumb fg-new" data-forge="seed"><b>+</b><small>${tr('Graine · {prix}', { prix: price(F.seedCost(data.planets.length)) })}</small></button>` : ''}</div>
-      ${F.systemOpen(data.planets)
-        ? `<button class="btn primary fg-sys" data-forge="system">${data.star.lit ? tr('MON SYSTÈME') : tr('ALLUMER MON SYSTÈME')}</button>`
-        : `<p class="fg-why fg-sys-lock">${tr('Mon système s’ouvrira quand un de vos mondes atteindra la taille {n} : une étoile à allumer, et vos mondes en orbite autour d’elle.', { n: F.SYSTEM_MASS })}</p>`}`;
+        ${data.planets.length < F.MAX_PLANETS ? `<button class="fg-thumb fg-new" data-forge="seed"><b>+</b><small>${tr('Graine · {prix}', { prix: price(F.seedCost(data.planets.length)) })}</small></button>` : ''}</div>`;
     if (p.type) swatches(p);
     box.innerHTML = html;
     // Le monde grossit en douceur jusqu'à sa nouvelle taille.
@@ -224,7 +223,7 @@
     const b = e.target.closest('[data-forge]');
     if (!b || b.disabled) return;
     const k = b.dataset.forge;
-    if (k !== 'name-ok' && k !== 'shape' && !k.startsWith('sys')) SFX.tap();
+    if (k !== 'name-ok' && k !== 'shape') SFX.tap();
     if (k === 'seed') seed();
     else if (k === 'feed') act({ t: 'feed' });
     else if (k === 'seedfeed') {
@@ -249,10 +248,8 @@
     else if (k === 'shape') { A.closeSheet(); act({ t: 'add', part: 'shape', v: b.dataset.k }); }
     else if (k === 'sel') { data.sel = Number(b.dataset.i); shownSize = 0; save(); render(); }
     else if (k === 'rename') renameSheet();
-    else if (k === 'system') openSystem();
     else if (k === 'fold') { customOpen = !(customOpen || !cur().type); render(); }
     else if (k === 'surface' && window.OrbiteColonieUI) window.OrbiteColonieUI.open(cur(), $('fgOrb'));
-    else if (k.startsWith('sys')) sysAction(k, b);
     else if (k === 'name-ok') {
       const v = ($('fgNameIn').value || '').trim().slice(0, 18);
       if (v) { cur().name = v; save(); }
@@ -261,217 +258,6 @@
     }
   });
 
-  // ─── Mon système ────────────────────────────────────────────
-  const SYS = { raf: 0, t0: 0, phase: Object.create(null) };
-  const starId = 'forge-star';
-  const registerStar = () => stage.register(starId, F.starLook(data.star));
-  registerStar();
-  // Visite : le système d'un ami, en lecture seule (VIEW), sinon le vôtre.
-  let VIEW = null;
-  const src = () => VIEW || data;
-  const plId = (p, i) => (VIEW ? 'visit-' + i : lookId(p));
-  const curStarId = () => (VIEW ? 'visit-star' : starId);
-  const starPx = () => 64 + src().star.size * 18;
-  const plPx = (p) => Math.round(16 + p.mass * 2.6);
-  const orbitR = (slot, W) => W * (0.2 + slot * 0.056);
-  const TILT = 0.4;
-  const sysDust = () => { $('sysDust').innerHTML = icon('dust') + ' ' + A.dust(); };
-
-  async function openSystem() {
-    if (!F.systemOpen(data.planets)) return;
-    await A.show('system');
-    renderSystem();
-    loopSystem();
-  }
-
-  function renderSystem() {
-    const S = src(), st = S.star;
-    const starName = st.lit ? F.STAR_CLASSES.find((c) => c.key === st.cls).name : tr('étoile éteinte');
-    $('sysBack').innerHTML = icon('back');
-    $('sysSub').textContent = VIEW ? `${VIEW.owner} · ${starName}` : starName;
-    sysDust();
-    $('sysDust').hidden = !!VIEW;
-    const inOrbit = S.planets.map((p, i) => ({ p, i })).filter((o) => o.p.orbit != null);
-    $('sysLayer').innerHTML = `<button class="sys-star ${st.lit ? '' : 'off'}" data-forge="sysStar" style="--s:${starPx()}px"><span class="orb" data-planet="${curStarId()}" ${st.lit ? '' : 'data-dim="0.18"'}></span></button>` +
-      inOrbit.map((o) => `<button class="sys-pl" data-forge="sysPlanet" data-i="${o.i}" style="--s:${plPx(o.p)}px"><span class="orb" data-planet="${plId(o.p, o.i)}"></span><small>${esc(o.p.name)}</small></button>`).join('');
-    const panel = [];
-    if (VIEW) {
-      panel.push(`<h4 class="fg-h">${tr('MONDES DE {nom}', { nom: esc(VIEW.owner.toUpperCase()) })} <small>${tr('{n} / {max} orbites', { n: inOrbit.length, max: F.ORBITS })}</small></h4>`);
-      panel.push(S.planets.map((p, i) => `<div class="sys-row sys-row-visit">
-        <span class="orb" data-planet="${plId(p, i)}"></span>
-        <span class="sys-row-txt"><b>${esc(p.name)}</b><small>${p.type ? `${F.NATURE[p.type].name} · ${tr('taille {n}', { n: p.mass })}` : tr('graine')} · ${p.orbit == null ? tr('hors orbite') : tr('orbite {n}', { n: p.orbit + 1 })}</small></span>
-      </div>`).join('') || `<p class="muted">${tr('Aucun monde forgé pour l’instant.')}</p>`);
-      $('sysPanel').innerHTML = panel.join('');
-      drawOrbits();
-      return;
-    }
-    if (!st.lit) {
-      const r = F.sysCheck(data, { t: 'light' }, A.dust());
-      panel.push(`<p class="sys-intro">${tr('Au centre de votre système, une étoile attend sa première lumière. Allumez-la, puis placez vos mondes en orbite autour d’elle.')}</p>
-        <button class="btn primary" data-forge="sysLight" ${r.ok || r.short ? '' : 'disabled'}>${tr('ALLUMER L’ÉTOILE · {prix}', { prix: price(F.LIGHT_COST) })}</button>`);
-    } else {
-      panel.push(`<h4 class="fg-h">${tr('VOS MONDES')} <small>${tr('{n} / {max} orbites', { n: inOrbit.length, max: F.ORBITS })}</small></h4>`);
-      panel.push(data.planets.map((p, i) => `<div class="sys-row">
-        <span class="orb" data-planet="${lookId(p)}"></span>
-        <span class="sys-row-txt"><b>${esc(p.name)}</b><small>${p.type ? `${F.NATURE[p.type].name} · ${tr('taille {n}', { n: p.mass })}` : tr('graine')} · ${p.orbit == null ? tr('hors orbite') : tr('orbite {n}', { n: p.orbit + 1 })}</small></span>
-        ${p.type ? `<button class="btn ${p.orbit == null ? 'primary' : ''}" data-forge="sysPlace" data-i="${i}">${p.orbit == null ? tr('PLACER') : tr('DÉPLACER')}</button>` : `<small class="fg-why">${tr('à nourrir')}</small>`}
-      </div>`).join(''));
-    }
-    panel.push(`<p class="sys-soon">${window.OrbiteOnline && window.OrbiteOnline.configured ? tr('Vos amis peuvent visiter votre système depuis leur profil, onglet Amis.') : tr('Bientôt : visitez les systèmes de vos amis, et faites visiter le vôtre.')}</p>`);
-    $('sysPanel').innerHTML = panel.join('');
-    drawOrbits();
-  }
-
-  function drawOrbits() {
-    const v = $('sysView'), W = v.clientWidth, H = v.clientHeight;
-    const used = new Set(src().planets.filter((p) => p.orbit != null).map((p) => p.orbit));
-    let svg = '';
-    for (let k = 0; k < F.ORBITS; k++) {
-      const rx = orbitR(k, W);
-      svg += `<ellipse cx="${W / 2}" cy="${H / 2}" rx="${rx.toFixed(1)}" ry="${(rx * TILT).toFixed(1)}" class="${used.has(k) ? 'used' : ''}"/>`;
-    }
-    $('sysOrbits').setAttribute('viewBox', `0 0 ${W} ${H}`);
-    $('sysOrbits').innerHTML = src().star.lit ? svg : '';
-  }
-
-  // Les mondes tournent : les orbites proches vont plus vite, ceux de devant passent devant l'étoile.
-  function placeSystem(now) {
-    const v = $('sysView'), W = v.clientWidth, H = v.clientHeight;
-    const t = (now - SYS.t0) / 1000;
-    const star = v.querySelector('.sys-star');
-    if (star) { star.style.transform = `translate(${(W - starPx()) / 2}px, ${(H - starPx()) / 2}px)`; star.style.zIndex = '100'; }
-    for (const el of v.querySelectorAll('.sys-pl')) {
-      const p = src().planets[Number(el.dataset.i)];
-      if (!p || p.orbit == null) continue;
-      const k = p.orbit, rx = orbitR(k, W), ry = rx * TILT;
-      const a0 = (p.seed % 628) / 100;
-      const a = a0 + t * 0.55 / Math.pow(1 + k, 1.2);
-      const depth = Math.sin(a);
-      const s = plPx(p) * (1 + 0.14 * depth);
-      el.style.setProperty('--s', s.toFixed(1) + 'px');
-      el.style.transform = `translate(${(W / 2 + rx * Math.cos(a) - s / 2).toFixed(1)}px, ${(H / 2 + ry * depth - s / 2).toFixed(1)}px)`;
-      el.style.zIndex = String(depth > 0 ? 200 + Math.round(depth * 50) : 50 + Math.round(depth * 40));
-    }
-  }
-  function loopSystem() {
-    cancelAnimationFrame(SYS.raf);
-    if (!SYS.t0) SYS.t0 = performance.now();
-    const step = (now) => {
-      if (!document.getElementById('system').classList.contains('active')) return;
-      placeSystem(now);
-      SYS.raf = requestAnimationFrame(step);
-    };
-    SYS.raf = requestAnimationFrame(step);
-  }
-  window.addEventListener('resize', () => { if (document.getElementById('system').classList.contains('active')) drawOrbits(); });
-
-  function sysDo(a, fx) {
-    const r = F.sysCheck(data, a, A.dust());
-    if (!r.ok) { A.refuse(r.reason); return false; }
-    if (r.cost) A.addDust(-r.cost);
-    F.sysApply(data, a);
-    save();
-    if (a.t === 'light' || a.t === 'starClass' || a.t === 'starGrow') registerStar();
-    renderSystem();
-    A.vibrate(15);
-    if (fx !== false) {
-      const el = $('sysView').querySelector(a.t === 'orbit' ? `.sys-pl[data-i="${a.i}"]` : '.sys-star');
-      if (el) {
-        const b = el.getBoundingClientRect();
-        const x = b.left + b.width / 2, y = b.top + b.height / 2;
-        const gold = [[246, 196, 83], [255, 255, 255]];
-        stage.ring(x, y, b.width * 0.5, { n: a.t === 'light' ? 80 : 36, colors: gold, speed: a.t === 'light' ? 140 : 60, life: 0.8 });
-        stage.burst(x, y, { n: a.t === 'light' ? 60 : 20, colors: gold, speed: 90, life: 0.8 });
-      }
-      if (a.t === 'light') SFX.level(); else if (a.t === 'orbit') SFX.place(); else SFX.golden ? SFX.golden() : SFX.level();
-    }
-    return true;
-  }
-
-  function starSheet() {
-    if (VIEW) {
-      const st = VIEW.star;
-      A.openSheet(`<h3>${tr('L’ÉTOILE DE {nom}', { nom: esc(VIEW.owner.toUpperCase()) })}</h3><h2>${st.lit ? esc(F.STAR_CLASSES.find((c) => c.key === st.cls).name) : tr('Étoile éteinte')}</h2>
-        <p class="muted">${tr('Taille {n} / {max}', { n: st.size + 1, max: F.STAR_GROW.length + 1 })}</p><div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
-      return;
-    }
-    const st = data.star;
-    if (!st.lit) { A.refuse(tr('Allumez d’abord votre étoile.')); return; }
-    const grow = st.size < F.STAR_GROW.length;
-    A.openSheet(`<h3>${tr('VOTRE ÉTOILE')}</h3><h2>${esc(F.STAR_CLASSES.find((c) => c.key === st.cls).name)}</h2>
-      <p class="muted">${tr('Changez sa lumière ou faites-la grandir.')}</p>
-      <div class="fg-chips">${F.STAR_CLASSES.map((c) => `<button class="fg-chip ${c.key === st.cls ? 'on' : ''}" data-forge="sysClass" data-k="${c.key}">${esc(c.name)}<small>${c.key === st.cls ? tr('actuelle') : price(c.price)}</small></button>`).join('')}</div>
-      <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button>${grow ? `<button class="btn primary" data-forge="sysGrow">${tr('GRANDIR · {prix}', { prix: price(F.STAR_GROW[st.size]) })}</button>` : ''}</div>`);
-  }
-  function planetSheet(i) {
-    if (VIEW) {
-      const q = VIEW.planets[i];
-      A.openSheet(`<div class="sheet-top"><div class="orb sheet-orb" data-planet="${plId(q, i)}"></div><div>
-        <span class="fam-chip" style="--c:var(--gold)">${tr('ORBITE {n}', { n: q.orbit + 1 })}</span>
-        <h2>${esc(q.name)}</h2><p class="muted">${F.NATURE[q.type].name} · ${tr('taille {n} / {max}', { n: q.mass, max: F.MAX_MASS })} · ${tr('forgé par {nom}', { nom: esc(VIEW.owner) })}</p></div></div>
-        <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
-      return;
-    }
-    const p = data.planets[i];
-    A.openSheet(`<div class="sheet-top"><div class="orb sheet-orb" data-planet="${lookId(p)}"></div><div>
-      <span class="fam-chip" style="--c:var(--gold)">${p.orbit == null ? tr('HORS ORBITE') : tr('ORBITE {n}', { n: p.orbit + 1 })}</span>
-      <h2>${esc(p.name)}</h2><p class="muted">${F.NATURE[p.type].name} · ${tr('taille {n} / {max}', { n: p.mass, max: F.MAX_MASS })}</p></div></div>
-      <div class="sheet-actions"><button class="btn" data-forge="sysForge" data-i="${i}">${tr('FAÇONNER')}</button><button class="btn primary" data-forge="sysPlace" data-i="${i}">${tr('CHANGER D’ORBITE')}</button></div>`);
-  }
-  function placeSheet(i) {
-    const p = data.planets[i];
-    const owner = (k) => data.planets.find((q) => q.orbit === k);
-    A.openSheet(`<h3>${tr('ORBITE DE {nom}', { nom: esc(p.name.toUpperCase()) })}</h3><p class="muted">${tr('Les orbites proches tournent plus vite. Choisir une orbite occupée échange les deux mondes.')}</p>
-      <div class="sys-slots">${Array.from({ length: F.ORBITS }, (_, k) => {
-        const o = owner(k);
-        return `<button class="fg-chip ${p.orbit === k ? 'on' : ''}" data-forge="sysSlot" data-i="${i}" data-k="${k}">${tr('Orbite {n}', { n: k + 1 })}<small>${o ? esc(o.name) : tr('libre')}</small></button>`;
-      }).join('')}</div>
-      <div class="sheet-actions">${p.orbit != null ? `<button class="btn ghost" data-forge="sysOut" data-i="${i}">${tr('RETIRER DE L’ORBITE')}</button>` : ''}<button class="btn" data-act="close">${tr('FERMER')}</button></div>`);
-  }
-
-  async function sysAction(k, b) {
-    const i = Number(b.dataset.i);
-    if (k === 'sysStar') { SFX.tap(); starSheet(); }
-    else if (k === 'sysPlanet') { SFX.tap(); planetSheet(i); }
-    else if (VIEW) return;
-    else if (k === 'sysPlace') { SFX.tap(); placeSheet(i); }
-    else if (k === 'sysLight') sysDo({ t: 'light' });
-    else if (k === 'sysClass') { A.closeSheet(); sysDo({ t: 'starClass', cls: b.dataset.k }); }
-    else if (k === 'sysGrow') { A.closeSheet(); sysDo({ t: 'starGrow' }); }
-    else if (k === 'sysSlot') { A.closeSheet(); sysDo({ t: 'orbit', i, slot: Number(b.dataset.k) }); }
-    else if (k === 'sysOut') { A.closeSheet(); sysDo({ t: 'orbit', i, slot: null }, false); SFX.tap(); }
-    else if (k === 'sysForge') {
-      A.closeSheet();
-      data.sel = i;
-      shownSize = 0;
-      save();
-      await A.openCreation();
-    }
-  }
-  $('sysBack').addEventListener('click', async () => {
-    SFX.tap();
-    if (VIEW) {
-      VIEW = null;
-      await A.show('profile');
-      A.renderProfile();
-      return;
-    }
-    await A.openCreation();
-  });
-
-  // Visite du système d'un autre Créateur (profil public venu du serveur).
-  async function visit(profile) {
-    const f = (profile && profile.forge) || {};
-    const star = F.sanitizeStar(f.star, 1);
-    const planets = (Array.isArray(f.planets) ? f.planets : []).slice(0, F.MAX_PLANETS).map((p, i) => F.sanitize(Object.assign({}, p, { id: 'v' + i }), i));
-    VIEW = { star, planets, owner: String(profile.pseudo || tr('Créateur')) };
-    stage.register('visit-star', F.starLook(star));
-    planets.forEach((p, i) => stage.register('visit-' + i, F.look(p)));
-    await A.show('system');
-    renderSystem();
-    loopSystem();
-  }
-
   stage.register('forge-graine', { type: 'asteroid', seed: 4711, debris: true, full: true, moons: 0 });
-  O.forge = { render, visit, get data() { return data; } };
+  O.forge = { render, get data() { return data; } };
 })();
