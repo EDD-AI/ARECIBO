@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 120;
+  const VERSION = 121;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -1590,6 +1590,9 @@
     return `<div class="vols">${row('music', tr('MUSIQUE'), SFX.musicOn ? SFX.musicVol : 0)}${row('fx', tr('EFFETS'), SFX.fxVol)}</div>`;
   }
   function settingsHtml() {
+    // Mode créateur (v121, js/rapports.js) : les bugs signalés par les joueurs, avec le nombre à régler.
+    const RP = window.OrbiteRapports;
+    const bugs = RP && RP.createur() ? RP.badge() : null;
     return `<h3>${tr('PARAMÈTRES')}</h3><div class="menu-list-sheet">
       <button class="btn" data-act="set" data-v="sound">${SFX.muted ? tr('SON : COUPÉ') : tr('SON : ACTIVÉ')}</button>
       ${volumesHtml()}
@@ -1597,6 +1600,7 @@
       <button class="btn" data-act="set" data-v="tutos">${tr('TUTORIELS ET AIDE')}</button>
       ${installed() ? '' : `<button class="btn" data-act="set" data-v="install">${tr('INSTALLER SUR LE TÉLÉPHONE')}</button>`}
       <button class="btn" data-act="set" data-v="code">${tr('CODE CADEAU')}</button>
+      ${bugs == null ? '' : `<button class="btn rp-entry" data-act="set" data-v="rapports">${tr('RAPPORTS DE BUGS')}<span class="rp-badge${bugs ? ' on' : ''}" id="rpBadge">${bugs}</span></button>`}
       <button class="btn" data-act="set" data-v="credits">${tr('CRÉDITS')}</button>
     </div><p class="muted">${tr('Poussières d’étoiles, niveau, planète et partie en cours restent sur cet appareil.')}</p>
     <p class="muted version">${tr('ORBITE · version {n}', { n: VERSION_LABEL })}</p>`;
@@ -1615,6 +1619,9 @@
     '09a89fb7ef25ffa7688ac9e246863d1f6d7ea5be7ac00106062780c00e989fdc': { id: 'createur-1', dust: 5000, seeds: 450 }
   };
   const GIFT_KEY = 'orbite.cadeaux';
+  // Code créateur (v121) : même calcul que les codes cadeaux, seule l'empreinte est publiée. Il active
+  // le mode créateur (lecture des bugs signalés, js/rapports.js) au lieu d'une récompense.
+  const CREATOR_CODE = '3cbd5100482381349aae3b30d9c5c9f1651329f6d0bcf316561306382ffb3db2';
   function openCode() {
     openSheet(`<h3>${tr('CODE CADEAU')}</h3><p class="muted">${tr('Entrez un code pour recevoir sa récompense.')}</p>
       <input class="code-input" id="giftCode" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="40">
@@ -1628,6 +1635,7 @@
         const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
         hex = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
       } catch (err) { refuse(tr('Codes indisponibles sur cet appareil.')); return; }
+      if (hex === CREATOR_CODE) { if (window.OrbiteRapports) window.OrbiteRapports.devenirCreateur(code); return; }
       const gift = GIFTS[hex];
       const used = readJson(GIFT_KEY, []);
       if (!gift) { refuse(tr('Ce code n’existe pas.')); return; }
@@ -1824,6 +1832,7 @@
     else if (v === 'help') openSheet(helpHtml(true));
     else if (v === 'credits') openCredits();
     else if (v === 'code') openCode();
+    else if (v === 'rapports') { if (window.OrbiteRapports) window.OrbiteRapports.ouvrirCreateur(); }
     else if (v === 'install') install();
     else if (v === 'guide') {
       closeSheet();
@@ -4897,10 +4906,10 @@
     SFX.hover();
   });
 
-  window.__orbite = { ui, rules: R, stage, show, portal, renderGame, fight, enterMenu, backToMenu, endScreen, autoRelic };
+  window.__orbite = { ui, rules: R, stage, show, portal, renderGame, fight, enterMenu, backToMenu, endScreen, autoRelic, version: VERSION };
   // Outils partagés avec le mode Campagne (js/campagne-ui.js).
   window.__orbite.api = {
-    show, openSheet, closeSheet, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
+    show, openSheet, closeSheet, sheetMore, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
     pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH, frameOf, framed, avatarOf, fontOf, nameHtml, myFont, myFrame, myAvatar, seatLook,
     coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation,
     seeds, addSeeds, wallet, renderMkWallet, worldLook, worldList, playerTag

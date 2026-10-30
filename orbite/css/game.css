@@ -2440,3 +2440,87 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .sheet-more.gone { opacity: 0; pointer-events: none; }
 @keyframes more-bob { 50% { transform: translateY(4px); } }
 @media (prefers-reduced-motion: reduce) { .sheet-more { animation: none; } }
+
+/* ─── Signaler un bug (v121, js/rapports.js) ──────────────── */
+/* Le « ? » rond en pixels : en bas à gauche du menu, et à gauche de la barre du bas en partie (le
+   terminal des synergies garde le coin droit). */
+.bug-btn { flex: none; display: grid; place-items: center; width: 30px; min-height: 46px; padding: 0; }
+.bug-ico { display: block; width: 26px; height: 26px; shape-rendering: crispEdges; transition: transform 0.12s; }
+.bug-ico .bug-bg { fill: rgba(3, 3, 5, 0.72); }
+.bug-ico .bug-ring { fill: rgba(241, 236, 218, 0.42); transition: fill 0.2s; }
+.bug-ico .bug-q { fill: rgba(241, 236, 218, 0.82); transition: fill 0.2s; }
+.bug-btn:hover .bug-ring, .bug-btn:focus-visible .bug-ring { fill: var(--ink); }
+.bug-btn:hover .bug-q, .bug-btn:focus-visible .bug-q { fill: #fff; }
+.bug-btn:active .bug-ico { transform: scale(0.9); }
+#menu .bug-btn { position: absolute; left: 10px; bottom: calc(var(--safe-b) + 30px); z-index: 2; width: 40px; min-height: 40px; }
+/* Place pour le « ? » dans la barre du bas : COMBATTRE un peu plus serré. Sur les téléphones étroits, la
+   loi passe en plus petit (texte, sphère, marges) pour que ses mots tiennent entiers ; couper un mot
+   reste le dernier recours, plutôt que de pousser le terminal hors de l'écran. */
+#game .game-foot { gap: 6px; }
+#game .bug-btn { position: relative; width: 26px; }
+#game .bug-ico { width: 24px; height: 24px; }
+/* Le doigt a droit à un peu plus que le dessin : la zone touchée déborde sur les marges. */
+#game .bug-btn::after { content: ''; position: absolute; top: 0; bottom: 0; left: -6px; right: -4px; }
+#game .fight { min-width: 128px; padding: 0 12px; }
+#game .power { min-width: 0; }
+#game .power-txt { min-width: 0; overflow-wrap: anywhere; }
+/* Téléphones plus étroits (360-389 px, beaucoup d'Android) : la barre se resserre. */
+@media (max-width: 389px) {
+  #game .fight { min-width: 0; padding: 0 10px; font-size: 14px; letter-spacing: 0.1em; }
+  #game .term-btn { width: 42px; }
+  #game .power { gap: 6px; padding: 0 8px; font-size: 11px; letter-spacing: 0.02em; }
+  #game .power b { font-size: 10px; letter-spacing: 0.06em; }
+  #game .power .sphere.mini { width: 22px; height: 22px; }
+}
+/* Très petits téléphones (iPhone SE de 1re génération, 320 px) : encore un cran, et le « ? » du menu
+   monte au-dessus du lecteur de musique. */
+@media (max-width: 359px) {
+  #game .fight { padding: 0 6px; font-size: 12px; letter-spacing: 0.05em; }
+  #game .term-btn { width: 40px; }
+  #game .power { gap: 5px; padding: 0 6px; font-size: 10.5px; letter-spacing: 0; }
+  #game .power b { font-size: 9.5px; letter-spacing: 0.04em; }
+  #game .power .sphere.mini { width: 20px; height: 20px; }
+  #menu .bug-btn { bottom: calc(var(--safe-b) + 76px); }
+}
+/* La fiche : texte, capture facultative, ce qui est joint. */
+.rp-intro { margin: 0 0 12px; font-size: 15px; }
+.rp-text { display: block; width: 100%; min-height: 118px; max-height: 38vh; padding: 10px 12px; font: inherit; font-size: 16px; line-height: 1.4; color: var(--ink); background: #111113; border: 1px solid var(--faint); border-radius: 0; resize: vertical; user-select: text; -webkit-user-select: text; }
+.rp-text:focus { outline: none; border-color: var(--ink); }
+.rp-text::placeholder { color: rgba(241, 236, 218, 0.38); }
+.rp-count { margin: 4px 0 10px; text-align: right; font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.rp-shot { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; min-height: 46px; }
+.rp-shot .btn { padding: 0 14px; font-size: 13px; letter-spacing: 0.12em; }
+.rp-opt { font-size: 11px; letter-spacing: 0.1em; color: var(--dim); }
+.rp-wait { margin: 0; }
+.rp-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.rp-mini { display: block; flex: none; padding: 0; border: 1px solid var(--line); background: #000; }
+.rp-mini img { display: block; width: 84px; height: 84px; object-fit: cover; }
+.rp-joint { margin: 12px 0 0; line-height: 1.45; }
+.rp-merci { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0 2px; text-align: center; }
+.rp-merci .bug-ico { width: 52px; height: 52px; margin-bottom: 6px; }
+.rp-merci .bug-ring { fill: var(--good); }
+.rp-merci p { margin: 4px 0 0; color: var(--dim); }
+.rp-need { margin: 0 0 12px; }
+.rp-full { position: fixed; inset: 0; z-index: 44; display: grid; place-items: center; padding: calc(var(--safe-t) + 12px) 12px calc(var(--safe-b) + 12px); background: rgba(0, 0, 0, 0.94); cursor: var(--cur-hand, pointer); animation: fade 0.2s ease both; }
+.rp-full img { max-width: 100%; max-height: 100%; object-fit: contain; border: 1px solid var(--line); }
+/* Pendant la fiche, le guide du tutoriel s'efface (il reprend à la fermeture). */
+body.rp-open .coach { visibility: hidden; }
+/* Mode créateur : RAPPORTS DE BUGS dans les Paramètres, avec le nombre à régler. */
+.rp-entry { gap: 10px; }
+.rp-badge { display: none; min-width: 20px; height: 20px; padding: 0 5px; place-items: center; font-size: 11px; font-weight: 600; letter-spacing: 0; color: #000; background: var(--gold); }
+.rp-badge.on { display: inline-grid; }
+.rp-admin h3 small { font-size: inherit; letter-spacing: 0.12em; color: var(--gold); }
+.rp-list { display: flex; flex-direction: column; gap: 10px; }
+.rp-item { min-width: 0; padding: 12px 12px 10px; border: 1px solid var(--faint); border-left: 3px solid var(--gold); background: rgba(241, 236, 218, 0.03); }
+.rp-item.done { opacity: 0.48; border-left-color: var(--faint); }
+.rp-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 10px; font-size: 11px; letter-spacing: 0.08em; color: var(--dim); }
+.rp-head b { font-weight: 500; color: var(--ink); }
+.rp-tag { font-style: normal; font-size: 10px; letter-spacing: 0.18em; color: var(--good); }
+.rp-body { display: flex; align-items: flex-start; gap: 12px; margin: 8px 0 6px; }
+.rp-msg { flex: 1; min-width: 0; margin: 0; font-size: 15px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; -webkit-user-select: text; }
+.rp-tech summary { padding: 4px 0; font-size: 11px; letter-spacing: 0.14em; color: var(--dim); cursor: var(--cur-hand, pointer); }
+.rp-tech dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; margin: 4px 0 2px; font-size: 12px; line-height: 1.35; user-select: text; -webkit-user-select: text; }
+.rp-tech dt { color: var(--dim); }
+.rp-tech dd { margin: 0; overflow-wrap: anywhere; }
+.rp-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.rp-acts .btn { min-height: 36px; padding: 0 10px; font-size: 11px; letter-spacing: 0.1em; }
