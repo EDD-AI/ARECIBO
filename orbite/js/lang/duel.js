@@ -199,6 +199,15 @@
     ['Rempart. Début de combat : vos autres Remparts gagnent +{2}/+{2}.', 'Bulwark. Start of combat: your other Bulwarks gain +{2}/+{2}.', 'Baluarte. Inicio del combate: tus otros Baluartes ganan +{2}/+{2}.', 'Bollwerk. Kampfbeginn: Deine anderen Bollwerke erhalten +{2}/+{2}.', 'Baluarte. Início do combate: seus outros Baluartes ganham +{2}/+{2}.'],
     ['Pouvoir (1 énergie, une fois par cycle) : ajoute une Sonde 4/4 Arrimage à votre main.', 'Power (1 energy, once per cycle): add a 4/4 Probe with Docking to your hand.', 'Poder (1 de energía, una vez por ciclo): añade a tu mano una Sonda 4/4 con Acoplamiento.', 'Kraft (1 Energie, einmal pro Zyklus): Füge deiner Hand eine Sonde 4/4 mit Andocken hinzu.', 'Poder (1 de energia, uma vez por ciclo): adiciona à sua mão uma Sonda 4/4 com Acoplagem.'],
     ['Quand un autre allié s’effondre, gagne +{2}/+{2} pour le combat.', 'When another ally collapses, gains +{2}/+{2} for this combat.', 'Cuando otro aliado colapsa, gana +{2}/+{2} durante el combate.', 'Wenn ein anderer Verbündeter kollabiert, erhält es +{2}/+{2} für den Kampf.', 'Quando outro aliado colapsa, ganha +{2}/+{2} durante o combate.'],
+    // Familles, loi et terminal des synergies (v110)
+    ['SYNERGIES', 'SYNERGIES', 'SINERGIAS', 'SYNERGIEN', 'SINERGIAS'],
+    ['Synergies', 'Synergies', 'Sinergias', 'Synergien', 'Sinergias'],
+    ['BONUS DE FORMATION', 'FORMATION BONUSES', 'BONUS DE FORMACIÓN', 'FORMATIONSBONI', 'BÔNUS DE FORMAÇÃO'],
+    ['Les astres neutres se trouvent dans tous les univers.', 'Neutral orbs appear in every universe.', 'Los astros neutros están en todos los universos.', 'Neutrale Gestirne gibt es in jedem Universum.', 'Os astros neutros aparecem em todos os universos.'],
+    ['GRAINES DE VIE', 'SEEDS OF LIFE', 'SEMILLAS DE VIDA', 'LEBENSSAMEN', 'SEMENTES DA VIDA'],
+    ['Gagnées en partie. Pour votre planète et les cosmétiques.', 'Earned in games. For your planet and cosmetics.', 'Se ganan en partida. Para tu planeta y los cosméticos.', 'In Partien verdient. Für deinen Planeten und Kosmetik.', 'Ganhas nas partidas. Para o seu planeta e os cosméticos.'],
+    ['Gagnées en jouant. Pour les cosmétiques et la Création.', 'Earned by playing. For cosmetics and the Creation.', 'Se ganan jugando. Para los cosméticos y la Creación.', 'Durch Spielen verdient. Für Kosmetik und die Schöpfung.', 'Ganhas jogando. Para os cosméticos e a Criação.'],
+    ['{a} / {b} XP', '{a} / {b} XP', '{a} / {b} XP', '{a} / {b} XP', '{a} / {b} XP'],
     // Spectateur en ligne (v105)
     ['MANCHE EN COURS', 'ROUND IN PROGRESS', 'RONDA EN CURSO', 'RUNDE LÄUFT', 'RODADA EM ANDAMENTO'],
     ['Les autres créateurs jouent leur tour…', 'The other creators are playing their turn…', 'Los demás creadores juegan su turno…', 'Die anderen Schöpfer spielen ihren Zug…', 'Os outros criadores estão jogando o turno…'],
