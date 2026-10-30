@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="orbite-version" content="118">
+<meta name="orbite-version" content="119">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -38,6 +38,9 @@
         '<i>Your progress is kept. Repair clears the offline copy and restarts.</i></p>' +
         '<button type="button" style="align-self:center;padding:14px 22px;border:1px solid #f1ecda;background:#f1ecda;color:#000;font:600 14px monospace;letter-spacing:.12em">RÉPARER ET RELANCER</button>' +
         '<pre style="margin:0;white-space:pre-wrap;word-break:break-word;font-size:11px;opacity:.6;text-align:left"></pre>';
+      // Même écriture que le jeu : 119 → 1.19.
+      var n = Number(v);
+      if (n > 0) v = Math.floor(n / 100) + '.' + ('0' + (n % 100)).slice(-2);
       box.querySelector('pre').textContent = 'PRE.ALPHA ' + v + '\n' + (errs.slice(0, 4).join('\n') || 'aucun écran affiché') + '\n' + navigator.userAgent;
       box.querySelector('button').addEventListener('click', repair);
       document.body.appendChild(box);

@@ -370,6 +370,12 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Numéro de version avec un point (v119)
+
+Le numéro affiché a un point après les centaines : **PRE.ALPHA 1.19** (au lancement, en bas du menu, dans
+les Paramètres, les crédits et l'écran de secours). En interne, `VERSION` reste un entier (119) : il sert à
+comparer les versions (`version.json`, cache de `sw.js`, balise `orbite-version`). 205 s'affichera 2.05.
+
 ## Big Bang en explosion, musique dans tous les menus (v118)
 
 - **Big Bang** (Anomalies, niveau 6) est une vraie explosion sans fin (nature `bigbang`, shader 15) :
