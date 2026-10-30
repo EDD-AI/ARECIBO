@@ -370,6 +370,49 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Mon système (v119)
+
+Autour de votre planète, trois astres à acheter puis à améliorer avec les **poussières d’étoiles**,
+dans le Marché stellaire, onglet **MON SYSTÈME** (entre Ma planète et Cosmétiques). Acheter un astre
+ne demande que des poussières ; ses améliorations s’achètent **dans l’ordre**, chacune avec un
+**niveau** de créateur et un prix. Tout se voit sur l’astre, chez vous et chez ceux qui vous visitent.
+
+| Astre | Prix | Améliorations (niveau, prix) : ce qui se voit |
+|---|---|---|
+| **Lune** (roche claire, autour de votre planète) | 250 | Cratères profonds (5, 120) : plus de cratères, relief marqué · Mers sombres (12, 200) : grandes plaines de basalte · Lueur d’argent (20, 320) : halo blanc · Base lunaire (32, 480) : petites lumières sur la face de nuit · Anneau de poussière (45, 700) |
+| **Neptune** (géante de gaz bleu profond, plus loin) | 500 | Grande Tache sombre (10, 350) : une tempête qui passe à chaque tour · Vents supersoniques (24, 550) : bandes contrastées, nuages blancs étirés · Anneaux (38, 800) · Triton (55, 1 200) : une lune de glace |
+| **Soleil** (naine jaune, au centre) | 5 000 | Couronne (30, 1 500) : longue couronne de flammes · Éruptions (50, 2 500) : plus grand, plus vif · Géante bleue (75, 4 000) : devient une géante bleue, encore plus grande |
+
+- **L’onglet** montre en grand le **système animé** : le Soleil au centre (s’il n’est pas acheté, sa
+  place reste éteinte, avec son prix), votre planète (son apparence vivante, `world-mini`) sur son
+  orbite, la Lune autour d’elle, Neptune plus loin. Ce qui passe devant le Soleil est dessiné après
+  lui. Puis une carte par astre : prix et bouton ACHETER, ou la prochaine amélioration (niveau, prix,
+  raison si c’est bloqué) et la feuille de route (carré plein : fait ; qui clignote : la suivante).
+  Toucher un astre du système amène à sa carte. Un achat fait le même éclat que pour votre planète.
+  Sur PC, le système reste à gauche en grand, les cartes défilent à droite.
+- **Visite** : depuis vos amis (VISITER) ou une fiche du classement (VISITER SON SYSTÈME), pour
+  tout le monde (chacun a sa planète). L’écran `#system` montre en lecture seule sa planète (`world`
+  du profil, `W.channels`) et ses astres avec leurs améliorations. Un profil d’un ancien client, sans
+  astres, montre sa planète seule.
+- **Passage de niveau** : il annonce aussi l’amélioration d’un astre acheté qui s’ouvre à ce niveau.
+- **Succès** : « Lumière ! » demande maintenant le Soleil, « Système solaire » les trois astres (les
+  identifiants restent : un succès gagné le reste).
+- **L’ancien « Mon système »** (l’étoile de la Forge et ses six orbites) est retiré, ainsi que son
+  bouton dans Création ; les mondes de la Forge restent dans Création. L’étoile et les orbites restent
+  dans `orbite.forge` et dans le profil public (`forge.star`, `forge.planets`) pour les anciens clients.
+
+Données : `orbite.systeme` = `{ "lune": n, … }` (clé absente : pas acheté ; `n` : améliorations
+faites), sauvegardé en ligne comme toute clé `orbite.*`. Le profil public le publie dans
+`forge.astres` (même forme), car les règles Firestore ne vérifient que `forge is map` : pas de clé
+nouvelle au premier niveau, pas de règle à republier. La lecture d’un profil d’autrui
+(`fromPublic`) ne garde que des entiers bornés des trois astres. Règles pures : `js/systeme.js`
+(`BODIES`, `check`, `apply`, `next`, `look`, `size`, `publish`, `fromPublic`…, testées par
+`tests/systeme.test.mjs`) ; interface : `js/systeme-ui.js` ; textes : `js/lang/systeme.js`.
+Les apparences passent par de petites options du moteur, sans effet sur les autres astres : humeur
+`claire` (roche claire et grise), `craters`, `maria` et `lights` (roche ; les lumières sont dans le
+shader `rockSurf`), humeur `neptune`, `storm` et `bands` (gaz), `corona` et `flare` (étoile),
+`moonKind` (nature des lunes).
+
 ## Big Bang en explosion, musique dans tous les menus (v118)
 
 - **Big Bang** (Anomalies, niveau 6) est une vraie explosion sans fin (nature `bigbang`, shader 15) :
@@ -608,7 +651,7 @@ Profil → **SUCCÈS** : 100 objectifs en 10 catégories, chacun rapporte de 1 �
 | Légendaires | 7 | en posséder un, puis chacun des 6 en fin de partie |
 | Exploits | 7 | gagner sans perdre un combat, avec 3 PV ou moins, en 12 cycles ; 7 astres, 3 dorés, deux formations |
 | En ligne | 10 | première partie, victoire, 10 parties, partie privée, placement, rangs Lune → Singularité |
-| Création | 5 | débloquer, semer 3 graines, taille 15, allumer l’étoile, 6 mondes en orbite |
+| Création | 5 | débloquer, semer 3 graines, taille 15, acheter le Soleil, réunir la Lune, Neptune et le Soleil (v119) |
 | Colonie | 9 | tour de contrôle, 10 / 25 bâtiments, 10 / 25 / 50 colons, 400 de recherche, tout le terrain, 20 arbres |
 | Expédition | 6 | partir, 5 / 25 découvertes, ruines, 200 cases de la base, 100 tronçons |
 | Divers | 5 | mener sa planète à la civilisation verte, niveaux 10 / 25 / 50 / 75 |
@@ -621,7 +664,8 @@ traductions : `js/lang/succes.js`, tests : `tests/succes.test.mjs`.
 
 ## Marché stellaire
 
-Deux onglets : **Ma planète** (les 24 améliorations décrites plus haut) et **Cosmétiques**.
+Quatre onglets : **Ma planète** (les 24 améliorations décrites plus haut), **Mon système** (la Lune,
+Neptune et le Soleil, v119), **Cosmétiques** et **Graines**.
 
 **Cosmétiques** (2 000 poussières d’étoiles chacun, ou en graines de vie : **25 pour un fond animé, 15 pour un cadre**, v91) :
 - **Fonds animés** : six décors de partie (Nébuleuse pourpre, Aurore boréale, Galaxie spirale, Voie
@@ -707,17 +751,10 @@ planète ».
 - **Remodeler le relief** (3) redessine les continents.
 - **Renommer** est gratuit.
 
-**Mon système.** Il s’ouvre quand un monde atteint la taille 5.
-- **L’étoile** : on l’allume (40 poussières). On change ensuite sa lumière, de 15 à 30 poussières :
-  naine rouge, étoile orange, naine jaune, étoile blanche, géante bleue ou étoile exotique. On peut
-  la faire grandir 4 fois (25, 50, 90 et 150).
-- **Les orbites** : chaque monde forgé (une fois sa nature choisie) prend une des 6 orbites,
-  gratuitement. Choisir une orbite occupée échange les deux mondes.
-- **L’écran** : les mondes tournent sur des orbites inclinées, les plus proches plus vite, et
-  passent devant ou derrière l’étoile. Toucher l’étoile change sa lumière ou la fait grandir.
-  Toucher un monde permet de le déplacer ou de revenir le façonner.
-- Les données (étoile + mondes) tiennent dans `orbite.forge`, prêtes à être partagées quand les
-  visites entre amis arriveront.
+**Mon système** (l’étoile de la Forge et ses orbites) n’est plus dans Création depuis la v119 : il est
+remplacé par l’onglet MON SYSTÈME du Marché stellaire (la Lune, Neptune et le Soleil, voir
+« Mon système (v119) »). Les règles de l’étoile restent dans `js/forge.js` (testées), et ses données
+dans `orbite.forge`, pour les anciens clients.
 
 Les règles sont dans `js/forge.js` (testées par `tests/forge.test.mjs`) et l’interface dans
 `js/forge-ui.js`. La collection est enregistrée dans `orbite.forge`. Une liste qui défile et porte
@@ -1004,10 +1041,10 @@ contient la configuration Firebase du projet ; sinon, le Profil annonce « bient
     l’emporte d’elle-même. On ne demande au joueur de choisir que si chacune est en avance sur un
     point.
 - **Profil public** (`profiles/{uid}`) : pseudo, tag, code ami, niveau, classé, parties, victoires,
-  planète et système de la Forge.
+  planète, mondes de la Forge et astres de Mon système (`forge.astres`, v119).
 - **Amis** (`friends/{a_b}`). Chaque joueur a un **code ami** de 6 caractères.
   - On ajoute un ami avec son code ; il accepte ou refuse, et une pastille signale les demandes.
-  - Depuis la liste, **Visiter** ouvre son système de la Forge en lecture seule.
+  - Depuis la liste, **Visiter** ouvre son système en lecture seule : sa planète et ses astres (v119).
 - **Présence** : connecté, chaque joueur signale où il est (menu, partie, partie en ligne), à chaque
   changement et au moins une fois par minute (`seen`, `where`). Dans Amis : point vert « En ligne »,
   point doré « En partie » ou « En partie en ligne », sinon « Vu il y a… ».
@@ -1791,6 +1828,7 @@ l’Hélice qui garde les PV volés et le Spirographe qui garde l’Attaque, pui
 | `js/rules.js` | Règles pures et déterministes : catalogue, lois, création, fusion, combat (journal d’événements), bots |
 | `js/energy.js` | Sphères d’énergie des lois : petites sphères pixel art animées selon la famille (souffle, vortex, bascule, flammes, facettes, bandes, roche, grille) |
 | `js/world.js` | Votre planète : les 24 améliorations, leurs ères, niveaux, prix et effets |
+| `js/systeme.js`, `js/systeme-ui.js` | Mon système : la Lune, Neptune et le Soleil (prix, améliorations, apparences, profil public) et leur interface (onglet du Marché, visite d'un système) |
 | `js/planet-engine.js` | Génome des planètes : une graine → astre, palette, nuages, anneaux, lunes, nom et fiche |
 | `js/planet-renderer.js` | Rendu WebGL2 pixel art (tramage, palettes à décalage de teinte) + encodeur GIF |
 | `js/stage.js` | Couche WebGL plein écran du jeu : dessine chaque planète à la position de son élément HTML, particules |

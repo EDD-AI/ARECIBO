@@ -360,6 +360,11 @@ Surf rockSurf(vec3 p, vec3 Lt, float dth) {
   if (c1.y > 0.5) s.row = row == 5 ? 6 : 11;
   float h2 = fbm01(normalize(p + Lt * 0.04) * uA.x + uSeed, uOct);
   s.bump += (h - h2) * uB.z;
+  // Base lunaire (v119, Lune de Mon système) : de petites lumières groupées sur la face de nuit.
+  if (uType == 6 && uC.x > 0.0) {
+    float cl = fbm01(q * 0.8 + 31.0, 3);
+    if (cl > 1.0 - uC.x && hash13(floor(p * uC.y) + uSeed) > 0.6) { s.glow = 5; s.glowRow = 10; }
+  }
   return s;
 }
 

@@ -62,8 +62,9 @@
   add('creation', 'creation', 'Créateur', 'Débloquer la Création.', 1, (f) => (f.creation ? 1 : 0), 2);
   add('graines-3', 'creation', 'Jardinier cosmique', 'Semer {n} graines dans la Forge.', 3, (f) => f.forge.n, 1, { n: 3 });
   add('monde-15', 'creation', 'Monde accompli', 'Faire grandir une planète jusqu’à la taille {n}.', 15, (f) => f.forge.maxMass, 2, { n: 15 });
-  add('etoile', 'creation', 'Lumière !', 'Allumer l’étoile de votre système.', 1, (f) => (f.forge.lit ? 1 : 0), 1);
-  add('orbites', 'creation', 'Système solaire', 'Placer {n} mondes en orbite.', 6, (f) => f.forge.orbits, 3, { n: 6 });
+  // Mon système (v119) : les astres achetés au Marché stellaire. Les ids restent : un succès gagné le reste.
+  add('etoile', 'creation', 'Lumière !', 'Allumer le Soleil de votre système.', 1, (f) => (f.sys.soleil ? 1 : 0), 1);
+  add('orbites', 'creation', 'Système solaire', 'Réunir la Lune, Neptune et le Soleil.', 3, (f) => f.sys.n, 3);
 
   add('colonie', 'colonie', 'Premiers pas', 'Fonder une colonie (tour de contrôle).', 1, (f) => (f.col.founded ? 1 : 0), 1);
   add('bat-10', 'colonie', 'Bâtisseur', 'Construire {n} bâtiments dans une colonie.', 10, (f) => f.col.built, 1, { n: 10 });
@@ -120,10 +121,12 @@
       }
     }
     const world = json('orbite.monde', []), Wd = window.OrbiteWorld;
+    const SY = window.OrbiteSysteme, sys = SY ? SY.sanitize(json(SY.KEY, {})) : {};
     return {
       st, c, lvl: A.levelInfo(A.xpTotal()).lvl,
       ranked: { placed: K.placed(cl), tier: K.tierOf(cl.points).idx },
-      forge: { n: planets.length, maxMass: Math.max(0, ...planets.map((p) => p.mass | 0)), lit: !!(forge.star && forge.star.lit), orbits: planets.filter((p) => p.orbit != null).length },
+      forge: { n: planets.length, maxMass: Math.max(0, ...planets.map((p) => p.mass | 0)) },
+      sys: { soleil: !!(SY && SY.owned(sys, 'soleil')), n: SY ? SY.count(sys) : 0 },
       creation: localStorage.getItem('orbite.creation') === '1',
       col, ex, civil: !!(Wd && Array.isArray(world) && Wd.civil(world))
     };

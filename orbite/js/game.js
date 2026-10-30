@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 118;
+  const VERSION = 119;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -706,9 +706,13 @@
   const WORLD_KEY = 'orbite.monde';
   const WORLD_SEEDS = [5002, 5008, 5016, 5045];
   const worldList = () => { try { const v = JSON.parse(store.get(WORLD_KEY, '[]')); return Array.isArray(v) ? v : []; } catch (err) { return []; } };
-  const worldSeed = () => WORLD_SEEDS[Number(playerTag()) % WORLD_SEEDS.length];
+  // La graine d'une planète vient du numéro du joueur (#1234) : la vôtre, ou celle d'un autre Créateur
+  // dont on visite le système (v119).
+  const seedOfTag = (tag) => { const n = Math.abs(Math.floor(Number(tag))); return WORLD_SEEDS[(Number.isFinite(n) ? n : 0) % WORLD_SEEDS.length]; };
+  const worldSeed = () => seedOfTag(playerTag());
+  const worldLook = (list, tag) => ({ seed: seedOfTag(tag), living: W.channels(Array.isArray(list) ? list : []), full: true, light: HZ_LIGHT });
   function applyWorld() {
-    const look = { seed: worldSeed(), living: W.channels(worldList()), full: true, light: HZ_LIGHT };
+    const look = worldLook(worldList(), playerTag());
     for (const id of ['horizon', 'world-big', 'world-mini']) stage.register(id, look);
   }
 
@@ -1226,7 +1230,8 @@
     for (const b of $('mkTabs').children) b.classList.toggle('on', b.dataset.tab === tab);
     for (const p of document.querySelectorAll('#market .mk-pane')) p.hidden = p.dataset.pane !== tab;
     if (tab === 'cosmetiques') { ui.cosPick = cosmetics().on || ''; renderCosmetics(); }
-    if (tab === 'creation' && window.__orbite.forge) window.__orbite.forge.render();
+    // Mon système (v119) : la Lune, Neptune et le Soleil (js/systeme-ui.js).
+    if (tab === 'systeme' && window.__orbite.systeme) window.__orbite.systeme.render();
     if (tab === 'graines') renderSeedShop();
     stage.sky = tab === 'cosmetiques' && SKY_BY_ID[ui.cosPick] ? SKY_BY_ID[ui.cosPick].mode : 0;
     skyPreview(tab === 'cosmetiques');
@@ -4441,8 +4446,12 @@
     pixelWord($('lvlNum'), String(lvl), pixelSize(11));
     $('lvlNum').classList.add('gold');
     for (const r of ov.querySelectorAll('.pixel-word rect')) r.style.opacity = '0';
-    const unlock = W.UPGRADES.find((u) => u.lvl === lvl);
-    $('lvlGift').innerHTML = `${icon('dust')} ${tr('+{n} poussières d’étoiles', { n: LEVEL_GIFT })}` + (unlock ? `<br><span>${tr('Nouvelle amélioration au Marché : {name}', { name: esc(unlock.name) })}</span>` : '');
+    // Ce qui s'ouvre au Marché à ce niveau : une étape de votre planète, une amélioration d'un astre
+    // de votre système (v119, seulement pour les astres achetés).
+    const SY = window.OrbiteSysteme;
+    const unlocks = W.UPGRADES.filter((u) => u.lvl === lvl).map((u) => u.name)
+      .concat(SY ? SY.unlocks(SY.sanitize(readJson(SY.KEY, {})), lvl).map((x) => `${x.up.name} (${x.body.name})`) : []);
+    $('lvlGift').innerHTML = `${icon('dust')} ${tr('+{n} poussières d’étoiles', { n: LEVEL_GIFT })}` + unlocks.slice(0, 3).map((name) => `<br><span>${tr('Nouvelle amélioration au Marché : {name}', { name: esc(name) })}</span>`).join('');
     $('lvlGift').classList.remove('show');
     $('lvlHint').classList.remove('show');
     ov.classList.remove('charging', 'boom');
@@ -4885,7 +4894,7 @@
     show, openSheet, closeSheet, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
     pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH, frameOf, framed, avatarOf, fontOf, nameHtml, myFont, myFrame, myAvatar, seatLook,
     coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation,
-    seeds, addSeeds, wallet
+    seeds, addSeeds, wallet, renderMkWallet, worldLook, worldList, playerTag
   };
 
   // ─── Démarrage ──────────────────────────────────────────────

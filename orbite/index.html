@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="orbite-version" content="118">
+<meta name="orbite-version" content="119">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -329,6 +329,7 @@
       <div class="mk-wallet" id="mkWallet"></div>
       <nav class="mk-tabs" id="mkTabs" role="tablist">
         <button class="on" data-tab="planete" role="tab" data-t>MA PLANÈTE</button>
+        <button data-tab="systeme" role="tab" data-t>MON SYSTÈME</button>
         <button data-tab="cosmetiques" role="tab" data-t>COSMÉTIQUES</button>
         <button data-tab="graines" role="tab" data-t>GRAINES</button>
       </nav>
@@ -345,6 +346,10 @@
         <div class="mk-next" id="mkNext"></div>
         <div class="mk-list" id="mkList"></div>
       </div>
+      <!-- Mon système (v119) : la Lune, Neptune et le Soleil autour de votre planète (js/systeme-ui.js) -->
+      <div class="mk-scroll mk-pane" data-pane="systeme" data-clipbox hidden>
+        <div class="sy-shop" id="syShop"></div>
+      </div>
       <div class="mk-scroll mk-pane" data-pane="cosmetiques" data-clipbox hidden>
         <p class="mk-intro" data-t>Des fonds animés qui remplacent le noir pendant vos parties. Touchez-en un pour l’essayer derrière cet écran.</p>
         <div class="cos-list" id="cosList"></div>
@@ -354,15 +359,16 @@
       </div>
     </section>
 
-    <!-- MON SYSTÈME : l'étoile et les mondes forgés en orbite -->
-    <section class="screen" id="system" aria-label="Mon système" data-t-attr="aria-label">
+    <!-- SYSTÈME D'UN CRÉATEUR (v119) : visite en lecture seule de sa planète et de ses astres -->
+    <section class="screen" id="system" aria-label="Système" data-t-attr="aria-label">
       <header class="screen-head">
         <button class="icon-btn" id="sysBack" aria-label="Retour" data-t-attr="aria-label"></button>
-        <h2><span data-t>Mon système</span> <small id="sysSub"></small></h2>
-        <span class="dust" id="sysDust"></span>
+        <h2><span id="sysTitle"></span> <small id="sysSub"></small></h2>
       </header>
-      <div class="sys-view" id="sysView"><svg class="sys-orbits" id="sysOrbits" aria-hidden="true"></svg><div class="sys-layer" id="sysLayer"></div></div>
-      <div class="sys-panel" id="sysPanel" data-clipbox></div>
+      <div class="sys-body">
+        <div class="sy-view sys-view" id="sysView"></div>
+        <div class="sys-panel" id="sysPanel" data-clipbox></div>
+      </div>
     </section>
 
     <!-- PROFIL -->
@@ -550,6 +556,7 @@
   <script src="js/lang/position.js"></script>
   <script src="js/lang/eveil.js"></script>
   <script src="js/lang/contenu.js"></script>
+  <script src="js/lang/systeme.js"></script>
   <script src="js/planet-engine.js"></script>
   <script src="js/planet-renderer.js"></script>
   <script src="js/stage.js"></script>
@@ -558,6 +565,7 @@
   <script src="js/portail.js"></script>
   <script src="js/rules.js"></script>
   <script src="js/world.js"></script>
+  <script src="js/systeme.js"></script>
   <script src="js/energy.js"></script>
   <script src="js/classement.js"></script>
   <script src="js/game.js"></script>
@@ -585,6 +593,7 @@
   <script src="js/exploration.js"></script>
   <script src="js/exploration-ui.js"></script>
   <script src="js/forge-ui.js"></script>
+  <script src="js/systeme-ui.js"></script>
   <script src="js/online-ui.js"></script>
   <script src="js/multi.js"></script>
   <script src="js/multi-ui.js"></script>

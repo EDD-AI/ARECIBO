@@ -69,7 +69,9 @@
           ring: !!look.ring, debris: !!look.debris, moons: look.moons || 0, shell: !!look.shell,
           starClass: look.starClass, hueShift: look.hueShift, mood: look.mood,
           caps: look.caps, light: look.light, shape: look.shape || 'aucune', warm: look.warm, coreHue: look.coreHue,
-          disk: look.disk, hot: look.hot, pitch: look.pitch, lens: look.lens, diskScale: look.diskScale, neb: look.neb, station: look.station, crescent: look.crescent, glow: look.glow
+          disk: look.disk, hot: look.hot, pitch: look.pitch, lens: look.lens, diskScale: look.diskScale, neb: look.neb, station: look.station, crescent: look.crescent, glow: look.glow,
+          // Astres de Mon système (v119, js/systeme.js).
+          craters: look.craters, maria: look.maria, lights: look.lights, storm: look.storm, bands: look.bands, corona: look.corona, flare: look.flare, moonKind: look.moonKind
         });
         g.flip = !!look.flip;
         this.genomes.set(id, g);

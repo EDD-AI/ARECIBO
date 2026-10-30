@@ -964,6 +964,58 @@
     g.extent = { x: ex, y: ey };
   }
 
+  // ─── Astres de Mon système (v119, js/systeme.js) ──────────────
+  // Options d'apparence des astres achetés au Marché stellaire. Sans ces options, rien ne change.
+  // Lune (roche) : mood 'claire' (roche claire et grise), craters (0 à 1) creuse des cratères plus
+  //   nombreux et plus marqués, maria (0 à 1) étend les mers sombres, lights allume les petites
+  //   lumières d'une base sur la face de nuit.
+  // Neptune (gaz) : mood 'neptune' (bandes bleu profond, sans tempête), storm (la Grande Tache
+  //   sombre), bands (vents violents : des bandes plus contrastées, des nuages blancs étirés).
+  // Soleil (étoile) : corona (longueur de la couronne), flare (plus vif, éruptions plus nombreuses).
+  function systemBody(body, opts) {
+    const P = body.pal;
+    if (body.shader === SH.ROCK) {
+      if (opts.craters != null) {
+        const k = Math.max(0, Math.min(1, opts.craters));
+        body.A[2] = 3 + 1.5 * k;
+        body.A[3] = 0.3 + 0.5 * k;
+        body.B[2] = 2.5 + 4 * k;
+      }
+      if (opts.maria != null) body.A[1] = 0.26 + 0.2 * Math.max(0, Math.min(1, opts.maria));
+      if (opts.lights) body.C = [0.55, 46, 0, 0];
+    }
+    if (body.shader === SH.GAS) {
+      if (opts.mood === 'neptune') {
+        const rows = opts.bands
+          ? [[0.32, 0.12, 268], [0.62, 0.12, 244], [0.4, 0.15, 262], [0.7, 0.1, 236], [0.48, 0.15, 256], [0.92, 0.03, 225]]
+          : [[0.44, 0.13, 264], [0.48, 0.14, 260], [0.52, 0.14, 257], [0.56, 0.13, 254], [0.6, 0.12, 250], [0.66, 0.1, 246]];
+        rows.forEach((s, i) => { P[i] = ramp(s[0], s[1], s[2]); });
+        body.B[1] = rows.length;
+        body.A[1] = opts.bands ? 9 : 6;
+        body.A[2] = opts.bands ? 0.85 : 0.35;
+        body.C = [0, 0, 0, 0];
+        P[12] = ramp(0.72, 0.1, 245);
+        body.atmo = { w: 0.09, inner: 0.45, pow: 2, outer: 0.85 };
+      }
+      if (opts.storm) {
+        // La tache, sombre, au sud : elle passe devant nous à chaque tour de la planète.
+        const lat = -0.38, lon = 0.6;
+        body.C = [Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon), 0.27];
+        P[6] = ramp(0.32, 0.11, 266);
+        P[7] = ramp(0.22, 0.09, 270);
+      }
+    }
+    if (body.shader === SH.STAR && body.corona) {
+      if (opts.corona != null) body.corona.len = Math.max(0, opts.corona);
+      if (opts.flare) {
+        body.corona.power = 1.5;
+        body.corona.freq = 4.5;
+        body.A[1] = 0.9;
+        body.pal = mapPalette(body.pal, (L, C, h) => [Math.min(0.995, L * 1.03 + 0.02), C * 1.15, h]);
+      }
+    }
+  }
+
   function generate(seed, opts) {
     opts = opts || {};
     seed = seed >>> 0;
@@ -974,6 +1026,7 @@
 
     const body = buildBody(key, makeRng(hashSeed(seed, 2)), opts);
     g.body = body;
+    systemBody(body, opts);
 
     // Station de combat (v115) : coque noire, tranchée à l'équateur, grande parabole tournée vers nous.
     // Elle ne tourne pas, pour que la parabole reste toujours visible.
@@ -1119,7 +1172,8 @@
     if (compact) nMoons = Math.min(nMoons, 2);
     const minA = Math.max(reach, body.bound + 0.25, body.corona ? 1.5 : 0, body.atmo ? 1.3 : 0);
     for (let i = 0; i < nMoons; i++) {
-      const kind = key === 'star' ? mr.weighted(STAR_PLANETS).key : mr.weighted(MOON_KINDS).key;
+      // moonKind : la nature des lunes imposée (Triton, lune de glace de Neptune, v119).
+      const kind = opts.moonKind && TYPE_BY_KEY[opts.moonKind] ? opts.moonKind : key === 'star' ? mr.weighted(STAR_PLANETS).key : mr.weighted(MOON_KINDS).key;
       g.moons.push(makeMoon(mr, kind, i, minA, compact, key === 'star'));
     }
 
@@ -1169,6 +1223,13 @@
     if (opts.mood === 'p-gaz') applyMood(g, (L, C, h) => [L * 0.9 + 0.03, C * 0.8 + 0.05, hueToward(h, 278, 180)]);
     if (opts.mood === 'p-mixte') applyMood(g, (L, C, h) => (L > 0.55 ? [Math.min(0.95, L * 0.92 + 0.12), 0.03, hueToward(h, 200, 180)] : [L * 0.95, C + 0.03, hueToward(h, 30, 180)]));
     if (opts.hueShift) applyMood(g, (L, C, h) => [L, C, h + opts.hueShift]);
+    // Lune de Mon système (v119) : roche claire et grise ; les mers de basalte et les lumières de la
+    // base gardent leurs couleurs, posées après l'humeur.
+    if (opts.mood === 'claire') applyMood(g, (L, C, h) => [Math.min(0.96, L * 0.82 + 0.16), C * 0.3, h]);
+    if (body.shader === SH.ROCK) {
+      if (opts.maria > 0) body.pal[11] = ramp(0.42 - 0.08 * Math.min(1, opts.maria), 0.012, 250);
+      if (opts.lights) body.pal[10] = ramp(0.86, 0.15, 82);
+    }
 
     // Options de décor : pas de calottes polaires, éclairage imposé.
     if (opts.caps === false && body.shader <= SH.OCEAN) body.A[3] = 3;

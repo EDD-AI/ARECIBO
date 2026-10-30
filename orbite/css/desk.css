@@ -359,10 +359,10 @@ body.desk #market .mw-lvl b { grid-column: 1; grid-row: 2 / 4; align-self: cente
 body.desk #market .mw-lvl .xp-bar { grid-column: 2; grid-row: 2; align-self: end; margin: 0 0 3px; height: 5px; }
 body.desk #market .mw-lvl small { grid-column: 2; grid-row: 3; }
 
-/* Onglets : une barre sur toute la largeur, les trois onglets à gauche. */
+/* Onglets : une barre sur toute la largeur, les quatre onglets à gauche (v119 : MON SYSTÈME). */
 body.desk #market .mk-tabs {
   grid-area: tabs;
-  grid-template-columns: repeat(3, minmax(0, 240px));
+  grid-template-columns: repeat(4, minmax(0, 240px));
   margin: 14px 0 18px;
 }
 body.desk #market .mk-tabs button { padding: 14px 8px 12px; font-size: 13px; letter-spacing: 0.22em; transition: color 0.2s; }
@@ -462,6 +462,46 @@ body.desk #market .mk-list h4:nth-of-type(3) { break-before: column; margin-top:
 body.desk #market .mk-list h4 small { font-size: 13px; line-height: 1.35; }
 body.desk #market .mk-row { padding: 7px 0; font-size: 15px; break-inside: avoid; }
 body.desk #market .mk-row small { font-size: 12px; white-space: nowrap; }
+
+/* ─── Mon système (v119) ─────────────────────────────────── */
+/* Le système animé en grand à gauche (il reste en place), les cartes des astres à droite. */
+body.desk #market .mk-pane[data-pane="systeme"] { padding-right: 10px; container-type: size; }
+body.desk #market .sy-shop {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-areas: 'hero intro' 'hero cards';
+  grid-template-rows: auto 1fr;
+  column-gap: 40px;
+  row-gap: 14px;
+  align-items: start;
+  padding: 0;
+}
+body.desk #market .sy-hero {
+  grid-area: hero;
+  position: sticky;
+  top: 0;
+  height: 100cqh;
+  gap: 0;
+  border: 1px solid var(--faint);
+  background: radial-gradient(circle at 50% 48%, rgba(246, 196, 83, 0.05), transparent 60%);
+}
+body.desk #market .sy-shop .sy-view { flex: 1; height: auto; min-height: 0; margin: 0; }
+body.desk #market .sy-state { flex: 0 0 auto; width: min(86%, 420px); align-self: center; align-items: center; gap: 8px; padding: 0 0 22px; text-align: center; }
+body.desk #market .sy-state b { font-size: 22px; letter-spacing: 0.12em; }
+body.desk #market .sy-state .xp-bar { align-self: stretch; height: 5px; }
+body.desk #market .sy-state small { font-size: 13px; }
+body.desk #market .sy-intro { grid-area: intro; font-size: 14px; }
+body.desk #market .sy-cards { grid-area: cards; gap: 16px; padding-bottom: 10px; }
+body.desk #market .sy-card { padding: 18px 20px; gap: 10px; }
+body.desk #market .sy-card-head { grid-template-columns: 96px minmax(0, 1fr); }
+body.desk #market .sy-card-orb { width: 96px; height: 96px; }
+body.desk #market .sy-card-title b { font-size: 24px; }
+body.desk #market .sy-text, body.desk #market .sy-next p { font-size: 14px; }
+body.desk #market .sy-next b { font-size: 19px; }
+body.desk #market .sy-act { flex-direction: row; align-items: center; gap: 16px; }
+body.desk #market .sy-act .btn { min-width: 230px; min-height: 50px; font-size: 14px; white-space: nowrap; }
+body.desk #market .sy-why { text-align: left; font-size: 13px; }
+body.desk #market .sy-road .mk-row { font-size: 14px; padding: 6px 0; }
 
 /* ─── Cosmétiques : une grille de cartes ─────────────────── */
 body.desk #market .mk-pane[data-pane="cosmetiques"] { padding-right: 8px; padding-bottom: 24px; }
@@ -1738,3 +1778,24 @@ body.desk #multi .mp-law small { grid-row: 5; align-self: start; margin-top: 8px
 body.desk #multi .mp-law b { font-size: 22px; letter-spacing: 0.05em; }
 body.desk #multi .mp-law small { font-size: 16px; line-height: 1.45; color: rgba(241, 236, 218, 0.86); }
 body.desk #multi [data-mp="go"] { margin-top: 0; }
+
+/* ═══ v119 : visite d'un système en plein écran sur PC ═══ */
+/* Le système à gauche en grand, la liste de ses astres à droite. */
+body.desk #system {
+  width: 100%;
+  max-width: 1360px;
+  padding: 16px 32px 18px;
+}
+body.desk #system .screen-head { height: auto; gap: 10px; }
+body.desk #system .screen-head h2 { font-size: 24px; letter-spacing: 0.18em; }
+body.desk #system .screen-head h2 small { font-size: 12px; margin-top: 4px; }
+body.desk #system .screen-head .icon-btn { width: 44px; height: 44px; font-size: 20px; }
+body.desk #system .sys-body { flex-direction: row; gap: 40px; margin-top: 16px; }
+body.desk #system .sys-view { flex: 1.35 1 0; height: auto; margin: 0; border: 1px solid var(--faint); background: radial-gradient(circle at 50% 50%, rgba(246, 196, 83, 0.05), transparent 60%); }
+body.desk #system .sys-panel { flex: 1 1 0; padding-right: 6px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+body.desk #system .sys-panel .fg-h { font-size: 13px; }
+body.desk #system .sys-row { grid-template-columns: 64px 1fr; padding: 12px 2px; }
+body.desk #system .sys-row .orb { width: 64px; height: 64px; }
+body.desk #system .sys-row-txt b { font-size: 18px; }
+body.desk #system .sys-row-txt small { font-size: 13px; }
+body.desk #system .sys-ups i { font-size: 12px; padding: 3px 8px; }
