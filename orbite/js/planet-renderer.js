@@ -345,6 +345,28 @@ Surf gasSurf(vec3 p, float dth) {
       else s.row = rg > 0.3 ? 6 : row;
     }
   }
+  // Astres de Mon système (js/systeme.js) : volcans (uD.w, rampe 9), éclairs (uD.x, rampe 10) et
+  // aurores polaires (uD.z, rampe 14). Ils brillent d'eux-mêmes, de jour comme de nuit.
+  if (uD.w > 0.0) {
+    Vor vv = voronoi(p * 3.4 + uSeed * 0.37 + 11.0);
+    float vr = vv.f1 + (dth - 0.5) * 0.08;
+    if (vv.id.y < 0.5 && vr < 0.24) {
+      float pulse = 0.5 + 0.5 * sin(TAU * uPhase * 3.0 + vv.id.x * 12.0);
+      s.row = 9; s.emis = clamp(int(6.6 - vr * 18.0 + pulse * 1.2), 2, 7);
+    }
+  }
+  if (uD.x > 0.0) {
+    Vor lv = voronoi(p * 4.2 + uSeed * 0.53 + 3.0);
+    float lt = fract(uPhase * 6.0 + lv.id.z * 5.0);
+    float lr = lv.f1 + (dth - 0.5) * 0.1;
+    if (lv.id.x < 0.55 && lt < 0.09 && lr < 0.42) { s.row = 10; s.emis = lr < 0.16 ? 7 : lr < 0.28 ? 5 : 3; }
+  }
+  if (uD.z > 0.0) {
+    float lon = atan(p.z, p.x);
+    float ring = 0.9 + 0.03 * sin(lon * 5.0 + TAU * uPhase * 2.0) + 0.015 * sin(lon * 13.0 - TAU * uPhase * 3.0);
+    float ad = abs(abs(p.y) - ring) + (dth - 0.5) * 0.02;
+    if (ad < 0.045) { s.row = 14; s.emis = ad < 0.018 ? 7 : ad < 0.032 ? 5 : 3; }
+  }
   return s;
 }
 
@@ -364,6 +386,18 @@ Surf rockSurf(vec3 p, vec3 Lt, float dth) {
   if (uType == 6 && uC.x > 0.0) {
     float cl = fbm01(q * 0.8 + 31.0, 3);
     if (cl > 1.0 - uC.x && hash13(floor(p * uC.y) + uSeed) > 0.6) { s.glow = 5; s.glowRow = 10; }
+  }
+  // Cœur de Pluton (Mon système) : une grande plaine claire en forme de cœur (rampe 7), tournée vers
+  // nous quand l'astre ne tourne pas ; uC.z : sa taille.
+  if (uType == 6 && uC.z > 0.0) {
+    vec3 hc = normalize(vec3(-0.18, -0.08, 1.0));
+    vec3 e1 = normalize(cross(vec3(0.0, 1.0, 0.0), hc));
+    vec3 e2 = cross(hc, e1);
+    vec2 hu = vec2(dot(p, e1), dot(p, e2)) / uC.z;
+    float wob = fbm(p * 6.0 + uSeed, 3) * 0.12;
+    float hx = hu.x * 1.25, hy = hu.y * 1.35 + 0.18 + wob;
+    float ha = hx * hx + hy * hy - 1.0;
+    if (dot(p, hc) > 0.0 && ha * ha * ha - hx * hx * hy * hy * hy < 0.0) { s.row = 7; s.bump *= 0.3; }
   }
   return s;
 }

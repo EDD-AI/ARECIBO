@@ -372,46 +372,75 @@ pas d’historique avant la v102.
 
 ## Mon système (v119)
 
-Autour de votre planète, trois astres à acheter puis à améliorer avec les **poussières d’étoiles**,
-dans le Marché stellaire, onglet **MON SYSTÈME** (entre Ma planète et Cosmétiques). Acheter un astre
-ne demande que des poussières ; ses améliorations s’achètent **dans l’ordre**, chacune avec un
-**niveau** de créateur et un prix. Tout se voit sur l’astre, chez vous et chez ceux qui vous visitent.
+Tout le **système solaire**, à acheter puis à améliorer avec les **poussières d’étoiles**, dans le
+Marché stellaire, onglet **MON SYSTÈME** (entre Ma planète et Cosmétiques). Au centre, un **Soleil
+rouge** ; votre planète prend la place de la **Terre** (elle garde ses 24 améliorations de l’onglet Ma
+planète). Acheter un astre ne demande que des poussières ; ses améliorations s’achètent **dans
+l’ordre**, chacune avec un **niveau** de créateur et un prix. Tout se voit sur l’astre, chez vous et
+chez ceux qui vous visitent.
 
-| Astre | Prix | Améliorations (niveau, prix) : ce qui se voit |
+| Astre (id) | Prix | Améliorations (niveau, prix) : ce qui se voit |
 |---|---|---|
-| **Lune** (roche claire, autour de votre planète) | 250 | Cratères profonds (5, 120) : plus de cratères, relief marqué · Mers sombres (12, 200) : grandes plaines de basalte · Lueur d’argent (20, 320) : halo blanc · Base lunaire (32, 480) : petites lumières sur la face de nuit · Anneau de poussière (45, 700) |
-| **Neptune** (géante de gaz bleu profond, plus loin) | 500 | Grande Tache sombre (10, 350) : une tempête qui passe à chaque tour · Vents supersoniques (24, 550) : bandes contrastées, nuages blancs étirés · Anneaux (38, 800) · Triton (55, 1 200) : une lune de glace |
-| **Soleil** (naine jaune, au centre) | 5 000 | Couronne (30, 1 500) : longue couronne de flammes · Éruptions (50, 2 500) : plus grand, plus vif · Géante bleue (75, 4 000) : devient une géante bleue, encore plus grande |
+| **Soleil** (`soleil`, au centre) | 5 000 | Une étoile rouge (classe `soleil rouge`) · Couronne (30, 1 500) : longue couronne de flammes rouges · Éruptions (50, 2 500) : plus grand, plus vif · Géante rouge (75, 4 000) : immense, d’un rouge plus profond (classe `géante rouge`) |
+| **Mercure** (`mercure`) | 300 | Petite roche grise · Cratères brûlés (8, 150) : cratères plus nombreux et marqués · Plaines de lave figée (20, 250) : grandes plaines sombres · Face brûlante (36, 400) : la face éclairée rougeoie, brume chaude |
+| **Vénus** (`venus`) | 350 | Jaune pâle, voilée · Nuages d’acide (10, 180) : épais nuages qui tourbillonnent · Éclairs (24, 300) : éclairs violets qui crépitent · Volcans (40, 450) : taches de lave qui rougeoient |
+| **Lune** (`lune`, autour de votre planète) | 250 | Roche claire · Cratères profonds (5, 120) · Mers sombres (12, 200) · Lueur d’argent (20, 320) : halo blanc · Base lunaire (32, 480) : lumières sur la face de nuit · Anneau de poussière (45, 700) |
+| **Mars** (`mars`) | 400 | Rouille · Calottes de glace (8, 160) : pôles blancs · Grand canyon (18, 260) : grandes failles sombres · Tempête de poussière (30, 380) : nuages orangés et brume · Phobos et Deimos (48, 600) : deux petites lunes de roche |
+| **Jupiter** (`jupiter`) | 1 200 | Géante beige · Bandes de nuages (15, 300) : larges bandes orange et crème · Grande Tache rouge (28, 500) · Anneau fin (44, 700) · Lunes galiléennes (62, 1 000) : Io, Europe, Ganymède, Callisto, alignées dans le plan de l’équateur |
+| **Saturne** (`saturne`) | 900 | Dorée pâle, avec un fin anneau · Anneaux (12, 250) : les grands anneaux · Anneaux brillants (26, 450) : plus larges et plus clairs · Aurores polaires (42, 650) : anneaux turquoise aux pôles · Titan (60, 900) : une lune orange |
+| **Uranus** (`uranus`) | 600 | Cyan pâle · Couchée sur le côté (14, 250) : l’axe bascule, les bandes se dressent · Anneaux sombres (32, 450) : debout, comme elle · Nuages cyan (50, 650) : cyan plus vif, nuages blancs |
+| **Neptune** (`neptune`) | 500 | Bleu profond · Grande Tache sombre (10, 350) · Vents supersoniques (24, 550) · Anneaux (38, 800) · Triton (55, 1 200) : une lune de glace |
+| **Pluton** (`pluton`, planète naine) | 150 | Beige et brun · Cœur de glace (6, 120) : la grande plaine claire en forme de cœur, tournée vers nous · Charon (22, 260) : sa grosse lune grise |
 
 - **L’onglet** montre en grand le **système animé** : le Soleil au centre (s’il n’est pas acheté, sa
-  place reste éteinte, avec son prix), votre planète (son apparence vivante, `world-mini`) sur son
-  orbite, la Lune autour d’elle, Neptune plus loin. Ce qui passe devant le Soleil est dessiné après
-  lui. Puis une carte par astre : prix et bouton ACHETER, ou la prochaine amélioration (niveau, prix,
-  raison si c’est bloqué) et la feuille de route (carré plein : fait ; qui clignote : la suivante).
-  Toucher un astre du système amène à sa carte. Un achat fait le même éclat que pour votre planète.
-  Sur PC, le système reste à gauche en grand, les cartes défilent à droite.
+  place reste éteinte, avec son prix), puis **neuf orbites dans l’ordre réel** (Mercure, Vénus, votre
+  planète et sa Lune, Mars, Jupiter, Saturne, Uranus, Neptune, Pluton). Les astres achetés tournent
+  sur leur orbite (les plus proches plus vite), dessinée à leur couleur ; celle d’un astre pas encore
+  acheté est à peine visible. L’écart entre deux orbites suit la taille de leurs astres (espacement
+  non linéaire) et les géantes sont un peu resserrées (taille à l’écran : `size^0.72`), pour que tout
+  tienne lisiblement sur un téléphone de 390 px ; sur PC, le système occupe toute la colonne de gauche.
+  Ce qui passe devant le Soleil est dessiné après lui. Toucher un astre amène à sa carte (son nom
+  apparaît au survol de la souris).
+- **Les cartes**, dans l’ordre du système (le Soleil d’abord, votre planète à la place de la Terre,
+  avec un bouton vers l’onglet Ma planète) : un astre pas encore acheté a une carte courte (l’astre
+  éteint, une phrase, le prix) ; un astre acheté montre sa prochaine amélioration (niveau, prix, raison
+  si c’est bloqué) et sa feuille de route en pastilles (pleine : faite ; qui clignote : la suivante ;
+  sinon son niveau). Un achat fait le même éclat que pour votre planète. Sur PC, le système reste à
+  gauche, les cartes défilent à droite (le bouton d’achat à droite de l’astre).
 - **Visite** : depuis vos amis (VISITER) ou une fiche du classement (VISITER SON SYSTÈME), pour
-  tout le monde (chacun a sa planète). L’écran `#system` montre en lecture seule sa planète (`world`
-  du profil, `W.channels`) et ses astres avec leurs améliorations. Un profil d’un ancien client, sans
-  astres, montre sa planète seule.
+  tout le monde (chacun a sa planète). L’écran `#system` montre en lecture seule le même système
+  (sa planète, `world` du profil, et ses astres avec leurs améliorations) et leur liste. Un profil
+  d’un ancien client, sans astres, montre sa planète seule.
 - **Passage de niveau** : il annonce aussi l’amélioration d’un astre acheté qui s’ouvre à ce niveau.
-- **Succès** : « Lumière ! » demande maintenant le Soleil, « Système solaire » les trois astres (les
-  identifiants restent : un succès gagné le reste).
+- **Succès** : « Lumière ! » demande le Soleil, « Système solaire » **tous** les astres (10) ; les
+  identifiants restent (un succès gagné le reste).
 - **L’ancien « Mon système »** (l’étoile de la Forge et ses six orbites) est retiré, ainsi que son
   bouton dans Création ; les mondes de la Forge restent dans Création. L’étoile et les orbites restent
   dans `orbite.forge` et dans le profil public (`forge.star`, `forge.planets`) pour les anciens clients.
 
-Données : `orbite.systeme` = `{ "lune": n, … }` (clé absente : pas acheté ; `n` : améliorations
-faites), sauvegardé en ligne comme toute clé `orbite.*`. Le profil public le publie dans
-`forge.astres` (même forme), car les règles Firestore ne vérifient que `forge is map` : pas de clé
-nouvelle au premier niveau, pas de règle à republier. La lecture d’un profil d’autrui
-(`fromPublic`) ne garde que des entiers bornés des trois astres. Règles pures : `js/systeme.js`
-(`BODIES`, `check`, `apply`, `next`, `look`, `size`, `publish`, `fromPublic`…, testées par
-`tests/systeme.test.mjs`) ; interface : `js/systeme-ui.js` ; textes : `js/lang/systeme.js`.
-Les apparences passent par de petites options du moteur, sans effet sur les autres astres : humeur
-`claire` (roche claire et grise), `craters`, `maria` et `lights` (roche ; les lumières sont dans le
-shader `rockSurf`), humeur `neptune`, `storm` et `bands` (gaz), `corona` et `flare` (étoile),
-`moonKind` (nature des lunes).
+Données : `orbite.systeme` = `{ "mercure": n, "lune": n, … }` (clé absente : pas acheté ; `n` :
+améliorations faites), sauvegardé en ligne comme toute clé `orbite.*`. Le profil public le publie dans
+`forge.astres` (même forme, tous les astres achetés), car les règles Firestore ne vérifient que
+`forge is map` : pas de clé nouvelle au premier niveau, pas de règle à republier. La lecture d’un
+profil d’autrui (`fromPublic`) ignore les clés inconnues et borne chaque valeur au nombre
+d’améliorations de l’astre. Règles pures : `js/systeme.js` (`BODIES` dans l’ordre du système, avec
+`orbit`, `size`, `color`, `base` et les `fx` de chaque amélioration ; `check`, `apply`, `next`,
+`look`, `size`, `unlocks`, `publish`, `fromPublic`…, testées par `tests/systeme.test.mjs`) ;
+interface : `js/systeme-ui.js` ; textes : `js/lang/systeme.js` (noms traduits : Mercury, Mercurio,
+Merkur, Mercúrio…).
+
+Les apparences passent par de petites options du moteur (`planet-engine.js`, `systemBody`), sans
+effet sur les autres astres ni sur les cartes (testé) : humeurs `claire` (la Lune), `mercure`,
+`pluton` (roche), `mars` (désert), `neptune`, `venus`, `jupiter`, `saturne`, `uranus` (gaz) ;
+`craters`, `maria`, `lights`, `heat` (face brûlante), `heart` (le cœur de Pluton, dans le shader
+`rockSurf`) ; `icecaps`, `canyons`, `dust` (désert) ; `bands`, `storm` (tache sombre ou rouge), `veil`
+(nuages imposés), `lightning`, `volcanoes`, `aurora` (éclairs, volcans et aurores qui brillent d’eux-
+mêmes, dans le shader `gasSurf`, réglages `D.x`, `D.w`, `D.z`), `cyan` ; `corona`, `flare` (étoile) ;
+`ringLook` (anneaux imposés : `jupiter`, `saturne-fin`, `saturne`, `saturne-brillant`, `uranus`) ;
+`moonKind` (une nature, ou une liste de lunes nommées avec leur taille et leur teinte : `phobos`,
+`deimos`, `io`, `europe`, `ganymede`, `callisto`, `titan`, `charon`) et `moonPlane` (lunes dans le plan
+de l’équateur) ; `axis` (axe imposé), `spin` (rotation imposée), `plain` (pas de décor tiré au hasard).
+Deux classes d’étoiles nouvelles, jamais tirées au hasard : `soleil rouge` et `géante rouge`.
 
 ## Big Bang en explosion, musique dans tous les menus (v118)
 
@@ -664,8 +693,8 @@ traductions : `js/lang/succes.js`, tests : `tests/succes.test.mjs`.
 
 ## Marché stellaire
 
-Quatre onglets : **Ma planète** (les 24 améliorations décrites plus haut), **Mon système** (la Lune,
-Neptune et le Soleil, v119), **Cosmétiques** et **Graines**.
+Quatre onglets : **Ma planète** (les 24 améliorations décrites plus haut), **Mon système** (tout le
+système solaire autour de votre planète, du Soleil rouge à Pluton, v119), **Cosmétiques** et **Graines**.
 
 **Cosmétiques** (2 000 poussières d’étoiles chacun, ou en graines de vie : **25 pour un fond animé, 15 pour un cadre**, v91) :
 - **Fonds animés** : six décors de partie (Nébuleuse pourpre, Aurore boréale, Galaxie spirale, Voie
@@ -1828,7 +1857,7 @@ l’Hélice qui garde les PV volés et le Spirographe qui garde l’Attaque, pui
 | `js/rules.js` | Règles pures et déterministes : catalogue, lois, création, fusion, combat (journal d’événements), bots |
 | `js/energy.js` | Sphères d’énergie des lois : petites sphères pixel art animées selon la famille (souffle, vortex, bascule, flammes, facettes, bandes, roche, grille) |
 | `js/world.js` | Votre planète : les 24 améliorations, leurs ères, niveaux, prix et effets |
-| `js/systeme.js`, `js/systeme-ui.js` | Mon système : la Lune, Neptune et le Soleil (prix, améliorations, apparences, profil public) et leur interface (onglet du Marché, visite d'un système) |
+| `js/systeme.js`, `js/systeme-ui.js` | Mon système : tout le système solaire, du Soleil rouge à Pluton (prix, améliorations, apparences, profil public) et son interface (onglet du Marché, visite d'un système) |
 | `js/planet-engine.js` | Génome des planètes : une graine → astre, palette, nuages, anneaux, lunes, nom et fiche |
 | `js/planet-renderer.js` | Rendu WebGL2 pixel art (tramage, palettes à décalage de teinte) + encodeur GIF |
 | `js/stage.js` | Couche WebGL plein écran du jeu : dessine chaque planète à la position de son élément HTML, particules |

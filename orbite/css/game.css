@@ -512,7 +512,7 @@ body.modal #gl { z-index: 35; }
 #system .screen-head h2 > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #system .screen-head h2 small { font-size: 10px; letter-spacing: 0.24em; color: var(--dim); font-weight: 400; text-transform: uppercase; }
 .sys-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.sys-view { flex: 0 0 auto; height: min(46vh, 380px); margin: 0 -14px; }
+.sys-view { flex: 0 0 auto; height: auto; aspect-ratio: 1.3; max-height: 50vh; margin: 0 -14px; }
 .sys-panel { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 20px; display: flex; flex-direction: column; gap: 4px; scrollbar-width: none; }
 .sys-panel .fg-h { align-self: stretch; text-align: left; }
 .sys-row { display: grid; grid-template-columns: 48px 1fr; gap: 12px; align-items: center; padding: 9px 2px; border-bottom: 1px solid rgba(241, 236, 218, 0.06); text-align: left; }
@@ -524,35 +524,48 @@ body.modal #gl { z-index: 35; }
 .sys-ups i { font-style: normal; font-size: 10px; letter-spacing: 0.06em; padding: 2px 6px; border: 1px solid var(--era, var(--line)); color: var(--era, var(--ink)); }
 .sys-none { margin: 12px 0 0; font-size: 13px; }
 
-/* Mon système (v119) : le système animé (le Soleil, votre planète et sa Lune, Neptune) et ses astres. */
+/* Mon système (v119) : le système solaire animé (le Soleil rouge au centre, neuf orbites, votre planète
+   à la place de la Terre) et une carte par astre. */
 .sy-view { position: relative; overflow: hidden; }
 .sy-orbits { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.sy-orbits ellipse { fill: none; stroke: rgba(241, 236, 218, 0.14); stroke-width: 1; }
-.sy-orbits ellipse.sy-o-nep { stroke-dasharray: 2 5; stroke: rgba(241, 236, 218, 0.1); }
-.sy-orbits ellipse.sy-o-nep.on { stroke-dasharray: none; stroke: rgba(111, 155, 255, 0.24); }
+.sy-orbits ellipse { fill: none; stroke-width: 1; }
+.sy-orbits ellipse.on { stroke: var(--oc, rgba(241, 236, 218, 0.5)); stroke-opacity: 0.26; }
+/* L'orbite d'un astre pas encore acheté : à peine là. */
+.sy-orbits ellipse.off { stroke: rgba(241, 236, 218, 0.07); stroke-dasharray: 1 6; }
 .sy-layer { position: absolute; inset: 0; }
 .sy-body { position: absolute; left: 0; top: 0; width: 20px; height: 20px; padding: 0; border: 0; background: none; will-change: transform; }
 .sy-body .orb { position: absolute; inset: 0; width: 100%; height: 100%; }
-.sy-body small { position: absolute; left: 50%; top: 92%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 4px; font-size: 9px; letter-spacing: 0.16em; color: var(--dim); white-space: nowrap; pointer-events: none; text-shadow: 0 0 4px #000; }
+/* Les petits astres se touchent facilement : la zone sensible déborde un peu. */
+button.sy-body::before { content: ''; position: absolute; inset: -9px; }
+.sy-body small { position: absolute; left: 50%; top: 100%; margin-top: 3px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 4px; font-size: 9px; letter-spacing: 0.16em; color: var(--dim); white-space: nowrap; pointer-events: none; text-shadow: 0 0 4px #000; }
+/* Le nom d'un astre apparaît au survol (souris). */
+.sy-body small.sy-name { opacity: 0; transition: opacity 0.2s; color: var(--ink); text-transform: uppercase; }
+.sy-body:hover small.sy-name, .sy-body:focus-visible small.sy-name { opacity: 1; }
 button.sy-body { cursor: pointer; }
 .sy-shop { display: flex; flex-direction: column; gap: 12px; padding-top: 2px; }
 .sy-hero { display: flex; flex-direction: column; gap: 8px; }
-.sy-shop .sy-view { height: min(30vh, 240px); margin: 0 -14px; }
+/* Neuf orbites : le système prend toute la largeur et un peu plus de hauteur qu'avant. */
+.sy-shop .sy-view { height: auto; aspect-ratio: 1.38; max-height: 46vh; margin: 0 -14px; }
 .sy-state { display: flex; flex-direction: column; gap: 5px; }
 .sy-state b { font-size: 17px; font-weight: 600; letter-spacing: 0.08em; }
 .sy-state small { font-size: 11px; color: var(--dim); }
 .sy-intro { margin: 0; color: var(--dim); font-size: 13px; line-height: 1.45; }
-.sy-cards { display: flex; flex-direction: column; gap: 12px; }
-.sy-card { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--line); border-left: 2px solid var(--line); }
+.sy-cards { display: flex; flex-direction: column; gap: 10px; }
+.sy-card { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid var(--line); border-left: 2px solid var(--line); }
 .sy-card.owned { border-left-color: var(--era); }
 .sy-card.flash { animation: syFlash 1.1s ease; }
 @keyframes syFlash { 0%, 100% { box-shadow: none; } 30% { box-shadow: 0 0 0 1px var(--era), 0 0 18px var(--era); } }
-.sy-card-head { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 12px; align-items: center; }
-.sy-card-orb { width: 72px; height: 72px; }
+.sy-card-head { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: center; }
+.sy-card-orb { width: 64px; height: 64px; }
 .sy-card-title { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.sy-card-title b { font-size: 20px; font-weight: 600; letter-spacing: 0.06em; }
+.sy-card-title b { font-size: 19px; font-weight: 600; letter-spacing: 0.06em; }
 .sy-card.owned .sy-card-title .mk-kicker { color: var(--era); }
 .sy-text { margin: 0; color: var(--dim); font-size: 13px; line-height: 1.4; }
+/* Astre pas encore acheté, votre planète : une carte courte. */
+.sy-card.sy-off, .sy-card.sy-earth { gap: 10px; }
+.sy-card.sy-off .sy-card-head, .sy-card.sy-earth .sy-card-head { grid-template-columns: 56px minmax(0, 1fr); align-items: start; }
+.sy-card.sy-off .sy-card-orb, .sy-card.sy-earth .sy-card-orb { width: 56px; height: 56px; }
+.sy-card-title small.sy-text { font-size: 12px; }
 .sy-next { display: flex; flex-direction: column; gap: 4px; }
 .sy-next b { font-size: 16px; font-weight: 600; }
 .sy-next p { margin: 0 0 2px; color: var(--dim); font-size: 13px; line-height: 1.4; }
@@ -560,7 +573,16 @@ button.sy-body { cursor: pointer; }
 .sy-act { display: flex; flex-direction: column; gap: 4px; }
 .sy-why { font-size: 12px; color: var(--dim); text-align: center; }
 .sy-done { margin: 0; font-size: 13px; color: var(--era); }
-.sy-road .mk-row { font-size: 13px; padding: 6px 0; }
+/* Feuille de route en pastilles : fait (couleur de l'astre), la suivante (or, qui clignote), plus tard. */
+.sy-road { display: flex; flex-wrap: wrap; gap: 5px; }
+.sy-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--line); font-size: 11px; letter-spacing: 0.04em; }
+.sy-chip .mk-pip { flex: 0 0 auto; }
+.sy-chip small { font-size: 9px; letter-spacing: 0.1em; color: var(--dim); }
+.sy-chip.owned { border-color: var(--era); color: var(--era); }
+.sy-chip.owned .mk-pip { background: var(--era); border-color: var(--era); box-shadow: 0 0 6px var(--era); }
+.sy-chip.next { border-color: var(--gold); color: var(--gold); }
+.sy-chip.next .mk-pip { border-color: var(--gold); animation: pipBlink 1.4s steps(2, jump-none) infinite; }
+.sy-chip.locked { opacity: 0.5; }
 /* Mode en ligne : carte de connexion, amis, classement. */
 .pf-tabs { position: sticky; top: 0; z-index: 3; background: var(--bg, #000); margin-bottom: 10px; }
 .pf-tabs button { position: relative; }

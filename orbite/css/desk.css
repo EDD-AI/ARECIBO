@@ -483,25 +483,35 @@ body.desk #market .sy-hero {
   height: 100cqh;
   gap: 0;
   border: 1px solid var(--faint);
-  background: radial-gradient(circle at 50% 48%, rgba(246, 196, 83, 0.05), transparent 60%);
+  background: radial-gradient(circle at 50% 48%, rgba(255, 91, 61, 0.06), transparent 55%);
 }
-body.desk #market .sy-shop .sy-view { flex: 1; height: auto; min-height: 0; margin: 0; }
+body.desk #market .sy-shop .sy-view { flex: 1; height: auto; aspect-ratio: auto; max-height: none; min-height: 0; margin: 0; }
 body.desk #market .sy-state { flex: 0 0 auto; width: min(86%, 420px); align-self: center; align-items: center; gap: 8px; padding: 0 0 22px; text-align: center; }
 body.desk #market .sy-state b { font-size: 22px; letter-spacing: 0.12em; }
 body.desk #market .sy-state .xp-bar { align-self: stretch; height: 5px; }
 body.desk #market .sy-state small { font-size: 13px; }
+body.desk #market .sy-body small { font-size: 11px; }
 body.desk #market .sy-intro { grid-area: intro; font-size: 14px; }
-body.desk #market .sy-cards { grid-area: cards; gap: 16px; padding-bottom: 10px; }
-body.desk #market .sy-card { padding: 18px 20px; gap: 10px; }
-body.desk #market .sy-card-head { grid-template-columns: 96px minmax(0, 1fr); }
-body.desk #market .sy-card-orb { width: 96px; height: 96px; }
-body.desk #market .sy-card-title b { font-size: 24px; }
+body.desk #market .sy-cards { grid-area: cards; gap: 14px; padding-bottom: 10px; }
+body.desk #market .sy-card { padding: 16px 20px; gap: 10px; }
+body.desk #market .sy-card-head { grid-template-columns: 88px minmax(0, 1fr); }
+body.desk #market .sy-card-orb { width: 88px; height: 88px; }
+/* Astre pas encore acheté, votre planète : courte, le bouton à droite de l'astre. */
+body.desk #market .sy-card.sy-off, body.desk #market .sy-card.sy-earth { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 16px; }
+body.desk #market .sy-card.sy-off .sy-card-head, body.desk #market .sy-card.sy-earth .sy-card-head { grid-template-columns: 64px minmax(0, 1fr); align-items: center; }
+body.desk #market .sy-card.sy-off .sy-card-orb, body.desk #market .sy-card.sy-earth .sy-card-orb { width: 64px; height: 64px; }
+body.desk #market .sy-card.sy-off .sy-act, body.desk #market .sy-card.sy-earth .sy-act { flex-direction: column; align-items: stretch; gap: 6px; }
+body.desk #market .sy-card.sy-off .sy-act .btn, body.desk #market .sy-card.sy-earth .sy-act .btn { min-width: 190px; }
+body.desk #market .sy-card.sy-off .sy-why { text-align: center; max-width: 190px; }
+body.desk #market .sy-card-title b { font-size: 22px; }
 body.desk #market .sy-text, body.desk #market .sy-next p { font-size: 14px; }
-body.desk #market .sy-next b { font-size: 19px; }
+body.desk #market .sy-card-title small.sy-text { font-size: 13px; }
+body.desk #market .sy-next b { font-size: 18px; }
 body.desk #market .sy-act { flex-direction: row; align-items: center; gap: 16px; }
-body.desk #market .sy-act .btn { min-width: 230px; min-height: 50px; font-size: 14px; white-space: nowrap; }
+body.desk #market .sy-act .btn { min-width: 230px; min-height: 48px; font-size: 14px; white-space: nowrap; }
 body.desk #market .sy-why { text-align: left; font-size: 13px; }
-body.desk #market .sy-road .mk-row { font-size: 14px; padding: 6px 0; }
+body.desk #market .sy-chip { font-size: 12px; padding: 5px 10px; }
+body.desk #market .sy-chip small { font-size: 10px; }
 
 /* ─── Cosmétiques : une grille de cartes ─────────────────── */
 body.desk #market .mk-pane[data-pane="cosmetiques"] { padding-right: 8px; padding-bottom: 24px; }
@@ -1791,7 +1801,7 @@ body.desk #system .screen-head h2 { font-size: 24px; letter-spacing: 0.18em; }
 body.desk #system .screen-head h2 small { font-size: 12px; margin-top: 4px; }
 body.desk #system .screen-head .icon-btn { width: 44px; height: 44px; font-size: 20px; }
 body.desk #system .sys-body { flex-direction: row; gap: 40px; margin-top: 16px; }
-body.desk #system .sys-view { flex: 1.35 1 0; height: auto; margin: 0; border: 1px solid var(--faint); background: radial-gradient(circle at 50% 50%, rgba(246, 196, 83, 0.05), transparent 60%); }
+body.desk #system .sys-view { flex: 1.35 1 0; height: auto; aspect-ratio: auto; max-height: none; margin: 0; border: 1px solid var(--faint); background: radial-gradient(circle at 50% 50%, rgba(255, 91, 61, 0.06), transparent 55%); }
 body.desk #system .sys-panel { flex: 1 1 0; padding-right: 6px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
 body.desk #system .sys-panel .fg-h { font-size: 13px; }
 body.desk #system .sys-row { grid-template-columns: 64px 1fr; padding: 12px 2px; }

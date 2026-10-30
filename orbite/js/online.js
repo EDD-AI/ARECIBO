@@ -220,7 +220,7 @@
     // que les règles Firestore laissent libre : pas de règle à republier pour que les amis les voient.
     const cos = read('orbite.cosmetiques', {}) || {};
     const frame = String(cos.frame || '').slice(0, 16), avatar = String(cos.avatar || '').slice(0, 16), font = String(cos.font || '').slice(0, 16);
-    // Mon système (v119) : les astres achetés et leurs améliorations, { lune: n, neptune: n, soleil: n }.
+    // Mon système (v119) : les astres achetés et leurs améliorations, { mercure: n, lune: n, … }.
     // Ils voyagent aussi dans « forge » ; star et planets restent pour les anciens clients.
     const SY = window.OrbiteSysteme;
     const astres = SY ? SY.publish(read(SY.KEY, {})) : {};

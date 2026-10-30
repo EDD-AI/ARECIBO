@@ -1230,7 +1230,7 @@
     for (const b of $('mkTabs').children) b.classList.toggle('on', b.dataset.tab === tab);
     for (const p of document.querySelectorAll('#market .mk-pane')) p.hidden = p.dataset.pane !== tab;
     if (tab === 'cosmetiques') { ui.cosPick = cosmetics().on || ''; renderCosmetics(); }
-    // Mon système (v119) : la Lune, Neptune et le Soleil (js/systeme-ui.js).
+    // Mon système (v119) : tout le système solaire, du Soleil rouge à Pluton (js/systeme-ui.js).
     if (tab === 'systeme' && window.__orbite.systeme) window.__orbite.systeme.render();
     if (tab === 'graines') renderSeedShop();
     stage.sky = tab === 'cosmetiques' && SKY_BY_ID[ui.cosPick] ? SKY_BY_ID[ui.cosPick].mode : 0;

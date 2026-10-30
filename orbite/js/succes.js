@@ -64,7 +64,8 @@
   add('monde-15', 'creation', 'Monde accompli', 'Faire grandir une planète jusqu’à la taille {n}.', 15, (f) => f.forge.maxMass, 2, { n: 15 });
   // Mon système (v119) : les astres achetés au Marché stellaire. Les ids restent : un succès gagné le reste.
   add('etoile', 'creation', 'Lumière !', 'Allumer le Soleil de votre système.', 1, (f) => (f.sys.soleil ? 1 : 0), 1);
-  add('orbites', 'creation', 'Système solaire', 'Réunir la Lune, Neptune et le Soleil.', 3, (f) => f.sys.n, 3);
+  const ASTRES = window.OrbiteSysteme ? window.OrbiteSysteme.BODIES.length : 10;
+  add('orbites', 'creation', 'Système solaire', 'Réunir les {n} astres du système solaire.', ASTRES, (f) => f.sys.n, 3, { n: ASTRES });
 
   add('colonie', 'colonie', 'Premiers pas', 'Fonder une colonie (tour de contrôle).', 1, (f) => (f.col.founded ? 1 : 0), 1);
   add('bat-10', 'colonie', 'Bâtisseur', 'Construire {n} bâtiments dans une colonie.', 10, (f) => f.col.built, 1, { n: 10 });
