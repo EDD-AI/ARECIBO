@@ -142,3 +142,497 @@ body.desk #codex .cx-card { padding: 12px 6px 12px; }
 body.desk #codex .cx-card .orb, body.desk #codex .cx-q { width: 78px; height: 78px; }
 body.desk #codex .cx-card b { font-size: 13px; }
 body.desk #codex .cx-card small { font-size: 10px; }
+
+/* ═══ v111 : menus en plein écran sur PC — menu principal et fiches ═══ */
+/* ORBITE — PC (16:9) : menu principal, Paramètres et fiches. Tout est sous body.desk : sur
+ * téléphone, rien ne change. Les tailles sont en pixels virtuels (zoom var(--z), 1280-1422 × 720-800). */
+
+/* ─── Menu principal : la planète au centre, le menu en bandeau sous l'horizon ─── */
+/* Les missions à gauche, le profil à droite, la musique en bas à gauche, la version en bas à droite. */
+body.desk #menu .menu-top { gap: 14px; }
+body.desk #menu .menu-top .dust { font-size: 14px; padding: 5px 14px 5px 12px; }
+
+/* Le menu : une rangée d'entrées côte à côte, séparées par de fins traits, sous l'horizon. */
+body.desk #menu .menu-list { width: min(1120px, calc(100% - 96px)); }
+body.desk #menu .menu-page.on {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  border-top: 1px solid var(--faint);
+  border-bottom: 1px solid var(--faint);
+  background: linear-gradient(180deg, rgba(241, 236, 218, 0.035), rgba(241, 236, 218, 0) 70%);
+}
+body.desk #menu .menu-item {
+  flex: 1 1 0;
+  min-width: max-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 22px 26px 24px;
+  font-size: 19px;
+  letter-spacing: 0.26em;
+  white-space: nowrap;
+  border-left: 1px solid var(--faint);
+}
+body.desk #menu .menu-item[hidden] { display: none; }
+body.desk #menu .menu-page > .menu-item:first-child { border-left: 0; }
+body.desk #menu .menu-item small { margin-top: 9px; font-size: 11px; letter-spacing: 0.26em; }
+body.desk #menu .menu-item::after { bottom: 12px; }
+body.desk #menu .menu-item:hover, body.desk #menu .menu-item:focus-visible { background: rgba(241, 236, 218, 0.05); }
+body.desk #menu .menu-item:focus-visible { outline-offset: -2px; }
+/* RETOUR : en tête de rangée, étroit. */
+body.desk #menu .menu-item.back {
+  order: -1;
+  flex: 0 0 auto;
+  flex-direction: row;
+  min-width: 0;
+  padding: 0 30px;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  border-left: 0;
+  border-right: 1px solid var(--faint);
+}
+
+/* Missions du jour : un vrai panneau à gauche, texte lisible. */
+body.desk #menu .mission-box.open { top: 28px; left: 32px; width: 344px; gap: 4px; padding: 14px 16px 16px; background: rgba(0, 0, 0, 0.66); }
+body.desk #menu .mission-box.open .mb-head b { font-size: 13px; letter-spacing: 0.22em; }
+body.desk #menu .mission-box.open .mi-clock { font-size: 12px; }
+body.desk #menu .mission-box.open .mi-list { margin-top: 10px; gap: 8px; }
+body.desk #menu .mission-box.open .mi-row { padding: 10px 12px; gap: 12px; }
+body.desk #menu .mission-box.open .mi-txt { gap: 7px; }
+body.desk #menu .mission-box.open .mi-txt b { font-size: 14px; line-height: 1.32; }
+body.desk #menu .mission-box.open .mi-txt small { font-size: 12px; }
+body.desk #menu .mission-box.open .mi-swap { font-size: 12px; }
+body.desk #menu .mission-box.open .mi-reward { font-size: 15px; }
+body.desk #menu .mission-box.open .mi-got { font-size: 12px; }
+body.desk #menu .mission-box.open .mi-act .btn { min-height: 34px; padding: 0 12px; font-size: 12px; }
+
+/* Profil : en haut à droite, plus grand. */
+body.desk #menu .profile-btn { top: 28px; right: 32px; gap: 12px; padding: 6px 6px 6px 16px; background: rgba(0, 0, 0, 0.66); }
+body.desk #menu .pf-txt { gap: 5px; max-width: 200px; }
+body.desk #menu .pf-txt b { font-size: 16px; max-width: 200px; }
+body.desk #menu .pf-txt small { font-size: 11px; }
+body.desk #menu .pf-txt .xp-mini { width: 64px; height: 3px; }
+body.desk #menu .pf-avatar { width: 46px; height: 46px; }
+
+/* Musique en bas à gauche, studio et version en bas à droite. */
+body.desk #menu .music-bar { left: 32px; bottom: 26px; transform: none; gap: 6px; }
+body.desk #menu .mus-btn { width: 40px; height: 40px; }
+body.desk #menu .mus-btn svg { width: 11px; height: 13px; }
+body.desk #menu .mus-play { width: 38px; height: 38px; }
+body.desk #menu .mus-name { min-width: 0; padding: 0 12px; font-size: 12px; }
+body.desk #menu .menu-foot { left: auto; right: 32px; bottom: 38px; font-size: 10px; letter-spacing: 0.32em; color: rgba(241, 236, 218, 0.36); }
+
+/* ─── Fiches : au centre de l'écran, en fenêtre, plus larges, texte plus grand ─── */
+body.desk #overlay { align-items: center; padding: 28px 32px; background: rgba(0, 0, 0, 0.62); }
+body.desk #overlay .sheet {
+  width: min(720px, 100%);
+  max-height: 100%;
+  padding: 26px 32px 28px;
+  border: 1px solid var(--line);
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.9);
+  animation-name: sheetPop;
+}
+body.desk #overlay.top .sheet { padding-top: 26px; border-top: 1px solid var(--line); }
+body.desk #overlay .sheet h2 { font-size: 28px; }
+body.desk #overlay .sheet h3 { margin-bottom: 14px; font-size: 14px; letter-spacing: 0.22em; }
+body.desk #overlay .sheet p { line-height: 1.45; }
+body.desk #overlay .sheet .muted { font-size: 13px; }
+body.desk #overlay .sheet .muted.version { font-size: 12px; }
+body.desk #overlay .sheet-actions { gap: 10px; margin-top: 18px; }
+body.desk #overlay .sheet-actions .btn { min-height: 48px; font-size: 14px; }
+body.desk #overlay .menu-list-sheet { gap: 10px; }
+body.desk #overlay .menu-list-sheet .btn { min-height: 50px; font-size: 15px; }
+body.desk #overlay .btn:hover { border-color: var(--dim); }
+body.desk #overlay .btn.primary:hover { border-color: var(--ink); }
+body.desk #overlay .vols { gap: 8px; padding: 12px 18px; }
+body.desk #overlay .vol { grid-template-columns: 100px minmax(0, 1fr) 56px; font-size: 14px; }
+
+/* Petites fiches (listes, code cadeau, installation) : une fenêtre plus étroite. */
+body.desk #overlay .sheet:has(> .menu-list-sheet [data-act="set"][data-v="help"]),
+body.desk #overlay .sheet:has(> .menu-list-sheet [data-v^="lang:"]),
+body.desk #overlay .sheet:has(> .code-input),
+body.desk #overlay .sheet:has(> .install-steps),
+body.desk #overlay .sheet:has(> .law-sheet),
+body.desk #overlay .sheet:has(> .event-card) { width: min(600px, 100%); }
+
+/* Paramètres et menu de la partie : deux colonnes (le son à gauche, le reste à droite). */
+body.desk #overlay .sheet:has(> .menu-list-sheet > [data-v="sound"]) { width: min(940px, 100%); padding: 30px 36px 30px; }
+body.desk #overlay .menu-list-sheet:has(> [data-v="sound"]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-content: start;
+  gap: 12px 24px;
+}
+body.desk #overlay .menu-list-sheet:has(> [data-v="sound"]) > * { grid-column: 2; }
+body.desk #overlay .menu-list-sheet > [data-v="sound"] { grid-column: 1; grid-row: 1; }
+body.desk #overlay .menu-list-sheet:has(> [data-v="sound"]) > .vols { grid-column: 1; grid-row: 2 / span 2; justify-content: center; }
+body.desk #overlay .menu-list-sheet:has(> [data-v="sound"]) > [data-v="lang"] { grid-column: 1; grid-row: 4; }
+body.desk #overlay .sheet:has(> .menu-list-sheet > [data-v="sound"]) > .muted { margin: 18px 0 0; }
+
+/* Fiche d'un astre : la planète en grand. */
+body.desk #overlay .sheet-top { grid-template-columns: 156px 1fr; gap: 22px; }
+body.desk #overlay .sheet-orb { width: 156px; height: 156px; }
+body.desk #overlay .sheet-top .fam-chip { font-size: 13px; }
+body.desk #overlay .sheet-stats { font-size: 30px; }
+body.desk #overlay .sheet-text { font-size: 19px; }
+body.desk #overlay .sheet-text.plain { font-size: 17px; }
+body.desk #overlay .kw-list div { font-size: 15px; }
+body.desk #overlay .kw-list b { font-size: 13px; }
+
+/* Familles de cet univers : une colonne par famille, côte à côte. */
+body.desk #overlay .sheet:has(> .fam-cards) { width: min(1200px, 100%); padding: 30px 36px; }
+body.desk #overlay .fam-cards { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+body.desk #overlay .fam-card { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; justify-items: center; align-items: start; gap: 14px; padding: 22px 16px 20px; text-align: center; }
+body.desk #overlay .fam-pic { grid-row: auto; width: 76px; height: 76px; }
+body.desk #overlay .fam-body b { display: block; font-size: 16px; }
+body.desk #overlay .fam-body .fam-n { margin: 8px 0 0; font-size: 11px; }
+body.desk #overlay .fam-body p { margin-top: 10px; font-size: 14px; line-height: 1.42; }
+body.desk #overlay .fam-orbs { gap: 10px; }
+body.desk #overlay .fam-orbs .orb { width: 42px; height: 42px; }
+body.desk #overlay .fam-note { margin-top: 18px; font-size: 13px; }
+body.desk #overlay .fam-note .fam-ico.mini { width: 22px; height: 22px; }
+
+/* Terminal des synergies : deux colonnes de texte. */
+body.desk #overlay .sheet:has(> .term) { width: min(1200px, 100%); padding: 28px 32px; }
+body.desk #overlay .term { columns: 2; column-gap: 44px; column-rule: 1px dashed rgba(109, 255, 154, 0.18); padding: 0 22px 18px; }
+body.desk #overlay .tm-bar { column-span: all; margin: 0 -22px 8px; padding: 10px 22px; font-size: 20px; }
+body.desk #overlay .tm-logo { width: 26px; height: 26px; }
+body.desk #overlay .tm-h { margin: 16px 0 8px; font-size: 19px; break-after: avoid; }
+body.desk #overlay .tm-line, body.desk #overlay .tm-ph { break-inside: avoid; }
+/* Colonne de gauche : vos formations et les bonus ; à droite : les phénomènes et l'arrière. */
+body.desk #overlay .term > .tm-h:nth-of-type(3) { break-before: column; margin-top: 4px; }
+body.desk #overlay .tm-line { grid-template-columns: 30px 1fr; gap: 12px; padding: 8px 0; }
+body.desk #overlay .tm-line .tm-ico { width: 28px; height: 28px; }
+body.desk #overlay .tm-line b, body.desk #overlay .tm-ph b { font-size: 13px; }
+body.desk #overlay .tm-line p, body.desk #overlay .tm-ph p { font-size: 13px; }
+body.desk #overlay .tm-line .fam-form { grid-template-columns: 70px 1fr; font-size: 13px; }
+body.desk #overlay .tm-line .fam-form b { font-size: 11px; }
+body.desk #overlay .tm-dim { font-size: 12px; }
+
+/* Comment jouer (en pages) : les trois conseils de la page côte à côte, en cartes. */
+body.desk #overlay .sheet:has(> .help) { width: min(1120px, 100%); padding: 30px 40px 32px; }
+body.desk #overlay .help-title { margin: 4px 0 18px; font-size: 30px; }
+body.desk #overlay .help { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; font-size: 15px; }
+body.desk #overlay .help li { margin: 0; padding: 18px 20px 20px; line-height: 1.5; border: 1px solid var(--faint); border-top: 2px solid var(--line); background: rgba(241, 236, 218, 0.03); }
+body.desk #overlay .help-dots { gap: 10px; margin: 22px 0 4px; }
+body.desk #overlay .help-dot { width: 11px; height: 11px; }
+body.desk #overlay .sheet:has(> .help) .sheet-actions { justify-content: center; }
+body.desk #overlay .sheet:has(> .help) .sheet-actions .btn { flex: 0 1 280px; }
+
+/* Votre loi. */
+body.desk #overlay .law-sheet .sphere { width: 120px; height: 120px; }
+body.desk #overlay .law-kicker { font-size: 12px; }
+body.desk #overlay .law-sheet h3 { font-size: 17px; }
+body.desk #overlay .law-tag { font-size: 15px; }
+body.desk #overlay .law-box { padding: 14px 16px; }
+body.desk #overlay .law-box p { font-size: 15px; }
+body.desk #overlay .law-first { font-size: 12px; }
+
+/* Événement, reliques, loi (bouton ✺). */
+body.desk #overlay .sheet:has(> .fam-item) { width: min(860px, 100%); }
+body.desk #overlay .event-item { gap: 16px; padding: 14px 16px; }
+body.desk #overlay .event-item small { font-size: 11px; }
+body.desk #overlay .event-item b { font-size: 15px; }
+body.desk #overlay .event-item p { font-size: 14px; }
+body.desk #overlay .relic-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+body.desk #overlay .relic-item { padding: 12px 14px; }
+body.desk #overlay .relic-item b { font-size: 14px; }
+body.desk #overlay .relic-item p { font-size: 13px; }
+body.desk #overlay .fam-item p { font-size: 14px; }
+body.desk #overlay .fam-item b { font-size: 14px; }
+body.desk #overlay .event-card > p { font-size: 16px; }
+
+/* Choisir une relique : trois cartes côte à côte. */
+body.desk #overlay .sheet:has(> .relic-list.pick) { width: min(980px, 100%); }
+body.desk #overlay .relic-list.pick { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+body.desk #overlay .relic-list.pick .relic-item { flex-direction: column; align-items: center; gap: 14px; padding: 22px 16px; text-align: center; }
+body.desk #overlay .relic-list.pick .relic-glyph { width: 52px; height: 52px; font-size: 26px; }
+
+/* Découverte : trois (ou quatre) astres en grand. */
+body.desk #overlay .sheet:has(> .discover-list) { width: min(900px, 100%); }
+body.desk #overlay .sheet:has(> .discover-list.four) { width: min(1080px, 100%); }
+body.desk #overlay .discover-list { gap: 14px; }
+body.desk #overlay .discover-list.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+body.desk #overlay .discover-item { padding: 14px 8px 16px; gap: 6px; }
+body.desk #overlay .discover-item .orb { width: 112px; height: 112px; }
+body.desk #overlay .discover-item b { font-size: 16px; }
+body.desk #overlay .discover-item .s { font-size: 15px; }
+body.desk #overlay .discover-item small { font-size: 12px; }
+
+/* Univers en lice. */
+body.desk #overlay .sheet:has(> .rival-list) { width: min(820px, 100%); }
+body.desk #overlay .rival-row .n { font-size: 16px; }
+body.desk #overlay .rival-row .l { font-size: 12px; }
+body.desk #overlay .rival-row em { font-size: 11px; }
+
+/* Installer, code cadeau. */
+body.desk #overlay .install-steps { font-size: 17px; }
+body.desk #overlay .code-input { font-size: 20px; padding: 14px; }
+
+/* ─── Crédits : agrandis comme le reste, sur une page plus large ─── */
+body.desk .credits-content { zoom: var(--z); }
+body.desk .credits-close { zoom: var(--z); top: 18px; left: 26px; }
+body.desk .cr-page { width: min(880px, 100%); }
+body.desk .cr-sub { font-size: 12px; }
+body.desk .cr-group h4 { font-size: 13px; }
+body.desk .cr-item small { font-size: 11px; }
+body.desk .cr-item span { font-size: 16px; }
+body.desk .cr-note { font-size: 13px; }
+body.desk .cr-switch { min-height: 46px; font-size: 13px; }
+body.desk .cr-group p { font-size: 14px; }
+body.desk .cr-group p.cr-mit { font-size: 12px; }
+
+/* ═══ v111 : Marché stellaire en plein écran sur PC ═══ */
+/* ─── Marché stellaire sur PC (v111) ─────────────────────────────────────────
+ * Toute la page, en largeur : en haut le titre et la bourse (niveau, poussières, graines),
+ * puis les onglets, puis l'onglet ouvert sur toute la surface restante.
+ * Ma planète : la planète en vitrine à gauche ; la prochaine étape et la feuille de route à droite.
+ * Cosmétiques : une grille de cartes. Graines : la vitrine et les gains à gauche, les offres à droite.
+ * Tout est sous body.desk : le téléphone ne change pas. */
+
+body.desk #market {
+  width: 100%;
+  max-width: 1360px;
+  padding: 16px 32px 18px;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas:
+    'head   wallet'
+    'tabs   tabs'
+    'pane   pane';
+  column-gap: 28px;
+}
+body.desk #market.active { display: grid; }
+
+/* En-tête : retour et titre, à gauche. */
+body.desk #market .screen-head { grid-area: head; align-self: center; height: auto; gap: 10px; }
+body.desk #market .screen-head h2 { font-size: 24px; letter-spacing: 0.18em; white-space: nowrap; }
+body.desk #market .screen-head .icon-btn { width: 44px; height: 44px; font-size: 20px; }
+body.desk #market .screen-head .dust { display: none; }
+
+/* Bourse : trois tuiles côte à côte, à droite du titre. */
+body.desk #market .mk-wallet {
+  grid-area: wallet;
+  justify-self: end;
+  width: 100%;
+  max-width: 714px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+body.desk #market .mw-tile { justify-content: center; min-height: 76px; padding: 10px 16px 11px; gap: 3px; }
+body.desk #market .mw-k { font-size: 11px; letter-spacing: 0.22em; }
+body.desk #market .mw-dust .mw-k,
+body.desk #market .mw-seed .mw-k { padding-right: 28px; }
+body.desk #market .mw-tile b { font-size: 30px; }
+body.desk #market .mw-tile small { font-size: 12px; }
+body.desk #market .mw-ico { top: 12px; right: 13px; width: 22px; height: 22px; }
+/* Niveau : le chiffre à gauche, la barre d'XP et son texte à droite. */
+body.desk #market .mw-lvl { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto auto; column-gap: 14px; align-content: center; }
+body.desk #market .mw-lvl .mw-k { grid-column: 1 / -1; }
+body.desk #market .mw-lvl b { grid-column: 1; grid-row: 2 / 4; align-self: center; }
+body.desk #market .mw-lvl .xp-bar { grid-column: 2; grid-row: 2; align-self: end; margin: 0 0 3px; height: 5px; }
+body.desk #market .mw-lvl small { grid-column: 2; grid-row: 3; }
+
+/* Onglets : une barre sur toute la largeur, les trois onglets à gauche. */
+body.desk #market .mk-tabs {
+  grid-area: tabs;
+  grid-template-columns: repeat(3, minmax(0, 240px));
+  margin: 14px 0 18px;
+}
+body.desk #market .mk-tabs button { padding: 14px 8px 12px; font-size: 13px; letter-spacing: 0.22em; transition: color 0.2s; }
+body.desk #market .mk-tabs button:not(.on):hover { color: var(--ink); }
+
+/* Chaque onglet occupe toute la place restante ; les listes défilent dans leur cadre,
+ * avec une fine barre de défilement (la molette n'est pas toujours évidente). */
+body.desk #market .mk-pane { grid-area: pane; min-height: 0; padding-bottom: 6px; }
+body.desk #market .mk-scroll { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+
+/* ─── Ma planète ─────────────────────────────────────────── */
+/* L'onglet défile en entier ; la vitrine de gauche reste en place (sticky), à droite la prochaine
+ * étape puis la feuille de route sur deux colonnes. */
+body.desk #market .mk-pane[data-pane="planete"]:not([hidden]) {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'hero next'
+    'hero list';
+  column-gap: 44px;
+  row-gap: 22px;
+  padding: 0 10px 0 0;
+  container-type: size;
+}
+/* La vitrine : la planète en grand, son état dessous. */
+body.desk #market .mk-hero {
+  grid-area: hero;
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100cqh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  margin: 0;
+  border: 1px solid var(--faint);
+  background: radial-gradient(circle at 50% 42%, rgba(241, 236, 218, 0.05), transparent 62%);
+}
+body.desk #market .mk-planet { width: 340px; height: 340px; }
+@supports (container-type: size) {
+  body.desk #market .mk-planet { width: min(400px, 36cqw, calc(100cqh - 150px)); height: min(400px, 36cqw, calc(100cqh - 150px)); }
+  /* Avec sa lune (16e amélioration) puis son anneau (23e), le système s'élargit (2 puis 2,75 fois
+   * la planète) : la planète rapetisse pour que tout tienne dans la vitrine, sans passer sous la liste.
+   * Les améliorations s'achètent dans l'ordre : la 16e ligne achetée suffit à le savoir. */
+  body.desk #market .mk-pane:has(.mk-row.owned:nth-of-type(16)) .mk-planet { width: min(300px, calc((100cqw - 54px) * 0.2)); height: min(300px, calc((100cqw - 54px) * 0.2)); }
+  body.desk #market .mk-pane:has(.mk-row.owned:nth-of-type(23)) .mk-planet { width: min(230px, calc((100cqw - 54px) * 0.155)); height: min(230px, calc((100cqw - 54px) * 0.155)); }
+}
+body.desk #market .mk-state { width: min(86%, 380px); align-items: center; gap: 9px; text-align: center; }
+body.desk #market .mk-kicker { font-size: 12px; letter-spacing: 0.26em; }
+body.desk #market .mk-state b { font-size: 26px; letter-spacing: 0.12em; }
+body.desk #market .mk-state .xp-bar { align-self: stretch; height: 5px; }
+body.desk #market .mk-state small { font-size: 13px; }
+
+/* Prochaine étape : le texte à gauche, le bouton à droite. */
+body.desk #market .mk-next {
+  grid-area: next;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: repeat(4, auto);
+  column-gap: 26px;
+  row-gap: 6px;
+  align-content: center;
+  margin: 0;
+  padding: 18px 22px;
+}
+body.desk #market .mk-next > * { grid-column: 1; }
+body.desk #market .mk-next .btn { grid-column: 2; grid-row: 1 / 4; align-self: center; min-width: 230px; min-height: 58px; padding: 0 22px; font-size: 16px; white-space: nowrap; }
+body.desk #market .mk-next .btn:last-child { grid-row: 1 / -1; }
+body.desk #market .mk-next > small { grid-column: 2; grid-row: 4; max-width: 300px; font-size: 13px; }
+body.desk #market .mk-next b { font-size: 22px; }
+body.desk #market .mk-next p { margin: 0; font-size: 15px; }
+body.desk #market .mk-req { margin: 2px 0 0; font-size: 12px; }
+
+/* Écran étroit (1024 px de large, 5:4) : le bouton passe sous le texte. */
+@container (max-width: 1100px) {
+  body.desk #market .mk-next { grid-template-columns: minmax(0, 1fr); }
+  body.desk #market .mk-next .btn,
+  body.desk #market .mk-next .btn:last-child { grid-column: 1; grid-row: auto; margin-top: 8px; }
+  body.desk #market .mk-next > small { grid-column: 1; grid-row: auto; max-width: none; }
+  body.desk #market .mk-list { column-gap: 26px; }
+}
+
+/* Feuille de route : les deux premières ères à gauche, les deux dernières à droite. */
+body.desk #market .mk-list {
+  grid-area: list;
+  align-self: start;
+  columns: 2;
+  column-gap: 36px;
+  padding-bottom: 8px;
+}
+body.desk #market .mk-list h4 { margin: 0 0 6px; padding-top: 2px; font-size: 13px; break-after: avoid; }
+body.desk #market .mk-list h4 ~ h4 { margin-top: 22px; }
+body.desk #market .mk-list h4:nth-of-type(3) { break-before: column; margin-top: 0; }
+body.desk #market .mk-list h4 small { font-size: 13px; line-height: 1.35; }
+body.desk #market .mk-row { padding: 7px 0; font-size: 15px; break-inside: avoid; }
+body.desk #market .mk-row small { font-size: 12px; white-space: nowrap; }
+
+/* ─── Cosmétiques : une grille de cartes ─────────────────── */
+body.desk #market .mk-pane[data-pane="cosmetiques"] { padding-right: 8px; padding-bottom: 24px; }
+body.desk #market .mk-intro { max-width: 860px; margin: 0 0 4px; font-size: 14px; }
+body.desk #market .cos-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: 12px;
+}
+body.desk #market .cos-list > h4,
+body.desk #market .cos-list > p { grid-column: 1 / -1; }
+body.desk #market .cos-list > h4 { margin: 18px 0 0; padding-bottom: 8px; border-bottom: 1px solid var(--faint); font-size: 13px; letter-spacing: 0.26em; }
+body.desk #market .cos-list > .cos-note { margin: -4px 0 2px; font-size: 13px; text-align: left; }
+body.desk #market .cos-list > .mk-note:last-child { margin-top: 10px; text-align: center; }
+
+/* Une carte : l'aperçu en haut, le nom et le texte, l'achat en bas. */
+body.desk #market .cos-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--faint);
+  background: rgba(241, 236, 218, 0.03);
+  transition: border-color 0.2s, background 0.2s;
+}
+body.desk #market .cos-row:hover { border-color: var(--line); background: rgba(241, 236, 218, 0.05); }
+body.desk #market .cos-row.sel { border-color: var(--ink); background: rgba(0, 0, 0, 0.55); }
+body.desk #market .cos-frame-row.premium,
+body.desk #market .cos-avatar-row.rare { border-color: rgba(246, 196, 83, 0.4); border-left: 1px solid rgba(246, 196, 83, 0.4); background: linear-gradient(180deg, rgba(246, 196, 83, 0.09), transparent 70%); }
+/* Aperçus : même hauteur pour toutes les cartes. */
+body.desk #market .cos-sw,
+body.desk #market .cos-fr,
+body.desk #market .cos-av { flex: none; width: 100%; height: 96px; }
+body.desk #market .cos-fr,
+body.desk #market .cos-av { border: 1px solid var(--faint); background: rgba(0, 0, 0, 0.4); }
+body.desk #market .cos-fr i { width: 44px; height: 44px; }
+body.desk #market .cos-av .orb { width: 80px; height: 80px; }
+body.desk #market .cos-txt { flex: 1; gap: 5px; }
+body.desk #market .cos-txt b { font-size: 16px; }
+body.desk #market .cos-txt small { font-size: 13px; line-height: 1.4; }
+body.desk #market .cos-prem { font-size: 11px; }
+body.desk #market .cos-font-row .cos-font-name { display: flex; align-items: center; justify-content: center; height: 96px; margin-bottom: 5px; border: 1px solid var(--faint); background: rgba(0, 0, 0, 0.4); font-size: 22px; }
+/* L'achat : les deux prix côte à côte ; « équipé » et « équiper » sur toute la largeur. */
+body.desk #market .cos-buy { flex-direction: row; gap: 8px; }
+body.desk #market .cos-buy .btn { flex: 1; min-width: 0; }
+body.desk #market .cos-row .btn { min-height: 40px; padding: 0 10px; font-size: 13px; }
+body.desk #market .cos-row > .btn { width: 100%; }
+body.desk #market .cos-on { display: grid; place-items: center; min-height: 40px; border: 1px solid rgba(159, 240, 154, 0.4); font-size: 12px; letter-spacing: 0.22em; }
+
+/* ─── Graines de vie ─────────────────────────────────────── */
+body.desk #market .mk-pane[data-pane="graines"] { padding-right: 8px; }
+body.desk #market .seed-shop {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.6fr);
+  grid-template-areas:
+    'hero  starter'
+    'hero  packs'
+    'earnh packs'
+    'earn  packs'
+    'earn  note';
+  column-gap: 40px;
+  row-gap: 14px;
+  align-items: start;
+}
+/* À gauche : la vitrine, puis comment en gagner. */
+body.desk #market .seed-hero { grid-area: hero; align-self: stretch; justify-content: center; padding: 14px 12px 18px; border: 1px solid rgba(126, 224, 138, 0.22); background: radial-gradient(circle at 50% 34%, rgba(126, 224, 138, 0.1), transparent 66%), rgba(0, 0, 0, 0.45); }
+body.desk #market .seed-orb { width: 136px; height: 136px; }
+body.desk #market .seed-hero-art { width: 88px; height: 88px; }
+body.desk #market .seed-hero > b { font-size: 46px; margin-top: 2px; }
+body.desk #market .seed-hero > small { font-size: 12px; }
+body.desk #market .seed-hero > p { max-width: 340px; font-size: 14px; }
+body.desk #market .seed-shop > .fg-h { grid-area: earnh; margin: 4px 0 0; font-size: 12px; }
+body.desk #market .seed-earn { grid-area: earn; align-self: end; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+body.desk #market .seed-earn span { padding: 10px 8px; font-size: 12px; background: rgba(0, 0, 0, 0.45); }
+body.desk #market .seed-earn b { font-size: 22px; }
+/* À droite : l'offre de bienvenue, puis les quatre paquets côte à côte. */
+body.desk #market .seed-starter { grid-area: starter; padding: 16px 20px 18px; gap: 10px; background-color: rgba(0, 0, 0, 0.55); }
+body.desk #market .seed-starter-tag { font-size: 12px; }
+body.desk #market .seed-starter-body { gap: 18px; }
+body.desk #market .seed-starter-ico { width: 56px; height: 56px; }
+body.desk #market .seed-starter-txt b { font-size: 22px; }
+body.desk #market .seed-starter-txt small { font-size: 13px; }
+body.desk #market .seed-packs { grid-area: packs; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+body.desk #market .seed-pack { gap: 10px; padding: 34px 10px 18px; }
+body.desk #market .seed-pack:hover { border-color: rgba(126, 224, 138, 0.75); }
+body.desk #market .seed-pack-art { width: 104px; height: 104px; }
+body.desk #market .seed-pack-art .seed-art { width: 92px; height: 92px; }
+body.desk #market .seed-pack-name { font-size: 12px; }
+body.desk #market .seed-pack > b { font-size: 32px; }
+body.desk #market .seed-pack > b .pix { width: 20px; height: 20px; }
+body.desk #market .seed-badge { padding: 4px 9px; font-size: 11px; }
+body.desk #market .seed-bonus { font-size: 11px; }
+body.desk #market .seed-price { min-width: 110px; padding: 10px 16px; font-size: 16px; }
+body.desk #market .seed-price s { font-size: 13px; }
+body.desk #market .seed-shop > .mk-note { grid-area: note; align-self: end; margin: 0 0 4px; font-size: 13px; }
