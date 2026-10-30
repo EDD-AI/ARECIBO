@@ -43,6 +43,8 @@
 
   // Ne redessine que si le contenu change (la saisie du code n'est pas effacée).
   function render() {
+    // Pendant le trou noir de l'entrée en partie (v109), l'écran aspiré ne se redessine plus.
+    if (st.entering) return;
     syncInvite();
     const box = $('mpBody');
     if (!box) return;
@@ -212,8 +214,8 @@
     clearInterval(st.tick);
     O.ui.state = MP.newState(law);
     O.ui.stamp = (O.ui.stamp || 0) + 1;
-    await O.show('game');
-    O.renderGame(true);
+    st.entering = true;
+    try { await O.portal(async () => { await O.show('game'); O.renderGame(true); }); } finally { st.entering = false; }
     A.banner(tr('CYCLE {n}', { n: 1 }), tr('Partie en ligne : achetez vos astres avant la fin du temps.'));
     MP.startRound();
   }
@@ -318,7 +320,7 @@
       const was = now - prev < 180000, is = now - p.seen < 180000;
       if (was || !is) continue;
       // Pas pendant une partie en ligne : on ne la dérange pas.
-      if (O.ui.screen === 'game' && s && s.mp && !s.over) continue;
+      if ((O.ui.screen === 'game' || st.entering) && s && s.mp && !s.over) continue;
       const d = document.createElement('div');
       d.className = 'ami-pop';
       d.innerHTML = `<i class="on-dot on"></i><span>${tr('{name} vient de se connecter', { name: `<b>${pseudoOf(p)}</b>` })}</span><button class="btn" data-ami="${esc(p.uid)}">${tr('DÉFIER')}</button>`;
@@ -341,7 +343,7 @@
     // Défi retiré (l'ami a quitté son salon) ou rejoint : la bulle s'en va.
     for (const el of [...pops.children]) if (!codes.has(el.dataset.code) || (m && m.code === el.dataset.code)) el.remove();
     const s = O.ui.state;
-    if (O.ui.screen === 'game' && s && s.mp && !s.over) return;
+    if ((O.ui.screen === 'game' || st.entering) && s && s.mp && !s.over) return;
     for (const x of inv) {
       if (shown.has(x.code) || (m && m.code === x.code)) continue;
       shown.add(x.code);

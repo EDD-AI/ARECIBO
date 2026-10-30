@@ -56,7 +56,7 @@
     comete: { front: 'Ils gagnent +{n} Attaque et attaquent avant le reste de l’avant.', back: 'Quand votre avant est tombé, ils avancent avec +{d}/+{n}.' },
     cristal: { front: 'Ils gagnent +{n}/+{n}, le double si l’arrière a aussi une formation de Cristal.', back: 'Tous vos Cristaux gagnent +{n}/+{n}.' },
     anomalie: { front: 'Chacun gagne {n} mots-clés aléatoires.', front1: 'Chacun gagne un mot-clé aléatoire.', back: '{n} astres de votre avant gagnent un mot-clé aléatoire.', back1: 'Un astre de votre avant gagne un mot-clé aléatoire.' },
-    nebuleuse: { front: 'Après leur attaque, ils volent {n} PV à un ennemi de l’avant.', back: 'Début de combat : votre astre de l’avant le plus faible vole {d} PV à l’ennemi de l’avant le plus fort.' }
+    nebuleuse: { front: 'Après leur attaque, ils volent {n} PV à un ennemi de l’avant.', back: 'Début de combat : vos astres de l’avant volent chacun {n} PV à l’ennemi en face.' }
   };
 
   const FAMILIES = {
@@ -152,7 +152,7 @@
     { id: 'cendre', fam: 'neant', tier: 1, atk: 2, hp: 1, name: 'Cendre', look: { type: 'asteroid', seed: 115, debris: true },
       text: 'Effondrement : invoque un Débris {1}/{1}.',
       death(c, u, m, i) { c.summon(u.side, 'debris', i, m); } },
-    { id: 'umbra', fam: 'neant', tier: 1, atk: 1, hp: 3, name: 'Umbra', look: { type: 'blackhole', seed: 222 },
+    { id: 'umbra', fam: 'neant', tier: 1, atk: 1, hp: 2, name: 'Umbra', look: { type: 'blackhole', seed: 222 },
       text: 'Quand un autre allié s’effondre, gagne +{1}/+{1} pour le combat.',
       allyDeath(c, u, m) { c.buff(u, m, m); } },
     { id: 'vestige', fam: 'neant', tier: 2, atk: 3, hp: 2, name: 'Vestige', look: { type: 'dead', seed: 333, ring: true, shape: 'brisee', coreHue: 290 },
@@ -161,7 +161,7 @@
     { id: 'nyx', fam: 'neant', tier: 2, atk: 2, hp: 2, name: 'Nyx', look: { type: 'moon', seed: 444, moons: 1, light: [-0.85, -0.2, -0.45], hueShift: 230 },
       text: 'Effondrement : invoque deux Débris {1}/{1}.',
       death(c, u, m, i) { c.summon(u.side, 'debris', i, m); c.summon(u.side, 'debris', i, m); } },
-    { id: 'abysse', fam: 'neant', tier: 3, atk: 3, hp: 5, name: 'Abysse', look: { type: 'blackhole', seed: 555, disk: false, lens: 1.95, hot: [[0.28, 0.13, 305], [0.48, 0.2, 300], [0.66, 0.19, 295], [0.82, 0.12, 290]] },
+    { id: 'abysse', fam: 'neant', tier: 3, atk: 3, hp: 4, name: 'Abysse', look: { type: 'blackhole', seed: 555, disk: false, lens: 1.95, hot: [[0.28, 0.13, 305], [0.48, 0.2, 300], [0.66, 0.19, 295], [0.82, 0.12, 290]] },
       text: 'Quand un autre allié s’effondre, gagne +{1}/+{1} pour le combat.',
       allyDeath(c, u, m) { c.buff(u, m, m); } },
     { id: 'eclipse', fam: 'neant', tier: 3, atk: 4, hp: 3, name: 'Éclipse', look: { type: 'eclipse', seed: 666 },
@@ -172,7 +172,7 @@
       death(c, u, m, i) { c.summon(u.side, 'debris', i, 2 * m); c.summon(u.side, 'debris', i, 2 * m); } },
     { id: 'linceul', fam: 'neant', tier: 5, atk: 5, hp: 6, name: 'Linceul', look: { type: 'eclipse', seed: 888, starClass: 'rouge sang' },
       text: 'Vos effets d’Effondrement se déclenchent {1} fois de plus.' },
-    { id: 'neant', fam: 'neant', tier: 6, atk: 8, hp: 8, name: 'Néant', look: { type: 'blackhole', seed: 999, pitch: 0.16, diskScale: 1.5, hot: [[0.38, 0.15, 35], [0.62, 0.2, 52], [0.8, 0.17, 70], [0.95, 0.08, 88]] },
+    { id: 'neant', fam: 'neant', tier: 6, atk: 7, hp: 7, name: 'Néant', look: { type: 'blackhole', seed: 999, pitch: 0.16, diskScale: 1.5, hot: [[0.38, 0.15, 35], [0.62, 0.2, 52], [0.8, 0.17, 70], [0.95, 0.08, 88]] },
       text: 'Quand un autre allié s’effondre, gagne +{2}/+{2} pour le combat.',
       allyDeath(c, u, m) { c.buff(u, 2 * m, 2 * m); } },
 
@@ -392,47 +392,48 @@
       start(c, u, m) { const n = Math.min(3, c.alliesFam(u.side, 'lune').length) * m; for (const v of c.allies(u.side)) if (v !== u) c.buff(v, n, n); } },
 
     // COMÈTES : elles grandissent quand vous actualisez et récompensent la vente.
-    { id: 'meteore', fam: 'comete', tier: 1, atk: 2, hp: 3, name: 'Météore', look: { type: 'comet', seed: 9201, warm: true },
+    { id: 'meteore', fam: 'comete', tier: 1, atk: 3, hp: 4, name: 'Météore', look: { type: 'comet', seed: 9201, warm: true },
       text: 'Quand vous actualisez la Création, gagne +{1} Attaque.',
       roll(x, u, m) { x.buff(u, m, 0); } },
-    { id: 'halley', fam: 'comete', tier: 1, atk: 2, hp: 3, name: 'Halley', look: { type: 'comet', seed: 9202 },
+    { id: 'halley', fam: 'comete', tier: 1, atk: 3, hp: 4, name: 'Halley', look: { type: 'comet', seed: 9202 },
       text: 'Vendu : un astre aléatoire de votre système gagne +{1}/+{1}.',
       sold(x, u, m) { x.buff(x.rnd(x.others(u)), m, m); } },
-    { id: 'encke', fam: 'comete', tier: 2, atk: 3, hp: 4, name: 'Encke', look: { type: 'comet', seed: 9203, hueShift: 40 },
+    { id: 'encke', fam: 'comete', tier: 2, atk: 4, hp: 5, name: 'Encke', look: { type: 'comet', seed: 9203, hueShift: 40 },
       text: 'Quand vous actualisez : une Comète aléatoire gagne +{1}/+{1}.',
       roll(x, u, m) { x.buff(x.rnd(x.fam('comete')), m, m); } },
-    { id: 'swift', fam: 'comete', tier: 2, atk: 3, hp: 3, name: 'Swift', kw: ['rafale'], look: { type: 'asteroid', seed: 9204, debris: true },
+    { id: 'swift', fam: 'comete', tier: 2, atk: 4, hp: 4, name: 'Swift', kw: ['rafale'], look: { type: 'asteroid', seed: 9204, debris: true },
       text: 'Rafale. Quand vous actualisez, gagne +{1} PV.',
       roll(x, u, m) { x.buff(u, 0, m); } },
-    { id: 'halebopp', fam: 'comete', tier: 3, atk: 4, hp: 5, name: 'Hale-Bopp', look: { type: 'comet', seed: 9205, hueShift: -60 },
+    { id: 'halebopp', fam: 'comete', tier: 3, atk: 5, hp: 6, name: 'Hale-Bopp', look: { type: 'comet', seed: 9205, hueShift: -60 },
       text: 'Quand vous actualisez : vos autres Comètes gagnent +{1} PV.',
       roll(x, u, m) { for (const v of x.fam('comete', u)) x.buff(v, 0, m); } },
-    { id: 'tchouri', fam: 'comete', tier: 3, atk: 4, hp: 6, name: 'Tchouri', look: { type: 'asteroid', seed: 9206, shape: 'double' },
+    { id: 'tchouri', fam: 'comete', tier: 3, atk: 5, hp: 6, name: 'Tchouri', look: { type: 'asteroid', seed: 9206, shape: 'double' },
       text: 'Fin de cycle : gagne +{1}/+{1} par actualisation faite ce cycle (3 au plus).',
       endTurn(x, u, m) { const n = Math.min(3, x.p.rolls || 0) * m; if (n) x.buff(u, n, n); } },
-    { id: 'ison', fam: 'comete', tier: 4, atk: 5, hp: 6, name: 'Ison', look: { type: 'comet', seed: 9213, warm: true, hueShift: -50, debris: true },
+    { id: 'ison', fam: 'comete', tier: 4, atk: 6, hp: 7, name: 'Ison', look: { type: 'comet', seed: 9213, warm: true, hueShift: -50, debris: true },
       text: 'Vendu : vos Comètes gagnent +{2}/+{2}.',
       sold(x, u, m) { for (const v of x.fam('comete', u)) x.buff(v, 2 * m, 2 * m); } },
-    { id: 'perseides', fam: 'comete', tier: 5, atk: 6, hp: 8, name: 'Perséides', look: { type: 'asteroid', seed: 9208, debris: true },
+    { id: 'perseides', fam: 'comete', tier: 5, atk: 7, hp: 9, name: 'Perséides', look: { type: 'asteroid', seed: 9208, debris: true },
       text: 'Début de combat : inflige {2} dégâts à un ennemi aléatoire pour chaque Comète.',
       start(c, u, m) { const n = c.alliesFam(u.side, 'comete').length; for (let i = 0; i < n; i++) c.dmg(u, c.rnd(c.allies(1 - u.side)), 2 * m); } },
-    { id: 'hyakutake', fam: 'comete', tier: 6, atk: 8, hp: 9, name: 'Hyakutake', look: { type: 'comet', seed: 9209, hueShift: 100, debris: true },
+    { id: 'hyakutake', fam: 'comete', tier: 6, atk: 9, hp: 10, name: 'Hyakutake', look: { type: 'comet', seed: 9209, hueShift: 100, debris: true },
       text: 'Quand vous actualisez : deux Comètes aléatoires gagnent +{1}/+{1}.',
       roll(x, u, m) { const l = x.fam('comete'), a = x.rnd(l); x.buff(a, m, m); x.buff(x.rnd(l.filter((v) => v !== a)), m, m); } },
 
     // CRISTAL : résonance, chaque Cristal joué renforce les autres. Allégés en v90 : un joueur « tout
     // Cristal » gagnait 73 % de ses duels contre l'IA experte (33 à 53 % pour les autres familles),
     // 57 % après (scratch cristal-sim : naïf une famille contre IA experte, 300 duels).
-    // u.res compte les résonances déjà reçues par Quartz et Opale.
+    // u.res compte les résonances déjà reçues par Quartz (v109 : +2/+2 une fois ; doré +3/+3 deux fois).
     { id: 'quartz', fam: 'cristal', tier: 1, atk: 2, hp: 2, name: 'Quartz', look: { type: 'crystal', seed: 9301, shape: 'monolithe' },
-      text: 'Quand vous jouez un autre Cristal, gagne +{1}/+{1} (2 fois au plus).',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < 2) { u.res = (u.res || 0) + 1; x.buff(u, m, m); } } },
+      text: 'Quand vous jouez un autre Cristal, gagne +{2}/+{2} (une seule fois).',
+      textGold: 'Quand vous jouez un autre Cristal, gagne +3/+3 (2 fois au plus).',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < m) { u.res = (u.res || 0) + 1; x.buff(u, m + 1, m + 1); } } },
     { id: 'amethyste', fam: 'cristal', tier: 1, atk: 2, hp: 3, name: 'Améthyste', look: { type: 'crystal', seed: 9302, hueShift: 60, shape: 'amas' },
       text: 'Naissance : un autre Cristal aléatoire gagne +{1} PV.',
       play(x, u, m) { x.buff(x.rnd(x.fam('cristal', u)), 0, m); } },
     { id: 'prisme', fam: 'cristal', tier: 2, atk: 2, hp: 4, name: 'Prisme', look: { type: 'crystal', seed: 9303, shell: true, shape: 'bloc' },
-      text: 'Quand vous jouez un Cristal, vos Cristaux gagnent +{1} PV (4 fois au plus).',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < 4) { u.res = (u.res || 0) + 1; for (const v of x.fam('cristal')) x.buff(v, 0, m); } } },
+      text: 'Naissance : vos autres Cristaux gagnent +{1}/+{2}.',
+      play(x, u, m) { for (const v of x.fam('cristal', u)) x.buff(v, m, 2 * m); } },
     { id: 'saphir', fam: 'cristal', tier: 2, atk: 3, hp: 3, name: 'Saphir', look: { type: 'crystal', seed: 9304, hueShift: 180, shape: 'diamant' },
       text: 'Début de combat : gagne +{1}/+{1} par autre Cristal (3 au plus).',
       start(c, u, m) { const n = Math.min(3, c.alliesFam(u.side, 'cristal').length - 1) * m; if (n > 0) c.buff(u, n, n); } },
@@ -440,8 +441,8 @@
       text: 'Quand vous jouez un Cristal, il gagne +{1}/+{1}.',
       allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') x.buff(b, m, m); } },
     { id: 'opale', fam: 'cristal', tier: 3, atk: 3, hp: 5, name: 'Opale', kw: ['bouclier'], look: { type: 'crystal', seed: 9306, shell: true },
-      text: 'Bouclier. Quand vous jouez un Cristal, gagne +{1}/+{1} (4 fois au plus).',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < 4) { u.res = (u.res || 0) + 1; x.buff(u, m, m); } } },
+      text: 'Bouclier. Début de combat : les Cristaux à ses côtés gagnent Bouclier.',
+      start(c, u) { for (const v of c.neighbors(u)) if (famOf(v) === 'cristal') c.kw(v, 'bouclier'); } },
     { id: 'emeraude', fam: 'cristal', tier: 4, atk: 5, hp: 5, name: 'Émeraude', look: { type: 'crystal', seed: 9307, hueShift: 120, shape: 'foret' },
       text: 'Quand vous jouez un Cristal, deux Cristaux aléatoires gagnent +{1} Attaque.',
       allyPlay(x, u, m, b) {
@@ -505,8 +506,8 @@
     { id: 'helice', fam: 'nebuleuse', tier: 3, atk: 4, hp: 7, name: 'Hélice', look: { type: 'nebula', seed: 7116, neb: { style: 'anneau', rim: 18, gas: 198, width: 0.22, fill: 0.7 } },
       kw: ['voldevie'], text: 'Vol de vie. Quand vos Nébuleuses volent des PV, elles gagnent +{2} PV pour toujours (3 fois par combat au plus chacune).' },
     { id: 'crabe', fam: 'nebuleuse', tier: 4, atk: 6, hp: 7, name: 'Crabe', look: { type: 'nebula', seed: 7117, neb: { style: 'oursin', rim: 42, gas: 210, rays: 13 } },
-      kw: ['voldevie'], text: 'Vol de vie. Après son attaque : vole {1} PV à chaque ennemi de l’avant.',
-      attack(c, u, m) { for (const v of c.front(1 - u.side)) c.drain(u, v, m); } },
+      kw: ['voldevie'], text: 'Vol de vie. Après son attaque : vole {2} PV à chaque ennemi de l’avant.',
+      attack(c, u, m) { for (const v of c.front(1 - u.side)) c.drain(u, v, 2 * m); } },
     { id: 'sablier', fam: 'nebuleuse', tier: 5, atk: 7, hp: 9, name: 'Sablier', look: { type: 'nebula', seed: 7118, neb: { style: 'papillon', rim: 165, gas: 330, aspect: 0.9 } },
       text: 'Quand vos astres volent des PV, votre univers en récupère {1} (4 fois par combat au plus).',
       allyDrain(c, u, m) { if ((u.n || 0) < 4) { u.n = (u.n || 0) + 1; c.healUniverse(u.side, m); } } },
@@ -552,7 +553,7 @@
     { id: 'pangee', fam: 'mineral', tier: 2, atk: 2, hp: 6, name: 'Pangée', legend: true, kw: ['rempart'], look: { type: 'moon', seed: 8833, shape: 'diamant', ring: true, moons: 1, hueShift: -15 },
       text: 'Rempart. Fin de cycle : vos Remparts gagnent +{1}/+{2}.',
       endTurn(x, u, m) { for (const v of x.board().filter((v) => v.kw.includes('rempart'))) x.buff(v, m, 2 * m); } },
-    { id: 'oumuamua', fam: 'comete', tier: 2, atk: 2, hp: 3, name: 'Oumuamua', legend: true, look: { type: 'asteroid', seed: 8909, shape: 'monolithe', hueShift: 25 },
+    { id: 'oumuamua', fam: 'comete', tier: 2, atk: 3, hp: 4, name: 'Oumuamua', legend: true, look: { type: 'asteroid', seed: 8909, shape: 'monolithe', hueShift: 25 },
       text: 'Quand vous actualisez, gagne +{1}/+{1}.',
       roll(x, u, m) { x.buff(u, m, m); } },
     { id: 'betelgeuse', fam: 'brasier', tier: 3, atk: 3, hp: 5, name: 'Bételgeuse', legend: true, look: { type: 'star', seed: 9010, starClass: 'naine rouge', shell: true, debris: true },
@@ -1874,12 +1875,8 @@
         case 'cristal:1': for (const u of c.alliesFam(s, 'cristal')) c.buff(u, L, L); break;
         case 'anomalie:0': for (const u of F) for (let i = 0; i < L; i++) c.randomKw(u); break;
         case 'anomalie:1': for (const u of shuffle(inRow(s, 0), rng).slice(0, L)) c.randomKw(u); break;
-        case 'nebuleuse:1': {
-          const t = inRow(e, 0).sort((x, y) => y.atk - x.atk || y.hp - x.hp)[0];
-          const w = inRow(s, 0).sort((x, y) => x.atk + x.hp - (y.atk + y.hp))[0];
-          if (t && w) c.drain(w, t, d);
-          break;
-        }
+        // v109 : chaque astre de l'avant vole {n} PV à l'ennemi en face (s'il en reste un).
+        case 'nebuleuse:1': for (const u of inRow(s, 0)) { const t = facing(u, inRow(e, 0)); if (t) c.drain(u, t, L); } break;
         default: break; // vie:1, neant, tempete:0 et comete:1 agissent pendant le combat.
       }
     }

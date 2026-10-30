@@ -370,6 +370,24 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Entrée en partie : le trou noir (v109)
+
+Quand une partie commence (nouvelle partie, tutoriel, reprise depuis le menu, partie en ligne), un trou
+noir s'ouvre au milieu de l'écran avec son disque de matière (blanc, orange, violet du Néant) et l'anneau
+de lumière courbée au-dessus. L'écran est aspiré en tournant, la poussière tombe en spirale, le trou
+grossit jusqu'à tout couvrir. On traverse des traits de lumière, puis la partie s'ouvre depuis le centre
+dans un anneau de lumière. Environ 2,3 secondes, en gros pixels comme les astres, avec un son
+d'aspiration (`SFX.hole`). Code : `js/portail.js` (`OrbitePortal.play(swap)`) ; le changement d'écran se
+fait dans le noir et l'arrivée attend qu'il soit fini.
+
+- Pendant l'animation, rien ne se touche : ni doigt, ni souris, ni clavier (l'écran aspiré est inerte),
+  et les guides du menu ne s'ouvrent pas par-dessus.
+- Un téléphone qui fige un instant (premier dessin des astres) ne fait pas sauter l'arrivée : le temps de
+  l'animation avance de 120 ms au plus par image.
+- Au lancement de l'appli, une partie en cours reprend directement, sans trou noir. Si l'appli passe en
+  arrière-plan, la partie s'affiche tout de suite.
+- Réglage « réduire les animations » du téléphone : un simple fondu au noir.
+
 ## Regarder la suite (mode spectateur, v98)
 
 Éliminé d’une mêlée solo, l’écran de fin propose **REGARDER LA SUITE**, au-dessus de REJOUER. La table
@@ -1438,7 +1456,7 @@ découverte en glisse un parmi ses choix dans 7 % des cas. On en croise un dans 
 | 6 | Oméga | Neutre | 7/7 | Début de combat : vos autres astres gagnent +2/+2, les deux premiers Bouclier |
 | 1 | Lune de sang (v98) | Lunes | 2/3 | Fin de cycle : ses voisins gagnent +1/+1 |
 | 2 | Pangée (v98) | Minéral | 2/6 | Rempart ; fin de cycle : vos Remparts gagnent +1/+2 |
-| 2 | Oumuamua (v98) | Comètes | 2/3 | Quand vous actualisez, gagne +1/+1 (forme allongée) |
+| 2 | Oumuamua (v98) | Comètes | 3/4 | Quand vous actualisez, gagne +1/+1 (forme allongée) |
 | 3 | Bételgeuse (v98) | Brasier | 3/5 | Début de combat et Effondrement : 2 dégâts à tous les ennemis |
 | 3 | Prisme absolu (v98) | Cristal | 3/5 | Quand vous jouez un autre Cristal, il gagne +2/+2 |
 | 4 | Zéro absolu (v98) | Glace | 4/6 | Bouclier ; début de combat : vos autres astres gagnent Bouclier |
@@ -1491,7 +1509,7 @@ même rangée**. Niveau I à 2 astres, II à 3, III à 4. Chaque famille a un ef
 | Comètes | +n Attaque, elles attaquent avant le reste de l’avant | quand l’avant est tombé, elles avancent avec +2n/+n |
 | Cristal | +n/+n, le double avec une formation de Cristal à l’arrière | tous vos Cristaux +n/+n |
 | Anomalies | n mots-clés aléatoires chacun | n astres de l’avant gagnent un mot-clé aléatoire |
-| Nébuleuses | après leur attaque, ils volent n PV à un ennemi de l’avant | votre astre de l’avant le plus faible vole 2n PV à l’ennemi de l’avant le plus fort |
+| Nébuleuses | après leur attaque, ils volent n PV à un ennemi de l’avant | chaque astre de l’avant vole n PV à l’ennemi en face (v109) |
 
 À l’écran : étiquettes colorées à côté de « Votre système » (toucher pour la fiche « Vos formations »
 et les effets de chaque famille), un trait de la couleur de la famille sous chaque astre d’une
@@ -1624,7 +1642,7 @@ emboîtés). La loi a sa forme d’énergie : un nuage aplati qui aspire (js/ene
 | 2 | Spirographe | 3/5 | Quand un allié vole des PV, il gagne +1 Attaque pour toujours (2 fois par combat) |
 | 3 | Œil-de-Chat | 5/6 | Naissance : vole un astre aléatoire déjà affronté, même un gros |
 | 3 | Hélice | 4/7 | Vol de vie ; quand vos Nébuleuses volent des PV, +2 PV pour toujours (3 fois par combat chacune) |
-| 4 | Crabe | 6/7 | Vol de vie ; après son attaque, vole 1 PV à chaque ennemi de l’avant |
+| 4 | Crabe | 6/7 | Vol de vie ; après son attaque, vole 2 PV à chaque ennemi de l’avant (v109) |
 | 5 | Sablier | 7/9 | Quand vos astres volent des PV, votre univers en récupère 1 (4 fois par combat) |
 | 6 | Tarentule | 9/10 | Vol de vie ; après son attaque, vole 2 PV à chaque ennemi |
 | 4 | Piliers de la Création (légendaire) | 4/8 | Fin de cycle : vole un astre aléatoire de votre dernier adversaire |
@@ -1632,7 +1650,7 @@ emboîtés). La loi a sa forme d’énergie : un nuage aplati qui aspire (js/ene
 
 **Loi du siphon** (astre de départ : Voile) : début de combat, vos Nébuleuses gagnent Vol de vie
 (éveillée : et +1/+1). **Formation** : à l’avant, après leur attaque, elles volent n PV à un ennemi de
-l’avant ; à l’arrière, votre astre de l’avant le plus faible vole 2n PV à l’ennemi de l’avant le plus fort.
+l’avant ; à l’arrière, chacun de vos astres de l’avant vole n PV à l’ennemi en face (v109).
 
 **Équilibrage.** La première version (vol de 1 PV après l’attaque, sans gain durable) ne gagnait que 13 %
 de ses duels (joueur naïf) et 29 % avec l’IA experte : les PV volés ne duraient que le combat, quand les
@@ -1800,6 +1818,35 @@ Mesure : `node orbite/tools/familles.js 200` (toutes les familles, environ 5 min
 **Hybrides (v107).** En mêlée à 8 (`tools/hybrides.js 200`), un joueur qui mêle deux familles finit en
 moyenne 4,38e (13,1 % de victoires), un joueur d’une seule famille 4,62e (11,9 %) : les hybrides
 restent intéressants.
+
+**Comètes, Néant, Cristaux (v109).** Même mesure (IA experte qui joue la famille contre une IA experte),
+mais sur 1 000 duels par réglage : à 200 duels, deux séries du même jeu donnaient jusqu’à 10 points
+d’écart (Comètes 42 % puis 52 %), trop pour choisir. Dix réglages ont été proposés et mesurés, puis les
+meilleurs revérifiés sur d’autres parties, avec le joueur naïf et en relisant le code.
+
+| Famille | Avant | Après | Naïf avant → après | Changements |
+|---|---|---|---|---|
+| Comètes | 42 % | 50–54 % | 28 → 41 % | toutes +1/+1 (Météore 3/4, Halley 3/4, Encke 4/5, Swift 4/4, Oumuamua 3/4, Hale-Bopp 5/6, Ison 6/7, Perséides 7/9, Hyakutake 9/10), sauf Tchouri +1/+0 (5/6, pour rester dans son rang) |
+| Néant | 58 % | 54 % | 41 → 41 % | Umbra 1/2, Abysse 3/4, Néant 7/7 (les astres qui grandissent quand un allié s’effondre) |
+| Cristal | 50 % | 52 % | 47 → 49 % | **Quartz** : +2/+2 une seule fois quand vous jouez un autre Cristal (doré : +3/+3, 2 fois au plus) ; **Prisme** : Naissance : vos autres Cristaux gagnent +1/+2 ; **Opale** : Bouclier, et les Cristaux à ses côtés gagnent Bouclier au début du combat (elle ne grandit plus) |
+
+Écartés : la formation des Comètes en +n/+n (44 %, presque rien), +1 PV seulement (47 %), un Météore et un
+Oumuamua qui grandissent plus à chaque actualisation (74 %, l’emballement de la v96 revient) ; pour le
+Néant, l’Ossuaire à un seul Débris 3/3 avec Nyx 1/2 et Vestige 2/2 (51 %, mais Nyx devient le plus faible
+astre de niveau 2). Les nouveaux Quartz, Prisme et Opale (demande d’un joueur) sont plus simples ; ils
+donnent à peu près autant de force que les anciens. Les autres familles (600 duels) : Machine 56 %,
+Minéral 55 %, Brasier 54 %, Envers 50 %, Vie 48 %, Glace 48 %, Lune 48 %, Tempête 47 %, Anomalies 46 %.
+En mêlée à 8 (`tools/equilibrage.js 600 --skill 1`, rang moyen de tous les joueurs), les Comètes passent
+de 5,81 à 5,25 ; le Néant reste le plus fort (3,08 puis 3,16), la mêlée lui laisse plus d’effondrements.
+
+**Nébuleuses (v109).** Après ces changements, les Nébuleuses étaient la famille la plus faible : 42,5 % (IA
+experte, 1 000 duels), 38,7 % avec le joueur naïf. Six réglages mesurés sur 1 000 duels : des statistiques
+plus hautes ne suffisaient pas (43 à 45 %) ; une Loi du siphon qui vole aussi des PV au début du combat
+allait trop loin (55 à 59 %, et 56 à 62 % pour le joueur naïf). Retenu : la **formation de l’arrière**,
+la plus faible du jeu (un seul vol de 2n PV), devient « chaque astre de l’avant vole n PV à l’ennemi en
+face », et le **Crabe** vole 2 PV (au lieu de 1) à chaque ennemi de l’avant. Résultat : 48 et 50 % sur
+deux séries de 1 000 duels, 44,5 % pour le joueur naïf. Les effets « quand un allié vole des PV »
+(Spirographe, Hélice, Sablier) gardent leur limite par combat : plus de vols ne fait pas grandir plus.
 
 **Reliques et éveil des lois (v84).** Mesuré avec `node orbite/tools/equilibrage.js 240 --seed v84
 --json`, avant et après (sans événement cosmique, que les outils ne tirent pas) : le rang moyen des
