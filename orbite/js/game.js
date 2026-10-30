@@ -79,6 +79,7 @@
     heart: ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'],
     bolt: ['...XX', '..XX.', '.XXXX', '...X.', '..X..', '.X...'],
     up: ['...X...', '..XXX..', '.XXXXX.', '...X...', '...X...', '...X...'],
+    down: ['..XXX..', '..XXX..', '..XXX..', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'],
     roll: ['..XXX..', '.X...X.', 'X.....X', 'X...XXX', 'X....X.', '.X.....', '..XXX..'],
     snow: ['..X.X..', 'X..X..X', '.X.X.X.', '..XXX..', '.X.X.X.', 'X..X..X', '..X.X..'],
     menu: ['XXXXXXX', '.......', 'XXXXXXX', '.......', 'XXXXXXX'],
@@ -957,8 +958,7 @@
   }
 
   // ─── Marché stellaire ───────────────────────────────────────
-  // Le haut du marché (v110) : votre niveau, vos poussières et vos graines en grand, avec ce
-  // qu'elles servent à acheter.
+  // Le haut du marché (v110) : votre niveau, vos poussières et vos graines en grand.
   function renderMkWallet() {
     const li = levelInfo(xpTotal());
     const num = (n) => Number(n).toLocaleString(I18N.lang);
@@ -966,10 +966,8 @@
       <div class="mw-tile mw-lvl"><span class="mw-k">${tr('NIVEAU')}</span><b>${li.lvl}</b>
         <div class="xp-bar"><i style="width:${Math.round(li.rest / li.need * 100)}%"></i></div>
         <small>${tr('{a} / {b} XP', { a: li.rest, b: li.need })}</small></div>
-      <div class="mw-tile mw-dust">${icon('dust', 'mw-ico')}<span class="mw-k">${tr('POUSSIÈRES D’ÉTOILES')}</span><b>${num(dust())}</b>
-        <small>${tr('Gagnées en partie. Pour votre planète et les cosmétiques.')}</small></div>
-      <div class="mw-tile mw-seed">${seedArt('graine', 'mw-ico')}<span class="mw-k">${tr('GRAINES DE VIE')}</span><b>${num(seeds())}</b>
-        <small>${tr('Gagnées en jouant. Pour les cosmétiques et la Création.')}</small></div>`;
+      <div class="mw-tile mw-dust">${icon('dust', 'mw-ico')}<span class="mw-k">${tr('POUSSIÈRES D’ÉTOILES')}</span><b>${num(dust())}</b></div>
+      <div class="mw-tile mw-seed">${seedArt('graine', 'mw-ico')}<span class="mw-k">${tr('GRAINES DE VIE')}</span><b>${num(seeds())}</b></div>`;
     $('marketDust').innerHTML = '';
   }
   function renderMarket() {
@@ -2963,7 +2961,31 @@
     ui.sheetClose = o.onClose || null;
     ui.sheetLocked = !!o.locked;
     [...$('sheet').querySelectorAll('[data-planet]')].forEach((orb, i) => revealIn(orb, i * 60));
+    $('sheet').scrollTop = 0;
+    sheetMore();
+    setTimeout(sheetMore, 350);
   }
+  // Fiche plus haute que l'écran (v110) : pas de barre de défilement, mais une flèche en bas qui
+  // montre qu'il y a une suite (et la fait défiler) ; elle s'efface une fois en bas.
+  function sheetMore() {
+    const sh = $('sheet');
+    let b = sh.querySelector(':scope > .sheet-more');
+    const more = sh.scrollHeight - sh.scrollTop - sh.clientHeight > 12;
+    if (!b && more) {
+      b = document.createElement('button');
+      b.className = 'sheet-more';
+      b.setAttribute('aria-label', tr('Voir la suite'));
+      b.innerHTML = icon('down');
+      sh.appendChild(b);
+    }
+    if (b) b.classList.toggle('gone', !more);
+  }
+  $('sheet').addEventListener('scroll', sheetMore, { passive: true });
+  $('sheet').addEventListener('click', (e) => {
+    if (!e.target.closest('.sheet-more')) return;
+    const sh = $('sheet');
+    sh.scrollBy({ top: sh.clientHeight * 0.7, behavior: 'smooth' });
+  });
   function closeSheet() {
     if (!$('overlay').hidden) SFX.close();
     $('overlay').hidden = true;

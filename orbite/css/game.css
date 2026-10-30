@@ -1120,6 +1120,8 @@ body.in-combat .banner { top: calc(50% - 34px); }
   width: var(--col);
   max-height: 88vh;
   overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
   padding: 18px 18px calc(var(--safe-b) + 18px);
   background: rgba(3, 3, 5, 0.97);
   border-top: 1px solid var(--line);
@@ -2302,7 +2304,7 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .law-first { margin-top: 10px; font-size: 11px; letter-spacing: 0.1em; }
 
 /* Terminal des synergies (v110) : une fenêtre d'écran vert à lignes de balayage. */
-.term { position: relative; margin: -4px -4px 0; padding: 0 12px 12px; border: 1px solid rgba(109, 255, 154, 0.4); background: #04120a; color: #c9f5d4; }
+.term { position: relative; margin: 0; padding: 0 12px 12px; border: 1px solid rgba(109, 255, 154, 0.4); background: #04120a; color: #c9f5d4; }
 .term::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px); }
 .tm-bar { display: flex; align-items: center; gap: 8px; margin: 0 -12px 6px; padding: 7px 12px; border-bottom: 1px solid rgba(109, 255, 154, 0.35); background: rgba(109, 255, 154, 0.08); font-family: 'ORB Terminal', monospace; font-size: 17px; letter-spacing: 0.04em; color: #6dff9a; }
 .tm-logo { width: 22px; height: 22px; image-rendering: pixelated; }
@@ -2336,3 +2338,10 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .mw-seed b { color: #b8f0bf; }
 .mw-lvl b { color: var(--ink); }
 @media (max-width: 380px) { .mw-tile b { font-size: 22px; } .mw-tile small { display: none; } }
+
+/* Fiches (v110) : sans barre de défilement ; une flèche en bas annonce la suite. */
+.sheet::-webkit-scrollbar { display: none; }
+.sheet-more { position: sticky; bottom: 4px; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; margin: -40px auto 0; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: rgba(3, 3, 5, 0.92); color: var(--ink); font-size: 16px; box-shadow: 0 -18px 24px 6px rgba(3, 3, 5, 0.85); animation: more-bob 1.4s ease-in-out infinite; transition: opacity 0.2s; }
+.sheet-more.gone { opacity: 0; pointer-events: none; }
+@keyframes more-bob { 50% { transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .sheet-more { animation: none; } }

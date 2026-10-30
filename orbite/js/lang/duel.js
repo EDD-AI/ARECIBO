@@ -205,9 +205,8 @@
     ['BONUS DE FORMATION', 'FORMATION BONUSES', 'BONUS DE FORMACIÓN', 'FORMATIONSBONI', 'BÔNUS DE FORMAÇÃO'],
     ['Les astres neutres se trouvent dans tous les univers.', 'Neutral orbs appear in every universe.', 'Los astros neutros están en todos los universos.', 'Neutrale Gestirne gibt es in jedem Universum.', 'Os astros neutros aparecem em todos os universos.'],
     ['GRAINES DE VIE', 'SEEDS OF LIFE', 'SEMILLAS DE VIDA', 'LEBENSSAMEN', 'SEMENTES DA VIDA'],
-    ['Gagnées en partie. Pour votre planète et les cosmétiques.', 'Earned in games. For your planet and cosmetics.', 'Se ganan en partida. Para tu planeta y los cosméticos.', 'In Partien verdient. Für deinen Planeten und Kosmetik.', 'Ganhas nas partidas. Para o seu planeta e os cosméticos.'],
-    ['Gagnées en jouant. Pour les cosmétiques et la Création.', 'Earned by playing. For cosmetics and the Creation.', 'Se ganan jugando. Para los cosméticos y la Creación.', 'Durch Spielen verdient. Für Kosmetik und die Schöpfung.', 'Ganhas jogando. Para os cosméticos e a Criação.'],
     ['{a} / {b} XP', '{a} / {b} XP', '{a} / {b} XP', '{a} / {b} XP', '{a} / {b} XP'],
+    ['Voir la suite', 'See more', 'Ver más', 'Mehr anzeigen', 'Ver mais'],
     // Spectateur en ligne (v105)
     ['MANCHE EN COURS', 'ROUND IN PROGRESS', 'RONDA EN CURSO', 'RUNDE LÄUFT', 'RODADA EM ANDAMENTO'],
     ['Les autres créateurs jouent leur tour…', 'The other creators are playing their turn…', 'Los demás creadores juegan su turno…', 'Die anderen Schöpfer spielen ihren Zug…', 'Os outros criadores estão jogando o turno…'],
