@@ -132,6 +132,7 @@ body.desk .banner p { font-size: 17px; }
 body.desk #codex { zoom: var(--z); width: min(1000px, calc(100vw / var(--z) - 40px)); }
 body.desk #codex .cx-fams { flex-wrap: wrap; overflow: visible; }
 body.desk #codex .cx-fam { min-width: 92px; padding: 7px 12px; font-size: 11px; }
+body.desk #codex .cx-fam .cx-ico { width: 30px; height: 30px; }
 body.desk #codex .cx-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
 body.desk #codex .cx-card { padding: 12px 6px 12px; }
 body.desk #codex .cx-card .orb, body.desk #codex .cx-q { width: 78px; height: 78px; }

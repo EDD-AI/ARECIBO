@@ -3380,6 +3380,7 @@
     anomalie: { pal: { l: '#c8ff3a', m: '#ff4fd8', c: '#5ee7ff' }, rows: ['............', '..mllllllc..', '.mll....llc.', '.mll....llc.', '........llc.', '.......llc..', '......llc...', '.....mll....', '.....mll....', '............', '.....mllc...', '.....mllc...'] },
     nebuleuse: { pal: { p: '#e58bff', v: '#9a6bff', w: '#ffffff', b: '#5ee7ff' }, rows: ['..........w.', '....pp..w...', '..ppvvpp....', '.pvvvvvvpp..', 'pvvwvvbvvvp.', 'pvvvvbbvvvpp', '.pvvvvvvwvvp', '..ppvvvvvpp.', '....ppppp...', '.w.......w..', '............', '............'] },
     neutre: { pal: { w: '#f2efe6', g: '#b8b4a8', d: '#7d796f' }, rows: ['............', '............', '....wwww....', '...wwwwgg...', '..wwwwwggg..', '..wwwwgggd..', '..wwwggggd..', '..wwgggggd..', '...gggggd...', '....dddd....', '............', '............'] },
+    legende: { pal: { y: '#ffe28c', o: '#c98a1a', w: '#fff6d0', r: '#ff5a7a', b: '#5ee7ff' }, rows: ['............', '............', '.....ww.....', '.y...yy...y.', '.yy.yyyy.yy.', '.yyyyyyyyyy.', '.yyyyyyyyyy.', '.yyryybyyry.', '.yyyyyyyyyy.', '.oooooooooo.', '............', '............'] },
     terminal: { pal: { s: '#d9d4c4', d: '#8a8678', k: '#0b1f14', g: '#6dff9a' }, rows: ['............', '.ssssssssss.', '.skkkkkkkks.', '.skgkkkkkks.', '.skkgkkkkks.', '.skgkggkkks.', '.skkkkkkkks.', '.sddddddddd.', '.....dd.....', '...ssssss...', '............', '............'] }
   };
   function pixArt(a, cls) {
@@ -4560,7 +4561,7 @@
         const list = cards.filter((c) => (k === 'legend' ? c.legend : c.fam === k && !c.legend));
         const got = list.filter((c) => seen.has(c.id)).length;
         const name = k === 'legend' ? tr('LÉGENDAIRES') : R.FAMILIES[k].name.toUpperCase();
-        return `<button class="cx-fam${k === g ? ' on' : ''}" data-cxf="${k}" style="--c:${k === 'legend' ? '#ffe28c' : famColor(k)}"><span>${name}</span><small>${got}/${list.length}</small></button>`;
+        return `<button class="cx-fam${k === g ? ' on' : ''}" data-cxf="${k}" style="--c:${k === 'legend' ? '#ffe28c' : famColor(k)}">${famIcon(k === 'legend' ? 'legende' : k, 'cx-ico')}<span>${name}</span><small>${got}/${list.length}</small></button>`;
       }).join('');
       const list = cards.filter((c) => (g === 'legend' ? c.legend : c.fam === g && !c.legend)).sort((a, b) => a.tier - b.tier || (a.name < b.name ? -1 : 1));
       const about = g === 'legend' ? tr('Un seul exemplaire par partie, et rares : 1 chance sur 100 par emplacement de la Création.') : R.FAMILIES[g].text;
