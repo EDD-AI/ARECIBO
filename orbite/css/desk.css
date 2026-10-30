@@ -1134,3 +1134,607 @@ body.desk #end #endHome:hover { color: var(--ink); }
   body.desk #end #againBtn { min-height: 52px; }
   body.desk #endBoard .static-rows .row { --u: 52px; }
 }
+
+/* ═══ v111 : Multijoueur et choix de la loi en plein écran sur PC ═══ */
+/* ─── Choix de la loi et Multijoueur sur PC ──────────────────────────────────
+ * Toute la page, comme le Marché : en haut le retour et le titre, puis l'écran sur toute la largeur.
+ * Votre loi : l'événement cosmique en haut à droite, les trois lois en grandes cartes côte à côte
+ * (la sphère en grand, le texte dessous), CRÉER MON UNIVERS centré en bas.
+ * Multijoueur : l'accueil en tuiles (duel et mêlée en grand, illustrés ; entre amis et rejoindre à
+ * droite ; les défis reçus en bandeau doré au-dessus) ; Défier des amis : les amis en grille, les
+ * boutons en bas ; le salon : le code, les places en cartes, les bots et les invitations à gauche,
+ * la discussion sur toute la hauteur à droite ; le choix de la loi en ligne comme en solo.
+ * Tout est sous body.desk : le téléphone ne change pas. */
+
+body.desk #laws,
+body.desk #multi {
+  width: 100%;
+  max-width: 1360px;
+  padding: 16px 32px 20px;
+}
+body.desk #laws .screen-head,
+body.desk #multi .screen-head { flex: none; height: 56px; gap: 10px; }
+body.desk #laws .screen-head h2,
+body.desk #multi .screen-head h2 { font-size: 24px; letter-spacing: 0.18em; white-space: nowrap; }
+body.desk #laws .screen-head .icon-btn,
+body.desk #multi .screen-head .icon-btn { width: 44px; height: 44px; font-size: 20px; transition: color 0.2s; }
+body.desk #laws .screen-head .icon-btn:hover,
+body.desk #multi .screen-head .icon-btn:hover { color: var(--ink); }
+
+/* ─── Votre loi ──────────────────────────────────────────── */
+body.desk #laws.active {
+  display: grid;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 620px);
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas:
+    'head  event'
+    'hint  event'
+    'list  list'
+    'go    go';
+  column-gap: 40px;
+}
+body.desk #laws .screen-head { grid-area: head; }
+body.desk #laws .hint { grid-area: hint; align-self: start; margin: 0 0 0 54px; font-size: 15px; line-height: 1.4; }
+/* L'événement cosmique (et le défi du jour) : en haut à droite, comme la bourse du Marché. */
+body.desk #laws .law-event { grid-area: event; align-self: center; margin: 0; }
+body.desk #laws .law-daily { margin-bottom: 8px; font-size: 12px; letter-spacing: 0.24em; text-align: right; }
+body.desk #laws .event-item { gap: 18px; align-items: center; padding: 14px 20px; }
+body.desk #laws .event-glyph { width: 40px; height: 40px; font-size: 34px; }
+body.desk #laws .event-item small { font-size: 11px; }
+body.desk #laws .event-item b { margin: 3px 0 4px; font-size: 16px; }
+body.desk #laws .event-item p { font-size: 14px; line-height: 1.4; }
+
+/* Les trois lois : trois grandes cartes côte à côte, sur toute la hauteur restante. Les cartes
+ * partagent leurs lignes (subgrid) : familles, noms, textes et éveils s'alignent d'une carte à
+ * l'autre ; la sphère prend la place qui reste et rapetisse quand la page est basse. */
+body.desk #laws .law-list {
+  grid-area: list;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: minmax(56px, 1fr) repeat(6, auto);
+  column-gap: 22px;
+  row-gap: 0;
+  margin-top: 22px;
+}
+body.desk #laws .law,
+body.desk #multi .mp-law {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: subgrid;
+  justify-items: center;
+  row-gap: 0;
+  min-height: 0;
+  padding: 22px 26px 18px;
+  text-align: center;
+  border: 1px solid var(--faint);
+  border-top: 2px solid color-mix(in srgb, var(--c) 60%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 7%, transparent), transparent 42%);
+  overflow: hidden;
+}
+/* Les textes partent du haut de leur ligne (le téléphone centre) : ils s'alignent d'une carte à l'autre. */
+body.desk #laws .law { grid-row: span 7; align-items: start; }
+body.desk #laws .law > div,
+body.desk #multi .mp-law-txt { display: contents; }
+body.desk #laws .law:hover,
+body.desk #multi .mp-law:hover { border-color: var(--line); border-top-color: var(--c); }
+body.desk #laws .law.on,
+body.desk #multi .mp-law.on {
+  border-color: var(--c);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 16%, transparent), color-mix(in srgb, var(--c) 5%, transparent) 60%);
+  box-shadow: 0 0 34px -12px var(--c), inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, transparent);
+}
+body.desk #laws .law:active,
+body.desk #multi .mp-law:active { transform: scale(0.99); }
+body.desk #laws .law .sphere { align-self: center; width: auto; height: min(180px, 100%); aspect-ratio: 1; }
+body.desk #laws .law .fam-chip,
+body.desk #multi .mp-law .fam-chip { align-self: end; margin-top: 12px; font-size: 13px; letter-spacing: 0.18em; }
+body.desk #laws .law .fam-chip::before,
+body.desk #multi .mp-law .fam-chip::before { width: 8px; height: 8px; }
+body.desk #laws .law h3 { margin: 8px 0 4px; font-size: 22px; letter-spacing: 0.05em; }
+body.desk #laws .law .tag { margin: 0 0 12px; font-size: 14px; }
+body.desk #laws .law .txt { font-size: 16px; line-height: 1.45; }
+/* L'éveil : un encadré doré, de la même hauteur sur les trois cartes. */
+body.desk #laws .law .awk {
+  justify-self: stretch;
+  align-self: stretch;
+  margin: 14px 0 16px;
+  padding: 10px 14px 11px;
+  font-size: 14px;
+  line-height: 1.42;
+  border: 1px solid rgba(246, 196, 83, 0.22);
+  background: rgba(246, 196, 83, 0.04);
+}
+body.desk #laws .law .awk b { display: block; margin: 0 0 4px; font-size: 11px; letter-spacing: 0.22em; }
+/* Le premier astre : en pied de carte. */
+body.desk #laws .law .starter { justify-self: stretch; align-self: end; margin: 0; padding-top: 12px; font-size: 12px; letter-spacing: 0.14em; border-top: 1px solid var(--faint); }
+/* Sans subgrid (navigateur ancien) : une colonne simple, la sphère à taille fixe. */
+@supports not (grid-template-rows: subgrid) {
+  body.desk #laws .law,
+  body.desk #multi .mp-law { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  body.desk #laws .law > div,
+  body.desk #multi .mp-law-txt { display: flex; flex-direction: column; align-items: center; }
+  body.desk #laws .law .sphere,
+  body.desk #multi .mp-law .sphere { flex: none; width: 120px; height: 120px; }
+}
+body.desk #laws #lawGo,
+body.desk #multi [data-mp="go"] {
+  grid-area: go;
+  justify-self: center;
+  width: min(460px, 100%);
+  min-height: 58px;
+  margin-top: 20px;
+  font-size: 15px;
+  letter-spacing: 0.22em;
+}
+body.desk #laws #lawGo:not(:disabled):hover,
+body.desk #multi [data-mp="go"]:not(:disabled):hover { box-shadow: 0 0 26px -6px rgba(241, 236, 218, 0.55); }
+
+/* ─── Multijoueur ───────────────────────────────────────── */
+body.desk #multi .mk-scroll {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 6px 4px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(241, 236, 218, 0.38) transparent;
+}
+body.desk #multi .mp { flex: 1 0 auto; gap: 18px; padding-top: 0; }
+body.desk #multi .mp-card { gap: 12px; padding: 22px 24px; border-color: var(--faint); background: rgba(241, 236, 218, 0.025); }
+body.desk #multi .mp-card > b { font-size: 14px; letter-spacing: 0.26em; }
+body.desk #multi .mp-card p { font-size: 15px; line-height: 1.5; }
+body.desk #multi .mp-card p b,
+body.desk #multi .mp-defi span b,
+body.desk #multi .mp-card .mp-friend span b { font-size: inherit; letter-spacing: 0.04em; }
+body.desk #multi .mp-rank { font-size: 13px; letter-spacing: 0.12em; }
+body.desk #multi .btn { min-height: 50px; font-size: 14px; letter-spacing: 0.18em; }
+body.desk #multi .btn:not(:disabled):hover { border-color: var(--dim); }
+body.desk #multi .btn.primary:not(:disabled):hover { border-color: var(--ink); box-shadow: 0 0 22px -8px rgba(241, 236, 218, 0.6); }
+body.desk #multi .muted { font-size: 14px; }
+
+/* Non configuré, ou pas encore connecté : une seule carte, au centre de la page. */
+body.desk #multi .mp:has(> .mp-note),
+body.desk #multi .mp:has([data-mp="signin"]) { justify-content: center; align-items: center; padding-bottom: 6%; }
+body.desk #multi .mp-note { margin: 0; font-size: 17px; letter-spacing: 0.04em; }
+body.desk #multi .mp > .mp-card:has([data-mp="signin"]) {
+  width: min(680px, 100%);
+  align-items: center;
+  gap: 16px;
+  padding: 40px 48px 44px;
+  text-align: center;
+  border-color: var(--line);
+}
+body.desk #multi .mp > .mp-card:has([data-mp="signin"])::before {
+  content: '';
+  width: 192px;
+  height: 192px;
+  margin-bottom: 6px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' shape-rendering='crispEdges'%3E%3Cpath fill='%235fd35a' d='M23 2h2v1h-2zM24 3h3v1h-3zM24 4h3v1h-3zM23 5h4v1h-4zM19 6h1v1h-1zM22 6h4v1h-4zM19 7h6v1h-6zM20 8h4v1h-4zM21 9h1v1h-1z'/%3E%3Cpath fill='%2397e293' d='M21 3h3v1h-3zM20 4h4v1h-4zM20 5h3v1h-3zM20 6h2v1h-2z'/%3E%3Cpath fill='%231c3f1b' d='M27 4h1v1h-1zM27 5h1v1h-1zM28 6h1v1h-1zM28 7h1v1h-1zM27 8h1v1h-1zM27 9h1v1h-1zM21 10h2v1h-2zM25 10h2v1h-2zM23 11h2v1h-2z'/%3E%3Cpath fill='%23408f3d' d='M26 6h2v1h-2zM25 7h3v1h-3zM24 8h3v1h-3zM20 9h1v1h-1zM22 9h4v1h-4zM23 10h2v1h-2z'/%3E%3Cpath fill='%234f7bff' d='M11 7h2v1h-2zM12 8h3v1h-3zM12 9h3v1h-3zM11 10h4v1h-4zM7 11h1v1h-1zM10 11h4v1h-4zM7 12h6v1h-6zM8 13h4v1h-4zM9 14h1v1h-1z'/%3E%3Cpath fill='%239a6bff' d='M35 7h2v1h-2zM36 8h3v1h-3zM36 9h3v1h-3zM35 10h4v1h-4zM31 11h1v1h-1zM34 11h4v1h-4zM31 12h6v1h-6zM32 13h4v1h-4zM33 14h1v1h-1z'/%3E%3Cpath fill='%238ca9ff' d='M9 8h3v1h-3zM8 9h4v1h-4zM8 10h3v1h-3zM8 11h2v1h-2z'/%3E%3Cpath fill='%23bd9eff' d='M33 8h3v1h-3zM32 9h4v1h-4zM32 10h3v1h-3zM32 11h2v1h-2z'/%3E%3Cpath fill='%2317244c' d='M15 9h1v1h-1zM15 10h1v1h-1zM16 11h1v1h-1zM16 12h1v1h-1zM15 13h1v1h-1zM15 14h1v1h-1zM9 15h2v1h-2zM13 15h2v1h-2zM11 16h2v1h-2z'/%3E%3Cpath fill='%23275825' d='M26 9h1v1h-1z'/%3E%3Cpath fill='%232e204c' d='M39 9h1v1h-1zM39 10h1v1h-1zM40 11h1v1h-1zM40 12h1v1h-1zM39 13h1v1h-1zM39 14h1v1h-1zM33 15h2v1h-2zM37 15h2v1h-2zM35 16h2v1h-2z'/%3E%3Cpath fill='%233553ad' d='M14 11h2v1h-2zM13 12h3v1h-3zM12 13h3v1h-3zM8 14h1v1h-1zM10 14h4v1h-4zM11 15h1v1h-1z'/%3E%3Cpath fill='%236848ad' d='M38 11h2v1h-2zM37 12h3v1h-3zM36 13h3v1h-3zM32 14h1v1h-1zM34 14h4v1h-4zM35 15h2v1h-2z'/%3E%3Cpath fill='%2321336b' d='M14 14h1v1h-1zM12 15h1v1h-1z'/%3E%3Cpath fill='%23402c6b' d='M38 14h1v1h-1z'/%3E%3Cpath fill='%23ffd447' d='M6 19h2v1h-2zM7 20h3v1h-3zM7 21h3v1h-3zM6 22h4v1h-4zM2 23h1v1h-1zM5 23h4v1h-4zM2 24h6v1h-6zM3 25h4v1h-4zM4 26h1v1h-1z'/%3E%3Cpath fill='%23ff4f6d' d='M40 19h2v1h-2zM41 20h3v1h-3zM41 21h3v1h-3zM40 22h4v1h-4zM36 23h1v1h-1zM39 23h4v1h-4zM36 24h6v1h-6zM37 25h4v1h-4zM38 26h1v1h-1z'/%3E%3Cpath fill='%23ffe387' d='M4 20h3v1h-3zM3 21h4v1h-4zM3 22h3v1h-3zM3 23h2v1h-2z'/%3E%3Cpath fill='%23ff8ca0' d='M38 20h3v1h-3zM37 21h4v1h-4zM37 22h3v1h-3zM37 23h2v1h-2z'/%3E%3Cpath fill='%234c3f15' d='M10 21h1v1h-1zM10 22h1v1h-1zM11 23h1v1h-1zM11 24h1v1h-1zM10 25h1v1h-1zM10 26h1v1h-1zM4 27h2v1h-2zM8 27h2v1h-2zM6 28h2v1h-2z'/%3E%3Cpath fill='%236e5825' d='M24 21h1v1h-1zM21 24h1v1h-1zM27 24h1v1h-1zM24 27h1v1h-1z'/%3E%3Cpath fill='%234c1720' d='M44 21h1v1h-1zM44 22h1v1h-1zM45 23h1v1h-1zM45 24h1v1h-1zM44 25h1v1h-1zM44 26h1v1h-1zM38 27h2v1h-2zM42 27h2v1h-2zM40 28h2v1h-2z'/%3E%3Cpath fill='%23ac893a' d='M24 22h1v1h-1zM22 24h1v1h-1zM26 24h1v1h-1zM24 26h1v1h-1z'/%3E%3Cpath fill='%23ad9030' d='M9 23h2v1h-2zM8 24h3v1h-3zM7 25h3v1h-3zM3 26h1v1h-1zM5 26h4v1h-4zM6 27h2v1h-2z'/%3E%3Cpath fill='%23f6c453' d='M24 23h1v1h-1zM23 24h1v1h-1zM25 24h1v1h-1zM24 25h1v1h-1z'/%3E%3Cpath fill='%23ad354a' d='M43 23h2v1h-2zM42 24h3v1h-3zM41 25h3v1h-3zM37 26h1v1h-1zM39 26h4v1h-4zM40 27h2v1h-2z'/%3E%3Cpath fill='%23f9db97' d='M24 24h1v1h-1z'/%3E%3Cpath fill='%236b591d' d='M9 26h1v1h-1z'/%3E%3Cpath fill='%236b212d' d='M43 26h1v1h-1z'/%3E%3Cpath fill='%232fd6b0' d='M11 31h2v1h-2zM12 32h3v1h-3zM12 33h3v1h-3zM11 34h4v1h-4zM7 35h1v1h-1zM10 35h4v1h-4zM7 36h6v1h-6zM8 37h4v1h-4zM9 38h1v1h-1z'/%3E%3Cpath fill='%23ff8a2a' d='M35 31h2v1h-2zM36 32h3v1h-3zM36 33h3v1h-3zM35 34h4v1h-4zM31 35h1v1h-1zM34 35h4v1h-4zM31 36h6v1h-6zM32 37h4v1h-4zM33 38h1v1h-1z'/%3E%3Cpath fill='%2377e4cb' d='M9 32h3v1h-3zM8 33h4v1h-4zM8 34h3v1h-3zM8 35h2v1h-2z'/%3E%3Cpath fill='%23ffb274' d='M33 32h3v1h-3zM32 33h4v1h-4zM32 34h3v1h-3zM32 35h2v1h-2z'/%3E%3Cpath fill='%230e4034' d='M15 33h1v1h-1zM15 34h1v1h-1zM16 35h1v1h-1zM16 36h1v1h-1zM15 37h1v1h-1zM15 38h1v1h-1zM9 39h2v1h-2zM13 39h2v1h-2zM11 40h2v1h-2z'/%3E%3Cpath fill='%234c290c' d='M39 33h1v1h-1zM39 34h1v1h-1zM40 35h1v1h-1zM40 36h1v1h-1zM39 37h1v1h-1zM39 38h1v1h-1zM33 39h2v1h-2zM37 39h2v1h-2zM35 40h2v1h-2z'/%3E%3Cpath fill='%231f9177' d='M14 35h2v1h-2zM13 36h3v1h-3zM12 37h3v1h-3zM8 38h1v1h-1zM10 38h4v1h-4zM11 39h2v1h-2z'/%3E%3Cpath fill='%23ad5d1c' d='M38 35h2v1h-2zM37 36h3v1h-3zM36 37h3v1h-3zM32 38h1v1h-1zM34 38h4v1h-4zM35 39h2v1h-2z'/%3E%3Cpath fill='%238be6ff' d='M23 36h2v1h-2zM24 37h3v1h-3zM24 38h3v1h-3zM23 39h4v1h-4zM19 40h1v1h-1zM22 40h4v1h-4zM19 41h6v1h-6zM20 42h4v1h-4zM21 43h1v1h-1z'/%3E%3Cpath fill='%23b3eeff' d='M21 37h3v1h-3zM20 38h4v1h-4zM20 39h3v1h-3zM20 40h2v1h-2z'/%3E%3Cpath fill='%23135949' d='M14 38h1v1h-1z'/%3E%3Cpath fill='%2329454c' d='M27 38h1v1h-1zM27 39h1v1h-1zM28 40h1v1h-1zM28 41h1v1h-1zM27 42h1v1h-1zM27 43h1v1h-1zM21 44h2v1h-2zM25 44h2v1h-2zM23 45h2v1h-2z'/%3E%3Cpath fill='%236b3911' d='M38 38h1v1h-1z'/%3E%3Cpath fill='%235e9cad' d='M26 40h2v1h-2zM25 41h3v1h-3zM24 42h3v1h-3zM20 43h1v1h-1zM22 43h4v1h-4zM23 44h2v1h-2z'/%3E%3Cpath fill='%233a606b' d='M26 43h1v1h-1z'/%3E%3C/svg%3E") center / contain no-repeat;
+  image-rendering: pixelated;
+}
+body.desk #multi .mp > .mp-card:has([data-mp="signin"]) > b { font-size: 18px; letter-spacing: 0.3em; }
+body.desk #multi .mp > .mp-card:has([data-mp="signin"]) p { max-width: 500px; font-size: 16px; }
+body.desk #multi [data-mp="signin"] { align-self: stretch; min-height: 58px; margin-top: 8px; font-size: 15px; }
+
+/* ─── Accueil : des tuiles ───────────────────────────────── */
+/* Duel et mêlée en grandes tuiles illustrées ; à droite, Entre amis (illustrée, elle prend la place)
+ * puis Rejoindre un ami (à sa hauteur), en pied de colonne comme les boutons des grandes tuiles. */
+body.desk #multi .mp:has(> .mp-card [data-mp="ranked"]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.92fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'duel  melee friends'
+    'duel  melee join';
+  gap: 20px;
+}
+/* Défis reçus : un bandeau doré sur toute la largeur, au-dessus des tuiles. Trois défis tiennent sur
+ * une ligne ; au-delà de deux lignes, le bandeau défile : il ne pousse jamais les tuiles hors de la page. */
+body.desk #multi .mp:has(> .mp-card [data-mp="ranked"]):has(> .mp-defis) {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'defis defis defis'
+    'duel  melee friends'
+    'duel  melee join';
+}
+body.desk #multi .mp > .mp-defis {
+  grid-area: defis;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  align-content: start;
+  gap: 8px 28px;
+  max-height: 178px;
+  overflow-y: auto;
+  padding: 14px 20px;
+  background: rgba(246, 196, 83, 0.05);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(246, 196, 83, 0.5) transparent;
+}
+body.desk #multi .mp-defis > b { grid-column: 1 / -1; color: var(--gold); }
+body.desk #multi .mp-defi { gap: 16px; padding: 8px 0 0; border-top: 1px solid rgba(246, 196, 83, 0.2); font-size: 15px; line-height: 1.35; }
+body.desk #multi .mp-defi .btn { min-height: 40px; padding: 0 18px; }
+body.desk #multi .mp > .mp-card:has([data-mp="friends"]) { grid-area: friends; }
+body.desk #multi .mp > .mp-card:has([data-mp="ranked"][data-size="2"]) { grid-area: duel; }
+body.desk #multi .mp > .mp-card:has([data-mp="ranked"][data-size="8"]) { grid-area: melee; }
+body.desk #multi .mp > .mp-card:has(.mp-join) { grid-area: join; }
+
+/* Les grandes tuiles : le titre en haut, l'illustration, le texte, puis les boutons en pied de tuile.
+ * L'illustration a la même hauteur dans les deux tuiles : leurs textes commencent à la même ligne.
+ * Quand la page manque de hauteur, c'est elle qui rapetisse d'abord. */
+body.desk #multi .mp > .mp-card:has([data-mp="ranked"]) { gap: 14px; padding: 28px 30px 30px; border-color: var(--line); }
+body.desk #multi .mp > .mp-card:has([data-mp="ranked"]) > b { order: -2; font-size: 17px; letter-spacing: 0.28em; }
+body.desk #multi .mp > .mp-card:has([data-mp="ranked"])::before {
+  content: '';
+  order: -1;
+  flex: 0 1 44%;
+  min-height: 64px;
+  margin: 6px 0 4px;
+  background: center / contain no-repeat;
+  image-rendering: pixelated;
+}
+body.desk #multi .mp > .mp-card:has([data-mp="ranked"][data-size="2"])::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='22' shape-rendering='crispEdges'%3E%3Cpath fill='%23abe5ff' d='M8 2h2v1h-2zM6 3h5v1h-5zM5 4h6v1h-6zM4 5h7v1h-7zM3 6h8v1h-8zM3 7h7v1h-7zM3 8h4v1h-4zM3 9h5v1h-5zM4 10h2v1h-2z'/%3E%3Cpath fill='%237fd8ff' d='M10 2h4v1h-4zM11 3h5v1h-5zM11 4h5v1h-5zM11 5h5v1h-5zM11 6h5v1h-5zM10 7h6v1h-6zM2 8h1v1h-1zM9 8h7v1h-7zM2 9h1v1h-1zM8 9h7v1h-7zM2 10h2v1h-2zM6 10h9v1h-9zM2 11h12v1h-12zM2 12h11v1h-11zM2 13h10v1h-10zM3 14h3v1h-3zM7 14h3v1h-3zM4 15h4v1h-4z'/%3E%3Cpath fill='%23ffb274' d='M46 2h2v1h-2zM44 3h5v1h-5zM43 4h6v1h-6zM42 5h7v1h-7zM41 6h8v1h-8zM41 8h6v1h-6zM41 9h5v1h-5zM42 10h2v1h-2z'/%3E%3Cpath fill='%23ff8a2a' d='M48 2h4v1h-4zM49 3h5v1h-5zM49 4h5v1h-5zM49 5h5v1h-5zM49 6h5v1h-5zM40 8h1v1h-1zM47 8h7v1h-7zM40 9h1v1h-1zM46 9h7v1h-7zM40 10h2v1h-2zM44 10h9v1h-9zM40 11h12v1h-12zM40 13h10v1h-10zM41 14h7v1h-7zM42 15h4v1h-4z'/%3E%3Cpath fill='%235692ad' d='M16 4h1v1h-1zM16 5h1v1h-1zM16 6h2v1h-2zM16 7h2v1h-2zM16 8h3v1h-3zM15 9h4v1h-4zM15 10h4v1h-4zM14 11h4v1h-4zM13 12h5v1h-5zM12 13h2v1h-2zM15 13h2v1h-2zM10 14h3v1h-3zM15 14h1v1h-1zM3 15h1v1h-1zM8 15h7v1h-7zM5 16h9v1h-9zM6 17h7v1h-7zM8 18h3v1h-3z'/%3E%3Cpath fill='%23ad5d1c' d='M54 4h1v1h-1zM54 5h1v1h-1zM54 6h2v1h-2zM54 8h3v1h-3zM53 9h4v1h-4zM53 10h4v1h-4zM52 11h4v1h-4zM50 13h5v1h-5zM48 14h6v1h-6zM41 15h1v1h-1zM46 15h7v1h-7zM44 17h7v1h-7zM46 18h3v1h-3z'/%3E%3Cpath fill='%2326404c' d='M17 5h1v1h-1zM18 6h1v1h-1zM18 7h1v1h-1zM19 8h1v1h-1zM19 9h1v1h-1zM19 10h1v1h-1zM19 11h1v1h-1zM19 12h1v1h-1zM19 13h1v1h-1zM18 14h1v1h-1zM18 15h1v1h-1zM4 16h1v1h-1zM17 16h1v1h-1zM5 17h1v1h-1zM16 17h1v1h-1zM6 18h2v1h-2zM14 18h2v1h-2zM8 19h6v1h-6z'/%3E%3Cpath fill='%234c290c' d='M55 5h1v1h-1zM56 6h1v1h-1zM56 7h1v1h-1zM57 8h1v1h-1zM57 9h1v1h-1zM57 10h1v1h-1zM57 11h1v1h-1zM57 12h1v1h-1zM57 13h1v1h-1zM56 14h1v1h-1zM56 15h1v1h-1zM42 16h1v1h-1zM55 16h1v1h-1zM43 17h1v1h-1zM54 17h1v1h-1zM44 18h2v1h-2zM52 18h2v1h-2zM46 19h6v1h-6z'/%3E%3Cpath fill='%23ff9b49' d='M41 7h15v1h-15z'/%3E%3Cpath fill='%2345768c' d='M7 8h2v1h-2zM14 13h1v1h-1zM6 14h1v1h-1zM13 14h2v1h-2z'/%3E%3Cpath fill='%236e5825' d='M30 8h1v1h-1zM27 11h1v1h-1zM33 11h1v1h-1zM30 14h1v1h-1z'/%3E%3Cpath fill='%23ac893a' d='M30 9h1v1h-1zM28 11h1v1h-1zM32 11h1v1h-1zM30 13h1v1h-1z'/%3E%3Cpath fill='%23f6c453' d='M30 10h1v1h-1zM29 11h1v1h-1zM31 11h1v1h-1zM30 12h1v1h-1z'/%3E%3Cpath fill='%23355a6b' d='M18 11h1v1h-1zM18 12h1v1h-1zM17 13h2v1h-2zM16 14h2v1h-2zM15 15h3v1h-3zM14 16h3v1h-3zM13 17h3v1h-3zM11 18h3v1h-3z'/%3E%3Cpath fill='%232c4b59' d='M22 11h1v1h-1z'/%3E%3Cpath fill='%233b6577' d='M23 11h1v1h-1z'/%3E%3Cpath fill='%234a7f96' d='M24 11h1v1h-1z'/%3E%3Cpath fill='%235a99b5' d='M25 11h1v1h-1z'/%3E%3Cpath fill='%2369b3d3' d='M26 11h1v1h-1z'/%3E%3Cpath fill='%23f9db97' d='M30 11h1v1h-1z'/%3E%3Cpath fill='%23d37222' d='M34 11h1v1h-1z'/%3E%3Cpath fill='%23b5611d' d='M35 11h1v1h-1z'/%3E%3Cpath fill='%23965118' d='M36 11h1v1h-1z'/%3E%3Cpath fill='%23774013' d='M37 11h1v1h-1z'/%3E%3Cpath fill='%2359300e' d='M38 11h1v1h-1z'/%3E%3Cpath fill='%236b3911' d='M56 11h1v1h-1zM55 13h2v1h-2zM54 14h2v1h-2zM53 15h3v1h-3zM51 17h3v1h-3zM49 18h3v1h-3z'/%3E%3Cpath fill='%23c66b20' d='M40 12h17v1h-17zM43 16h12v1h-12z'/%3E%3C/svg%3E"); background-size: min(100%, 360px) auto; }
+body.desk #multi .mp > .mp-card:has([data-mp="ranked"][data-size="8"])::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' shape-rendering='crispEdges'%3E%3Cpath fill='%235fd35a' d='M23 2h2v1h-2zM24 3h3v1h-3zM24 4h3v1h-3zM23 5h4v1h-4zM19 6h1v1h-1zM22 6h4v1h-4zM19 7h6v1h-6zM20 8h4v1h-4zM21 9h1v1h-1z'/%3E%3Cpath fill='%2397e293' d='M21 3h3v1h-3zM20 4h4v1h-4zM20 5h3v1h-3zM20 6h2v1h-2z'/%3E%3Cpath fill='%231c3f1b' d='M27 4h1v1h-1zM27 5h1v1h-1zM28 6h1v1h-1zM28 7h1v1h-1zM27 8h1v1h-1zM27 9h1v1h-1zM21 10h2v1h-2zM25 10h2v1h-2zM23 11h2v1h-2z'/%3E%3Cpath fill='%23408f3d' d='M26 6h2v1h-2zM25 7h3v1h-3zM24 8h3v1h-3zM20 9h1v1h-1zM22 9h4v1h-4zM23 10h2v1h-2z'/%3E%3Cpath fill='%234f7bff' d='M11 7h2v1h-2zM12 8h3v1h-3zM12 9h3v1h-3zM11 10h4v1h-4zM7 11h1v1h-1zM10 11h4v1h-4zM7 12h6v1h-6zM8 13h4v1h-4zM9 14h1v1h-1z'/%3E%3Cpath fill='%239a6bff' d='M35 7h2v1h-2zM36 8h3v1h-3zM36 9h3v1h-3zM35 10h4v1h-4zM31 11h1v1h-1zM34 11h4v1h-4zM31 12h6v1h-6zM32 13h4v1h-4zM33 14h1v1h-1z'/%3E%3Cpath fill='%238ca9ff' d='M9 8h3v1h-3zM8 9h4v1h-4zM8 10h3v1h-3zM8 11h2v1h-2z'/%3E%3Cpath fill='%23bd9eff' d='M33 8h3v1h-3zM32 9h4v1h-4zM32 10h3v1h-3zM32 11h2v1h-2z'/%3E%3Cpath fill='%2317244c' d='M15 9h1v1h-1zM15 10h1v1h-1zM16 11h1v1h-1zM16 12h1v1h-1zM15 13h1v1h-1zM15 14h1v1h-1zM9 15h2v1h-2zM13 15h2v1h-2zM11 16h2v1h-2z'/%3E%3Cpath fill='%23275825' d='M26 9h1v1h-1z'/%3E%3Cpath fill='%232e204c' d='M39 9h1v1h-1zM39 10h1v1h-1zM40 11h1v1h-1zM40 12h1v1h-1zM39 13h1v1h-1zM39 14h1v1h-1zM33 15h2v1h-2zM37 15h2v1h-2zM35 16h2v1h-2z'/%3E%3Cpath fill='%233553ad' d='M14 11h2v1h-2zM13 12h3v1h-3zM12 13h3v1h-3zM8 14h1v1h-1zM10 14h4v1h-4zM11 15h1v1h-1z'/%3E%3Cpath fill='%236848ad' d='M38 11h2v1h-2zM37 12h3v1h-3zM36 13h3v1h-3zM32 14h1v1h-1zM34 14h4v1h-4zM35 15h2v1h-2z'/%3E%3Cpath fill='%2321336b' d='M14 14h1v1h-1zM12 15h1v1h-1z'/%3E%3Cpath fill='%23402c6b' d='M38 14h1v1h-1z'/%3E%3Cpath fill='%23ffd447' d='M6 19h2v1h-2zM7 20h3v1h-3zM7 21h3v1h-3zM6 22h4v1h-4zM2 23h1v1h-1zM5 23h4v1h-4zM2 24h6v1h-6zM3 25h4v1h-4zM4 26h1v1h-1z'/%3E%3Cpath fill='%23ff4f6d' d='M40 19h2v1h-2zM41 20h3v1h-3zM41 21h3v1h-3zM40 22h4v1h-4zM36 23h1v1h-1zM39 23h4v1h-4zM36 24h6v1h-6zM37 25h4v1h-4zM38 26h1v1h-1z'/%3E%3Cpath fill='%23ffe387' d='M4 20h3v1h-3zM3 21h4v1h-4zM3 22h3v1h-3zM3 23h2v1h-2z'/%3E%3Cpath fill='%23ff8ca0' d='M38 20h3v1h-3zM37 21h4v1h-4zM37 22h3v1h-3zM37 23h2v1h-2z'/%3E%3Cpath fill='%234c3f15' d='M10 21h1v1h-1zM10 22h1v1h-1zM11 23h1v1h-1zM11 24h1v1h-1zM10 25h1v1h-1zM10 26h1v1h-1zM4 27h2v1h-2zM8 27h2v1h-2zM6 28h2v1h-2z'/%3E%3Cpath fill='%236e5825' d='M24 21h1v1h-1zM21 24h1v1h-1zM27 24h1v1h-1zM24 27h1v1h-1z'/%3E%3Cpath fill='%234c1720' d='M44 21h1v1h-1zM44 22h1v1h-1zM45 23h1v1h-1zM45 24h1v1h-1zM44 25h1v1h-1zM44 26h1v1h-1zM38 27h2v1h-2zM42 27h2v1h-2zM40 28h2v1h-2z'/%3E%3Cpath fill='%23ac893a' d='M24 22h1v1h-1zM22 24h1v1h-1zM26 24h1v1h-1zM24 26h1v1h-1z'/%3E%3Cpath fill='%23ad9030' d='M9 23h2v1h-2zM8 24h3v1h-3zM7 25h3v1h-3zM3 26h1v1h-1zM5 26h4v1h-4zM6 27h2v1h-2z'/%3E%3Cpath fill='%23f6c453' d='M24 23h1v1h-1zM23 24h1v1h-1zM25 24h1v1h-1zM24 25h1v1h-1z'/%3E%3Cpath fill='%23ad354a' d='M43 23h2v1h-2zM42 24h3v1h-3zM41 25h3v1h-3zM37 26h1v1h-1zM39 26h4v1h-4zM40 27h2v1h-2z'/%3E%3Cpath fill='%23f9db97' d='M24 24h1v1h-1z'/%3E%3Cpath fill='%236b591d' d='M9 26h1v1h-1z'/%3E%3Cpath fill='%236b212d' d='M43 26h1v1h-1z'/%3E%3Cpath fill='%232fd6b0' d='M11 31h2v1h-2zM12 32h3v1h-3zM12 33h3v1h-3zM11 34h4v1h-4zM7 35h1v1h-1zM10 35h4v1h-4zM7 36h6v1h-6zM8 37h4v1h-4zM9 38h1v1h-1z'/%3E%3Cpath fill='%23ff8a2a' d='M35 31h2v1h-2zM36 32h3v1h-3zM36 33h3v1h-3zM35 34h4v1h-4zM31 35h1v1h-1zM34 35h4v1h-4zM31 36h6v1h-6zM32 37h4v1h-4zM33 38h1v1h-1z'/%3E%3Cpath fill='%2377e4cb' d='M9 32h3v1h-3zM8 33h4v1h-4zM8 34h3v1h-3zM8 35h2v1h-2z'/%3E%3Cpath fill='%23ffb274' d='M33 32h3v1h-3zM32 33h4v1h-4zM32 34h3v1h-3zM32 35h2v1h-2z'/%3E%3Cpath fill='%230e4034' d='M15 33h1v1h-1zM15 34h1v1h-1zM16 35h1v1h-1zM16 36h1v1h-1zM15 37h1v1h-1zM15 38h1v1h-1zM9 39h2v1h-2zM13 39h2v1h-2zM11 40h2v1h-2z'/%3E%3Cpath fill='%234c290c' d='M39 33h1v1h-1zM39 34h1v1h-1zM40 35h1v1h-1zM40 36h1v1h-1zM39 37h1v1h-1zM39 38h1v1h-1zM33 39h2v1h-2zM37 39h2v1h-2zM35 40h2v1h-2z'/%3E%3Cpath fill='%231f9177' d='M14 35h2v1h-2zM13 36h3v1h-3zM12 37h3v1h-3zM8 38h1v1h-1zM10 38h4v1h-4zM11 39h2v1h-2z'/%3E%3Cpath fill='%23ad5d1c' d='M38 35h2v1h-2zM37 36h3v1h-3zM36 37h3v1h-3zM32 38h1v1h-1zM34 38h4v1h-4zM35 39h2v1h-2z'/%3E%3Cpath fill='%238be6ff' d='M23 36h2v1h-2zM24 37h3v1h-3zM24 38h3v1h-3zM23 39h4v1h-4zM19 40h1v1h-1zM22 40h4v1h-4zM19 41h6v1h-6zM20 42h4v1h-4zM21 43h1v1h-1z'/%3E%3Cpath fill='%23b3eeff' d='M21 37h3v1h-3zM20 38h4v1h-4zM20 39h3v1h-3zM20 40h2v1h-2z'/%3E%3Cpath fill='%23135949' d='M14 38h1v1h-1z'/%3E%3Cpath fill='%2329454c' d='M27 38h1v1h-1zM27 39h1v1h-1zM28 40h1v1h-1zM28 41h1v1h-1zM27 42h1v1h-1zM27 43h1v1h-1zM21 44h2v1h-2zM25 44h2v1h-2zM23 45h2v1h-2z'/%3E%3Cpath fill='%236b3911' d='M38 38h1v1h-1z'/%3E%3Cpath fill='%235e9cad' d='M26 40h2v1h-2zM25 41h3v1h-3zM24 42h3v1h-3zM20 43h1v1h-1zM22 43h4v1h-4zM23 44h2v1h-2z'/%3E%3Cpath fill='%233a606b' d='M26 43h1v1h-1z'/%3E%3C/svg%3E"); background-size: auto min(100%, 230px); }
+body.desk #multi .mp > .mp-card:has([data-mp="ranked"]) p { font-size: 16px; }
+body.desk #multi .mp > .mp-card:has([data-mp="ranked"]) .btn { min-height: 56px; font-size: 15px; }
+body.desk #multi .mp > .mp-card:has([data-mp="ranked"]) .btn:first-of-type { margin-top: auto; }
+/* Le rang du duel : juste au-dessus de son bouton. */
+/* Il occupe la hauteur d'un bouton : les deux tuiles ont la même structure et leurs illustrations
+ * rapetissent pareil quand la page est basse. */
+body.desk #multi .mp > .mp-card:has([data-mp="ranked"]) .mp-rank { display: flex; align-items: flex-end; min-height: 56px; margin-top: auto; padding-bottom: 2px; font-size: 14px; }
+body.desk #multi .mp > .mp-card:has([data-mp="ranked"]) .mp-rank ~ .btn:first-of-type { margin-top: 0; }
+
+/* Entre amis : comme les grandes tuiles, le titre, l'illustration au milieu, le bouton en pied. */
+body.desk #multi .mp > .mp-card:has([data-mp="friends"]),
+body.desk #multi .mp > .mp-card:has(.mp-join) { gap: 14px; padding: 26px 28px; }
+body.desk #multi .mp > .mp-card:has([data-mp="friends"]) { min-height: 0; padding: 28px 28px 26px; border-color: var(--line); }
+body.desk #multi .mp > .mp-card:has([data-mp="friends"])::after {
+  content: '';
+  order: -1;
+  flex: 1 1 0;
+  min-height: 0;
+  margin: 2px 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='18' shape-rendering='crispEdges'%3E%3Cpath fill='%23f5f2e6' d='M5 2h2v1h-2zM4 3h4v1h-4zM3 4h5v1h-5zM2 5h6v1h-6zM2 6h5v1h-5zM1 7h5v1h-5zM2 8h2v1h-2z'/%3E%3Cpath fill='%23f1ecda' d='M7 2h4v1h-4zM8 3h4v1h-4zM8 4h4v1h-4zM8 5h4v1h-4zM1 6h1v1h-1zM7 6h5v1h-5zM6 7h6v1h-6zM1 8h1v1h-1zM4 8h7v1h-7zM1 9h9v1h-9zM1 10h8v1h-8zM1 11h7v1h-7zM2 12h4v1h-4z'/%3E%3Cpath fill='%23c0f5bd' d='M37 2h2v1h-2zM36 3h4v1h-4zM35 4h5v1h-5zM34 5h6v1h-6zM34 6h5v1h-5zM33 7h5v1h-5zM34 8h2v1h-2z'/%3E%3Cpath fill='%239ff09a' d='M39 2h4v1h-4zM40 3h4v1h-4zM40 4h4v1h-4zM40 5h4v1h-4zM33 6h1v1h-1zM39 6h5v1h-5zM38 7h6v1h-6zM33 8h1v1h-1zM36 8h7v1h-7zM33 9h9v1h-9zM33 10h8v1h-8zM33 11h7v1h-7zM34 12h4v1h-4z'/%3E%3Cpath fill='%23a3a094' d='M12 4h1v1h-1zM12 5h1v1h-1zM12 6h1v1h-1zM12 7h2v1h-2zM11 8h3v1h-3zM10 9h4v1h-4zM9 10h4v1h-4zM8 11h4v1h-4zM6 12h5v1h-5zM4 13h6v1h-6zM6 14h2v1h-2z'/%3E%3Cpath fill='%236ca368' d='M44 4h1v1h-1zM44 5h1v1h-1zM44 6h1v1h-1zM44 7h2v1h-2zM43 8h3v1h-3zM42 9h4v1h-4zM41 10h4v1h-4zM40 11h4v1h-4zM38 12h5v1h-5zM36 13h6v1h-6zM38 14h2v1h-2z'/%3E%3Cpath fill='%23484641' d='M13 5h1v1h-1zM13 6h2v1h-2zM14 7h1v1h-1zM14 8h1v1h-1zM14 9h1v1h-1zM14 10h1v1h-1zM13 11h2v1h-2zM13 12h1v1h-1zM3 13h1v1h-1zM12 13h1v1h-1zM4 14h2v1h-2zM10 14h2v1h-2zM5 15h6v1h-6z'/%3E%3Cpath fill='%232f482e' d='M45 5h1v1h-1zM45 6h2v1h-2zM46 7h1v1h-1zM46 8h1v1h-1zM46 9h1v1h-1zM46 10h1v1h-1zM45 11h2v1h-2zM45 12h1v1h-1zM35 13h1v1h-1zM44 13h1v1h-1zM36 14h2v1h-2zM42 14h2v1h-2zM37 15h6v1h-6z'/%3E%3Cpath fill='%23f6c453' d='M18 9h1v1h-1zM21 9h1v1h-1zM24 9h1v1h-1zM27 9h1v1h-1zM30 9h1v1h-1z'/%3E%3Cpath fill='%2365635b' d='M13 10h1v1h-1zM12 11h1v1h-1zM11 12h2v1h-2zM10 13h2v1h-2zM8 14h2v1h-2z'/%3E%3Cpath fill='%23426440' d='M45 10h1v1h-1zM44 11h1v1h-1zM43 12h2v1h-2zM42 13h2v1h-2zM40 14h2v1h-2z'/%3E%3C/svg%3E") center / contain no-repeat;
+  image-rendering: pixelated;
+}
+body.desk #multi .mp > .mp-card:has([data-mp="friends"]) > b { order: -2; font-size: 17px; letter-spacing: 0.28em; }
+body.desk #multi .mp > .mp-card:has([data-mp="friends"]) .btn { margin-top: auto; min-height: 54px; }
+body.desk #multi .mp-join { gap: 10px; }
+body.desk #multi .mp-join .code-input { height: 52px; padding: 0 14px; font-size: 20px; }
+body.desk #multi .mp-join .btn { min-height: 52px; }
+
+/* ─── Défier des amis ───────────────────────────────────── */
+/* À gauche, les amis en grille dans un grand cadre (la liste défile dedans) ; à droite, un panneau :
+ * le titre, l'illustration, puis le défi (son libellé dit duel ou partie à N), le lien et le retour. */
+body.desk #multi .mp:has(> .mp-friends) {
+  flex: 1 1 0;
+  min-height: 460px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'list side'
+    'list go'
+    'list acts';
+  gap: 0 28px;
+}
+/* Le cadre du panneau de droite, derrière le titre et les boutons. */
+body.desk #multi .mp:has(> .mp-friends)::before {
+  content: '';
+  grid-column: 2;
+  grid-row: 1 / -1;
+  border: 1px solid var(--line);
+  background: rgba(241, 236, 218, 0.025);
+}
+body.desk #multi .mp:has(> .mp-friends) > .mp-card {
+  grid-area: side;
+  min-height: 0;
+  gap: 16px;
+  padding: 30px 28px 20px;
+  text-align: center;
+  background: none;
+  border: 0;
+}
+body.desk #multi .mp:has(> .mp-friends) > .mp-card > b { font-size: 20px; letter-spacing: 0.3em; text-indent: 0.3em; }
+body.desk #multi .mp:has(> .mp-friends) > .mp-card::after {
+  content: '';
+  flex: 1 1 0;
+  min-height: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='18' shape-rendering='crispEdges'%3E%3Cpath fill='%23f5f2e6' d='M5 2h2v1h-2zM4 3h4v1h-4zM3 4h5v1h-5zM2 5h6v1h-6zM2 6h5v1h-5zM1 7h5v1h-5zM2 8h2v1h-2z'/%3E%3Cpath fill='%23f1ecda' d='M7 2h4v1h-4zM8 3h4v1h-4zM8 4h4v1h-4zM8 5h4v1h-4zM1 6h1v1h-1zM7 6h5v1h-5zM6 7h6v1h-6zM1 8h1v1h-1zM4 8h7v1h-7zM1 9h9v1h-9zM1 10h8v1h-8zM1 11h7v1h-7zM2 12h4v1h-4z'/%3E%3Cpath fill='%23c0f5bd' d='M37 2h2v1h-2zM36 3h4v1h-4zM35 4h5v1h-5zM34 5h6v1h-6zM34 6h5v1h-5zM33 7h5v1h-5zM34 8h2v1h-2z'/%3E%3Cpath fill='%239ff09a' d='M39 2h4v1h-4zM40 3h4v1h-4zM40 4h4v1h-4zM40 5h4v1h-4zM33 6h1v1h-1zM39 6h5v1h-5zM38 7h6v1h-6zM33 8h1v1h-1zM36 8h7v1h-7zM33 9h9v1h-9zM33 10h8v1h-8zM33 11h7v1h-7zM34 12h4v1h-4z'/%3E%3Cpath fill='%23a3a094' d='M12 4h1v1h-1zM12 5h1v1h-1zM12 6h1v1h-1zM12 7h2v1h-2zM11 8h3v1h-3zM10 9h4v1h-4zM9 10h4v1h-4zM8 11h4v1h-4zM6 12h5v1h-5zM4 13h6v1h-6zM6 14h2v1h-2z'/%3E%3Cpath fill='%236ca368' d='M44 4h1v1h-1zM44 5h1v1h-1zM44 6h1v1h-1zM44 7h2v1h-2zM43 8h3v1h-3zM42 9h4v1h-4zM41 10h4v1h-4zM40 11h4v1h-4zM38 12h5v1h-5zM36 13h6v1h-6zM38 14h2v1h-2z'/%3E%3Cpath fill='%23484641' d='M13 5h1v1h-1zM13 6h2v1h-2zM14 7h1v1h-1zM14 8h1v1h-1zM14 9h1v1h-1zM14 10h1v1h-1zM13 11h2v1h-2zM13 12h1v1h-1zM3 13h1v1h-1zM12 13h1v1h-1zM4 14h2v1h-2zM10 14h2v1h-2zM5 15h6v1h-6z'/%3E%3Cpath fill='%232f482e' d='M45 5h1v1h-1zM45 6h2v1h-2zM46 7h1v1h-1zM46 8h1v1h-1zM46 9h1v1h-1zM46 10h1v1h-1zM45 11h2v1h-2zM45 12h1v1h-1zM35 13h1v1h-1zM44 13h1v1h-1zM36 14h2v1h-2zM42 14h2v1h-2zM37 15h6v1h-6z'/%3E%3Cpath fill='%23f6c453' d='M18 9h1v1h-1zM21 9h1v1h-1zM24 9h1v1h-1zM27 9h1v1h-1zM30 9h1v1h-1z'/%3E%3Cpath fill='%2365635b' d='M13 10h1v1h-1zM12 11h1v1h-1zM11 12h2v1h-2zM10 13h2v1h-2zM8 14h2v1h-2z'/%3E%3Cpath fill='%23426440' d='M45 10h1v1h-1zM44 11h1v1h-1zM43 12h2v1h-2zM42 13h2v1h-2zM40 14h2v1h-2z'/%3E%3C/svg%3E") center / min(100%, 300px) auto no-repeat;
+  image-rendering: pixelated;
+}
+body.desk #multi .mp > [data-mp="inviteGo"] { grid-area: go; margin: 0 28px 12px; min-height: 62px; font-size: 15px; letter-spacing: 0.2em; }
+body.desk #multi .mp:has(> .mp-friends) > .sheet-actions { grid-area: acts; flex-direction: column; flex-wrap: nowrap; margin: 0 28px 28px; gap: 10px; }
+body.desk #multi .mp:has(> .mp-friends) > .sheet-actions .btn { flex: none; width: 100%; min-width: 0; min-height: 52px; font-size: 14px; }
+/* La liste : un grand cadre, les amis en grille, du haut vers le bas. */
+body.desk #multi .mp > .mp-friends {
+  grid-area: list;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  align-content: start;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px;
+  border: 1px solid var(--faint);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(241, 236, 218, 0.38) transparent;
+}
+/* Pas encore d'ami (ou chargement) : une illustration et le message au milieu du cadre. */
+body.desk #multi .mp > .mp-friends:has(> .muted) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  padding-bottom: 6%;
+  border-style: dashed;
+}
+body.desk #multi .mp > .mp-friends:has(> .muted)::before {
+  content: '';
+  width: min(100%, 288px);
+  height: 108px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='18' shape-rendering='crispEdges'%3E%3Cpath fill='%23f5f2e6' d='M5 2h2v1h-2zM4 3h4v1h-4zM3 4h5v1h-5zM2 5h6v1h-6zM2 6h5v1h-5zM1 7h5v1h-5zM2 8h2v1h-2z'/%3E%3Cpath fill='%23f1ecda' d='M7 2h4v1h-4zM8 3h4v1h-4zM8 4h4v1h-4zM8 5h4v1h-4zM1 6h1v1h-1zM7 6h5v1h-5zM6 7h6v1h-6zM1 8h1v1h-1zM4 8h7v1h-7zM1 9h9v1h-9zM1 10h8v1h-8zM1 11h7v1h-7zM2 12h4v1h-4z'/%3E%3Cpath fill='%236d6a60' d='M40 2h3v1h-3zM35 3h3v1h-3zM35 4h1v1h-1zM44 4h2v1h-2zM45 5h1v1h-1zM33 6h1v1h-1zM45 6h1v1h-1zM33 7h1v1h-1zM33 8h1v1h-1zM46 9h1v1h-1zM46 10h1v1h-1zM34 11h1v1h-1zM46 11h1v1h-1zM34 12h1v1h-1zM34 13h2v1h-2zM44 13h1v1h-1zM42 14h3v1h-3zM37 15h3v1h-3z'/%3E%3Cpath fill='%23a3a094' d='M12 4h1v1h-1zM12 5h1v1h-1zM12 6h1v1h-1zM12 7h2v1h-2zM11 8h3v1h-3zM10 9h4v1h-4zM9 10h4v1h-4zM8 11h4v1h-4zM6 12h5v1h-5zM4 13h6v1h-6zM6 14h2v1h-2z'/%3E%3Cpath fill='%23484641' d='M13 5h1v1h-1zM13 6h2v1h-2zM14 7h1v1h-1zM14 8h1v1h-1zM14 9h1v1h-1zM14 10h1v1h-1zM13 11h2v1h-2zM13 12h1v1h-1zM3 13h1v1h-1zM12 13h1v1h-1zM4 14h2v1h-2zM10 14h2v1h-2zM5 15h6v1h-6z'/%3E%3Cpath fill='%23f6c453' d='M18 9h1v1h-1z'/%3E%3Cpath fill='%23d3a847' d='M21 9h1v1h-1z'/%3E%3Cpath fill='%23b18d3b' d='M24 9h1v1h-1z'/%3E%3Cpath fill='%238e7130' d='M27 9h1v1h-1z'/%3E%3Cpath fill='%236c5624' d='M30 9h1v1h-1z'/%3E%3Cpath fill='%2365635b' d='M13 10h1v1h-1zM12 11h1v1h-1zM11 12h2v1h-2zM10 13h2v1h-2zM8 14h2v1h-2z'/%3E%3C/svg%3E") center / contain no-repeat;
+  image-rendering: pixelated;
+}
+body.desk #multi .mp-friends > .muted { margin: 0; max-width: 480px; font-size: 17px; line-height: 1.5; text-align: center; }
+
+/* Un ami : sa présence, son pseudo, son niveau ; la coche à droite. */
+body.desk #multi .mp-friend { gap: 14px; min-height: 80px; padding: 14px 20px; }
+body.desk #multi .mp-friend .on-dot { width: 10px; height: 10px; }
+body.desk #multi .mp-friend span b,
+body.desk #multi .mp-card .mp-friend span b { font-size: 18px; }
+body.desk #multi .mp-friend span b small { font-size: 12px; }
+body.desk #multi .mp-friend span > small { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.desk #multi .mp-friend em { font-size: 14px; }
+body.desk #multi .mp-friend[data-mp="pick"] em { display: grid; place-items: center; width: 34px; height: 34px; letter-spacing: 0; font-size: 17px; border: 1px solid var(--line); }
+body.desk #multi .mp-friend.on[data-mp="pick"] em { border-color: var(--good); }
+
+/* ─── Salon d'attente ───────────────────────────────────── */
+/* À gauche le code, les places, puis (partie entre amis) les invitations, les boutons en bas ; à
+ * droite la discussion, sur toute la hauteur. */
+body.desk #multi .mp:has(> .mp-seats) {
+  flex: 1 1 0;
+  min-height: 500px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    'head  chat'
+    'seats chat'
+    'acts  chat';
+  gap: 16px 24px;
+}
+/* Partie entre amis, côté hôte : les bots se règlent dans la barre du bas, entre QUITTER et LANCER ;
+ * les places sont compactes ; les invitations prennent toute la hauteur qui reste. */
+body.desk #multi .mp:has(> .mp-seats):has(> .mp-bots) {
+  grid-template-columns: minmax(150px, 200px) minmax(0, 1fr) minmax(240px, 320px) minmax(280px, 330px);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'head  head  head  chat'
+    'seats seats seats chat'
+    'inv   inv   inv   chat'
+    'quit  bots  go    chat';
+  column-gap: 16px;
+}
+body.desk #multi .mp:has(> .mp-seats):has(> .mp-bots):not(:has(> .mp-invites)) {
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    'head  head  head  chat'
+    'seats seats seats chat'
+    'quit  bots  go    chat';
+}
+body.desk #multi .mp:has(> .mp-seats):has(> .mp-bots) > .mp-card:has(.chat) { margin-left: 8px; }
+/* L'en-tête du salon : le titre, puis le code en grand, le texte et le bouton du lien sur une ligne. */
+body.desk #multi .mp:has(> .mp-seats) > .mp-card:first-child {
+  grid-area: head;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 8px 30px;
+  padding: 20px 24px;
+  border-color: var(--line);
+}
+body.desk #multi .mp:has(> .mp-seats) > .mp-card:first-child > b { flex: 1 0 100%; }
+body.desk #multi .mp:has(> .mp-seats) > .mp-card:first-child > p { flex: 1 1 220px; }
+body.desk #multi .mp:has(> .mp-seats) > .mp-card:first-child > .btn { flex: none; min-width: 220px; }
+body.desk #multi .mp-code { flex: none; padding: 0; font-size: 38px; line-height: 1.1; letter-spacing: 0.26em; text-shadow: 0 0 22px rgba(246, 196, 83, 0.35); }
+body.desk #multi .mp:has(> .mp-bots) .mp-code { font-size: 34px; }
+body.desk #multi .mp:has(> .mp-bots) > .mp-card:first-child { padding: 16px 24px; }
+
+/* Les places : des cartes, la photo au-dessus du pseudo (deux lignes au plus pour un long pseudo). */
+body.desk #multi .mp > .mp-seats {
+  grid-area: seats;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  align-content: stretch;
+  gap: 10px;
+  container-type: inline-size;
+}
+body.desk #multi .mp > .mp-seats:not(:has(> .mp-seat:nth-child(3))) { position: relative; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 64px; }
+/* Duel : « VS » entre les deux places. */
+body.desk #multi .mp > .mp-seats:not(:has(> .mp-seat:nth-child(3)))::after {
+  content: 'VS';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22px;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  color: var(--gold);
+  text-shadow: 0 0 16px rgba(246, 196, 83, 0.5);
+}
+body.desk #multi .mp-seat {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 108px;
+  padding: 14px 12px;
+  text-align: center;
+}
+body.desk #multi .mp-seat.on { flex-direction: column; gap: 8px; background: rgba(241, 236, 218, 0.04); }
+body.desk #multi .mp-seat .orb { width: 56px; height: 56px; }
+body.desk #multi .mp-seat .pfw { margin: 4px; }
+body.desk #multi .mp-seat-txt { align-items: center; max-width: 100%; }
+body.desk #multi .mp-seat b {
+  display: -webkit-box;
+  max-width: 100%;
+  font-size: 16px;
+  line-height: 1.18;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+body.desk #multi .mp-seat small { font-size: 13px; letter-spacing: 0.1em; }
+body.desk #multi .mp-seat.bot b { font-size: 14px; letter-spacing: 0.22em; }
+/* Une place libre : un cercle en pointillés de la taille de la photo (le « … » du téléphone est
+ * inutile à côté) ; un bot : un astre éteint. */
+body.desk #multi .mp-seat:not(.on)::before {
+  content: '';
+  flex: none;
+  box-sizing: border-box;
+  width: 56px;
+  height: 56px;
+  margin: 4px;
+  border: 2px dashed var(--line);
+  border-radius: 50%;
+}
+body.desk #multi .mp-seat.bot::before {
+  border: 1px solid var(--line);
+  background: radial-gradient(circle at 36% 34%, rgba(241, 236, 218, 0.24), rgba(241, 236, 218, 0.06) 62%, rgba(241, 236, 218, 0.02));
+}
+body.desk #multi .mp-seat:not(.on):not(.bot) > b { display: none; }
+body.desk #multi .mp-seat:not(.on):not(.bot) > small { font-size: 14px; letter-spacing: 0.14em; }
+/* En recherche (partie classée, sans code ni bouton LANCER) : les cercles tournent doucement. */
+body.desk #multi .mp:has(> .mp-seats):not(:has([data-mp="start"])):not(:has(.mp-code)) .mp-seat:not(.on):not(.bot)::before {
+  border-color: rgba(241, 236, 218, 0.34);
+  animation: deskMpSpin 9s linear infinite, deskMpPulse 2.4s ease-in-out infinite;
+}
+@keyframes deskMpSpin { to { rotate: 360deg; } }
+@keyframes deskMpPulse { 50% { scale: 1.07; border-color: rgba(241, 236, 218, 0.62); } }
+@media (prefers-reduced-motion: reduce) {
+  body.desk #multi .mp-seat:not(.on)::before { animation: none; }
+}
+/* Duel : deux grandes cartes face à face. */
+body.desk #multi .mp > .mp-seats:not(:has(> .mp-seat:nth-child(3))) .mp-seat .orb,
+body.desk #multi .mp > .mp-seats:not(:has(> .mp-seat:nth-child(3))) .mp-seat:not(.on)::before { width: 120px; height: 120px; }
+body.desk #multi .mp > .mp-seats:not(:has(> .mp-seat:nth-child(3))) .mp-seat { gap: 12px; }
+body.desk #multi .mp > .mp-seats:not(:has(> .mp-seat:nth-child(3))) .mp-seat b { font-size: 20px; }
+body.desk #multi .mp > .mp-seats:not(:has(> .mp-seat:nth-child(3))) .mp-seat small { font-size: 13px; }
+body.desk #multi .mp > .mp-seats:not(:has(> .mp-seat:nth-child(3))) .mp-seat:not(.on):not(.bot) > small { font-size: 15px; }
+
+/* Partie entre amis (hôte, avec des amis à inviter) : des places compactes, la photo à gauche du
+ * pseudo, pour laisser la hauteur aux invitations. */
+body.desk #multi .mp:has(> .mp-invites) > .mp-seats { grid-auto-rows: auto; align-content: start; gap: 8px; }
+body.desk #multi .mp:has(> .mp-invites) .mp-seat { flex-direction: row; justify-content: flex-start; gap: 10px; min-height: 58px; padding: 6px 12px; text-align: left; }
+body.desk #multi .mp:has(> .mp-invites) .mp-seat.on { flex-direction: row; }
+body.desk #multi .mp:has(> .mp-invites) .mp-seat .orb { width: 34px; height: 34px; }
+body.desk #multi .mp:has(> .mp-invites) .mp-seat .pfw { margin: 3px; }
+body.desk #multi .mp:has(> .mp-invites) .mp-seat-txt { align-items: flex-start; min-width: 0; }
+body.desk #multi .mp:has(> .mp-invites) .mp-seat b { font-size: 15px; }
+body.desk #multi .mp:has(> .mp-invites) .mp-seat:not(.on) {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: center;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 2px;
+}
+body.desk #multi .mp:has(> .mp-invites) .mp-seat:not(.on)::before { grid-row: 1 / 3; width: 34px; height: 34px; margin: 0 3px; }
+body.desk #multi .mp:has(> .mp-invites) .mp-seat:not(.on) > * { grid-column: 2; }
+body.desk #multi .mp:has(> .mp-invites) .mp-seat:not(.on):not(.bot) > small { grid-row: 1 / 3; font-size: 13px; }
+/* Colonne étroite (écran 4:3 ou 5:4) : la photo au-dessus du pseudo, pour qu'il reste lisible. */
+@container (max-width: 700px) {
+  body.desk #multi .mp:has(> .mp-invites) .mp-seat.on { flex-direction: column; justify-content: center; align-items: center; gap: 4px; padding: 8px 6px; text-align: center; }
+  body.desk #multi .mp:has(> .mp-invites) .mp-seat.on .mp-seat-txt { align-items: center; }
+  body.desk #multi .mp:has(> .mp-invites) .mp-seat .orb { width: 30px; height: 30px; }
+  body.desk #multi .mp:has(> .mp-invites) .mp-seat b { font-size: 14px; }
+}
+
+/* Les bots : dans la barre du bas, entre QUITTER et LANCER, à la hauteur des boutons. */
+body.desk #multi .mp > .mp-bots { grid-area: bots; gap: 12px; min-height: 56px; padding: 5px 6px 5px 18px; border-color: var(--line); }
+body.desk #multi .mp-bots span { font-size: 14px; letter-spacing: 0.22em; }
+body.desk #multi .mp-bots span small { font-size: 13px; letter-spacing: 0.06em; }
+body.desk #multi .mp-bots .btn { width: 46px; min-height: 44px; font-size: 22px; letter-spacing: 0; }
+body.desk #multi .mp-bots > b { min-width: 34px; font-size: 22px; }
+
+/* Inviter des amis : la liste prend la hauteur qui reste et défile, avec un fondu en bas et une barre
+ * de défilement visible. */
+body.desk #multi .mp > .mp-invites { grid-area: inv; min-height: 0; gap: 10px; padding: 16px 12px 0 20px; }
+body.desk #multi .mp-invites .mp-friends {
+  flex: 1 1 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  align-content: start;
+  gap: 8px 10px;
+  min-height: 0;
+  margin: 0;
+  padding: 0 6px 26px 0;
+  overflow-y: auto;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(241, 236, 218, 0.45) transparent;
+}
+body.desk #multi .mp-invites .mp-friend { gap: 12px; min-height: 58px; padding: 9px 16px; }
+body.desk #multi .mp-invites .mp-friend span b { font-size: 16px; }
+body.desk #multi .mp-invites .mp-friend span > small { font-size: 13px; }
+body.desk #multi .mp-invites .mp-friend em { font-size: 12px; letter-spacing: 0.14em; }
+
+/* Les boutons du salon : QUITTER à gauche, LANCER à droite. */
+body.desk #multi .mp:has(> .mp-seats) > .sheet-actions { grid-area: acts; margin: 0; gap: 12px; }
+body.desk #multi .mp:has(> .mp-seats) > .sheet-actions .btn { flex: 0 1 300px; min-height: 56px; font-size: 14px; }
+body.desk #multi .mp:has(> .mp-seats) > .sheet-actions [data-mp="leave"] { order: -1; flex-basis: 220px; margin-right: auto; }
+/* Partie entre amis (hôte) : les deux boutons deviennent des cases de la grille, autour des bots. */
+body.desk #multi .mp:has(> .mp-seats):has(> .mp-bots) > .sheet-actions { display: contents; }
+body.desk #multi .mp:has(> .mp-seats):has(> .mp-bots) > .sheet-actions [data-mp="leave"] { grid-area: quit; margin: 0; }
+body.desk #multi .mp:has(> .mp-seats):has(> .mp-bots) > .sheet-actions [data-mp="start"] { grid-area: go; min-width: 0; }
+
+/* La discussion : toute la hauteur à droite, les messages défilent. */
+body.desk #multi .mp > .mp-card:has(.chat) { grid-area: chat; grid-row: 1 / -1; min-height: 0; padding: 20px 20px 18px; }
+body.desk #multi .mp-card .chat { flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+body.desk #multi #mpBody .chat-list { flex: 1; max-height: none; min-height: 0; padding: 10px 12px; gap: 6px; border-color: var(--faint); scrollbar-width: thin; scrollbar-color: rgba(241, 236, 218, 0.38) transparent; }
+body.desk #multi .chat-msg { font-size: 14px; line-height: 1.45; }
+body.desk #multi .chat-msg b { font-size: 14px; letter-spacing: 0.04em; }
+body.desk #multi .chat-quick .chip { height: 34px; font-size: 13px; }
+body.desk #multi .chat-quick .chip:hover { border-color: var(--dim); }
+body.desk #multi .chat-input { padding: 10px 12px; font-size: 14px; }
+body.desk #multi .chat-form .btn { min-height: 44px; padding: 0 14px; letter-spacing: 0.12em; }
+body.desk #multi .chat-note,
+body.desk #multi .chat-empty { font-size: 13px; line-height: 1.4; }
+
+/* ─── Choix de la loi en ligne : comme en solo ───────────── */
+body.desk #multi .mp:has(> .mp-laws) {
+  flex: 1 1 0;
+  min-height: 500px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'head' 'list' 'go';
+  gap: 20px;
+}
+body.desk #multi .mp:has(> .mp-laws) > .mp-card { grid-area: head; flex-direction: row; align-items: baseline; justify-content: space-between; gap: 24px; padding: 18px 24px; border-color: var(--line); }
+body.desk #multi .mp:has(> .mp-laws) > .mp-card > b { font-size: 16px; }
+/* Le compte à rebours : l'information qui compte sur un choix de 20 s, en grand et en or. */
+body.desk #multi .mp:has(> .mp-laws) > .mp-card { align-items: center; }
+body.desk #multi .mp-card p[data-law-left] { font-size: 24px; color: var(--gold); letter-spacing: 0.1em; font-variant-numeric: tabular-nums; text-shadow: 0 0 18px rgba(246, 196, 83, 0.35); }
+/* Les lignes des trois cartes sont partagées ; une marge en haut et en bas centre le tout. */
+body.desk #multi .mp > .mp-laws {
+  grid-area: list;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr) repeat(4, auto) minmax(0, 1fr);
+  column-gap: 22px;
+  row-gap: 0;
+  min-height: 0;
+  container-type: size;
+}
+body.desk #multi .mp-law { grid-row: span 6; padding: 0 30px; }
+body.desk #multi .mp-law .sphere { grid-row: 2; width: auto; height: min(210px, 44cqh); aspect-ratio: 1; margin-bottom: 8px; }
+body.desk #multi .mp-law .fam-chip { grid-row: 3; }
+body.desk #multi .mp-law b { grid-row: 4; margin-top: 4px; }
+body.desk #multi .mp-law small { grid-row: 5; align-self: start; margin-top: 8px; }
+body.desk #multi .mp-law b { font-size: 22px; letter-spacing: 0.05em; }
+body.desk #multi .mp-law small { font-size: 16px; line-height: 1.45; color: rgba(241, 236, 218, 0.86); }
+body.desk #multi [data-mp="go"] { margin-top: 0; }
