@@ -1438,7 +1438,7 @@ découverte en glisse un parmi ses choix dans 7 % des cas. On en croise un dans 
 | 6 | Oméga | Neutre | 7/7 | Début de combat : vos autres astres gagnent +2/+2, les deux premiers Bouclier |
 | 1 | Lune de sang (v98) | Lunes | 2/3 | Fin de cycle : ses voisins gagnent +1/+1 |
 | 2 | Pangée (v98) | Minéral | 2/6 | Rempart ; fin de cycle : vos Remparts gagnent +1/+2 |
-| 2 | Oumuamua (v98) | Comètes | 2/3 | Quand vous actualisez, gagne +1/+1 (forme allongée) |
+| 2 | Oumuamua (v98) | Comètes | 3/4 | Quand vous actualisez, gagne +1/+1 (forme allongée) |
 | 3 | Bételgeuse (v98) | Brasier | 3/5 | Début de combat et Effondrement : 2 dégâts à tous les ennemis |
 | 3 | Prisme absolu (v98) | Cristal | 3/5 | Quand vous jouez un autre Cristal, il gagne +2/+2 |
 | 4 | Zéro absolu (v98) | Glace | 4/6 | Bouclier ; début de combat : vos autres astres gagnent Bouclier |
