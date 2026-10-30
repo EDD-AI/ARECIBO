@@ -141,6 +141,8 @@
       </nav>
       <!-- Petit lecteur de musique (v89) : morceau précédent, lecture ou pause, nom, morceau suivant. -->
       <div class="music-bar" id="musicBar" role="group" aria-label="Musique" data-t-attr="aria-label"></div>
+      <!-- Signaler un bug (v121, js/rapports.js) : le « ? » rond, en bas à gauche. -->
+      <button class="bug-btn" id="bugMenuBtn" type="button" aria-label="Signaler un bug" title="Signaler un bug" data-t-attr="aria-label title"></button>
       <p class="menu-foot" id="menuFoot">STUDIO EDDA</p>
     </section>
 
@@ -431,6 +433,7 @@
       </section>
 
       <footer class="game-foot">
+        <button class="bug-btn" id="bugGameBtn" type="button" aria-label="Signaler un bug" title="Signaler un bug" data-t-attr="aria-label title"></button>
         <button class="power" id="powerBtn"></button>
         <button class="btn primary fight" id="fightBtn" data-t>COMBATTRE</button>
         <button class="term-btn" id="termBtn" aria-label="Synergies" data-t-attr="aria-label"><span class="term-lbl" data-t>SYNERGIES</span></button>
@@ -553,6 +556,8 @@
   <script src="js/lang/position.js"></script>
   <script src="js/lang/eveil.js"></script>
   <script src="js/lang/contenu.js"></script>
+  <script src="js/lang/rapports.js"></script>
+  <script src="js/rapports.js"></script>
   <script src="js/planet-engine.js"></script>
   <script src="js/planet-renderer.js"></script>
   <script src="js/stage.js"></script>

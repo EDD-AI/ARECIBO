@@ -84,6 +84,8 @@ const SHELL = [
   './js/lang/position.js',
   './js/lang/eveil.js',
   './js/lang/contenu.js',
+  './js/lang/rapports.js',
+  './js/rapports.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',

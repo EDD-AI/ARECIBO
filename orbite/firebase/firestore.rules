@@ -7,10 +7,51 @@ rules_version = '2';
 // - matches/{id}   : une partie en ligne (salon, puis manches) ; posts/{uid} le plateau publié
 //                    par chaque joueur, rounds/{r} les plateaux retenus par l'hôte (écrits une fois).
 // - daily/{d}_{uid} : le score du défi du jour, écrit une seule fois par joueur et par jour (v84).
+// - rapports/{id}  : les bugs signalés par le bouton « ? » (v121). Tout le monde peut en écrire un,
+//                    même sans compte, avec des champs vérifiés ; seul le créateur les lit.
+// - admins/{uid}   : le créateur du jeu. Le document ne se crée qu'avec le code créateur, dont seule
+//                    l'empreinte SHA-256 est ici ; le code lui-même n'est écrit nulle part dans le dépôt.
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function isMe(uid) { return signedIn() && request.auth.uid == uid; }
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+
+    match /admins/{uid} {
+      allow read: if isMe(uid);
+      allow create: if isMe(uid)
+        && request.resource.data.keys().hasOnly(['cle'])
+        && request.resource.data.cle is string && request.resource.data.cle.size() <= 64
+        && hashing.sha256(request.resource.data.cle).toHexString().lower() == '3cbd5100482381349aae3b30d9c5c9f1651329f6d0bcf316561306382ffb3db2';
+    }
+
+    match /rapports/{id} {
+      function r() { return request.resource.data; }
+      function absent(k) { return !(k in r()); }
+      function texte(k, max) { return r()[k] is string && r()[k].size() <= max; }
+      // Une erreur de la liste : au plus 5, chacune un texte de 300 caractères au plus.
+      function erreur(i) { return r().erreurs.size() <= i || (r().erreurs[i] is string && r().erreurs[i].size() <= 300); }
+      // Identifiant tiré au hasard par le jeu (20 lettres ou chiffres) : un renvoi ne crée pas de doublon.
+      allow create: if id.matches('[A-Za-z0-9]{20}')
+        && r().keys().hasOnly(['texte', 'capture', 'version', 'ecran', 'langue', 'appareil', 'taille', 'erreurs', 'etat', 'pseudo', 'uid', 'cree', 'regle'])
+        && r().keys().hasAll(['texte', 'version', 'ecran', 'langue', 'appareil', 'taille', 'erreurs', 'cree', 'regle'])
+        && texte('texte', 1000) && r().texte.size() >= 1
+        && (absent('capture') || (texte('capture', 600000) && r().capture.matches('data:image/jpeg;base64,[A-Za-z0-9+/=]+')))
+        && r().version is int && r().version >= 1 && r().version <= 100000
+        && texte('ecran', 24) && texte('langue', 8) && texte('appareil', 300) && texte('taille', 40)
+        && r().erreurs is list && r().erreurs.size() <= 5
+        && erreur(0) && erreur(1) && erreur(2) && erreur(3) && erreur(4)
+        && (absent('etat') || texte('etat', 300))
+        && (absent('pseudo') || texte('pseudo', 16))
+        && (absent('uid') || (signedIn() && r().uid == request.auth.uid))
+        && r().cree == request.time
+        && r().regle == false;
+      // Le créateur lit les rapports et les marque réglés (rien d'autre ne change).
+      allow read, delete: if isAdmin();
+      allow update: if isAdmin()
+        && r().diff(resource.data).affectedKeys().hasOnly(['regle'])
+        && r().regle is bool;
+    }
 
     match /saves/{uid} {
       allow read, delete: if isMe(uid);

@@ -1738,3 +1738,11 @@ body.desk #multi .mp-law small { grid-row: 5; align-self: start; margin-top: 8px
 body.desk #multi .mp-law b { font-size: 22px; letter-spacing: 0.05em; }
 body.desk #multi .mp-law small { font-size: 16px; line-height: 1.45; color: rgba(241, 236, 218, 0.86); }
 body.desk #multi [data-mp="go"] { margin-top: 0; }
+
+/* Signaler un bug (v121) : le « ? » en bas de la colonne de droite, sous le combat et le terminal. */
+body.desk #game .bug-btn { order: 10; margin-top: auto; align-self: flex-end; width: 44px; min-height: 44px; }
+body.desk #game .bug-btn::after { content: none; }
+body.desk #game .bug-ico { width: 30px; height: 30px; }
+/* Les rapports de bugs du créateur : une fiche large, deux colonnes. */
+body.desk #overlay .sheet:has(> .rp-admin) { width: min(1040px, 100%); }
+body.desk .rp-admin .rp-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }

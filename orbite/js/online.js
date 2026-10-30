@@ -10,8 +10,9 @@
   const EMU = window.ORBITE_FIREBASE_EMULATOR || null;
   const SYNC_KEY = 'orbite.sync';
   // Ce qui ne suit pas le joueur d'un appareil à l'autre : l'écran ouvert, la partie ou
-  // l'expédition en cours, l'état de synchronisation.
-  const LOCAL_ONLY = ['orbite.session', 'orbite.partie.v1', 'orbite.campagne', SYNC_KEY];
+  // l'expédition en cours, l'état de synchronisation ; les bugs signalés en attente d'envoi (avec leur
+  // capture), l'heure du dernier envoi et le mode créateur de cet appareil (v121, js/rapports.js).
+  const LOCAL_ONLY = ['orbite.session', 'orbite.partie.v1', 'orbite.campagne', SYNC_KEY, 'orbite.rapports', 'orbite.rapports.envoi', 'orbite.createur'];
 
   const listeners = new Set();
   // synced : la progression en ligne est réglée (envoyée, ou récupérée, ce qui recharge la page).
@@ -430,11 +431,18 @@
     return res.docs.map((x) => x.data()).sort((a, b) => b.score - a.score || a.rounds - b.rounds).slice(0, 50);
   }
 
+  // Jeton de connexion du joueur, pour les appels REST à Firestore (bugs signalés, js/rapports.js) :
+  // null sans compte connecté.
+  async function idToken() {
+    if (!auth || !auth.currentUser) return null;
+    try { return await auth.currentUser.getIdToken(); } catch (err) { return null; }
+  }
+
   window.OrbiteOnline = {
     get configured() { return !!CFG; },
     state,
     on(fn) { listeners.add(fn); return () => listeners.delete(fn); },
-    boot, signIn, signOut, resolveConflict,
+    boot, signIn, signOut, resolveConflict, idToken,
     syncNow: () => uploadNow(),
     myCode: () => (state.user ? codeOf(state.user.uid) : ''),
     friends, addByCode, accept, remove, leaderboard, profileOf, dailySubmit, dailyTop,
