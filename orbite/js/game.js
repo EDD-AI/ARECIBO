@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 109;
+  const VERSION = 110;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -957,11 +957,26 @@
   }
 
   // ─── Marché stellaire ───────────────────────────────────────
+  // Le haut du marché (v110) : votre niveau, vos poussières et vos graines en grand, avec ce
+  // qu'elles servent à acheter.
+  function renderMkWallet() {
+    const li = levelInfo(xpTotal());
+    const num = (n) => Number(n).toLocaleString(I18N.lang);
+    $('mkWallet').innerHTML = `
+      <div class="mw-tile mw-lvl"><span class="mw-k">${tr('NIVEAU')}</span><b>${li.lvl}</b>
+        <div class="xp-bar"><i style="width:${Math.round(li.rest / li.need * 100)}%"></i></div>
+        <small>${tr('{a} / {b} XP', { a: li.rest, b: li.need })}</small></div>
+      <div class="mw-tile mw-dust">${icon('dust', 'mw-ico')}<span class="mw-k">${tr('POUSSIÈRES D’ÉTOILES')}</span><b>${num(dust())}</b>
+        <small>${tr('Gagnées en partie. Pour votre planète et les cosmétiques.')}</small></div>
+      <div class="mw-tile mw-seed">${seedArt('graine', 'mw-ico')}<span class="mw-k">${tr('GRAINES DE VIE')}</span><b>${num(seeds())}</b>
+        <small>${tr('Gagnées en jouant. Pour les cosmétiques et la Création.')}</small></div>`;
+    $('marketDust').innerHTML = '';
+  }
   function renderMarket() {
     const list = worldList(), lvl = levelInfo(xpTotal()).lvl;
     const nxt = W.next(list);
     $('marketBack').innerHTML = icon('back');
-    $('marketDust').innerHTML = wallet();
+    renderMkWallet();
     $('mkStage').textContent = W.stageName(list).toUpperCase();
     $('mkProg').style.width = (list.length / W.UPGRADES.length * 100) + '%';
     $('mkCount').textContent = tr('{a} / {b} améliorations · niveau {n}', { a: list.length, b: W.UPGRADES.length, n: lvl });
@@ -1168,7 +1183,13 @@
     if (tab === 'creation' && window.__orbite.forge) window.__orbite.forge.render();
     if (tab === 'graines') renderSeedShop();
     stage.sky = tab === 'cosmetiques' && SKY_BY_ID[ui.cosPick] ? SKY_BY_ID[ui.cosPick].mode : 0;
-    stage.skyGain = 1;
+    skyPreview(tab === 'cosmetiques');
+  }
+  // Aperçu d'un fond animé (v110) : atténué et pâli comme en partie (voir show), pour que le
+  // marché reste lisible et que le joueur voie le fond tel qu'il sera.
+  function skyPreview(on) {
+    stage.skyGain = on ? 0.3 : 1;
+    stage.skySat = on ? 0.45 : 1;
   }
   // Boutique des graines de vie : vitrine, offre de bienvenue, quatre paquets illustrés (de la graine
   // à l'arbre), ce qu'elles permettent et comment en gagner.
@@ -1271,10 +1292,10 @@
       SFX.golden();
       const [x, y] = center(buy);
       stage.burst(x, y, { n: 40, colors: [[246, 196, 83], [255, 255, 255]], speed: 90, life: 0.8 });
-      $('marketDust').innerHTML = wallet();
+      renderMkWallet();
       toast(k.avatar ? tr('{name} : votre nouvelle photo de profil.', { name: k.name }) : k.frame ? tr('{name} : votre nouveau cadre.', { name: k.name })
         : k.font ? tr('{name} : la nouvelle police de votre pseudo.', { name: k.name }) : tr('{name} : équipé pour vos parties.', { name: k.name }), 2600);
-      if (k.frame || k.avatar || k.font) { renderCosmetics(); $('marketDust').innerHTML = wallet(); return; }
+      if (k.frame || k.avatar || k.font) { renderCosmetics(); renderMkWallet(); return; }
     } else if (eq) {
       SFX.place();
       if (eq.dataset.kind === 'avatar') {
@@ -1306,7 +1327,7 @@
     } else return;
     ui.cosPick = row ? row.dataset.cos : ui.cosPick;
     stage.sky = SKY_BY_ID[ui.cosPick] ? SKY_BY_ID[ui.cosPick].mode : 0;
-    stage.skyGain = 1;
+    skyPreview(true);
     renderCosmetics();
   });
 
@@ -2264,8 +2285,11 @@
     }
     ui.formKey = key;
     ui.formCount = forms.length + phen.length;
+    // Le terminal des synergies affiche combien sont actives.
+    const tb = $('termBtn');
+    if (tb) { tb.dataset.n = String(forms.length + new Set(phen.map((x) => x.kind)).size); tb.classList.toggle('lit', tb.dataset.n !== '0'); }
   }
-  listen('allianceTag', 'click', () => { SFX.tap(); openFamilies(); });
+  listen('allianceTag', 'click', () => { SFX.tap(); openTerminal(); });
 
   function renderHand() {
     const p = me();
@@ -3254,30 +3278,46 @@
     tuto('repere');
   }
 
+  // Les familles de cet univers (v110) : une carte par famille avec son picto, sa couleur, trois de
+  // ses astres et combien vous en avez. Les synergies sont dans le terminal (openTerminal).
   function openFamilies() {
     const p = me();
-    const items = ui.state.families.concat(['neutre']).map((f) => {
+    const cards = ui.state.families.map((f) => {
       const n = p.board.filter((u) => R.famOf(u) === f).length;
-      // Chaque famille : son effet propre, puis ses formations à l'avant et à l'arrière (niveau I).
-      const forms = f === 'neutre' ? '' : `<p class="fam-form"><b>${tr('AVANT')}</b> ${esc(R.formText(f, 0, 1))}</p><p class="fam-form"><b>${tr('ARRIÈRE')}</b> ${esc(R.formText(f, 1, 1))}</p>`;
-      return `<div class="fam-item" style="--c:${famColor(f)}"><b>${R.FAMILIES[f].name.toUpperCase()}</b> <small>· ${tr('{n} dans votre système', { n })}</small><p>${esc(R.FAMILIES[f].text)}</p>${forms}</div>`;
+      const ex = [1, 3, 6].map((t) => R.CARDS.find((c) => c.fam === f && c.tier === t && !c.legend && !c.token)).filter(Boolean);
+      return `<div class="fam-card${n ? ' mine' : ''}" style="--c:${famColor(f)}">
+        <span class="fam-pic">${famIcon(f)}</span>
+        <div class="fam-body"><b>${esc(R.FAMILIES[f].name).toUpperCase()}</b>${n ? `<small class="fam-n">${tr('{n} dans votre système', { n })}</small>` : ''}<p>${esc(R.FAMILIES[f].text)}</p></div>
+        <div class="fam-orbs">${ex.map((c) => `<div class="orb" data-planet="${c.id}"></div>`).join('')}</div>
+      </div>`;
     }).join('');
-    const law = R.LAW[p.law];
+    openSheet(`<h3>${tr('FAMILLES DE CET UNIVERS')}</h3><div class="fam-cards">${cards}</div>
+      <p class="muted fam-note">${famIcon('neutre', 'mini')}<span>${tr('Les astres neutres se trouvent dans tous les univers.')}</span></p>`);
+  }
+
+  // Le terminal des synergies (v110, bouton en bas à droite et étiquette des formations) : vos
+  // formations, les bonus de formation des familles de cet univers, les phénomènes et l'arrière.
+  function openTerminal() {
+    const p = me();
+    const line = (f, head, body) => `<div class="tm-line" style="--c:${famColor(f)}">${famIcon(f, 'tm-ico')}<div><b>${head}</b>${body}</div></div>`;
     const active = R.formationsOf(p.board);
     const now = active.length
-      ? active.map((f) => `<div class="fam-item" style="--c:${famColor(f.fam)}"><b>${formLabel(f)}</b> <small>· ${tr('{n} astres', { n: f.n })}</small><p>${esc(R.formText(f.fam, f.row, f.lvl))}</p></div>`).join('')
-      : `<p class="muted">${tr('Aucune formation pour l’instant.')}</p>`;
+      ? active.map((f) => line(f.fam, `${formLabel(f)} <small>· ${tr('{n} astres', { n: f.n })}</small>`, `<p>${esc(R.formText(f.fam, f.row, f.lvl))}</p>`)).join('')
+      : `<p class="tm-dim">${tr('Aucune formation pour l’instant.')}</p>`;
+    const bonus = ui.state.families.map((f) => line(f, esc(R.FAMILIES[f].name).toUpperCase(),
+      `<p class="fam-form"><b>${tr('AVANT')}</b> ${esc(R.formText(f, 0, 1))}</p><p class="fam-form"><b>${tr('ARRIÈRE')}</b> ${esc(R.formText(f, 1, 1))}</p>`)).join('');
     const phen = R.phenomenaOf(p.board).map((x) => x.kind);
-    const phenHtml = Object.entries(R.PHENOMENA).map(([k, ph]) => `<div class="fam-item ph-item ${phen.includes(k) ? 'on' : ''}"><b>✦ ${esc(tr(ph.name)).toUpperCase()}</b>${phen.includes(k) ? ` <small>· ${tr('actif')}</small>` : ''}<p>${esc(tr(ph.text))}</p></div>`).join('');
-    const posHtml = ['portee', 'percee', 'garde'].map((k) => `<div class="fam-item" style="--c:var(--ink)"><b>${icon({ portee: 'range', percee: 'pierce', garde: 'guard' }[k])} ${esc(R.KEYWORDS[k].name).toUpperCase()}</b><p>${esc(R.KEYWORDS[k].text)}</p></div>`).join('');
-    openSheet(`<h3>${tr('VOS FORMATIONS')}</h3>${now}
-      <p class="muted">${tr('Deux astres d’une même famille dans la même rangée forment une formation : niveau I à 2 astres, II à 3, III à 4. Chaque famille a un bonus à l’avant et un autre à l’arrière, au début du combat.')}</p>
-      <h3 style="margin-top:18px">${tr('PHÉNOMÈNES')}</h3>
-      <p class="muted">${tr('Des combinaisons de placement qui transforment un astre au début du combat. « Juste derrière » : l’astre de l’arrière dans la même colonne.')}</p>
-      <div class="fam-list">${phenHtml}</div>
-      <h3 style="margin-top:18px">${tr('L’ARRIÈRE AU COMBAT')}</h3><div class="fam-list">${posHtml}</div>
-      <h3 style="margin-top:18px">${tr('FAMILLES DE CET UNIVERS')}</h3><div class="fam-list">${items}</div>
-      <h3 style="margin-top:18px">${tr('VOTRE LOI')}</h3>${lawHtml(p)}`);
+    const phenHtml = Object.entries(R.PHENOMENA).map(([k, ph]) => `<div class="tm-ph ${phen.includes(k) ? 'on' : ''}"><b>✦ ${esc(tr(ph.name)).toUpperCase()}</b>${phen.includes(k) ? ` <small>· ${tr('actif')}</small>` : ''}<p>${esc(tr(ph.text))}</p></div>`).join('');
+    const posHtml = ['portee', 'percee', 'garde'].map((k) => `<div class="tm-ph"><b>${icon({ portee: 'range', percee: 'pierce', garde: 'guard' }[k])} ${esc(R.KEYWORDS[k].name).toUpperCase()}</b><p>${esc(R.KEYWORDS[k].text)}</p></div>`).join('');
+    const sec = (title) => `<h4 class="tm-h">&gt; ${title}</h4>`;
+    openSheet(`<div class="term">
+      <div class="tm-bar">${pixArt(FAM_ART.terminal, 'tm-logo')}<span>ORBITE://${tr('SYNERGIES')}</span><i class="tm-cur"></i></div>
+      ${sec(tr('VOS FORMATIONS'))}${now}
+      <p class="tm-dim">${tr('Deux astres d’une même famille dans la même rangée forment une formation : niveau I à 2 astres, II à 3, III à 4. Chaque famille a un bonus à l’avant et un autre à l’arrière, au début du combat.')}</p>
+      ${sec(tr('BONUS DE FORMATION'))}${bonus}
+      ${sec(tr('PHÉNOMÈNES'))}<p class="tm-dim">${tr('Des combinaisons de placement qui transforment un astre au début du combat. « Juste derrière » : l’astre de l’arrière dans la même colonne.')}</p>${phenHtml}
+      ${sec(tr('L’ARRIÈRE AU COMBAT'))}${posHtml}
+    </div>`);
   }
 
   // ─── Événement cosmique, reliques, éveil des lois (v84) ─────
@@ -3301,23 +3341,64 @@
     maree: { pal: { b: '#2f6fd6', l: '#7fd8ff', w: '#ffffff' }, rows: ['............', '............', '............', '......ww....', '.....lll....', '....lbbblw..', '...lbbbll...', '..wlbbl....l', 'l...bbbl..lb', 'blllbbbbllbb', 'bbbbbbbbbbbb', 'bbbbbbbbbbbb'] },
     instable: { pal: { l: '#c8ff3a', m: '#ff4fd8', c: '#5ee7ff' }, rows: ['............', '.m........m.', '..mllllllc..', '...mllllllc.', '...mllllllc.', '.mllllllc...', '....mllllllc', '..mllllllc..', 'mllllllc....', '...mllllllc.', 'm..........m', '......m.....'] }
   };
+  // Pictos des familles (v110) : un dessin en pixels 12 × 12 par famille, plus le terminal des
+  // synergies. Même rendu que les pictos des événements.
+  const FAM_ART = {
+    vie: { pal: { g: '#5fd35a', l: '#b6f5a8', d: '#2f8a3a', b: '#8a5a2b', s: '#ffd447' }, rows: ['..........s.', '........gg..', '..gg...glgg.', '.glgg.ggggd.', '.ggggdgdd...', '..gddgg.....', '.....gg.....', '.....dg.....', '.....dg.....', '....dggd....', '..bbbbbbbb..', '...bbbbbb...'] },
+    neant: { pal: { v: '#9a6bff', p: '#e0a0ff', k: '#140a26', w: '#fff6e0', y: '#ffd27a', o: '#ff9a3c' }, rows: ['............', '...pppppp...', '..p..vv..p..', '...vkkkkv...', '..vkkkkkkv..', 'wyyokkkkoyyw', '.yoovkkvooy.', '...vkkkkv...', '....vvvv....', '............', '............', '............'] },
+    envers: { pal: { r: '#ff4f6d', p: '#ffa3b4' }, rows: ['............', '..rr....pp..', '.rrrr...pp..', 'rrrrrr..pp..', '..rr....pp..', '..rr....pp..', '..rr....pp..', '..rr....pp..', '..rr..pppppp', '..rr...pppp.', '..rr....pp..', '............'] },
+    brasier: { pal: { o: '#ff8a2a', y: '#ffd447', r: '#d8401c', w: '#fff3c0' }, rows: ['.....r......', '.....rr.....', '....rro.....', '....roor.r..', '...rrooorr..', '..rroyyoor..', '..royyyyor..', '.rroyywyorr.', '.rooywwyoor.', '.rooywwyoor.', '..rooyyoor..', '...rrrrrr...'] },
+    glace: { pal: { c: '#8be6ff', w: '#ffffff' }, rows: ['.....cc.....', '..c..cc..c..', '...c.cc.c...', '....cwwc....', '.c..cwwc..c.', 'cccccwwccccc', 'cccccwwccccc', '.c..cwwc..c.', '....cwwc....', '...c.cc.c...', '..c..cc..c..', '.....cc.....'] },
+    tempete: { pal: { t: '#2fd6b0', w: '#e8fff9', y: '#fff27a' }, rows: ['............', '....tttt....', '..tttwwttt..', '.ttwwwwwwtt.', 'ttwwwwwwwwtt', '.tttyytttt..', '....yy......', '...yyyyy....', '.....yy.....', '....yy......', '...y........', '............'] },
+    mineral: { pal: { m: '#b8743f', l: '#e0a56a', d: '#7a4a24', k: '#4a2c14' }, rows: ['............', '....llll....', '...lllmmm...', '..llmmmmmd..', '.llmmmmmmdd.', '.lmmmmmmddd.', 'lmmmmmmdddd.', 'lmmmmmdddddk', '.mmmmddddkk.', '..mddddkkk..', '...kkkkk....', '............'] },
+    machine: { pal: { s: '#9fb3c8', w: '#e6eef6', d: '#5d6f82' }, rows: ['.....ss.....', '..s..ss..s..', '.sssswwssss.', '..sswddwss..', '..swd..dws..', 'sssd....dsss', 'sssd....dsss', '..swd..dws..', '..ssdwwdss..', '.ssssssssss.', '..s..ss..s..', '.....ss.....'] },
+    lune: { pal: { y: '#ffd447', w: '#fff3b0', o: '#c99a1a' }, rows: ['....wyyy....', '..wyyyy.....', '.wyyyy...w..', '.yyyy.......', 'wyyyy.......', 'yyyyo...w...', 'yyyyo.......', 'yyyyy.......', '.yyyyo......', '.oyyyyo.....', '..ooyyyyo...', '....oooo....'] },
+    comete: { pal: { b: '#4f7bff', c: '#9fc0ff', w: '#ffffff' }, rows: ['...........c', '........ccbc', '.......cbbc.', '......cbbc..', '.....cbbc...', '...wcbbc....', '..wwwbc.....', '.wwwwwc.....', '.wwwwwb.....', '..www.......', '............', '............'] },
+    cristal: { pal: { p: '#ff6fd8', l: '#ffc2f0', d: '#b8329a' }, rows: ['.....l......', '....llp.....', '....lpp.....', '.l..lpp.....', 'lll.lpp..p..', 'lpp.lppdppp.', 'lpd.lppdlpd.', 'lpd.lppdlpd.', 'lpd.lppdlpd.', '.pd.lppdlpd.', '..dddddddd..', '............'] },
+    anomalie: { pal: { l: '#c8ff3a', m: '#ff4fd8', c: '#5ee7ff' }, rows: ['............', '..mllllllc..', '.mll....llc.', '.mll....llc.', '........llc.', '.......llc..', '......llc...', '.....mll....', '.....mll....', '............', '.....mllc...', '.....mllc...'] },
+    nebuleuse: { pal: { p: '#e58bff', v: '#9a6bff', w: '#ffffff', b: '#5ee7ff' }, rows: ['..........w.', '....pp..w...', '..ppvvpp....', '.pvvvvvvpp..', 'pvvwvvbvvvp.', 'pvvvvbbvvvpp', '.pvvvvvvwvvp', '..ppvvvvvpp.', '....ppppp...', '.w.......w..', '............', '............'] },
+    neutre: { pal: { w: '#f2efe6', g: '#b8b4a8', d: '#7d796f' }, rows: ['............', '............', '....wwww....', '...wwwwgg...', '..wwwwwggg..', '..wwwwgggd..', '..wwwggggd..', '..wwgggggd..', '...gggggd...', '....dddd....', '............', '............'] },
+    terminal: { pal: { s: '#d9d4c4', d: '#8a8678', k: '#0b1f14', g: '#6dff9a' }, rows: ['............', '.ssssssssss.', '.skkkkkkkks.', '.skgkkkkkks.', '.skkgkkkkks.', '.skgkggkkks.', '.skkkkkkkks.', '.sddddddddd.', '.....dd.....', '...ssssss...', '............', '............'] }
+  };
+  function pixArt(a, cls) {
+    let rects = '';
+    a.rows.forEach((row, y) => [...row].forEach((c, x) => { if (a.pal[c]) rects += `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${a.pal[c]}"/>`; }));
+    return `<svg class="${cls || ''}" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
+  }
+  const famIcon = (f, cls) => (FAM_ART[f] ? pixArt(FAM_ART[f], 'fam-ico ' + (cls || '')) : '');
   function eventIcon(id, cls) {
     const a = EVENT_ART[id];
     if (!a) return `<span class="ev-ico ${cls || ''}">✺</span>`;
-    let rects = '';
-    a.rows.forEach((row, y) => [...row].forEach((c, x) => { if (a.pal[c]) rects += `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${a.pal[c]}"/>`; }));
-    return `<svg class="ev-ico ${cls || ''}" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
+    return pixArt(a, 'ev-ico ' + (cls || ''));
   }
   function eventHtml(id) {
     const e = R.EVENT[id];
     return e ? `<div class="event-item"><span class="event-glyph">${eventIcon(id)}</span><span><small>${tr('ÉVÉNEMENT COSMIQUE')}</small><b>${esc(e.name).toUpperCase()}</b><p>${esc(e.text)}</p></span></div>` : '';
   }
-  function lawHtml(p) {
+  function lawBody(p) {
     const law = R.LAW[p.law];
-    const body = p.awake
+    return p.awake
       ? `<p class="awk on"><b>${tr('ÉVEILLÉE')}</b> ${esc(law.awake)}</p>`
       : `<p>${esc(law.text)}</p><p class="awk"><b>${tr('ÉVEIL AU CYCLE {n}', { n: R.AWAKE_ROUND })}</b> ${esc(law.awake)}</p>`;
-    return `<div class="fam-item${p.awake ? ' awake' : ''}" style="--c:${famColor(law.fam)}"><b>${esc(law.name).toUpperCase()}</b>${body}</div>`;
+  }
+  function lawHtml(p) {
+    const law = R.LAW[p.law];
+    return `<div class="fam-item${p.awake ? ' awake' : ''}" style="--c:${famColor(law.fam)}"><b>${esc(law.name).toUpperCase()}</b>${lawBody(p)}</div>`;
+  }
+  // Le bouton de la loi (quand elle n'a pas de pouvoir à utiliser) : votre loi, et seulement elle
+  // (v110) : sa sphère d'énergie, sa devise, son effet, son éveil et son premier astre.
+  function openLaw() {
+    const p = me(), law = R.LAW[p.law], st = R.CARD[law.starter];
+    const fam = law.fam === 'neutre' ? tr('POINTS DE VIE') : R.FAMILIES[law.fam].name.toUpperCase();
+    openSheet(`<div class="law-sheet${p.awake ? ' awake' : ''}" style="--c:${famColor(law.fam)}">
+      <canvas class="sphere" data-fam="${law.fam}" aria-hidden="true"></canvas>
+      <small class="law-kicker">${tr('VOTRE LOI')} · ${fam}</small>
+      <h3>${esc(law.name).toUpperCase()}</h3>
+      ${law.tagline ? `<p class="law-tag">${esc(law.tagline)}</p>` : ''}
+      <div class="law-box">${lawBody(p)}</div>
+      ${st ? `<p class="muted law-first">${tr('PREMIER ASTRE : {name}', { name: esc(st.name).toUpperCase() })} ${st.atk}/${st.hp}</p>` : ''}
+    </div>`, { center: true });
+    mountEnergy($('sheet'));
   }
   // Le bouton ✺ du haut : l'événement de la partie, vos reliques (et celles du rival en duel), votre loi.
   function openCosmos() {
@@ -4651,12 +4732,14 @@
   listen('fightBtn', 'click', fight);
   listen('rivals', 'click', () => { if (!ui.busy) { SFX.tap(); openRivals(); } });
   listen('famsBtn', 'click', () => { SFX.tap(); openFamilies(); });
+  $('termBtn').insertAdjacentHTML('afterbegin', pixArt(FAM_ART.terminal, 'term-ico'));
+  listen('termBtn', 'click', () => { if (ui.state) { SFX.tap(); openTerminal(); } });
   listen('menuBtn', 'click', () => { SFX.tap(); openMenu(); });
   listen('cosmosBtn', 'click', () => { if (ui.state) { SFX.tap(); openCosmos(); } });
   listen('powerBtn', 'click', () => {
     if (ui.busy) return;
     const p = me(), law = R.LAW[p.law];
-    if (!law.active) { openFamilies(); return; }
+    if (!law.active) { SFX.tap(); openLaw(); return; }
     const can = R.canUsePower(ui.state);
     if (!can.ok) { refuse(tr(can.reason)); return; }
     if (law.active.target) {

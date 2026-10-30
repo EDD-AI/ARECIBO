@@ -370,6 +370,25 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Fiches de la partie (v110)
+
+- **Familles de cet univers** (les carrés de couleur en haut) : une carte par famille de la partie, avec
+  son picto en pixel art (12 × 12, `FAM_ART` dans `js/game.js`), sa couleur, sa description, trois de
+  ses astres et combien vous en avez. Les familles que vous jouez sont mises en avant.
+- **Votre loi** (le bouton de la loi en bas à gauche, quand elle n'a pas de pouvoir à utiliser) : la loi
+  seule, avec sa sphère d'énergie, sa devise, son effet, son éveil et son premier astre.
+- **Terminal des synergies** (petit ordinateur en bas à droite, ou l'étiquette des formations) : une
+  fenêtre d'écran vert avec vos formations actives, les bonus de formation des familles de cet univers,
+  les phénomènes (ceux qui sont actifs en doré) et les règles de l'arrière. Un chiffre vert sur le bouton
+  compte les synergies actives.
+
+## Marché stellaire : ce que vous avez (v110)
+
+En haut du marché, trois grandes cases toujours visibles : votre **niveau** (et la barre d'expérience),
+vos **poussières d'étoiles** et vos **graines de vie**, en gros, avec ce qu'elles servent à acheter.
+Dans Cosmétiques, l'aperçu d'un fond animé est atténué et pâli comme en partie : le marché reste lisible
+et le fond se voit tel qu'il sera derrière vos astres.
+
 ## Entrée en partie : le trou noir (v109)
 
 Quand une partie commence (nouvelle partie, tutoriel, reprise depuis le menu, partie en ligne), un trou
