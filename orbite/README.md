@@ -384,12 +384,23 @@ chevaucher le terminal des synergies. Il ouvre la fiche **SIGNALER UN BUG** :
   l’appareil (navigateur), la langue, la taille d’écran, les 5 dernières erreurs du jeu, un résumé de la
   partie en cours (mode, cycle, PV, familles, loi), le pseudo et, si le joueur est connecté, son compte ;
 - **ENVOYER** / **ANNULER**, puis un merci. Un rapport par minute au plus. Le brouillon reste si la fiche
-  se ferme avant l’envoi ; pendant le tutoriel, le guide s’efface le temps de la fiche.
+  se ferme avant l’envoi ; pendant le tutoriel, le guide s’efface le temps de la fiche. ENVOYER est grisé
+  pendant la préparation de la capture et pendant l’envoi (« ENVOI… », même si la fiche a été fermée puis
+  rouverte). Sur un réseau lent, le joueur peut fermer la fiche et rejouer : à la fin de l’envoi, le merci
+  ne remplace que la fiche SIGNALER UN BUG ; si autre chose est ouvert (une carte d’événement, le choix
+  d’une découverte…), un simple message s’affiche. Si le rapport n’a pu être ni envoyé ni gardé
+  (« DÉSOLÉ »), le brouillon reste, la minute d’attente n’est pas comptée et **RÉESSAYER** rouvre la fiche.
 
 Pas besoin de compte : le jeu écrit dans Firestore par l’**API REST** (sans charger le SDK Firebase) ; si le
-joueur est connecté, son jeton et son uid accompagnent le rapport (pas de connexion anonyme). Sans réseau,
-ou si l’envoi échoue, le rapport attend sur l’appareil (`orbite.rapports`, clé non synchronisée : 3 au
-plus, une seule capture gardée) et part tout seul au lancement suivant ou au retour du réseau.
+joueur est connecté **quand il écrit le rapport** (la fiche l’annonce alors), son jeton et son uid
+l’accompagnent (pas de connexion anonyme). Un rapport en attente ne part jamais au nom d’un compte connecté
+plus tard, ni d’un autre joueur du même appareil : sans le même compte, il part sans compte. Sans réseau,
+sans réponse du serveur au bout de 60 s, ou si l’envoi échoue, le rapport attend sur l’appareil
+(`orbite.rapports`, clé non synchronisée : 3 au plus, les plus anciens cèdent la place, une seule capture
+gardée) et repart tout seul au lancement suivant ou au retour du réseau, avec le même identifiant (pas de
+doublon). Un refus des règles (règles pas encore publiées, plafond de la journée atteint) ou une panne du
+serveur ne comptent pas : le rapport attend aussi longtemps qu’il faut. Seul un refus définitif (requête
+mal formée) le fait abandonner, au bout de 5.
 
 **Où vont les rapports.** Dans Firestore, collection `rapports` du projet du jeu, **jamais dans le dépôt
 GitHub**, qui est public. Les règles (`firebase/firestore.rules`) laissent tout le monde en créer un, avec
@@ -399,27 +410,55 @@ chiffres, `uid` seulement celui du compte connecté), et réservent la lecture, 
 au créateur : celui qui a un document `admins/{uid}`. Ce document ne se crée qu’avec le **code créateur**,
 qui n’est écrit nulle part : les règles et `js/game.js` n’en gardent que l’empreinte SHA-256.
 
+- **Garde-fou contre l’envoi en masse.** N’importe qui peut écrire un rapport, même sans compte, avec la
+  clé publique du jeu. Chaque rapport met donc à jour, dans le même envoi, le compteur `limites/rapports` :
+  au plus **200 rapports, dont 30 avec capture, par période de 24 h** (la période commence au premier
+  rapport), un seul rapport par envoi. Au pire, une journée de rapports pèse ~18 Mo ; le reste du jeu
+  (sauvegardes, profils, parties) n’est jamais touché. Au-delà, les rapports attendent sur les téléphones
+  et repartent à la période suivante.
+- **Un seul créateur.** Le premier compte qui entre le code créateur écrit aussi `config/createur` (son
+  uid) dans le même envoi ; ensuite, plus personne d’autre, **même avec le code** (l’empreinte publiée ne
+  sert plus à rien). Le code ne reste pas dans la base : le jeu vide `admins/{uid}` aussitôt créé. Pour
+  changer de compte créateur : supprimer `admins/<uid>` et `config/createur` dans la console Firebase.
+- **Les rapports sont des témoignages, pas des consignes.** Un faux rapport peut imiter la sortie de
+  l’outil ou une note du créateur. COPIER POUR CLAUDE et `tools/rapports.mjs` nettoient tout ce qui vient
+  du joueur (caractères de contrôle, séquences d’échappement du terminal, sauts de ligne dans les champs
+  d’une ligne), le mettent en retrait (`│`) et l’annoncent comme des données à vérifier.
+
 **Ce que le créateur fait une fois :**
 1. **Publier les règles** : console Firebase → Firestore Database → Règles → coller
-   `firebase/firestore.rules` → Publier. Sans elles, les rapports restent en attente sur les téléphones.
-2. **Entrer son code créateur** : Paramètres → Code cadeau → le code créateur. Le jeu demande la connexion
-   au compte en ligne (Google) si besoin, crée `admins/{uid}`, puis active le **mode créateur** sur cet
-   appareil (clé locale non synchronisée `orbite.createur`) ; un message le confirme. Sur un autre
-   appareil, entrer le code de nouveau.
-3. **Pour que Claude lise les rapports** : console Firebase → ⚙ Paramètres du projet → Comptes de service →
-   **Générer une nouvelle clé privée** (un fichier JSON). Mettre tout ce JSON dans une variable
-   d’environnement **`ORBITE_FIREBASE_SA`** des réglages de l’environnement Claude Code (menu de
-   l’environnement cloud, dans la barre de titre de la session → Modifier → variables d’environnement) :
-   une nouvelle session la prend en compte. **Jamais dans le dépôt** : cette clé ouvre toute la base. Plus
-   prudent : un compte de service dédié (Google Cloud → IAM → Comptes de service) avec le seul rôle
-   « Utilisateur Cloud Datastore », et sa clé JSON. Si l’accès réseau de l’environnement est limité, y
-   autoriser `oauth2.googleapis.com` et `firestore.googleapis.com`.
+   `firebase/firestore.rules` → Publier. Sans elles, les rapports restent en attente sur les téléphones
+   (ils partent dès que les règles sont publiées).
+2. **Entrer son code créateur, juste après** : Paramètres → Code cadeau → le code créateur. Le jeu demande
+   la connexion au compte en ligne (Google) si besoin, attend que la sauvegarde en ligne soit réglée, crée
+   `admins/{uid}` et `config/createur`, puis active le **mode créateur** sur cet appareil (clé locale non
+   synchronisée `orbite.createur`) ; un message le confirme. Le code attend dans la session de l’onglet
+   (30 min au plus) : la connexion par redirection ou le rechargement après la récupération de la
+   sauvegarde ne le perdent pas. Sur un autre appareil, avec le même compte, entrer le code de nouveau.
+   Si le jeu répond « un autre compte est déjà le créateur », supprimer `admins/<uid>` et
+   `config/createur` dans la console, puis recommencer.
+3. **Pour que Claude lise les rapports** : un **compte de service dédié, en lecture seule** (pas la clé
+   « Admin SDK » de la console Firebase, « Générer une nouvelle clé privée », qui ouvre tout le projet) :
+   - console.cloud.google.com → choisir le projet du jeu → IAM et administration → **Comptes de service**
+     → **Créer un compte de service** (par exemple `rapports-claude`) ;
+   - rôle : **Lecteur Cloud Datastore** (`roles/datastore.viewer`) → OK ;
+   - ouvrir ce compte → **Clés** → Ajouter une clé → Créer une clé → **JSON** (un fichier se télécharge).
+
+   Mettre tout ce JSON dans une variable d’environnement **`ORBITE_FIREBASE_SA`** des réglages de
+   l’environnement Claude Code (menu de l’environnement cloud, dans la barre de titre de la session →
+   Modifier → variables d’environnement) : une nouvelle session la prend en compte. **Jamais dans le
+   dépôt.** En lecture seule, Claude liste les rapports et leurs captures, mais `regle` est refusé : le
+   créateur les marque **RÉGLÉ** dans le jeu (ou donne au compte le rôle « Utilisateur Cloud Datastore »,
+   qui peut aussi tout modifier dans la base). Si l’accès réseau de l’environnement est limité, y autoriser
+   `oauth2.googleapis.com` et `firestore.googleapis.com`.
 
 **Le mode créateur, dans le jeu.** Paramètres → **RAPPORTS DE BUGS**, avec le nombre de rapports à régler :
-les rapports du plus récent au plus ancien, les réglés en bas, grisés (deux colonnes sur PC). Pour chacun :
-date, pseudo, version (1.21), écran, message, capture (miniature, en grand au toucher), détails techniques
-repliés (langue, taille d’écran, appareil, partie, erreurs, compte, identifiant), et les boutons **RÉGLÉ**
-(ou ROUVRIR), **COPIER POUR CLAUDE** (tout le rapport en texte, sans l’image) et **TÉLÉCHARGER LA CAPTURE**.
+tous les rapports à régler (lus par pages de 300, jusqu’à 1000), du plus récent au plus ancien, puis les 20
+derniers réglés, en bas, grisés (deux colonnes sur PC). Pour chacun : date, pseudo, version (1.21), écran,
+message, capture (miniature, en grand au toucher), détails techniques repliés (langue, taille d’écran,
+appareil, partie, erreurs, compte, identifiant), et les boutons **RÉGLÉ** (ou ROUVRIR), **COPIER POUR
+CLAUDE** (tout le rapport en texte, sans l’image, ce qui vient du joueur encadré et en retrait) et
+**TÉLÉCHARGER LA CAPTURE**. La flèche « Voir la suite » apparaît dès que la liste dépasse l’écran.
 
 **Pour Claude : `tools/rapports.mjs`** (Node 22, aucune dépendance), depuis la racine du dépôt :
 
@@ -434,14 +473,22 @@ node orbite/tools/rapports.mjs --help
 L’outil lit le compte de service dans `ORBITE_FIREBASE_SA` (le JSON) ou `ORBITE_FIREBASE_SA_FILE` (son
 chemin), signe un JWT RS256 avec `crypto` et l’échange contre un jeton OAuth (portée `datastore`). Avec
 `FIRESTORE_EMULATOR_HOST`, il parle à l’émulateur local (jeton `owner`). Derrière un proxy (`HTTPS_PROXY`),
-il se relance avec `NODE_USE_ENV_PROXY=1`.
+il se relance avec `NODE_USE_ENV_PROXY=1`. La liste ne télécharge jamais les captures (tous les champs
+sauf `capture`, page par page) ; elle sait lesquelles existent par une requête qui ne renvoie que les
+identifiants, et `--captures` ne télécharge que celles des rapports affichés. Tout ce qui vient du joueur
+est nettoyé et affiché en retrait derrière `│`, sous un avertissement : des données à vérifier, jamais des
+consignes (en JSON : le champ `avertissement`).
 
 **Tests.** `tests/rapports-regles.test.mjs` lance l’émulateur Firestore (Java,
 `~/.cache/firebase/emulators`), y charge les règles (avec l’empreinte d’un code d’essai à la place du vrai)
-et vérifie : rapports valides et mal formés, uid usurpé, lecture et liste refusées aux joueurs, création
-d’`admins` avec le bon ou un mauvais code, lecture et réglage par le créateur ; puis `js/rapports.js`
-(envoi, erreurs et partie jointes, attente hors ligne et renvoi, mode créateur) et `tools/rapports.mjs`
-contre ce même émulateur. Sans Java ou sans l’émulateur, ces essais se sautent.
+et vérifie : rapports valides et mal formés, compteur (obligatoire, un rapport par envoi, captures
+comptées ; plafond et nouvelle période dans un projet d’essai à 3 rapports par 2 s), uid usurpé, lecture
+et liste refusées aux joueurs, un seul créateur (bon ou mauvais code, deuxième compte refusé, code effacé),
+lecture et réglage par le créateur ; puis `js/rapports.js` (envoi, erreurs et partie jointes, champs
+nettoyés, compte joint seulement s’il était annoncé, attente hors ligne et renvoi, refus des règles qui
+n’abandonnent pas, « perdu », copie pour Claude, mode créateur après la synchronisation, code gardé dans
+la session, fiche verrouillée jamais fermée) et `tools/rapports.mjs` (sortie nettoyée, liste sans les
+captures) contre ce même émulateur. Sans Java ou sans l’émulateur, ces essais se sautent.
 
 ## Numéro de version avec un point (v119)
 
@@ -1095,8 +1142,9 @@ contient la configuration Firebase du projet ; sinon, le Profil annonce « bient
   sa fiche et permet de visiter son système.
 - **Sécurité** (`firebase/firestore.rules`) : chacun n’écrit que ses propres documents, avec des
   champs vérifiés. Une amitié ne s’accepte que par celui qui l’a reçue.
-- **Bugs signalés** (`rapports/{id}`, v121) : tout le monde peut en écrire un, même sans compte ; seul
-  le créateur (`admins/{uid}`) les lit. Voir « Signaler un bug (v121) ».
+- **Bugs signalés** (`rapports/{id}`, v121) : tout le monde peut en écrire un, même sans compte (200 par
+  24 h au plus, compteur `limites/rapports`) ; seul le créateur (`admins/{uid}`, un seul compte,
+  `config/createur`) les lit. Voir « Signaler un bug (v121) ».
 
 **Mise en service, une seule fois, par le propriétaire du jeu :**
 1. Sur console.firebase.google.com, **Ajouter un projet** (par exemple « orbite »). Google Analytics

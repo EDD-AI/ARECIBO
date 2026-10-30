@@ -45,7 +45,9 @@ nouvelle version, la **checklist** se coche au fur et à mesure.
 - [ ] (toi) Publier les règles Firestore (`firebase/firestore.rules`) dans la console Firebase.
       Plus bloquant depuis la v75 (les duels se reconnaissent aussi sans le champ `size`), mais
       les règles à jour limitent un duel à deux joueurs côté serveur. Les bugs signalés (bouton « ? »,
-      v121) en ont besoin : sans elles, les rapports restent en attente sur les téléphones.
+      v121) en ont besoin : sans elles, les rapports restent en attente sur les téléphones. Juste
+      après, entrer son code créateur (Paramètres → Code cadeau) : le premier compte qui l'entre
+      devient le seul créateur.
 - [ ] (toi + moi) Faire jouer le duel aux testeurs : placement, formations, durée (~12 cycles).
 - [ ] (moi) Supprimer son compte depuis le jeu (et ses données en ligne).
 - [ ] (moi) Remontée des erreurs (plantages chez les joueurs). Depuis la v121, chaque bug signalé
