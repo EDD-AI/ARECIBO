@@ -423,16 +423,17 @@
     // CRISTAL : résonance, chaque Cristal joué renforce les autres. Allégés en v90 : un joueur « tout
     // Cristal » gagnait 73 % de ses duels contre l'IA experte (33 à 53 % pour les autres familles),
     // 57 % après (scratch cristal-sim : naïf une famille contre IA experte, 300 duels).
-    // u.res compte les résonances déjà reçues par Quartz et Opale.
+    // u.res compte les résonances déjà reçues par Quartz (v109 : +2/+2 une fois ; doré +3/+3 deux fois).
     { id: 'quartz', fam: 'cristal', tier: 1, atk: 2, hp: 2, name: 'Quartz', look: { type: 'crystal', seed: 9301, shape: 'monolithe' },
-      text: 'Quand vous jouez un autre Cristal, gagne +{1}/+{1} (2 fois au plus).',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < 2) { u.res = (u.res || 0) + 1; x.buff(u, m, m); } } },
+      text: 'Quand vous jouez un autre Cristal, gagne +{2}/+{2} (une seule fois).',
+      textGold: 'Quand vous jouez un autre Cristal, gagne +3/+3 (2 fois au plus).',
+      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < m) { u.res = (u.res || 0) + 1; x.buff(u, m + 1, m + 1); } } },
     { id: 'amethyste', fam: 'cristal', tier: 1, atk: 2, hp: 3, name: 'Améthyste', look: { type: 'crystal', seed: 9302, hueShift: 60, shape: 'amas' },
       text: 'Naissance : un autre Cristal aléatoire gagne +{1} PV.',
       play(x, u, m) { x.buff(x.rnd(x.fam('cristal', u)), 0, m); } },
     { id: 'prisme', fam: 'cristal', tier: 2, atk: 2, hp: 4, name: 'Prisme', look: { type: 'crystal', seed: 9303, shell: true, shape: 'bloc' },
-      text: 'Quand vous jouez un Cristal, vos Cristaux gagnent +{1} PV (4 fois au plus).',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < 4) { u.res = (u.res || 0) + 1; for (const v of x.fam('cristal')) x.buff(v, 0, m); } } },
+      text: 'Naissance : vos autres Cristaux gagnent +{1}/+{2}.',
+      play(x, u, m) { for (const v of x.fam('cristal', u)) x.buff(v, m, 2 * m); } },
     { id: 'saphir', fam: 'cristal', tier: 2, atk: 3, hp: 3, name: 'Saphir', look: { type: 'crystal', seed: 9304, hueShift: 180, shape: 'diamant' },
       text: 'Début de combat : gagne +{1}/+{1} par autre Cristal (3 au plus).',
       start(c, u, m) { const n = Math.min(3, c.alliesFam(u.side, 'cristal').length - 1) * m; if (n > 0) c.buff(u, n, n); } },
@@ -440,8 +441,8 @@
       text: 'Quand vous jouez un Cristal, il gagne +{1}/+{1}.',
       allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') x.buff(b, m, m); } },
     { id: 'opale', fam: 'cristal', tier: 3, atk: 3, hp: 5, name: 'Opale', kw: ['bouclier'], look: { type: 'crystal', seed: 9306, shell: true },
-      text: 'Bouclier. Quand vous jouez un Cristal, gagne +{1}/+{1} (4 fois au plus).',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < 4) { u.res = (u.res || 0) + 1; x.buff(u, m, m); } } },
+      text: 'Bouclier. Début de combat : les Cristaux à ses côtés gagnent Bouclier.',
+      start(c, u) { for (const v of c.neighbors(u)) if (famOf(v) === 'cristal') c.kw(v, 'bouclier'); } },
     { id: 'emeraude', fam: 'cristal', tier: 4, atk: 5, hp: 5, name: 'Émeraude', look: { type: 'crystal', seed: 9307, hueShift: 120, shape: 'foret' },
       text: 'Quand vous jouez un Cristal, deux Cristaux aléatoires gagnent +{1} Attaque.',
       allyPlay(x, u, m, b) {
