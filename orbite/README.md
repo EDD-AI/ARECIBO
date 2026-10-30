@@ -375,8 +375,7 @@ pas d’historique avant la v102.
 Sur un écran d'ordinateur (16:9), les menus ne sont plus une colonne de téléphone au milieu : ils
 prennent toute la page, comme la partie et le Codex (tout est dans `css/desk.css`, sous `body.desk` ;
 le téléphone ne change pas).
-- **Menu principal** : la barre des choix s'étale en largeur sous l'horizon, les missions du jour en
-  haut à gauche, le profil en haut à droite, la musique en bas à gauche.
+- **Menu principal** : il garde sa mise en page d'avant (préférée par le joueur).
 - **Fiches** (Paramètres, Comment jouer, familles, loi, terminal…) : des fenêtres centrées et larges,
   sur deux colonnes quand c'est utile ; leur hauteur tient compte du zoom (le haut ne sort plus de
   l'écran).
