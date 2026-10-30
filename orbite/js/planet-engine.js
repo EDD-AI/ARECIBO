@@ -1137,6 +1137,10 @@
     if (opts.mood === 'envers') applyMood(g, (L, C, h) => (L < 0.52 ? [L * 0.8, C * 0.45 + 0.025, hueToward(h, 250, 120)] : [L * 0.92, C * 0.7 + 0.06, hueToward(h, 18, 140)]));
     // Obsidienne : verre volcanique presque noir, reflets violets.
     if (opts.mood === 'obsidienne') applyMood(g, (L, C, h) => [L * 0.5 + 0.06, C * 0.6 + 0.02, hueToward(h, 285, 160)]);
+    // Bleu nuit : roche bleu foncé, pour un croissant de lune sombre (Grande Marée, v117).
+    if (opts.mood === 'bleu-nuit') applyMood(g, (L, C, h) => [L * 0.52 + 0.04, C * 0.4 + 0.09, hueToward(h, 258, 180)]);
+    // Pleine lune : roche blanche et grise, sans couleur (les mers restent un peu plus sombres).
+    if (opts.mood === 'pleine') applyMood(g, (L, C, h) => [Math.min(0.97, L * 0.52 + 0.45), C * 0.12, hueToward(h, 95, 180)]);
     // Planétésimaux de la Genèse : un gros rocher dont la matière dépend de ce qu'il a absorbé.
     if (opts.mood === 'p-glace') applyMood(g, (L, C, h) => [Math.min(0.96, L * 0.85 + 0.24), C * 0.45 + 0.025, hueToward(h, 205, 180)]);
     if (opts.mood === 'p-roche') applyMood(g, (L, C, h) => [L * 0.82, C * 1.1 + 0.045, hueToward(h, 20, 180)]);
@@ -1152,6 +1156,12 @@
       g.night = g.light[2] < 0;
       // Croissant découpé : seule la partie éclairée est dessinée, la sphère disparaît.
       g.cut = g.night && !!opts.crescent;
+    }
+    // Astre qui brille (pleine lune) : un halo blanc qui ondule autour, et des teintes un cran plus claires.
+    if (opts.glow) {
+      body.glow = 1.6;
+      body.pal[12] = gradRamp([[0.55, 0.02, 230], [0.8, 0.02, 220], [0.93, 0.015, 95], [0.995, 0.005, 95]]);
+      g.bright = 1;
     }
 
     computeExtent(g);

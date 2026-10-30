@@ -230,6 +230,10 @@
     ['LÉGENDAIRES', 'LEGENDARIES', 'LEGENDARIOS', 'LEGENDÄRE', 'LENDÁRIOS'],
     ['Rareté', 'Rarity', 'Rareza', 'Seltenheit', 'Raridade'],
     ['de {a} à {b} graines', 'from {a} to {b} seeds', 'de {a} a {b} semillas', '{a} bis {b} Lebenssamen', 'de {a} a {b} sementes'],
+    // Cadre laser et codes cadeaux en graines (v117)
+    ['Laser rouge', 'Red Laser', 'Láser rojo', 'Roter Laser', 'Laser vermelho'],
+    ['Un rayon laser rouge fait sans fin le tour de votre profil.', 'A red laser beam endlessly circles your profile.', 'Un rayo láser rojo recorre sin fin el contorno de tu perfil.', 'Ein roter Laserstrahl umkreist endlos dein Profil.', 'Um raio laser vermelho percorre sem fim o contorno do seu perfil.'],
+    ['Code accepté : +{n} poussières d’étoiles et +{s} graines de vie.', 'Code accepted: +{n} stardust and +{s} seeds of life.', 'Código aceptado: +{n} de polvo de estrellas y +{s} semillas de vida.', 'Code angenommen: +{n} Sternenstaub und +{s} Lebenssamen.', 'Código aceito: +{n} de poeira estelar e +{s} sementes da vida.'],
     // Spectateur en ligne (v105)
     ['MANCHE EN COURS', 'ROUND IN PROGRESS', 'RONDA EN CURSO', 'RUNDE LÄUFT', 'RODADA EM ANDAMENTO'],
     ['Les autres créateurs jouent leur tour…', 'The other creators are playing their turn…', 'Los demás creadores juegan su turno…', 'Die anderen Schöpfer spielen ihren Zug…', 'Os outros criadores estão jogando o turno…'],

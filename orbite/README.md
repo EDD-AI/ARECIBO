@@ -370,6 +370,20 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Pleine Lune, Grande Marée bleu nuit, cadre Laser rouge (v117)
+
+- **Pleine Lune** : une vraie pleine lune blanche, éclairée de face (lumière `[0.12, 0.14, 1]`), roche
+  blanche et grise (humeur `pleine`), teintes un cran plus claires et un **halo blanc** qui ondule
+  autour (option `glow: true` d'un look : halo de mode 4 sur la rampe 12 du corps). La bulle
+  arc-en-ciel est retirée.
+- **Grande Marée** : un croissant **bleu foncé** (humeur `bleu-nuit`).
+- **Cadre « Laser rouge »** (premium, **300 graines de vie**, en graines seulement) : un contour rouge
+  vif qui pulse, et un rayon blanc et rouge qui en fait le tour sans fin (dégradé conique dont l'angle
+  `--frl` tourne grâce à `@property` ; sans `@property`, le rayon reste immobile).
+- **Codes cadeaux** : un code peut maintenant donner des poussières **et** des graines de vie (champ
+  `seeds`). Seule l'empreinte SHA-256 du code est dans le jeu ; chaque code ne sert qu'une fois par
+  appareil.
+
 ## Nouveaux visuels et photos de profil (v115)
 
 - **Vraies lunes en croissant** : Europe et Grande Marée ne sont plus des sphères, seule la partie
