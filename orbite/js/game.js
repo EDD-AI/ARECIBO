@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 118;
+  const VERSION = 119;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -33,8 +33,10 @@
   // l'avoir). Pas de « ?. » dans ce fichier : un iPhone resté sous iOS 12 ou 13 ne le lirait plus.
   function listen(id, type, fn, opts) { const el = $(id); if (el) el.addEventListener(type, fn, opts); }
   const SAVE_KEY = 'orbite.partie.v1';
-  // Le jeu est en pré-alpha : le numéro s'affiche toujours « PRE.ALPHA n ».
-  const VERSION_LABEL = 'PRE.ALPHA ' + VERSION;
+  // Le jeu est en pré-alpha : le numéro s'affiche « PRE.ALPHA 1.19 » (un point après les centaines :
+  // 119 → 1.19, 205 → 2.05). En interne, VERSION reste un entier, qui sert à comparer les versions.
+  const versionName = (v) => Math.floor(v / 100) + '.' + String(v % 100).padStart(2, '0');
+  const VERSION_LABEL = 'PRE.ALPHA ' + versionName(VERSION);
   const DUST_KEY = 'orbite.poussieres';
 
   const ui = {
