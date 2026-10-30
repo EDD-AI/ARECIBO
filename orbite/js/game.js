@@ -3454,6 +3454,7 @@
     if (!p.relicChoice || !p.relicChoice.length) return Promise.resolve();
     return new Promise((resolve) => {
       ui.relicDone = resolve;
+      SFX.relic();
       const items = p.relicChoice.map((id, i) => relicHtml(id, `data-act="relic" data-i="${i}"`)).join('');
       openSheet(`<h3>${tr('RELIQUE · CYCLE {n}', { n: ui.state.round })}</h3><h2>${tr('Choisissez une relique')}</h2><p class="muted">${tr('Elle reste avec vous jusqu’à la fin de la partie.')}</p><div class="relic-list pick">${items}</div>`, { center: true, locked: true });
     });
