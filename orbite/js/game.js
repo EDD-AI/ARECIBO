@@ -85,6 +85,7 @@
     snow: ['..X.X..', 'X..X..X', '.X.X.X.', '..XXX..', '.X.X.X.', 'X..X..X', '..X.X..'],
     menu: ['XXXXXXX', '.......', 'XXXXXXX', '.......', 'XXXXXXX'],
     back: ['...X...', '..X....', '.XXXXXX', '..X....', '...X...'],
+    fwd: ['...X...', '....X..', 'XXXXXX.', '....X..', '...X...'],
     soundOn: ['...X...', '..XX.X.', 'XXXX..X', 'XXXX..X', '..XX.X.', '...X...'],
     soundOff: ['...X....', '..XX....', 'XXXX.X.X', 'XXXX..X.', '..XX.X.X', '...X....'],
     dust: ['...X...', '...X...', '..XXX..', 'XXXXXXX', '..XXX..', '...X...', '...X...'],
@@ -3165,7 +3166,8 @@
     const act = b.dataset.act;
     // Pendant un combat (en ligne, on ne peut pas le passer), le son et l'aide restent accessibles ;
     // quitter la partie attend la fin du combat. Les Paramètres ne dépendent jamais d'une partie.
-    const anytime = act === 'choose' || act === 'relic' || act === 'close' || act === 'rival' || act === 'set' || (act === 'menu' && (b.dataset.v === 'sound' || b.dataset.v === 'help'));
+    const anytime = act === 'choose' || act === 'relic' || act === 'close' || act === 'rival' || act === 'set' || act === 'help' || (act === 'menu' && (b.dataset.v === 'sound' || b.dataset.v === 'help'));
+    if (act === 'help') { SFX.tap(); openSheet(helpHtml(b.dataset.from === '1', Number(b.dataset.v))); return; }
     if (ui.busy && !anytime) { if (act === 'menu') toast(tr('Possible à la fin du combat.'), 1800); return; }
     if (act === 'buy') {
       const slot = Number(b.dataset.slot);
@@ -3501,25 +3503,43 @@
     </div>`);
   }
 
-  function helpHtml(fromSettings) {
+  // Comment jouer (v111) : cinq pages courtes (le duel, le placement, les synergies, lire la partie,
+  // gagner) au lieu d'une longue liste ; des points et PRÉCÉDENT / SUIVANT pour tourner les pages.
+  function helpHtml(fromSettings, page) {
     const ic = { sword: icon('sword'), heart: icon('heart'), skull: icon('skull'), spark: icon('spark') };
-    return `<h3>${tr('COMMENT JOUER')}</h3><ul class="help">
-      <li>${tr('En <b>duel</b>, vous affrontez un seul rival, cycle après cycle. Chaque cycle : vous achetez, vous placez, puis votre système combat seul. Le premier à 0 PV perd. La <b>mêlée à 8</b> (Multijoueur) suit les mêmes règles contre sept univers.')}</li>
-      <li>${tr('<b>Acheter</b> coûte 3 énergies (glissez un astre vers votre main ou directement dans le système). <b>Vendre</b> rend 1 énergie, 2 pour un astre doré (glissez un astre du système vers la Création). <b>Actualiser</b> coûte 1.')}</li>
-      <li>${tr('<b>Geler</b> garde les astres proposés pour le cycle suivant. <b>Monter de niveau</b> débloque des astres plus puissants ; le prix baisse à chaque cycle.')}</li>
-      <li>${tr('Votre système a <b>deux rangées de 4</b> (7 astres au plus). L’<b>avant</b> attaque et encaisse ; l’<b>arrière</b> est à l’abri des attaques et <b>avance</b> quand l’avant est tombé. Les effets des astres agissent depuis les deux rangées.')}</li>
-      <li>${tr('Chaque astre de l’avant frappe l’ennemi <b>en face</b> de lui (les Remparts d’abord), de gauche à droite. Aucun hasard dans les cibles : votre placement décide.')}</li>
-      <li>${tr('<b>Formation</b> : deux astres d’une même famille dans la même rangée. Chaque famille a un bonus à l’avant et un autre à l’arrière, plus fort à 3 et 4 astres. Mélangez : trois Brasier devant, deux Glace derrière…')}</li>
-      <li>${tr('L’arrière a son rôle : <b>Portée</b> attaque depuis l’arrière sans riposte ; <b>Percée</b> frappe l’arrière ennemi ; <b>Garde</b>, à l’avant, protège votre arrière de la Percée.')}</li>
-      <li>${tr('<b>Phénomènes</b> : certaines combinaisons de placement transforment un astre au début du combat. Un Minéral juste derrière un astre le fait grossir ; deux Néant l’un derrière l’autre forment un trou noir ; deux Brasier, une supernova… La liste est dans la fiche des familles.')}</li>
-      <li>${tr('Touchez la barre du rival pour voir le <b>système qu’il a joué</b> au dernier combat, et adaptez votre placement.')}</li>
-      <li>${tr('<b>Touchez un astre</b> pour lire ce qu’il fait, même en combat ou chez un rival. Sous chaque astre : {sword} son <b>Attaque</b> et {heart} ses <b>PV</b>. En haut à droite : {skull} il a un effet d’<b>Effondrement</b> (quand il est détruit, comme laisser des Débris), {spark} il a un autre effet.', ic)}</li>
-      <li>${tr('<b>Trois copies</b> d’un même astre fusionnent en un <b>astre doré</b> (stats doublées). Le placer offre une <b>découverte</b> du niveau supérieur.')}</li>
-      <li>${tr('Chaque partie active <b>5 familles</b> sur 12, plus les neutres. La réserve est <b>partagée</b> : si des rivaux jouent une famille, ses astres se font rares.')}</li>
-      <li>${tr('Le perdant subit : niveau du gagnant + niveaux de ses astres survivants. En duel, chacun commence avec <b>deux fois plus de PV</b>. En mêlée, <b>maximum {n} dégâts</b> tant que plus de trois univers sont en vie.', { n: R.DAMAGE_CAP })}</li>
-      <li>${tr('Un duel gagné rapporte {d} poussières d’étoiles. En mêlée, seuls les <b>trois premiers</b> en gagnent : {a}, {b} et {c}.', { d: R.DUEL.rewards[1], a: R.REWARDS[1], b: R.REWARDS[2], c: R.REWARDS[3] })}</li>
-      <li>${tr('Chaque partie rapporte de l’<b>expérience</b>. Les niveaux ouvrent des améliorations au <b>Marché stellaire</b> : avec vos poussières, faites renaître votre planète, celle qui tourne derrière le menu, ou achetez des <b>fonds animés</b> ({n}) pour vos parties.', { n: COS_PRICE })}</li>
-    </ul><div class="sheet-actions">${fromSettings ? `<button class="btn" data-act="set" data-v="tutos">${icon('back')} ${tr('TUTORIELS')}</button>` : ''}<button class="btn primary" data-act="close">${tr('COMPRIS')}</button></div>`;
+    const pages = [
+      [tr('LE DUEL'), [
+        tr('En <b>duel</b>, vous affrontez un seul rival, cycle après cycle. Chaque cycle : vous achetez, vous placez, puis votre système combat seul. Le premier à 0 PV perd. La <b>mêlée à 8</b> (Multijoueur) suit les mêmes règles contre sept univers.'),
+        tr('<b>Acheter</b> coûte 3 énergies (glissez un astre vers votre main ou directement dans le système). <b>Vendre</b> rend 1 énergie, 2 pour un astre doré (glissez un astre du système vers la Création). <b>Actualiser</b> coûte 1.'),
+        tr('<b>Geler</b> garde les astres proposés pour le cycle suivant. <b>Monter de niveau</b> débloque des astres plus puissants ; le prix baisse à chaque cycle.')]],
+      [tr('LE PLACEMENT'), [
+        tr('Votre système a <b>deux rangées de 4</b> (7 astres au plus). L’<b>avant</b> attaque et encaisse ; l’<b>arrière</b> est à l’abri des attaques et <b>avance</b> quand l’avant est tombé. Les effets des astres agissent depuis les deux rangées.'),
+        tr('Chaque astre de l’avant frappe l’ennemi <b>en face</b> de lui (les Remparts d’abord), de gauche à droite. Aucun hasard dans les cibles : votre placement décide.'),
+        tr('L’arrière a son rôle : <b>Portée</b> attaque depuis l’arrière sans riposte ; <b>Percée</b> frappe l’arrière ennemi ; <b>Garde</b>, à l’avant, protège votre arrière de la Percée.')]],
+      [tr('LES SYNERGIES'), [
+        tr('<b>Formation</b> : deux astres d’une même famille dans la même rangée. Chaque famille a un bonus à l’avant et un autre à l’arrière, plus fort à 3 et 4 astres. Mélangez : trois Brasier devant, deux Glace derrière…'),
+        tr('<b>Phénomènes</b> : certaines combinaisons de placement transforment un astre au début du combat. Un Minéral juste derrière un astre le fait grossir ; deux Néant l’un derrière l’autre forment un trou noir ; deux Brasier, une supernova… La liste est dans le terminal des synergies (le petit ordinateur).'),
+        tr('<b>Trois copies</b> d’un même astre fusionnent en un <b>astre doré</b> (stats doublées). Le placer offre une <b>découverte</b> du niveau supérieur.')]],
+      [tr('LIRE LA PARTIE'), [
+        tr('Touchez la barre du rival pour voir le <b>système qu’il a joué</b> au dernier combat, et adaptez votre placement.'),
+        tr('<b>Touchez un astre</b> pour lire ce qu’il fait, même en combat ou chez un rival. Sous chaque astre : {sword} son <b>Attaque</b> et {heart} ses <b>PV</b>. En haut à droite : {skull} il a un effet d’<b>Effondrement</b> (quand il est détruit, comme laisser des Débris), {spark} il a un autre effet.', ic),
+        tr('Chaque partie active <b>5 familles</b> sur {n}, plus les neutres. La réserve est <b>partagée</b> : si des rivaux jouent une famille, ses astres se font rares.', { n: R.FAMILY_KEYS.length })]],
+      [tr('GAGNER'), [
+        tr('Le perdant subit : niveau du gagnant + niveaux de ses astres survivants. En duel, chacun commence avec <b>deux fois plus de PV</b>. En mêlée, <b>maximum {n} dégâts</b> tant que plus de trois univers sont en vie.', { n: R.DAMAGE_CAP }),
+        tr('Un duel gagné rapporte {d} poussières d’étoiles. En mêlée, seuls les <b>trois premiers</b> en gagnent : {a}, {b} et {c}.', { d: R.DUEL.rewards[1], a: R.REWARDS[1], b: R.REWARDS[2], c: R.REWARDS[3] }),
+        tr('Chaque partie rapporte de l’<b>expérience</b>. Les niveaux ouvrent des améliorations au <b>Marché stellaire</b> : avec vos poussières, faites renaître votre planète, celle qui tourne derrière le menu, ou achetez des <b>fonds animés</b> ({n}) pour vos parties.', { n: COS_PRICE })]]
+    ];
+    const i = Math.max(0, Math.min(pages.length - 1, page || 0)), last = i === pages.length - 1;
+    const go = (n, label, cls) => `<button class="btn ${cls || ''}" data-act="help" data-v="${n}" data-from="${fromSettings ? 1 : 0}">${label}</button>`;
+    const dots = pages.map((pg, k) => `<button class="help-dot${k === i ? ' on' : ''}" data-act="help" data-v="${k}" data-from="${fromSettings ? 1 : 0}" aria-label="${esc(pg[0])}"></button>`).join('');
+    const prev = i > 0 ? go(i - 1, `${icon('back')} ${tr('PRÉCÉDENT')}`)
+      : fromSettings ? `<button class="btn" data-act="set" data-v="tutos">${icon('back')} ${tr('TUTORIELS')}</button>` : '';
+    const next = last ? `<button class="btn primary" data-act="close">${tr('COMPRIS')}</button>` : go(i + 1, `${tr('SUIVANT')} ${icon('fwd')}`, 'primary');
+    return `<h3>${tr('COMMENT JOUER')} · ${i + 1}/${pages.length}</h3>
+      <h2 class="help-title">${pages[i][0]}</h2>
+      <ul class="help">${pages[i][1].map((t) => `<li>${t}</li>`).join('')}</ul>
+      <div class="help-dots">${dots}</div>
+      <div class="sheet-actions">${prev}${next}</div>`;
   }
 
   async function menuAction(v) {

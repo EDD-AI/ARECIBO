@@ -16,6 +16,10 @@ body.desk .overlay,
 body.desk .toast,
 body.desk .chat-pops,
 body.desk .defi-pops { zoom: var(--z); }
+/* Les fiches sont zoomées : leur hauteur en vh se divise par --z, sinon le haut sort de l'écran et
+   ne se fait plus défiler (v111). */
+body.desk .sheet { max-height: calc(88vh / var(--z)); }
+body.desk .overlay.top .sheet { max-height: calc(82vh / var(--z)); }
 
 /* ─── Partie : trois colonnes ─────────────────────────────── */
 body.desk #game {
