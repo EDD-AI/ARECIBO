@@ -1229,6 +1229,9 @@
     ui.mkTab = tab;
     for (const b of $('mkTabs').children) b.classList.toggle('on', b.dataset.tab === tab);
     for (const p of document.querySelectorAll('#market .mk-pane')) p.hidden = p.dataset.pane !== tab;
+    // Ma planète se redessine à chaque retour : des poussières dépensées dans un autre onglet (un astre
+    // de Mon système, un cosmétique) changent ce qu'on peut acheter.
+    if (tab === 'planete') renderMarket();
     if (tab === 'cosmetiques') { ui.cosPick = cosmetics().on || ''; renderCosmetics(); }
     // Mon système (v119) : tout le système solaire, du Soleil rouge à Pluton (js/systeme-ui.js).
     if (tab === 'systeme' && window.__orbite.systeme) window.__orbite.systeme.render();
@@ -4451,7 +4454,8 @@
     const SY = window.OrbiteSysteme;
     const unlocks = W.UPGRADES.filter((u) => u.lvl === lvl).map((u) => u.name)
       .concat(SY ? SY.unlocks(SY.sanitize(readJson(SY.KEY, {})), lvl).map((x) => `${x.up.name} (${x.body.name})`) : []);
-    $('lvlGift').innerHTML = `${icon('dust')} ${tr('+{n} poussières d’étoiles', { n: LEVEL_GIFT })}` + unlocks.slice(0, 3).map((name) => `<br><span>${tr('Nouvelle amélioration au Marché : {name}', { name: esc(name) })}</span>`).join('');
+    // Chaque amélioration sur sa ligne (span en bloc, sans <br> : il laisserait une ligne vide entre deux).
+    $('lvlGift').innerHTML = `${icon('dust')} ${tr('+{n} poussières d’étoiles', { n: LEVEL_GIFT })}` + unlocks.slice(0, 3).map((name) => `<span>${tr('Nouvelle amélioration au Marché : {name}', { name: esc(name) })}</span>`).join('');
     $('lvlGift').classList.remove('show');
     $('lvlHint').classList.remove('show');
     ov.classList.remove('charging', 'boom');
@@ -4763,7 +4767,7 @@
     SFX.tap();
     await backToMenu();
   });
-  listen('marketBtn', 'click', async () => { SFX.tap(); stopAmbient(); renderMarket(); marketTab('planete'); await show('market'); });
+  listen('marketBtn', 'click', async () => { SFX.tap(); stopAmbient(); marketTab('planete'); await show('market'); });
   // Création : Forge des mondes, Atelier des planètes, Bâtisseur de colonies.
   async function openCreation() {
     stopAmbient();

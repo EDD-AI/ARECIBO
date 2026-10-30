@@ -256,7 +256,8 @@ body.modal #gl { z-index: 35; }
 .lvl-title { grid-area: 1 / 1; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .pixel-word.gold rect { fill: var(--gold); }
 .lvl-flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
-.lvl-gift { margin: 0; font-size: 14px; letter-spacing: 0.1em; color: var(--gold); opacity: 0; transform: translateY(6px); transition: opacity 0.6s, transform 0.6s; }
+/* Centré, et les annonces d'amélioration passent à la ligne plutôt que de toucher les bords. */
+.lvl-gift { margin: 0; max-width: min(340px, calc(100vw - 40px)); text-align: center; font-size: 14px; letter-spacing: 0.1em; color: var(--gold); opacity: 0; transform: translateY(6px); transition: opacity 0.6s, transform 0.6s; }
 .lvl-gift.show { opacity: 1; transform: none; }
 .lvlup.charging .lvl-stage { animation: lvlShake 1.6s ease-in both; }
 .lvlup.charging .lvl-ring { animation: lvlImplode 1.6s ease-in both; }
@@ -526,15 +527,24 @@ body.modal #gl { z-index: 35; }
 
 /* Mon système (v119) : le système solaire animé (le Soleil rouge au centre, neuf orbites, votre planète
    à la place de la Terre) et une carte par astre. */
-.sy-view { position: relative; overflow: hidden; }
+/* Pas zoomée, un doigt qui glisse fait défiler la page ; zoomée, il déplace la vue (js/systeme-ui.js). */
+.sy-view { position: relative; overflow: hidden; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+.sy-view.zoomed { touch-action: none; cursor: grab; }
+.sy-view.dragging, .sy-view.dragging button.sy-body { cursor: grabbing; }
 .sy-orbits { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .sy-orbits ellipse { fill: none; stroke-width: 1; }
 .sy-orbits ellipse.on { stroke: var(--oc, rgba(241, 236, 218, 0.5)); stroke-opacity: 0.26; }
 /* L'orbite d'un astre pas encore acheté : à peine là. */
 .sy-orbits ellipse.off { stroke: rgba(241, 236, 218, 0.07); stroke-dasharray: 1 6; }
-.sy-layer { position: absolute; inset: 0; }
-.sy-body { position: absolute; left: 0; top: 0; width: 20px; height: 20px; padding: 0; border: 0; background: none; will-change: transform; }
-.sy-body .orb { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* Les astres dessinés (rangés par profondeur) et, au-dessus, leurs zones sensibles (jamais déplacées). */
+.sy-layer, .sy-hits { position: absolute; inset: 0; }
+.sy-layer { pointer-events: none; }
+.sy-hits { z-index: 1; }
+.sy-orb, .sy-body { position: absolute; left: 0; top: 0; width: 20px; height: 20px; will-change: transform; }
+.sy-body { padding: 0; border: 0; background: none; }
+/* L'indice du zoom : discret, dans un coin (sur téléphone, la vue déborde de 14 px de chaque côté). */
+.sy-hint { position: absolute; right: 22px; bottom: 6px; z-index: 2; font-size: 10px; letter-spacing: 0.08em; color: var(--dim); text-shadow: 0 0 4px #000; pointer-events: none; opacity: 0; transition: opacity 0.4s; }
+.sy-hint.on { opacity: 0.85; }
 /* Les petits astres se touchent facilement : la zone sensible déborde un peu. */
 button.sy-body::before { content: ''; position: absolute; inset: -9px; }
 .sy-body small { position: absolute; left: 50%; top: 100%; margin-top: 3px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 4px; font-size: 9px; letter-spacing: 0.16em; color: var(--dim); white-space: nowrap; pointer-events: none; text-shadow: 0 0 4px #000; }
@@ -701,7 +711,7 @@ button.sy-body { cursor: pointer; }
 .pf-hist b { font-size: 16px; font-weight: 600; }
 .pf-hist .podium b { color: var(--gold); }
 .pf-hist small { font-size: 11px; color: var(--dim); }
-.lvl-gift span { display: block; margin-top: 6px; font-size: 12px; color: var(--ink); letter-spacing: 0.04em; }
+.lvl-gift span { display: block; margin-top: 6px; font-size: 12px; line-height: 1.4; color: var(--ink); letter-spacing: 0.04em; }
 .screen-head { display: flex; align-items: center; gap: 6px; height: 44px; }
 .screen-head h2 { margin: 0; font-size: 18px; letter-spacing: 0.14em; font-weight: 400; }
 .hint { margin: 2px 0 14px; color: var(--dim); font-size: 13px; }

@@ -100,7 +100,11 @@ window.OrbiteI18n.add({
     "Achetez les astres du système solaire, du Soleil rouge à Pluton, puis améliorez-les. Votre planète prend la place de la Terre. Ceux qui visitent votre système les voient.": "Buy the bodies of the solar system, from the red Sun to Pluto, then upgrade them. Your planet takes the Earth’s place. Anyone who visits your system sees them.",
     "À LA PLACE DE LA TERRE": "IN THE EARTH’S PLACE",
     "VOIR MA PLANÈTE": "SEE MY PLANET",
-    "{n} AMÉLIORATIONS": "{n} UPGRADES"
+    "{n} AMÉLIORATIONS": "{n} UPGRADES",
+    "Pincez pour zoomer": "Pinch to zoom",
+    "Molette pour zoomer": "Scroll to zoom",
+    "Double toucher : vue d’ensemble": "Double-tap: whole view",
+    "Double clic : vue d’ensemble": "Double-click: whole view"
   },
   es: {
     "Une lune de roche claire, qui tourne autour de votre planète.": "Una luna de roca clara que gira alrededor de tu planeta.",
@@ -201,7 +205,11 @@ window.OrbiteI18n.add({
     "Achetez les astres du système solaire, du Soleil rouge à Pluton, puis améliorez-les. Votre planète prend la place de la Terre. Ceux qui visitent votre système les voient.": "Compra los astros del sistema solar, del Sol rojo a Plutón, y luego mejóralos. Tu planeta ocupa el lugar de la Tierra. Quienes visitan tu sistema los ven.",
     "À LA PLACE DE LA TERRE": "EN LUGAR DE LA TIERRA",
     "VOIR MA PLANÈTE": "VER MI PLANETA",
-    "{n} AMÉLIORATIONS": "{n} MEJORAS"
+    "{n} AMÉLIORATIONS": "{n} MEJORAS",
+    "Pincez pour zoomer": "Pellizca para ampliar",
+    "Molette pour zoomer": "Usa la rueda para ampliar",
+    "Double toucher : vue d’ensemble": "Doble toque: vista completa",
+    "Double clic : vue d’ensemble": "Doble clic: vista completa"
   },
   de: {
     "Une lune de roche claire, qui tourne autour de votre planète.": "Ein Mond aus hellem Gestein, der deinen Planeten umkreist.",
@@ -302,7 +310,11 @@ window.OrbiteI18n.add({
     "Achetez les astres du système solaire, du Soleil rouge à Pluton, puis améliorez-les. Votre planète prend la place de la Terre. Ceux qui visitent votre système les voient.": "Kaufe die Gestirne des Sonnensystems, von der roten Sonne bis Pluto, und verbessere sie dann. Dein Planet nimmt den Platz der Erde ein. Wer dein System besucht, sieht sie.",
     "À LA PLACE DE LA TERRE": "AN STELLE DER ERDE",
     "VOIR MA PLANÈTE": "MEINEN PLANETEN ANSEHEN",
-    "{n} AMÉLIORATIONS": "{n} VERBESSERUNGEN"
+    "{n} AMÉLIORATIONS": "{n} VERBESSERUNGEN",
+    "Pincez pour zoomer": "Mit zwei Fingern zoomen",
+    "Molette pour zoomer": "Mausrad zum Zoomen",
+    "Double toucher : vue d’ensemble": "Doppelt tippen: Gesamtansicht",
+    "Double clic : vue d’ensemble": "Doppelklick: Gesamtansicht"
   },
   pt: {
     "Une lune de roche claire, qui tourne autour de votre planète.": "Uma lua de rocha clara que gira em torno do seu planeta.",
@@ -403,6 +415,10 @@ window.OrbiteI18n.add({
     "Achetez les astres du système solaire, du Soleil rouge à Pluton, puis améliorez-les. Votre planète prend la place de la Terre. Ceux qui visitent votre système les voient.": "Compre os astros do sistema solar, do Sol vermelho a Plutão, depois melhore-os. Seu planeta fica no lugar da Terra. Quem visita o seu sistema os vê.",
     "À LA PLACE DE LA TERRE": "NO LUGAR DA TERRA",
     "VOIR MA PLANÈTE": "VER MEU PLANETA",
-    "{n} AMÉLIORATIONS": "{n} MELHORIAS"
+    "{n} AMÉLIORATIONS": "{n} MELHORIAS",
+    "Pincez pour zoomer": "Use dois dedos para ampliar",
+    "Molette pour zoomer": "Roda do mouse para ampliar",
+    "Double toucher : vue d’ensemble": "Toque duplo: visão geral",
+    "Double clic : vue d’ensemble": "Clique duplo: visão geral"
   }
 });

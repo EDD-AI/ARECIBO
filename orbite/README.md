@@ -400,7 +400,21 @@ chez ceux qui vous visitent.
   non linéaire) et les géantes sont un peu resserrées (taille à l’écran : `size^0.72`), pour que tout
   tienne lisiblement sur un téléphone de 390 px ; sur PC, le système occupe toute la colonne de gauche.
   Ce qui passe devant le Soleil est dessiné après lui. Toucher un astre amène à sa carte (son nom
-  apparaît au survol de la souris).
+  apparaît au survol de la souris). Chaque astre a deux éléments : l’astre dessiné, rangé par
+  profondeur dans le DOM (le moteur dessine dans l’ordre du DOM), et sa zone sensible avec son nom,
+  qui ne bouge jamais dans le DOM (profondeur par `z-index`) : sinon le navigateur annule un clic de
+  souris en cours et le focus du clavier saute.
+- **Zoom** (×1 à ×4, même chose dans la visite) : au repos, la vue d’ensemble. Sur téléphone, pincer
+  à deux doigts zoome, un doigt fait glisser la vue quand elle est zoomée (sinon la page défile
+  normalement), un double toucher revient à la vue d’ensemble. Sur PC, la molette zoome autour du
+  pointeur (sur la vue seulement : ailleurs, elle fait défiler la page), glisser avec la souris
+  déplace la vue zoomée, un double clic revient. Les astres restent nets : on agrandit leurs boîtes et
+  leurs positions (le moteur dessine un `[data-planet]` à la taille de sa boîte), pas un
+  `transform: scale`. Zoomée, la vue devient un cadre `data-clipbox` pour le moteur (les cadres
+  imbriqués se recoupent : la vue dans son onglet qui défile). Un petit indice dans un coin (« Pincez
+  pour zoomer » / « Molette pour zoomer ») reste tant que le joueur n’a jamais zoomé
+  (`orbite.syzoom`), puis, quand c’est zoomé, rappelle comment revenir. Un glissement ou un
+  pincement n’amène pas à une carte.
 - **Les cartes**, dans l’ordre du système (le Soleil d’abord, votre planète à la place de la Terre,
   avec un bouton vers l’onglet Ma planète) : un astre pas encore acheté a une carte courte (l’astre
   éteint, une phrase, le prix) ; un astre acheté montre sa prochaine amélioration (niveau, prix, raison
@@ -680,7 +694,7 @@ Profil → **SUCCÈS** : 100 objectifs en 10 catégories, chacun rapporte de 1 �
 | Légendaires | 7 | en posséder un, puis chacun des 6 en fin de partie |
 | Exploits | 7 | gagner sans perdre un combat, avec 3 PV ou moins, en 12 cycles ; 7 astres, 3 dorés, deux formations |
 | En ligne | 10 | première partie, victoire, 10 parties, partie privée, placement, rangs Lune → Singularité |
-| Création | 5 | débloquer, semer 3 graines, taille 15, acheter le Soleil, réunir la Lune, Neptune et le Soleil (v119) |
+| Création | 5 | débloquer, semer 3 graines, taille 15, acheter le Soleil, réunir les 10 astres du système solaire (v119) |
 | Colonie | 9 | tour de contrôle, 10 / 25 bâtiments, 10 / 25 / 50 colons, 400 de recherche, tout le terrain, 20 arbres |
 | Expédition | 6 | partir, 5 / 25 découvertes, ruines, 200 cases de la base, 100 tronçons |
 | Divers | 5 | mener sa planète à la civilisation verte, niveaux 10 / 25 / 50 / 75 |
@@ -781,8 +795,8 @@ planète ».
 - **Renommer** est gratuit.
 
 **Mon système** (l’étoile de la Forge et ses orbites) n’est plus dans Création depuis la v119 : il est
-remplacé par l’onglet MON SYSTÈME du Marché stellaire (la Lune, Neptune et le Soleil, voir
-« Mon système (v119) »). Les règles de l’étoile restent dans `js/forge.js` (testées), et ses données
+remplacé par l’onglet MON SYSTÈME du Marché stellaire (tout le système solaire, du Soleil rouge à
+Pluton, voir « Mon système (v119) »). Les règles de l’étoile restent dans `js/forge.js` (testées), et ses données
 dans `orbite.forge`, pour les anciens clients.
 
 Les règles sont dans `js/forge.js` (testées par `tests/forge.test.mjs`) et l’interface dans

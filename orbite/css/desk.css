@@ -491,6 +491,9 @@ body.desk #market .sy-state b { font-size: 22px; letter-spacing: 0.12em; }
 body.desk #market .sy-state .xp-bar { align-self: stretch; height: 5px; }
 body.desk #market .sy-state small { font-size: 13px; }
 body.desk #market .sy-body small { font-size: 11px; }
+body.desk .sy-hint { right: 12px; bottom: 10px; font-size: 12px; }
+/* Passage de niveau : sur PC, la place ne manque pas, chaque amélioration tient sur une ligne. */
+body.desk .lvl-gift { max-width: 600px; }
 body.desk #market .sy-intro { grid-area: intro; font-size: 14px; }
 body.desk #market .sy-cards { grid-area: cards; gap: 14px; padding-bottom: 10px; }
 body.desk #market .sy-card { padding: 16px 20px; gap: 10px; }

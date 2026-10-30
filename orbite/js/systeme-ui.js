@@ -56,28 +56,48 @@
   for (let i = 1; i < REACH.length; i++) RX[i] = RX[i - 1] + 0.72 * (REACH[i - 1] + REACH[i]) + 0.55;
   const OUTER = RX[RX.length - 1] + REACH[REACH.length - 1];
 
-  function bodyHtml(key, id, opts) {
+  // Chaque astre a deux éléments à la même place : l'astre dessiné (.sy-orb, data-planet), rangé par
+  // profondeur dans .sy-layer (le moteur dessine dans l'ordre du DOM), et sa zone sensible avec son nom
+  // (.sy-body, dans .sy-hits), qui ne bouge jamais dans le DOM : la ranger couperait le clic de la
+  // souris en cours (le navigateur l'annule si l'élément sous le bouton est retiré) et le focus du
+  // clavier. Sa profondeur passe par z-index.
+  function orbHtml(key, id, dim) {
+    return `<span class="orb sy-orb" data-k="${key}" data-planet="${id}" data-fit="body" ${dim ? `data-dim="${dim}"` : ''}></span>`;
+  }
+  function hitHtml(key, opts) {
     const o = opts || {};
     const tag = o.go ? 'button' : 'span';
     return `<${tag} class="sy-body sy-b-${key}" data-k="${key}" ${o.go ? `data-sy-go="${key}" aria-label="${esc(o.label || '')}"` : ''}>` +
-      `<span class="orb" data-planet="${id}" data-fit="body" ${o.dim ? `data-dim="${o.dim}"` : ''}></span>` +
       `${o.cap ? `<small>${o.cap}</small>` : o.label ? `<small class="sy-name">${esc(o.label)}</small>` : ''}</${tag}>`;
   }
   // box : élément vide ; ids : apparences ; st : astres achetés ; mine : vue du Marché (astres cliquables).
   function scene(box, ids, st, mine, keepTime) {
     const key = mine ? 'own' : 'visit';
     if (!keepTime || clocks[key] == null) clocks[key] = performance.now();
+    // Le zoom reste après un achat (la vue est redessinée), il revient à la vue d'ensemble sinon.
+    if (!keepTime || !zooms[key]) zooms[key] = { z: 1, px: 0, py: 0, anim: null };
     const B = S.BY_ID;
     const sun = S.owned(st, 'soleil');
     const orbits = SLOTS.map((id, i) => {
       const on = id === 'world' || S.owned(st, id);
       return `<ellipse class="${on ? 'on' : 'off'}" data-o="${i}" ${id !== 'world' && on ? `style="--oc:${B[id].color}"` : ''}/>`;
     }).join('');
-    const bodies = [bodyHtml('soleil', ids.soleil, { go: mine, label: B.soleil.name, dim: sun ? '' : '0.16', cap: sun ? '' : mine ? `${esc(B.soleil.name.toUpperCase())} · ${icon('dust')} ${B.soleil.price}` : '' })];
-    bodies.push(bodyHtml('world', ids.world, { go: mine, label: mine ? tr('Ma planète') : tr('Sa planète') }));
-    for (const b of S.BODIES) if (b.id !== 'soleil' && S.owned(st, b.id)) bodies.push(bodyHtml(b.id, ids[b.id], { go: mine, label: b.name }));
-    box.innerHTML = `<svg class="sy-orbits" aria-hidden="true">${orbits}</svg><div class="sy-layer">${bodies.join('')}</div>`;
-    scenes.set(box, { ids, st, t0: clocks[key] });
+    const orbs = [orbHtml('soleil', ids.soleil, sun ? '' : '0.16')];
+    const hits = [hitHtml('soleil', { go: mine, label: B.soleil.name, cap: sun ? '' : mine ? `${esc(B.soleil.name.toUpperCase())} · ${icon('dust')} ${B.soleil.price}` : '' })];
+    orbs.push(orbHtml('world', ids.world));
+    hits.push(hitHtml('world', { go: mine, label: mine ? tr('Ma planète') : tr('Sa planète') }));
+    for (const b of S.BODIES) {
+      if (b.id === 'soleil' || !S.owned(st, b.id)) continue;
+      orbs.push(orbHtml(b.id, ids[b.id]));
+      hits.push(hitHtml(b.id, { go: mine, label: b.name }));
+    }
+    box.innerHTML = `<svg class="sy-orbits" aria-hidden="true">${orbits}</svg><div class="sy-layer" aria-hidden="true">${orbs.join('')}</div>` +
+      `<div class="sy-hits">${hits.join('')}</div><span class="sy-hint" aria-hidden="true"></span>`;
+    const els = {};
+    for (const el of box.querySelectorAll('.sy-orb')) els[el.dataset.k] = { orb: el };
+    for (const el of box.querySelectorAll('.sy-hits > .sy-body')) els[el.dataset.k].hit = el;
+    scenes.set(box, { ids, st, t0: clocks[key], key, els });
+    bindZoom(box);
     place(box, performance.now());
     if (!raf) raf = requestAnimationFrame(loop);
   }
@@ -105,12 +125,20 @@
     return Math.max(0.5 * fit, Math.min(1, (1.15 * fit) / Math.max(ex, ey))).toFixed(3);
   }
   // r : rayon de l'astre (anneaux et lunes débordent de l'élément : data-fit="body").
-  function put(el, x, y, r, z) {
+  function put1(el, x, y, r) {
     const d = 2 * r;
     // La taille ne change qu'un peu (profondeur) : on ne la réécrit que si elle bouge vraiment.
     if (!(Math.abs((el._d || 0) - d) < 0.25)) { el._d = d; el.style.width = el.style.height = d.toFixed(1) + 'px'; }
     el.style.transform = `translate(${(x - r).toFixed(1)}px, ${(y - r).toFixed(1)}px)`;
-    el._z = z;
+  }
+  function put(pair, x, y, r, z) {
+    put1(pair.orb, x, y, r);
+    pair.orb._z = z;
+    if (!pair.hit) return;
+    put1(pair.hit, x, y, r);
+    // Devant, la zone sensible passe au-dessus (un astre devant le Soleil se touche en premier).
+    const zi = String(Math.round(z * 100) + 200);
+    if (pair.hit._zi !== zi) { pair.hit._zi = zi; pair.hit.style.zIndex = zi; }
   }
   function place(box, now) {
     const sc = scenes.get(box);
@@ -119,26 +147,26 @@
     if (Wd < 10 || H < 10) return;
     const t = (now - sc.t0) / 1000;
     const cx = Wd / 2, cy = H / 2;
-    const st = sc.st;
+    const st = sc.st, els = sc.els;
     // Rayon de votre planète (u) : tout le reste s'y rapporte ; le système tient en largeur et en hauteur.
     const padY = REACH[8] + 0.9;
     const u = Math.max(3, Math.min((Wd / 2 - 4) / OUTER, (H / 2 - 6) / (RX[8] * TILT_MIN + padY), 24));
     const tilt = Math.max(TILT_MIN, Math.min(TILT_MAX, (H / 2 - 6 - padY * u) / (RX[8] * u)));
-    const layer = box.querySelector('.sy-layer');
-    if (!layer) return;
-    const els = {};
-    for (const el of layer.children) els[el.dataset.k] = el;
+    // Zoom : tout s'agrandit autour du centre de la vue, puis se décale (positions et tailles des
+    // boîtes, le moteur redessine les astres nets à leur nouvelle taille).
+    const zs = stepZoom(zooms[sc.key], now, Wd, H);
+    const Z = zs.z, ox = cx + zs.px, oy = cy + zs.py;
+    const at = (k, x, y, r, z) => { if (els[k]) put(els[k], ox + (x - cx) * Z, oy + (y - cy) * Z, r * Z, z); };
     // Le Soleil, au centre.
-    if (els.soleil) put(els.soleil, cx, cy, u * vsize('soleil', S.done(st, 'soleil')), 0);
+    at('soleil', cx, cy, u * vsize('soleil', S.done(st, 'soleil')), 0);
     // Les planètes sur leurs orbites.
     let wx = cx, wy = cy, wz = 0, wk = 1;
     SLOTS.forEach((id, i) => {
-      const el = els[id];
-      if (!el) return;
+      if (!els[id]) return;
       const a = START[i] + t * SPEED[i];
       const z = Math.sin(a), k = 1 + 0.1 * z;
       const x = cx + RX[i] * u * Math.cos(a), y = cy + RX[i] * u * tilt * z;
-      put(el, x, y, u * vsize(id, S.done(st, id)) * k, z);
+      at(id, x, y, u * vsize(id, S.done(st, id)) * k, z);
       if (id === 'world') { wx = x; wy = y; wz = z; wk = k; }
     });
     // La Lune, autour de votre planète.
@@ -146,23 +174,237 @@
       const am = t * 0.9;
       const rm = u * wk * 2.1;
       const zm = Math.sin(am);
-      put(els.lune, wx + rm * Math.cos(am), wy + rm * 0.42 * zm, u * vsize('lune', S.done(st, 'lune')) * wk * (1 + 0.08 * zm), wz + 0.02 * zm);
+      at('lune', wx + rm * Math.cos(am), wy + rm * 0.42 * zm, u * vsize('lune', S.done(st, 'lune')) * wk * (1 + 0.08 * zm), wz + 0.02 * zm);
     }
     // Orbites.
     const svg = box.querySelector('.sy-orbits');
-    if (svg && (svg._w !== Wd || svg._h !== H)) {
-      svg._w = Wd; svg._h = H;
+    const sig = `${Wd},${H},${Z.toFixed(4)},${zs.px.toFixed(1)},${zs.py.toFixed(1)}`;
+    if (svg && svg._sig !== sig) {
+      svg._sig = sig;
       svg.setAttribute('viewBox', `0 0 ${Wd} ${H}`);
       for (const e of svg.children) {
-        const rx = RX[+e.dataset.o] * u;
-        e.setAttribute('cx', cx); e.setAttribute('cy', cy);
+        const rx = RX[+e.dataset.o] * u * Z;
+        e.setAttribute('cx', ox.toFixed(1)); e.setAttribute('cy', oy.toFixed(1));
         e.setAttribute('rx', rx.toFixed(1)); e.setAttribute('ry', (rx * tilt).toFixed(1));
       }
     }
+    // Zoomée, la vue est un cadre pour le moteur : les astres agrandis ne débordent pas sur les cartes.
+    const zoomed = Z > 1.001;
+    if (box._zoomed !== zoomed) {
+      box._zoomed = zoomed;
+      box.classList.toggle('zoomed', zoomed);
+      if (zoomed) box.setAttribute('data-clipbox', ''); else box.removeAttribute('data-clipbox');
+    }
+    hint(box, zoomed);
     // Profondeur : derrière le Soleil d'abord, devant ensuite (le moteur dessine dans l'ordre du DOM).
+    // Seuls les astres dessinés changent de place dans le DOM (pas les zones sensibles).
+    const layer = box.querySelector('.sy-layer');
+    if (!layer) return;
     const kids = [...layer.children];
     const sorted = kids.slice().sort((a, b) => (a._z || 0) - (b._z || 0));
     if (sorted.some((el, i) => el !== kids[i])) for (const el of sorted) layer.appendChild(el);
+  }
+
+  // ─── Zoom de la vue (×1 à ×4) ──────────────────────────────
+  // Téléphone : pincer à deux doigts, glisser à un doigt quand c'est zoomé (sinon la page défile
+  // normalement), double toucher pour revenir. PC : la molette zoome autour du pointeur (sur la vue
+  // seulement), glisser avec la souris, double clic pour revenir. Toucher un astre amène toujours à sa
+  // carte, sauf à la fin d'un glissement ou d'un pincement.
+  const ZMAX = 4;
+  const zooms = {};
+  const HINT_KEY = 'orbite.syzoom';
+  const clampZ = (z) => Math.max(1, Math.min(ZMAX, z));
+  // Le décalage reste dans la vue agrandie : on ne sort jamais du système.
+  function clampPan(zs, Wd, H) {
+    const mx = (zs.z - 1) * Wd / 2, my = (zs.z - 1) * H / 2;
+    zs.px = Math.max(-mx, Math.min(mx, zs.px));
+    zs.py = Math.max(-my, Math.min(my, zs.py));
+  }
+  // Retour en douceur à la vue d'ensemble.
+  function stepZoom(zs, now, Wd, H) {
+    const a = zs.anim;
+    if (a) {
+      const k = Math.min(1, (now - a.t0) / a.ms), e = 1 - Math.pow(1 - k, 3);
+      zs.z = a.z + (1 - a.z) * e; zs.px = a.px * (1 - e); zs.py = a.py * (1 - e);
+      if (k >= 1) { zs.anim = null; zs.z = 1; zs.px = 0; zs.py = 0; }
+    }
+    clampPan(zs, Wd, H);
+    return zs;
+  }
+  function resetZoom(zs) {
+    zs.anim = { t0: performance.now(), ms: 280, z: zs.z, px: zs.px, py: zs.py };
+    wake();
+  }
+  // Zoom vers nz en gardant immobile le point (sx, sy) de la vue (le doigt, le pointeur).
+  function zoomAt(box, zs, sx, sy, nz) {
+    const Wd = box.clientWidth, H = box.clientHeight;
+    const k = clampZ(nz) / zs.z;
+    zs.px = (sx - Wd / 2) - (sx - Wd / 2 - zs.px) * k;
+    zs.py = (sy - H / 2) - (sy - H / 2 - zs.py) * k;
+    zs.z = clampZ(nz);
+    zs.anim = null;
+    clampPan(zs, Wd, H);
+    if (zs.z > 1.001) seen();
+    wake();
+  }
+  // Point de l'écran → point de la vue (sur PC, les écrans sont agrandis par la propriété zoom).
+  function local(box, x, y) {
+    const r = box.getBoundingClientRect();
+    const k = box.clientWidth / (r.width || 1);
+    return [(x - r.left) * k, (y - r.top) * k];
+  }
+  // Un petit indice discret : comment zoomer (tant que le joueur ne l'a jamais fait), puis comment
+  // revenir (tant que c'est zoomé).
+  const FINE = !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+  let zoomedOnce = A.store.get(HINT_KEY, '') === '1';
+  function seen() {
+    if (zoomedOnce) return;
+    zoomedOnce = true;
+    A.store.set(HINT_KEY, '1');
+  }
+  function hint(box, zoomed) {
+    const el = box.querySelector('.sy-hint');
+    if (!el) return;
+    const txt = zoomed ? (FINE ? tr('Double clic : vue d’ensemble') : tr('Double toucher : vue d’ensemble'))
+      : zoomedOnce ? '' : FINE ? tr('Molette pour zoomer') : tr('Pincez pour zoomer');
+    if (el._t !== txt) { el._t = txt; if (txt) el.textContent = txt; el.classList.toggle('on', !!txt); }
+  }
+  function bindZoom(box) {
+    if (box._zoomBound) return;
+    box._zoomBound = true;
+    const zsOf = () => { const sc = scenes.get(box); return sc ? zooms[sc.key] : null; };
+    // Après un glissement ou un pincement, le clic qui suit n'amène pas à une carte. Zoomée, un astre
+    // remplit vite la vue : au doigt, on attend un instant de voir si c'est un double toucher (retour
+    // à la vue d'ensemble) avant d'aller à sa carte.
+    let noClickUntil = 0, touchedAt = -1e9, pendingGo = 0;
+    const noClick = () => { noClickUntil = performance.now() + 350; };
+    box.addEventListener('click', (e) => {
+      if (performance.now() < noClickUntil) { e.stopPropagation(); e.preventDefault(); return; }
+      const zs = zsOf(), b = e.target.closest('[data-sy-go]');
+      if (!b || !zs || zs.z <= 1.001 || performance.now() - touchedAt > 600) return;
+      e.stopPropagation();
+      e.preventDefault();
+      clearTimeout(pendingGo);
+      pendingGo = setTimeout(() => { pendingGo = 0; goCard(b.dataset.syGo); }, 330);
+    }, true);
+
+    // Doigts.
+    let g = null, lastTap = null;
+    const pt = (t) => local(box, t.clientX, t.clientY);
+    function begin(ts, zs) {
+      if (ts.length >= 2) {
+        const a = pt(ts[0]), b = pt(ts[1]);
+        g = { pinch: true, d0: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, z0: zs.z, mx: (a[0] + b[0]) / 2, my: (a[1] + b[1]) / 2, px0: zs.px, py0: zs.py, moved: true };
+      } else {
+        const p = pt(ts[0]);
+        g = { pinch: false, x0: p[0], y0: p[1], px0: zs.px, py0: zs.py, moved: g ? g.moved : false };
+      }
+    }
+    box.addEventListener('touchstart', (e) => {
+      const zs = zsOf();
+      if (!zs) return;
+      if (e.touches.length === 1) g = null;
+      begin(e.touches, zs);
+      if (e.touches.length >= 2) { zs.anim = null; if (e.cancelable) e.preventDefault(); }
+    }, { passive: false });
+    box.addEventListener('touchmove', (e) => {
+      const zs = zsOf();
+      if (!zs || !g) return;
+      const ts = e.touches;
+      const Wd = box.clientWidth, H = box.clientHeight;
+      if (g.pinch && ts.length >= 2) {
+        const a = pt(ts[0]), b = pt(ts[1]);
+        const nz = clampZ(g.z0 * (Math.hypot(a[0] - b[0], a[1] - b[1]) || 1) / g.d0);
+        // Le point du système qui était entre les doigts reste entre les doigts.
+        const wx = (g.mx - Wd / 2 - g.px0) / g.z0, wy = (g.my - H / 2 - g.py0) / g.z0;
+        zs.z = nz;
+        zs.px = (a[0] + b[0]) / 2 - Wd / 2 - wx * nz;
+        zs.py = (a[1] + b[1]) / 2 - H / 2 - wy * nz;
+        zs.anim = null;
+        clampPan(zs, Wd, H);
+        if (nz > 1.001) seen();
+        if (e.cancelable) e.preventDefault();
+        wake();
+        return;
+      }
+      if (!g.pinch && ts.length === 1) {
+        const p = pt(ts[0]);
+        const dx = p[0] - g.x0, dy = p[1] - g.y0;
+        if (!g.moved && Math.hypot(dx, dy) > 8) g.moved = true;
+        // Pas zoomé : la page défile comme d'habitude.
+        if (zs.z <= 1.001) return;
+        if (e.cancelable) e.preventDefault();
+        if (g.moved) { zs.px = g.px0 + dx; zs.py = g.py0 + dy; zs.anim = null; clampPan(zs, Wd, H); wake(); }
+      }
+    }, { passive: false });
+    box.addEventListener('touchend', (e) => {
+      const zs = zsOf();
+      if (!zs || !g) return;
+      // Un doigt levé pendant le pincement : l'autre continue en glissant.
+      if (e.touches.length) { begin(e.touches, zs); g.moved = true; return; }
+      touchedAt = performance.now();
+      const was = g;
+      g = null;
+      if (was.moved) { noClick(); lastTap = null; return; }
+      // Double toucher : retour à la vue d'ensemble.
+      const t = performance.now();
+      if (lastTap && t - lastTap.t < 320 && Math.hypot(was.x0 - lastTap.x, was.y0 - lastTap.y) < 30) {
+        lastTap = null;
+        if (zs.z > 1.001) { clearTimeout(pendingGo); pendingGo = 0; resetZoom(zs); noClick(); if (e.cancelable) e.preventDefault(); }
+        return;
+      }
+      lastTap = { t, x: was.x0, y: was.y0 };
+    });
+    box.addEventListener('touchcancel', () => { g = null; });
+    // Safari : pas de zoom de la page entière par-dessus.
+    box.addEventListener('gesturestart', (e) => e.preventDefault());
+
+    // Souris : la molette zoome autour du pointeur, sans faire défiler la page.
+    box.addEventListener('wheel', (e) => {
+      const zs = zsOf();
+      if (!zs) return;
+      e.preventDefault();
+      const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
+      const [sx, sy] = local(box, e.clientX, e.clientY);
+      zoomAt(box, zs, sx, sy, zs.z * Math.exp(-Math.max(-300, Math.min(300, dy)) * 0.0018));
+    }, { passive: false });
+    // Glisser pour se déplacer quand c'est zoomé (au-delà de quelques pixels : sinon c'est un clic).
+    let md = null;
+    box.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch' || e.button !== 0) return;
+      const zs = zsOf();
+      if (!zs || zs.z <= 1.001) return;
+      md = { id: e.pointerId, x0: e.clientX, y0: e.clientY, px0: zs.px, py0: zs.py, moved: false };
+    });
+    box.addEventListener('pointermove', (e) => {
+      if (!md || e.pointerId !== md.id) return;
+      const zs = zsOf();
+      if (!zs) return;
+      if (!md.moved) {
+        if (Math.hypot(e.clientX - md.x0, e.clientY - md.y0) < 5) return;
+        md.moved = true;
+        box.classList.add('dragging');
+        try { box.setPointerCapture(e.pointerId); } catch (err) { /* pointeur déjà relâché */ }
+      }
+      const r = box.getBoundingClientRect(), k = box.clientWidth / (r.width || 1);
+      zs.px = md.px0 + (e.clientX - md.x0) * k;
+      zs.py = md.py0 + (e.clientY - md.y0) * k;
+      zs.anim = null;
+      clampPan(zs, box.clientWidth, box.clientHeight);
+      wake();
+    });
+    const endDrag = (e) => {
+      if (!md || e.pointerId !== md.id) return;
+      if (md.moved) noClick();
+      md = null;
+      box.classList.remove('dragging');
+    };
+    box.addEventListener('pointerup', endDrag);
+    box.addEventListener('pointercancel', endDrag);
+    box.addEventListener('dblclick', (e) => {
+      const zs = zsOf();
+      if (zs && zs.z > 1.001) { e.preventDefault(); resetZoom(zs); }
+    });
   }
 
   // ─── Onglet MON SYSTÈME du Marché stellaire ────────────────
@@ -277,6 +519,16 @@
     }
   }
 
+  // Toucher un astre du système amène à sa carte.
+  function goCard(key) {
+    SFX.tap();
+    const c = $('sy-card-' + key);
+    if (!c) return;
+    c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    c.classList.remove('flash');
+    void c.offsetWidth;
+    c.classList.add('flash');
+  }
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-sy-buy], [data-sy-up], [data-sy-go], [data-sy-tab]');
     if (!b || b.disabled) return;
@@ -288,18 +540,7 @@
       if (pane) pane.scrollTop = 0;
       return;
     }
-    if (b.dataset.syGo) {
-      // Toucher un astre du système amène à sa carte.
-      SFX.tap();
-      const c = $('sy-card-' + b.dataset.syGo);
-      if (c) {
-        c.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        c.classList.remove('flash');
-        void c.offsetWidth;
-        c.classList.add('flash');
-      }
-      return;
-    }
+    if (b.dataset.syGo) { goCard(b.dataset.syGo); return; }
     buy(b.dataset.syBuy || b.dataset.syUp);
   });
 

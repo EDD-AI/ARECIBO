@@ -229,13 +229,16 @@
       if (b.bottom < -80 || b.top > window.innerHeight + 80) return;
       if (s.reveal <= 0.01) return;
       // Dans une liste qui défile (data-clipbox), l'astre ne déborde pas sur l'en-tête ni le bas.
-      const boxEl = el.closest('[data-clipbox]');
+      // Des cadres imbriqués se recoupent (la vue zoomée de Mon système, dans son onglet qui défile).
+      let boxEl = el.closest('[data-clipbox]');
       let bound = null;
-      if (boxEl) {
+      while (boxEl) {
         const c = boxEl.getBoundingClientRect();
         if (b.bottom <= c.top || b.top >= c.bottom) return;
         const [x0, y1] = this.toArt(c.left, c.top), [x1, y0] = this.toArt(c.right, c.bottom);
-        bound = [Math.floor(x0), Math.floor(y0), Math.ceil(x1), Math.ceil(y1)];
+        const nb = [Math.floor(x0), Math.floor(y0), Math.ceil(x1), Math.ceil(y1)];
+        bound = bound ? [Math.max(bound[0], nb[0]), Math.max(bound[1], nb[1]), Math.min(bound[2], nb[2]), Math.min(bound[3], nb[3])] : nb;
+        boxEl = boxEl.parentElement ? boxEl.parentElement.closest('[data-clipbox]') : null;
       }
       const id = el.dataset.planet;
       if (!id) return;
