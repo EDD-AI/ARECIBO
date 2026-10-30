@@ -80,6 +80,7 @@
     bolt: ['...XX', '..XX.', '.XXXX', '...X.', '..X..', '.X...'],
     up: ['...X...', '..XXX..', '.XXXXX.', '...X...', '...X...', '...X...'],
     down: ['..XXX..', '..XXX..', '..XXX..', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'],
+    pencil: ['.....XX', '....XXX', '...XXX.', '..XXX..', '.XXX...', 'X.X....', 'XX.....'],
     roll: ['..XXX..', '.X...X.', 'X.....X', 'X...XXX', 'X....X.', '.X.....', '..XXX..'],
     snow: ['..X.X..', 'X..X..X', '.X.X.X.', '..XXX..', '.X.X.X.', 'X..X..X', '..X.X..'],
     menu: ['XXXXXXX', '.......', 'XXXXXXX', '.......', 'XXXXXXX'],
@@ -1408,7 +1409,7 @@
       <div class="pf-id ${myFrame() ? 'pframe' : ''}" ${myFrame() ? `data-frame="${myFrame()}"` : ''}>
         <div class="orb pf-planet" data-planet="${myAvatar() || 'world-mini'}"></div>
         <div class="pf-who">
-          <div class="pf-name-row" id="pfNameRow"><button class="pf-name" data-pf="rename">${nameHtml(pseudo(), myFont())}<span>#${playerTag()}</span></button></div>
+          <div class="pf-name-row" id="pfNameRow"><button class="pf-name" data-pf="rename" title="${tr('Changer de pseudo')}">${nameHtml(pseudo(), myFont())}<span>#${playerTag()}</span>${icon('pencil', 'pf-pen')}</button></div>
           <span class="pf-lvl">${tr('NIVEAU {n}', { n: lv.lvl })} · ${esc(W.stageName(list))}</span>
           <div class="xp-bar"><i style="width:${(lv.rest / lv.need * 100).toFixed(1)}%"></i></div>
           <small>${tr('{a} / {b} XP vers le niveau {n}', { a: lv.rest, b: lv.need, n: lv.lvl + 1 })}</small>

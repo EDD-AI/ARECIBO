@@ -617,6 +617,9 @@ body.modal #gl { z-index: 35; }
 .pf-name { font-size: 22px; font-weight: 600; letter-spacing: 0.04em; text-align: left; }
 .pf-name span { margin-left: 6px; font-size: 13px; font-weight: 400; color: var(--dim); }
 .pf-name-row { display: flex; gap: 8px; align-items: center; }
+/* Crayon (v111) : on peut toucher le pseudo pour le changer. */
+.pf-name .pf-pen { margin-left: 10px; width: 14px; height: 14px; vertical-align: 0.05em; color: var(--dim); transition: color 0.2s, transform 0.2s; }
+.pf-name:hover .pf-pen, .pf-name:focus-visible .pf-pen { color: var(--ink); transform: rotate(-12deg); }
 .pf-input { flex: 1; min-width: 0; height: 40px; padding: 0 10px; font: inherit; font-size: 16px; color: var(--ink); background: #000; border: 1px solid var(--ink); }
 .pf-lvl { font-size: 11px; letter-spacing: 0.2em; color: var(--dim); }
 .pf-who small { font-size: 11px; color: var(--dim); }

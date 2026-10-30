@@ -207,6 +207,7 @@
     ['GRAINES DE VIE', 'SEEDS OF LIFE', 'SEMILLAS DE VIDA', 'LEBENSSAMEN', 'SEMENTES DA VIDA'],
     ['{a} / {b} XP', '{a} / {b} XP', '{a} / {b} XP', '{a} / {b} XP', '{a} / {b} XP'],
     ['Voir la suite', 'See more', 'Ver más', 'Mehr anzeigen', 'Ver mais'],
+    ['Changer de pseudo', 'Change name', 'Cambiar de apodo', 'Namen ändern', 'Mudar de apelido'],
     // Spectateur en ligne (v105)
     ['MANCHE EN COURS', 'ROUND IN PROGRESS', 'RONDA EN CURSO', 'RUNDE LÄUFT', 'RODADA EM ANDAMENTO'],
     ['Les autres créateurs jouent leur tour…', 'The other creators are playing their turn…', 'Los demás creadores juegan su turno…', 'Die anderen Schöpfer spielen ihren Zug…', 'Os outros criadores estão jogando o turno…'],
