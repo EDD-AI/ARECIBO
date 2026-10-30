@@ -370,6 +370,28 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Sur PC : les menus en plein écran (v111)
+
+Sur un écran d'ordinateur (16:9), les menus ne sont plus une colonne de téléphone au milieu : ils
+prennent toute la page, comme la partie et le Codex (tout est dans `css/desk.css`, sous `body.desk` ;
+le téléphone ne change pas).
+- **Menu principal** : la barre des choix s'étale en largeur sous l'horizon, les missions du jour en
+  haut à gauche, le profil en haut à droite, la musique en bas à gauche.
+- **Fiches** (Paramètres, Comment jouer, familles, loi, terminal…) : des fenêtres centrées et larges,
+  sur deux colonnes quand c'est utile ; leur hauteur tient compte du zoom (le haut ne sort plus de
+  l'écran).
+- **Marché stellaire** : le titre et les trois cases (niveau, poussières, graines) en haut, les onglets
+  en largeur. Ma planète : la planète en vitrine à gauche, la prochaine étape et la feuille de route
+  sur deux colonnes à droite. Cosmétiques : une grille de cartes. Graines : la vitrine à gauche, les
+  offres en largeur.
+- Profil, fin de partie, Multijoueur, choix de la loi et Création suivent.
+
+Autres changements de la v111 : **Comment jouer** en 5 pages (le duel, le placement, les synergies,
+lire la partie, gagner) ; les fiches n'ont plus de barre de défilement mais une **flèche** en bas
+quand il y a une suite ; un **crayon** à côté du pseudo (on peut le changer) ; le **tutoriel** présente
+les familles, le terminal des synergies et la loi ; les **pictos des familles** sur les onglets du
+Codex ; l'aperçu des cadres n'a plus de dégradé bleu.
+
 ## Fiches de la partie (v110)
 
 - **Familles de cet univers** (les carrés de couleur en haut) : une carte par famille de la partie, avec

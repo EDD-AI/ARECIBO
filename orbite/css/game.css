@@ -617,6 +617,9 @@ body.modal #gl { z-index: 35; }
 .pf-name { font-size: 22px; font-weight: 600; letter-spacing: 0.04em; text-align: left; }
 .pf-name span { margin-left: 6px; font-size: 13px; font-weight: 400; color: var(--dim); }
 .pf-name-row { display: flex; gap: 8px; align-items: center; }
+/* Crayon (v111) : on peut toucher le pseudo pour le changer. */
+.pf-name .pf-pen { margin-left: 10px; width: 14px; height: 14px; vertical-align: 0.05em; color: var(--dim); transition: color 0.2s, transform 0.2s; }
+.pf-name:hover .pf-pen, .pf-name:focus-visible .pf-pen { color: var(--ink); transform: rotate(-12deg); }
 .pf-input { flex: 1; min-width: 0; height: 40px; padding: 0 10px; font: inherit; font-size: 16px; color: var(--ink); background: #000; border: 1px solid var(--ink); }
 .pf-lvl { font-size: 11px; letter-spacing: 0.2em; color: var(--dim); }
 .pf-who small { font-size: 11px; color: var(--dim); }
@@ -1120,6 +1123,8 @@ body.in-combat .banner { top: calc(50% - 34px); }
   width: var(--col);
   max-height: 88vh;
   overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
   padding: 18px 18px calc(var(--safe-b) + 18px);
   background: rgba(3, 3, 5, 0.97);
   border-top: 1px solid var(--line);
@@ -1230,6 +1235,10 @@ body.in-combat .banner { top: calc(50% - 34px); }
 .credits small { font-size: 12px; line-height: 1.4; color: var(--dim); }
 .credits .legal { font-size: 10px; line-height: 1.45; opacity: 0.8; }
 .help { font-size: 14px; }
+.help-title { margin: 2px 0 12px; }
+.help-dots { display: flex; justify-content: center; gap: 8px; margin: 14px 0 4px; }
+.help-dot { width: 9px; height: 9px; padding: 0; border: 1px solid var(--dim); background: transparent; }
+.help-dot.on { background: var(--ink); border-color: var(--ink); }
 .help li { margin-bottom: 7px; line-height: 1.4; }
 .help b { color: var(--ink); font-weight: 600; }
 
@@ -1954,7 +1963,7 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 @media (prefers-reduced-motion: reduce) { .pframe[data-frame^="cadre-p-"]::before { animation: none; } }
 /* Aperçu d'un cadre au Marché : une petite planète dans son cadre. */
 .cos-fr { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; }
-.cos-fr i { position: relative; display: block; width: 30px; height: 30px; background: radial-gradient(circle at 35% 35%, #8fb7d8, #2a4a6a 55%, #0a1420 75%); border: 1px solid var(--faint); }
+.cos-fr i { position: relative; display: block; width: 30px; height: 30px; border: 1px solid var(--faint); }
 .cos-note { margin: 0 0 6px; }
 /* Photos de profil (v92) : l'astre lui-même ; les plus chères ont un liseré doré. */
 .cos-av { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; }
@@ -2264,6 +2273,8 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .cx-fams[hidden] { display: none; }
 .cx-fam { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 10px; border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); color: var(--dim); font-size: 10px; letter-spacing: 0.12em; }
 .cx-fam small { font-size: 9px; color: var(--dim); letter-spacing: 0.06em; }
+.cx-fam .cx-ico { width: 22px; height: 22px; margin-bottom: 2px; image-rendering: pixelated; opacity: 0.7; }
+.cx-fam.on .cx-ico { opacity: 1; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c) 70%, transparent)); }
 .cx-fam.on { color: var(--ink); border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
 .cx-about { margin: 0 0 10px; }
 .cx-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -2302,7 +2313,7 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .law-first { margin-top: 10px; font-size: 11px; letter-spacing: 0.1em; }
 
 /* Terminal des synergies (v110) : une fenêtre d'écran vert à lignes de balayage. */
-.term { position: relative; margin: -4px -4px 0; padding: 0 12px 12px; border: 1px solid rgba(109, 255, 154, 0.4); background: #04120a; color: #c9f5d4; }
+.term { position: relative; margin: 0; padding: 0 12px 12px; border: 1px solid rgba(109, 255, 154, 0.4); background: #04120a; color: #c9f5d4; }
 .term::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px); }
 .tm-bar { display: flex; align-items: center; gap: 8px; margin: 0 -12px 6px; padding: 7px 12px; border-bottom: 1px solid rgba(109, 255, 154, 0.35); background: rgba(109, 255, 154, 0.08); font-family: 'ORB Terminal', monospace; font-size: 17px; letter-spacing: 0.04em; color: #6dff9a; }
 .tm-logo { width: 22px; height: 22px; image-rendering: pixelated; }
@@ -2336,3 +2347,10 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .mw-seed b { color: #b8f0bf; }
 .mw-lvl b { color: var(--ink); }
 @media (max-width: 380px) { .mw-tile b { font-size: 22px; } .mw-tile small { display: none; } }
+
+/* Fiches (v110) : sans barre de défilement ; une flèche en bas annonce la suite. */
+.sheet::-webkit-scrollbar { display: none; }
+.sheet-more { position: sticky; bottom: 4px; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px; margin: -40px auto 0; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: rgba(3, 3, 5, 0.92); color: var(--ink); font-size: 16px; box-shadow: 0 -18px 24px 6px rgba(3, 3, 5, 0.85); animation: more-bob 1.4s ease-in-out infinite; transition: opacity 0.2s; }
+.sheet-more.gone { opacity: 0; pointer-events: none; }
+@keyframes more-bob { 50% { transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .sheet-more { animation: none; } }
