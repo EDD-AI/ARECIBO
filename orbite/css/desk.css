@@ -143,87 +143,9 @@ body.desk #codex .cx-card .orb, body.desk #codex .cx-q { width: 78px; height: 78
 body.desk #codex .cx-card b { font-size: 13px; }
 body.desk #codex .cx-card small { font-size: 10px; }
 
-/* ═══ v111 : menus en plein écran sur PC — menu principal et fiches ═══ */
-/* ORBITE — PC (16:9) : menu principal, Paramètres et fiches. Tout est sous body.desk : sur
+/* ═══ v111 : fiches en plein écran sur PC ═══ */
+/* ORBITE — PC (16:9) : Paramètres et fiches (le menu principal garde sa mise en page d’avant, v111). Tout est sous body.desk : sur
  * téléphone, rien ne change. Les tailles sont en pixels virtuels (zoom var(--z), 1280-1422 × 720-800). */
-
-/* ─── Menu principal : la planète au centre, le menu en bandeau sous l'horizon ─── */
-/* Les missions à gauche, le profil à droite, la musique en bas à gauche, la version en bas à droite. */
-body.desk #menu .menu-top { gap: 14px; }
-body.desk #menu .menu-top .dust { font-size: 14px; padding: 5px 14px 5px 12px; }
-
-/* Le menu : une rangée d'entrées côte à côte, séparées par de fins traits, sous l'horizon. */
-body.desk #menu .menu-list { width: min(1120px, calc(100% - 96px)); }
-body.desk #menu .menu-page.on {
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: stretch;
-  gap: 0;
-  border-top: 1px solid var(--faint);
-  border-bottom: 1px solid var(--faint);
-  background: linear-gradient(180deg, rgba(241, 236, 218, 0.035), rgba(241, 236, 218, 0) 70%);
-}
-body.desk #menu .menu-item {
-  flex: 1 1 0;
-  min-width: max-content;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 22px 26px 24px;
-  font-size: 19px;
-  letter-spacing: 0.26em;
-  white-space: nowrap;
-  border-left: 1px solid var(--faint);
-}
-body.desk #menu .menu-item[hidden] { display: none; }
-body.desk #menu .menu-page > .menu-item:first-child { border-left: 0; }
-body.desk #menu .menu-item small { margin-top: 9px; font-size: 11px; letter-spacing: 0.26em; }
-body.desk #menu .menu-item::after { bottom: 12px; }
-body.desk #menu .menu-item:hover, body.desk #menu .menu-item:focus-visible { background: rgba(241, 236, 218, 0.05); }
-body.desk #menu .menu-item:focus-visible { outline-offset: -2px; }
-/* RETOUR : en tête de rangée, étroit. */
-body.desk #menu .menu-item.back {
-  order: -1;
-  flex: 0 0 auto;
-  flex-direction: row;
-  min-width: 0;
-  padding: 0 30px;
-  font-size: 13px;
-  letter-spacing: 0.22em;
-  border-left: 0;
-  border-right: 1px solid var(--faint);
-}
-
-/* Missions du jour : un vrai panneau à gauche, texte lisible. */
-body.desk #menu .mission-box.open { top: 28px; left: 32px; width: 344px; gap: 4px; padding: 14px 16px 16px; background: rgba(0, 0, 0, 0.66); }
-body.desk #menu .mission-box.open .mb-head b { font-size: 13px; letter-spacing: 0.22em; }
-body.desk #menu .mission-box.open .mi-clock { font-size: 12px; }
-body.desk #menu .mission-box.open .mi-list { margin-top: 10px; gap: 8px; }
-body.desk #menu .mission-box.open .mi-row { padding: 10px 12px; gap: 12px; }
-body.desk #menu .mission-box.open .mi-txt { gap: 7px; }
-body.desk #menu .mission-box.open .mi-txt b { font-size: 14px; line-height: 1.32; }
-body.desk #menu .mission-box.open .mi-txt small { font-size: 12px; }
-body.desk #menu .mission-box.open .mi-swap { font-size: 12px; }
-body.desk #menu .mission-box.open .mi-reward { font-size: 15px; }
-body.desk #menu .mission-box.open .mi-got { font-size: 12px; }
-body.desk #menu .mission-box.open .mi-act .btn { min-height: 34px; padding: 0 12px; font-size: 12px; }
-
-/* Profil : en haut à droite, plus grand. */
-body.desk #menu .profile-btn { top: 28px; right: 32px; gap: 12px; padding: 6px 6px 6px 16px; background: rgba(0, 0, 0, 0.66); }
-body.desk #menu .pf-txt { gap: 5px; max-width: 200px; }
-body.desk #menu .pf-txt b { font-size: 16px; max-width: 200px; }
-body.desk #menu .pf-txt small { font-size: 11px; }
-body.desk #menu .pf-txt .xp-mini { width: 64px; height: 3px; }
-body.desk #menu .pf-avatar { width: 46px; height: 46px; }
-
-/* Musique en bas à gauche, studio et version en bas à droite. */
-body.desk #menu .music-bar { left: 32px; bottom: 26px; transform: none; gap: 6px; }
-body.desk #menu .mus-btn { width: 40px; height: 40px; }
-body.desk #menu .mus-btn svg { width: 11px; height: 13px; }
-body.desk #menu .mus-play { width: 38px; height: 38px; }
-body.desk #menu .mus-name { min-width: 0; padding: 0 12px; font-size: 12px; }
-body.desk #menu .menu-foot { left: auto; right: 32px; bottom: 38px; font-size: 10px; letter-spacing: 0.32em; color: rgba(241, 236, 218, 0.36); }
 
 /* ─── Fiches : au centre de l'écran, en fenêtre, plus larges, texte plus grand ─── */
 body.desk #overlay { align-items: center; padding: 28px 32px; background: rgba(0, 0, 0, 0.62); }
