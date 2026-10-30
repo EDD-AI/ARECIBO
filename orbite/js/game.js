@@ -1985,12 +1985,14 @@
     { id: 'combat', target: '#fightBtn', text: tr('Plus assez d’énergie ? Lancez le <b>combat</b> ! Il se joue tout seul.'), gesture: { tap: '#fightBtn', at: 0.5 }, wait: ['combat'] },
     { id: 'regard', soft: true, dim: false, y: 0.76, extra: true, text: tr('Vos astres (en bas) frappent ceux du rival (en haut) : seul l’avant attaque, chacun l’ennemi en face. Les survivants du gagnant infligent des dégâts au perdant.'), wait: ['cycle'] },
     { id: 'degats', text: tr('Le perdant perd des PV : <b>niveau de création du gagnant + niveaux de ses astres survivants</b>. Nouveau cycle, nouvelle énergie !'), next: tr('SUIVANT'), delay: 600 },
-    { id: 'formation', target: '#systemZone', pad: -10, text: tr('<b>Formation</b> : deux astres d’une même famille dans la même rangée donnent un bonus au début du combat. Chaque famille a le sien, à l’avant comme à l’arrière. Touchez l’étiquette des familles pour les lire.'), next: tr('SUIVANT') },
+    { id: 'formation', target: '#systemZone', pad: -10, text: tr('<b>Formation</b> : deux astres d’une même famille dans la même rangée donnent un bonus au début du combat. Chaque famille a le sien, à l’avant comme à l’arrière. Touchez l’étiquette ou le petit ordinateur pour les lire.'), next: tr('SUIVANT') },
+    { id: 'familles', target: '#famsBtn', text: tr('Les <b>familles</b> de cet univers : touchez les carrés de couleur pour voir chacune, avec son picto et ses astres.'), next: tr('SUIVANT') },
+    { id: 'terminal', target: '#termBtn', text: tr('Le <b>terminal</b> de vos synergies : vos formations, les phénomènes et les règles de l’arrière. Le chiffre vert compte celles qui sont actives.'), next: tr('SUIVANT') },
     { id: 'actualiser', target: '#rollBtn', text: tr('<b>Actualiser</b> (1 énergie) : la Création fait naître d’autres astres.'), next: tr('SUIVANT') },
     { id: 'geler', target: '#freezeBtn', text: tr('<b>Geler</b> : les astres proposés restent les mêmes au prochain cycle. Pratique pour garder un astre que vous ne pouvez pas encore payer.'), next: tr('SUIVANT') },
     { id: 'niveau', target: '#upBtn', text: tr('<b>Monter de niveau</b> : la Création fait naître des astres plus puissants. Le prix baisse à chaque cycle.'), next: tr('SUIVANT') },
     { id: 'vendre', target: '#systemZone', pad: -10, text: tr('Pour <b>vendre</b> un astre (+1 énergie), glissez-le de votre système vers la Création.'), next: tr('SUIVANT') },
-    { id: 'pouvoir', target: '#powerBtn', text: tr('Le <b>pouvoir</b> de votre loi : touchez-le pour l’utiliser. Il coûte de l’énergie.'), next: tr('SUIVANT') },
+    { id: 'pouvoir', target: '#powerBtn', text: tr('Votre <b>loi</b> : touchez-la pour lire son effet et son éveil au cycle 6. Si elle a un <b>pouvoir</b>, la toucher l’utilise.'), next: tr('SUIVANT') },
     { id: 'rivaux', target: '#rivals', text: tr('Votre <b>rival</b> : touchez ici pour voir le système qu’il a joué au dernier combat, et placez vos astres pour le contrer.'), next: tr('SUIVANT') },
     { id: 'fin', text: tr('Dernier secret : <b>trois copies</b> du même astre fusionnent en un astre <b>doré</b>, deux fois plus fort. Gagnez le duel pour remporter des poussières d’étoiles. À vous !'), next: tr('JOUER') }
   ];
