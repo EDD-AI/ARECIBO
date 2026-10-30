@@ -1965,7 +1965,7 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 @keyframes frLaserGlow { 0%, 100% { box-shadow: 0 0 6px rgba(255, 30, 30, 0.75), 0 0 14px rgba(255, 0, 0, 0.35); } 50% { box-shadow: 0 0 10px rgba(255, 50, 50, 0.95), 0 0 24px rgba(255, 0, 0, 0.55); } }
 .pframe[data-frame="cadre-laser"]::before {
   content: ''; position: absolute; inset: -6px; padding: 4px; pointer-events: none; z-index: 1;
-  background: conic-gradient(from var(--frl), transparent 0deg 250deg, rgba(255, 40, 40, 0.5) 310deg, #ff3a3a 338deg, #ffffff 354deg, #ff7070 357deg, transparent 360deg);
+  background: conic-gradient(from var(--frl, 0deg), transparent 0deg 250deg, rgba(255, 40, 40, 0.5) 310deg, #ff3a3a 338deg, #ffffff 354deg, #ff7070 357deg, transparent 360deg);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   animation: frLaser 1.6s linear infinite;
