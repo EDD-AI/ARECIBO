@@ -709,9 +709,10 @@ vec4 bigbangColor(vec2 xy, float dth, vec2 fc) {
   float ang = atan(xy.y, xy.x);
   vec2 dir = r > 1e-4 ? xy / r : vec2(1.0, 0.0);
   float pulse = 0.5 + 0.5 * sin(TAU * uPhase * 12.0);
-  float core = 0.12 + 0.03 * pulse;
+  // Au moins quelques pixels : sur une petite carte, le cœur et sa croix restent visibles.
+  float core = max(0.12 + 0.03 * pulse, 1.6 / uRadius);
   if (r < core) return vec4(pal(0, 7), 1.0);
-  float arm = 0.016 + 0.008 * pulse;
+  float arm = max(0.016 + 0.008 * pulse, 0.6 / uRadius);
   if (r < core * 2.6 && (abs(xy.x) < arm || abs(xy.y) < arm)) return vec4(pal(0, 7), 1.0);
   // Le souffle n'est pas rond : un bord qui varie selon la direction (et respire doucement).
   vec3 sway = vec3(cos(TAU * uPhase), sin(TAU * uPhase), 0.0) * 0.25;

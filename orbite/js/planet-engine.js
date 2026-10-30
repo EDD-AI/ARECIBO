@@ -775,7 +775,7 @@
   const RING_ODDS = {
     terran: [0.12, 0.15], earth: [0.08, 0.12], ocean: [0.1, 0.12], ice: [0.25, 0.2], lava: [0.08, 0.2],
     desert: [0.1, 0.2], gas: [0.6, 0.25], moon: [0.08, 0.25], asteroid: [0, 0.65], star: [0, 0.35],
-    crystal: [0.1, 0.5], toxic: [0.12, 0.15], dead: [0.06, 0.4], portal: [0, 0], blackhole: [0, 0], mecha: [0.1, 0.25], nebula: [0, 0]
+    crystal: [0.1, 0.5], toxic: [0.12, 0.15], dead: [0.06, 0.4], portal: [0, 0], blackhole: [0, 0], mecha: [0.1, 0.25], nebula: [0, 0], bigbang: [0, 0]
   };
 
   const BG_THEMES = [

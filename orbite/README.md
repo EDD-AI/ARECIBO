@@ -378,7 +378,8 @@ pas d’historique avant la v102.
   couture), trois ondes de choc déchirées qui grandissent en refroidissant (du blanc au bleu), des jets
   de matière de longueurs inégales et des débris projetés avec une petite traînée (`g.fx.blast`). Le
   souffle n'est pas rond : son bord varie selon la direction et respire.
-- **Musique** : elle joue maintenant dans tous les menus (Codex, fin de partie, campagne compris). Elle
+- **Musique** : elle joue maintenant dans tous les menus (Codex, fin de partie, campagne compris ; en fin
+  de partie, elle revient après le jingle de victoire pour ne pas le couvrir). Elle
   reste coupée en partie (une musique de partie viendra plus tard), sur le logo du studio et pendant la
   cinématique.
 

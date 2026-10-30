@@ -448,7 +448,8 @@
     SFX.ambience({ splash: 'off', title: 'off', wake: 'wake', game: 'game', end: 'end', cStory: 'wake', genese: 'wake', essaim: 'wake', coeur: 'wake', sculpture: 'wake', cFight: 'battle', cEnd: 'game', multi: 'ship', creation: 'atelier', colony: 'atelier', explore: 'atelier', system: 'atelier' }[name] || 'menu');
     // La musique joue dans tous les menus (v118) ; seulement pas en partie (une musique de partie viendra),
     // ni sur le logo du studio, ni pendant la cinématique (qui la gère elle-même).
-    SFX.music(!['splash', 'cine', 'game', 'cFight'].includes(name));
+    // Fin de partie : la musique attend la fin du jingle de victoire (voir endScreen).
+    SFX.music(!['splash', 'cine', 'game', 'cFight', 'end'].includes(name));
     // Pendant la partie, le ciel s'efface derrière les planètes pour rester lisible.
     const busySky = ['laws', 'game', 'end', 'cFight'].includes(name);
     stage.starArea = busySky ? 3600 : 1800;
@@ -4343,6 +4344,8 @@
     $('endTotal').innerHTML = tr('Total') + ' ' + icon('dust') + ' ' + (dust() - (s.reward || 0) - gift);
     await show('end');
     if (rank === 1 && !quit) SFX.jingle(); else if (good) SFX.win(); else SFX.lose();
+    // La musique des menus revient doucement une fois le jingle (4,3 s) terminé.
+    setTimeout(() => { if (ui.screen === 'end') SFX.music(true); }, 4600);
     const reward = s.reward || 0;
     if (reward) {
       const t0 = performance.now();
