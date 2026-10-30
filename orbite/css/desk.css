@@ -558,3 +558,576 @@ body.desk #market .seed-bonus { font-size: 11px; }
 body.desk #market .seed-price { min-width: 110px; padding: 10px 16px; font-size: 16px; }
 body.desk #market .seed-price s { font-size: 13px; }
 body.desk #market .seed-shop > .mk-note { grid-area: note; align-self: end; margin: 0 0 4px; font-size: 13px; }
+
+/* ═══ v114 : Profil et fin de partie en plein écran sur PC ═══ */
+/* ═══ v111 : Profil et fin de partie en plein écran sur PC ═══ */
+/* ─── Profil sur PC ───────────────────────────────────────────────────────────
+ * Toute la page, comme le Marché : en haut le retour et le titre, puis les onglets sur toute la
+ * largeur, puis l'onglet ouvert sur toute la surface restante.
+ * Profil : un tableau de bord. En haut l'identité, le rang classé et le compte en ligne côte à côte ;
+ * en dessous les statistiques, votre style (et la loi favorite) et les dernières parties (la liste
+ * défile dans sa colonne). Succès : une grille de cartes. Amis : le code et l'ajout en bandeau, les
+ * amis en cartes sur deux colonnes. Classement : un podium (2e, 1er, 3e) puis la liste en tableau,
+ * dans l'ordre de lecture. Tout est sous body.desk : le téléphone ne change pas. */
+
+body.desk #profile {
+  width: 100%;
+  max-width: 1360px;
+  padding: 16px 32px 0;
+}
+body.desk #profile .screen-head { flex: none; height: 56px; gap: 10px; }
+body.desk #profile .screen-head h2 { font-size: 24px; letter-spacing: 0.18em; white-space: nowrap; }
+body.desk #profile .screen-head .icon-btn { width: 44px; height: 44px; font-size: 20px; }
+
+/* Le corps défile (Succès, Amis, Classement) ; l'onglet Profil, lui, tient dans la page. */
+body.desk #profileBody {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(241, 236, 218, 0.3) transparent;
+}
+body.desk #profile .pf-pane:not([hidden]) { flex: none; }
+
+/* Onglets : une barre sur toute la largeur, les quatre onglets à gauche. */
+body.desk #profile .pf-tabs {
+  flex: none;
+  grid-template-columns: repeat(4, minmax(0, 220px));
+  margin: 8px 0 22px;
+}
+body.desk #profile .pf-tabs button { padding: 14px 8px 12px; font-size: 13px; letter-spacing: 0.22em; transition: color 0.2s; }
+body.desk #profile .pf-tabs button:not(.on):hover { color: var(--ink); }
+/* La pastille des demandes d'amis suit le mot AMIS au lieu de flotter au bord de l'onglet. */
+body.desk #profile .pf-badge { position: relative; top: -2px; right: auto; margin-left: 10px; min-width: 18px; height: 18px; border-radius: 9px; font-size: 11px; line-height: 18px; letter-spacing: 0; }
+body.desk #profile .pf-badge:not([hidden]) { display: inline-block; }
+
+/* ─── Onglet Profil : le tableau de bord ─────────────────── */
+/* Colonne de gauche : les statistiques (sur deux rangées de la grille). Au milieu : votre style, qui
+ * s'étire, puis la loi favorite. À droite : les dernières parties, qui défilent. */
+body.desk #profile .pf-pane[data-pfpane="profil"]:not([hidden]) {
+  flex: 1 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.05fr) minmax(0, 0.9fr);
+  grid-template-rows: auto auto auto auto minmax(auto, 1fr) auto;
+  grid-template-areas:
+    'id     rank   online'
+    'ladder ladder ladder'
+    'scale  scale  scale'
+    'statsh styleh histh'
+    'stats  style  hist'
+    'stats  fav    hist';
+  column-gap: 28px;
+}
+/* Sans « Votre style » : les statistiques prennent les deux colonnes, à leur hauteur naturelle (pas
+ * de grandes cases vides pour un nouveau joueur), la loi favorite dessous. */
+body.desk #profile .pf-pane[data-pfpane="profil"]:not([hidden]):not(:has(> .pf-style)) {
+  grid-template-rows: auto auto auto auto auto minmax(auto, 1fr);
+  grid-template-areas:
+    'id     rank   online'
+    'ladder ladder ladder'
+    'scale  scale  scale'
+    'statsh statsh histh'
+    'stats  stats  hist'
+    'fav    fav    hist';
+}
+body.desk #profile .pf-pane[data-pfpane="profil"] > .pf-h { margin: 0 0 10px; font-size: 12px; letter-spacing: 0.26em; }
+body.desk #profile .pf-pane[data-pfpane="profil"] > .pf-h:has(+ .pf-stats) { grid-area: statsh; margin-top: 28px; }
+body.desk #profile .pf-pane[data-pfpane="profil"] > .pf-h:has(+ .pf-style) { grid-area: styleh; margin-top: 28px; }
+body.desk #profile .pf-pane[data-pfpane="profil"] > .pf-h:has(+ .pf-hist) { grid-area: histh; margin-top: 28px; }
+/* « CLASSÉ » : le titre se pose dans la carte de rang, en haut à gauche (la carte reste cliquable). */
+body.desk #profile .pf-pane[data-pfpane="profil"] > .pf-h:has(+ .pf-rank) {
+  grid-area: rank;
+  align-self: start;
+  justify-self: start;
+  position: relative;
+  z-index: 1;
+  margin: 17px 0 0 20px;
+  pointer-events: none;
+}
+
+/* Identité : la planète en grand, le pseudo, le niveau. */
+body.desk #profile .pf-id {
+  grid-area: id;
+  align-self: stretch;
+  grid-template-columns: 136px minmax(0, 1fr);
+  align-content: center;
+  gap: 22px;
+  margin: 0;
+  padding: 18px 22px;
+  border: 1px solid var(--faint);
+  background: radial-gradient(circle at 90px 50%, rgba(241, 236, 218, 0.05), transparent 170px);
+}
+/* Avec un cadre équipé, c'est le cadre qui borde la carte. */
+body.desk #profile .pf-id.pframe { margin: 6px; border-color: transparent; }
+body.desk #profile .pf-planet { width: 136px; height: 136px; }
+body.desk #profile .pf-who { gap: 8px; }
+/* Le pseudo (16 caractères au plus) reste dans la carte : il passe à la ligne s'il le faut, et le
+ * « #tag » suit toujours sur sa propre ligne avec le crayon (la pseudo-ligne ::before force le
+ * retour). Le pseudo dans une typo achetée (.nf) garde sa taille relative et l'encre claire. */
+body.desk #profile .pf-name-row { min-width: 0; }
+body.desk #profile .pf-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 26px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+body.desk #profile .pf-name::before { content: ''; order: 1; flex: 0 0 100%; height: 5px; }
+body.desk #profile .pf-name > .nf { max-width: 100%; margin: 0; color: var(--ink); }
+body.desk #profile .pf-name > span:not(.nf) { order: 2; margin: 0; font-size: 15px; letter-spacing: 0.1em; }
+body.desk #profile .pf-name .pf-pen { order: 2; width: 16px; height: 16px; margin-left: 12px; }
+body.desk #profile .pf-input { height: 44px; font-size: 18px; }
+body.desk #profile .pf-name-row .btn { min-height: 44px; padding: 0 16px; font-size: 13px; }
+body.desk #profile .pf-lvl { font-size: 13px; }
+body.desk #profile .pf-who .xp-bar { height: 5px; }
+body.desk #profile .pf-who small { font-size: 13px; }
+
+/* Rang classé : la carte s'étire à la hauteur de l'identité. */
+body.desk #profile .pf-rank {
+  grid-area: rank;
+  align-self: stretch;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  gap: 16px;
+  padding: 44px 18px 16px;
+  border-color: var(--line);
+  transition: border-color 0.2s, background 0.2s;
+}
+body.desk #profile .pf-rank:hover { border-color: var(--dim); background: rgba(241, 236, 218, 0.03); }
+body.desk #profile .pf-rank-orb { width: 64px; height: 64px; }
+body.desk #profile .pf-unranked { width: 60px; height: 60px; font-size: 22px; }
+body.desk #profile .pf-rank b { font-size: 18px; }
+/* Lignes équilibrées : pas de « 455 » ni de « suivante · record 455 » seul en bout de phrase. */
+body.desk #profile .pf-rank small { font-size: 13px; line-height: 1.45; text-wrap: balance; }
+body.desk #profile .pf-rank .xp-bar { height: 5px; margin-top: 8px; }
+body.desk #profile .pf-fold { font-size: 18px; }
+
+/* En ligne : la carte remplit sa colonne. */
+body.desk #profile #pfOnline { grid-area: online; display: flex; min-width: 0; }
+body.desk #profile #pfOnline .on-card { flex: 1; justify-content: center; gap: 10px; margin: 0; padding: 16px 18px; }
+body.desk #profile .on-card .mk-kicker { font-size: 11px; }
+body.desk #profile .on-card p { font-size: 14px; }
+body.desk #profile .on-card .btn { min-height: 42px; font-size: 13px; }
+/* « Se connecter avec Google » tient sur une ligne, même dans la colonne étroite (1280 px). */
+body.desk #profile .on-card .on-google { min-width: 0; max-width: 100%; padding: 0 16px; font-size: 12px; letter-spacing: 0.08em; white-space: nowrap; }
+body.desk #profile .on-card .link { font-size: 13px; padding: 4px 10px; }
+body.desk #profile .on-sync { font-size: 12px; }
+body.desk #profile .on-err { font-size: 13px; }
+body.desk #profile .on-code { font-size: 11px; }
+body.desk #profile .on-code .btn { min-height: 34px; padding: 0 12px; font-size: 12px; }
+
+/* Échelle des rangs (dépliée) : les neuf rangs sur une ligne, sous le bandeau. */
+body.desk #profile .pf-ladder {
+  grid-area: ladder;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 6px;
+  margin: 16px 0 0;
+  padding: 14px 8px 12px;
+  border: 1px solid var(--faint);
+}
+body.desk #profile .pf-tier { gap: 5px; padding: 4px 0; }
+body.desk #profile .pf-tier .orb { width: 52px; height: 52px; }
+body.desk #profile .pf-tier b { font-size: 13px; }
+body.desk #profile .pf-tier small { font-size: 11px; }
+body.desk #profile .pf-tier.on { box-shadow: inset 0 -2px 0 var(--gold); }
+body.desk #profile .pf-ladder + .muted { grid-area: scale; margin: 10px 0 0; font-size: 13px; line-height: 1.45; text-align: left; }
+
+/* Statistiques : neuf tuiles, chiffres en grand. Chaque intitulé réserve la place de deux lignes :
+ * les chiffres d'une même rangée restent sur une même ligne même quand un intitulé (POUSSIÈRES
+ * GAGNÉES) passe sur deux lignes. */
+body.desk #profile .pf-stats { grid-area: stats; align-self: stretch; grid-auto-rows: minmax(0, 1fr); }
+body.desk #profile .pf-stats div { justify-content: center; gap: 6px; min-height: 0; padding: 12px 16px; }
+body.desk #profile .pf-stats b { font-size: 30px; line-height: 1.1; }
+body.desk #profile .pf-stats small { min-height: 2.7em; font-size: 11px; line-height: 1.35; letter-spacing: 0.12em; text-wrap: balance; }
+/* Nouveau joueur (sans « Votre style ») : des tuiles à leur taille, pas étirées. */
+body.desk #profile .pf-pane:not(:has(> .pf-style)) > .pf-stats { align-self: start; grid-auto-rows: auto; }
+body.desk #profile .pf-pane:not(:has(> .pf-style)) > .pf-stats div { min-height: 104px; }
+
+/* Loi favorite : une case sous « Votre style » (ou sous les statistiques s'il n'y a pas de style). */
+body.desk #profile .pf-stats + .muted {
+  grid-area: fav;
+  align-self: start;
+  margin: 12px 0 0;
+  padding: 13px 16px;
+  border: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* Votre style : trois lignes qui s'étirent avec la page. */
+body.desk #profile .pf-style { grid-area: style; align-self: stretch; }
+body.desk #profile .pf-style > div { flex: 1 1 auto; align-content: center; gap: 7px 14px; padding: 13px 16px; }
+body.desk #profile .pf-style small { font-size: 11px; line-height: 1.35; letter-spacing: 0.1em; text-wrap: balance; }
+body.desk #profile .pf-style .fam-chip { font-size: 13px; }
+body.desk #profile .pf-style em { font-size: 13px; }
+
+/* Dernières parties : la liste remplit sa colonne et défile dedans. Un fondu en bas montre qu'il y a
+ * d'autres parties plus bas ; il disparaît quand on arrive au bout (navigateurs qui connaissent les
+ * animations liées au défilement ; ailleurs, la barre de défilement reste visible). */
+body.desk #profile .pf-hist {
+  grid-area: hist;
+  contain: size;
+  min-height: 180px;
+  overflow-y: auto;
+  padding-right: 6px;
+  border-top: 1px solid var(--faint);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(241, 236, 218, 0.35) transparent;
+}
+@property --pf-fade { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@keyframes pf-hist-fade { from, 88% { --pf-fade: 44px; } to { --pf-fade: 0px; } }
+@supports (animation-timeline: scroll()) {
+  body.desk #profile .pf-hist {
+    -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - var(--pf-fade)), transparent);
+    mask-image: linear-gradient(180deg, #000 calc(100% - var(--pf-fade)), transparent);
+    animation: pf-hist-fade linear both;
+    animation-timeline: scroll(self);
+  }
+}
+body.desk #profile .pf-hist div { grid-template-columns: 50px minmax(0, 1fr) auto; gap: 10px; padding: 9px 2px; font-size: 14px; }
+body.desk #profile .pf-hist span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.desk #profile .pf-hist b { font-size: 17px; }
+body.desk #profile .pf-hist small { font-size: 12px; white-space: nowrap; }
+body.desk #profile .pf-hist .muted { margin: 14px 0 0; font-size: 14px; }
+
+/* ─── Onglet Succès : une grille de cartes ───────────────── */
+body.desk #profile .succ-head {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 18px;
+  row-gap: 10px;
+  margin: 0 0 6px;
+}
+body.desk #profile .succ-head b { font-size: 30px; }
+body.desk #profile .succ-head small { font-size: 14px; }
+body.desk #profile .succ-head .xp-bar { grid-column: 1 / -1; height: 5px; }
+body.desk #profile #pfSucces .fg-h { margin: 26px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--faint); font-size: 13px; letter-spacing: 0.26em; }
+body.desk #profile #pfSucces .fg-h small { font-size: 13px; }
+body.desk #profile .succ-list { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; }
+body.desk #profile .succ { grid-template-columns: 30px minmax(0, 1fr) auto; gap: 12px; padding: 12px 14px; }
+body.desk #profile .succ-medal { font-size: 24px; }
+body.desk #profile .succ-txt { gap: 4px; }
+body.desk #profile .succ-txt b { font-size: 15px; }
+body.desk #profile .succ-txt small { font-size: 13px; }
+/* La base fixe cette taille avec !important : il faut faire de même pour la grossir. */
+body.desk #profile .succ-txt .succ-n { font-size: 12px !important; }
+body.desk #profile .succ-bar { height: 4px; margin-top: 6px; }
+body.desk #profile .succ-gain { font-size: 14px; }
+
+/* ─── Amis et Classement hors connexion : la carte au centre ─── */
+body.desk #profile #pfFriends > .on-card:only-child,
+body.desk #profile #pfLeader > .on-card:only-child { max-width: 640px; margin: 48px auto 0; padding: 34px 40px; gap: 16px; }
+body.desk #profile #pfFriends > .on-card:only-child p,
+body.desk #profile #pfLeader > .on-card:only-child p { max-width: 520px; font-size: 15px; }
+
+/* ─── Onglet Amis ────────────────────────────────────────── */
+/* En haut, un bandeau : votre code ami à gauche, l'ajout d'un ami à droite. Dessous, les demandes
+ * reçues, vos amis et les demandes envoyées, en cartes sur deux colonnes (dans l'ordre de lecture). */
+body.desk #profile #pfFriends:not([hidden]):has(> .on-add) {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  grid-template-areas:
+    'code add'
+    'list list';
+  align-items: center;
+  column-gap: 32px;
+  row-gap: 26px;
+}
+body.desk #profile #pfFriends > .on-code.big {
+  grid-area: code;
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  justify-content: start;
+  gap: 4px 28px;
+  margin: 0;
+  padding: 14px 20px 14px 22px;
+  border: 1px solid rgba(246, 196, 83, 0.35);
+  background: linear-gradient(90deg, rgba(246, 196, 83, 0.06), transparent 80%);
+  font-size: 11px;
+}
+body.desk #profile #pfFriends > .on-code.big span { grid-column: 1; grid-row: 1; }
+body.desk #profile #pfFriends > .on-code.big b { grid-column: 1; grid-row: 2; font-size: 30px; line-height: 1.1; }
+body.desk #profile #pfFriends > .on-code.big .btn { grid-column: 2; grid-row: 1 / span 2; min-height: 42px; padding: 0 18px; font-size: 12px; }
+body.desk #profile #pfFriends > .on-add { grid-area: add; justify-self: end; width: min(100%, 560px); gap: 10px; margin: 0; }
+body.desk #profile .on-add input { min-height: 50px; font-size: 17px; }
+body.desk #profile .on-add .btn { min-height: 50px; padding: 0 24px; font-size: 13px; }
+
+body.desk #profile #onFriendList {
+  grid-area: list;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+  align-items: start;
+  min-width: 0;
+}
+body.desk #profile #onFriendList > .fg-h,
+body.desk #profile #onFriendList > .muted { grid-column: 1 / -1; }
+body.desk #profile #onFriendList > .fg-h { margin: 16px 0 2px; padding-bottom: 8px; border-bottom: 1px solid var(--faint); font-size: 13px; }
+body.desk #profile #onFriendList > .fg-h:first-child { margin-top: 0; }
+body.desk #profile #onFriendList > .fg-h small { font-size: 13px; }
+body.desk #profile #onFriendList > .muted { margin: 4px 0 0; font-size: 14px; }
+
+/* Une personne (amis) : une carte. */
+body.desk #profile .on-row { grid-template-columns: 56px minmax(0, 1fr) auto; gap: 14px; padding: 10px 6px; }
+body.desk #profile #onFriendList > .on-row {
+  min-height: 78px;
+  padding: 10px 12px 10px 8px;
+  border: 1px solid var(--faint);
+  background: rgba(241, 236, 218, 0.015);
+  transition: border-color 0.2s, background 0.2s;
+}
+body.desk #profile #onFriendList > .on-row:hover { border-color: var(--line); background: rgba(241, 236, 218, 0.035); }
+/* Les demandes reçues (avant le titre « Vos amis ») ressortent en or. */
+body.desk #profile #onFriendList > .on-row:has(~ .fg-h > small) { border-color: rgba(246, 196, 83, 0.4); background: rgba(246, 196, 83, 0.05); }
+body.desk #profile .on-row .orb, body.desk #profile .on-board .orb { width: 44px; height: 44px; }
+body.desk #profile .on-row-txt { gap: 4px; }
+body.desk #profile .on-row-txt b { overflow: hidden; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+body.desk #profile .on-row-txt b small { font-size: 13px; }
+body.desk #profile .on-row-txt > small { font-size: 13px; line-height: 1.4; }
+body.desk #profile .on-row-act { align-items: center; gap: 8px; }
+body.desk #profile .on-row-act .btn { min-height: 40px; padding: 0 14px; font-size: 12px; }
+/* Retirer un ami : une vraie case de 40 px, la croix bien visible (la base la fixe avec !important). */
+body.desk #profile .on-row-act .on-x {
+  width: 40px;
+  min-width: 40px;
+  padding: 0;
+  border: 1px solid var(--faint);
+  color: var(--dim);
+  font-size: 22px !important;
+  line-height: 1;
+  transition: color 0.2s, border-color 0.2s;
+}
+body.desk #profile .on-row-act .on-x:hover { border-color: var(--hp); color: var(--hp); }
+body.desk #profile .on-board .pfw, body.desk #profile .on-row .pfw { margin: 3px 4px; }
+
+/* ─── Onglet Classement : un podium, puis la liste en tableau ─── */
+/* Les trois premiers en cartes côte à côte (2e, 1er, 3e), puis tout le monde dans l'ordre, une ligne
+ * par joueur : rang, planète, pseudo, rang classé et niveau, points. La liste se lit de haut en bas,
+ * comme elle défile. */
+body.desk #profile .on-scope { justify-content: flex-start; gap: 8px; margin: 0 0 18px; }
+body.desk #profile .on-scope .fg-chip { min-width: 130px; min-height: 42px; justify-content: center; font-size: 13px; letter-spacing: 0.22em; }
+body.desk #profile .on-board {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 0 16px;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+body.desk #profile .on-board li {
+  order: 3;
+  flex: 0 0 100%;
+  grid-template-columns: 48px 56px minmax(0, 1.2fr) minmax(0, 1fr) 96px;
+  column-gap: 14px;
+  min-height: 62px;
+  padding: 6px 10px;
+  transition: background 0.2s;
+}
+body.desk #profile .on-board li .on-row-txt { display: contents; }
+body.desk #profile .on-board li .on-row-txt > b { min-width: 0; }
+body.desk #profile .on-board li .on-row-txt > small { min-width: 0; overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+body.desk #profile .on-board li:hover { background: rgba(241, 236, 218, 0.04); }
+body.desk #profile .on-pos { font-size: 16px; font-variant-numeric: tabular-nums; }
+body.desk #profile .on-pts { font-size: 18px; font-variant-numeric: tabular-nums; text-align: right; }
+body.desk #profile #onBoard > .muted { font-size: 14px; }
+/* Votre ligne : bordée d'or. (Le fond reste transparent : les planètes sont peintes dessous.) */
+body.desk #profile .on-board li.me { background: rgba(246, 196, 83, 0.08); box-shadow: inset 0 0 0 1px rgba(246, 196, 83, 0.35); }
+body.desk #profile .on-board li.me:hover { background: rgba(246, 196, 83, 0.12); }
+
+/* Le podium (dès que la liste a plus de trois joueurs, ou dès un seul). */
+body.desk #profile .on-board li:nth-child(-n+3) {
+  flex: 0 1 300px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-content: start;
+  row-gap: 6px;
+  min-height: 0;
+  margin-bottom: 22px;
+  padding: 16px 14px 18px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(241, 236, 218, 0.04), transparent 70%);
+  text-align: center;
+}
+body.desk #profile .on-board li:nth-child(1) { order: 1; padding-top: 26px; padding-bottom: 30px; border-color: rgba(246, 196, 83, 0.55); background: linear-gradient(180deg, rgba(246, 196, 83, 0.1), transparent 75%); }
+body.desk #profile .on-board li:nth-child(2) { order: 0; }
+body.desk #profile .on-board li:nth-child(3) { order: 2; }
+body.desk #profile .on-board li.me:nth-child(-n+3) { box-shadow: inset 0 0 0 1px rgba(246, 196, 83, 0.55); }
+body.desk #profile .on-board li:nth-child(-n+3) .on-pos { font-size: 26px; font-weight: 600; color: var(--gold); }
+body.desk #profile .on-board li:nth-child(-n+3) .orb { width: 72px; height: 72px; }
+body.desk #profile .on-board li:nth-child(1) .orb { width: 88px; height: 88px; }
+body.desk #profile .on-board li:nth-child(-n+3) .on-row-txt > b { max-width: 100%; overflow: hidden; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+body.desk #profile .on-board li:nth-child(-n+3) .on-row-txt > small { max-width: 100%; font-size: 13px; }
+body.desk #profile .on-board li:nth-child(-n+3) .on-pts { margin-top: 2px; font-size: 24px; text-align: center; }
+
+/* ─── Fin de partie sur PC ───────────────────────────────────────────────────
+ * Deux colonnes séparées par un fin trait vertical : à gauche le résultat (la place en très grand,
+ * la phrase, votre système final) ; à droite les gains (poussières, niveau, classé) et les boutons.
+ * Les éléments s'empilent en colonne et passent à la colonne suivante grâce au trait (::before).
+ * Les deux colonnes partent de la même ligne en haut ; l'ensemble est à peu près centré en hauteur. */
+body.desk #end {
+  width: 100%;
+  max-width: 1280px;
+  padding: max(28px, calc((100vh / var(--z) - 560px) / 2)) 48px 28px;
+  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-content: center;
+  align-items: center;
+  column-gap: 64px;
+  row-gap: 14px;
+}
+body.desk #end::before {
+  content: '';
+  order: 1;
+  flex: 0 0 100%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, var(--faint) 12%, var(--faint) 70%, transparent);
+}
+body.desk #end > .end-dust,
+body.desk #end > .end-xp,
+body.desk #end > .end-ranked,
+body.desk #end > .btn,
+body.desk #end > .link { order: 2; width: 400px; }
+body.desk #end > .btn[hidden] { display: none; }
+
+/* À gauche : le résultat. */
+/* La colonne de gauche a toujours la même largeur : le trait ne bouge pas d'une partie à l'autre. */
+body.desk #end .end-kicker { width: 600px; font-size: 14px; letter-spacing: 0.34em; }
+body.desk #end .end-rank { font-size: 190px; }
+body.desk #end .end-rank.duel { font-size: 104px; letter-spacing: 0.04em; }
+body.desk #end .end-text { max-width: 36ch; margin: 0 0 4px; font-size: 17px; line-height: 1.45; }
+body.desk #end .end-board { max-width: 600px; margin: 6px 0 0; padding: 14px 22px 10px; border: 1px solid var(--faint); }
+body.desk #end .end-board > .muted { font-size: 14px; }
+body.desk #endBoard .static-rows { gap: 8px; }
+body.desk #endBoard .static-rows .srow { grid-template-columns: 72px minmax(0, 1fr); }
+body.desk #endBoard .static-rows .srow small { padding-top: 24px; font-size: 11px; text-align: left; }
+body.desk #endBoard .static-rows .row { --u: 74px; gap: 14px; }
+body.desk #endBoard .unit .stats { font-size: 15px; gap: 6px; }
+
+/* À droite : les gains, en cartes. */
+body.desk #end .end-dust {
+  align-items: flex-start;
+  gap: 4px;
+  margin: 0;
+  padding: 18px 22px 16px;
+  border: 1px solid rgba(246, 196, 83, 0.35);
+  background: linear-gradient(180deg, rgba(246, 196, 83, 0.07), transparent 80%);
+  text-align: left;
+}
+body.desk #end .end-dust span { font-size: 12px; letter-spacing: 0.26em; }
+body.desk #end .end-dust b { font-size: 52px; line-height: 1.05; }
+body.desk #end .end-dust small { font-size: 14px; }
+body.desk #end .end-xp { gap: 9px; margin: 0; padding: 18px 22px; border: 1px solid var(--faint); }
+body.desk #end .xp-head { font-size: 13px; }
+body.desk #end .xp-head b { font-size: 15px; }
+body.desk #end .end-xp .xp-bar { height: 6px; }
+body.desk #end .end-xp small { font-size: 13px; }
+body.desk #end .end-ranked { margin: 2px 0 4px; font-size: 13px; line-height: 1.6; text-align: left; }
+body.desk #end .end-ranked:empty { display: none; }
+body.desk #end .end-ranked b { white-space: nowrap; }
+body.desk #end .end-ranked .link { padding: 4px 0; font-size: 13px; }
+body.desk #end .end-daily { font-size: 13px; }
+body.desk #end > .btn { min-height: 52px; font-size: 15px; }
+body.desk #end > .btn:hover { border-color: var(--dim); }
+body.desk #end #againBtn { min-width: 0; min-height: 62px; font-size: 18px; }
+body.desk #end #againBtn:hover { border-color: var(--ink); background: #fff; }
+body.desk #end #watchBtn { margin: 0; }
+body.desk #end #endHome { padding: 8px; font-size: 15px; }
+body.desk #end #endHome:hover { color: var(--ink); }
+
+/* Écrans peu hauts (1280 × 720, 1366 × 768) : un peu plus serré pour que l'onglet Profil tienne
+ * sans défiler. */
+@media (max-height: 780px) {
+  body.desk #profile .pf-tabs { margin: 4px 0 16px; }
+  body.desk #profile .pf-tabs button { padding: 12px 8px 11px; }
+  body.desk #profile .pf-pane[data-pfpane="profil"] > .pf-h:has(+ .pf-stats),
+  body.desk #profile .pf-pane[data-pfpane="profil"] > .pf-h:has(+ .pf-style),
+  body.desk #profile .pf-pane[data-pfpane="profil"] > .pf-h:has(+ .pf-hist) { margin-top: 20px; }
+  body.desk #profile .pf-id { grid-template-columns: 120px minmax(0, 1fr); padding: 14px 20px; }
+  body.desk #profile .pf-planet { width: 120px; height: 120px; }
+  body.desk #profile .pf-name { font-size: 24px; }
+  body.desk #profile .pf-rank { grid-template-columns: 56px minmax(0, 1fr) auto; gap: 14px; padding-left: 16px; padding-right: 14px; }
+  body.desk #profile .pf-rank-orb { width: 56px; height: 56px; }
+  body.desk #profile .pf-stats div { gap: 4px; padding: 12px 14px 9px; }
+  body.desk #profile .pf-stats b { font-size: 26px; }
+  body.desk #profile .pf-pane:not(:has(> .pf-style)) > .pf-stats div { min-height: 92px; }
+  body.desk #profile .pf-style > div { padding: 10px 16px; }
+  body.desk #profile .pf-stats + .muted { margin-top: 10px; padding: 10px 16px; }
+  body.desk #profile .on-board li:nth-child(-n+3) { margin-bottom: 16px; padding-top: 12px; padding-bottom: 14px; }
+  body.desk #profile .on-board li:nth-child(1) { padding-top: 18px; padding-bottom: 20px; }
+  body.desk #profile .on-board li:nth-child(-n+3) .orb { width: 64px; height: 64px; }
+  body.desk #profile .on-board li:nth-child(1) .orb { width: 78px; height: 78px; }
+  body.desk #endBoard .static-rows .row { --u: 62px; }
+  body.desk #endBoard .static-rows .srow small { padding-top: 20px; }
+}
+
+/* Écrans PC plus étroits que 16:9 (1024 × 768, 1280 × 1024, 5:4, 4:3 : moins de 1240 px virtuels de
+ * large). Profil : deux colonnes, la page défile (les dernières parties s'affichent en entier, sans
+ * défilement intérieur). Fin de partie : colonnes plus étroites. */
+@media (max-width: 1239px) and (max-height: 800px), (min-height: 801px) and (max-aspect-ratio: 155/100) {
+  body.desk #profile .pf-pane[data-pfpane="profil"]:not([hidden]),
+  body.desk #profile .pf-pane[data-pfpane="profil"]:not([hidden]):not(:has(> .pf-style)) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto auto auto auto auto auto minmax(auto, 1fr);
+    grid-template-areas:
+      'id     rank'
+      'id     online'
+      'ladder ladder'
+      'scale  scale'
+      'statsh histh'
+      'stats  hist'
+      'styleh hist'
+      'style  hist'
+      'fav    hist'
+      '.      hist';
+  }
+  body.desk #profile .pf-id { align-self: stretch; }
+  body.desk #profile #pfOnline { margin-top: 14px; }
+  body.desk #profile #pfOnline .on-card { padding: 14px 16px; }
+  body.desk #profile .pf-pane[data-pfpane="profil"] > .pf-h:has(+ .pf-style) { margin-top: 24px; }
+  body.desk #profile .pf-stats { align-self: start; grid-auto-rows: auto; }
+  body.desk #profile .pf-stats div { min-height: 96px; }
+  body.desk #profile .pf-style { align-self: start; }
+  body.desk #profile .pf-hist {
+    contain: none;
+    min-height: 0;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+    animation: none;
+  }
+  body.desk #profile .pf-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  body.desk #profile #onFriendList { grid-template-columns: minmax(0, 1fr); }
+  body.desk #profile #pfFriends:not([hidden]):has(> .on-add) { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'code' 'add' 'list'; row-gap: 16px; }
+  body.desk #profile #pfFriends > .on-add { justify-self: stretch; width: auto; }
+
+  body.desk #end { padding: max(24px, calc((100vh / var(--z) - 560px) / 2)) 32px 24px; column-gap: 36px; }
+  body.desk #end .end-kicker { width: 420px; }
+  body.desk #end > .end-dust,
+  body.desk #end > .end-xp,
+  body.desk #end > .end-ranked,
+  body.desk #end > .btn,
+  body.desk #end > .link { width: 330px; }
+  body.desk #end .end-rank { font-size: 150px; }
+  body.desk #end .end-rank.duel { font-size: 76px; }
+  body.desk #end .end-board { max-width: 420px; }
+  body.desk #endBoard .static-rows .row { --u: 62px; }
+  body.desk #endBoard .static-rows .srow small { padding-top: 20px; }
+}
+/* Écrans PC très bas (moins de 660 px) : la fin de partie se resserre pour tenir sur deux colonnes. */
+@media (max-height: 659px) {
+  body.desk #end { padding-top: 14px; padding-bottom: 14px; row-gap: 9px; }
+  body.desk #end .end-rank { font-size: 120px; }
+  body.desk #end .end-dust { padding: 12px 18px; }
+  body.desk #end .end-dust b { font-size: 40px; }
+  body.desk #end .end-xp { padding: 12px 18px; }
+  body.desk #end > .btn { min-height: 44px; }
+  body.desk #end #againBtn { min-height: 52px; }
+  body.desk #endBoard .static-rows .row { --u: 52px; }
+}

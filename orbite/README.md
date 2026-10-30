@@ -388,7 +388,13 @@ le téléphone ne change pas).
   en largeur. Ma planète : la planète en vitrine à gauche, la prochaine étape et la feuille de route
   sur deux colonnes à droite. Cosmétiques : une grille de cartes. Graines : la vitrine à gauche, les
   offres en largeur.
-- Profil, fin de partie, Multijoueur, choix de la loi et Création suivent.
+- **Profil** (v114) : l'identité, le classé et le compte en ligne côte à côte en haut ; dessous, les
+  statistiques en tuiles, votre style et les dernières parties en trois colonnes. Succès, Amis (code ami
+  en bandeau, demandes et amis en cartes) et Classement (podium puis liste en tableau) suivent la même
+  largeur. Les pseudos longs passent à la ligne sans sortir de la carte.
+- **Fin de partie** (v114) : le résultat et votre système à gauche, les poussières, l'expérience et les
+  boutons à droite.
+- Multijoueur, choix de la loi et Création suivent.
 
 Autres changements de la v111 : **Comment jouer** en 5 pages (le duel, le placement, les synergies,
 lire la partie, gagner) ; les fiches n'ont plus de barre de défilement mais une **flèche** en bas
