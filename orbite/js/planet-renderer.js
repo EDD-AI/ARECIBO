@@ -1776,6 +1776,7 @@ void main() {
       this.drawLayer('back', st);
       moons.filter((ms) => ms.pos[2] < 0).sort((a, c) => a.pos[2] - c.pos[2]).forEach((ms) => this.moonPass(g, ms, P, isStar));
 
+      if (b.glow) this.haloPass(4, cx, cy, R, b.glow, [b.glow, 0.95, 0, 0], b.pal, 12, b.seed, light, st);
       if (o.legend) this.haloPass(4, cx, cy, R, 1.75, [1.75, 1.1, 0, 0], this.legendRows, 0, b.seed, light, st);
       // Doré (v107) : le halo d'or, plus large et plus dense, passe désormais après l'atmosphère, la
       // coque et le bouclier, qui le cachaient. Une nébuleuse le garde derrière elle (le nuage est ajouré).
@@ -1792,7 +1793,7 @@ void main() {
       if (b.corona) this.haloPass(2, cx, cy, R, 1 + b.corona.len * 1.6, [b.corona.len, b.corona.freq, b.corona.power, 0], b.pal, 0, b.seed, light, st);
       if (b.lens) this.haloPass(3, cx, cy, R, b.lens.outer, [b.lens.outer, b.lens.cycles, 0, 0], b.pal, 9, b.seed, light, st);
 
-      const base = { cx, cy, light, occ, occN, st, ring: bandRing, ringN: g.ringN, bias: g.night ? (g.cut ? -3 : -2) : 0 };
+      const base = { cx, cy, light, occ, occN, st, ring: bandRing, ringN: g.ringN, bias: g.night ? (g.cut ? -3 : -2) : (g.bright || 0) };
       this.bodyPass(b, 0, Object.assign({}, base, { r: R, spin, unit: 1 }));
       if (b.clouds) {
         const cspin = TAU * (b.spinCycles + b.clouds.extraCycles) * phase + b.spinOffset;

@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 116;
+  const VERSION = 117;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -1066,7 +1066,9 @@
     { id: 'cadre-p-feu', frame: true, premium: true, dust: 6000, seeds: 40, name: tr('Flammes éternelles'), text: tr('Des braises montent sans fin autour de vous.') },
     { id: 'cadre-p-brume', frame: true, premium: true, dust: 6000, seeds: 40, name: tr('Brume'), text: tr('Une brume pâle qui dérive lentement.') },
     { id: 'cadre-p-orage', frame: true, premium: true, dust: 6000, seeds: 40, name: tr('Orage'), text: tr('Des éclairs crépitent tout autour.') },
-    { id: 'cadre-p-etoiles', frame: true, premium: true, dust: 6000, seeds: 40, name: tr('Pluie d’étoiles'), text: tr('Des étoiles qui scintillent et tombent doucement.') }
+    { id: 'cadre-p-etoiles', frame: true, premium: true, dust: 6000, seeds: 40, name: tr('Pluie d’étoiles'), text: tr('Des étoiles qui scintillent et tombent doucement.') },
+    // Laser rouge (v117) : en graines de vie seulement.
+    { id: 'cadre-laser', frame: true, premium: true, seedOnly: true, seeds: 300, name: tr('Laser rouge'), text: tr('Un rayon laser rouge fait sans fin le tour de votre profil.') }
   ];
   const FRAME_BY_ID = Object.fromEntries(FRAMES.map((k) => [k.id, k]));
   // Photos de profil (v92) : des astres achetés en graines de vie, de 5 à 650. Sans photo, l'avatar
@@ -1145,11 +1147,13 @@
 
   function renderCosmetics() {
     const c = cosmetics();
+    // En graines seulement (photos de profil, cadre laser) : un seul bouton.
+    const seedBtn = (k) => `<span class="cos-buy"><button class="btn primary" data-cos-buy="${k.id}" data-seed="1" ${seeds() < seedPrice(k) ? 'disabled' : ''}>${icon('seed', 'seed')} ${seedPrice(k)}</button></span>`;
     const buyBtn = (k) => `<span class="cos-buy"><button class="btn primary" data-cos-buy="${k.id}" ${dust() < dustPrice(k) ? 'disabled' : ''}>${icon('dust')} ${dustPrice(k)}</button><button class="btn" data-cos-buy="${k.id}" data-seed="1" ${seeds() < seedPrice(k) ? 'disabled' : ''}>${icon('seed', 'seed')} ${seedPrice(k)}</button></span>`;
     // Un cadre : aperçu sur une petite planète, puis acheter, équiper, ou « équipé ».
     const frameRow = (k) => {
       const owned = !k.id || c.owned.includes(k.id), on = (c.frame || '') === (k.id || '');
-      const btn = on ? `<span class="cos-on">${tr('ÉQUIPÉ')}</span>` : owned ? `<button class="btn" data-cos-equip="${k.id || ''}" data-kind="frame">${tr('ÉQUIPER')}</button>` : buyBtn(k);
+      const btn = on ? `<span class="cos-on">${tr('ÉQUIPÉ')}</span>` : owned ? `<button class="btn" data-cos-equip="${k.id || ''}" data-kind="frame">${tr('ÉQUIPER')}</button>` : k.seedOnly ? seedBtn(k) : buyBtn(k);
       return `<div class="cos-row cos-frame-row ${k.premium ? 'premium' : ''}">
         <span class="cos-fr"><i class="${k.id ? 'pframe' : ''}" ${k.id ? `data-frame="${k.id}"` : ''}></i></span>
         <span class="cos-txt"><b>${esc(k.name)}${k.premium ? ` <em class="cos-prem">${tr('PREMIUM')}</em>` : ''}</b><small>${esc(k.text)}</small></span>${btn}</div>`;
@@ -1158,7 +1162,7 @@
     const avatarRow = (k) => {
       const owned = !k.id || c.owned.includes(k.id), on = (c.avatar || '') === (k.id || '');
       const btn = on ? `<span class="cos-on">${tr('ÉQUIPÉ')}</span>` : owned ? `<button class="btn" data-cos-equip="${k.id || ''}" data-kind="avatar">${tr('ÉQUIPER')}</button>`
-        : `<span class="cos-buy"><button class="btn primary" data-cos-buy="${k.id}" data-seed="1" ${seeds() < k.seeds ? 'disabled' : ''}>${icon('seed', 'seed')} ${k.seeds}</button></span>`;
+        : seedBtn(k);
       return `<div class="cos-row cos-avatar-row ${k.seeds >= 450 ? 'rare' : ''}">
         <span class="cos-av"><span class="orb" data-planet="${k.id || 'world-mini'}"></span></span>
         <span class="cos-txt"><b>${esc(k.name)}${k.legend ? ` <em class="cos-prem">${tr('LÉGENDAIRE')}</em>` : ''}</b>${k.id ? '' : `<small>${tr('Votre planète, celle du Marché stellaire.')}</small>`}</span>${btn}</div>`;
@@ -1328,7 +1332,7 @@
       if (buy.dataset.seed) {
         if (seeds() < seedPrice(k)) { refuse(tr('Il vous manque {n} graines de vie.', { n: seedPrice(k) - seeds() })); return; }
         addSeeds(-seedPrice(k));
-      } else if (k.avatar) {
+      } else if (k.avatar || k.seedOnly) {
         return;
       } else {
         if (dust() < dustPrice(k)) { refuse(tr('Il vous manque {n} poussières d’étoiles.', { n: dustPrice(k) - dust() })); return; }
@@ -1594,7 +1598,8 @@
 
   // Codes cadeaux : seule l'empreinte SHA-256 de chaque code est publiée ; chacun ne sert qu'une fois par appareil.
   const GIFTS = {
-    '69c6a9d25df079588239c63c3a69003d4e26fc55ca5ea4d72977649b42944415': { id: 'test-10k', dust: 10000 }
+    '69c6a9d25df079588239c63c3a69003d4e26fc55ca5ea4d72977649b42944415': { id: 'test-10k', dust: 10000 },
+    '09a89fb7ef25ffa7688ac9e246863d1f6d7ea5be7ac00106062780c00e989fdc': { id: 'createur-1', dust: 5000, seeds: 450 }
   };
   const GIFT_KEY = 'orbite.cadeaux';
   function openCode() {
@@ -1616,14 +1621,16 @@
       if (used.includes(gift.id)) { refuse(tr('Ce code a déjà été utilisé.')); return; }
       used.push(gift.id);
       store.set(GIFT_KEY, JSON.stringify(used));
-      addDust(gift.dust);
+      if (gift.dust) addDust(gift.dust);
+      if (gift.seeds) addSeeds(gift.seeds);
       closeSheet();
       renderMenu();
       SFX.golden();
       const [x, y] = center($('menuDust'));
       stage.ring(x, y, 20, { n: 60, colors: [[255, 226, 140], [255, 255, 255]], speed: 90, life: 1 });
-      popOn($('menuDust'), `+${gift.dust} ${icon('dust')}`, 'gold');
-      toast(tr('Code accepté : +{n} poussières d’étoiles.', { n: gift.dust }), 3200);
+      if (gift.dust) popOn($('menuDust'), `+${gift.dust} ${icon('dust')}`, 'gold');
+      toast(gift.seeds ? tr('Code accepté : +{n} poussières d’étoiles et +{s} graines de vie.', { n: gift.dust || 0, s: gift.seeds })
+        : tr('Code accepté : +{n} poussières d’étoiles.', { n: gift.dust }), 3600);
     };
     listen('giftGo', 'click', go);
     listen('giftCode', 'keydown', (e) => { if (e.key === 'Enter') go(); });

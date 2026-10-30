@@ -384,10 +384,10 @@
     { id: 'ganymede', fam: 'lune', tier: 4, atk: 5, hp: 6, name: 'Ganymède', look: { type: 'moon', seed: 9107, hueShift: 200, moons: 1 },
       text: 'Début de combat : chaque Lune donne +{1}/+{1} à ses voisins pour le combat.',
       start(c, u, m) { for (const l of c.alliesFam(u.side, 'lune')) for (const v of c.neighbors(l)) c.buff(v, m, m); } },
-    { id: 'maree', fam: 'lune', tier: 5, atk: 6, hp: 7, name: 'Grande Marée', look: { type: 'moon', seed: 9108, hueShift: 35, light: [-0.62, -0.42, -0.52], crescent: true },
+    { id: 'maree', fam: 'lune', tier: 5, atk: 6, hp: 7, name: 'Grande Marée', look: { type: 'moon', seed: 9108, mood: 'bleu-nuit', light: [-0.62, -0.42, -0.52], crescent: true },
       text: 'Fin de cycle : vos astres voisins d’une Lune gagnent +{1}/+{1}.',
       endTurn(x, u, m) { const set = new Set(); for (const l of x.fam('lune')) for (const v of x.neighbors(l)) set.add(v); for (const v of set) x.buff(v, m, m); } },
-    { id: 'pleinelune', fam: 'lune', tier: 6, atk: 8, hp: 9, name: 'Pleine Lune', look: { type: 'moon', seed: 9109, shell: true },
+    { id: 'pleinelune', fam: 'lune', tier: 6, atk: 8, hp: 9, name: 'Pleine Lune', look: { type: 'moon', seed: 9109, mood: 'pleine', light: [0.12, 0.14, 1], glow: true },
       text: 'Début de combat : vos autres astres gagnent +{1}/+{1} par Lune (3 au plus).',
       start(c, u, m) { const n = Math.min(3, c.alliesFam(u.side, 'lune').length) * m; for (const v of c.allies(u.side)) if (v !== u) c.buff(v, n, n); } },
 
