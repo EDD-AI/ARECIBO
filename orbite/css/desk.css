@@ -1812,3 +1812,10 @@ body.desk #system .sys-row .orb { width: 64px; height: 64px; }
 body.desk #system .sys-row-txt b { font-size: 18px; }
 body.desk #system .sys-row-txt small { font-size: 13px; }
 body.desk #system .sys-ups i { font-size: 12px; padding: 3px 8px; }
+/* Signaler un bug (v121) : le « ? » en bas de la colonne de droite, sous le combat et le terminal. */
+body.desk #game .bug-btn { order: 10; margin-top: auto; align-self: flex-end; width: 44px; min-height: 44px; }
+body.desk #game .bug-btn::after { content: none; }
+body.desk #game .bug-ico { width: 30px; height: 30px; }
+/* Les rapports de bugs du créateur : une fiche large, deux colonnes. */
+body.desk #overlay .sheet:has(> .rp-admin) { width: min(1040px, 100%); }
+body.desk .rp-admin .rp-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }

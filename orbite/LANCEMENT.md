@@ -44,10 +44,14 @@ nouvelle version, la **checklist** se coche au fur et à mesure.
       - [ ] Ère II · chapitre 4 · Le Grand Impact (+ choix du destin)
 - [ ] (toi) Publier les règles Firestore (`firebase/firestore.rules`) dans la console Firebase.
       Plus bloquant depuis la v75 (les duels se reconnaissent aussi sans le champ `size`), mais
-      les règles à jour limitent un duel à deux joueurs côté serveur.
+      les règles à jour limitent un duel à deux joueurs côté serveur. Les bugs signalés (bouton « ? »,
+      v121) en ont besoin : sans elles, les rapports restent en attente sur les téléphones. Juste
+      après, entrer son code créateur (Paramètres → Code cadeau) : le premier compte qui l'entre
+      devient le seul créateur.
 - [ ] (toi + moi) Faire jouer le duel aux testeurs : placement, formations, durée (~12 cycles).
 - [ ] (moi) Supprimer son compte depuis le jeu (et ses données en ligne).
-- [ ] (moi) Remontée des erreurs (plantages chez les joueurs).
+- [ ] (moi) Remontée des erreurs (plantages chez les joueurs). Depuis la v121, chaque bug signalé
+      (bouton « ? ») joint les 5 dernières erreurs ; la remontée automatique des plantages reste à faire.
 - [ ] (toi + moi) Performances testées sur un téléphone moyen ou ancien ; mode économie si besoin.
 
 ### Phase 2 · L'appli Android
@@ -59,7 +63,9 @@ nouvelle version, la **checklist** se coche au fur et à mesure.
 
 ### Phase 3 · La fiche et l'administratif
 - [ ] (toi) Compte développeur Google Play (25 $), identité, profil de paiement.
-- [ ] (moi → toi) Politique de confidentialité en ligne.
+- [ ] (moi → toi) Politique de confidentialité en ligne. Y déclarer les bugs signalés (v121) : message,
+      capture facultative, version, écran, appareil, langue, taille d’écran, dernières erreurs, partie en
+      cours, pseudo, compte s’il est connecté (lus par le créateur seul).
 - [ ] (moi → toi) Formulaire « Sécurité des données » et questionnaire de classification (13+).
 - [ ] (moi) Visuels : icône 512 px, bannière 1024×500, 6 à 8 captures légendées.
 - [ ] (moi) Bande-annonce de 30 s (la poussière qui devient un astre).
