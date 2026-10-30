@@ -370,6 +370,33 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Nouveaux visuels et photos de profil (v115)
+
+- **Vraies lunes en croissant** : Europe et Grande Marée ne sont plus des sphères, seule la partie
+  éclairée est dessinée (option `crescent: true` d'un look, qui demande une lumière de nuit, z < 0 :
+  le shader ne dessine pas la face cachée, la limite suit la sphère lisse). Les autres lunes de nuit
+  (Séléné, Nyx, Luna) ont un croissant plus vif et plus net.
+- **Givre** est une boule miroir transparente : des facettes carrées qui tournent et renvoient la
+  lumière ; entre elles et dans les facettes sombres, on voit le dos de la boule (nature `mirror`).
+- **Zéro absolu** (légendaire Glace) est une sphère de verre où l'on voit à travers : un bord clair,
+  un reflet de fenêtre, la lumière concentrée de l'autre côté, un éclat qui passe de temps en temps
+  (nature `glass`). Ces deux natures ne sont jamais tirées au hasard ; elles partagent le shader 14.
+- **Cerveau Matriochka** (légendaire Machine) est une station de combat sphérique noire : panneaux
+  sombres, tranchée à l'équateur, grande parabole en haut à droite avec un petit cœur rouge. Elle ne
+  tourne pas, pour que la parabole reste visible (option `station: true` d'un look `mecha`).
+- **Un ami se connecte** : en plus de la bulle, deux notes de verre douces (`SFX.friend`), une seule
+  fois même si plusieurs amis arrivent ensemble.
+- **Photos de profil : tous les astres du jeu** (140, identifiant `c-<astre>`), en plus des 13 astres
+  classiques. Un onglet par famille (avec son picto) et un onglet Légendaires. Le prix, en graines de
+  vie, suit la rareté de la famille et le niveau de l'astre :
+
+  | Rareté | Familles | Niveau 1 → 6 |
+  | --- | --- | --- |
+  | Commune | Vie, Glace, Machine, Minéral, Lunes, Neutre | 5, 10, 15, 25, 35, 50 |
+  | Moyenne | Brasier, Cristal, Comètes, Tempête, Nébuleuses | 60, 75, 90, 110, 130, 160 |
+  | Rare | Néant, Envers, Anomalies | 200, 240, 280, 320, 370, 420 |
+  | Légendaire | les 15 légendaires | 500 + 25 × niveau (525 à 650) |
+
 ## Son des reliques (v113)
 
 Quand le choix d'une relique apparaît (début des cycles de relique), un petit son l'annonce : un souffle

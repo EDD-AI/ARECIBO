@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 114;
+  const VERSION = 115;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -1086,6 +1086,23 @@
     { id: 'av-eclipse', avatar: true, seeds: 550, name: tr('Éclipse'), look: { type: 'eclipse', seed: 6112 } },
     { id: 'av-trou-noir', avatar: true, seeds: 650, name: tr('Trou noir'), look: { type: 'blackhole', seed: 6113 } }
   ];
+  for (const a of AVATARS) a.group = 'classique';
+  // Tous les astres du jeu en photo de profil (v115). Le prix suit la rareté de la famille et le
+  // niveau de l'astre : familles communes, moyennes, rares, et les légendaires au-dessus de tout.
+  // Identifiant « c-<astre> » : 16 caractères au plus dans le profil public.
+  const AV_RARITY = [
+    { id: 'commun', name: tr('COMMUNE'), fams: ['vie', 'glace', 'machine', 'mineral', 'lune', 'neutre'], prices: [5, 10, 15, 25, 35, 50] },
+    { id: 'moyen', name: tr('MOYENNE'), fams: ['brasier', 'cristal', 'comete', 'tempete', 'nebuleuse'], prices: [60, 75, 90, 110, 130, 160] },
+    { id: 'rare', name: tr('RARE'), fams: ['neant', 'envers', 'anomalie'], prices: [200, 240, 280, 320, 370, 420] }
+  ];
+  const avRarity = (f) => AV_RARITY.find((r) => r.fams.includes(f)) || AV_RARITY[0];
+  for (const c of R.CARDS) {
+    if (c.token) continue;
+    AVATARS.push({ id: 'c-' + c.id, avatar: true, group: c.legend ? 'legend' : c.fam, legend: !!c.legend, name: c.name, look: c.look,
+      seeds: c.legend ? 500 + 25 * c.tier : avRarity(c.fam).prices[Math.min(5, c.tier - 1)] });
+  }
+  // Onglets de la boutique : les astres classiques, chaque famille de la moins chère à la plus chère, les légendaires.
+  const AV_GROUPS = ['classique'].concat(...AV_RARITY.map((r) => r.fams), 'legend');
   const AVATAR_BY_ID = Object.fromEntries(AVATARS.map((k) => [k.id, k]));
   // Compact : anneaux et disques restent près de l'astre, qui tient dans un petit avatar.
   for (const a of AVATARS) stage.register(a.id, a.look);
@@ -1144,8 +1161,24 @@
         : `<span class="cos-buy"><button class="btn primary" data-cos-buy="${k.id}" data-seed="1" ${seeds() < k.seeds ? 'disabled' : ''}>${icon('seed', 'seed')} ${k.seeds}</button></span>`;
       return `<div class="cos-row cos-avatar-row ${k.seeds >= 450 ? 'rare' : ''}">
         <span class="cos-av"><span class="orb" data-planet="${k.id || 'world-mini'}"></span></span>
-        <span class="cos-txt"><b>${esc(k.name)}</b>${k.id ? '' : `<small>${tr('Votre planète, celle du Marché stellaire.')}</small>`}</span>${btn}</div>`;
+        <span class="cos-txt"><b>${esc(k.name)}${k.legend ? ` <em class="cos-prem">${tr('LÉGENDAIRE')}</em>` : ''}</b>${k.id ? '' : `<small>${tr('Votre planète, celle du Marché stellaire.')}</small>`}</span>${btn}</div>`;
     };
+    // Les photos : un onglet par groupe (classiques, chaque famille, légendaires), puis la grille.
+    const eqAv = AVATAR_BY_ID[c.avatar];
+    if (!AV_GROUPS.includes(ui.avGroup)) ui.avGroup = eqAv ? eqAv.group : 'classique';
+    const grp = ui.avGroup;
+    const chipOf = (g) => {
+      const label = g === 'classique' ? tr('CLASSIQUES') : g === 'legend' ? tr('LÉGENDAIRES') : R.FAMILIES[g].name.toUpperCase();
+      const col = g === 'classique' ? 'var(--ink)' : g === 'legend' ? 'var(--gold)' : famColor(g);
+      const ico = R.FAMILIES[g] ? famIcon(g, 'av-chip-ico') : '';
+      return `<button class="av-chip ${g === grp ? 'on' : ''}" data-av-group="${g}" style="--c:${col}">${ico}<span>${esc(label)}</span></button>`;
+    };
+    const items = AVATARS.filter((k) => k.group === grp).sort((a, b) => a.seeds - b.seeds);
+    const rar = grp === 'classique' ? null : grp === 'legend' ? { name: tr('LÉGENDAIRE') } : avRarity(grp);
+    const span = items.length ? tr('de {a} à {b} graines', { a: items[0].seeds, b: items[items.length - 1].seeds }) : '';
+    const avatarsHtml = `<div class="av-chips">${AV_GROUPS.map(chipOf).join('')}</div>` +
+      (rar ? `<p class="mk-note cos-note av-rar">${tr('Rareté')} : <b>${esc(rar.name)}</b> · ${span}</p>` : '') +
+      (grp === 'classique' ? avatarRow({ id: '', name: tr('Ma planète') }) : '') + items.map(avatarRow).join('');
     // Une police : votre pseudo écrit avec elle, puis acheter, équiper, ou « équipé ».
     const fontRow = (k) => {
       const owned = !k.id || c.owned.includes(k.id), on = (c.font || '') === (k.id || '');
@@ -1164,14 +1197,21 @@
         <span class="cos-sw" style="${sw}"></span>
         <span class="cos-txt"><b>${esc(k.name)}</b><small>${esc(k.text)}</small></span>${btn}</div>`;
     };
+    // La rangée d'onglets (qui défile sur téléphone) garde sa position quand on change de groupe.
+    const oldChips = $('cosList').querySelector('.av-chips'), chipsX = oldChips ? oldChips.scrollLeft : 0;
     $('cosList').innerHTML = `<h4>${tr('FONDS ANIMÉS')}</h4>` + row({ id: '', name: tr('Noir'), text: tr('Le fond sobre d’origine.') }) + SKIES.map(row).join('') +
       `<h4>${tr('CADRES DE PROFIL')}</h4><p class="mk-note cos-note">${tr('Autour de votre avatar et de votre nom, au menu, au profil et chez vos amis.')}</p>` +
       frameRow({ id: '', name: tr('Sans cadre'), text: tr('Votre profil tel qu’au premier jour.') }) + FRAMES.map(frameRow).join('') +
       `<h4>${tr('PHOTOS DE PROFIL')}</h4><p class="mk-note cos-note">${tr('Un astre à la place de votre planète, au menu, au profil et chez vos amis. En graines de vie seulement.')}</p>` +
-      avatarRow({ id: '', name: tr('Ma planète') }) + AVATARS.map(avatarRow).join('') +
+      avatarsHtml +
       `<h4>${tr('POLICES DU PSEUDO')}</h4><p class="mk-note cos-note">${tr('Votre pseudo écrit en pixels, au menu, au profil, en partie, et chez les autres joueurs.')}</p>` +
       fontRow({ id: '', name: tr('Classique'), text: tr('La police du jeu.') }) + FONTS.map(fontRow).join('') +
       (dust() < COS_PRICE ? `<p class="mk-note">${tr('Vous avez {n} poussières d’étoiles. Un duel gagné ou un podium en rapporte.', { n: dust() })}</p>` : '');
+    const chips = $('cosList').querySelector('.av-chips'), onChip = chips && chips.querySelector('.av-chip.on');
+    if (chips) {
+      chips.scrollLeft = chipsX;
+      if (onChip && (onChip.offsetLeft < chips.scrollLeft || onChip.offsetLeft + onChip.offsetWidth > chips.scrollLeft + chips.clientWidth)) chips.scrollLeft = onChip.offsetLeft - 12;
+    }
   }
   // Aperçu de l'onglet Création : une planète détaillée qui change à chaque visite.
   stage.register('atelier-apercu', { type: 'terran', seed: (Date.now() % 100000) + 1, full: true, ring: true, moons: 1 });
@@ -1271,6 +1311,14 @@
     marketTab(b.dataset.tab);
   });
   listen('cosList', 'click', (e) => {
+    const chip = e.target.closest('[data-av-group]');
+    if (chip) {
+      if (chip.classList.contains('on')) return;
+      SFX.tap();
+      ui.avGroup = chip.dataset.avGroup;
+      renderCosmetics();
+      return;
+    }
     const buy = e.target.closest('[data-cos-buy]'), eq = e.target.closest('[data-cos-equip]'), row = e.target.closest('[data-cos]');
     const c = cosmetics();
     if (buy) {
