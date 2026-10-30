@@ -421,7 +421,16 @@ le téléphone ne change pas).
   largeur. Les pseudos longs passent à la ligne sans sortir de la carte.
 - **Fin de partie** (v114) : le résultat et votre système à gauche, les poussières, l'expérience et les
   boutons à droite.
-- Multijoueur, choix de la loi et Création suivent.
+- **Choix de la loi** (v116) : l'événement cosmique en haut à droite, les trois lois en grandes cartes
+  côte à côte (la sphère en grand, le texte, l'éveil dans un cadre doré de même hauteur), CRÉER MON
+  UNIVERS centré dessous.
+- **Multijoueur** (v116) : l'accueil en tuiles illustrées (duel, mêlée, entre amis, rejoindre un ami) ;
+  les défis reçus en bandeau doré au-dessus, qui défile s'il y en a beaucoup (les boutons restent
+  visibles même en 1280×720). Défier des amis : les amis en grille à gauche, un panneau à droite avec
+  DÉFIER, PAR UN LIEN et RETOUR. Le salon : le code, les places en cartes (places libres en pointillé,
+  qui tournent doucement pendant une recherche classée), les invitations en liste, les bots entre
+  QUITTER et LANCER, la discussion sur toute la hauteur à droite.
+- Création suit.
 
 Autres changements de la v111 : **Comment jouer** en 5 pages (le duel, le placement, les synergies,
 lire la partie, gagner) ; les fiches n'ont plus de barre de défilement mais une **flèche** en bas
