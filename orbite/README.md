@@ -1801,6 +1801,26 @@ Mesure : `node orbite/tools/familles.js 200` (toutes les familles, environ 5 min
 moyenne 4,38e (13,1 % de victoires), un joueur d’une seule famille 4,62e (11,9 %) : les hybrides
 restent intéressants.
 
+**Comètes, Néant, Cristaux (v109).** Même mesure (IA experte qui joue la famille contre une IA experte),
+mais sur 1 000 duels par réglage : à 200 duels, deux séries du même jeu donnaient jusqu’à 10 points
+d’écart (Comètes 42 % puis 52 %), trop pour choisir. Dix réglages ont été proposés et mesurés, puis les
+meilleurs revérifiés sur d’autres parties, avec le joueur naïf et en relisant le code.
+
+| Famille | Avant | Après | Naïf avant → après | Changements |
+|---|---|---|---|---|
+| Comètes | 42 % | 50–54 % | 28 → 40 % | toutes +1/+1 (Météore 3/4, Halley 3/4, Encke 4/5, Swift 4/4, Oumuamua 3/4, Hale-Bopp 5/6, Ison 6/7, Perséides 7/9, Hyakutake 9/10), sauf Tchouri +1/+0 (5/6, pour rester dans son rang) |
+| Néant | 58 % | 54 % | 41 → 41 % | Umbra 1/2, Abysse 3/4, Néant 7/7 (les astres qui grandissent quand un allié s’effondre) |
+| Cristal | 50 % | 52 % | 47 → 49 % | **Quartz** : +2/+2 une seule fois quand vous jouez un autre Cristal (doré : +3/+3, 2 fois au plus) ; **Prisme** : Naissance : vos autres Cristaux gagnent +1/+2 ; **Opale** : Bouclier, et les Cristaux à ses côtés gagnent Bouclier au début du combat (elle ne grandit plus) |
+
+Écartés : la formation des Comètes en +n/+n (44 %, presque rien), +1 PV seulement (47 %), un Météore et un
+Oumuamua qui grandissent plus à chaque actualisation (74 %, l’emballement de la v96 revient) ; pour le
+Néant, l’Ossuaire à un seul Débris 3/3 avec Nyx 1/2 et Vestige 2/2 (51 %, mais Nyx devient le plus faible
+astre de niveau 2). Les nouveaux Quartz, Prisme et Opale (demande d’un joueur) sont plus simples ; ils
+donnent à peu près autant de force que les anciens. Les autres familles (600 duels) : Machine 56 %,
+Minéral 55 %, Brasier 54 %, Envers 50 %, Vie 48 %, Glace 48 %, Lune 48 %, Tempête 47 %, Anomalies 46 %.
+En mêlée à 8 (`tools/equilibrage.js 600 --skill 1`, rang moyen de tous les joueurs), les Comètes passent
+de 5,81 à 5,25 ; le Néant reste le plus fort (3,08 puis 3,16), la mêlée lui laisse plus d’effondrements.
+
 **Reliques et éveil des lois (v84).** Mesuré avec `node orbite/tools/equilibrage.js 240 --seed v84
 --json`, avant et après (sans événement cosmique, que les outils ne tirent pas) : le rang moyen des
 lois va de 3,17 (Résonance) à 5,62 (Sacrifice) avant, de 3,43 (Entropie) à 5,50 (Sacrifice) après.
