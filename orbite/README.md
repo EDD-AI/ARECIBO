@@ -1808,7 +1808,7 @@ meilleurs revérifiés sur d’autres parties, avec le joueur naïf et en relisa
 
 | Famille | Avant | Après | Naïf avant → après | Changements |
 |---|---|---|---|---|
-| Comètes | 42 % | 50–54 % | 28 → 40 % | toutes +1/+1 (Météore 3/4, Halley 3/4, Encke 4/5, Swift 4/4, Oumuamua 3/4, Hale-Bopp 5/6, Ison 6/7, Perséides 7/9, Hyakutake 9/10), sauf Tchouri +1/+0 (5/6, pour rester dans son rang) |
+| Comètes | 42 % | 50–54 % | 28 → 41 % | toutes +1/+1 (Météore 3/4, Halley 3/4, Encke 4/5, Swift 4/4, Oumuamua 3/4, Hale-Bopp 5/6, Ison 6/7, Perséides 7/9, Hyakutake 9/10), sauf Tchouri +1/+0 (5/6, pour rester dans son rang) |
 | Néant | 58 % | 54 % | 41 → 41 % | Umbra 1/2, Abysse 3/4, Néant 7/7 (les astres qui grandissent quand un allié s’effondre) |
 | Cristal | 50 % | 52 % | 47 → 49 % | **Quartz** : +2/+2 une seule fois quand vous jouez un autre Cristal (doré : +3/+3, 2 fois au plus) ; **Prisme** : Naissance : vos autres Cristaux gagnent +1/+2 ; **Opale** : Bouclier, et les Cristaux à ses côtés gagnent Bouclier au début du combat (elle ne grandit plus) |
 
