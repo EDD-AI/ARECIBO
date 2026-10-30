@@ -370,6 +370,11 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Son des reliques (v113)
+
+Quand le choix d'une relique apparaît (début des cycles de relique), un petit son l'annonce : un souffle
+qui monte puis un carillon grave et mystérieux (`SFX.relic`), plus doux que la récompense dorée.
+
 ## Sur PC : les menus en plein écran (v111)
 
 Sur un écran d'ordinateur (16:9), les menus ne sont plus une colonne de téléphone au milieu : ils
