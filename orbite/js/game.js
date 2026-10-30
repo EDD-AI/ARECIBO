@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 117;
+  const VERSION = 118;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -446,7 +446,9 @@
     ui.screen = name;
     stage.starsOn = !['splash', 'title', 'wake', 'cStory'].includes(name);
     SFX.ambience({ splash: 'off', title: 'off', wake: 'wake', game: 'game', end: 'end', cStory: 'wake', genese: 'wake', essaim: 'wake', coeur: 'wake', sculpture: 'wake', cFight: 'battle', cEnd: 'game', multi: 'ship', creation: 'atelier', colony: 'atelier', explore: 'atelier', system: 'atelier' }[name] || 'menu');
-    SFX.music(['title', 'wake', 'menu', 'market', 'creation', 'colony', 'explore', 'genese', 'essaim', 'coeur', 'sculpture', 'multi', 'profile', 'laws', 'cMap', 'system'].includes(name));
+    // La musique joue dans tous les menus (v118) ; seulement pas en partie (une musique de partie viendra),
+    // ni sur le logo du studio, ni pendant la cinématique (qui la gère elle-même).
+    SFX.music(!['splash', 'cine', 'game', 'cFight'].includes(name));
     // Pendant la partie, le ciel s'efface derrière les planètes pour rester lisible.
     const busySky = ['laws', 'game', 'end', 'cFight'].includes(name);
     stage.starArea = busySky ? 3600 : 1800;

@@ -198,13 +198,14 @@
     { key: 'nebula', label: 'Nébuleuse', w: 2 },
     // Natures réservées à certaines cartes (jamais tirées au hasard).
     { key: 'glass', label: 'Sphère de verre', w: 0 },
-    { key: 'mirror', label: 'Boule miroir', w: 0 }
+    { key: 'mirror', label: 'Boule miroir', w: 0 },
+    { key: 'bigbang', label: 'Big Bang', w: 0 }
   ];
   const TYPE_BY_KEY = Object.fromEntries(TYPES.map((t) => [t.key, t]));
-  const NO_FACET = new Set(['star', 'portal', 'blackhole', 'crystal', 'comet', 'eclipse', 'nebula', 'glass', 'mirror']);
+  const NO_FACET = new Set(['star', 'portal', 'blackhole', 'crystal', 'comet', 'eclipse', 'nebula', 'glass', 'mirror', 'bigbang']);
 
   // Identifiants des programmes de surface (doivent correspondre au shader).
-  const SH = { TERRAN: 0, OCEAN: 1, ICE: 2, LAVA: 3, DESERT: 4, GAS: 5, ROCK: 6, ASTEROID: 7, STAR: 8, CRYSTAL: 9, PORTAL: 10, BLACKHOLE: 11, MECHA: 12, NEBULA: 13, GLASS: 14 };
+  const SH = { TERRAN: 0, OCEAN: 1, ICE: 2, LAVA: 3, DESERT: 4, GAS: 5, ROCK: 6, ASTEROID: 7, STAR: 8, CRYSTAL: 9, PORTAL: 10, BLACKHOLE: 11, MECHA: 12, NEBULA: 13, GLASS: 14, BIGBANG: 15 };
 
   function newBody(shader, r) {
     return {
@@ -612,6 +613,20 @@
     return b;
   }
 
+  // Big Bang (v118) : une explosion sans fin, sans corps solide (shader BIGBANG). pal 0 : la chaleur,
+  // du violet sombre au blanc ; pal 1 : les ondes refroidies, du bleu nuit au bleu pâle. Le souffle
+  // dépasse largement le cœur : bound 1.7.
+  function bodyBigBang(r) {
+    const b = newBody(SH.BIGBANG, r);
+    b.pal[0] = gradRamp([[0.2, 0.1, 295], [0.36, 0.19, 318], [0.52, 0.22, 350], [0.66, 0.2, 32], [0.79, 0.17, 58], [0.91, 0.12, 88], [0.995, 0.02, 98]]);
+    b.pal[1] = gradRamp([[0.22, 0.09, 275], [0.42, 0.15, 262], [0.64, 0.14, 240], [0.84, 0.09, 215], [0.97, 0.03, 200]]);
+    b.A = [r.int(8, 11), r.range(0, 6.28), 0, 0];
+    b.roll = 0; b.pitch = 0;
+    b.bound = 1.7;
+    b.size = 1;
+    return b;
+  }
+
   // Nébuleuse (v107) : un nuage plat de gaz, sans corps solide (shader NEBULA). Une coquille (pal 0,
   // teinte rim) entoure un gaz intérieur (pal 1, teinte gas) ; une naine blanche brille au centre
   // (pal 2). Styles : anneau (coquille fine, intérieur clair), bulle (remplie), papillon (deux lobes),
@@ -661,6 +676,7 @@
       case 'nebula': return bodyNebula(r, opts && opts.neb);
       case 'glass': return bodyGlass(r, false);
       case 'mirror': return bodyGlass(r, true);
+      case 'bigbang': return bodyBigBang(r);
       case 'eclipse': {
         const b = bodyStar(r, (opts && opts.starClass) || 'étoile blanche');
         b.B = [0, 0, 0, 1];
@@ -1080,6 +1096,12 @@
       const n = xr.int(26, 44);
       for (let i = 0; i < n; i++) g.fx.motes.push({ a: xr.range(0, TAU), r0: xr.range(0.15, 1.05), cyc: xr.int(1, 2), ph: xr.next(), drift: xr.range(0.08, 0.3), row: xr.chance(0.55) ? 0 : 1, size: xr.pick([1, 1, 1, 2]) });
     }
+    // Big Bang : des débris de matière projetés dans toutes les directions, chauds puis refroidis.
+    if (key === 'bigbang') {
+      g.fx.blast = [];
+      const n = xr.int(30, 42);
+      for (let i = 0; i < n; i++) g.fx.blast.push({ a: xr.range(0, TAU), cyc: xr.int(1, 3), ph: xr.next(), speed: xr.range(0.85, 1.4), size: xr.pick([1, 1, 1, 2]) });
+    }
     if (key === 'blackhole') {
       g.fx.infall = [];
       const n = xr.int(14, 26);
@@ -1090,7 +1112,7 @@
     const mr = makeRng(hashSeed(seed, 4));
     let nMoons;
     if (opts.moons != null) nMoons = opts.moons;
-    else if (key === 'portal' || key === 'blackhole' || key === 'nebula') nMoons = 0;
+    else if (key === 'portal' || key === 'blackhole' || key === 'nebula' || key === 'bigbang') nMoons = 0;
     else if (key === 'star') nMoons = mr.int(0, compact ? 2 : 3);
     else if (key === 'asteroid' || key === 'moon') nMoons = mr.chance(0.3) ? 1 : 0;
     else nMoons = mr.weighted([{ v: 0, w: 30 }, { v: 1, w: 35 }, { v: 2, w: 20 }, { v: 3, w: 10 }, { v: 4, w: 5 }]).v;
@@ -1180,7 +1202,7 @@
   function accentOf(g) {
     const P = g.body.pal;
     switch (g.body.shader) {
-      case SH.STAR: case SH.PORTAL: case SH.NEBULA: return P[0][6];
+      case SH.STAR: case SH.PORTAL: case SH.NEBULA: case SH.BIGBANG: return P[0][6];
       case SH.BLACKHOLE: return P[9][6];
       case SH.GAS: return P[0][5];
       case SH.LAVA: return P[9][6];

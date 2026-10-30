@@ -80,7 +80,7 @@
     colors(id) {
       const g = this.genome(id), P = g.body.pal;
       const acc = OP.accentOf(g);
-      const rows = g.body.shader === OP.SH.GAS || g.body.shader === OP.SH.NEBULA ? [0, 1, 2] : g.body.shader === OP.SH.STAR || g.body.shader === OP.SH.PORTAL ? [0, 0, 0] : [4, 5, 1];
+      const rows = g.body.shader === OP.SH.GAS || g.body.shader === OP.SH.NEBULA ? [0, 1, 2] : g.body.shader === OP.SH.STAR || g.body.shader === OP.SH.PORTAL || g.body.shader === OP.SH.BIGBANG ? [0, 0, 0] : [4, 5, 1];
       return [acc, P[rows[1]][4], P[rows[2]][5], P[rows[0]][3]];
     }
 

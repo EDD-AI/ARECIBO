@@ -699,6 +699,60 @@ vec3 nebulaColor(vec2 xy, float dth, vec2 fc) {
   return t + (dth - 0.5) * 0.45 > 0.5 ? pal(0, idx) : pal(1, idx);
 }
 
+// Big Bang (v118) : une explosion qui ne finit jamais, à plat, sans lumière. Un cœur blanc qui palpite
+// avec son éclat en croix, une boule de feu turbulente qui file vers l'extérieur, trois ondes de choc
+// déchirées qui s'étendent en refroidissant (du blanc au bleu), des jets de matière de longueurs
+// inégales. pal 0 : la chaleur (0 violet sombre … 7 blanc) ; pal 1 : les ondes refroidies.
+// Le défilement vers l'extérieur mêle deux couches décalées d'une demi-période : la boucle est sans couture.
+vec4 bigbangColor(vec2 xy, float dth, vec2 fc) {
+  float r = length(xy);
+  float ang = atan(xy.y, xy.x);
+  vec2 dir = r > 1e-4 ? xy / r : vec2(1.0, 0.0);
+  float pulse = 0.5 + 0.5 * sin(TAU * uPhase * 12.0);
+  float core = 0.12 + 0.03 * pulse;
+  if (r < core) return vec4(pal(0, 7), 1.0);
+  float arm = 0.016 + 0.008 * pulse;
+  if (r < core * 2.6 && (abs(xy.x) < arm || abs(xy.y) < arm)) return vec4(pal(0, 7), 1.0);
+  // Le souffle n'est pas rond : un bord qui varie selon la direction (et respire doucement).
+  vec3 sway = vec3(cos(TAU * uPhase), sin(TAU * uPhase), 0.0) * 0.25;
+  float lobe = fbm01(vec3(dir * 1.4, 0.0) + uSeed * 0.7 + sway, 3);
+  float rs = r * (1.0 + (0.5 - lobe) * 0.45);
+  // Boule de feu : deux couches de turbulence qui filent vers l'extérieur, en fondu croisé.
+  float t = uPhase * 4.0;
+  float p1 = fract(t), p2 = fract(t + 0.5);
+  float nA = fbm01(vec3(dir * 2.2, (rs - p1 * 0.9) * 4.2) + uSeed, 4);
+  float nB = fbm01(vec3(dir * 2.2, (rs - p2 * 0.9) * 4.2) + uSeed + 17.3, 4);
+  float n = mix(nA, nB, abs(1.0 - 2.0 * p1));
+  float clump = pow(n, 1.6) * 1.9;
+  float fire = exp(-pow(rs / 0.55, 1.8)) * (0.25 + clump);
+  // Ondes de choc : trois coquilles déchirées, qui grandissent et s'éteignent en refroidissant.
+  float ringI = 0.0, ringT = 0.0;
+  for (int i = 0; i < 3; i++) {
+    float p = fract(uPhase * 3.0 + float(i) / 3.0);
+    float rr = core + p * 1.45;
+    float w = 0.03 + 0.07 * p;
+    float tear = smoothstep(0.32, 0.62, fbm01(vec3(dir * 2.6, float(i) * 3.7 + p * 1.5) + uSeed * 1.3, 3));
+    float k = exp(-pow((rs - rr) / w, 2.0)) * pow(1.0 - p, 1.15) * (0.2 + 0.95 * tear) * (0.6 + 0.8 * n);
+    if (k > ringI) { ringI = k; ringT = 1.0 - p; }
+  }
+  // Jets de matière : des traits fins de longueurs inégales, dans des directions tirées au hasard.
+  float bins = 46.0;
+  float u = (ang / TAU + 0.5) * bins;
+  float id = floor(u);
+  float h = hash12(vec2(id, 3.7) + uSeed.xy);
+  float len = (0.45 + 1.05 * h) * (0.88 + 0.12 * sin(TAU * (uPhase * 4.0 + h * 7.0)));
+  float lane = abs(fract(u) - 0.5) * 2.0;
+  float jet = h > 0.55 ? (1.0 - smoothstep(0.0, 0.32, lane)) * (1.0 - smoothstep(len * 0.55, len, r)) * smoothstep(core, core * 2.5, r) : 0.0;
+  float I = fire + ringI + jet * 0.7;
+  // Poussière : sous un seuil tramé, le pixel reste vide (bords en grains).
+  float jit = hash12(floor(fc) * 1.37 + uSeed.xy * 7.0);
+  if (I * (0.6 + 0.8 * jit) < 0.16) discard;
+  int idx = clamp(int(I * 5.6 + (dth - 0.5) * 1.1), 0, 7);
+  // L'onde refroidie (loin, plus forte que le feu) prend la rampe bleue.
+  if (ringI > fire && ringI > jet * 0.7 && ringT < 0.55) return vec4(pal(1, clamp(int(ringI * 9.0 + 2.0 + (dth - 0.5)), 1, 7)), 1.0);
+  return vec4(pal(0, idx), 1.0);
+}
+
 float cloudDens(vec3 p) {
   if (uD.w > 0.0) {
     vec3 sd = uD.xyz;
@@ -749,6 +803,7 @@ void main() {
   xy.y *= uFlip;
   if (uType == 10) { outColor = fin(portalColor(xy, dth)); return; }
   if (uType == 13) { if (!(dot(xy, xy) <= 2.0)) discard; outColor = fin(nebulaColor(xy, dth, fc)); return; }
+  if (uType == 15) { if (!(dot(xy, xy) <= 2.89)) discard; vec4 bb = bigbangColor(xy, dth, fc); outColor = fin(bb.rgb); return; }
 
   bool ast = (shapeKind() > 0 && uLayer == 0);
   vec3 pv;
@@ -1780,7 +1835,7 @@ void main() {
       if (o.legend) this.haloPass(4, cx, cy, R, 1.75, [1.75, 1.1, 0, 0], this.legendRows, 0, b.seed, light, st);
       // Doré (v107) : le halo d'or, plus large et plus dense, passe désormais après l'atmosphère, la
       // coque et le bouclier, qui le cachaient. Une nébuleuse le garde derrière elle (le nuage est ajouré).
-      const goldLate = o.golden && b.shader !== OP.SH.NEBULA;
+      const goldLate = o.golden && b.shader !== OP.SH.NEBULA && b.shader !== OP.SH.BIGBANG;
       if (o.golden && !goldLate) this.haloPass(4, cx, cy, R, 1.7, [1.7, 1.25, 0, 0], this.goldRows, 0, b.seed, light, st);
       if (o.ghost) this.haloPass(4, cx, cy, R, 1.45, [1.45, 0.8, 0, 0], this.ghostRows, 0, b.seed, light, st);
       if (b.tail) {
@@ -1924,6 +1979,20 @@ void main() {
       }
 
       // Nébuleuse : des grains qui dérivent lentement vers l'extérieur en s'éteignant.
+      // Big Bang : des débris projetés hors du souffle, avec une petite traînée ; chauds puis refroidis.
+      if (g.fx.blast) {
+        const P0 = g.body.pal[0], P1 = g.body.pal[1];
+        for (const d of g.fx.blast) {
+          const u = (d.ph + d.cyc * phase) % 1;
+          const r = 0.18 + d.speed * u * 1.15;
+          const ca = Math.cos(d.a), sa = Math.sin(d.a);
+          const col = u < 0.25 ? P0[7] : u < 0.5 ? P0[6] : u < 0.72 ? P0[4] : P1[5];
+          const al = 1 - Math.pow(u, 1.6);
+          const size = Math.max(1, Math.round(d.size * sizeK));
+          put('top', ca * r, sa * r, size, 0, col, al);
+          put('top', ca * (r - 0.07), sa * (r - 0.07), 1, 0, col, al * 0.45);
+        }
+      }
       if (g.fx.motes) {
         const b = g.body, c = Math.cos(b.A[1]), s = Math.sin(b.A[1]), asp = b.A[0];
         for (const m of g.fx.motes) {
