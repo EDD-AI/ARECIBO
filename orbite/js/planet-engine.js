@@ -516,7 +516,10 @@
     { label: 'géante bleue', w: 1.5, stops: [[0.38, 0.14, 265], [0.6, 0.14, 255], [0.82, 0.09, 235], [0.98, 0.02, 220]] },
     { label: 'étoile exotique', w: 1, stops: null },
     // Rouge sang (v100) : jamais tirée au hasard (w: 0) ; l'éclipse rouge du Linceul.
-    { label: 'rouge sang', w: 0, stops: [[0.24, 0.13, 22], [0.42, 0.2, 26], [0.58, 0.22, 30], [0.74, 0.17, 38]] }
+    { label: 'rouge sang', w: 0, stops: [[0.24, 0.13, 22], [0.42, 0.2, 26], [0.58, 0.22, 30], [0.74, 0.17, 38]] },
+    // Le Soleil rouge de Mon système, puis sa géante rouge, plus sombre (jamais tirés au hasard).
+    { label: 'soleil rouge', w: 0, stops: [[0.3, 0.13, 24], [0.5, 0.2, 28], [0.66, 0.21, 35], [0.82, 0.15, 48]] },
+    { label: 'géante rouge', w: 0, stops: [[0.22, 0.11, 20], [0.38, 0.18, 23], [0.53, 0.22, 27], [0.68, 0.19, 34]] }
   ];
 
   function bodyStar(r, cls) {
@@ -964,6 +967,178 @@
     g.extent = { x: ex, y: ey };
   }
 
+  // ─── Astres de Mon système (js/systeme.js) ─────────────────────
+  // Options d'apparence des astres du système solaire achetés au Marché stellaire. Sans ces options,
+  // rien ne change pour les autres astres ni pour les cartes.
+  // Roche (nature moon) : mood 'claire' (la Lune, roche claire et grise), 'mercure' (gris brun),
+  //   'pluton' (beige et brun) ; craters (0 à 1) creuse des cratères plus nombreux et plus marqués,
+  //   maria (0 à 1) étend les mers sombres, lights allume les lumières d'une base sur la face de nuit,
+  //   heat rend brûlante la face tournée vers la lumière, heart dessine le grand cœur clair de Pluton.
+  // Désert : mood 'mars' (rouille) ; icecaps (calottes blanches), canyons (failles sombres), dust
+  //   (tempête de poussière : nuages orangés et brume).
+  // Gaz : mood 'neptune', 'venus' (jaune pâle voilé), 'jupiter' (beige et orange), 'saturne' (doré
+  //   pâle), 'uranus' (cyan pâle) ; bands (bandes plus contrastées), storm (la grande tache : sombre
+  //   sur Neptune, rouge sur Jupiter), veil (épais nuages), lightning (éclairs), volcanoes (taches de
+  //   lave), aurora (aurores aux pôles), cyan (nuages cyan et blancs).
+  // Étoile : corona (longueur de la couronne), flare (plus vive, éruptions plus nombreuses).
+  // Dans generate : ringLook (anneaux imposés), moonKind (nature ou noms des lunes), moonPlane (lunes
+  // dans le plan de l'équateur), axis ([roulis, tangage] de l'axe), spin (tours par boucle).
+  const GAS_TONES = {
+    venus: { rows: [[0.89, 0.05, 90], [0.87, 0.055, 87], [0.9, 0.045, 93], [0.86, 0.06, 85], [0.88, 0.05, 89]], freq: 2.5, turb: 0.3, atmo: [0.88, 0.07, 90], aw: 0.12 },
+    jupiter: { rows: [[0.86, 0.05, 80], [0.8, 0.07, 70], [0.84, 0.055, 76], [0.76, 0.08, 64], [0.82, 0.06, 72]], freq: 7, turb: 0.35, atmo: [0.84, 0.05, 75], aw: 0.05 },
+    'jupiter-bandes': { rows: [[0.92, 0.035, 86], [0.62, 0.11, 48], [0.86, 0.05, 80], [0.54, 0.1, 40], [0.8, 0.08, 70], [0.68, 0.11, 56]], freq: 11, turb: 0.75, atmo: [0.84, 0.05, 75], aw: 0.05, diff: 1 },
+    saturne: { rows: [[0.88, 0.065, 88], [0.83, 0.075, 82], [0.86, 0.07, 85], [0.79, 0.085, 78], [0.9, 0.05, 90]], freq: 8, turb: 0.3, atmo: [0.86, 0.06, 85], aw: 0.06 },
+    uranus: { rows: [[0.84, 0.055, 202], [0.82, 0.06, 199], [0.86, 0.05, 205], [0.8, 0.065, 196], [0.83, 0.058, 201]], freq: 5, turb: 0.25, atmo: [0.86, 0.06, 200], aw: 0.09 },
+    'uranus-cyan': { rows: [[0.82, 0.09, 200], [0.76, 0.1, 205], [0.86, 0.075, 196], [0.72, 0.1, 208], [0.8, 0.095, 200], [0.9, 0.05, 192]], freq: 7, turb: 0.5, atmo: [0.86, 0.1, 198], aw: 0.12 }
+  };
+  // Une couche de nuages imposée (même forme que makeClouds) et sa rampe de couleurs.
+  function solarClouds(body, mul, A, B, seed, stops) {
+    body.clouds = { mul, A, B, D: [0, 1, 0, 0], seed, extraCycles: 1 };
+    body.pal[8] = gradRamp(stops);
+  }
+  function systemBody(body, opts) {
+    const P = body.pal;
+    if (body.shader === SH.ROCK) {
+      if (opts.mood === 'mercure') {
+        P[5] = ramp(0.64, 0.014, 70);
+        P[6] = ramp(0.52, 0.016, 60);
+        P[11] = ramp(opts.maria ? 0.34 : 0.42, opts.maria ? 0.03 : 0.018, opts.maria ? 40 : 55);
+        body.A[0] = 2.2;
+      }
+      if (opts.mood === 'pluton') {
+        P[5] = ramp(0.74, 0.045, 68);
+        P[6] = ramp(0.62, 0.055, 58);
+        P[11] = ramp(0.4, 0.07, 38);
+        P[7] = ramp(0.94, 0.022, 85);
+        body.A = [1.6, 0.36, 3.5, 0.28];
+        body.B = [2.4, 0, 2.5, 0];
+      }
+      if (opts.craters != null) {
+        const k = Math.max(0, Math.min(1, opts.craters));
+        body.A[2] = 3 + 1.5 * k;
+        body.A[3] = 0.3 + 0.5 * k;
+        body.B[2] = 2.5 + 4 * k;
+      }
+      if (opts.maria != null) body.A[1] = 0.26 + 0.2 * Math.max(0, Math.min(1, opts.maria));
+      if (opts.lights) body.C = [0.55, 46, 0, 0];
+      if (opts.heart) body.C[2] = 0.5;
+      if (opts.heat) {
+        // La face éclairée rougeoie (les teintes claires de la roche virent à l'orange) ; brume chaude.
+        for (const k of [5, 6, 11]) {
+          const row = P[k].slice();
+          row[5] = oklch(0.7, 0.16, 46); row[6] = oklch(0.8, 0.16, 60); row[7] = oklch(0.9, 0.11, 82);
+          P[k] = row;
+        }
+        P[12] = ramp(0.66, 0.17, 42);
+        body.atmo = { w: 0.13, inner: 0.55, pow: 1.8, outer: 1 };
+      }
+    }
+    if (body.shader === SH.DESERT && opts.mood === 'mars') {
+      P[3] = ramp(0.7, 0.1, 52);
+      P[4] = ramp(0.6, 0.14, 44);
+      P[5] = ramp(0.53, 0.15, 38);
+      P[6] = ramp(0.44, 0.13, 33);
+      P[11] = ramp(0.24, 0.08, 26);
+      P[7] = ramp(0.96, 0.012, 230);
+      P[12] = ramp(0.72, 0.1, 48);
+      body.A = [1.4, 46, opts.canyons ? 0.9 : 2, opts.icecaps ? 0.8 : 3];
+      body.B = [0.3, 3.4, 2.6, 0];
+      body.clouds = null;
+      body.atmo = { w: 0.05, inner: 0.35, pow: 2, outer: 0.7 };
+      if (opts.dust) {
+        solarClouds(body, 1.035, [1.5, 0.52, 2.2, 0.42], [0, 0.1, 3, 1.5], [3.1, -7.4, 12.2], [[0.5, 0.07, 50], [0.66, 0.09, 58], [0.8, 0.085, 66], [0.93, 0.05, 76]]);
+        P[12] = ramp(0.74, 0.13, 55);
+        body.atmo = { w: 0.15, inner: 0.6, pow: 1.6, outer: 1 };
+      }
+    }
+    if (body.shader === SH.GAS) {
+      if (opts.mood === 'neptune') {
+        const rows = opts.bands
+          ? [[0.32, 0.12, 268], [0.62, 0.12, 244], [0.4, 0.15, 262], [0.7, 0.1, 236], [0.48, 0.15, 256], [0.92, 0.03, 225]]
+          : [[0.44, 0.13, 264], [0.48, 0.14, 260], [0.52, 0.14, 257], [0.56, 0.13, 254], [0.6, 0.12, 250], [0.66, 0.1, 246]];
+        rows.forEach((s, i) => { P[i] = ramp(s[0], s[1], s[2]); });
+        body.B[1] = rows.length;
+        body.A[1] = opts.bands ? 9 : 6;
+        body.A[2] = opts.bands ? 0.85 : 0.35;
+        body.C = [0, 0, 0, 0];
+        P[12] = ramp(0.72, 0.1, 245);
+        body.atmo = { w: 0.09, inner: 0.45, pow: 2, outer: 0.85 };
+      }
+      const toneKey = opts.mood === 'jupiter' && opts.bands ? 'jupiter-bandes' : opts.mood === 'uranus' && opts.cyan ? 'uranus-cyan' : opts.mood;
+      const tone = GAS_TONES[toneKey];
+      if (tone) {
+        tone.rows.forEach((s, i) => { P[i] = ramp(s[0], s[1], s[2]); });
+        body.B = [tone.diff || 0, tone.rows.length, 0, 0];
+        body.A[1] = tone.freq;
+        body.A[2] = tone.turb;
+        body.C = [0, 0, 0, 0];
+        P[12] = ramp(tone.atmo[0], tone.atmo[1], tone.atmo[2]);
+        body.atmo = { w: tone.aw, inner: 0.45, pow: 2, outer: 0.9 };
+      }
+      if (opts.storm) {
+        // La grande tache, au sud : elle passe devant nous à chaque tour de la planète. Sombre sur
+        // Neptune, rouge orangé et plus allongée sur Jupiter.
+        const red = opts.mood === 'jupiter';
+        const lat = red ? -0.34 : -0.38, lon = 0.6;
+        body.C = [Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon), red ? 0.25 : 0.27];
+        P[6] = red ? ramp(0.62, 0.15, 38) : ramp(0.32, 0.11, 266);
+        P[7] = red ? ramp(0.5, 0.17, 30) : ramp(0.22, 0.09, 270);
+      }
+      if (opts.mood === 'venus' && opts.veil) {
+        // Épais nuages d'acide, plus clairs, étirés par des vents qui font le tour en un rien de temps.
+        solarClouds(body, 1.04, [1.3, 0.5, 2, 0.34], [7, 0.16, 5, 2.2], [11.3, 4.2, -9.1], [[0.42, 0.07, 62], [0.6, 0.085, 72], [0.8, 0.08, 86], [0.97, 0.04, 98]]);
+        body.A[2] = 0.9;
+      }
+      if (opts.mood === 'uranus' && opts.cyan) {
+        solarClouds(body, 1.03, [1.5, 0.72, 2.6, 0.3], [9, 0.13, 3, 3], [-5.2, 8.8, 2.6], [[0.52, 0.05, 212], [0.72, 0.06, 206], [0.9, 0.05, 196], [0.99, 0.015, 190]]);
+      }
+      // Éclairs (rampe 10), aurores polaires (rampe 14) et volcans (rampe 9) : D.x, D.z, D.w (shader gasSurf).
+      if (opts.lightning) { body.D[0] = 1; P[10] = gradRamp([[0.42, 0.15, 295], [0.62, 0.16, 290], [0.84, 0.09, 280], [0.99, 0.02, 260]]); }
+      if (opts.aurora) { body.D[2] = 1; P[14] = gradRamp([[0.42, 0.1, 170], [0.62, 0.14, 165], [0.82, 0.13, 172], [0.97, 0.05, 185]]); }
+      if (opts.volcanoes) { body.D[3] = 1; P[9] = gradRamp([[0.3, 0.1, 25], [0.52, 0.19, 32], [0.72, 0.19, 48], [0.95, 0.08, 85]]); }
+    }
+    if (body.shader === SH.STAR && body.corona) {
+      if (opts.corona != null) body.corona.len = Math.max(0, opts.corona);
+      if (opts.flare) {
+        body.corona.power = 1.5;
+        body.corona.freq = 4.5;
+        body.A[1] = 0.9;
+        body.pal = mapPalette(body.pal, (L, C, h) => [Math.min(0.995, L * 1.03 + 0.02), C * 1.15, h]);
+      }
+    }
+  }
+
+  // Anneaux imposés des astres du système : [intérieur, extérieur, opacité, fréquence des bandes,
+  // fréquence des couleurs, L, C, h].
+  const RING_LOOKS = {
+    jupiter: [1.32, 1.6, 0.55, 14, 3, 0.6, 0.035, 55],
+    'saturne-fin': [1.42, 1.76, 0.75, 9, 4, 0.76, 0.05, 80],
+    saturne: [1.24, 2.2, 1.6, 12, 5, 0.8, 0.06, 80],
+    'saturne-brillant': [1.2, 2.3, 2.2, 16, 6, 0.9, 0.065, 84],
+    uranus: [1.45, 1.72, 1.1, 22, 2, 0.5, 0.012, 230]
+  };
+  function solarRing(ring, name) {
+    const k = RING_LOOKS[name];
+    if (!ring || !k) return;
+    Object.assign(ring, { inner: k[0], outer: k[1], opacity: k[2], freq: k[3], colorFreq: k[4] });
+    ring.pal[0] = ramp(k[5], k[6], k[7]);
+    ring.pal[1] = ramp(k[5] - 0.08, k[6] * 1.1, k[7] - 8);
+    ring.pal[2] = ramp(Math.min(0.97, k[5] + 0.07), k[6] * 0.8, k[7] + 6);
+  }
+  // Lunes nommées : nature, taille (rayon de la planète = 1), teinte [lumière, chroma, teinte] et, au
+  // besoin, l'inclinaison de leur orbite [roulis, tangage] (Charon tourne autour de Pluton presque de
+  // face : il ne cache jamais son cœur).
+  const NAMED_MOONS = {
+    phobos: { kind: 'asteroid', size: 0.13, tint: [0.82, 0.02, 50] },
+    deimos: { kind: 'asteroid', size: 0.1, tint: [0.92, 0.02, 60] },
+    io: { kind: 'desert', size: 0.15, tint: [1.08, 0.13, 98] },
+    europe: { kind: 'ice', size: 0.13, tint: [1.08, 0.03, 75] },
+    ganymede: { kind: 'moon', size: 0.18, tint: [0.92, 0.025, 65] },
+    callisto: { kind: 'moon', size: 0.17, tint: [0.72, 0.02, 55] },
+    titan: { kind: 'desert', size: 0.2, tint: [1, 0.12, 68] },
+    charon: { kind: 'moon', size: 0.46, tint: [0.88, 0.01, 260], tilt: [0.25, 1.15] }
+  };
+
   function generate(seed, opts) {
     opts = opts || {};
     seed = seed >>> 0;
@@ -974,6 +1149,7 @@
 
     const body = buildBody(key, makeRng(hashSeed(seed, 2)), opts);
     g.body = body;
+    systemBody(body, opts);
 
     // Station de combat (v115) : coque noire, tranchée à l'équateur, grande parabole tournée vers nous.
     // Elle ne tourne pas, pour que la parabole reste toujours visible.
@@ -1046,6 +1222,10 @@
     const hasRing = opts.ring != null ? !!opts.ring && odds[0] > 0 : rr.chance(odds[0]);
     const hasDebris = opts.debris != null ? !!opts.debris && odds[1] > 0 : rr.chance(odds[1]);
     if ((hasRing || hasDebris) && body.shader !== SH.ASTEROID && !body.shape) body.pitch = rr.sign() * rr.range(0.18, 0.5);
+    // Astres de Mon système : axe imposé (Uranus couchée sur le côté, les anneaux de Saturne bien
+    // ouverts…) et rotation imposée (Pluton ne tourne pas : son cœur reste face à nous).
+    if (Array.isArray(opts.axis)) { body.roll = opts.axis[0]; body.pitch = opts.axis[1]; }
+    if (opts.spin != null) { body.spinCycles = opts.spin; if (!opts.spin) body.spinOffset = 0; }
     const M = tiltMatrix(body.roll, body.pitch);
     body.M = M;
     g.ringN = column(M, 1); g.ringU = column(M, 0); g.ringV = column(M, 2);
@@ -1058,6 +1238,7 @@
     let reach = 1.15;
     if (hasRing) {
       g.ring = makeRing(rr, body, compact);
+      if (opts.ringLook) solarRing(g.ring, opts.ringLook);
       reach = g.ring.outer + 0.1;
     }
     if (body.disk) {
@@ -1119,8 +1300,30 @@
     if (compact) nMoons = Math.min(nMoons, 2);
     const minA = Math.max(reach, body.bound + 0.25, body.corona ? 1.5 : 0, body.atmo ? 1.3 : 0);
     for (let i = 0; i < nMoons; i++) {
-      const kind = key === 'star' ? mr.weighted(STAR_PLANETS).key : mr.weighted(MOON_KINDS).key;
-      g.moons.push(makeMoon(mr, kind, i, minA, compact, key === 'star'));
+      // moonKind : la nature des lunes imposée (Triton, lune de glace de Neptune), ou une liste de
+      // lunes nommées (Phobos, Io, Titan, Charon…), chacune avec sa nature, sa taille et sa teinte.
+      const named = Array.isArray(opts.moonKind) ? NAMED_MOONS[opts.moonKind[i]] : null;
+      const kindOpt = Array.isArray(opts.moonKind) ? opts.moonKind[i] : opts.moonKind;
+      const kind = named ? named.kind : kindOpt && TYPE_BY_KEY[kindOpt] ? kindOpt : key === 'star' ? mr.weighted(STAR_PLANETS).key : mr.weighted(MOON_KINDS).key;
+      const moon = makeMoon(mr, kind, i, minA, compact, key === 'star');
+      if (named) {
+        const t = named.tint;
+        moon.size = named.size;
+        moon.a = minA + named.size + i * 0.3 + (i ? 0.04 : 0.08);
+        moon.body.pal = mapPalette(moon.body.pal, (L, C, h) => [Math.min(0.96, L * t[0]), t[1] * (0.7 + Math.min(0.6, C * 6)), hueToward(h, t[2], 180)]);
+        moon.name = opts.moonKind[i];
+        if (named.tilt) {
+          const TM = tiltMatrix(named.tilt[0], named.tilt[1]);
+          moon.M = TM; moon.U = column(TM, 0); moon.V = column(TM, 2); moon.N = column(TM, 1);
+        }
+      }
+      // moonPlane : les lunes tournent dans le plan de l'équateur (les lunes galiléennes de Jupiter,
+      // presque alignées vues de côté), les plus proches plus vite.
+      if (opts.moonPlane) {
+        moon.M = M; moon.U = column(M, 0); moon.V = column(M, 2); moon.N = column(M, 1);
+        moon.cycles = Math.max(1, nMoons - i);
+      }
+      g.moons.push(moon);
     }
 
     // Habillage optionnel.
@@ -1130,7 +1333,9 @@
       body.shell = { rs: dr.range(1.12, 1.3), rim: dr.range(0.9, 1.4), glow: dr.range(0.06, 0.1), cycles: dr.int(1, 2) };
       body.pal[13] = rainbowRow(dr.range(0, 360));
     }
-    if (!compact) {
+    // plain : pas de décor tiré au hasard (satellites, étincelles, comète, astre lointain) ; les astres
+    // de Mon système n'ont que ce que leurs améliorations leur donnent.
+    if (!compact && !opts.plain) {
       const satOdds = key === 'mecha' ? 0.8 : body.meta && body.meta.cities ? 0.4 : 0.06;
       if (dr.chance(satOdds)) {
         const n = dr.int(1, 4);
@@ -1169,6 +1374,13 @@
     if (opts.mood === 'p-gaz') applyMood(g, (L, C, h) => [L * 0.9 + 0.03, C * 0.8 + 0.05, hueToward(h, 278, 180)]);
     if (opts.mood === 'p-mixte') applyMood(g, (L, C, h) => (L > 0.55 ? [Math.min(0.95, L * 0.92 + 0.12), 0.03, hueToward(h, 200, 180)] : [L * 0.95, C + 0.03, hueToward(h, 30, 180)]));
     if (opts.hueShift) applyMood(g, (L, C, h) => [L, C, h + opts.hueShift]);
+    // Lune de Mon système (v120) : roche claire et grise ; les mers de basalte et les lumières de la
+    // base gardent leurs couleurs, posées après l'humeur.
+    if (opts.mood === 'claire') applyMood(g, (L, C, h) => [Math.min(0.96, L * 0.82 + 0.16), C * 0.3, h]);
+    if (body.shader === SH.ROCK) {
+      if (opts.maria > 0 && opts.mood === 'claire') body.pal[11] = ramp(0.42 - 0.08 * Math.min(1, opts.maria), 0.012, 250);
+      if (opts.lights) body.pal[10] = ramp(0.86, 0.15, 82);
+    }
 
     // Options de décor : pas de calottes polaires, éclairage imposé.
     if (opts.caps === false && body.shader <= SH.OCEAN) body.A[3] = 3;

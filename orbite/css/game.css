@@ -256,7 +256,8 @@ body.modal #gl { z-index: 35; }
 .lvl-title { grid-area: 1 / 1; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .pixel-word.gold rect { fill: var(--gold); }
 .lvl-flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
-.lvl-gift { margin: 0; font-size: 14px; letter-spacing: 0.1em; color: var(--gold); opacity: 0; transform: translateY(6px); transition: opacity 0.6s, transform 0.6s; }
+/* Centré, et les annonces d'amélioration passent à la ligne plutôt que de toucher les bords. */
+.lvl-gift { margin: 0; max-width: min(340px, calc(100vw - 40px)); text-align: center; font-size: 14px; letter-spacing: 0.1em; color: var(--gold); opacity: 0; transform: translateY(6px); transition: opacity 0.6s, transform 0.6s; }
 .lvl-gift.show { opacity: 1; transform: none; }
 .lvlup.charging .lvl-stage { animation: lvlShake 1.6s ease-in both; }
 .lvlup.charging .lvl-ring { animation: lvlImplode 1.6s ease-in both; }
@@ -450,8 +451,9 @@ body.modal #gl { z-index: 35; }
 
 .mk-row.locked { opacity: 0.45; }
 /* Onglets du Marché stellaire. */
-.mk-tabs { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 0 14px; border-bottom: 1px solid var(--line); }
-.mk-tabs button { padding: 12px 4px 10px; font-size: 11px; letter-spacing: 0.16em; color: var(--dim); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+/* Quatre onglets (v120) : MA PLANÈTE, MON SYSTÈME, COSMÉTIQUES, GRAINES. */
+.mk-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 0 14px; border-bottom: 1px solid var(--line); }
+.mk-tabs button { padding: 12px 2px 10px; font-size: 10px; letter-spacing: 0.08em; color: var(--dim); border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .mk-tabs button.on { color: var(--ink); border-bottom-color: var(--ink); }
 .mk-pane[hidden] { display: none; }
 .mk-atelier { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 28px; padding: 22px 8px 0; border-top: 1px solid var(--faint); text-align: center; color: inherit; text-decoration: none; }
@@ -506,30 +508,91 @@ body.modal #gl { z-index: 35; }
 .fg-thumb small { font-size: 11px; color: var(--dim); display: inline-flex; align-items: center; gap: 3px; }
 .fg-thumb.on { border-color: var(--gold); }
 .fg-new b { display: grid; place-items: center; width: 64px; height: 64px; font-size: 28px; font-weight: 400; color: var(--dim); }
-.fg-sys { margin-top: 18px; min-width: 240px; }
-.fg-sys-lock { margin-top: 16px; max-width: 300px; text-align: center; }
-
-/* Mon système : l'étoile au centre, les mondes forgés sur six orbites inclinées. */
-#system .screen-head h2 { display: flex; flex-direction: column; line-height: 1.1; }
+/* Visite d'un système (v120) : la planète d'un autre Créateur et ses astres, en lecture seule. */
+#system .screen-head h2 { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
+#system .screen-head h2 > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #system .screen-head h2 small { font-size: 10px; letter-spacing: 0.24em; color: var(--dim); font-weight: 400; text-transform: uppercase; }
-.sys-view { position: relative; flex: 0 0 auto; height: min(58vh, 460px); margin: 0 -14px; overflow: hidden; }
-.sys-orbits { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.sys-orbits ellipse { fill: none; stroke: rgba(241, 236, 218, 0.1); stroke-width: 1; stroke-dasharray: 2 5; }
-.sys-orbits ellipse.used { stroke: rgba(246, 196, 83, 0.35); stroke-dasharray: none; }
-.sys-layer { position: absolute; inset: 0; }
-.sys-star, .sys-pl { position: absolute; left: 0; top: 0; width: var(--s); height: var(--s); padding: 0; border: 0; background: none; }
-.sys-star .orb, .sys-pl .orb { position: absolute; inset: 0; width: 100%; height: 100%; }
-.sys-pl small { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); font-size: 9px; letter-spacing: 0.12em; color: var(--dim); white-space: nowrap; pointer-events: none; text-shadow: 0 0 4px #000; }
-.sys-panel { flex: 1; overflow-y: auto; padding-bottom: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; scrollbar-width: none; }
-.sys-intro { margin: 6px 0; max-width: 320px; color: var(--dim); font-size: 14px; line-height: 1.45; }
-.sys-row { align-self: stretch; display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; padding: 8px 2px; border-bottom: 1px solid rgba(241, 236, 218, 0.06); text-align: left; }
-.sys-row .orb { width: 44px; height: 44px; }
-.sys-row-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.sys-row-txt b { font-size: 14px; font-weight: 600; }
+.sys-body { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.sys-view { flex: 0 0 auto; height: auto; aspect-ratio: 1.3; max-height: 50vh; margin: 0 -14px; }
+.sys-panel { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 20px; display: flex; flex-direction: column; gap: 4px; scrollbar-width: none; }
+.sys-panel .fg-h { align-self: stretch; text-align: left; }
+.sys-row { display: grid; grid-template-columns: 48px 1fr; gap: 12px; align-items: center; padding: 9px 2px; border-bottom: 1px solid rgba(241, 236, 218, 0.06); text-align: left; }
+.sys-row .orb { width: 48px; height: 48px; }
+.sys-row-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sys-row-txt b { font-size: 15px; font-weight: 600; }
 .sys-row-txt small { font-size: 11px; color: var(--dim); }
-.sys-row .btn { padding: 0 12px; min-height: 36px; font-size: 11px; letter-spacing: 0.1em; }
-.sys-soon { margin-top: 12px; font-size: 11px; letter-spacing: 0.06em; color: var(--dim); }
-.sys-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0; }
+.sys-ups { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.sys-ups i { font-style: normal; font-size: 10px; letter-spacing: 0.06em; padding: 2px 6px; border: 1px solid var(--era, var(--line)); color: var(--era, var(--ink)); }
+.sys-none { margin: 12px 0 0; font-size: 13px; }
+
+/* Mon système (v120) : le système solaire animé (le Soleil rouge au centre, neuf orbites, votre planète
+   à la place de la Terre) et une carte par astre. */
+/* Pas zoomée, un doigt qui glisse fait défiler la page ; zoomée, il déplace la vue (js/systeme-ui.js). */
+.sy-view { position: relative; overflow: hidden; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+.sy-view.zoomed { touch-action: none; cursor: grab; }
+.sy-view.dragging, .sy-view.dragging button.sy-body { cursor: grabbing; }
+.sy-orbits { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.sy-orbits ellipse { fill: none; stroke-width: 1; }
+.sy-orbits ellipse.on { stroke: var(--oc, rgba(241, 236, 218, 0.5)); stroke-opacity: 0.26; }
+/* L'orbite d'un astre pas encore acheté : à peine là. */
+.sy-orbits ellipse.off { stroke: rgba(241, 236, 218, 0.07); stroke-dasharray: 1 6; }
+/* Les astres dessinés (rangés par profondeur) et, au-dessus, leurs zones sensibles (jamais déplacées). */
+.sy-layer, .sy-hits { position: absolute; inset: 0; }
+.sy-layer { pointer-events: none; }
+.sy-hits { z-index: 1; }
+.sy-orb, .sy-body { position: absolute; left: 0; top: 0; width: 20px; height: 20px; will-change: transform; }
+.sy-body { padding: 0; border: 0; background: none; }
+/* L'indice du zoom : discret, dans un coin (sur téléphone, la vue déborde de 14 px de chaque côté). */
+.sy-hint { position: absolute; right: 22px; bottom: 6px; z-index: 2; font-size: 10px; letter-spacing: 0.08em; color: var(--dim); text-shadow: 0 0 4px #000; pointer-events: none; opacity: 0; transition: opacity 0.4s; }
+.sy-hint.on { opacity: 0.85; }
+/* Les petits astres se touchent facilement : la zone sensible déborde un peu. */
+button.sy-body::before { content: ''; position: absolute; inset: -9px; }
+.sy-body small { position: absolute; left: 50%; top: 100%; margin-top: 3px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 4px; font-size: 9px; letter-spacing: 0.16em; color: var(--dim); white-space: nowrap; pointer-events: none; text-shadow: 0 0 4px #000; }
+/* Le nom d'un astre apparaît au survol (souris). */
+.sy-body small.sy-name { opacity: 0; transition: opacity 0.2s; color: var(--ink); text-transform: uppercase; }
+.sy-body:hover small.sy-name, .sy-body:focus-visible small.sy-name { opacity: 1; }
+button.sy-body { cursor: pointer; }
+.sy-shop { display: flex; flex-direction: column; gap: 12px; padding-top: 2px; }
+.sy-hero { display: flex; flex-direction: column; gap: 8px; }
+/* Neuf orbites : le système prend toute la largeur et un peu plus de hauteur qu'avant. */
+.sy-shop .sy-view { height: auto; aspect-ratio: 1.38; max-height: 46vh; margin: 0 -14px; }
+.sy-state { display: flex; flex-direction: column; gap: 5px; }
+.sy-state b { font-size: 17px; font-weight: 600; letter-spacing: 0.08em; }
+.sy-state small { font-size: 11px; color: var(--dim); }
+.sy-intro { margin: 0; color: var(--dim); font-size: 13px; line-height: 1.45; }
+.sy-cards { display: flex; flex-direction: column; gap: 10px; }
+.sy-card { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 1px solid var(--line); border-left: 2px solid var(--line); }
+.sy-card.owned { border-left-color: var(--era); }
+.sy-card.flash { animation: syFlash 1.1s ease; }
+@keyframes syFlash { 0%, 100% { box-shadow: none; } 30% { box-shadow: 0 0 0 1px var(--era), 0 0 18px var(--era); } }
+.sy-card-head { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: center; }
+.sy-card-orb { width: 64px; height: 64px; }
+.sy-card-title { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sy-card-title b { font-size: 19px; font-weight: 600; letter-spacing: 0.06em; }
+.sy-card.owned .sy-card-title .mk-kicker { color: var(--era); }
+.sy-text { margin: 0; color: var(--dim); font-size: 13px; line-height: 1.4; }
+/* Astre pas encore acheté, votre planète : une carte courte. */
+.sy-card.sy-off, .sy-card.sy-earth { gap: 10px; }
+.sy-card.sy-off .sy-card-head, .sy-card.sy-earth .sy-card-head { grid-template-columns: 56px minmax(0, 1fr); align-items: start; }
+.sy-card.sy-off .sy-card-orb, .sy-card.sy-earth .sy-card-orb { width: 56px; height: 56px; }
+.sy-card-title small.sy-text { font-size: 12px; }
+.sy-next { display: flex; flex-direction: column; gap: 4px; }
+.sy-next b { font-size: 16px; font-weight: 600; }
+.sy-next p { margin: 0 0 2px; color: var(--dim); font-size: 13px; line-height: 1.4; }
+.sy-next .mk-req { margin: 0; }
+.sy-act { display: flex; flex-direction: column; gap: 4px; }
+.sy-why { font-size: 12px; color: var(--dim); text-align: center; }
+.sy-done { margin: 0; font-size: 13px; color: var(--era); }
+/* Feuille de route en pastilles : fait (couleur de l'astre), la suivante (or, qui clignote), plus tard. */
+.sy-road { display: flex; flex-wrap: wrap; gap: 5px; }
+.sy-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--line); font-size: 11px; letter-spacing: 0.04em; }
+.sy-chip .mk-pip { flex: 0 0 auto; }
+.sy-chip small { font-size: 9px; letter-spacing: 0.1em; color: var(--dim); }
+.sy-chip.owned { border-color: var(--era); color: var(--era); }
+.sy-chip.owned .mk-pip { background: var(--era); border-color: var(--era); box-shadow: 0 0 6px var(--era); }
+.sy-chip.next { border-color: var(--gold); color: var(--gold); }
+.sy-chip.next .mk-pip { border-color: var(--gold); animation: pipBlink 1.4s steps(2, jump-none) infinite; }
+.sy-chip.locked { opacity: 0.5; }
 /* Mode en ligne : carte de connexion, amis, classement. */
 .pf-tabs { position: sticky; top: 0; z-index: 3; background: var(--bg, #000); margin-bottom: 10px; }
 .pf-tabs button { position: relative; }
@@ -648,7 +711,7 @@ body.modal #gl { z-index: 35; }
 .pf-hist b { font-size: 16px; font-weight: 600; }
 .pf-hist .podium b { color: var(--gold); }
 .pf-hist small { font-size: 11px; color: var(--dim); }
-.lvl-gift span { display: block; margin-top: 6px; font-size: 12px; color: var(--ink); letter-spacing: 0.04em; }
+.lvl-gift span { display: block; margin-top: 6px; font-size: 12px; line-height: 1.4; color: var(--ink); letter-spacing: 0.04em; }
 .screen-head { display: flex; align-items: center; gap: 6px; height: 44px; }
 .screen-head h2 { margin: 0; font-size: 18px; letter-spacing: 0.14em; font-weight: 400; }
 .hint { margin: 2px 0 14px; color: var(--dim); font-size: 13px; }
