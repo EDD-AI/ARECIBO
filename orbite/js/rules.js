@@ -483,7 +483,7 @@
     { id: 'multivers', fam: 'anomalie', tier: 5, atk: 6, hp: 7, name: 'Multivers', look: { type: 'portal', seed: 9408, ring: true },
       text: 'Fin de cycle : ajoute un astre de niveau 3 aléatoire à votre main.',
       endTurn(x, u, m) { for (let i = 0; i < m; i++) x.addHand(3); } },
-    { id: 'bigbang', fam: 'anomalie', tier: 6, atk: 8, hp: 8, name: 'Big Bang', look: { type: 'star', seed: 9409, starClass: 'géante bleue' },
+    { id: 'bigbang', fam: 'anomalie', tier: 6, atk: 8, hp: 8, name: 'Big Bang', look: { type: 'bigbang', seed: 9409 },
       text: 'Effondrement : remplit votre système d’astres de niveau 2 aléatoires.',
       death(c, u, m, i) { for (let k = 0; k < 7; k++) if (!c.summonRandom(u.side, 2, i)) break; } },
 

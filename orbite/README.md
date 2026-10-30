@@ -370,6 +370,19 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Big Bang en explosion, musique dans tous les menus (v118)
+
+- **Big Bang** (Anomalies, niveau 6) est une vraie explosion sans fin (nature `bigbang`, shader 15) :
+  un cœur blanc qui palpite avec son éclat en croix, une boule de feu turbulente qui file vers
+  l'extérieur (deux couches de bruit décalées d'une demi-période, en fondu croisé : la boucle est sans
+  couture), trois ondes de choc déchirées qui grandissent en refroidissant (du blanc au bleu), des jets
+  de matière de longueurs inégales et des débris projetés avec une petite traînée (`g.fx.blast`). Le
+  souffle n'est pas rond : son bord varie selon la direction et respire.
+- **Musique** : elle joue maintenant dans tous les menus (Codex, fin de partie, campagne compris ; en fin
+  de partie, elle revient après le jingle de victoire pour ne pas le couvrir). Elle
+  reste coupée en partie (une musique de partie viendra plus tard), sur le logo du studio et pendant la
+  cinématique.
+
 ## Pleine Lune, Grande Marée bleu nuit, cadre Laser rouge (v117)
 
 - **Pleine Lune** : une vraie pleine lune blanche, éclairée de face (lumière `[0.12, 0.14, 1]`), roche
