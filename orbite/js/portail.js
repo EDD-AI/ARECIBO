@@ -20,20 +20,33 @@
   const heat = (k) => HEAT[Math.max(0, Math.min(HEAT.length - 1, Math.floor(k * HEAT.length)))];
 
   let running = null;
+  const SAFETY_MS = 9000;
 
   function play(swap) {
-    const go = () => Promise.resolve().then(() => (swap ? swap() : null));
-    if (running || !document.body) return go();
+    // Une erreur du changement d'écran n'arrête pas l'animation, mais reste signalée (filet de
+    // secours d'index.html).
+    const go = () => Promise.resolve().then(() => (swap ? swap() : null)).catch((err) => { setTimeout(() => { throw err; }); });
+    // Une seconde entrée attend la fin de la première ; une page cachée (appli en arrière-plan)
+    // n'a pas d'animation à montrer.
+    if (running) return running.then(go);
+    if (!document.body || document.hidden) return go();
     const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    running = (calm ? fade(go) : hole(go)).then((v) => { running = null; return v; }, (e) => { running = null; throw e; });
+    running = (calm ? fade(go) : hole(go)).then(() => { running = null; });
     return running;
   }
 
+  // Le voile bloque le doigt, la souris et le clavier (le bouton touché perd le focus, l'écran sous
+  // le trou devient inerte) ; release() rend tout.
   function overlay() {
     const cv = document.createElement('canvas');
     cv.className = 'bh-portal';
     cv.setAttribute('aria-hidden', 'true');
+    const app = document.getElementById('app');
+    const a = document.activeElement;
+    if (a && a !== document.body && a.blur) a.blur();
+    if (app) app.inert = true;
     document.body.appendChild(cv);
+    cv.release = () => { if (app) app.inert = false; cv.remove(); };
     return cv;
   }
 
@@ -47,16 +60,20 @@
     cv.style.transition = 'opacity 0.18s';
     cv.style.opacity = '0';
     return new Promise((resolve) => {
+      let done = false;
+      const end = () => { if (done) return; done = true; cv.release(); resolve(); };
       requestAnimationFrame(() => { cv.style.opacity = '1'; });
-      setTimeout(() => go().catch(() => null).then(() => {
+      setTimeout(() => go().then(() => {
         cv.style.transition = 'opacity 0.24s';
         cv.style.opacity = '0';
-        setTimeout(() => { cv.remove(); resolve(); }, 260);
+        setTimeout(end, 260);
       }), 200);
+      setTimeout(end, SAFETY_MS);
     });
   }
 
   function hole(go) {
+    try { if (window.OrbiteSfx && window.OrbiteSfx.hole) window.OrbiteSfx.hole(); } catch (err) { /* sans son */ }
     const W = window.innerWidth, H = window.innerHeight;
     // Taille d'un pixel : environ 200 pixels sur le petit côté de l'écran, comme les astres.
     const px = Math.max(2, Math.round(Math.min(W, H) / 200));
@@ -68,14 +85,13 @@
     const app = document.getElementById('app');
     const cx = w / 2, cy = h / 2, m = Math.min(w, h), diag = Math.hypot(w, h) / 2 + 3;
     const R0 = m * 0.05, R1 = m * 0.16;
-    if (window.OrbiteSfx && window.OrbiteSfx.hole) window.OrbiteSfx.hole();
 
     // Poussière et étoiles aspirées : elles tournent de plus en plus vite en tombant vers le trou.
     const dust = [];
     const spawn = (d) => {
       const c = Math.random();
       dust.push({ a: Math.random() * Math.PI * 2, d: d != null ? d : diag * (0.45 + Math.random() * 0.75), v: 0,
-        col: c < 0.5 ? '#ffffff' : c < 0.75 ? '#ffd27a' : c < 0.9 ? '#b9a4ff' : '#ff9a3c', big: Math.random() < 0.18 });
+        col: c < 0.5 ? '#ffffff' : c < 0.75 ? '#ffd27a' : c < 0.9 ? '#b9a4ff' : '#ff9a3c' });
     };
     for (let i = 0; i < 150; i++) spawn(diag * (0.2 + Math.random()));
 
@@ -157,32 +173,39 @@
     }
 
     return new Promise((resolve) => {
-      let t0 = 0, last = 0, hold = 0, swapped = null, ready = false, done = false;
+      // tl : temps de l'animation. Il avance avec les images, 120 ms au plus d'un coup : un
+      // téléphone qui fige (premier dessin des astres de la partie) ne fait pas sauter l'arrivée.
+      let t0 = 0, last = 0, tl = 0, swapped = null, ready = false, done = false;
+      const onVis = () => { if (document.hidden) bail(); };
       const finish = () => {
         if (done) return;
         done = true;
+        document.removeEventListener('visibilitychange', onVis);
         arrive(1);
-        cv.remove();
+        cv.release();
         resolve();
       };
       const swap = () => {
-        if (!swapped) swapped = go().catch(() => null).then(() => { arrive(0); ready = true; });
+        if (!swapped) swapped = go().then(() => { if (!done) arrive(0); ready = true; });
         return swapped;
       };
-      // En cas de pépin (erreur de dessin, onglet en arrière-plan), la partie s'affiche quand même.
+      // En cas de pépin (erreur de dessin, appli passée en arrière-plan), la partie s'affiche
+      // tout de suite.
       const bail = () => { swap().then(finish); };
+      document.addEventListener('visibilitychange', onVis);
       const frame = (now) => {
         if (done) return;
         try { step(now); } catch (err) { bail(); }
       };
       const step = (now) => {
         if (!t0) t0 = last = now;
-        const dt = Math.min(50, now - last) / 1000;
+        const gap = now - last;
+        const dt = Math.min(50, gap) / 1000;
         last = now;
-        // Tant que la partie n'est pas prête, la traversée continue (le temps s'arrête juste avant
-        // l'arrivée) ; au-delà de 5 s, on révèle quand même.
-        if (!ready && now - t0 - hold > T_TUNNEL && now - t0 < 5000) hold = now - t0 - T_TUNNEL;
-        const t = now - t0 - hold;
+        tl += Math.min(120, gap);
+        // Tant que la partie n'est pas prête, la traversée continue juste avant l'arrivée.
+        if (!ready && tl > T_TUNNEL) tl = T_TUNNEL;
+        const t = tl;
         if (t >= T_FILL && !swapped) {
           suck(1);
           swap();
@@ -197,11 +220,11 @@
           suck(pull);
           // L'écran s'assombrit autour du trou.
           const vg = g.createRadialGradient(cx, cy, r, cx, cy, diag);
-          vg.addColorStop(0, 'rgba(0, 0, 0, ' + (0.15 + 0.5 * pull) + ')');
-          vg.addColorStop(1, 'rgba(0, 0, 0, ' + (0.35 + 0.6 * pull) + ')');
+          const on = clamp01(t / T_OPEN);
+          vg.addColorStop(0, 'rgba(0, 0, 0, ' + (0.15 + 0.5 * pull) * on + ')');
+          vg.addColorStop(1, 'rgba(0, 0, 0, ' + (0.35 + 0.6 * pull) * on + ')');
           g.fillStyle = vg;
           g.fillRect(0, 0, w, h);
-          const on = clamp01(t / T_OPEN);
           glow(r, on);
           // La poussière tombe en spirale ; celle qui passe l'horizon disparaît et revient du bord.
           for (const p of dust) {
@@ -213,7 +236,7 @@
             const x = cx + Math.cos(p.a) * p.d, y = cy + Math.sin(p.a) * p.d * 0.8;
             g.strokeStyle = p.col;
             g.globalAlpha = 0.35 + 0.65 * on;
-            g.lineWidth = p.big ? 2 : 1;
+            g.lineWidth = 1;
             g.beginPath();
             g.moveTo(ox | 0, oy | 0);
             g.lineTo(x | 0, y | 0);
@@ -228,7 +251,7 @@
           // Dans le trou : des traits de lumière filent vers les bords.
           g.fillStyle = '#000';
           g.fillRect(0, 0, w, h);
-          const q = (now - t0 - T_FILL) / 1000;
+          const q = Math.max(0, now - t0 - T_FILL) / 1000;
           for (let i = 0; i < 64; i++) {
             const a = hash(i, 3) * Math.PI * 2;
             const d = ((q * (1.4 + hash(i, 7) * 1.6) + hash(i, 9)) % 1) * diag;
@@ -279,7 +302,7 @@
         requestAnimationFrame(frame);
       };
       requestAnimationFrame(frame);
-      setTimeout(bail, 9000);
+      setTimeout(bail, SAFETY_MS);
     });
   }
 

@@ -370,6 +370,24 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Entrée en partie : le trou noir (v109)
+
+Quand une partie commence (nouvelle partie, tutoriel, reprise depuis le menu, partie en ligne), un trou
+noir s'ouvre au milieu de l'écran avec son disque de matière (blanc, orange, violet du Néant) et l'anneau
+de lumière courbée au-dessus. L'écran est aspiré en tournant, la poussière tombe en spirale, le trou
+grossit jusqu'à tout couvrir. On traverse des traits de lumière, puis la partie s'ouvre depuis le centre
+dans un anneau de lumière. Environ 2,3 secondes, en gros pixels comme les astres, avec un son
+d'aspiration (`SFX.hole`). Code : `js/portail.js` (`OrbitePortal.play(swap)`) ; le changement d'écran se
+fait dans le noir et l'arrivée attend qu'il soit fini.
+
+- Pendant l'animation, rien ne se touche : ni doigt, ni souris, ni clavier (l'écran aspiré est inerte),
+  et les guides du menu ne s'ouvrent pas par-dessus.
+- Un téléphone qui fige un instant (premier dessin des astres) ne fait pas sauter l'arrivée : le temps de
+  l'animation avance de 120 ms au plus par image.
+- Au lancement de l'appli, une partie en cours reprend directement, sans trou noir. Si l'appli passe en
+  arrière-plan, la partie s'affiche tout de suite.
+- Réglage « réduire les animations » du téléphone : un simple fondu au noir.
+
 ## Regarder la suite (mode spectateur, v98)
 
 Éliminé d’une mêlée solo, l’écran de fin propose **REGARDER LA SUITE**, au-dessus de REJOUER. La table

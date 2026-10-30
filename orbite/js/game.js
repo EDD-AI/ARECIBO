@@ -400,7 +400,15 @@
   // ─── Écrans ─────────────────────────────────────────────────
   // Entrée en partie (v109) : un trou noir aspire l'écran ; la partie s'affiche dans le noir (swap),
   // puis s'ouvre depuis le centre (js/portail.js).
-  const portal = (swap) => (window.OrbitePortal ? window.OrbitePortal.play(swap) : Promise.resolve().then(swap));
+  // Pendant le trou noir, ui.entering bloque une seconde entrée et les guides du menu ; les guides
+  // de la loi et du menu s'arrêtent tout de suite, comme le faisait show('game').
+  const portal = (swap) => {
+    if (coach.steps === LAW_STEPS) coachStop(false);
+    else if (coach.steps && coach.steps.menu) coachStop(true);
+    ui.entering = true;
+    const done = () => { ui.entering = false; };
+    return (window.OrbitePortal ? window.OrbitePortal.play(swap) : Promise.resolve().then(swap)).then(done, (err) => { done(); throw err; });
+  };
   async function show(name) {
     rememberScreen(name);
     if (name !== 'menu') menuPage('main', true);
@@ -847,13 +855,15 @@
     const items = [...document.querySelectorAll('#menuList .menu-page.on .menu-item')];
     document.querySelectorAll('.menu-item').forEach((b) => { if (!items.includes(b)) b.classList.add('show'); });
     for (const b of items) { b.classList.add('show'); await wait(120); }
-    if (needTuto() && ui.screen === 'menu') {
+    // Au menu, et pas déjà en train d'entrer en partie (trou noir).
+    const atMenu = () => ui.screen === 'menu' && !ui.entering;
+    if (needTuto() && atMenu()) {
       // Le guide du menu attend la fin du duel d'entraînement : d'abord, JOUER.
       await wait(500);
-      if (ui.screen === 'menu' && !coach.steps) coachStart(TUTO_INVITE);
-    } else if (store.get(MENU_GUIDE_KEY, '') !== '1' && ui.screen === 'menu') {
+      if (atMenu() && !coach.steps) coachStart(TUTO_INVITE);
+    } else if (store.get(MENU_GUIDE_KEY, '') !== '1' && atMenu()) {
       await wait(500);
-      if (ui.screen === 'menu' && !coach.steps) coachStart(menuSteps(), () => store.set(MENU_GUIDE_KEY, '1'));
+      if (atMenu() && !coach.steps) coachStart(menuSteps(), () => store.set(MENU_GUIDE_KEY, '1'));
     }
   }
 
@@ -916,7 +926,7 @@
     if (!ses || Date.now() - ses.t > RESUME_MS || store.get(WAKE_KEY, '') !== '1') return false;
     const fin = loadFinished();
     if (fin) { ui.state = fin; await endScreen(); return true; }
-    if (ses.s === 'game' && loadGame()) { await resumeGame(); return true; }
+    if (ses.s === 'game' && loadGame()) { await resumeGame(true); return true; }
     // Campagne bloquée pendant sa refonte : on ne la reprend plus au lancement.
     await backToMenu();
     return true;
@@ -1808,8 +1818,7 @@
     codexMark([R.LAW[ui.lawPick].starter]);
     ui.stamp++;
     saveGame();
-    ui.entering = true;
-    try { await portal(async () => { await show('game'); renderGame(true); }); } finally { ui.entering = false; }
+    await portal(async () => { await show('game'); renderGame(true); });
     if (ui.state.event) await new Promise((done) => openEventCard(done));
     banner(R.isDuel(ui.state) ? tr('DUEL · {name}', { name: esc(ui.state.players[1].name) }) : tr('CYCLE {n}', { n: 1 }), tr('Achetez des astres, placez-les, puis lancez le combat.'));
     if (!tutoDone()) {
@@ -1985,6 +1994,7 @@
     7: tr('Conseil : touchez la Sentinelle en haut pour voir son système, et placez-vous pour la contrer.')
   };
   async function startTutorial() {
+    if (ui.entering) return;
     coachStop(false);
     closeSheet();
     ui.daily = null;
@@ -4485,13 +4495,16 @@
     await show('laws');
     if (!tutoDone()) coachStart(LAW_STEPS);
   }
-  async function resumeGame() {
+  // instant : reprise au lancement de l'appli, sans écran à aspirer (pas de trou noir).
+  async function resumeGame(instant) {
     const s = loadGame();
-    if (!s) return;
+    if (!s || ui.entering) return;
     stopAmbient();
     ui.state = s;
     ui.stamp++;
-    await portal(async () => { await show('game'); renderGame(true); });
+    const swap = async () => { await show('game'); renderGame(true); };
+    if (instant) await swap();
+    else await portal(swap);
     // Partie reprise au milieu d'une découverte : elle revient tout de suite.
     if (me() && me().discover.length) setTimeout(() => { if (!ui.discoverDone) openDiscover(); }, 700);
     else if (me() && me().relicChoice && me().relicChoice.length) setTimeout(() => { if (!ui.relicDone) openRelics(); }, 700);
@@ -4717,7 +4730,7 @@
     let last = 0;
     try { last = Number(sessionStorage.getItem('orbite.maj')) || 0; } catch (err) { /* indisponible */ }
     if (Date.now() - last < 120000) return;
-    if (!force && (ui.screen !== 'menu' || ui.busy || document.querySelector('.coach:not([hidden])'))) { ui.updatePending = true; return; }
+    if (!force && (ui.screen !== 'menu' || ui.busy || ui.entering || document.querySelector('.coach:not([hidden])'))) { ui.updatePending = true; return; }
     try { sessionStorage.setItem('orbite.maj', String(Date.now())); } catch (err) { /* indisponible */ }
     location.reload();
   }
