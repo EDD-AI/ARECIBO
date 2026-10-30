@@ -69,7 +69,7 @@
           ring: !!look.ring, debris: !!look.debris, moons: look.moons || 0, shell: !!look.shell,
           starClass: look.starClass, hueShift: look.hueShift, mood: look.mood,
           caps: look.caps, light: look.light, shape: look.shape || 'aucune', warm: look.warm, coreHue: look.coreHue,
-          disk: look.disk, hot: look.hot, pitch: look.pitch, lens: look.lens, diskScale: look.diskScale, neb: look.neb
+          disk: look.disk, hot: look.hot, pitch: look.pitch, lens: look.lens, diskScale: look.diskScale, neb: look.neb, station: look.station, crescent: look.crescent
         });
         g.flip = !!look.flip;
         this.genomes.set(id, g);

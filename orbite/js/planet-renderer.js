@@ -176,7 +176,8 @@ vec3 bodyToView(vec3 b, float spin) { return transpose(uTilt) * rotY(b, spin); }
 
 // Biais de teinte : -1 assombrit tout (astres lointains) ; -2 (nuit) n'assombrit que la face cachée,
 // pour un croissant net.
-int biasSh(int sh) { return uShadeBias == -2 ? (sh <= 2 ? sh - 1 : sh) : sh + uShadeBias; }
+// -3 : croissant découpé, la face cachée n'est pas dessinée du tout (v115).
+int biasSh(int sh) { return uShadeBias <= -2 ? (sh <= 2 ? sh - 1 : sh) : sh + uShadeBias; }
 int shadeOf(float l, float d) {
   float v = l + (d - 0.5) * 0.16;
   if (v > 0.8) return 5;
@@ -412,13 +413,15 @@ Surf mechaSurf(vec3 p, vec3 Lt, float dth) {
   vec3 ed = normalize(uC.xyz);
   float ang = acos(clamp(dot(p, ed), -1.0, 1.0));
   float rr = ang / uC.w;
+  // uA.w : taille du cœur lumineux de la parabole (0 = 0,3 par défaut ; plus petit pour la station noire).
+  float core = uA.w > 0.0 ? uA.w : 0.3;
   if (rr < 1.0) {
     s.glow = -1;
-    if (rr < 0.3) {
+    if (rr < core) {
       s.row = 9;
       int pulse = sin(TAU * uPhase * 3.0) > 0.6 ? 1 : 0;
-      s.emis = clamp(7 - int(rr / 0.3 * 3.0 + (dth - 0.5) * 0.8) - pulse, 3, 7);
-    } else if (rr < 0.4) {
+      s.emis = clamp(7 - int(rr / core * 3.0 + (dth - 0.5) * 0.8) - pulse, 3, 7);
+    } else if (rr < core + 0.1) {
       s.row = 11; s.bump = -0.4; s.spec = 0.0;
     } else {
       s.row = fract(rr * 4.0) < 0.12 ? 6 : 5;
@@ -430,6 +433,76 @@ Surf mechaSurf(vec3 p, vec3 Lt, float dth) {
     }
   }
   return s;
+}
+
+// Verre (v115) : une sphère transparente, on voit à travers. Une seule rampe (pal 0).
+// uB.x = 0 : bille de verre lisse (bord, reflets, lumière concentrée de l'autre côté) ;
+// uB.x = 1 : boule miroir, des facettes carrées qui tournent et renvoient la lumière ; entre elles,
+// on voit le dos de la boule. a = 0 : le pixel laisse voir le fond.
+void discoCell(vec3 pv, out vec2 f, out vec2 id, out vec3 fn) {
+  vec3 p = rotY(uTilt * pv, -uSpin);
+  float rows = uA.y;
+  float lat = asin(clamp(p.y, -1.0, 1.0));
+  float v = (lat / 3.14159265 + 0.5) * rows;
+  float iy = floor(v);
+  float latC = ((iy + 0.5) / rows - 0.5) * 3.14159265;
+  float n = max(3.0, floor(uA.x * cos(latC) + 0.5));
+  float u = (atan(p.z, p.x) / TAU + 0.5) * n;
+  float ix = floor(u);
+  float lonC = ((ix + 0.5) / n - 0.5) * TAU;
+  f = vec2(fract(u), fract(v));
+  id = vec2(ix, iy);
+  fn = bodyToView(vec3(cos(latC) * cos(lonC), sin(latC), cos(latC) * sin(lonC)), uSpin);
+}
+
+vec4 glassBall(vec2 xy, vec3 pv, float dth) {
+  float r = length(xy);
+  float edge = (1.0 - r) * uRadius;
+  vec2 ld = dot(uLight.xy, uLight.xy) > 1e-4 ? normalize(uLight.xy) : vec2(-0.7, 0.7);
+  vec2 dir = r > 1e-4 ? xy / r : vec2(0.0);
+  float side = dot(dir, ld);
+  // Le bord : un trait clair, plus vif côté lumière.
+  if (edge < 1.3) return vec4(pal(0, biasSh(side > 0.3 ? 7 : side > -0.4 ? 5 : 4)), 1.0);
+  if (uB.x < 0.5) {
+    // Épaisseur du verre : un second trait à l'opposé de la lumière, là où elle se concentre.
+    if (edge > 2.6 && edge < 3.7 && dth < -side * 1.2 - 0.1) return vec4(pal(0, biasSh(5)), 1.0);
+    // Reflet de fenêtre : un arc près du bord, côté lumière, et un point juste à côté.
+    if (edge > 2.4 && edge < 2.4 + max(1.6, uRadius * 0.1) && side > 0.6) return vec4(pal(0, biasSh(side > 0.8 ? 7 : 6)), 1.0);
+    vec2 hp = (ld * 0.82 - vec2(-ld.y, ld.x) * 0.57) * 0.6;
+    if (length(xy - hp) * uRadius < max(1.1, uRadius * 0.065)) return vec4(pal(0, biasSh(7)), 1.0);
+    // La lumière traverse et se concentre en une tache de l'autre côté.
+    float cd = length(xy + ld * 0.56) / 0.24;
+    if (cd < 1.0 && dth < (1.0 - cd) * 1.2) return vec4(pal(0, biasSh(cd < 0.4 ? 6 : 4)), 1.0);
+    // De temps en temps, un éclat traverse le verre (la moitié du temps, rien ne passe).
+    float tg = fract(uPhase * 4.0);
+    float sweep = abs(dot(xy, vec2(0.7071, 0.7071)) - (tg * 4.0 - 1.4));
+    if (tg < 0.5 && sweep < 0.035 && r < 0.86 && dth < 0.5) return vec4(pal(0, biasSh(6)), 1.0);
+    // Le reste est transparent, avec un léger voile bleuté vers le bord.
+    if (dth < smoothstep(0.45, 1.0, r) * 0.38) return vec4(pal(0, biasSh(r > 0.85 ? 4 : 3)), 1.0);
+    return vec4(0.0);
+  }
+  // Boule miroir : la face avant.
+  vec2 f, id;
+  vec3 fn;
+  discoCell(pv, f, id, fn);
+  float gw = clamp(uA.y / (uRadius * 3.14159265), 0.06, 0.3);
+  if (f.x > gw && f.y > gw) {
+    vec3 R = vec3(2.0 * fn.z * fn.xy, 2.0 * fn.z * fn.z - 1.0);
+    float h = hash12(id + uSeed.xy);
+    float spec = pow(max(dot(R, uLight), 0.0), 12.0);
+    float tw = fract(h * 7.31 + uPhase * 6.0);
+    float e = (0.25 + h * 0.6) * (0.45 + 0.55 * fn.z) + spec * 1.3 + (tw < 0.05 ? 0.7 : 0.0);
+    // Facettes sombres : du verre, on voit à travers.
+    if (h > 0.22 || spec > 0.3) return vec4(pal(0, biasSh(clamp(int(e * 5.0) + 2, 2, 7))), 1.0);
+    if (dth < 0.25) return vec4(pal(0, biasSh(3)), 1.0);
+  }
+  // À travers : le dos de la boule, vu de l'intérieur (ses joints, quelques facettes qui brillent).
+  vec3 pb = vec3(pv.xy, -pv.z);
+  discoCell(pb, f, id, fn);
+  float gb = gw * 1.15;
+  if (f.x < gb || f.y < gb) return dth < 0.75 ? vec4(pal(0, biasSh(2)), 1.0) : vec4(0.0);
+  if (hash12(id + uSeed.yz) > 0.8 && dth < 0.3) return vec4(pal(0, biasSh(3)), 1.0);
+  return vec4(0.0);
 }
 
 float asteroidR(vec3 dir) {
@@ -701,6 +774,7 @@ void main() {
     pv = vec3(xy, sqrt(1.0 - r2));
   }
   if (uType == 11) { outColor = fin(vec3(0.0)); return; }
+  if (uType == 14 && !ast) { vec4 gc = glassBall(xy, pv, dth); if (gc.a < 0.5) discard; outColor = fin(gc.rgb); return; }
   // Éclipse : l'étoile est masquée, seul un liseré brille autour du disque noir.
   if (uType == 8 && uB.w > 0.5) {
     float rr = length(xy);
@@ -759,6 +833,10 @@ void main() {
   if (s.emis >= 0) { outColor = fin(pal(s.row, s.emis)); return; }
 
   float l = dot(nl, uLight) + s.bump * 0.5;
+  // Nuit (croissant) : la partie éclairée est plus vive et la limite plus nette (v115).
+  if (uShadeBias <= -2) l = l * 1.45 + 0.18;
+  // Croissant découpé : la limite suit la sphère lisse (sans le relief), pour un bord net.
+  if (uShadeBias == -3 && dot(nv, uLight) < 0.02 + (dth - 0.5) * 0.05) discard;
   float sf = shadowAt(P, dth);
   l -= sf;
   int sh = shadeOf(l, dth);
@@ -770,7 +848,7 @@ void main() {
   int row = s.row;
   if (s.glow >= 0 && l < -0.02) { row = s.glowRow; sh = max(sh, s.glow); }
   vec3 col = pal(row, clamp(biasSh(sh), 0, 7));
-  if (uShadeBias == -2 && sh <= 1) col *= 0.3;
+  if (uShadeBias <= -2 && sh <= 1) col *= 0.3;
   outColor = fin(col);
 }
 `;
@@ -1714,7 +1792,7 @@ void main() {
       if (b.corona) this.haloPass(2, cx, cy, R, 1 + b.corona.len * 1.6, [b.corona.len, b.corona.freq, b.corona.power, 0], b.pal, 0, b.seed, light, st);
       if (b.lens) this.haloPass(3, cx, cy, R, b.lens.outer, [b.lens.outer, b.lens.cycles, 0, 0], b.pal, 9, b.seed, light, st);
 
-      const base = { cx, cy, light, occ, occN, st, ring: bandRing, ringN: g.ringN, bias: g.night ? -2 : 0 };
+      const base = { cx, cy, light, occ, occN, st, ring: bandRing, ringN: g.ringN, bias: g.night ? (g.cut ? -3 : -2) : 0 };
       this.bodyPass(b, 0, Object.assign({}, base, { r: R, spin, unit: 1 }));
       if (b.clouds) {
         const cspin = TAU * (b.spinCycles + b.clouds.extraCycles) * phase + b.spinOffset;

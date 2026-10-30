@@ -313,6 +313,7 @@
   const lastSeen = {};
   function popOnline() {
     const s = O.ui.state, now = Date.now();
+    let rang = false;
     for (const p of ON.friendProfiles ? ON.friendProfiles() : []) {
       const prev = lastSeen[p.uid];
       lastSeen[p.uid] = p.seen || 0;
@@ -325,7 +326,8 @@
       d.className = 'ami-pop';
       d.innerHTML = `<i class="on-dot on"></i><span>${tr('{name} vient de se connecter', { name: `<b>${pseudoOf(p)}</b>` })}</span><button class="btn" data-ami="${esc(p.uid)}">${tr('DÉFIER')}</button>`;
       pops.appendChild(d);
-      SFX.on();
+      // Un seul petit son, même si plusieurs amis arrivent en même temps.
+      if (!rang) { rang = true; (SFX.friend || SFX.on)(); }
       setTimeout(() => d.classList.add('out'), 5500);
       setTimeout(() => d.remove(), 6000);
     }

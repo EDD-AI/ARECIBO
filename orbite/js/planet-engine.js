@@ -195,13 +195,16 @@
     { key: 'mecha', label: 'Sphère artificielle', w: 2 },
     { key: 'comet', label: 'Comète', w: 3 },
     { key: 'eclipse', label: 'Éclipse', w: 1 },
-    { key: 'nebula', label: 'Nébuleuse', w: 2 }
+    { key: 'nebula', label: 'Nébuleuse', w: 2 },
+    // Natures réservées à certaines cartes (jamais tirées au hasard).
+    { key: 'glass', label: 'Sphère de verre', w: 0 },
+    { key: 'mirror', label: 'Boule miroir', w: 0 }
   ];
   const TYPE_BY_KEY = Object.fromEntries(TYPES.map((t) => [t.key, t]));
-  const NO_FACET = new Set(['star', 'portal', 'blackhole', 'crystal', 'comet', 'eclipse', 'nebula']);
+  const NO_FACET = new Set(['star', 'portal', 'blackhole', 'crystal', 'comet', 'eclipse', 'nebula', 'glass', 'mirror']);
 
   // Identifiants des programmes de surface (doivent correspondre au shader).
-  const SH = { TERRAN: 0, OCEAN: 1, ICE: 2, LAVA: 3, DESERT: 4, GAS: 5, ROCK: 6, ASTEROID: 7, STAR: 8, CRYSTAL: 9, PORTAL: 10, BLACKHOLE: 11, MECHA: 12, NEBULA: 13 };
+  const SH = { TERRAN: 0, OCEAN: 1, ICE: 2, LAVA: 3, DESERT: 4, GAS: 5, ROCK: 6, ASTEROID: 7, STAR: 8, CRYSTAL: 9, PORTAL: 10, BLACKHOLE: 11, MECHA: 12, NEBULA: 13, GLASS: 14 };
 
   function newBody(shader, r) {
     return {
@@ -597,6 +600,18 @@
     return b;
   }
 
+  // Verre (v115) : une sphère transparente, on voit à travers (shader GLASS). Une seule rampe (pal 0),
+  // du bleu nuit au blanc. A : [facettes à l'équateur, rangées de facettes] ; B.x = 1 : boule miroir.
+  function bodyGlass(r, mirror) {
+    const b = newBody(SH.GLASS, r);
+    const h = r.range(200, 215);
+    b.pal[0] = gradRamp([[0.24, 0.05, h + 25], [0.46, 0.08, h + 10], [0.7, 0.08, h], [0.88, 0.05, h - 10], [0.995, 0.01, h - 30]]);
+    b.A = mirror ? [r.int(26, 30), r.int(13, 15), 0, 0] : [0, 0, 0, 0];
+    b.B = [mirror ? 1 : 0, 0, 0, 0];
+    b.size = mirror ? 0.8 : 0.86;
+    return b;
+  }
+
   // Nébuleuse (v107) : un nuage plat de gaz, sans corps solide (shader NEBULA). Une coquille (pal 0,
   // teinte rim) entoure un gaz intérieur (pal 1, teinte gas) ; une naine blanche brille au centre
   // (pal 2). Styles : anneau (coquille fine, intérieur clair), bulle (remplie), papillon (deux lobes),
@@ -644,6 +659,8 @@
       case 'mecha': return bodyMecha(r);
       case 'comet': return bodyComet(r, opts && opts.warm);
       case 'nebula': return bodyNebula(r, opts && opts.neb);
+      case 'glass': return bodyGlass(r, false);
+      case 'mirror': return bodyGlass(r, true);
       case 'eclipse': {
         const b = bodyStar(r, (opts && opts.starClass) || 'étoile blanche');
         b.B = [0, 0, 0, 1];
@@ -942,6 +959,24 @@
     const body = buildBody(key, makeRng(hashSeed(seed, 2)), opts);
     g.body = body;
 
+    // Station de combat (v115) : coque noire, tranchée à l'équateur, grande parabole tournée vers nous.
+    // Elle ne tourne pas, pour que la parabole reste toujours visible.
+    const station = !!opts.station && body.shader === SH.MECHA;
+    if (station) {
+      const P = body.pal;
+      P[5] = ramp(0.36, 0.008, 250);
+      P[6] = ramp(0.27, 0.008, 250);
+      P[11] = ramp(0.13, 0.006, 250);
+      P[9] = gradRamp([[0.3, 0.12, 25], [0.55, 0.2, 28], [0.75, 0.17, 35], [0.97, 0.04, 60]]);
+      P[10] = ramp(0.88, 0.04, 210);
+      body.A = [52, 26, 0.035, 0.12];
+      body.roll = -0.12;
+      body.pitch = 0.2;
+      body.spinCycles = 0;
+      body.spinOffset = 0;
+      body.size = 0.9;
+    }
+
     // Silhouette : imposée par le jeu, ou tirée au hasard pour certaines natures dans l'atelier.
     const shr = makeRng(hashSeed(seed, 11));
     let shapeName = opts.shape;
@@ -998,6 +1033,12 @@
     const M = tiltMatrix(body.roll, body.pitch);
     body.M = M;
     g.ringN = column(M, 1); g.ringU = column(M, 0); g.ringV = column(M, 2);
+    if (station) {
+      // Parabole en haut à droite, face à nous : direction vue -> repère de l'astre (transposée de M).
+      const v = [0.42, 0.4, 0.81];
+      const e = [0, 1, 2].map((i) => M[i] * v[0] + M[3 + i] * v[1] + M[6 + i] * v[2]);
+      body.C = [e[0], e[1], e[2], 0.42];
+    }
     let reach = 1.15;
     if (hasRing) {
       g.ring = makeRing(rr, body, compact);
@@ -1109,6 +1150,8 @@
       const l = Math.hypot(opts.light[0], opts.light[1], opts.light[2]) || 1;
       g.light = opts.light.map((v) => v / l);
       g.night = g.light[2] < 0;
+      // Croissant découpé : seule la partie éclairée est dessinée, la sphère disparaît.
+      g.cut = g.night && !!opts.crescent;
     }
 
     computeExtent(g);

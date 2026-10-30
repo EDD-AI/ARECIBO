@@ -1969,6 +1969,15 @@ body.mp-game #fightBtn:disabled { opacity: 1; color: var(--ink); background: rgb
 .cos-av { display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; }
 .cos-av .orb { width: 46px; height: 46px; }
 .cos-avatar-row.rare { border-left: 2px solid var(--gold); background: linear-gradient(90deg, rgba(246, 196, 83, 0.07), transparent 60%); }
+/* Photos de profil (v115) : un onglet par groupe (classiques, familles, légendaires). Sur téléphone,
+   une rangée qui défile ; sur PC, des onglets sur plusieurs lignes. */
+.av-chips { position: relative; display: flex; gap: 6px; margin: 4px 0 8px; padding-bottom: 6px; overflow-x: auto; scrollbar-width: none; }
+.av-chips::-webkit-scrollbar { display: none; }
+.av-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 10px; border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); background: rgba(0, 0, 0, 0.35); color: var(--ink); font: inherit; font-size: 11px; letter-spacing: 0.14em; cursor: var(--cur-hand, pointer); }
+.av-chip .av-chip-ico { width: 16px; height: 16px; image-rendering: pixelated; }
+.av-chip.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); }
+.av-rar { margin: 0 0 6px; text-align: left; }
+.av-rar b { color: var(--ink); font-weight: 400; letter-spacing: 0.14em; }
 /* Polices du pseudo (v96) : votre pseudo écrit avec chaque police. */
 .cos-row.cos-font-row { grid-template-columns: minmax(0, 1fr) auto; }
 .cos-font-row .cos-font-name { font-size: 20px; font-weight: 500; letter-spacing: 0.04em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

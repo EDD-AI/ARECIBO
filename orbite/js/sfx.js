@@ -584,6 +584,12 @@
       [0.5, 0.63, 0.75, 1].forEach((r, i) => play('glass1', { rate: r, jit: 0.01, vol: 0.24, rev: 0.9, delay: 0.18 + i * 0.09 }));
       play('glass5', { vol: 0.16, rate: 0.6, rev: 1.1, delay: 0.55 });
     },
+    // Un ami se connecte (v115) : deux notes de verre qui montent, douces, comme un « coucou ».
+    friend() {
+      if (!buffers.glass1) { tone(660, 0.18, { type: 'triangle', vol: 0.05 }); tone(990, 0.26, { delay: 0.12, type: 'triangle', vol: 0.05 }); return; }
+      play('glass1', { rate: 0.5, jit: 0, vol: 0.2, rev: 0.7 });
+      play('glass1', { rate: 0.75, jit: 0, vol: 0.2, rev: 0.8, delay: 0.13 });
+    },
     // Récompense dorée (boosts, succès, campagne…) : carillon de cristal.
     golden() {
       if (!buffers.glass1) { [784, 988, 1175, 1568, 1976].forEach((f, i) => tone(f, 0.16, { delay: i * 0.06, type: 'triangle', vol: 0.07 })); return; }

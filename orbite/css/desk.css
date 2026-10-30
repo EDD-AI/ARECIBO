@@ -475,6 +475,9 @@ body.desk #market .cos-list > h4,
 body.desk #market .cos-list > p { grid-column: 1 / -1; }
 body.desk #market .cos-list > h4 { margin: 18px 0 0; padding-bottom: 8px; border-bottom: 1px solid var(--faint); font-size: 13px; letter-spacing: 0.26em; }
 body.desk #market .cos-list > .cos-note { margin: -4px 0 2px; font-size: 13px; text-align: left; }
+body.desk #market .cos-list > .av-chips { grid-column: 1 / -1; flex-wrap: wrap; overflow: visible; margin: 2px 0 0; padding: 0; }
+body.desk #market .av-chip { min-height: 38px; padding: 0 14px; font-size: 12px; }
+body.desk #market .av-chip .av-chip-ico { width: 20px; height: 20px; }
 body.desk #market .cos-list > .mk-note:last-child { margin-top: 10px; text-align: center; }
 
 /* Une carte : l'aperçu en haut, le nom et le texte, l'achat en bas. */
