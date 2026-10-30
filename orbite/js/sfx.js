@@ -576,6 +576,14 @@
       play('glass4', { vol: 0.3, rate: 0.75, rev: 1.2, delay: 0.38 });
       if (big) { play('glass1', { vol: 0.26, rate: 0.6, rev: 1.4, delay: 0.55 }); chime([0.5, 0.75, 1], { vol: 0.22, rev: 1, delay: 0.7 }); }
     },
+    // Une relique apparaît (choix au début d'un cycle) : un souffle qui monte, puis un carillon grave
+    // et mystérieux, plus doux que la récompense dorée.
+    relic() {
+      if (!buffers.glass1) { [392, 494, 587, 784].forEach((f, i) => tone(f, 0.26, { delay: i * 0.09, type: 'triangle', vol: 0.06 })); return; }
+      play('rise', { vol: 0.16, rate: 1.35, rev: 0.6, jit: 0 });
+      [0.5, 0.63, 0.75, 1].forEach((r, i) => play('glass1', { rate: r, jit: 0.01, vol: 0.24, rev: 0.9, delay: 0.18 + i * 0.09 }));
+      play('glass5', { vol: 0.16, rate: 0.6, rev: 1.1, delay: 0.55 });
+    },
     // Récompense dorée (boosts, succès, campagne…) : carillon de cristal.
     golden() {
       if (!buffers.glass1) { [784, 988, 1175, 1568, 1976].forEach((f, i) => tone(f, 0.16, { delay: i * 0.06, type: 'triangle', vol: 0.07 })); return; }

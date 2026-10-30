@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 112;
+  const VERSION = 113;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -3454,6 +3454,7 @@
     if (!p.relicChoice || !p.relicChoice.length) return Promise.resolve();
     return new Promise((resolve) => {
       ui.relicDone = resolve;
+      SFX.relic();
       const items = p.relicChoice.map((id, i) => relicHtml(id, `data-act="relic" data-i="${i}"`)).join('');
       openSheet(`<h3>${tr('RELIQUE · CYCLE {n}', { n: ui.state.round })}</h3><h2>${tr('Choisissez une relique')}</h2><p class="muted">${tr('Elle reste avec vous jusqu’à la fin de la partie.')}</p><div class="relic-list pick">${items}</div>`, { center: true, locked: true });
     });
