@@ -1491,7 +1491,7 @@ même rangée**. Niveau I à 2 astres, II à 3, III à 4. Chaque famille a un ef
 | Comètes | +n Attaque, elles attaquent avant le reste de l’avant | quand l’avant est tombé, elles avancent avec +2n/+n |
 | Cristal | +n/+n, le double avec une formation de Cristal à l’arrière | tous vos Cristaux +n/+n |
 | Anomalies | n mots-clés aléatoires chacun | n astres de l’avant gagnent un mot-clé aléatoire |
-| Nébuleuses | après leur attaque, ils volent n PV à un ennemi de l’avant | votre astre de l’avant le plus faible vole 2n PV à l’ennemi de l’avant le plus fort |
+| Nébuleuses | après leur attaque, ils volent n PV à un ennemi de l’avant | chaque astre de l’avant vole n PV à l’ennemi en face (v109) |
 
 À l’écran : étiquettes colorées à côté de « Votre système » (toucher pour la fiche « Vos formations »
 et les effets de chaque famille), un trait de la couleur de la famille sous chaque astre d’une
@@ -1624,7 +1624,7 @@ emboîtés). La loi a sa forme d’énergie : un nuage aplati qui aspire (js/ene
 | 2 | Spirographe | 3/5 | Quand un allié vole des PV, il gagne +1 Attaque pour toujours (2 fois par combat) |
 | 3 | Œil-de-Chat | 5/6 | Naissance : vole un astre aléatoire déjà affronté, même un gros |
 | 3 | Hélice | 4/7 | Vol de vie ; quand vos Nébuleuses volent des PV, +2 PV pour toujours (3 fois par combat chacune) |
-| 4 | Crabe | 6/7 | Vol de vie ; après son attaque, vole 1 PV à chaque ennemi de l’avant |
+| 4 | Crabe | 6/7 | Vol de vie ; après son attaque, vole 2 PV à chaque ennemi de l’avant (v109) |
 | 5 | Sablier | 7/9 | Quand vos astres volent des PV, votre univers en récupère 1 (4 fois par combat) |
 | 6 | Tarentule | 9/10 | Vol de vie ; après son attaque, vole 2 PV à chaque ennemi |
 | 4 | Piliers de la Création (légendaire) | 4/8 | Fin de cycle : vole un astre aléatoire de votre dernier adversaire |
@@ -1632,7 +1632,7 @@ emboîtés). La loi a sa forme d’énergie : un nuage aplati qui aspire (js/ene
 
 **Loi du siphon** (astre de départ : Voile) : début de combat, vos Nébuleuses gagnent Vol de vie
 (éveillée : et +1/+1). **Formation** : à l’avant, après leur attaque, elles volent n PV à un ennemi de
-l’avant ; à l’arrière, votre astre de l’avant le plus faible vole 2n PV à l’ennemi de l’avant le plus fort.
+l’avant ; à l’arrière, chacun de vos astres de l’avant vole n PV à l’ennemi en face (v109).
 
 **Équilibrage.** La première version (vol de 1 PV après l’attaque, sans gain durable) ne gagnait que 13 %
 de ses duels (joueur naïf) et 29 % avec l’IA experte : les PV volés ne duraient que le combat, quand les
@@ -1820,6 +1820,15 @@ donnent à peu près autant de force que les anciens. Les autres familles (600 d
 Minéral 55 %, Brasier 54 %, Envers 50 %, Vie 48 %, Glace 48 %, Lune 48 %, Tempête 47 %, Anomalies 46 %.
 En mêlée à 8 (`tools/equilibrage.js 600 --skill 1`, rang moyen de tous les joueurs), les Comètes passent
 de 5,81 à 5,25 ; le Néant reste le plus fort (3,08 puis 3,16), la mêlée lui laisse plus d’effondrements.
+
+**Nébuleuses (v109).** Après ces changements, les Nébuleuses étaient la famille la plus faible : 42,5 % (IA
+experte, 1 000 duels), 38,7 % avec le joueur naïf. Six réglages mesurés sur 1 000 duels : des statistiques
+plus hautes ne suffisaient pas (43 à 45 %) ; une Loi du siphon qui vole aussi des PV au début du combat
+allait trop loin (55 à 59 %, et 56 à 62 % pour le joueur naïf). Retenu : la **formation de l’arrière**,
+la plus faible du jeu (un seul vol de 2n PV), devient « chaque astre de l’avant vole n PV à l’ennemi en
+face », et le **Crabe** vole 2 PV (au lieu de 1) à chaque ennemi de l’avant. Résultat : 48 et 50 % sur
+deux séries de 1 000 duels, 44,5 % pour le joueur naïf. Les effets « quand un allié vole des PV »
+(Spirographe, Hélice, Sablier) gardent leur limite par combat : plus de vols ne fait pas grandir plus.
 
 **Reliques et éveil des lois (v84).** Mesuré avec `node orbite/tools/equilibrage.js 240 --seed v84
 --json`, avant et après (sans événement cosmique, que les outils ne tirent pas) : le rang moyen des

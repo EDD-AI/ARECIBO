@@ -56,7 +56,7 @@
     comete: { front: 'Ils gagnent +{n} Attaque et attaquent avant le reste de l’avant.', back: 'Quand votre avant est tombé, ils avancent avec +{d}/+{n}.' },
     cristal: { front: 'Ils gagnent +{n}/+{n}, le double si l’arrière a aussi une formation de Cristal.', back: 'Tous vos Cristaux gagnent +{n}/+{n}.' },
     anomalie: { front: 'Chacun gagne {n} mots-clés aléatoires.', front1: 'Chacun gagne un mot-clé aléatoire.', back: '{n} astres de votre avant gagnent un mot-clé aléatoire.', back1: 'Un astre de votre avant gagne un mot-clé aléatoire.' },
-    nebuleuse: { front: 'Après leur attaque, ils volent {n} PV à un ennemi de l’avant.', back: 'Début de combat : votre astre de l’avant le plus faible vole {d} PV à l’ennemi de l’avant le plus fort.' }
+    nebuleuse: { front: 'Après leur attaque, ils volent {n} PV à un ennemi de l’avant.', back: 'Début de combat : vos astres de l’avant volent chacun {n} PV à l’ennemi en face.' }
   };
 
   const FAMILIES = {
@@ -506,8 +506,8 @@
     { id: 'helice', fam: 'nebuleuse', tier: 3, atk: 4, hp: 7, name: 'Hélice', look: { type: 'nebula', seed: 7116, neb: { style: 'anneau', rim: 18, gas: 198, width: 0.22, fill: 0.7 } },
       kw: ['voldevie'], text: 'Vol de vie. Quand vos Nébuleuses volent des PV, elles gagnent +{2} PV pour toujours (3 fois par combat au plus chacune).' },
     { id: 'crabe', fam: 'nebuleuse', tier: 4, atk: 6, hp: 7, name: 'Crabe', look: { type: 'nebula', seed: 7117, neb: { style: 'oursin', rim: 42, gas: 210, rays: 13 } },
-      kw: ['voldevie'], text: 'Vol de vie. Après son attaque : vole {1} PV à chaque ennemi de l’avant.',
-      attack(c, u, m) { for (const v of c.front(1 - u.side)) c.drain(u, v, m); } },
+      kw: ['voldevie'], text: 'Vol de vie. Après son attaque : vole {2} PV à chaque ennemi de l’avant.',
+      attack(c, u, m) { for (const v of c.front(1 - u.side)) c.drain(u, v, 2 * m); } },
     { id: 'sablier', fam: 'nebuleuse', tier: 5, atk: 7, hp: 9, name: 'Sablier', look: { type: 'nebula', seed: 7118, neb: { style: 'papillon', rim: 165, gas: 330, aspect: 0.9 } },
       text: 'Quand vos astres volent des PV, votre univers en récupère {1} (4 fois par combat au plus).',
       allyDrain(c, u, m) { if ((u.n || 0) < 4) { u.n = (u.n || 0) + 1; c.healUniverse(u.side, m); } } },
@@ -1875,12 +1875,8 @@
         case 'cristal:1': for (const u of c.alliesFam(s, 'cristal')) c.buff(u, L, L); break;
         case 'anomalie:0': for (const u of F) for (let i = 0; i < L; i++) c.randomKw(u); break;
         case 'anomalie:1': for (const u of shuffle(inRow(s, 0), rng).slice(0, L)) c.randomKw(u); break;
-        case 'nebuleuse:1': {
-          const t = inRow(e, 0).sort((x, y) => y.atk - x.atk || y.hp - x.hp)[0];
-          const w = inRow(s, 0).sort((x, y) => x.atk + x.hp - (y.atk + y.hp))[0];
-          if (t && w) c.drain(w, t, d);
-          break;
-        }
+        // v109 : chaque astre de l'avant vole {n} PV à l'ennemi en face (s'il en reste un).
+        case 'nebuleuse:1': for (const u of inRow(s, 0)) { const t = facing(u, inRow(e, 0)); if (t) c.drain(u, t, L); } break;
         default: break; // vie:1, neant, tempete:0 et comete:1 agissent pendant le combat.
       }
     }
