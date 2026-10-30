@@ -37,6 +37,7 @@ const SHELL = [
   './js/stage.js',
   './js/eveil.js',
   './js/sfx.js',
+  './js/portail.js',
   './js/rules.js',
   './js/world.js',
   './js/energy.js',

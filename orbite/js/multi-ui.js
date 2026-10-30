@@ -212,8 +212,7 @@
     clearInterval(st.tick);
     O.ui.state = MP.newState(law);
     O.ui.stamp = (O.ui.stamp || 0) + 1;
-    await O.show('game');
-    O.renderGame(true);
+    await O.portal(async () => { await O.show('game'); O.renderGame(true); });
     A.banner(tr('CYCLE {n}', { n: 1 }), tr('Partie en ligne : achetez vos astres avant la fin du temps.'));
     MP.startRound();
   }

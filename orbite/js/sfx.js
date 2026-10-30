@@ -653,6 +653,14 @@
       }
     },
     hiss(dur, o) { noise(dur, o); },
+    // Entrée en partie (v109) : le trou noir aspire l'écran (souffle qui monte, grave qui plonge),
+    // puis la partie s'ouvre (coup sourd et éclat de verre lointain).
+    hole() {
+      tone(110, 1.35, { to: 28, type: 'sine', vol: 0.11 });
+      if (!play('rise', { vol: 0.5, rate: 0.75, rev: 0.5, jit: 0 })) { noise(1.3, { vol: 0.12, cut: 900 }); return; }
+      play('blast', { vol: 0.28, rate: 0.5, rev: 0.7, jit: 0, delay: 1.4 });
+      play('glass4', { vol: 0.18, rate: 0.55, rev: 1, jit: 0, delay: 1.65 });
+    },
     jingle() { if (!play('jingle', { vol: 0.5, jit: 0 })) SFX.win(); },
     // Alerte : vos PV passent sous le quart.
     alarm() { play('alarm', { vol: 0.22, jit: 0 }); },

@@ -398,6 +398,9 @@
   const elByUid = (uid) => document.querySelector(`#board .unit[data-uid="${uid}"], #hand .unit[data-uid="${uid}"]`);
 
   // ─── Écrans ─────────────────────────────────────────────────
+  // Entrée en partie (v109) : un trou noir aspire l'écran ; la partie s'affiche dans le noir (swap),
+  // puis s'ouvre depuis le centre (js/portail.js).
+  const portal = (swap) => (window.OrbitePortal ? window.OrbitePortal.play(swap) : Promise.resolve().then(swap));
   async function show(name) {
     rememberScreen(name);
     if (name !== 'menu') menuPage('main', true);
@@ -1798,16 +1801,15 @@
   });
 
   listen('lawGo', 'click', async () => {
-    if (!ui.lawPick) return;
-    SFX.level();
+    if (!ui.lawPick || ui.entering) return;
     ui.state = R.newGame(ui.seed, ui.lawPick, { size: ui.size || 2, event: 'auto', daily: ui.daily || undefined });
     if (ui.daily) dailyStart(ui.daily);
     ui.daily = null;
     codexMark([R.LAW[ui.lawPick].starter]);
     ui.stamp++;
     saveGame();
-    await show('game');
-    renderGame(true);
+    ui.entering = true;
+    try { await portal(async () => { await show('game'); renderGame(true); }); } finally { ui.entering = false; }
     if (ui.state.event) await new Promise((done) => openEventCard(done));
     banner(R.isDuel(ui.state) ? tr('DUEL · {name}', { name: esc(ui.state.players[1].name) }) : tr('CYCLE {n}', { n: 1 }), tr('Achetez des astres, placez-les, puis lancez le combat.'));
     if (!tutoDone()) {
@@ -1992,8 +1994,7 @@
     codexMark([R.LAW[TUTO_LAW].starter]);
     ui.stamp++;
     saveGame();
-    await show('game');
-    renderGame(true);
+    await portal(async () => { await show('game'); renderGame(true); });
     banner(tr('DUEL D’ENTRAÎNEMENT'), tr('Battez la Sentinelle : elle n’a que 20 PV.'));
     store.set(HINT_KEY, '1');
     setTimeout(() => { if (ui.state && ui.state.tutorial) coachStart(TUTO_STEPS(), () => store.set(TUTO_KEY, 'fini')); }, 1600);
@@ -4490,8 +4491,7 @@
     stopAmbient();
     ui.state = s;
     ui.stamp++;
-    await show('game');
-    renderGame(true);
+    await portal(async () => { await show('game'); renderGame(true); });
     // Partie reprise au milieu d'une découverte : elle revient tout de suite.
     if (me() && me().discover.length) setTimeout(() => { if (!ui.discoverDone) openDiscover(); }, 700);
     else if (me() && me().relicChoice && me().relicChoice.length) setTimeout(() => { if (!ui.relicDone) openRelics(); }, 700);
@@ -4679,7 +4679,7 @@
     SFX.hover();
   });
 
-  window.__orbite = { ui, rules: R, stage, show, renderGame, fight, enterMenu, backToMenu, endScreen, autoRelic };
+  window.__orbite = { ui, rules: R, stage, show, portal, renderGame, fight, enterMenu, backToMenu, endScreen, autoRelic };
   // Outils partagés avec le mode Campagne (js/campagne-ui.js).
   window.__orbite.api = {
     show, openSheet, closeSheet, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
