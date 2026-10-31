@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 123;
+  const VERSION = 124;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -1629,7 +1629,9 @@
       <div class="sheet-actions"><button class="btn primary" id="giftGo">${tr('VALIDER')}</button>
       <button class="btn" data-act="set" data-v="settings">${icon('back')} ${tr('PARAMÈTRES')}</button></div>`);
     const go = async () => {
-      const code = $('giftCode').value.trim().toUpperCase();
+      // Tolérant (v124) : sans accents (« CRÉATEUR »), sans espaces, et les tirets typographiques que
+      // posent certains claviers de téléphone redeviennent un tiret simple.
+      const code = $('giftCode').value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\u2010-\u2015\u2212]/g, '-').replace(/\s+/g, '').toUpperCase();
       if (!code) return;
       let hex = '';
       try {

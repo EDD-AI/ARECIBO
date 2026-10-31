@@ -370,6 +370,13 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Codes cadeaux plus tolérants (v124)
+
+Un code tapé avec des accents (« CRÉATEUR »), des espaces ou un tiret typographique (– — que posent
+certains claviers de téléphone) était refusé (« Ce code n’existe pas »), car l’empreinte SHA-256 ne
+correspondait plus. Avant le calcul, le jeu retire maintenant les accents et les espaces et remet un
+tiret simple ; une vraie faute de frappe reste refusée. Vaut pour les codes cadeaux et le code créateur.
+
 ## Téléphone : toutes les fiches se ferment, contrôle de tous les écrans (v123)
 
 - **Bouton ✕ sur chaque fiche.** Jusqu'ici, une fiche (synergies, familles, règles, détail d'un astre…)
