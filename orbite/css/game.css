@@ -982,6 +982,9 @@ body.in-combat .game-foot { margin-top: auto; }
 .unit .orb { position: relative; width: var(--u); height: var(--u); }
 .unit .stats { display: flex; gap: 5px; margin-top: -3px; font-size: 13px; line-height: 1; white-space: nowrap; }
 .hand-row .unit .stats { font-size: 11px; gap: 4px; }
+/* Boutique pleine (v123) : un astre garde exactement sa place (--u), ses chiffres en plus petit. */
+.shop .unit { min-width: 0; }
+.shop.crowd .unit .stats { font-size: 11px; gap: 3px; }
 .unit .stats b { font-weight: 600; }
 .unit .atk { color: var(--atk); }
 .unit .hp { color: var(--hp); }
@@ -1191,8 +1194,11 @@ body.in-combat .banner { top: calc(50% - 34px); }
 .sheet {
   width: var(--col);
   max-height: 88vh;
+  /* iPhone (Safari) : 100vh compte l'écran sans les barres du navigateur ; dvh suit la hauteur visible. */
+  max-height: 88dvh;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
   scrollbar-width: none;
   padding: 18px 18px calc(var(--safe-b) + 18px);
   background: rgba(3, 3, 5, 0.97);
@@ -1200,6 +1206,13 @@ body.in-combat .banner { top: calc(50% - 34px); }
   animation: sheetUp 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 .overlay.center .sheet { border: 1px solid var(--line); animation: sheetPop 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; width: min(var(--col), calc(100vw - 24px)); }
+/* Le ✕ de fermeture (v123) : une barre sans hauteur collée en haut de la fiche, qui reste visible
+ * quand on fait défiler ; le bouton déborde dans la marge du haut à droite. */
+.sheet-xbar { position: -webkit-sticky; position: sticky; top: 0; z-index: 5; height: 0; display: flex; justify-content: flex-end; pointer-events: none; }
+.sheet-x { pointer-events: auto; display: grid; place-items: center; width: 40px; height: 40px; margin: -14px -14px 0 0; padding: 0; color: var(--dim); background: rgba(3, 3, 5, 0.85); border: 1px solid var(--faint); }
+.sheet-x .pix { width: 14px; height: 10px; }
+.sheet-x:active { color: var(--ink); border-color: var(--line); }
+@media (hover: hover) { .sheet-x:hover { color: var(--ink); border-color: var(--line); } }
 @keyframes sheetUp { from { transform: translateY(40px); opacity: 0; } }
 @keyframes sheetPop { from { transform: scale(0.92); opacity: 0; } }
 .sheet h2 { margin: 2px 0 4px; font-size: 24px; font-weight: 600; letter-spacing: 0.06em; }
@@ -1281,7 +1294,7 @@ body.in-combat .banner { top: calc(50% - 34px); }
 .rv-hp .hp-bar i { display: block; height: 100%; background: var(--hp); }
 .rival-board .rv-last { margin: 6px 0 2px; font-size: 10px; letter-spacing: 0.2em; color: var(--dim); }
 .overlay.top { align-items: flex-start; }
-.overlay.top .sheet { border-top: 0; border-bottom: 1px solid var(--line); padding-top: calc(var(--safe-t) + 16px); animation-name: sheetDown; max-height: 82vh; }
+.overlay.top .sheet { border-top: 0; border-bottom: 1px solid var(--line); padding-top: calc(var(--safe-t) + 16px); animation-name: sheetDown; max-height: 82vh; max-height: 82dvh; }
 @keyframes sheetDown { from { transform: translateY(-40px); opacity: 0; } }
 .rival-row.dead { opacity: 0.4; }
 .rival-row .rk { color: var(--dim); font-size: 12px; }
@@ -1770,6 +1783,8 @@ button.pf-rank { grid-template-columns: 56px 1fr auto; width: 100%; font: inheri
 .chat-quick { display: flex; flex-wrap: wrap; gap: 6px; }
 .chat-form { display: flex; gap: 6px; }
 .chat-input { flex: 1; min-width: 0; font: inherit; font-size: 14px; color: var(--ink); background: transparent; border: 1px solid var(--line); padding: 8px 10px; }
+/* iPhone : Safari zoome toute la page quand on touche un champ écrit en moins de 16 px (v123). */
+body:not(.desk) .chat-input { font-size: 16px; }
 .chat-form .btn { flex: none; width: auto; padding: 0 14px; }
 /* Messages reçus en pleine partie : de grosses bulles en haut de l'écran. */
 .chat-pops { position: fixed; top: calc(var(--safe-t) + 54px); left: 50%; transform: translateX(-50%); z-index: 46; display: flex; flex-direction: column; align-items: center; gap: 6px; width: min(92vw, 460px); pointer-events: none; }

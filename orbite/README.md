@@ -370,6 +370,29 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Téléphone : toutes les fiches se ferment, contrôle de tous les écrans (v123)
+
+- **Bouton ✕ sur chaque fiche.** Jusqu'ici, une fiche (synergies, familles, règles, détail d'un astre…)
+  ne se fermait qu'en touchant le fond sombre au-dessus d'elle. Une longue fiche comme le terminal des
+  synergies ne laissait presque plus de fond à toucher sur téléphone, et parfois plus du tout sur iPhone :
+  on restait bloqué. Chaque fiche a maintenant un **✕** en haut à droite, qui reste visible quand on fait
+  défiler la fiche (barre collante de hauteur nulle, `.sheet-xbar`, ajoutée par `openSheet`). Les fiches
+  verrouillées (un choix à faire : découverte, relique) n'en ont pas, comme avant.
+- **iPhone (Safari)** : la hauteur des fiches suit la hauteur vraiment visible (`dvh`, avec `vh` en
+  secours) : `100vh` compte l'écran sans les barres du navigateur.
+- **Chat** : le champ est écrit en 16 px sur téléphone ; en dessous, Safari zoome toute la page quand on
+  le touche.
+- **Boutique pleine** : au niveau 6 de Création (6 astres, 7 avec la Longue-vue ou l'événement
+  Féconde), la boutique dépassait de l'écran sur téléphone ; sur un petit iPhone, le premier astre était
+  presque entièrement caché, impossible à acheter. La taille des astres de la boutique tient maintenant
+  compte de leur nombre et des écarts (`sizeRow`), et leurs chiffres passent en plus petit quand la place
+  manque (`.shop.crowd`).
+- **Contrôle de tous les écrans** : un robot (Playwright) a ouvert chaque écran et chaque fiche (menu,
+  Marché et ses 4 onglets, codex, profil, multijoueur, Paramètres et leurs pages, choix de la loi, partie
+  en duel et à 8, partie avec un système plein, combat, fin de partie, crédits…) sur 6 tailles de
+  téléphone (320×568 à 430×932, avec les encoches d'iPhone), à la recherche de ce qui sort de l'écran sans
+  pouvoir défiler. Hors le choix de la loi (v122), les fiches et la boutique ci-dessus, rien d'autre ne débordait.
+
 ## Choix de la loi sur iPhone (v122)
 
 Sur téléphone, les trois lois sont plus hautes que l’écran : la liste ne défilait pas et le bouton
