@@ -370,6 +370,72 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Classé : trouver une partie, classé entre amis, emblèmes (v129)
+
+- **TROUVER UNE PARTIE** (`js/multi-ui.js`) : en haut de l’écran Multijoueur, un grand panneau doré
+  avec votre emblème et votre rang, le choix **DUEL / MÊLÉE** (le dernier choix est retenu,
+  `orbite.trouver`) et le grand bouton, qui lance la recherche classée existante
+  (`MP.searchRanked`). Les parties entre amis (DÉFIER DES AMIS, CRÉER UNE MÊLÉE PRIVÉE, code de
+  session) restent dessous, dans une carte plus discrète. Sur PC : le panneau en grand, l’illustration
+  du mode choisi, puis les parties entre amis sur une ligne.
+- **Écran de recherche** : « RECHERCHE… », le **temps écoulé** depuis le clic (0:12), votre emblème au
+  centre d’un radar, les **rangs recherchés** (la tolérance s’élargit d’un rang toutes les 10 s), les
+  **joueurs trouvés** (places remplies / total, avec pseudo, emblème et rang de chacun), le compte à
+  rebours avant que des univers rivaux complètent la table (40 s après l’ouverture du salon) et
+  **ANNULER**. Seuls les chiffres changent chaque seconde : le radar tourne sans à-coups. Sur PC : le
+  temps et le radar à gauche, les joueurs à droite, la discussion sur toute la hauteur.
+- **ANNULER quitte proprement** (`MP.cancelSearch`, `js/multi.js`) : plus de recherche régulière, on
+  quitte le salon (le dernier à partir le supprime). Une recherche encore en route au moment du clic
+  s’arrête à son retour et quitte le salon qu’elle vient d’ouvrir (chaque recherche a son numéro,
+  `searchGen`). Le bouton retour fait de même. Corrigé au passage : après avoir quitté son salon pour
+  rejoindre un salon plus ancien, la recherche régulière ne reprenait pas (si l’hôte partait ensuite, plus
+  personne ne lançait la partie au bout de 40 s) ; elle est relancée dans le nouveau salon
+  (`ensurePoll`).
+- **Classé entre amis** : les parties en ligne entre amis (duel entre amis, partie entre amis, mêlée
+  privée) comptent aussi pour le classement, avec les mêmes points (`classement.js` : duel gagné = 2e
+  place, perdu = 6e, abandon = 8e, `placeOf`). **Protection contre les abus** (`counts`, `lobbyOf`,
+  testés) :
+  - une partie privée ne compte qu’avec **au moins 2 créateurs humains** au salon au lancement : seul
+    face aux bots qu’on a soi-même choisis, rien ne change ;
+  - l’ajustement selon le niveau de la partie (`lobby`) est la moyenne des points des **autres
+    humains** seulement : les bots n’ont pas de place au salon et n’y entrent jamais, ils ne gonflent
+    pas les points.
+  - La recherche classée publique compte toujours, même complétée par des univers rivaux : on n’y
+    choisit ni ses adversaires ni les bots.
+  - Le salon l’annonce : « **PARTIE CLASSÉE** · elle compte pour le classement de chaque joueur », ou
+    « **PAS ENCORE CLASSÉE** · il faut au moins 2 joueurs humains ». Le choix de la loi porte l’étiquette
+    PARTIE CLASSÉE ; la fin de partie montre les points gagnés ou perdus (« CLASSÉ ENTRE AMIS »), ou
+    « Partie entre amis non classée ».
+  - `newState` met dans la partie `mp.humans` (places du salon) et `mp.ranked` ; l’écran de fin compte
+    les humains de la partie si `humans` manque (partie reprise d’une version plus ancienne).
+- **Emblèmes de rang** (`js/embleme.js`, testé) : un insigne en pixels pour chacun des 9 rangs, dessiné
+  en SVG (rectangles fusionnés par ligne, mis en cache), net de 15 px à 200 px. Un médaillon octogonal
+  dont le métal suit le rang (pierre, bronze, argent, jade, ambre, or, magenta, cyan, violet), avec des
+  **ailes** dès la Planète et une **couronne** dès la Nébuleuse ; au centre, le dessin du rang : nuage
+  de poussière, astéroïde cratérisé, croissant de lune, planète bleue et verte, géante à anneau, étoile
+  rayonnante, nébuleuse, pulsar et ses faisceaux, trou noir et son disque. Sous le médaillon, la
+  **division** : un losange allumé pour III, deux pour II, trois pour I ; un bandeau pour la
+  Singularité. **En placement** : un « ? » et cinq points, un par partie de placement jouée.
+  - Partout : profil (la carte du rang et l’échelle des rangs), liste d’amis, onglet Classement (chaque
+    ligne, et le podium sur PC), fiche d’un joueur, TROUVER UNE PARTIE, écran de recherche, salon
+    d’attente (chaque place), barre et liste des rivaux en partie en ligne (téléphone et colonne PC),
+    écran de fin. `A.emblem(p)` lit `{ points, placed, pl }` ; une place au salon d’une version plus
+    ancienne (sans `placed`) est classée si elle a des points, sinon en placement.
+  - La place au salon porte maintenant `placed` et `pl` (placements joués) en plus des `points` : le
+    contenu des places n’est pas contrôlé par les règles Firestore.
+- **Fin de partie** : une carte avec l’emblème, le rang, les points (« +36 pts · 326 points ») et la
+  barre de la division. Elle part de l’état d’avant la partie et s’anime après l’expérience : les points
+  défilent, puis **montée de division** (l’emblème rétrécit, s’illumine et grossit dans un éclat de ses
+  couleurs, son de niveau ; « DIVISION SUPÉRIEURE ! ») ou **de rang** (éclat plus grand, anneau,
+  carillon, vibration ; « RANG SUPÉRIEUR ! ») ; **descente** plus sobre (l’emblème pâlit et retombe,
+  « rang inférieur » / « division inférieure ») ; **fin des placements** : le « ? » tremble, se charge,
+  pivote et révèle le rang obtenu (« PLACÉ EN LUNE III », « RANG OBTENU ! »). Un placement de plus
+  allume simplement son point. `record` renvoie aussi `before`, `from`, `divUp` et `divDown`
+  (`K.step` : 0 pour Poussière III … 24 pour la Singularité).
+- Téléphone : la fin de partie défile si elle dépasse l’écran (petits téléphones), et reste centrée
+  quand elle tient ; l’écran de recherche se resserre sur les écrans bas pour garder ANNULER en vue.
+- **Règles Firestore inchangées** : rien à republier. Textes en 5 langues dans `js/lang/classe.js`.
+
 ## Faire tourner sa planète au menu (v128)
 
 Au menu, glisser au doigt ou à la souris sur la partie visible de la planète la fait tourner, et la
@@ -1167,9 +1233,10 @@ Bouton en haut à droite du menu, en trois onglets : **Profil**, **Amis** et **C
   - le pseudo modifiable et le tag à quatre chiffres (`Créateur#4821`), le niveau, la barre d’XP et
     votre planète ;
   - le classé, les statistiques et les 15 dernières parties.
-- **Classé** (`js/classement.js`, testé). Seules les **parties classées en ligne** (Multijoueur)
-  comptent, et un abandon vaut la 8e place. Le solo contre les univers rivaux, la campagne et les
-  parties privées ne changent pas les points.
+- **Classé** (`js/classement.js`, testé). Les **parties en ligne** comptent (Multijoueur) : la
+  recherche classée, et depuis la v128 les parties entre amis à 2 créateurs humains ou plus (voir
+  « Classé : trouver une partie… (v129) ») ; un abandon vaut la 8e place. Le solo contre les univers
+  rivaux, la campagne et une partie privée seul face aux bots ne changent pas les points.
   - 5 parties de placement fixent le départ : un rang moyen de 1 donne Planète I, de 8 donne zéro.
   - Ensuite, les points changent selon la place : +32, +18, +4, −6, −12, −18, −24, −30, ajustés
     selon le niveau de la partie (écart avec la moyenne des points des autres créateurs, 1 point
@@ -1178,7 +1245,8 @@ Bouton en haut à droite du menu, en trois onglets : **Profil**, **Amis** et **C
     gagne un peu, ou rien dans une partie plus faible que lui. Les places 4 à 8 perdent toujours.
   - 9 rangs : Poussière, Astéroïde, Lune, Planète, Géante, Étoile, Nébuleuse, Pulsar, chacun en
     divisions III, II, I de 100 points, puis **Singularité** dès 2 400 points.
-  - L’écran de fin affiche le gain (« +28 points · Lune II », « RANG SUPÉRIEUR ! »).
+  - L’écran de fin affiche le gain avec l’emblème du rang, animé à la montée, à la descente et à la
+    fin des placements (v129).
 - **Statistiques** : parties, victoires, podiums, rang moyen, meilleur rang, combats gagnés, astres
   dorés, cycles joués, poussières gagnées, loi favorite.
 
@@ -1206,7 +1274,9 @@ sphère (Neutre), et les treize couleurs de familles sont nettement distinctes.
 
 ## Multijoueur
 
-Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne »).
+Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne »). Depuis la v128, le
+grand bouton **TROUVER UNE PARTIE** (duel ou mêlée) lance la recherche classée ; les parties entre
+amis sont dessous (voir « Classé : trouver une partie… (v129) »).
 
 - **Duel en ligne** : « Rechercher un duel » cherche un créateur de votre rang ; personne au bout de
   40 secondes ? Un univers rival (bot) prend la place. « Défier un ami » crée un duel privé avec un
@@ -1270,10 +1340,11 @@ Bouton **MULTIJOUEUR** du menu (connexion Google requise, voir « Mode en ligne 
     plus ancien.
   - Au bout de 40 secondes, ou à 8 joueurs, la partie commence. Les places libres sont tenues par
     des univers rivaux (bots).
-  - Le résultat compte pour le classement (c’est le seul mode qui en donne).
+  - Le résultat compte pour le classement (comme les parties entre amis à 2 humains ou plus, v128).
 - **Mêlée privée** : « Créer une mêlée privée » donne un **code de session** de 6 caractères, à
   partager. Les amis le saisissent dans « Rejoindre un ami ». L’hôte lance quand il veut ; les places
-  libres vont aux bots. Une partie privée ne compte pas pour le classement.
+  libres vont aux bots. Depuis la v128, une partie privée compte pour le classement dès 2 joueurs
+  humains (seul face aux bots, non).
 - **Qui affronte qui** (v79, façon Battlegrounds, `planPairs` dans `js/rules.js`), en mêlée solo
   comme en ligne : pas un tirage au hasard. Chaque cycle, les paires sont choisies pour que chacun
   affronte d’abord ceux qu’il n’a pas croisés depuis le plus longtemps (jamais deux fois de suite

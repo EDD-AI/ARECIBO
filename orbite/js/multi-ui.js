@@ -9,18 +9,35 @@
   const $ = (id) => document.getElementById(id);
   const tr = window.tr || ((s) => s);
   const { esc } = A;
-  const st = { busy: false, law: null, lawTimer: 0, lawEnd: 0, view: 'menu', tick: 0, invite: null, target: null, pick: new Set() };
+  const st = { busy: false, law: null, lawTimer: 0, lawEnd: 0, view: 'menu', tick: 0, invite: null, target: null, pick: new Set(), search: null };
+  // TROUVER UNE PARTIE (v129) : duel (2) ou mêlée (8), le dernier choix est retenu.
+  const SIZE_KEY = 'orbite.trouver';
+  const findSize = () => { try { return localStorage.getItem(SIZE_KEY) === '8' ? 8 : 2; } catch (err) { return 2; } };
+  const setFindSize = (n) => { try { localStorage.setItem(SIZE_KEY, String(n === 8 ? 8 : 2)); } catch (err) { /* sans importance */ } };
+  const E = window.OrbiteEmbleme;
+  const emb = (p, cls) => (A.emblem ? A.emblem(p, cls) : '');
+  const myEmb = (cls) => (A.myEmblem ? A.myEmblem(cls) : '');
   const INVITE_KEY = 'orbite.invite';
   const dropInvite = () => { st.invite = null; try { sessionStorage.removeItem(INVITE_KEY); } catch (err) { /* sans importance */ } };
   // Le lien d'invitation : la page du jeu, avec le code de la partie après #rejoindre=.
   const inviteUrl = (code) => location.origin + location.pathname + '#rejoindre=' + code;
 
-  function myRank() {
-    try {
-      const c = K.sanitize(JSON.parse(localStorage.getItem('orbite.classe') || 'null'));
-      return K.placed(c) ? K.tierOf(c.points).label + ' · ' + c.points + ' pts' : tr('placement en cours');
-    } catch (err) { return tr('placement en cours'); }
+  function myClasse() { try { return K.sanitize(JSON.parse(localStorage.getItem('orbite.classe') || 'null')); } catch (err) { return K.fresh(); } }
+  // Son rang en deux lignes : le nom (Lune II) et le détail (412 pts · 12 / 100), ou le placement.
+  function myRankLines() {
+    const c = myClasse();
+    if (!K.placed(c)) return { name: tr('PLACEMENT {a} / {b}', { a: c.placements.length, b: K.PLACEMENTS }), more: tr('Votre rang après {n} parties classées.', { n: K.PLACEMENTS }) };
+    const t = K.tierOf(c.points);
+    return { name: (A.tierLabel ? A.tierLabel(t) : t.label).toUpperCase(), more: tr('{n} pts', { n: c.points }) + (t.span ? ' · ' + tr('{a} / {b} vers la division suivante', { a: t.into, b: t.span }) : '') };
   }
+  // Le rang d'une place au salon : son nom, ou « placement » (anciennes versions : ses points).
+  function seatRank(s) {
+    if (!E) return s.points ? tr('{n} pts', { n: s.points }) : '';
+    const i = E.infoOf(s);
+    return i.placed ? (A.tierLabel ? A.tierLabel(K.tierOf(i.points)) : i.label) : i.known ? tr('placement') : '';
+  }
+  const myPseudo = () => { try { return String(localStorage.getItem('orbite.pseudo') || tr('Créateur')).slice(0, 16); } catch (err) { return tr('Créateur'); } };
+  const timeTxt = (ms) => { const n = Math.max(0, Math.floor(ms / 1000)); return Math.floor(n / 60) + ':' + String(n % 60).padStart(2, '0'); };
 
   // Présence d'un ami : en ligne (vu il y a moins de 3 min), en partie, ou hors ligne.
   function presenceOf(p) {
@@ -81,28 +98,97 @@
         <button class="btn primary" data-mp="signin" ${loading ? 'disabled' : ''}>${loading ? tr('CONNEXION…') : tr('SE CONNECTER AVEC GOOGLE')}</button></div>`;
       return;
     }
-    if (m && m.status === 'playing' && !(O.ui.state && O.ui.state.mp && O.ui.state.mp.mid === m.id)) { renderLaws(box); return; }
+    if (m && m.status === 'playing' && !(O.ui.state && O.ui.state.mp && O.ui.state.mp.mid === m.id)) { st.search = null; renderLaws(box); return; }
+    // Recherche classée : l'écran d'attente, du clic sur TROUVER UNE PARTIE au lancement.
+    if (m && m.status === 'waiting' && m.mode === 'ranked') { renderSearch(box, m); return; }
+    if (!m && st.search) { renderSearch(box, null); return; }
     if (m && m.status === 'waiting') { renderLobby(box, m); return; }
     const off = st.busy ? 'disabled' : '';
     if (st.view === 'friends') { renderFriends(box, off); return; }
     const inv = ON.invites ? ON.invites() : [];
+    const size = findSize(), rk = myRankLines();
+    const mode = (n, name, sub) => `<button class="mpf-mode ${size === n ? 'on' : ''}" data-mp="mode" data-size="${n}" role="radio" aria-checked="${size === n}" ${off}><b>${name}</b><small>${sub}</small></button>`;
     box.innerHTML = `
+      <div class="mp-find">
+        <div class="mpf-rank">${myEmb('mpf-emb')}<span class="mpf-rank-txt"><small>${tr('VOTRE RANG')}</small><b>${esc(rk.name)}</b><small>${esc(rk.more)}</small></span></div>
+        <div class="mpf-play">
+          <div class="mpf-modes" role="radiogroup" aria-label="${tr('Mode de jeu')}">${mode(2, tr('DUEL'), tr('1 CONTRE 1'))}${mode(8, tr('MÊLÉE'), tr('À 8 JOUEURS'))}</div>
+          <button class="btn primary mpf-go" data-mp="find" ${off}><b>${tr('TROUVER UNE PARTIE')}</b><small>${size === 2 ? tr('DUEL CLASSÉ') : tr('MÊLÉE CLASSÉE')}</small></button>
+          <p class="mpf-note">${tr('Face à des créateurs de votre rang. Personne au bout de 40 s ? Des univers rivaux complètent la table.')}</p>
+        </div>
+      </div>
       ${inv.length ? `<div class="mp-card mp-defis"><b>${tr('DÉFIS REÇUS')}</b>${inv.map((x) => `<div class="mp-defi"><span>${inviteText(x)}</span><button class="btn primary" data-mp="join" data-code="${esc(x.code)}" ${off}>${tr('REJOINDRE')}</button></div>`).join('')}</div>` : ''}
-      <div class="mp-card"><b>${tr('ENTRE AMIS')}</b>
-        <button class="btn primary" data-mp="friends" ${off}>${tr('DÉFIER DES AMIS')}</button></div>
-      <div class="mp-card"><b>${tr('DUEL EN LIGNE')}</b>
-        <p>${tr('Un contre un, face à un créateur de votre rang. Personne au bout de 40 s ? Un univers rival prend la place.')}</p>
-        <small class="mp-rank">${tr('Votre rang : {r}', { r: esc(myRank()) })}</small>
-        <button class="btn primary" data-mp="ranked" data-size="2" ${off}>${tr('RECHERCHER UN DUEL')}</button></div>
-      <div class="mp-card"><b>${tr('MÊLÉE À 8 EN LIGNE')}</b>
-        <p>${tr('Affrontez des créateurs de votre rang. Les places libres sont tenues par des univers rivaux.')}</p>
-        <button class="btn" data-mp="ranked" data-size="8" ${off}>${tr('RECHERCHER UNE MÊLÉE')}</button>
-        <button class="btn" data-mp="create" data-size="8" ${off}>${tr('CRÉER UNE MÊLÉE PRIVÉE')}</button></div>
-      <div class="mp-card"><b>${tr('REJOINDRE UN AMI')}</b>
-        <p>${tr('Saisissez le code de sa partie. Les parties privées ne comptent pas pour le classement.')}</p>
-        <div class="mp-join"><input class="code-input" id="mpCode" maxlength="7" placeholder="${tr('CODE')}" autocomplete="off" spellcheck="false" value="${esc(st.prefill || '')}">
-        <button class="btn" data-mp="join" ${off}>${tr('REJOINDRE')}</button></div></div>`;
+      <div class="mp-card mp-amis"><b>${tr('ENTRE AMIS')}</b>
+        <p>${tr('Classé aussi entre amis, dès 2 joueurs humains. Seul face aux bots, la partie ne compte pas.')}</p>
+        <div class="mp-amis-row">
+          <button class="btn" data-mp="friends" ${off}>${tr('DÉFIER DES AMIS')}</button>
+          <button class="btn" data-mp="create" data-size="8" ${off}>${tr('CRÉER UNE MÊLÉE PRIVÉE')}</button>
+          <div class="mp-join"><input class="code-input" id="mpCode" maxlength="7" placeholder="${tr('CODE')}" autocomplete="off" spellcheck="false" value="${esc(st.prefill || '')}" aria-label="${tr('Code de sa partie')}">
+          <button class="btn" data-mp="join" ${off}>${tr('REJOINDRE')}</button></div>
+        </div></div>`;
   }
+  // ─── Écran de recherche (v129) ──────────────────────────────
+  // Le temps écoulé, son emblème au centre d'un radar, les joueurs trouvés (places remplies / total,
+  // avec pseudo et emblème), le compte à rebours avant que des univers rivaux complètent, les rangs
+  // acceptés (la tolérance s'élargit d'un rang toutes les 10 s), et ANNULER. Le contenu n'est
+  // redessiné que s'il change (joueurs, messages) : sinon seuls les chiffres bougent, et le radar
+  // tourne sans à-coups.
+  function searchFacts(m) {
+    const now = Date.now(), at = (st.search && st.search.at) || MP.state.searchStart || now;
+    const n = m ? MP.seatsOf(m) : (st.search && st.search.size) || 2;
+    const left = m ? Math.max(0, Math.ceil((m.created + MP.WAIT_MS - now) / 1000)) : Math.ceil(MP.WAIT_MS / 1000);
+    const full = !!m && m.uids.length >= n;
+    const note = !m ? tr('Connexion au serveur…')
+      : full ? tr('Table complète : la partie commence…')
+      : left > 0 ? (n === 2 ? tr('Personne dans {n} s ? Un univers rival prend la place.', { n: left }) : tr('Places libres dans {n} s ? Des univers rivaux complètent la table.', { n: left }))
+      : tr('La partie commence…');
+    // Rangs acceptés : le sien ± un rang par tranche de 10 s d'attente.
+    const c = myClasse(), b = K.tierOf(K.placed(c) ? c.points : 0).idx, spread = Math.min(9, Math.floor((now - at) / 10000));
+    const lo = Math.max(0, b - spread), hi = Math.min(K.TIERS.length - 1, b + spread);
+    const range = lo === hi ? tr('Rang recherché : {a}', { a: tr(K.TIERS[lo]) }) : tr('Rangs recherchés : {a} – {b}', { a: tr(K.TIERS[lo]), b: tr(K.TIERS[hi]) });
+    return { time: timeTxt(now - at), note, range, found: tr('{a} / {b}', { a: m ? m.seats.length : 1, b: n }), n };
+  }
+  function renderSearch(box, m) {
+    const f = searchFacts(m);
+    const me = ON.uid();
+    const seats = Array.from({ length: f.n }, (_, i) => {
+      const s = m ? m.seats[i] : i === 0 ? { uid: me, name: myPseudo() } : null;
+      if (!s) return `<div class="mps-seat"><span class="mps-wait" aria-hidden="true"></span><small>${tr('en recherche')}</small></div>`;
+      const mine = s.uid === me;
+      const lk = A.seatLook ? A.seatLook(s) : null;
+      return `<div class="mps-seat on ${mine ? 'me' : ''}">${mine ? myEmb('mps-emb') : emb(s, 'mps-emb')}<b>${A.nameHtml ? A.nameHtml(s.name, lk && lk.font) : esc(s.name)}</b><small>${mine ? tr('vous') : esc(seatRank(s))}</small></div>`;
+    }).join('');
+    const chat = m && window.OrbiteChat ? `<div class="mp-card mps-chat"><b>${tr('DISCUSSION')}</b>${window.OrbiteChat.html(20)}</div>` : '';
+    // Clé du contenu : tout ce qui n'est pas un chiffre qui défile.
+    const key = [f.n, m ? m.id : '', seats, chat].join('|');
+    const body = $('mpBody'), cur = body && body.querySelector('.mp-search');
+    if (cur && cur.dataset.key === String(hash(key))) {
+      cur.querySelector('[data-mps-time]').textContent = f.time;
+      cur.querySelector('[data-mps-note]').textContent = f.note;
+      cur.querySelector('[data-mps-range]').textContent = f.range;
+      cur.querySelector('[data-mps-found]').textContent = f.found;
+      return;
+    }
+    const rk = myRankLines();
+    // Deux moitiés : le temps et son rang (à gauche sur PC), les joueurs trouvés et ANNULER.
+    box.innerHTML = `<div class="mp-search ${f.n === 2 ? 'duel' : 'melee'}" data-key="${hash(key)}">
+        <div class="mps-side">
+          <div class="mps-head"><small class="mps-kick">${f.n === 2 ? tr('DUEL CLASSÉ') : tr('MÊLÉE CLASSÉE')}</small>
+            <b class="mps-title">${tr('RECHERCHE…')}</b>
+            <span class="mps-time" data-mps-time>${f.time}</span></div>
+          <div class="mps-radar" aria-hidden="true"><i class="mps-ring"></i><i class="mps-ring r2"></i><i class="mps-sweep"></i>${myEmb('mps-me')}</div>
+          <div class="mps-rank"><b>${esc(rk.name)}</b><small data-mps-range>${f.range}</small></div>
+        </div>
+        <div class="mps-side">
+          <div class="mps-found"><span>${tr('JOUEURS TROUVÉS')}</span><b data-mps-found>${f.found}</b></div>
+          <div class="mps-seats">${seats}</div>
+          <p class="mps-note" data-mps-note>${f.note}</p>
+          <button class="btn mps-cancel" data-mp="cancel">${tr('ANNULER')}</button>
+        </div>
+      </div>${chat}`;
+  }
+  // Petite empreinte d'une chaîne (clé de contenu de l'écran de recherche).
+  function hash(t) { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
   // Défier un ami : sa liste d'amis, ceux en ligne d'abord. Le lien reste possible pour les autres.
   const friendsSorted = () => (ON.friendProfiles ? ON.friendProfiles() : []).map((p) => ({ p, pr: presenceOf(p) }))
     .sort((a, b) => a.pr.rank - b.pr.rank || String(a.p.pseudo || '').localeCompare(String(b.p.pseudo || '')));
@@ -134,7 +220,6 @@
   };
   function renderLobby(box, m) {
     const host = m.host === ON.uid();
-    const left = Math.max(0, Math.ceil((m.created + MP.WAIT_MS - Date.now()) / 1000));
     const n = MP.seatsOf(m), duel = n === 2;
     // Partie privée : les places des bots choisis par l'hôte suivent celles des joueurs.
     const nBots = m.mode === 'private' && !duel ? MP.botsOf(m) : 0;
@@ -142,15 +227,14 @@
       const s = m.seats[i];
       // Chaque créateur avec sa photo, son cadre et la police de son pseudo (v96).
       const lk = s && A.seatLook ? A.seatLook(s) : null;
-      return s ? `<div class="mp-seat on">${lk ? A.framed(`<span class="orb" data-planet="${lk.avatar}"></span>`, lk.frame) : ''}<span class="mp-seat-txt"><b>${A.nameHtml ? A.nameHtml(s.name, lk && lk.font) : esc(s.name)}</b><small>${s.uid === ON.uid() ? tr('vous') : s.uid === m.host ? tr('hôte') : ''} ${s.points ? s.points + ' pts' : ''}</small></span></div>`
+      // Et son emblème de rang (v129).
+      const mine = s && s.uid === ON.uid();
+      return s ? `<div class="mp-seat on">${lk ? A.framed(`<span class="orb" data-planet="${lk.avatar}"></span>`, lk.frame) : ''}<span class="mp-seat-txt"><b>${A.nameHtml ? A.nameHtml(s.name, lk && lk.font) : esc(s.name)}</b><small>${[mine ? tr('vous') : s.uid === m.host ? tr('hôte') : '', mine ? '' : esc(seatRank(s))].filter(Boolean).join(' · ')}</small></span>${mine ? myEmb('mp-seat-emb') : emb(s, 'mp-seat-emb')}</div>`
         : i < m.seats.length + nBots ? `<div class="mp-seat bot"><b>${tr('BOT')}</b><small>${tr('univers rival')}</small></div>`
-        : `<div class="mp-seat"><b>…</b><small>${m.mode === 'ranked' ? tr('en recherche') : tr('place libre')}</small></div>`;
+        : `<div class="mp-seat"><b>…</b><small>${tr('place libre')}</small></div>`;
     }).join('');
-    const head = m.mode === 'ranked'
-      ? duel
-        ? `<b>${tr('RECHERCHE D’UN RIVAL')}</b><p>${left > 0 ? tr('Si personne n’arrive dans {n} s, un univers rival prend la place.', { n: left }) : tr('La partie commence…')}</p>`
-        : `<b>${tr('RECHERCHE DE CRÉATEURS')}</b><p>${left > 0 ? tr('Les places restantes seront tenues par des univers rivaux dans {n} s.', { n: left }) : tr('La partie commence…')}</p>`
-      : host && st.target && m.uids.length < n
+    // (La recherche classée a son propre écran depuis la v129 : renderSearch.)
+    const head = host && st.target && m.uids.length < n
         ? `<b>${tr('DÉFI ENVOYÉ')}</b><p>${tr('Votre défi s’affiche dans le jeu de {name}. Lancez la partie dès son arrivée.', { name: `<b>${esc(st.target.name)}</b>` })}</p>
            ${presenceOf(friendOf(st.target.uid)).cls === 'off' ? `<p class="muted">${tr('Hors ligne pour le moment : envoyez aussi le lien.')}</p>` : ''}
            <button class="btn" data-mp="share">${tr('ENVOYER AUSSI LE LIEN')}</button>`
@@ -171,7 +255,12 @@
       return friendRow(p, pr, here || sent ? 'noop' : 'invite', here ? tr('LÀ') : sent ? tr('INVITÉ') : tr('INVITER'), here || sent, m.uids.length >= n ? 'disabled' : '');
     }).join('') : '';
     const startLabel = group ? tr('LANCER · {n} JOUEURS', { n: total }) : `${tr('LANCER LA PARTIE')} · ${m.uids.length}/${n}`;
-    box.innerHTML = `<div class="mp-card">${head}</div>
+    // Classé entre amis (v129) : dès 2 joueurs humains au salon (les bots ne comptent pas).
+    const ranked = MP.rankedOf ? MP.rankedOf(m) : false;
+    const rankBox = m.mode === 'private' ? `<div class="mp-ranked ${ranked ? 'on' : 'off'}">${ranked ? myEmb('mp-ranked-emb') : ''}<span><b>${ranked ? tr('PARTIE CLASSÉE') : tr('PAS ENCORE CLASSÉE')}</b><small>${ranked
+      ? tr('Elle compte pour le classement de chaque joueur : points gagnés ou perdus selon la place.')
+      : tr('Il faut au moins 2 joueurs humains : les bots ne comptent pas.')}</small></span></div>` : '';
+    box.innerHTML = `<div class="mp-card">${head}${rankBox}</div>
       <div class="mp-seats">${seats}</div>
       ${group ? `<div class="mp-bots"><span>${tr('BOTS')}<small>${tr('univers rivaux')}</small></span>
           <button class="btn" data-mp="botsDown" ${nBots <= 0 ? 'disabled' : ''} aria-label="−">−</button><b>${nBots}</b>
@@ -196,7 +285,8 @@
       for (const b of list.querySelectorAll('.mp-law')) b.classList.toggle('on', b.dataset.law === st.law);
       body.querySelector('[data-mp="go"]').disabled = !st.law;
     } else {
-      box.innerHTML = `<div class="mp-card"><b>${tr('LA PARTIE COMMENCE')}</b><p data-law-left>${tr('Choisissez votre loi · {n} s', { n: left })}</p></div>
+      const ranked = MP.rankedOf && MP.rankedOf(MP.state.match);
+      box.innerHTML = `<div class="mp-card"><b>${tr('LA PARTIE COMMENCE')}${ranked ? ` <em class="mp-ranked-tag">${tr('PARTIE CLASSÉE')}</em>` : ''}</b><p data-law-left>${tr('Choisissez votre loi · {n} s', { n: left })}</p></div>
         <div class="mp-laws" data-mid="${esc(MP.state.mid)}">${MP.lawChoices().map((id) => {
           const l = R.LAW[id], f = R.FAMILIES[l.fam];
           return `<button class="mp-law ${st.law === id ? 'on' : ''}" data-mp="law" data-law="${id}" style="--c:${f.color}">
@@ -223,11 +313,20 @@
   const friendOf = (uid) => (ON.friendProfiles ? ON.friendProfiles().find((p) => p.uid === uid) : null) || null;
 
   async function act(k, b) {
-    if (st.busy && k !== 'leave') return;
+    if (st.busy && k !== 'leave' && k !== 'cancel') return;
     SFX.tap();
     try {
       if (k === 'signin') { await ON.signIn(); }
-      else if (k === 'ranked') { st.busy = true; render(); await MP.searchRanked(Number(b.dataset.size)); }
+      else if (k === 'mode') { setFindSize(Number(b.dataset.size)); }
+      else if (k === 'find' || k === 'ranked') {
+        const size = k === 'find' ? findSize() : Number(b.dataset.size) === 8 ? 8 : 2;
+        st.search = { size, at: Date.now() };
+        st.busy = true;
+        render();
+        await MP.searchRanked(size);
+        if (MP.state.searchOff) st.search = null;
+      }
+      else if (k === 'cancel') { st.search = null; st.busy = false; await (MP.cancelSearch ? MP.cancelSearch() : MP.leave()); }
       else if (k === 'create') { st.target = null; st.view = 'menu'; st.busy = true; render(); await MP.createPrivate(Number(b.dataset.size)); }
       else if (k === 'friends') { st.view = 'friends'; st.pick.clear(); }
       else if (k === 'pick') { const u = b.dataset.uid; if (st.pick.has(u)) st.pick.delete(u); else if (st.pick.size < 7) st.pick.add(u); }
@@ -261,7 +360,7 @@
       }
       else if (k === 'join') { st.view = 'menu'; st.busy = true; render(); await MP.joinCode(b.dataset.code || ($('mpCode') ? $('mpCode').value : '')); }
       else if (k === 'start') { await MP.start(); }
-      else if (k === 'leave') { st.target = null; await MP.leave(); }
+      else if (k === 'leave') { st.target = null; st.search = null; await (MP.cancelSearch ? MP.cancelSearch() : MP.leave()); }
       else if (k === 'share') {
         const code = MP.state.match.code, url = inviteUrl(code), text = tr('Rejoins ma partie ORBITE avec le code {c}', { c: code });
         if (navigator.share) navigator.share({ title: 'ORBITE', text, url }).catch(() => {});
@@ -272,6 +371,8 @@
     } catch (err) {
       const denied = err && (err.code === 'permission-denied' || /permission/i.test(err.message || ''));
       A.refuse(denied ? tr('Le serveur n’autorise pas encore les parties en ligne : réessayez plus tard.') : err && err.message ? err.message : tr('Connexion impossible.'));
+      // Recherche impossible : retour au menu (le salon éventuellement ouvert est quitté).
+      if (k === 'find' || k === 'ranked') { st.search = null; if (MP.cancelSearch) MP.cancelSearch().catch(() => {}); }
       // Invitation qui n'aboutit pas (partie lancée, code périmé) : le code reste affiché.
       if (k === 'join' && b.dataset.code) st.prefill = b.dataset.code;
     }
@@ -297,7 +398,8 @@
     clearInterval(st.tick);
     st.target = null;
     st.view = 'menu';
-    if (MP.state.match && MP.state.match.status === 'waiting') await MP.leave();
+    // Revenir pendant une recherche l'annule (comme ANNULER).
+    if (st.search || (MP.state.match && MP.state.match.status === 'waiting')) { st.search = null; await (MP.cancelSearch ? MP.cancelSearch() : MP.leave()); }
     syncInvite();
     await O.api.backToMenu();
   });
