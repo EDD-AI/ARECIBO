@@ -370,6 +370,55 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Visiter sa planète (v124)
+
+« Comme dans Spore » : au **Marché stellaire**, onglet **MA PLANÈTE**, une nouvelle amélioration juste
+après la Lune capturée, avant la civilisation verte : **Visiter la planète** (niveau 75, 530 poussières).
+Une fois achetée, le bouton **VISITER** apparaît sous l'état de la planète (toucher la grande planète
+ouvre aussi la visite).
+
+- **Le globe** (écran `#visite`, `js/visite-ui.js`) : votre planète vivante, en grand sur fond d'étoiles,
+  sans sa lune, ses satellites ni son anneau (l'astre seul, option `bare`), les nuages dérivant doucement.
+- **Tourner** : glisser au doigt ou à la souris fait tourner le globe dans les deux sens ; vers le haut
+  ou le bas, on voit les pôles (latitude du centre bornée à ±75°). Un lancer continue sur sa lancée
+  (inertie). Au clavier : les flèches.
+- **Zoomer** : pincer ou molette, autour du pointeur (le point visé reste sous les doigts), de ×1 à ×5 ;
+  boutons + et −. Un double toucher ou double clic revient à ×1. De près, le globe déborde de l'écran
+  (c'est voulu). La boîte de l'astre grandit (pas de `transform: scale`) : il reste net, et de près le relief
+  gagne des détails (jusqu'à 7 octaves de bruit au lieu de 5).
+- **Atterrir** : à partir de ×2, un **réticule** au centre montre le sol visé : OCÉAN en rouge, SABLE,
+  PRAIRIE, FORÊT, MONTAGNE ou GLACE en vert. **ATTERRIR ICI** (sous ×2 : **S'APPROCHER**) fonde une
+  colonie après confirmation : « Impossible de se poser sur l'océan », **trois colonies au plus**, à
+  plus de 23° l'une de l'autre (sinon « Trop près de … »). Le réticule posé sur une de vos colonies y
+  ramène. Les colonies s'appellent Aube, Havre, Clairière…
+- **Le sol** est lu sur l'image même : le moteur redessine un pixel, celui du réticule, en écrivant la
+  rangée de palette du sol au lieu de sa couleur (`uPick`, nuages exclus), et le relit avant l'image
+  suivante (`stage.probe` → `pickBody`). Rangées 0 à 2 : les eaux ; 3 : sable ; 4 : prairie ; 5 : forêt ;
+  6 : montagne ; 7 : neige et glace (calottes et banquise comprises).
+- **Les balises** : chaque colonie brille à sa place sur le globe avec son nom, suit la rotation et se
+  cache quand elle passe derrière. La toucher fait atterrir dans la colonie.
+- **La colonie** : la descente et l'écran de colonie de la Création (`js/colonie-ui.js`), tout le jeu
+  de gestion (construction, recherche, rovers, pépinière, temps réel, expédition). Id `terre-1` à
+  `terre-3` (ceux de la Forge commencent par `f`), graine tirée de la planète et du site. Sol de la
+  colonie selon le sol visé : **terre** brun-vert (prairie, forêt, nouveau sol du rendu des bâtiments),
+  **sable** (nouveau), roche grise (montagne) ou glace. Chaque nouvelle colonie voit son colonisateur se
+  poser (« Créateur… Vos premiers colons se posent sur votre planète. »), avec la même fusée et les mêmes
+  réserves. Le retour de la colonie ramène au globe, tourné vers elle ; celui d'une colonie de la Forge
+  ramène toujours à la Création.
+- **Retour** du globe : l'onglet MA PLANÈTE du Marché. **Première visite** : trois bulles (tourner,
+  s'approcher, atterrir).
+- **Création inchangée** : la visite est une amélioration « bonus » (`bonus: true`), que
+  `OrbiteWorld.civil` n'exige pas : la Création s'ouvre toujours juste après la Lune capturée, et ceux qui
+  l'ont déjà la gardent. Un joueur déjà plus loin (villages…) trouve la visite comme prochaine étape.
+- **Moteur** : `drawSystem(g, { orient: { lat, lon }, bare })` (`js/planet-renderer.js`) dessine l'astre
+  sans rotation automatique, le point (lat, lon) face à nous (`spin = -lon`, inclinaison `rotX(lat)` à la
+  place de l'axe de l'astre) ; `stage.orient(el, o)` le règle à chaque image pour un élément. Sans ces
+  options, rien ne change (test de non-régression).
+- **Sauvegarde** : les sites et la dernière orientation dans `orbite.visite` (synchronisée en ligne,
+  nettoyée par `OrbiteVisite.sanitize`) ; les colonies dans `orbite.colonies`, comme les autres.
+- Règles et maths du globe (sites, écarts, noms, projection lat/lon ↔ écran, zoom autour du pointeur) :
+  `js/visite.js`, testées par `tests/visite.test.mjs` ; textes en 5 langues : `js/lang/visite.js`.
+
 ## Téléphone : toutes les fiches se ferment, contrôle de tous les écrans (v123)
 
 - **Bouton ✕ sur chaque fiche.** Jusqu'ici, une fiche (synergies, familles, règles, détail d'un astre…)
@@ -524,7 +573,7 @@ captures) contre ce même émulateur. Sans Java ou sans l’émulateur, ces essa
 
 Tout le **système solaire**, à acheter puis à améliorer avec les **poussières d’étoiles**, dans le
 Marché stellaire, onglet **MON SYSTÈME** (entre Ma planète et Cosmétiques). Au centre, un **Soleil
-rouge** ; votre planète prend la place de la **Terre** (elle garde ses 24 améliorations de l’onglet Ma
+rouge** ; votre planète prend la place de la **Terre** (elle garde ses 25 améliorations de l’onglet Ma
 planète). Acheter un astre ne demande que des poussières ; ses améliorations s’achètent **dans
 l’ordre**, chacune avec un **niveau** de créateur et un prix. Tout se voit sur l’astre, chez vous et
 chez ceux qui vous visitent.
@@ -794,16 +843,17 @@ les poussières d’étoiles achètent des **améliorations** qui la font renaî
 |---|---|
 | Réveil | Cœur rallumé (1), Volcans (3), Atmosphère primitive (6) |
 | Eau | Pluie de comètes (9), Premières pluies (12), Mers (16), Calottes polaires (20), Océans (25), Cycle de l’eau (30), Ciel bleu (35) |
-| Vie | Algues (40), Mousses et lichens (46), Forêts (53), Prairies (60), Faune (67), Lune capturée (74) |
+| Vie | Algues (40), Mousses et lichens (46), Forêts (53), Prairies (60), Faune (67), Lune capturée (74), Visiter la planète (75, v124) |
 | Civilisation verte | Villages à éoliennes (80), Fermes solaires (86), Usines écologiques (92), Satellites solaires (98), Villes lumière (104), Station orbitale (110), Anneau solaire (115), Terre nouvelle (120) |
 
-24 améliorations, 10 110 poussières au total. Le moteur garde la même géographie (tirée du tag du
+25 améliorations, 10 640 poussières au total. Le moteur garde la même géographie (tirée du tag du
 joueur) et fait varier la roche, la lave sur la face de nuit, le niveau des mers, les calottes, les
 nuages, l’atmosphère, la végétation, les lumières des villes, puis ajoute lune, satellites et
 anneau (`livingWorld` dans `js/planet-engine.js`). Au niveau 120 elle ressemble à la Terre.
 
-Quand les trois premières ères sont faites (dernière amélioration : Lune capturée), la planète arrive à la
-**civilisation verte** (`OrbiteWorld.civil`) : le bouton **Création** apparaît alors au menu (v87).
+Quand les trois premières ères sont faites (dernière amélioration exigée : Lune capturée ; la visite,
+v124, n’est pas exigée), la planète arrive à la **civilisation verte** (`OrbiteWorld.civil`) : le bouton
+**Création** apparaît alors au menu (v87). Voir « Visiter sa planète (v124) ».
 
 ## Graines de vie
 
@@ -864,7 +914,7 @@ traductions : `js/lang/succes.js`, tests : `tests/succes.test.mjs`.
 
 ## Marché stellaire
 
-Quatre onglets : **Ma planète** (les 24 améliorations décrites plus haut), **Mon système** (tout le
+Quatre onglets : **Ma planète** (les 25 améliorations décrites plus haut), **Mon système** (tout le
 système solaire autour de votre planète, du Soleil rouge à Pluton, v120), **Cosmétiques** et **Graines**.
 
 **Cosmétiques** (2 000 poussières d’étoiles chacun, ou en graines de vie : **25 pour un fond animé, 15 pour un cadre**, v91) :
@@ -2032,7 +2082,8 @@ l’Hélice qui garde les PV volés et le Spirographe qui garde l’Attaque, pui
 | `tools/rapports.mjs` | Lire et régler les bugs signalés (Claude ou le créateur), avec un compte de service ou l’émulateur |
 | `js/rules.js` | Règles pures et déterministes : catalogue, lois, création, fusion, combat (journal d’événements), bots |
 | `js/energy.js` | Sphères d’énergie des lois : petites sphères pixel art animées selon la famille (souffle, vortex, bascule, flammes, facettes, bandes, roche, grille) |
-| `js/world.js` | Votre planète : les 24 améliorations, leurs ères, niveaux, prix et effets |
+| `js/world.js` | Votre planète : les 25 améliorations, leurs ères, niveaux, prix et effets |
+| `js/visite.js`, `js/visite-ui.js`, `js/lang/visite.js` | Visiter sa planète (v124) : sites des colonies, maths du globe (projection, zoom), sauvegarde ; l'écran du globe (tourner, zoomer, atterrir, balises) ; ses traductions |
 | `js/systeme.js`, `js/systeme-ui.js` | Mon système : tout le système solaire, du Soleil rouge à Pluton (prix, améliorations, apparences, profil public) et son interface (onglet du Marché, visite d'un système) |
 | `js/planet-engine.js` | Génome des planètes : une graine → astre, palette, nuages, anneaux, lunes, nom et fiche |
 | `js/planet-renderer.js` | Rendu WebGL2 pixel art (tramage, palettes à décalage de teinte) + encodeur GIF |

@@ -990,6 +990,10 @@
     $('mkStage').textContent = W.stageName(list).toUpperCase();
     $('mkProg').style.width = (list.length / W.UPGRADES.length * 100) + '%';
     $('mkCount').textContent = tr('{a} / {b} améliorations · niveau {n}', { a: list.length, b: W.UPGRADES.length, n: lvl });
+    // Visiter la planète (v124, js/visite-ui.js) : le bouton VISITER, et la grande planète se touche.
+    const canVisit = list.includes('visite') && !!window.OrbiteVisiteUI;
+    $('mkVisit').hidden = !canVisit;
+    $('mkPlanet').classList.toggle('can-visit', canVisit);
     if (!nxt) {
       $('mkNext').innerHTML = tr('<b>Votre planète est pleinement vivante.</b><p>Elle tourne désormais au-dessus du menu comme une nouvelle Terre.</p>');
     } else {

@@ -30,6 +30,9 @@
     { id: 'prairies', stage: 2, lvl: 60, price: 440, name: tr('Prairies'), text: tr('Les plaines fleurissent entre les forêts.'), fx: { life: 0.2 } },
     { id: 'faune', stage: 2, lvl: 67, price: 480, name: tr('Faune'), text: tr('Troupeaux, oiseaux, récifs : la planète respire.'), fx: { life: 0.25, clouds: 0.25 } },
     { id: 'lune', stage: 2, lvl: 74, price: 520, name: tr('Lune capturée'), text: tr('Une lune vient stabiliser les saisons et rythmer les marées.'), fx: { moon: 1 } },
+    // Visiter la planète (v124) : la faire tourner, s'en approcher et y fonder des colonies (js/visite-ui.js).
+    // Elle ne change pas l'apparence et n'est pas exigée pour la civilisation verte (bonus).
+    { id: 'visite', stage: 2, lvl: 75, price: 530, name: tr('Visiter la planète'), text: tr('Posez le pied sur votre planète : faites-la tourner, approchez-vous et bâtissez.'), fx: {}, bonus: true },
     { id: 'villages', stage: 3, lvl: 80, price: 560, name: tr('Villages à éoliennes'), text: tr('Les premiers villages s’éclairent, alimentés par le vent.'), fx: { cities: 0.1 } },
     { id: 'solaire', stage: 3, lvl: 86, price: 600, name: tr('Fermes solaires'), text: tr('Des champs de panneaux captent la lumière de l’étoile.'), fx: { cities: 0.15 } },
     { id: 'usines', stage: 3, lvl: 92, price: 650, name: tr('Usines écologiques'), text: tr('Une industrie propre, sans fumée, qui recycle tout.'), fx: { cities: 0.25 } },
@@ -53,13 +56,15 @@
   }
 
   // La planète arrive à la civilisation verte quand les trois premières ères sont faites :
-  // la Création (bâtir sa civilisation) s'ouvre alors au menu.
-  function civil(list) { return UPGRADES.every((u) => u.stage >= 3 || list.includes(u.id)); }
+  // la Création (bâtir sa civilisation) s'ouvre alors au menu. Une amélioration bonus (la visite,
+  // v124) n'est pas exigée : la Création s'ouvre toujours juste après la Lune capturée.
+  function civil(list) { return UPGRADES.every((u) => u.stage >= 3 || u.bonus || list.includes(u.id)); }
 
   function stageName(list) {
     const o = owned(list);
     if (!o.length) return tr('Planète morte');
-    if (o.length === UPGRADES.length) return tr('Terre nouvelle');
+    // Toutes les étapes faites (la visite, bonus, n'est pas exigée : un monde accompli avant la v124 le reste).
+    if (UPGRADES.every((u) => u.bonus || list.includes(u.id))) return tr('Terre nouvelle');
     return STAGES[o[o.length - 1].stage].name;
   }
 

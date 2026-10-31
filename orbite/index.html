@@ -346,6 +346,7 @@
             <b id="mkStage"></b>
             <div class="xp-bar"><i id="mkProg"></i></div>
             <small id="mkCount"></small>
+            <button class="btn primary mk-visit" id="mkVisit" type="button" hidden data-t>VISITER</button>
           </div>
         </div>
         <div class="mk-next" id="mkNext"></div>
@@ -361,6 +362,28 @@
       </div>
       <div class="mk-scroll mk-pane" data-pane="graines" hidden>
         <div class="seed-shop" id="seedShop"></div>
+      </div>
+    </section>
+
+    <!-- MA PLANÈTE (v124) : votre planète vivante en grand ; la faire tourner, s'en approcher, y fonder des colonies (js/visite-ui.js) -->
+    <section class="screen visite" id="visite" aria-label="Ma planète" data-t-attr="aria-label">
+      <header class="screen-head">
+        <button class="icon-btn" id="vsBack" aria-label="Retour" data-t-attr="aria-label"></button>
+        <h2><span data-t>Ma planète</span> <small id="vsSub"></small></h2>
+      </header>
+      <div class="vs-view" id="vsView" data-clipbox>
+        <div class="orb vs-planet" id="vsPlanet" data-planet="visite-world" data-fit="body" data-bare="1" data-speed="0.08"></div>
+        <div class="vs-marks" id="vsMarks"></div>
+        <div class="vs-reticle" id="vsReticle" hidden><i></i><b id="vsGround"></b></div>
+        <div class="col-zoom vs-zoom" id="vsZoom">
+          <button class="icon-btn" id="vsZoomIn" type="button" aria-label="Zoomer" data-t-attr="aria-label">+</button>
+          <button class="icon-btn" id="vsZoomOut" type="button" aria-label="Dézoomer" data-t-attr="aria-label">−</button>
+        </div>
+        <p class="vs-hint" id="vsHint"></p>
+      </div>
+      <div class="vs-bar">
+        <button class="btn primary" id="vsLand" type="button">ATTERRIR ICI</button>
+        <small class="vs-tip" id="vsTip"></small>
       </div>
     </section>
 
@@ -564,6 +587,7 @@
   <script src="js/lang/contenu.js"></script>
   <script src="js/lang/systeme.js"></script>
   <script src="js/lang/rapports.js"></script>
+  <script src="js/lang/visite.js"></script>
   <script src="js/rapports.js"></script>
   <script src="js/planet-engine.js"></script>
   <script src="js/planet-renderer.js"></script>
@@ -573,6 +597,7 @@
   <script src="js/portail.js"></script>
   <script src="js/rules.js"></script>
   <script src="js/world.js"></script>
+  <script src="js/visite.js"></script>
   <script src="js/systeme.js"></script>
   <script src="js/energy.js"></script>
   <script src="js/classement.js"></script>
@@ -598,6 +623,7 @@
   <script src="js/building-renderer.js"></script>
   <script src="js/colonie-jeu.js"></script>
   <script src="js/colonie-ui.js"></script>
+  <script src="js/visite-ui.js"></script>
   <script src="js/exploration.js"></script>
   <script src="js/exploration-ui.js"></script>
   <script src="js/forge-ui.js"></script>

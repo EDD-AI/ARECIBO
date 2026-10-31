@@ -19,6 +19,8 @@
       this.looks = {};
       this.fx = new WeakMap();
       this.particles = [];
+      // Sondes du sol en attente (visite de votre planète, v124), traitées en début d'image.
+      this.probes = [];
       this.time = 0;
       this.last = performance.now();
       this.modal = false;
@@ -92,6 +94,49 @@
       let s = this.fx.get(el);
       if (!s) { s = { flash: 0, reveal: 1, tween: null, frost: el.dataset && el.dataset.frozen === '1' ? 1 : 0 }; this.fx.set(el, s); }
       return s;
+    }
+
+    // Orientation imposée de l'astre d'un élément (visite de votre planète, v124) : { lat, lon } met ce
+    // point face à nous, sans rotation automatique ; null rend sa rotation normale.
+    orient(el, o) { if (el) this.state(el).orient = o || null; }
+
+    // Sonde (v124) : la rangée de palette du sol de l'astre de el sous le point (x, y) de l'écran
+    // (pixels CSS), nuages exclus (voir pickBody) ; -1 si on ne sait pas.
+    probe(el, x, y) {
+      return new Promise((resolve) => { this.probes.push({ el, x, y, resolve, tries: 0 }); });
+    }
+    runProbes() {
+      const list = this.probes;
+      this.probes = [];
+      for (const q of list) {
+        let res = -1;
+        try {
+          const el = q.el;
+          const id = el && el.dataset.planet;
+          if (id && el.isConnected && el.getClientRects().length) {
+            const g = this.genome(id), b = el.getBoundingClientRect(), L = this.geom(el, g, b);
+            const [ax, ay] = this.toArt(q.x, q.y);
+            res = this.r.pickBody(g, { cx: L.cx, cy: L.cy, R: L.R, x: ax, y: ay, orient: this.state(el).orient, phase: this.phaseOf(el, g) });
+          }
+        } catch (err) { res = -1; }
+        if (res === -2 && ++q.tries < 20) this.probes.push(q);
+        else q.resolve(res < 0 ? -1 : res);
+      }
+    }
+
+    // Centre et rayon (en pixels art) de l'astre dessiné dans la boîte b de l'élément.
+    geom(el, g, b) {
+      const scale = parseFloat(el.dataset.scale || '1');
+      const half = Math.min(b.width, b.height) / 2 / this.px;
+      const fit = el.dataset.fit === 'body' ? 1 : clamp(g.extent.x, 1.12, 1.75);
+      const R = Math.max(3, (half * scale) / fit);
+      const [cx, cy] = this.toArt(b.left + b.width / 2, b.top + b.height / 2);
+      return { cx, cy, R };
+    }
+    phaseOf(el, g) {
+      const speed = el.dataset.speed ? parseFloat(el.dataset.speed) : 1;
+      const p = speed === 1 ? (this.time / LOOP_SECONDS) % 1 : ((this.time * speed) / LOOP_SECONDS) % 1;
+      return (p + (g.seed % 997) / 997) % 1;
     }
 
     flash(el, amount) { if (el) this.state(el).flash = Math.max(this.state(el).flash, amount == null ? 0.85 : amount); }
@@ -243,11 +288,7 @@
       const id = el.dataset.planet;
       if (!id) return;
       const g = this.genome(id);
-      const scale = parseFloat(el.dataset.scale || '1');
-      const half = Math.min(b.width, b.height) / 2 / this.px;
-      const fit = el.dataset.fit === 'body' ? 1 : clamp(g.extent.x, 1.12, 1.75);
-      const R = Math.max(3, (half * scale) / fit);
-      const [cx, cy] = this.toArt(b.left + b.width / 2, b.top + b.height / 2);
+      const { cx, cy, R } = this.geom(el, g, b);
       const speed = el.dataset.speed ? parseFloat(el.dataset.speed) : 1;
       const p = speed === 1 ? phase : ((this.time * speed) / LOOP_SECONDS) % 1;
       const own = el.dataset.dim ? parseFloat(el.dataset.dim) : 1;
@@ -260,7 +301,7 @@
         cx, cy, R, phase: (p + (g.seed % 997) / 997) % 1,
         reveal: s.reveal, flash: s.flash, dim: dim * own,
         flip: g.flip, golden: el.dataset.golden === '1', legend: !!(this.catalog && this.catalog[id] && this.catalog[id].legend), shield: el.dataset.shield === '1', ghost: el.dataset.ghost === '1',
-        frost: s.frost
+        frost: s.frost, orient: s.orient || null, bare: el.dataset.bare === '1'
       });
       this.r.bound = null;
       // data-clip : rien n'est dessiné sous cette ligne (l'horizon du menu), quel que soit le décor HTML.
@@ -298,6 +339,7 @@
       this.last = now;
       this.time += dt;
       const r = this.r;
+      if (this.probes.length) this.runProbes();
       r.clear();
       const phase = (this.time / LOOP_SECONDS) % 1;
       const dimBg = this.modal ? 0.3 : 1;
