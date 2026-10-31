@@ -716,6 +716,12 @@ button.sy-body { cursor: pointer; }
 .screen-head h2 { margin: 0; font-size: 18px; letter-spacing: 0.14em; font-weight: 400; }
 .hint { margin: 2px 0 14px; color: var(--dim); font-size: 13px; }
 .law-list { flex: 1; display: flex; flex-direction: column; gap: 10px; overflow: visible; }
+/* Téléphone (v122) : les trois lois sont plus hautes que l'écran ; la liste défile entre l'en-tête et
+ * le bouton, qui reste toujours visible en bas (avant, il sortait de l'écran sur iPhone). */
+body:not(.desk) .law-list { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; padding-bottom: 4px; }
+body:not(.desk) .law-list::-webkit-scrollbar { display: none; }
+body:not(.desk) .law-list > .law { flex: none; }
+body:not(.desk) #lawGo { flex: none; }
 .law {
   display: grid;
   grid-template-columns: 92px 1fr;
