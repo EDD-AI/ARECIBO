@@ -28,7 +28,10 @@ function play(seed, laws, late) {
     if (late && round % 3 === 0 && last[late] && snaps[late]) snaps[late] = last[late];
     last = Object.assign({}, last, snaps);
     const playing = humans.filter((h) => states[h].phase === 'lock');
-    for (const h of playing) assert.ok(R.mpResolve(states[h], snaps, []).ok);
+    // Phase de combat commune (v127) : chaque téléphone trouve le même plus long combat de la manche.
+    const longest = new Set();
+    for (const h of playing) { const res = R.mpResolve(states[h], snaps, []); assert.ok(res.ok); longest.add(res.longest); }
+    assert.ok(longest.size <= 1, 'plus long combat différent selon le téléphone, manche ' + round + ' : ' + [...longest].join(', '));
     // La réserve partagée reste conservée sur chaque téléphone (v106) : plateaux des autres compris.
     for (const h of playing) assert.deepEqual(R.poolAudit(states[h]), states[h].poolTotal, 'réserve de ' + h + ', manche ' + round);
     const view = (h) => states[h].players.map((p) => (p.id === 'you' ? h : p.id) + ':' + p.hp + ':' + p.alive).sort().join(' ');
