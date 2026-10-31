@@ -64,7 +64,40 @@
     c.points = Math.max(0, c.points + deltaFor(r, c.points, lobby));
     c.best = Math.max(c.best, c.points);
     const t0 = tierOf(before), t1 = tierOf(c.points);
-    return { placement: false, points: c.points, delta: c.points - before, tier: t1, up: t1.idx > t0.idx, down: t1.idx < t0.idx };
+    // up / down : changement de rang ; divUp / divDown : de division (III → II…), rang compris.
+    const s0 = step(before), s1 = step(c.points);
+    return { placement: false, points: c.points, before, delta: c.points - before, tier: t1, from: t0, up: t1.idx > t0.idx, down: t1.idx < t0.idx, divUp: s1 > s0, divDown: s1 < s0 };
+  }
+
+  // L'étape de division : 0 pour Poussière III, 1 pour Poussière II… 24 pour la Singularité.
+  function step(points) {
+    const t = tierOf(points);
+    return t.idx * DIVS.length + (t.div ? DIVS.indexOf(t.div) : 0);
+  }
+
+  // ─── Parties qui comptent (v129) ────────────────────────────
+  // La recherche classée compte toujours (les places libres y sont tenues par des univers rivaux
+  // au bout de 40 s, sans qu'on les choisisse). Une partie entre amis (privée : duel, partie entre
+  // amis, mêlée privée) compte aussi, à condition d'y être au moins deux créateurs humains : seul
+  // face aux bots qu'on a soi-même choisis, elle ne compte pas.
+  const MIN_HUMANS = 2;
+  function counts(mode, humans) {
+    if (mode === 'ranked') return true;
+    return mode === 'private' && (humans | 0) >= MIN_HUMANS;
+  }
+  // Niveau de la partie pour l'ajustement : la moyenne des points des AUTRES créateurs humains. Les
+  // bots n'ont pas de place au salon et n'y entrent jamais (ils ne gonflent ni ne dégonflent les
+  // points). null sans autre humain : pas d'ajustement.
+  function lobbyOf(seats, me) {
+    const others = (Array.isArray(seats) ? seats : []).filter((x) => x && !x.bot && x.uid !== me);
+    if (!others.length) return null;
+    return Math.round(others.reduce((n, x) => n + Math.max(0, Math.round(Number(x.points) || 0)), 0) / others.length);
+  }
+  // La place classée d'une partie : un abandon vaut la 8e ; un duel gagné la 2e, perdu la 6e.
+  function placeOf(rank, duel, quit) {
+    if (quit) return 8;
+    if (duel) return rank === 1 ? 2 : 6;
+    return Math.max(1, Math.min(8, rank | 0 || 8));
   }
 
   function tierOf(points) {
@@ -76,5 +109,5 @@
     return { idx, name: tr(TIERS[idx]), div: DIVS[d], into, span: 100, label: `${tr(TIERS[idx])} ${DIVS[d]}` };
   }
 
-  return { PLACEMENTS, DELTA, deltaFor, TIERS, TIER_SPAN, fresh, sanitize, placed, seed, record, tierOf };
+  return { PLACEMENTS, DELTA, deltaFor, TIERS, TIER_SPAN, DIVS, fresh, sanitize, placed, seed, record, tierOf, step, MIN_HUMANS, counts, lobbyOf, placeOf };
 });

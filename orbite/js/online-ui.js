@@ -20,6 +20,8 @@
   // Le pseudo d'un créateur dans sa police (v96).
   const nameOf = (p) => (A.nameHtml ? A.nameHtml(p.pseudo || tr('Créateur'), A.fontOf(p)) : esc(p.pseudo || tr('Créateur')));
   const tierText = (p) => (p && p.placed ? `${K.tierOf(p.points).label} · ${tr('{n} pts', { n: p.points })}` : tr('non classé'));
+  // Son emblème de rang (v129, js/embleme.js) ; « placed » faux : en placement.
+  const embOf = (p, cls) => (A.emblem ? A.emblem({ points: p && p.points, placed: !!(p && p.placed) }, cls) : '');
   const profileActive = () => $('profile') && $('profile').classList.contains('active');
 
   // ─── Carte « En ligne » (onglet Profil) ─────────────────────
@@ -79,7 +81,7 @@
     const pr = f.status === 'accepted' ? presenceOf(p) : null;
     return `<div class="on-row">
       ${A.framed ? A.framed(`<span class="orb" data-planet="${(A.avatarOf && A.avatarOf(p)) || tierOrb(p)}"></span>`, A.frameOf(p)) : `<span class="orb" data-planet="${(A.avatarOf && A.avatarOf(p)) || tierOrb(p)}"></span>`}
-      <span class="on-row-txt"><b>${pr ? `<i class="on-dot ${pr.cls}"></i>` : ''}${nameOf(p)}<small>#${esc(p.tag || '')}</small></b><small>${pr && pr.cls !== 'off' ? `<em class="on-pres ${pr.cls}">${esc(pr.txt)}</em> · ` : ''}${tr('Niveau {n}', { n: p.level || 1 })} · ${esc(tierText(p))}${pr && pr.cls === 'off' ? ' · ' + esc(pr.txt) : ''}</small></span>
+      <span class="on-row-txt"><b>${pr ? `<i class="on-dot ${pr.cls}"></i>` : ''}${nameOf(p)}<small>#${esc(p.tag || '')}</small></b><small>${pr && pr.cls !== 'off' ? `<em class="on-pres ${pr.cls}">${esc(pr.txt)}</em> · ` : ''}${tr('Niveau {n}', { n: p.level || 1 })} · ${embOf(p, 'emb-in')}${esc(tierText(p))}${pr && pr.cls === 'off' ? ' · ' + esc(pr.txt) : ''}</small></span>
       <span class="on-row-act">${actions}</span></div>`;
   }
   function listHtml(list) {
@@ -112,13 +114,13 @@
     return `<ol class="on-board">${rows.map((p, i) => `<li class="${p.uid === me ? 'me' : ''}" data-on="who" data-uid="${p.uid}">
       <span class="on-pos">${i + 1}</span>${A.framed ? A.framed(`<span class="orb" data-planet="${(A.avatarOf && A.avatarOf(p)) || tierOrb(p)}"></span>`, A.frameOf(p)) : `<span class="orb" data-planet="${(A.avatarOf && A.avatarOf(p)) || tierOrb(p)}"></span>`}
       <span class="on-row-txt"><b>${nameOf(p)}<small>#${esc(p.tag || '')}</small></b><small>${esc(K.tierOf(p.points).label)} · ${tr('niveau {n}', { n: p.level })}</small></span>
-      <b class="on-pts">${p.points}</b></li>`).join('')}</ol>`;
+      <span class="on-rank">${embOf(p, 'on-emb')}<b class="on-pts">${p.points}</b></span></li>`).join('')}</ol>`;
   }
   async function whoSheet(uid) {
     const p = await N.profileOf(uid).catch(() => null);
     if (!p) return;
     A.openSheet(`<div class="sheet-top">${A.framed ? A.framed(`<div class="orb sheet-orb" data-planet="${(A.avatarOf && A.avatarOf(p)) || tierOrb(p)}"></div>`, A.frameOf(p)) : `<div class="orb sheet-orb" data-planet="${(A.avatarOf && A.avatarOf(p)) || tierOrb(p)}"></div>`}<div>
-      <span class="fam-chip" style="--c:var(--gold)">${esc(tierText(p).toUpperCase())}</span>
+      <span class="who-rank">${embOf(p, 'who-emb')}<span class="fam-chip" style="--c:var(--gold)">${esc(tierText(p).toUpperCase())}</span></span>
       <h2>${nameOf(p)}<small class="muted"> #${esc(p.tag || '')}</small></h2>
       <p class="muted">${tr('Niveau {n} · {p} parties · {v} victoires', { n: p.level, p: p.games, v: p.wins })}</p></div></div>
       <div class="sheet-actions"><button class="btn" data-act="close">${tr('FERMER')}</button><button class="btn primary" data-on="visit" data-uid="${uid}">${tr('VISITER SON SYSTÈME')}</button></div>`);
