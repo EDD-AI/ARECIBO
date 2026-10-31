@@ -19,7 +19,8 @@
   const THEME = { terran: 'mars', earth: 'mars', desert: 'mars', dead: 'mars', ocean: 'glace', ice: 'glace', moon: 'lune', crystal: 'lune', toxic: 'soufre', lava: 'volcan' };
   const SURFACE_MASS = 8;
 
-  const ui = { col: null, planet: null, scale: 2, panX: 0, panY: 0, cat: 'habitat', sel: null, ghost: null, timer: 0, anim: 0, drag: null, lastSol: -1 };
+  // from : 'visite' quand on vient de Ma planète (v125) ; le retour ramène alors au globe.
+  const ui = { col: null, planet: null, from: null, scale: 2, panX: 0, panY: 0, cat: 'habitat', sel: null, ghost: null, timer: 0, anim: 0, drag: null, lastSol: -1 };
 
   const all = () => A.readJson(KEY, {});
   function save() {
@@ -370,12 +371,15 @@
   }
 
   // ─── Ouverture ──────────────────────────────────────────────
-  async function open(planet, orbEl) {
+  // planet : { id, seed, type, name, hue, theme? } (un monde de la Forge, ou un site de votre planète).
+  // opts.from = 'visite' : on vient de Ma planète (v125) ; opts.first : sa toute première colonie.
+  async function open(planet, orbEl, opts) {
+    opts = opts || {};
     const all0 = all();
     let col = all0[planet.id];
     const fresh = !col;
-    if (fresh) col = C.create(planet.id, planet.seed, THEME[planet.type] || 'mars', Date.now());
-    ui.col = col; ui.planet = planet; ui.sel = null; ui.ghost = null; ui.lastSol = -1;
+    if (fresh) col = C.create(planet.id, planet.seed, planet.theme || THEME[planet.type] || 'mars', Date.now());
+    ui.col = col; ui.planet = planet; ui.from = opts.from || null; ui.sel = null; ui.ghost = null; ui.lastSol = -1;
     // Le sol prend la teinte choisie pour la planète dans la Forge.
     col.hue = planet.hue || 0;
     // Sans tour de contrôle, on ouvre l'onglet où elle se trouve.
@@ -384,7 +388,10 @@
     const ev = C.catchUp(col, Date.now());
     save();
     await dive(orbEl);
-    if (A.store.get(INTRO_KEY, '') !== '1') { A.store.set(INTRO_KEY, '1'); await colonizer(); }
+    // Sur votre planète, chaque nouvelle colonie voit son colonisateur se poser ; dans la Forge, la
+    // cinématique ne passe qu'une fois.
+    if (ui.from === 'visite') { if (fresh) await colonizer(opts.first ? tr('Vos premiers colons se posent sur votre planète.') : tr('De nouveaux colons se posent sur votre planète, à {nom}.', { nom: planet.name })); }
+    else if (A.store.get(INTRO_KEY, '') !== '1') { A.store.set(INTRO_KEY, '1'); await colonizer(); }
     $('colName').textContent = planet.name;
     await A.show('colony');
     stage.sky = 0;
@@ -424,7 +431,8 @@
   }
 
   // Cinématique : « Créateur, on dirait qu'il y a de la vie… » puis l'arrivée du colonisateur.
-  async function colonizer() {
+  // home : la phrase d'une colonie sur votre planète (v125) à la place de « l'une de vos créations ».
+  async function colonizer(home) {
     const orb = $('cineOrb'), line = $('cineLine');
     orb.style.display = 'none';
     const art = document.createElement('canvas');
@@ -446,7 +454,7 @@
       const t0 = performance.now(); while (!skip && performance.now() - t0 < (hold || 1600)) await A.wait(50);
     };
     await say(tr('Créateur…'), 900);
-    await say(tr('On dirait qu’il y a de la vie sur l’une de vos créations.'), 1800);
+    await say(home || tr('On dirait qu’il y a de la vie sur l’une de vos créations.'), 1800);
     if (!skip) {
       art.style.opacity = '1';
       SFX.whoosh(0);
@@ -528,7 +536,13 @@
   view.addEventListener('pointerup', up);
   view.addEventListener('pointercancel', () => { ui.drag = null; });
   $('colBack').innerHTML = icon('back');
-  $('colBack').addEventListener('click', async () => { SFX.tap(); close(); await A.openCreation(); });
+  $('colBack').addEventListener('click', async () => {
+    SFX.tap();
+    close();
+    // Une colonie de votre planète ramène au globe, tourné vers elle (v125) ; celle d'un monde forgé, à la Création.
+    if (ui.from === 'visite' && window.OrbiteVisiteUI && ui.col) await window.OrbiteVisiteUI.open({ site: ui.col.id });
+    else await A.openCreation();
+  });
   document.addEventListener('visibilitychange', () => { if (document.hidden) save(); else if (ui.col) tick(); });
   window.addEventListener('resize', () => { if (ui.col) place(); });
 

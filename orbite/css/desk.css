@@ -409,9 +409,10 @@ body.desk #market .mk-planet { width: 340px; height: 340px; }
   body.desk #market .mk-planet { width: min(400px, 36cqw, calc(100cqh - 150px)); height: min(400px, 36cqw, calc(100cqh - 150px)); }
   /* Avec sa lune (16e amélioration) puis son anneau (23e), le système s'élargit (2 puis 2,75 fois
    * la planète) : la planète rapetisse pour que tout tienne dans la vitrine, sans passer sous la liste.
-   * Les améliorations s'achètent dans l'ordre : la 16e ligne achetée suffit à le savoir. */
+   * Les améliorations s'achètent dans l'ordre : la 16e ligne achetée suffit à le savoir (l'anneau est
+   * la 24e depuis la visite, v125). */
   body.desk #market .mk-pane:has(.mk-row.owned:nth-of-type(16)) .mk-planet { width: min(300px, calc((100cqw - 54px) * 0.2)); height: min(300px, calc((100cqw - 54px) * 0.2)); }
-  body.desk #market .mk-pane:has(.mk-row.owned:nth-of-type(23)) .mk-planet { width: min(230px, calc((100cqw - 54px) * 0.155)); height: min(230px, calc((100cqw - 54px) * 0.155)); }
+  body.desk #market .mk-pane:has(.mk-row.owned:nth-of-type(24)) .mk-planet { width: min(230px, calc((100cqw - 54px) * 0.155)); height: min(230px, calc((100cqw - 54px) * 0.155)); }
 }
 body.desk #market .mk-state { width: min(86%, 380px); align-items: center; gap: 9px; text-align: center; }
 body.desk #market .mk-kicker { font-size: 12px; letter-spacing: 0.26em; }
@@ -1819,3 +1820,20 @@ body.desk #game .bug-ico { width: 30px; height: 30px; }
 /* Les rapports de bugs du créateur : une fiche large, deux colonnes. */
 body.desk #overlay .sheet:has(> .rp-admin) { width: min(1040px, 100%); }
 body.desk .rp-admin .rp-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+
+/* ═══ v125 : visiter sa planète, en plein écran sur PC ═══ */
+body.desk #visite { zoom: var(--z); width: 100%; padding: 16px 0 18px; }
+body.desk #visite .screen-head { height: auto; gap: 10px; padding: 0 32px; }
+body.desk #visite .vs-zoom { right: 32px; }
+body.desk #visite .vs-reticle { width: 56px; height: 56px; margin: -28px 0 0 -28px; }
+body.desk #visite .vs-reticle b { font-size: 12px; }
+body.desk #visite .vs-mark span { font-size: 12px; }
+body.desk #visite .screen-head h2 { font-size: 24px; letter-spacing: 0.18em; }
+body.desk #visite .screen-head h2 small { font-size: 12px; margin-top: 4px; }
+body.desk #visite .screen-head .icon-btn { width: 44px; height: 44px; font-size: 20px; }
+body.desk #visite .vs-zoom .icon-btn { width: 40px; height: 40px; }
+body.desk #visite .vs-bar { padding-top: 8px; }
+body.desk #visite .vs-bar .btn { width: 300px; min-height: 52px; font-size: 16px; }
+body.desk #visite .vs-tip { font-size: 13px; }
+body.desk #visite .vs-hint { font-size: 12px; }
+body.desk #market .mk-visit { align-self: center; min-width: 220px; min-height: 48px; font-size: 15px; }

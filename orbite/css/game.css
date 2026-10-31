@@ -429,6 +429,10 @@ body.modal #gl { z-index: 35; }
 .mk-state { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .mk-state b { font-size: 18px; font-weight: 600; letter-spacing: 0.08em; }
 .mk-state small { font-size: 11px; color: var(--dim); }
+/* Visiter la planète (v125) : le bouton sous l'état de la planète, et la planète qui se touche. */
+.mk-visit { align-self: stretch; min-height: 40px; margin-top: 4px; padding: 0 10px; font-size: 13px; }
+.mk-visit[hidden] { display: none; }
+.mk-planet.can-visit { cursor: var(--cur-hand, pointer); }
 .mk-kicker { font-size: 10px; letter-spacing: 0.24em; color: var(--dim); }
 .mk-next { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px solid var(--line); margin-bottom: 18px; }
 .mk-next b { font-size: 18px; font-weight: 600; }
@@ -2545,3 +2549,47 @@ body.rp-open .coach { visibility: hidden; }
 .rp-tech dd { margin: 0; overflow-wrap: anywhere; }
 .rp-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .rp-acts .btn { min-height: 36px; padding: 0 10px; font-size: 11px; letter-spacing: 0.1em; }
+
+/* ─── Visiter sa planète (v125) ───────────────────────────── */
+/* Le globe en grand sur tout l'écran : on le fait tourner, on zoome, on atterrit (js/visite-ui.js). */
+.screen.visite { width: 100%; padding-left: 0; padding-right: 0; gap: 4px; }
+.visite .screen-head { padding: 0 10px; flex: none; }
+.visite .screen-head h2 { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
+.visite .screen-head h2 small { font-size: 10px; letter-spacing: 0.24em; color: var(--dim); font-weight: 400; text-transform: uppercase; margin-top: 2px; }
+.vs-view { position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: none; cursor: var(--cur-hand, grab); }
+.vs-planet { position: absolute; left: 0; top: 0; pointer-events: none; }
+.vs-marks { position: absolute; inset: 0; pointer-events: none; }
+/* Une balise : le point lumineux est au centre du bouton (zone sensible de 44 px), son nom au-dessus. */
+.vs-mark { position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; pointer-events: auto; will-change: transform; }
+.vs-mark i { position: absolute; left: 18px; top: 18px; width: 8px; height: 8px; background: #fff2b8; box-shadow: 0 0 0 2px #f6c453, 0 0 10px 4px rgba(255, 214, 120, 0.75); animation: vsBeacon 1.6s steps(2, jump-none) infinite; }
+.vs-mark i::before { content: ''; position: absolute; left: 3px; bottom: 10px; width: 2px; height: 16px; background: linear-gradient(to top, rgba(255, 226, 150, 0.95), rgba(255, 226, 150, 0)); }
+.vs-mark span { position: absolute; left: 50%; bottom: 36px; transform: translateX(-50%); padding: 1px 6px; font-size: 11px; letter-spacing: 0.16em; color: var(--ink); white-space: nowrap; text-transform: uppercase; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(246, 196, 83, 0.55); }
+.vs-mark.ping i { animation: vsPing 0.5s steps(2, jump-none) 3; }
+@keyframes vsBeacon { 50% { box-shadow: 0 0 0 2px #f6c453, 0 0 16px 7px rgba(255, 214, 120, 0.5); } }
+@keyframes vsPing { 50% { background: #ff6f6f; box-shadow: 0 0 0 2px #ff6f6f, 0 0 18px 8px rgba(255, 111, 111, 0.7); } }
+/* Réticule : quatre coins, vert sur la terre, rouge sur l'océan ; le sol visé dessous. */
+.vs-reticle { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; pointer-events: none; }
+.vs-reticle[hidden] { display: none; }
+.vs-reticle::before, .vs-reticle::after, .vs-reticle i::before, .vs-reticle i::after { content: ''; position: absolute; width: 12px; height: 12px; border: 2px solid var(--ink); filter: drop-shadow(0 0 2px #000); }
+.vs-reticle::before { left: 0; top: 0; border-right: 0; border-bottom: 0; }
+.vs-reticle::after { right: 0; top: 0; border-left: 0; border-bottom: 0; }
+.vs-reticle i::before { left: 0; bottom: 0; border-right: 0; border-top: 0; }
+.vs-reticle i::after { right: 0; bottom: 0; border-left: 0; border-top: 0; }
+.vs-reticle i { position: absolute; inset: 0; }
+.vs-reticle i { background: radial-gradient(circle, var(--ink) 0 1.5px, transparent 2px); }
+.vs-reticle.land::before, .vs-reticle.land::after, .vs-reticle.land i::before, .vs-reticle.land i::after { border-color: var(--good); }
+.vs-reticle.sea::before, .vs-reticle.sea::after, .vs-reticle.sea i::before, .vs-reticle.sea i::after { border-color: var(--bad); }
+.vs-reticle b { position: absolute; left: 50%; top: 100%; margin-top: 6px; transform: translateX(-50%); padding: 1px 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.2em; white-space: nowrap; background: rgba(0, 0, 0, 0.6); }
+.vs-reticle b:empty { display: none; }
+.vs-reticle.land b { color: var(--good); }
+.vs-reticle.sea b { color: var(--bad); }
+.vs-zoom { top: 8px; right: 10px; z-index: 2; }
+.vs-hint { position: absolute; left: 12px; right: 12px; bottom: 8px; margin: 0; text-align: center; font-size: 11px; letter-spacing: 0.08em; color: var(--dim); text-shadow: 0 0 4px #000; pointer-events: none; transition: opacity 0.5s; }
+.vs-hint.gone { opacity: 0; }
+.vs-bar { flex: none; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 4px 14px 0; }
+.vs-bar .btn { width: min(100%, 320px); }
+.vs-tip { min-height: 1.3em; max-width: 420px; font-size: 12px; line-height: 1.3; text-align: center; color: var(--dim); }
+.vs-tip.good { color: var(--good); }
+.vs-tip.bad { color: #ff8a7a; }
+/* Une fiche ouverte (fonder une colonie) : le bouton du bas ne transparaît pas derrière elle. */
+body.modal #visite .vs-bar { visibility: hidden; }

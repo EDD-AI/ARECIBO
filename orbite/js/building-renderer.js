@@ -39,7 +39,10 @@
     lune: ['#141416', '#26262a', '#3c3c42', '#5a5a62', '#7c7c86', '#a2a2ac'],
     glace: ['#1a2a3a', '#2e4a62', '#4c7090', '#7aa0bc', '#a8c8dc', '#dceef8'],
     soufre: ['#2a2408', '#4a4010', '#706018', '#9a8a24', '#c4b23c', '#e2d670'],
-    volcan: ['#0c0a0a', '#1c1616', '#2c2222', '#403030', '#584242', '#745858']
+    volcan: ['#0c0a0a', '#1c1616', '#2c2222', '#403030', '#584242', '#745858'],
+    // Sols de votre planète vivante (v125) : terre brun-vert des prairies et forêts, sable des plages.
+    terre: ['#16110b', '#291f14', '#3d311f', '#524529', '#655c33', '#7f7a46'],
+    sable: ['#33261a', '#56432a', '#7e693e', '#a69056', '#c9b676', '#e4d6a0']
   };
   const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const shift = (ramp, k) => ramp.map((_, i) => ramp[Math.max(0, Math.min(5, i + k))]);

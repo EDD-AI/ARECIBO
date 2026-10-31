@@ -158,6 +158,8 @@ uniform sampler2D uPal;
 uniform float uFacet;
 uniform vec4 uOcc[4];
 uniform int uOccN;
+// uPick (v125) : au lieu de la couleur, la rangée de palette du sol (pour savoir sur quoi l'on se pose).
+uniform int uPick;
 uniform vec3 uRingN;
 uniform vec4 uRing;
 uniform float uRingA;
@@ -925,6 +927,7 @@ void main() {
   else if (uType == 9) { vec3 nc = nl; s = crystalSurf(p, spin, dth, nc); nl = ast ? normalize(nv * 0.6 + nc * 0.4) : nc; }
   else s = mechaSurf(p, Lt, dth);
 
+  if (uPick == 1) { outColor = vec4(float(s.row) / 255.0, 0.0, 0.0, 1.0); return; }
   if (s.emis >= 0) { outColor = fin(pal(s.row, s.emis)); return; }
 
   float l = dot(nl, uLight) + s.bump * 0.5;
@@ -1497,6 +1500,13 @@ void main() {
   const SPRITE_CAP = 6000;
   const LAYERS = ['far', 'back', 'front', 'top'];
   const ZERO4 = new Float32Array(4);
+  // Orientation imposée (v125) → uniformes du shader : le point (lat, lon) face à nous.
+  // Même écriture que les axes des astres (tiltMatrix, ligne par ligne, envoyée telle quelle).
+  function orientOf(o) {
+    return { spin: -(Number(o.lon) || 0), tilt: new Float32Array(OP.rotX(Number(o.lat) || 0)) };
+  }
+  // Vu de près (visite), le relief gagne des détails : jusqu'à 7 octaves de bruit au lieu de 5.
+  const orientOct = (R) => (R >= 400 ? 7 : R >= 200 ? 6 : 0);
 
   class SpriteBatch {
     constructor() {
@@ -1724,9 +1734,11 @@ void main() {
       gl.uniform2f(U('uCenter'), P.cx, P.cy);
       gl.uniform1f(U('uRadius'), P.r);
       gl.uniform1i(U('uLayer'), layer);
-      gl.uniform1i(U('uOct'), P.r < 16 ? 3 : P.r < 34 ? 4 : 5);
-      gl.uniformMatrix3fv(U('uTilt'), false, b.M32);
+      gl.uniform1i(U('uOct'), P.oct || (P.r < 16 ? 3 : P.r < 34 ? 4 : 5));
+      // P.tilt : orientation imposée (visite de votre planète, v125) à la place de l'axe de l'astre.
+      gl.uniformMatrix3fv(U('uTilt'), false, P.tilt || b.M32);
       gl.uniform1f(U('uSpin'), P.spin);
+      gl.uniform1i(U('uPick'), P.pick ? 1 : 0);
       gl.uniform3fv(U('uLight'), P.light);
       gl.uniform3fv(U('uSeed'), src.seed);
       gl.uniform4fv(U('uA'), src.A);
@@ -1817,7 +1829,10 @@ void main() {
     }
 
     // ─── Système complet ──────────────────────────────────────
-    // o : { cx, cy, R, phase, reveal, flash, dim, flip, golden, ghost, shield, light }
+    // o : { cx, cy, R, phase, reveal, flash, dim, flip, golden, ghost, shield, light, orient, bare }
+    // orient (v125) : { lat, lon }, l'astre ne tourne plus tout seul, le point (lat, lon) est face à
+    // nous (spin = -lon, inclinaison rotX(lat)) ; seuls ses nuages dérivent. bare : l'astre seul, sans
+    // anneau, lunes, satellites ni étincelles. Sans ces options, rien ne change.
     drawSystem(g, o) {
       const gl = this.gl;
       const st = {
@@ -1838,7 +1853,9 @@ void main() {
       const isStar = b.shader === OP.SH.STAR;
       const P = { cx, cy, R, flip: st.flip, phase, light, st, golden: o.golden, ghost: o.ghost, legend: o.legend };
 
-      const moons = g.moons.map((m) => {
+      const bare = !!o.bare;
+      const orient = o.orient ? orientOf(o.orient) : null;
+      const moons = (bare ? [] : g.moons).map((m) => {
         const ang = TAU * (m.phase0 + m.cycles * phase);
         const ca = Math.cos(ang), sa = Math.sin(ang);
         const pos = [
@@ -1851,7 +1868,7 @@ void main() {
       });
 
       this.batch.reset(['back', 'front', 'top']);
-      this.systemSprites(g, P, moons);
+      if (!bare) this.systemSprites(g, P, moons);
       this.uploadBatch(['back', 'front', 'top']);
       gl.enable(gl.SCISSOR_TEST);
 
@@ -1864,10 +1881,11 @@ void main() {
           occN++;
         }
       }
-      const bandRing = g.ring && g.ring.mode === 0 ? g.ring : null;
-      const spin = TAU * b.spinCycles * phase + b.spinOffset;
+      const ring = bare ? null : g.ring;
+      const bandRing = ring && ring.mode === 0 ? ring : null;
+      const spin = orient ? orient.spin : TAU * b.spinCycles * phase + b.spinOffset;
 
-      if (g.ring) this.ringPass(g, 0, P);
+      if (ring) this.ringPass(g, 0, P);
       this.drawLayer('back', st);
       moons.filter((ms) => ms.pos[2] < 0).sort((a, c) => a.pos[2] - c.pos[2]).forEach((ms) => this.moonPass(g, ms, P, isStar));
 
@@ -1888,10 +1906,10 @@ void main() {
       if (b.corona) this.haloPass(2, cx, cy, R, 1 + b.corona.len * 1.6, [b.corona.len, b.corona.freq, b.corona.power, 0], b.pal, 0, b.seed, light, st);
       if (b.lens) this.haloPass(3, cx, cy, R, b.lens.outer, [b.lens.outer, b.lens.cycles, 0, 0], b.pal, 9, b.seed, light, st);
 
-      const base = { cx, cy, light, occ, occN, st, ring: bandRing, ringN: g.ringN, bias: g.night ? (g.cut ? -3 : -2) : (g.bright || 0) };
+      const base = { cx, cy, light, occ, occN, st, ring: bandRing, ringN: g.ringN, bias: g.night ? (g.cut ? -3 : -2) : (g.bright || 0), tilt: orient ? orient.tilt : null, oct: orient ? orientOct(R) : 0 };
       this.bodyPass(b, 0, Object.assign({}, base, { r: R, spin, unit: 1 }));
       if (b.clouds) {
-        const cspin = TAU * (b.spinCycles + b.clouds.extraCycles) * phase + b.spinOffset;
+        const cspin = orient ? orient.spin + TAU * b.clouds.extraCycles * phase : TAU * (b.spinCycles + b.clouds.extraCycles) * phase + b.spinOffset;
         this.bodyPass(b, 1, Object.assign({}, base, { r: R * b.clouds.mul, spin: cspin, unit: b.clouds.mul }));
       }
       if (b.atmo) this.haloPass(0, cx, cy, R, 1 + b.atmo.w, [b.atmo.w, b.atmo.inner, b.atmo.pow, b.atmo.outer], b.pal, 12, b.seed, light, st);
@@ -1903,11 +1921,40 @@ void main() {
         this.haloPass(6, cx, cy, R, rs + 0.05, [o.frost, rs, 0, 0], b.pal, 0, b.seed, light, Object.assign({}, st, { frost: 0 }));
       }
 
-      if (g.ring) this.ringPass(g, 1, P);
+      if (ring) this.ringPass(g, 1, P);
       this.drawLayer('front', st);
       moons.filter((ms) => ms.pos[2] >= 0).sort((a, c) => a.pos[2] - c.pos[2]).forEach((ms) => this.moonPass(g, ms, P, isStar));
       this.drawLayer('top', st);
       gl.disable(gl.SCISSOR_TEST);
+    }
+
+    // Sonde (v125) : la rangée de palette du sol de l'astre au pixel (x, y) de la toile (repère du
+    // moteur, y vers le haut), nuages exclus. Dessinée et lue avant l'image suivante (la toile est
+    // effacée ensuite) : -1 hors de l'astre, -2 pas encore prêt (shader en cours de compilation).
+    pickBody(g, o) {
+      const gl = this.gl, b = g.body;
+      const x = Math.floor(o.x), y = Math.floor(o.y);
+      if (!(x >= 0 && y >= 0 && x < this.W && y < this.H)) return -1;
+      const dx = (x + 0.5 - Math.round(o.cx)) / o.R, dy = (y + 0.5 - Math.round(o.cy)) / o.R;
+      if (dx * dx + dy * dy > 1) return -1;
+      if (!b.M) b.M = OP.tiltMatrix(b.roll, b.pitch);
+      gl.viewport(0, 0, this.W, this.H);
+      gl.enable(gl.SCISSOR_TEST);
+      gl.scissor(x, y, 1, 1);
+      gl.clearColor(1, 1, 1, 1);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      const st = { reveal: 1, phase: o.phase || 0, flash: 0, dim: 1, flip: 1, frost: 0 };
+      const orient = o.orient ? orientOf(o.orient) : null;
+      const spin = orient ? orient.spin : TAU * b.spinCycles * st.phase + b.spinOffset;
+      const was = this.bound;
+      this.bound = [x, y, x + 1, y + 1];
+      this.bodyPass(b, 0, { cx: Math.round(o.cx), cy: Math.round(o.cy), r: o.R, spin, tilt: orient ? orient.tilt : null, oct: orient ? orientOct(o.R) : 0, light: o.light || g.light, occ: new Float32Array(16), occN: 0, st, ring: null, unit: 1, bias: 0, pick: 1 });
+      this.bound = was;
+      const px = new Uint8Array(4);
+      gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      gl.disable(gl.SCISSOR_TEST);
+      if (px[1] === 255) return -2;
+      return px[0];
     }
 
     moonPass(g, ms, P, isStar) {
@@ -2443,6 +2490,7 @@ void main() {
   }
 
   OP.Renderer = Renderer;
+  OP.orientOf = orientOf;
   OP.encodeGif = encodeGif;
   OP.GOLD = GOLD;
 })(typeof window !== 'undefined' ? window : globalThis);

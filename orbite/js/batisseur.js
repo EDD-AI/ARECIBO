@@ -3,7 +3,7 @@
   'use strict';
   const E = window.OrbiteBuildings, R = window.OrbiteBuildingRenderer;
   const $ = (id) => document.getElementById(id);
-  const THEME_NAMES = { mars: 'Mars', lune: 'Lune', glace: 'Glace', soufre: 'Soufre', volcan: 'Volcan' };
+  const THEME_NAMES = { mars: 'Mars', lune: 'Lune', glace: 'Glace', soufre: 'Soufre', volcan: 'Volcan', terre: 'Terre', sable: 'Sable' };
   const ACCENT_NAMES = { orange: 'Orange', rouge: 'Rouge', sarcelle: 'Sarcelle', jaune: 'Jaune', bleu: 'Bleu' };
 
   const state = { type: 'random', theme: 'auto', accent: 'auto', size: 112, view: 0, blink: true, history: [], at: -1, cur: null, scene: null };
