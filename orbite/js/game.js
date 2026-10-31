@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 127;
+  const VERSION = 128;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -730,6 +730,57 @@
     try { localStorage.removeItem(HZ_OWNED); localStorage.removeItem(HZ_ON); } catch (err) { /* stockage indisponible */ }
     if (back) { addDust(back); setTimeout(() => toast(tr('Horizons remboursés : +{n} poussières d’étoiles.', { n: back }), 3600), 9000); }
   })();
+
+  // Faire tourner sa planète au menu (v128) : glisser au doigt ou à la souris sur la planète la fait
+  // tourner, avec de l'élan au lâcher ; elle reprend ensuite sa lente rotation. On décale simplement
+  // le départ de sa rotation (spinOffset de l'astre) : pas de saut, ni au début ni à la fin.
+  const spinMenu = { drag: null, v: 0, raf: 0 };
+  function menuSpin(dx) {
+    const g = stage.genome ? stage.genome('horizon') : null;
+    if (!g || !g.body || !ui.menuR) return;
+    // La surface suit le doigt (vérifié : augmenter spinOffset la fait glisser vers la droite).
+    g.body.spinOffset = (g.body.spinOffset || 0) + dx / ui.menuR;
+  }
+  function menuSpinCoast() {
+    cancelAnimationFrame(spinMenu.raf);
+    let last = performance.now();
+    const step = (t) => {
+      const dt = Math.min(48, t - last); last = t;
+      spinMenu.v *= Math.pow(0.93, dt / 16);
+      if (Math.abs(spinMenu.v) < 0.01 || spinMenu.drag || ui.screen !== 'menu') return;
+      menuSpin(spinMenu.v * dt);
+      spinMenu.raf = requestAnimationFrame(step);
+    };
+    spinMenu.raf = requestAnimationFrame(step);
+  }
+  document.addEventListener('pointerdown', (e) => {
+    if (ui.screen !== 'menu' || !$('overlay').hidden || e.button > 0) return;
+    if (e.target.closest('button, a, input, textarea, select, [role="button"], .mission-box, .menu-list, .sheet, .coach')) return;
+    const r = $('menuPlanet').getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    // Seulement sur la partie visible de la planète (au-dessus de l'horizon).
+    if (Math.hypot(e.clientX - cx, e.clientY - cy) > r.width / 2 || e.clientY > (ui.horizon || 0) * ui.z + 6) return;
+    cancelAnimationFrame(spinMenu.raf);
+    spinMenu.drag = { id: e.pointerId, x: e.clientX, t: performance.now(), moved: false };
+    spinMenu.v = 0;
+  });
+  document.addEventListener('pointermove', (e) => {
+    const d = spinMenu.drag;
+    if (!d || e.pointerId !== d.id) return;
+    const dx = (e.clientX - d.x) / ui.z, now = performance.now();
+    if (!d.moved && Math.abs(dx) < 4) return;
+    d.moved = true;
+    menuSpin(dx);
+    spinMenu.v = 0.6 * spinMenu.v + 0.4 * (dx / Math.max(8, now - d.t));
+    d.x = e.clientX; d.t = now;
+  });
+  const menuSpinEnd = (e) => {
+    const d = spinMenu.drag;
+    if (!d || e.pointerId !== d.id) return;
+    spinMenu.drag = null;
+    if (d.moved && performance.now() - d.t < 200) menuSpinCoast();
+  };
+  document.addEventListener('pointerup', menuSpinEnd);
+  document.addEventListener('pointercancel', menuSpinEnd);
 
   function layoutMenu() {
     const W = viewW(), H = viewH();
