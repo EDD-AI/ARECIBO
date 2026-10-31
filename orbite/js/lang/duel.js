@@ -235,6 +235,8 @@
     ['Un rayon laser rouge fait sans fin le tour de votre profil.', 'A red laser beam endlessly circles your profile.', 'Un rayo láser rojo recorre sin fin el contorno de tu perfil.', 'Ein roter Laserstrahl umkreist endlos dein Profil.', 'Um raio laser vermelho percorre sem fim o contorno do seu perfil.'],
     ['Code accepté : +{n} poussières d’étoiles et +{s} graines de vie.', 'Code accepted: +{n} stardust and +{s} seeds of life.', 'Código aceptado: +{n} de polvo de estrellas y +{s} semillas de vida.', 'Code angenommen: +{n} Sternenstaub und +{s} Lebenssamen.', 'Código aceito: +{n} de poeira estelar e +{s} sementes da vida.'],
     ['ACCÉLÉRÉ', 'FAST-FORWARD', 'ACELERADO', 'BESCHLEUNIGT', 'ACELERADO'],
+    ['PROCHAIN TOUR', 'NEXT TURN', 'PRÓXIMO TURNO', 'NÄCHSTE RUNDE', 'PRÓXIMO TURNO'],
+    ['Dans {n} s : les autres combats se terminent.', 'In {n} s: the other fights are finishing.', 'En {n} s: los demás combates están terminando.', 'In {n} s: Die anderen Kämpfe gehen zu Ende.', 'Em {n} s: os outros combates estão terminando.'],
     // Spectateur en ligne (v105)
     ['MANCHE EN COURS', 'ROUND IN PROGRESS', 'RONDA EN CURSO', 'RUNDE LÄUFT', 'RODADA EM ANDAMENTO'],
     ['Les autres créateurs jouent leur tour…', 'The other creators are playing their turn…', 'Los demás creadores juegan su turno…', 'Die anderen Schöpfer spielen ihren Zug…', 'Os outros criadores estão jogando o turno…'],

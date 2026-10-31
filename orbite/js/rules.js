@@ -1487,7 +1487,10 @@
     const players = [a, b];
     let cidc = 1;
     const ev = [];
-    const log = (e) => { if (keepLog) ev.push(e); };
+    // Nombre d'étapes du combat, même sans journal (v127) : en ligne, tous les téléphones en tirent la
+    // même durée de phase de combat (js/multi.js).
+    let steps = 0;
+    const log = (e) => { steps++; if (keepLog) ev.push(e); };
     const toCombat = (u, side, row) => ({
       cid: 'c' + cidc++, ref: u.uid, id: u.id, golden: !!u.golden, m: u.golden ? 2 : 1,
       atk: u.atk, hp: u.hp, maxHp: u.hp, kw: u.kw.slice(), side, row,
@@ -1963,7 +1966,7 @@
     const surv = winner === 0 ? l0 : winner === 1 ? l1 : [];
     const damage = winner < 0 ? 0 : players[winner].tier + surv.reduce((s, u) => s + cardOf(u).tier, 0);
     log({ t: 'end', winner, damage });
-    return { events: ev, winner, damage, survivors: surv.length, heal: heals };
+    return { events: ev, winner, damage, survivors: surv.length, heal: heals, steps };
   }
 
   // ─── Bots ───────────────────────────────────────────────────
@@ -2387,6 +2390,8 @@
   }
   // Résolution d'une manche à partir des plateaux publiés (snaps : identifiant → instantané).
   // opts.watch (v105) : éliminé, le joueur regarde la suite ; le combat du meneur est gardé (watched).
+  // Le plus long combat d'une manche, en étapes (v127).
+  const longestOf = (results) => results.reduce((m, x) => Math.max(m, x.steps || 0), 0);
   function mpResolve(state, snaps, endEvents, opts) {
     const me = you(state);
     const players = alivePlayers(state);
@@ -2441,7 +2446,7 @@
       const fs = { seed: state.seed, rc: 0, families: state.families, uidc: 1000000, pool: {}, event: state.event };
       const r = fight(fs, A, B, state.round + ':' + ga + ':' + gb, mineFight || isFeat);
       r.damage = Math.min(cap, r.damage);
-      results.push({ a: ga, b: gb, winner: r.winner, damage: r.damage, ghost: !!B.ghost });
+      results.push({ a: ga, b: gb, winner: r.winner, damage: r.damage, ghost: !!B.ghost, steps: r.steps });
       if (mineFight) {
         const flip = isMe(B);
         const opp = flip ? A : B;
@@ -2501,7 +2506,7 @@
       state.phase = 'over';
       state.rank = me.rank;
       state.reward = rewardsOf(state)[me.rank] || 0;
-      return { ok: true, battle, watched, results, fallen: fallen.map((p) => p.id), endEvents: endEvents || [], over: true, rank: me.rank, reward: state.reward, winner: still[0] ? still[0].id : null };
+      return { ok: true, battle, watched, results, longest: longestOf(results), fallen: fallen.map((p) => p.id), endEvents: endEvents || [], over: true, rank: me.rank, reward: state.reward, winner: still[0] ? still[0].id : null };
     }
     state.round++;
     state.phase = 'shop';
@@ -2512,7 +2517,7 @@
       const evs = startTurn(state, p);
       if (p === me) startEvents = evs;
     }
-    return { ok: true, battle, watched, results, fallen: fallen.map((p) => p.id), endEvents: endEvents || [], startEvents, over: false };
+    return { ok: true, battle, watched, results, longest: longestOf(results), fallen: fallen.map((p) => p.id), endEvents: endEvents || [], startEvents, over: false };
   }
 
   // ─── Contrôle (tests) ───────────────────────────────────────

@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 126;
+  const VERSION = 127;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -3692,6 +3692,7 @@
       await playShopEvents(res.endEvents, null, pre);
       await sleep(250);
       if (res.battle) await playBattle(res.battle);
+      if (MP && !res.over) await waitTurnStart(MP);
       await afterBattle(res);
     } catch (err) {
       console.error(err);
@@ -3699,6 +3700,20 @@
       ui.time = 1;
       ui.busy = false;
     }
+  }
+
+  // En ligne, tout le monde revient en boutique au même moment (v127, comme TFT et Champs de
+  // bataille) : qui a fini son combat plus tôt attend la fin de la phase de combat (js/multi.js).
+  async function waitTurnStart(MP) {
+    const end = MP.shopStart ? MP.shopStart(ui.state.round) : 0;
+    let left = end - Date.now();
+    if (left < 600) return;
+    while (left > 300) {
+      banner(tr('PROCHAIN TOUR'), tr('Dans {n} s : les autres combats se terminent.', { n: Math.ceil(left / 1000) }));
+      await new Promise((r) => setTimeout(r, Math.min(1000, left - (Math.ceil(left / 1000) - 1) * 1000)));
+      left = end - Date.now();
+    }
+    clearBanner();
   }
 
   function combatRowEl(side) { return side === 0 ? $('board') : $('enemy'); }

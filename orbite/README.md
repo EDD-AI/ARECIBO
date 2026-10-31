@@ -370,6 +370,18 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## En ligne : même départ pour tous, comme TFT et Champs de bataille (v127)
+
+- **Tout le monde revient en boutique au même moment** et a **le même temps d’achat**. La phase de
+  combat dure ce que dure le **plus long combat de la manche** : `R.fight` compte ses étapes même sans
+  journal, `R.mpResolve` renvoie `longest`, et `fightWindow` (`js/multi.js`) en tire une durée avec
+  l’accélération des longs combats et le temps du résultat, entre 12 s et 32 s. Tous les téléphones
+  simulent les mêmes combats : ils trouvent la même durée (vérifié par `tests/multi.test.mjs`).
+- Qui a fini son combat plus tôt voit « **PROCHAIN TOUR** · Dans n s : les autres combats se terminent »,
+  puis la boutique s’ouvre pour tous ensemble (`shopStart`). Échéance de la boutique : ce départ commun
+  plus le temps d’achat de la manche ; un téléphone très lent garde au moins 8 s pour acheter.
+- Remplace la « fin d’achat commune » de la v126, où un combat court donnait plus de temps d’achat.
+
 ## En ligne : plus d’attente entre les manches, combats accélérés (v126)
 
 - **Avant** : le temps d’achat de chaque joueur partait de la fin de **son** combat. Celui qui avait un
