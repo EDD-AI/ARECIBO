@@ -79,13 +79,17 @@
   };
   const now = () => Date.now();
   const pseudo = () => String(localStorage.getItem('orbite.pseudo') || tr('Créateur')).slice(0, 16);
-  function myPoints() { try { const c = K.sanitize(JSON.parse(localStorage.getItem('orbite.classe') || 'null')); return K.placed(c) ? c.points : 0; } catch (err) { return 0; } }
+  function myClasse() { try { return K.sanitize(JSON.parse(localStorage.getItem('orbite.classe') || 'null')); } catch (err) { return K.fresh(); } }
+  function myPoints() { const c = myClasse(); return K.placed(c) ? c.points : 0; }
   const bracketOf = (pts) => K.tierOf(pts).idx;
   // Sa place au salon porte aussi sa police de pseudo, son cadre et sa photo (v96) : les autres
   // joueurs les voient au salon et en partie. Le contenu des places n'est pas contrôlé par les règles
   // Firestore : rien à republier.
   function seatOf() {
-    const seat = { uid: uid(), name: pseudo(), points: myPoints() };
+    // Son rang voyage aussi (v128) : classé ou non, et ses parties de placement jouées, pour son
+    // emblème au salon et en partie.
+    const c = myClasse();
+    const seat = { uid: uid(), name: pseudo(), points: K.placed(c) ? c.points : 0, placed: K.placed(c), pl: c.placements.length };
     const api = O.api || {};
     const font = api.myFont ? api.myFont() : '', frame = api.myFrame ? api.myFrame() : '', avatar = api.myAvatar ? api.myAvatar() : '';
     if (font) seat.font = font;
@@ -118,7 +122,8 @@
     M.beat = setInterval(heartbeat, BEAT_MS);
     heartbeat();
   }
-  function stopWatch() { for (const u of M.unsub) try { u(); } catch (err) { /* déjà arrêté */ } M.unsub = []; clearInterval(M.beat); clearInterval(M.poll); }
+  function stopWatch() { for (const u of M.unsub) try { u(); } catch (err) { /* déjà arrêté */ } M.unsub = []; clearInterval(M.beat); stopPoll(); }
+  function stopPoll() { clearInterval(M.poll); M.poll = 0; }
   async function heartbeat() {
     if (!M.mid) return;
     try { const { fs } = fire(); await fs.updateDoc(ref(M.mid), { ['beat.' + uid()]: now() }); } catch (err) { /* hors ligne : on réessaiera */ }
@@ -183,15 +188,34 @@
   // Recherche classée : on rejoint le plus ancien salon d'un rang proche ; sinon on ouvre le sien.
   // La tolérance de rang s'élargit avec l'attente ; au bout de 40 s, l'hôte complète avec des bots.
   async function searchRanked(size) {
+    stopPoll();
+    M.searchOff = false;
+    // Chaque recherche a son numéro : une recherche annulée encore en route ne peut plus ouvrir de salon.
+    const gen = M.searchGen = (M.searchGen || 0) + 1;
     M.mode = 'ranked';
     M.size = size === 2 ? 2 : SEATS;
     M.searchStart = now();
-    await findOrCreate();
-    clearInterval(M.poll);
-    M.poll = setInterval(() => { findOrCreate().catch(() => {}); hostStartCheck(); }, 3000);
+    await findOrCreate(gen);
+    // ANNULER pendant la toute première recherche : le salon ouvert entre-temps est quitté.
+    if (M.searchOff || gen !== M.searchGen) { if (gen === M.searchGen) await leave(); return; }
+    ensurePoll();
   }
-  async function findOrCreate() {
-    if (M.started) { clearInterval(M.poll); return; }
+  // Toutes les 3 s : chercher un salon plus ancien, et lancer la partie à l'heure si l'on est l'hôte.
+  // Quitter un salon (leave) l'arrête : on la relance dans le nouveau.
+  function ensurePoll() {
+    if (M.poll || M.searchOff) return;
+    M.poll = setInterval(() => { findOrCreate(M.searchGen).catch(() => {}); hostStartCheck(); }, 3000);
+  }
+  // ANNULER la recherche (v128) : plus de nouvelle recherche, et l'on quitte proprement le salon (le
+  // dernier à partir le supprime). Une recherche encore en route s'arrête dès son retour.
+  async function cancelSearch() {
+    M.searchOff = true;
+    stopPoll();
+    await leave();
+  }
+  async function findOrCreate(gen) {
+    const off = () => M.searchOff || gen !== M.searchGen;
+    if (M.started || off()) { stopPoll(); return; }
     const { db, fs } = fire();
     const b = bracketOf(myPoints()), spread = Math.min(9, Math.floor((now() - M.searchStart) / 10000));
     const res = await fs.getDocs(fs.query(fs.collection(db, 'matches'), fs.where('status', '==', 'waiting'), fs.where('mode', '==', 'ranked'), fs.limit(30)));
@@ -203,23 +227,26 @@
     // Notre propre salon est plus récent qu'un autre : on le quitte pour rejoindre le plus ancien.
     if (best && (!M.mid || (M.match && M.match.uids.length === 1 && (best.created < M.match.created || (best.created === M.match.created && best.id < M.mid))))) {
       if (M.mid) await leave();
+      if (off()) return;
       M.mode = 'ranked';
-      try { await join(best.id); return; } catch (err) { /* complet entre-temps */ }
+      try { await join(best.id); if (off()) await leave(); else ensurePoll(); return; } catch (err) { /* complet entre-temps */ }
     }
-    if (!M.mid) await create('ranked', M.size);
+    if (!M.mid && !off()) { await create('ranked', M.size); if (off()) await leave(); else ensurePoll(); }
   }
   function hostStartCheck() {
     const m = M.match;
     if (!m || m.status !== 'waiting' || m.host !== uid() || m.mode !== 'ranked') return;
     if (m.uids.length >= seatsOf(m) || now() - m.created >= WAIT_MS) start();
   }
-  async function createPrivate(size) { M.mode = 'private'; return create('private', size === 2 ? 2 : SEATS); }
+  async function createPrivate(size) { M.searchOff = true; stopPoll(); M.mode = 'private'; return create('private', size === 2 ? 2 : SEATS); }
   async function joinCode(raw) {
     const code = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (code.length !== 6) throw new Error(tr('Le code compte 6 caractères.'));
     const { db, fs } = fire();
     const res = await fs.getDocs(fs.query(fs.collection(db, 'matches'), fs.where('code', '==', code), fs.where('status', '==', 'waiting'), fs.limit(1)));
     if (res.empty) throw new Error(tr('Aucune partie en attente avec ce code.'));
+    M.searchOff = true;
+    stopPoll();
     M.mode = 'private';
     await join(res.docs[0].id);
   }
@@ -272,10 +299,12 @@
     const m = M.match, me = uid();
     const families = R.mpFamilies(m.seed);
     const seats = m.seats.filter((s) => s.uid !== me).map((s) => ({ id: s.uid, name: s.name, law: null }));
-    // Niveau de la partie : la moyenne des points des autres créateurs (pour le barème classé).
-    const others = m.seats.filter((s) => s.uid !== me);
-    const lobby = others.length ? Math.round(others.reduce((n, s) => n + (s.points || 0), 0) / others.length) : null;
-    const st = R.newGame(m.seed, lawId, { families, seats, size: seatsOf(m), event: 'auto', mp: { me, mid: M.mid, mode: m.mode, lobby } });
+    // Niveau de la partie : la moyenne des points des autres créateurs humains (pour le barème classé ;
+    // les bots n'ont pas de place au salon). Classée (v128) : recherche classée, ou partie entre amis
+    // à deux humains ou plus (classement.js, counts).
+    const lobby = K.lobbyOf(m.seats, me);
+    const humans = m.seats.length;
+    const st = R.newGame(m.seed, lawId, { families, seats, size: seatsOf(m), event: 'auto', mp: { me, mid: M.mid, mode: m.mode, lobby, humans, ranked: K.counts(m.mode, humans) } });
     st.players[0].name = pseudo();
     M.posts = {}; M.roundDocs = {}; M.lastSnaps = {}; M.locked = null; M.timerRound = 0; M.roundRecv = {}; M.roundWin = {};
     listenPosts();
@@ -485,7 +514,9 @@
 
   window.OrbiteMulti = {
     get state() { return M; },
-    searchRanked, createPrivate, joinCode, start, leave, invite, setBots, newState, lawChoices, endTurn, startRound, stopRound, isHost, say, watchNext,
-    SEATS, seatsOf, botsOf, WAIT_MS, LAW_MS, startBase, shopStart, fightWindow
+    searchRanked, cancelSearch, createPrivate, joinCode, start, leave, invite, setBots, newState, lawChoices, endTurn, startRound, stopRound, isHost, say, watchNext,
+    SEATS, seatsOf, botsOf, WAIT_MS, LAW_MS, startBase, shopStart, fightWindow,
+    // La partie de ce salon comptera-t-elle pour le classement ? (humains présents au salon)
+    rankedOf: (m) => !!m && K.counts(m.mode, (m.uids || []).length)
   };
 })();

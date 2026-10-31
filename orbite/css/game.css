@@ -2597,3 +2597,159 @@ body.rp-open .coach { visibility: hidden; }
 .vs-tip.bad { color: #ff8a7a; }
 /* Une fiche ouverte (fonder une colonie) : le bouton du bas ne transparaît pas derrière elle. */
 body.modal #visite .vs-bar { visibility: hidden; }
+
+/* ─── Classé (v128) : emblèmes, TROUVER UNE PARTIE, recherche, classé entre amis ─── */
+/* Un emblème de rang (js/embleme.js) : un SVG en pixels, carré, net à toutes les tailles. */
+.emb { display: inline-flex; flex: none; width: 32px; height: 32px; vertical-align: middle; }
+.emb > svg { display: block; width: 100%; height: 100%; }
+.emb-xs { width: 18px; height: 18px; margin-right: 5px; vertical-align: -4px; }
+.emb-in { width: 15px; height: 15px; margin-right: 3px; vertical-align: -3px; }
+
+/* TROUVER UNE PARTIE : en haut, son rang, DUEL / MÊLÉE, puis le grand bouton. */
+.mp-find {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(246, 196, 83, 0.45);
+  background: linear-gradient(180deg, rgba(246, 196, 83, 0.09), rgba(246, 196, 83, 0.02) 70%);
+}
+.mpf-rank { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.mpf-emb { width: 60px; height: 60px; }
+.mpf-rank-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mpf-rank-txt b { font-size: 17px; font-weight: 600; letter-spacing: 0.12em; color: var(--gold); }
+.mpf-rank-txt small { font-size: 11px; letter-spacing: 0.08em; color: var(--dim); }
+.mpf-rank-txt small:first-child { letter-spacing: 0.24em; }
+.mpf-play { display: flex; flex-direction: column; gap: 10px; }
+.mpf-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); }
+.mpf-mode { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 9px 6px; color: var(--dim); transition: background 0.2s, color 0.2s; }
+.mpf-mode + .mpf-mode { border-left: 1px solid var(--line); }
+.mpf-mode b { font-size: 15px; font-weight: 600; letter-spacing: 0.2em; }
+.mpf-mode small { font-size: 10px; letter-spacing: 0.14em; }
+.mpf-mode.on { color: #000; background: var(--gold); }
+.btn.primary.mpf-go { flex-direction: column; gap: 2px; min-height: 68px; padding: 8px 14px; background: var(--gold); border-color: var(--gold); box-shadow: 0 0 28px -10px rgba(246, 196, 83, 0.9); }
+.mpf-go b { font-size: 19px; font-weight: 700; letter-spacing: 0.18em; }
+.mpf-go small { font-size: 11px; font-weight: 600; letter-spacing: 0.24em; opacity: 0.7; }
+.mpf-note { margin: 0; font-size: 12px; line-height: 1.45; color: var(--dim); text-align: center; text-wrap: balance; }
+/* Les autres modes, plus discrets, en dessous. */
+.mp-amis { gap: 10px; }
+.mp-amis p { font-size: 12px; }
+.mp-amis-row { display: flex; flex-direction: column; gap: 8px; }
+.mp-amis-row .btn { min-height: 42px; font-size: 13px; }
+
+/* L'écran de recherche : le temps, le radar et son emblème, les joueurs trouvés, ANNULER. */
+.mp-search { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 12px 12px; border: 1px solid rgba(246, 196, 83, 0.4); background: radial-gradient(ellipse at 50% 30%, rgba(246, 196, 83, 0.08), transparent 65%); text-align: center; }
+.mps-side { display: flex; flex-direction: column; align-items: center; gap: inherit; width: 100%; }
+.mps-head { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.mps-kick { font-size: 11px; letter-spacing: 0.3em; color: var(--gold); }
+.mps-title { font-size: 20px; font-weight: 600; letter-spacing: 0.26em; text-indent: 0.26em; animation: mpsBlink 1.6s ease-in-out infinite; }
+@keyframes mpsBlink { 50% { opacity: 0.55; } }
+.mps-time { font-size: 30px; font-weight: 600; letter-spacing: 0.08em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.mps-radar { position: relative; display: grid; place-items: center; width: 132px; height: 132px; margin: 2px 0; }
+.mps-radar > * { grid-area: 1 / 1; }
+.mps-ring { position: absolute; inset: 0; border: 1px solid rgba(246, 196, 83, 0.35); border-radius: 50%; animation: mpsPing 2.4s ease-out infinite; }
+.mps-ring.r2 { animation-delay: 1.2s; }
+@keyframes mpsPing { from { transform: scale(0.55); opacity: 1; } to { transform: scale(1.12); opacity: 0; } }
+.mps-sweep { position: absolute; inset: 6px; border-radius: 50%; background: conic-gradient(from 0deg, rgba(246, 196, 83, 0.32), transparent 22%, transparent); animation: mpsSweep 2.6s linear infinite; }
+@keyframes mpsSweep { to { transform: rotate(360deg); } }
+.mps-me { position: relative; width: 84px; height: 84px; filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.8)); }
+.mps-rank { display: flex; flex-direction: column; gap: 2px; }
+.mps-rank b { font-size: 14px; font-weight: 600; letter-spacing: 0.16em; color: var(--gold); }
+.mps-rank small { font-size: 11px; letter-spacing: 0.06em; color: var(--dim); }
+.mps-found { display: flex; align-items: baseline; gap: 10px; }
+.mps-found span { font-size: 11px; letter-spacing: 0.24em; color: var(--dim); }
+.mps-found b { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mps-seats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; width: 100%; }
+.mp-search.duel .mps-seats { grid-template-columns: repeat(2, minmax(0, 1fr)); width: min(100%, 300px); gap: 10px; }
+.mps-seat { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; padding: 7px 3px 6px; border: 1px dashed var(--faint); }
+.mps-seat.on { border-style: solid; border-color: var(--line); background: rgba(241, 236, 218, 0.03); }
+.mps-seat.me { border-color: rgba(246, 196, 83, 0.5); }
+.mps-seat b { max-width: 100%; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mps-seat small { max-width: 100%; font-size: 9px; letter-spacing: 0.06em; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mps-emb { width: 34px; height: 34px; }
+.mp-search.duel .mps-emb { width: 52px; height: 52px; }
+.mps-wait { width: 34px; height: 34px; box-sizing: border-box; border: 2px dashed rgba(241, 236, 218, 0.3); border-radius: 50%; animation: mpsSpin 6s linear infinite; }
+.mp-search.duel .mps-wait { width: 52px; height: 52px; }
+@keyframes mpsSpin { to { transform: rotate(360deg); } }
+.mps-note { margin: 0; max-width: 34ch; font-size: 13px; line-height: 1.4; color: var(--dim); text-wrap: balance; }
+.mps-cancel { width: min(100%, 300px); }
+@media (prefers-reduced-motion: reduce) { .mps-title, .mps-ring, .mps-sweep, .mps-wait { animation: none; } }
+
+/* Salon entre amis : « Partie classée » dès 2 joueurs humains ; l'emblème de chaque place. */
+.mp-ranked { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--faint); text-align: left; }
+.mp-ranked span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mp-ranked b { font-size: 12px; letter-spacing: 0.22em; }
+.mp-card .mp-ranked b { font-size: 12px; }
+.mp-ranked small { font-size: 11px; line-height: 1.35; color: var(--dim); }
+.mp-ranked.on { border-color: rgba(246, 196, 83, 0.5); background: rgba(246, 196, 83, 0.07); }
+.mp-ranked.on b { color: var(--gold); }
+.mp-ranked-emb { width: 36px; height: 36px; }
+.mp-ranked-tag { margin-left: 8px; padding: 1px 6px; font-style: normal; font-size: 10px; letter-spacing: 0.2em; color: #000; background: var(--gold); vertical-align: 2px; }
+.mp-seat.on { position: relative; }
+.mp-seat-emb { width: 26px; height: 26px; margin-left: auto; }
+
+/* Profil, classement, fiches : l'emblème à la place de l'astre de rang. */
+.pf-emb { width: 56px; height: 56px; }
+.pf-tier-emb { width: 48px; height: 48px; }
+.on-rank { display: flex; align-items: center; gap: 8px; }
+.on-emb { width: 30px; height: 30px; }
+.who-rank { display: inline-flex; align-items: center; gap: 8px; }
+.who-emb { width: 40px; height: 40px; }
+.dr-who b .emb-xs, .rv-who .emb-xs { margin-right: 4px; }
+.rv-info .emb-xs { width: 16px; height: 16px; margin-right: 4px; vertical-align: -3px; }
+
+/* Fin de partie : la carte du classé (emblème, rang, points, barre) et ses animations. */
+.end-ranked:empty { display: none; }
+.end-classe { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; width: min(300px, 86vw); margin: 0 auto; padding: 8px 12px; border: 1px solid var(--line); text-align: left; letter-spacing: 0; }
+.ec-emb { display: grid; width: 58px; height: 58px; transform-origin: 50% 50%; }
+.ec-emb > svg { width: 100%; height: 100%; }
+.ec-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ec-kick { font-size: 10px; letter-spacing: 0.24em; color: var(--dim); }
+.ec-label { font-size: 15px; letter-spacing: 0.12em; color: var(--ink); }
+.ec-line { font-size: 12px; color: var(--dim); }
+.ec-line b.ec-delta { font-size: 14px; font-variant-numeric: tabular-nums; }
+.ec-line b.up { color: var(--good); }
+.ec-line b.down { color: var(--hp); }
+.ec-tag { min-height: 0; font-style: normal; font-size: 11px; font-weight: 600; letter-spacing: 0.16em; }
+.ec-tag.wait { visibility: hidden; }
+.ec-tag.up { color: var(--good); }
+.ec-tag.down { color: var(--hp); font-weight: 400; }
+.ec-tag.show { animation: ecTag 0.5s ease-out; }
+@keyframes ecTag { from { opacity: 0; transform: translateY(4px); } }
+.ec-bar { display: block; height: 3px; margin-top: 3px; background: var(--faint); }
+.ec-bar > i { display: block; height: 100%; background: var(--gold); transition: width 0.5s ease; }
+.end-classe.ec-pop .ec-emb { animation: ecPop 0.52s cubic-bezier(.2, 1.6, .4, 1); }
+@keyframes ecPop { 0% { transform: scale(1); } 45% { transform: scale(0.3); filter: brightness(3); } 75% { transform: scale(1.35); filter: brightness(1.6); } 100% { transform: scale(1); } }
+.end-classe.ec-drop .ec-emb { animation: ecDrop 0.64s ease-in-out; }
+@keyframes ecDrop { 0% { transform: none; } 45% { transform: translateY(6px) scale(0.86); filter: grayscale(1) brightness(0.6); opacity: 0.4; } 100% { transform: none; } }
+.end-classe.ec-charge .ec-emb { animation: ecCharge 0.9s ease-in; }
+@keyframes ecCharge { 0% { transform: none; } 30% { transform: translateX(-1px) rotate(-3deg); } 50% { transform: translateX(1px) rotate(3deg) scale(1.06); } 70% { transform: translateX(-1px) rotate(-4deg) scale(1.1); filter: brightness(1.5); } 100% { transform: scale(1.15); filter: brightness(2.2); } }
+.end-classe.ec-flip .ec-emb { animation: ecFlip 0.52s ease-in-out; }
+@keyframes ecFlip { 0% { transform: scale(1.15) rotateY(0); filter: brightness(2.2); } 50% { transform: scale(1.25) rotateY(90deg); filter: brightness(3); } 80% { transform: scale(1.3) rotateY(0); } 100% { transform: scale(1); } }
+.end-classe.ec-placed { border-color: rgba(246, 196, 83, 0.6); background: rgba(246, 196, 83, 0.06); }
+.end-classe.ec-placed .ec-label { color: var(--gold); }
+.ec-skip { display: block; max-width: 34ch; margin: 0 auto; font-size: 11px; line-height: 1.4; letter-spacing: 0.06em; color: var(--dim); }
+@media (prefers-reduced-motion: reduce) { .end-classe .ec-emb { animation: none !important; } }
+/* Petits écrans : le grand bouton tient sur une ligne, l'écran de recherche se resserre (ANNULER
+ * reste en vue), la fin de partie défile si elle dépasse (elle reste centrée quand elle tient). */
+@media (max-width: 360px) {
+  .mpf-go b { font-size: 16px; letter-spacing: 0.12em; }
+  .mp-search.melee .mps-seat:not(.on) small { display: none; }
+  #mpBody .sheet-actions .btn { padding: 4px 10px; font-size: 13px; letter-spacing: 0.06em; line-height: 1.2; white-space: normal; }
+}
+@media (max-height: 700px) {
+  .mp-search { gap: 7px; padding-top: 10px; }
+  .mps-time { font-size: 24px; }
+  .mps-radar { width: 92px; height: 92px; margin: 0; }
+  .mps-me { width: 60px; height: 60px; }
+  .mps-emb, .mps-wait { width: 28px; height: 28px; }
+  .mp-search.duel .mps-emb, .mp-search.duel .mps-wait { width: 40px; height: 40px; }
+  .mps-seat { padding: 5px 3px 4px; }
+  .end-classe { gap: 10px; padding: 6px 10px; }
+  .ec-emb { width: 46px; height: 46px; }
+}
+body:not(.desk) #end { overflow-y: auto; justify-content: flex-start; scrollbar-width: none; }
+body:not(.desk) #end > * { flex-shrink: 0; }
+body:not(.desk) #end > :first-child { margin-top: auto; }
+body:not(.desk) #end > :last-child { margin-bottom: auto; }

@@ -1416,12 +1416,131 @@
   const K = window.OrbiteClassement;
   const CLASSE_KEY = 'orbite.classe';
   const classe = () => K.sanitize(readJson(CLASSE_KEY, null));
-  function rankedLine(r) {
-    if (!r) return '';
-    if (r.placement && !r.done) return tr('CLASSÉ · placement {a} / {b}', { a: K.PLACEMENTS - r.left, b: K.PLACEMENTS });
-    if (r.placement) return tr('CLASSÉ · placé en <b>{rank}</b>', { rank: esc(tierLabel(r.tier)) });
-    const sign = r.delta >= 0 ? '+' : '';
-    return `${tr('CLASSÉ')} · <b class="${r.delta >= 0 ? 'up' : 'down'}">${tr('{n} points', { n: sign + r.delta })}</b> · ${esc(tierLabel(r.tier))}${r.up ? ` · <b class="up">${tr('RANG SUPÉRIEUR !')}</b>` : r.down ? ' · ' + tr('rang inférieur') : ''}`;
+  // ─── Classé en fin de partie (v128) ─────────────────────────
+  // Une carte : l'emblème, le rang, les points gagnés ou perdus et la barre de la division. Elle
+  // s'affiche d'abord dans l'état d'avant la partie ; rankedScene l'anime ensuite vers le nouveau
+  // (montée : l'emblème grossit dans un éclat ; descente : plus sobre ; fin des placements : le rang
+  // se révèle). done : déjà animée (écran de fin rouvert), on montre directement le résultat.
+  const signed = (n) => (n > 0 ? '+' : n < 0 ? '−' : '±') + Math.abs(n);
+  function rankedHtml(s, done) {
+    const r = s.rankedRes;
+    if (!r) return s.rankedSkip ? `<span class="ec-skip">${tr('Partie entre amis non classée : il faut au moins 2 joueurs humains.')}</span>` : '';
+    // Résultat d'avant la v128 (sans état de départ) : on part du résultat.
+    if (!r.placement && !r.from) Object.assign(r, { from: r.tier, before: r.points - (r.delta || 0) });
+    const kick = r.friends ? tr('CLASSÉ ENTRE AMIS') : tr('PARTIE CLASSÉE');
+    let emb, label, line, bar, cls = '';
+    if (r.placement && !r.done) {
+      const n = K.PLACEMENTS - r.left;
+      emb = EMB.placement(done ? n : n - 1);
+      label = tr('PLACEMENT {a} / {b}', { a: n, b: K.PLACEMENTS });
+      line = r.left > 1 ? tr('Encore {n} parties pour obtenir votre rang.', { n: r.left }) : tr('Encore 1 partie pour obtenir votre rang.');
+      bar = n / K.PLACEMENTS * 100;
+    } else if (r.placement) {
+      emb = done ? EMB.svg(r.tier.idx, r.tier.div) : EMB.placement(K.PLACEMENTS - 1);
+      label = done ? tr('PLACÉ EN {rank}', { rank: esc(tierLabel(r.tier)).toUpperCase() }) : tr('PLACEMENT {a} / {b}', { a: K.PLACEMENTS, b: K.PLACEMENTS });
+      line = done ? tr('{n} points', { n: r.points }) : tr('Votre rang se dévoile…');
+      bar = done ? (r.tier.span ? r.tier.into : 100) : 100;
+      cls = done ? 'ec-placed' : '';
+    } else {
+      const t = done ? r.tier : r.from;
+      emb = EMB.svg(t.idx, t.div);
+      label = esc(tierLabel(t)).toUpperCase();
+      line = `<b class="ec-delta ${r.delta > 0 ? 'up' : r.delta < 0 ? 'down' : ''}" data-ec-delta>${done ? tr('{n} pts', { n: signed(r.delta) }) : tr('{n} pts', { n: '±0' })}</b> <small data-ec-pts>${tr('{n} points', { n: done ? r.points : r.before })}</small>`;
+      bar = t.span ? (done ? t.into : r.before % 100) : 100;
+    }
+    // L'annonce (rang supérieur…) garde sa place dès le début : rien ne bouge quand elle apparaît.
+    const tag = rankedTag(r);
+    return `<span class="end-classe ${cls}" data-ec>
+      <span class="ec-emb" data-ec-emb>${emb}</span>
+      <span class="ec-txt"><small class="ec-kick">${kick}</small><b class="ec-label" data-ec-label>${label}</b>
+        <span class="ec-line" data-ec-line>${line}</span>${tag ? `<em class="ec-tag ${tag.cls} ${done ? '' : 'wait'}" data-ec-tag>${tag.txt}</em>` : ''}
+        <i class="ec-bar"><i data-ec-fill style="width:${bar}%"></i></i></span></span>`;
+  }
+  function rankedTag(r) {
+    if (r.placement) return r.done ? { cls: 'up', txt: tr('RANG OBTENU !') } : null;
+    if (r.up) return { cls: 'up', txt: tr('RANG SUPÉRIEUR !') };
+    if (r.divUp) return { cls: 'up', txt: tr('DIVISION SUPÉRIEURE !') };
+    if (r.down) return { cls: 'down', txt: tr('rang inférieur') };
+    if (r.divDown) return { cls: 'down', txt: tr('division inférieure') };
+    return null;
+  }
+  const rgbOf = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  async function rankedScene(s) {
+    const r = s.rankedRes, box = document.querySelector('#endRanked [data-ec]');
+    if (!r || !box || s.rankedShown) return;
+    s.rankedShown = true;
+    const q = (k) => box.querySelector('[data-ec-' + k + ']');
+    const embEl = q('emb'), fill = q('fill');
+    const burst = (idx, big) => {
+      if (!embEl) return;
+      const [x, y] = center(embEl), m = EMB.METAL[idx];
+      stage.burst(x, y, { n: big ? 46 : 22, colors: [rgbOf(m.h), rgbOf(m.m), [255, 255, 255]], speed: big ? 260 : 150, up: 30, life: big ? 1.3 : 0.9 });
+      if (big) stage.ring(x, y, embEl.offsetWidth * 0.55, { n: 40, colors: [rgbOf(m.h), rgbOf(m.m)], speed: 70, life: 0.8 });
+    };
+    const swap = async (svg, cls, ms) => {
+      box.classList.remove('ec-pop', 'ec-drop', 'ec-flip');
+      void box.offsetWidth;
+      box.classList.add(cls);
+      await wait(ms / 2);
+      embEl.innerHTML = svg;
+      await wait(ms / 2);
+    };
+    const showTag = () => { const t = rankedTag(r), el = q('tag'); if (t && el) el.className = 'ec-tag show ' + t.cls; };
+    await wait(300);
+    if (r.placement && !r.done) {
+      // Un placement de plus : son point s'allume.
+      await swap(EMB.placement(K.PLACEMENTS - r.left), 'ec-pop', 360);
+      SFX.coin();
+      return;
+    }
+    if (r.placement) {
+      // Fin des placements : le « ? » tourne, se charge, et le rang obtenu apparaît dans un éclat.
+      box.classList.add('ec-charge');
+      SFX.charge && SFX.charge();
+      await wait(900);
+      box.classList.remove('ec-charge');
+      await swap(EMB.svg(r.tier.idx, r.tier.div), 'ec-flip', 520);
+      burst(r.tier.idx, true);
+      (SFX.legend ? SFX.legend(true) : SFX.level());
+      vibrate([30, 40, 60]);
+      box.classList.add('ec-placed');
+      q('label').innerHTML = tr('PLACÉ EN {rank}', { rank: esc(tierLabel(r.tier)).toUpperCase() });
+      q('line').innerHTML = tr('{n} points', { n: r.points });
+      if (fill) fill.style.width = (r.tier.span ? r.tier.into : 100) + '%';
+      showTag();
+      return;
+    }
+    // Les points défilent, la barre suit ; au passage d'une division, l'emblème change.
+    const delta = q('delta'), pts = q('pts');
+    const changed = r.divUp || r.divDown;
+    const t0 = performance.now(), ms = 900;
+    if (fill) fill.style.transition = 'none';
+    await new Promise((resolve) => {
+      const tick = (now) => {
+        const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 2);
+        const v = Math.round(r.delta * e), cur = r.before + v;
+        if (delta) delta.textContent = tr('{n} pts', { n: signed(v) });
+        if (pts) pts.textContent = tr('{n} points', { n: cur });
+        // Dans la division d'avant tant qu'on ne l'a pas quittée (barre pleine ou vide au passage).
+        if (fill && r.from.span) fill.style.width = (changed ? Math.max(0, Math.min(100, cur - (r.before - r.before % 100))) : cur % 100) + '%';
+        if (k < 1) requestAnimationFrame(tick); else resolve();
+      };
+      requestAnimationFrame(tick);
+    });
+    if (fill) fill.style.transition = '';
+    if (r.divUp) {
+      await swap(EMB.svg(r.tier.idx, r.tier.div), 'ec-pop', 520);
+      burst(r.tier.idx, r.up);
+      if (r.up) { (SFX.legend ? SFX.legend(true) : SFX.level()); vibrate([30, 40, 60]); } else SFX.level();
+    } else if (r.divDown) {
+      await swap(EMB.svg(r.tier.idx, r.tier.div), 'ec-drop', 640);
+      SFX.off();
+    }
+    if (changed) {
+      q('label').textContent = tierLabel(r.tier).toUpperCase();
+      if (fill) fill.style.width = (r.tier.span ? r.tier.into : 100) + '%';
+    }
+    showTag();
   }
   const readJson = (k, d) => { try { return JSON.parse(store.get(k, '')) || d; } catch (err) { return d; } };
   const stats = () => Object.assign({ games: 0, wins: 0, top3: 0, rankSum: 0, best: 0, cycles: 0, fights: 0, goldens: 0, dust: 0, laws: {} }, readJson(STATS_KEY, {}));
@@ -1439,6 +1558,18 @@
     { id: 'singularite', name: 'Singularité', look: { type: 'blackhole', seed: 8117 } }
   ];
   RANKS.forEach((r) => stage.register('rank-' + r.id, r.look));
+
+  // Emblèmes des rangs (v128, js/embleme.js) : celui d'un créateur ({ points, placed, pl } : profil
+  // public ou place au salon), ou le nôtre. Le nom du rang au survol.
+  const EMB = window.OrbiteEmbleme;
+  function emblemTitle(p) {
+    const i = EMB.infoOf(p);
+    if (i.placed) return tierLabel(K.tierOf(i.points));
+    return i.done != null ? tr('Placement {a} / {b}', { a: Math.min(i.done, K.PLACEMENTS), b: K.PLACEMENTS }) : tr('non classé');
+  }
+  const emblem = (p, cls) => (EMB ? `<span class="emb ${cls || ''}" title="${esc(emblemTitle(p))}">${EMB.of(p)}</span>` : '');
+  function myRankInfo() { const c = classe(); return { points: K.placed(c) ? c.points : 0, placed: K.placed(c), pl: c.placements.length }; }
+  const myEmblem = (cls) => emblem(myRankInfo(), cls);
 
   // Votre style (v102) : la famille la plus jouée, celle qui gagne le plus, et le combo gagnant.
   function styleHtml(st) {
@@ -1491,11 +1622,11 @@
         const c = classe();
         // Toucher la carte de rang déplie ou replie l'échelle des rangs et le barème.
         const fold = `<i class="pf-fold">${ui.pfRanks ? '▴' : '▾'}</i>`;
-        if (!K.placed(c)) return `<button class="pf-rank" data-pf="ranks" aria-expanded="${!!ui.pfRanks}"><div class="pf-unranked">?</div><div><b>${tr('PLACEMENT · {a} / {b}', { a: c.placements.length, b: K.PLACEMENTS })}</b><small>${tr('Seules les parties classées en ligne (Multijoueur) comptent. Après {n} parties de placement, votre rang monte à chaque podium et descend dans les dernières places.', { n: K.PLACEMENTS })}</small></div>${fold}</button>`;
+        if (!K.placed(c)) return `<button class="pf-rank" data-pf="ranks" aria-expanded="${!!ui.pfRanks}">${myEmblem('pf-emb')}<div><b>${tr('PLACEMENT · {a} / {b}', { a: c.placements.length, b: K.PLACEMENTS })}</b><small>${tr('Les parties en ligne comptent : la recherche classée, et les parties entre amis à 2 joueurs humains ou plus. Après {n} parties de placement, votre rang monte à chaque podium et descend dans les dernières places.', { n: K.PLACEMENTS })}</small></div>${fold}</button>`;
         const t = K.tierOf(c.points);
-        return `<button class="pf-rank" data-pf="ranks" aria-expanded="${!!ui.pfRanks}"><div class="orb pf-rank-orb" data-planet="rank-${RANKS[t.idx].id}"></div><div><b>${esc(tierLabel(t)).toUpperCase()}</b><small>${tr('{n} points', { n: c.points })}${t.span ? ' · ' + tr('{a} / {b} vers la division suivante', { a: t.into, b: t.span }) : ''} · ${tr('record {n}', { n: c.best })}</small><div class="xp-bar"><i style="width:${t.span ? t.into : 100}%"></i></div></div>${fold}</button>`;
+        return `<button class="pf-rank" data-pf="ranks" aria-expanded="${!!ui.pfRanks}">${myEmblem('pf-emb')}<div><b>${esc(tierLabel(t)).toUpperCase()}</b><small>${tr('{n} points', { n: c.points })}${t.span ? ' · ' + tr('{a} / {b} vers la division suivante', { a: t.into, b: t.span }) : ''} · ${tr('record {n}', { n: c.best })}</small><div class="xp-bar"><i style="width:${t.span ? t.into : 100}%"></i></div></div>${fold}</button>`;
       })()}
-      ${ui.pfRanks ? `<div class="pf-ladder">${RANKS.map((r, i) => `<div class="pf-tier ${K.placed(classe()) && K.tierOf(classe().points).idx === i ? 'on' : ''}"><div class="orb" data-planet="rank-${r.id}"></div><b>${tr(r.name)}</b><small>${i === RANKS.length - 1 ? tr('dès {n} points', { n: K.TIER_SPAN * (RANKS.length - 1) }) : 'III · II · I'}</small></div>`).join('')}</div>
+      ${ui.pfRanks ? `<div class="pf-ladder">${RANKS.map((r, i) => `<div class="pf-tier ${K.placed(classe()) && K.tierOf(classe().points).idx === i ? 'on' : ''}"><span class="emb pf-tier-emb">${EMB ? EMB.svg(i, null) : ''}</span><b>${tr(r.name)}</b><small>${i === RANKS.length - 1 ? tr('dès {n} points', { n: K.TIER_SPAN * (RANKS.length - 1) }) : 'III · II · I'}</small></div>`).join('')}</div>
       <p class="muted">${tr('Points par place : {list}, ajustés selon le niveau de la partie (plus de points en battant des créateurs mieux classés, moins de pertes contre eux).', { list: K.DELTA.map((d) => (d > 0 ? '+' : '') + d).join(' · ') })}</p>` : ''}
       <h3 class="pf-h">${tr('STATISTIQUES')}</h3>
       <div class="pf-stats">${tiles.map(([k, v]) => `<div><b>${v}</b><small>${k}</small></div>`).join('')}</div>
@@ -2144,9 +2275,20 @@
     if (!p || p.bot || p.ghost) return null;
     // Nous-mêmes : comme les autres nous voient (sans photo, l'astre de notre rang).
     if (p.id === 'you') { const c = classe(); return seatLook({ font: myFont(), frame: myFrame(), avatar: myAvatar(), points: K.placed(c) ? c.points : 0 }); }
-    const MP = window.OrbiteMulti, m = MP && MP.state.match;
-    const seat = p.remote && m && Array.isArray(m.seats) ? m.seats.find((x) => x && x.uid === p.id) : null;
+    const seat = seatFor(p);
     return seat ? seatLook(seat) : null;
+  }
+  // La place au salon d'un créateur en ligne (rien pour un bot).
+  function seatFor(p) {
+    const MP = window.OrbiteMulti, m = MP && MP.state.match;
+    return p && p.remote && m && Array.isArray(m.seats) ? m.seats.find((x) => x && x.uid === p.id) || null : null;
+  }
+  // Son emblème de rang en partie en ligne (v128) : le nôtre, ou celui de sa place au salon.
+  function playerEmb(p, cls) {
+    if (!p || !ui.state || !ui.state.mp || p.bot || p.ghost) return '';
+    if (p.id === 'you') return myEmblem(cls || 'emb-xs');
+    const seat = seatFor(p);
+    return seat ? emblem(seat, cls || 'emb-xs') : '';
   }
   // Les cosmétiques d'une place du salon, vérifiés ; sans photo, l'astre de son rang classé.
   function seatLook(seat) {
@@ -2174,7 +2316,7 @@
       const tag = duel ? '' : isNext ? tr('PROCHAIN ADVERSAIRE') : !mine && p.id === last ? tr('DERNIER ADVERSAIRE') : '';
       return `<span class="dr-row ${mine ? 'me' : ''} ${isNext ? 'next' : ''} ${p.alive ? '' : 'dead'}">
         <i class="dr-rk">${p.alive ? i + 1 : p.rank}</i>${s.mp ? `<span class="pl-av">${playerAv(p)}</span>` : ''}
-        <span class="dr-who"><b>${playerName(p, mine ? tr('VOUS') : p.name)}</b>${tag ? `<em>${tag}</em>` : `<small>${tr('niveau {n}', { n: p.tier })}</small>`}</span>
+        <span class="dr-who"><b>${playerEmb(p)}${playerName(p, mine ? tr('VOUS') : p.name)}</b>${tag ? `<em>${tag}</em>` : `<small>${tr('niveau {n}', { n: p.tier })}</small>`}</span>
         <span class="dr-hp"><b>${p.alive ? hp : '–'}</b><i class="hp-bar"><i style="width:${p.alive ? Math.min(100, hp / (p.maxHp || R.START_HP) * 100) : 0}%"></i></i></span>
       </span>`;
     }).join('');
@@ -2195,7 +2337,7 @@
     if (R.isDuel(s)) {
       // Duel : le rival, ses PV, et son dernier système d'un geste.
       const o = s.players[1];
-      $('rivals').innerHTML = `<span class="rv-label">${tr('DUEL')}</span><span class="rv-info"><b>${playerName(o)}</b> · ${icon('heart')} ${Math.max(0, o.hp)}${s.round > 1 ? ' · ' + tr('voir son système') : ''}</span><span class="rv-open">${icon('back', 'down')}</span>`;
+      $('rivals').innerHTML = `<span class="rv-label">${tr('DUEL')}</span><span class="rv-info">${playerEmb(o)}<b>${playerName(o)}</b> · ${icon('heart')} ${Math.max(0, o.hp)}${s.round > 1 ? ' · ' + tr('voir son système') : ''}</span><span class="rv-open">${icon('back', 'down')}</span>`;
       return;
     }
     // Mêlée : le prochain adversaire est connu dès la boutique, comme dans Battlegrounds.
@@ -3388,7 +3530,7 @@
       const tag = isNext ? `<em class="next">${tr('PROCHAIN ADVERSAIRE')}</em>` : !mine && p.id === last ? `<em>${tr('DERNIER ADVERSAIRE')}</em>` : '';
       return `<button class="rival-row ${p.alive ? '' : 'dead'} ${mine ? 'me' : ''} ${isNext ? 'next' : ''}" data-act="rival">
           <span class="rk">${p.alive ? i + 1 : p.rank}</span>${s.mp ? `<span class="pl-av">${playerAv(p)}</span>` : ''}
-          <span class="rv-who"><span class="n">${playerName(p, mine ? tr('VOUS') : p.name)}</span>${tag}<span class="l">${tr('niveau {n}', { n: p.tier })}${p.alive ? '' : ' · ' + tr('éliminé {rank}', { rank: ordinal(p.rank) })}</span></span>
+          <span class="rv-who"><span class="n">${playerEmb(p)}${playerName(p, mine ? tr('VOUS') : p.name)}</span>${tag}<span class="l">${tr('niveau {n}', { n: p.tier })}${p.alive ? '' : ' · ' + tr('éliminé {rank}', { rank: ordinal(p.rank) })}</span></span>
           <span class="rv-hp">${lost ? `<small>−${lost}</small>` : ''}<b>${p.alive ? hp : '–'}</b><i class="hp-bar"><i style="width:${p.alive ? Math.min(100, hp / (p.maxHp || R.START_HP) * 100) : 0}%"></i></i></span>
         </button>
         <div class="rival-board" ${(duel && p !== me()) || isNext ? '' : 'hidden'}><p class="rv-last">${p.bot || p.remote ? tr('Système joué au dernier combat') : tr('Votre système')}</p>${board}</div>`;
@@ -4375,16 +4517,22 @@
       s.recorded = true;
       recordGame(s, rank, quit);
     }
-    // Classement : seules les parties classées en ligne comptent (un abandon vaut la 8e place) ;
-    // le solo contre les univers rivaux et les parties privées n'y touchent pas.
+    // Classement : les parties en ligne comptent (un abandon vaut la 8e place) : la recherche
+    // classée, et depuis la v128 les parties entre amis à deux créateurs humains ou plus
+    // (classement.js, counts). Le solo contre les univers rivaux n'y touche pas.
     if (!s.rankedDone) {
       s.rankedDone = true;
       const c = K.sanitize(readJson(CLASSE_KEY, null));
-      if (!s.mp || s.mp.mode !== 'ranked') s.rankedRes = null;
-      // Un duel classé compte comme une 2e place (victoire) ou une 6e (défaite) : ±18 points.
-      else { s.rankedRes = K.record(c, quit ? 8 : R.isDuel(s) ? (rank === 1 ? 2 : 6) : rank, s.mp.lobby); store.set(CLASSE_KEY, JSON.stringify(c)); }
+      const humans = s.mp ? (s.mp.humans != null ? s.mp.humans : s.players.filter((p) => p.id === 'you' || p.remote).length) : 0;
+      s.rankedRes = null;
+      if (s.mp && K.counts(s.mp.mode, humans)) {
+        // Un duel classé compte comme une 2e place (victoire) ou une 6e (défaite) : ±18 points.
+        s.rankedRes = K.record(c, K.placeOf(rank, R.isDuel(s), quit), s.mp.lobby);
+        s.rankedRes.friends = s.mp.mode !== 'ranked';
+        store.set(CLASSE_KEY, JSON.stringify(c));
+      } else if (s.mp) s.rankedSkip = true;
     }
-    $('endRanked').innerHTML = rankedLine(s.rankedRes) + dailyLine(s);
+    $('endRanked').innerHTML = rankedHtml(s, !!s.rankedShown) + dailyLine(s);
     if (!s.xpGiven) {
       s.xpGiven = true;
       xpTo = xpFrom + gain.total;
@@ -4454,6 +4602,7 @@
     }
     await wait(250);
     await fillXp(xpFrom, xpTo, dust() - gift);
+    await rankedScene(s);
     $('end').classList.remove('pending');
   }
 
@@ -4976,7 +5125,7 @@
   // Outils partagés avec le mode Campagne (js/campagne-ui.js).
   window.__orbite.api = {
     show, openSheet, closeSheet, sheetMore, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
-    pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH, frameOf, framed, avatarOf, fontOf, nameHtml, myFont, myFrame, myAvatar, seatLook,
+    pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH, frameOf, framed, avatarOf, fontOf, nameHtml, myFont, myFrame, myAvatar, seatLook, emblem, myEmblem, myRankInfo, tierLabel,
     coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation,
     seeds, addSeeds, wallet, renderMkWallet, worldLook, worldList, playerTag
   };
