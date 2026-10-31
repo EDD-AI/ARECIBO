@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 125;
+  const VERSION = 126;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -3722,9 +3722,40 @@
   // dès l'élimination, avant ce dernier combat).
   const noSkipOnline = () => document.body.classList.toggle('no-skip', !!(ui.state && ui.state.mp));
 
+  // Combats trop longs (v126, comme Hearthstone) : passé 8 s, l'animation accélère par paliers
+  // (×1,5, ×2, ×3) ; au-delà de 22 s, on passe directement au résultat. En ligne, chaque téléphone
+  // finit ainsi son combat dans la fenêtre commune (js/multi.js FIGHT_MS) et retrouve la boutique à
+  // l'heure : plus personne n'attend celui qui a un long combat.
+  const FIGHT_SPEED = [[8000, 1.5], [12000, 2], [16000, 3]];
+  const FIGHT_CAP = 22000;
+  function speedUp(t0) {
+    const el = performance.now() - t0;
+    let k = 1;
+    for (const [t, v] of FIGHT_SPEED) if (el >= t) k = v;
+    if (el >= FIGHT_CAP && !ui.skip) ui.skip = true;
+    if (k !== ui.time) {
+      ui.time = k;
+      let tag = $('fightSpeed');
+      if (!tag) { tag = document.createElement('div'); tag.id = 'fightSpeed'; tag.className = 'fight-speed'; $('game').appendChild(tag); }
+      tag.innerHTML = `${icon('fwd')} ${tr('ACCÉLÉRÉ')} ×${String(k).replace('.', ',')}`;
+      tag.hidden = k === 1;
+      if (k > 1) tag.animate([{ transform: 'translateX(-50%) scale(1.25)', opacity: 0.4 }, { transform: 'translateX(-50%) scale(1)', opacity: 1 }], { duration: 300, easing: 'ease-out' });
+    }
+  }
+
   async function playBattle(b) {
     ui.time = 1;
     ui.skip = false;
+    const t0 = performance.now();
+    const pace = setInterval(() => speedUp(t0), 200);
+    try { await playBattleInner(b); } finally {
+      clearInterval(pace);
+      ui.time = 1;
+      const tag = $('fightSpeed');
+      if (tag) tag.hidden = true;
+    }
+  }
+  async function playBattleInner(b) {
     const opp = b.opponent;
     ui.opp = opp;
     $('oppName').innerHTML = opp.ghost ? esc(opp.name + ' · ' + tr('FANTÔME')) : playerName(ui.state.players.find((x) => x.id === opp.id) || opp, opp.name);

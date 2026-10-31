@@ -44,18 +44,23 @@
   // et 75 s au plus.
   const SHOP_START = [25000, 35000, 50000];
   const shopMs = (r) => F.shop || (r <= SHOP_START.length ? SHOP_START[Math.max(1, r) - 1] : Math.min(75000, 40000 + 5000 * r));
-  const GRACE_MS = F.grace || 20000; // retard toléré après la fin du temps de boutique
+  const GRACE_MS = F.grace || 12000; // retard toléré après la fin du temps de boutique
   const LAW_MS = F.law || 20000; // choix de la loi
-  // Le plus long combat attendu (v106) : le temps de boutique ne part qu'à la fin de son propre combat,
-  // et l'hôte n'attend un retardataire que jusqu'à BATTLE_MS + boutique + GRACE_MS après la manche.
-  const BATTLE_MS = F.battle || 60000;
+  // Fenêtre de combat commune (v126, comme Hearthstone) : chaque téléphone joue son combat dans ce
+  // temps (les longs combats accélèrent puis passent au résultat, game.js playBattle), et le temps
+  // d'achat finit pour tous à la même échéance : réception de la manche + FIGHT_MS + boutique. Un
+  // combat court laisse plus de temps d'achat ; plus personne n'attend celui qui a un long combat.
+  const FIGHT_MS = F.fight || 35000;
   const STALE_MS = F.stale || 30000; // hôte silencieux depuis : un autre prend le relais
   const BEAT_MS = 10000;
   const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
   const M = {
     mid: null, match: null, mode: null, unsub: [], beat: 0, poll: 0, onChange: null,
-    started: false, posts: {}, roundDocs: {}, lastSnaps: {}, locked: null, lockAt: 0, timerRound: 0, deadline: 0, tick: 0, hostRoundStart: {}
+    started: false, posts: {}, roundDocs: {}, lastSnaps: {}, locked: null, lockAt: 0, timerRound: 0, deadline: 0, tick: 0, hostRoundStart: {},
+    // Heures locales de réception (v126) : du lancement et de chaque manche. Les échéances partent de là
+    // et non de l'horloge de l'hôte : un téléphone à l'heure fausse ne décale plus le minuteur.
+    roundRecv: {}, startLocal: 0
   };
   const fire = () => { const f = ON.fire(); if (!f || !ON.uid()) throw new Error(tr('Connectez-vous avec Google pour jouer en ligne.')); return f; };
   const uid = () => ON.uid();
@@ -90,7 +95,14 @@
     M.mid = mid;
     M.unsub.push(fs.onSnapshot(ref(mid), (d) => {
       M.match = d.exists() ? Object.assign({ id: d.id }, d.data()) : null;
-      if (M.match && M.match.status === 'playing' && !M.started) { M.started = true; if (M.onStart) M.onStart(M); }
+      if (M.match && M.match.status === 'playing' && !M.started) {
+        M.started = true;
+        // Lancement vu en direct : l'heure locale de réception sert de départ ; repris plus tard (rechargé),
+        // on garde celle de l'hôte.
+        const at = M.match.startAt || 0;
+        M.startLocal = at && Math.abs(now() - at) < 15000 ? now() : at;
+        if (M.onStart) M.onStart(M);
+      }
       notify();
       if (M.started) hostCheck();
     }));
@@ -142,7 +154,7 @@
     const mid = M.mid, m = M.match;
     stopRound();
     stopWatch();
-    Object.assign(M, { mid: null, match: null, started: false, posts: {}, roundDocs: {}, lastSnaps: {}, locked: null, timerRound: 0 });
+    Object.assign(M, { mid: null, match: null, started: false, posts: {}, roundDocs: {}, lastSnaps: {}, locked: null, timerRound: 0, roundRecv: {}, startLocal: 0 });
     notify();
     if (!mid || !m) return;
     try {
@@ -257,7 +269,7 @@
     const lobby = others.length ? Math.round(others.reduce((n, s) => n + (s.points || 0), 0) / others.length) : null;
     const st = R.newGame(m.seed, lawId, { families, seats, size: seatsOf(m), event: 'auto', mp: { me, mid: M.mid, mode: m.mode, lobby } });
     st.players[0].name = pseudo();
-    M.posts = {}; M.roundDocs = {}; M.lastSnaps = {}; M.locked = null; M.timerRound = 0;
+    M.posts = {}; M.roundDocs = {}; M.lastSnaps = {}; M.locked = null; M.timerRound = 0; M.roundRecv = {};
     listenPosts();
     // Sa loi est annoncée tout de suite : les autres voient ses vrais PV dès la première manche.
     try { const { fs } = fire(); fs.setDoc(ref(M.mid, 'posts', me), { r: 0, snap: R.snapshotOf(st, st.players[0]), at: now() }).catch(() => {}); } catch (err) { /* hors ligne */ }
@@ -329,6 +341,7 @@
         if (done || !d.exists()) return;
         done = true;
         M.roundDocs[r] = d.data();
+        if (!M.roundRecv[r]) M.roundRecv[r] = now();
         clearInterval(chk);
         un();
         resolve(d.data());
@@ -393,13 +406,14 @@
     if (isHost()) handOver();
   }
 
-  // Fin de la boutique de la manche r, au plus tard : la même pour tous (horloge de l'hôte). La manche 1
-  // suit le choix des lois ; les suivantes, le document de la manche précédente et le plus long combat.
-  // Chaque téléphone compte ensuite son propre temps d'achat depuis la fin de son combat (startRound).
+  // Fin de la boutique de la manche r : la même pour tous (v126). La manche 1 suit le choix des lois ;
+  // les suivantes, la réception du document de la manche précédente (tous les téléphones le reçoivent
+  // au même moment, à la latence près), plus la fenêtre de combat et le temps d'achat.
+  const startBase = () => M.startLocal || (M.match && M.match.startAt) || now();
   function deadlineOf(r) {
-    if (r <= 1) return (M.match && M.match.startAt ? M.match.startAt : now()) + LAW_MS + shopMs(1);
+    if (r <= 1) return startBase() + LAW_MS + shopMs(1);
     const prev = M.roundDocs[r - 1];
-    return (prev && prev.at ? prev.at : now()) + BATTLE_MS + shopMs(r);
+    return (M.roundRecv[r - 1] || (prev && prev.at) || now()) + FIGHT_MS + shopMs(r);
   }
 
   // ─── Minuteur de boutique ───────────────────────────────────
@@ -411,12 +425,12 @@
       const st = O.ui.state, el = document.getElementById('mpTimer'), btn = document.getElementById('fightBtn');
       if (!st || !st.mp || st.mp.mid !== M.mid) { stopRound(); return; }
       if (st.round !== M.timerRound) {
-        // Le minuteur ne tourne pas pendant le combat (v106) : le temps d'achat part quand la boutique
-        // revient à l'écran, sans dépasser l'échéance commune (un combat de plus d'une minute en mange
-        // le surplus).
+        // Le compte à rebours s'affiche quand la boutique revient à l'écran (v106) ; l'échéance est la
+        // même pour tous (v126) : un combat court laisse plus de temps, un long combat accéléré moins.
         if (st.round > 1 && (O.ui.busy || document.body.classList.contains('in-combat'))) return;
         M.timerRound = st.round;
-        M.deadline = st.round <= 1 ? deadlineOf(1) : Math.min(now() + shopMs(st.round), deadlineOf(st.round));
+        // Garde-fou : un téléphone très lent, sorti tard de son combat, garde au moins 8 s pour acheter.
+        M.deadline = st.round <= 1 ? deadlineOf(1) : Math.max(deadlineOf(st.round), now() + 8000);
       }
       const left = Math.max(0, M.deadline - now());
       const txt = Math.floor(left / 60000) + ':' + String(Math.ceil(left / 1000) % 60).padStart(2, '0');
@@ -455,6 +469,6 @@
   window.OrbiteMulti = {
     get state() { return M; },
     searchRanked, createPrivate, joinCode, start, leave, invite, setBots, newState, lawChoices, endTurn, startRound, stopRound, isHost, say, watchNext,
-    SEATS, seatsOf, botsOf, WAIT_MS, LAW_MS
+    SEATS, seatsOf, botsOf, WAIT_MS, LAW_MS, startBase
   };
 })();

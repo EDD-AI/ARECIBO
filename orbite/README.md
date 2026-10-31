@@ -370,6 +370,23 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## En ligne : plus d’attente entre les manches, combats accélérés (v126)
+
+- **Avant** : le temps d’achat de chaque joueur partait de la fin de **son** combat. Celui qui avait un
+  long combat finissait ses achats plus tard, et tous les autres l’attendaient (« EN ATTENTE »).
+- **Fin d’achat commune** (`js/multi.js`, comme Hearthstone Battlegrounds) : la boutique se termine pour
+  tous au même moment, à la réception de la manche + une fenêtre de combat de 35 s (`FIGHT_MS`) + le temps
+  d’achat de la manche. Un combat court laisse plus de temps pour acheter ; tout le monde publie son
+  système en même temps, plus personne n’attend. Un retardataire (téléphone en veille, réseau coupé)
+  n’est plus attendu que 12 s (au lieu de 20) avant de jouer avec son dernier système.
+- **Combats accélérés** (`game.js`, `playBattle`) : passé 8 s, l’animation accélère par paliers (×1,5 à
+  8 s, ×2 à 12 s, ×3 à 16 s, pastille « ACCÉLÉRÉ » en bas de l’écran) ; au-delà de 22 s, on passe
+  directement au résultat. Un combat tient ainsi dans la fenêtre commune, même sur un téléphone lent.
+  Vaut aussi en solo et pour les spectateurs.
+- **Horloges** : les échéances partent de l’heure locale à laquelle chaque téléphone reçoit le lancement
+  et chaque manche (`roundRecv`, `startLocal`), et non plus de l’horloge de l’hôte : un téléphone dont
+  l’heure est décalée ne décale plus le minuteur des autres.
+
 ## Visiter sa planète (v125)
 
 « Comme dans Spore » : au **Marché stellaire**, onglet **MA PLANÈTE**, une nouvelle amélioration juste

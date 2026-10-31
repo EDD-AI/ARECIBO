@@ -186,7 +186,7 @@
   // rebours et la loi choisie changent (les formes animées ne repartent pas de zéro).
   function renderLaws(box) {
     // Même échéance pour tous : l'heure du lancement par l'hôte + 20 s.
-    if (!st.lawEnd) { st.lawEnd = (MP.state.match.startAt || Date.now()) + MP.LAW_MS; st.law = null; SFX.level(); }
+    if (!st.lawEnd) { st.lawEnd = (MP.startBase ? MP.startBase() : (MP.state.match.startAt || Date.now())) + MP.LAW_MS; st.law = null; SFX.level(); }
     const left = Math.max(0, Math.ceil((st.lawEnd - Date.now()) / 1000));
     // Les 5 dernières secondes du choix : un tic d'horloge par seconde (v103).
     if (left > 0 && left <= 5 && st.lawTick !== left && !(O.ui.state && O.ui.state.mp && O.ui.state.mp.mid === MP.state.mid)) { st.lawTick = left; if (SFX && SFX.tick) SFX.tick(left); }
