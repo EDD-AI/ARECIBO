@@ -370,6 +370,13 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Choix de la loi sur iPhone (v122)
+
+Sur téléphone, les trois lois sont plus hautes que l’écran : la liste ne défilait pas et le bouton
+**CRÉER MON UNIVERS** sortait par le bas (impossible de valider sur iPhone, même sur un grand écran).
+La liste des lois défile maintenant au doigt entre l’en-tête (avec l’événement cosmique) et le bouton,
+qui reste toujours visible en bas. Le PC (trois grandes cartes côte à côte) ne change pas.
+
 ## Signaler un bug (v121)
 
 **Ce que voit le joueur.** Un petit **« ? »** rond, en pixels, reste toujours en bas de l’écran : en bas à
