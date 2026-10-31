@@ -370,6 +370,16 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Le même grand écran des lois en ligne qu’en solo (v130)
+
+En ligne, le choix de la loi se faisait dans une petite liste du Multijoueur. Il prend maintenant le
+**même grand écran qu’en solo** (`#laws` : trois grandes cartes côte à côte sur PC, la liste qui défile
+sur téléphone, l’événement cosmique de la partie, le premier astre et ses PV). Ce qui change en ligne :
+le compte à rebours commun (et « PARTIE CLASSÉE » si elle compte) s’affiche en doré à la place de la
+phrase d’aide, rouge dans les 5 dernières secondes ; le bouton dit **PRÊT** ; pas de bouton retour
+(20 s). `lawScreen.open/timer/done` (game.js, `O.api.lawScreen`) sert à `js/multi-ui.js`, dont le
+minuteur continue de tourner sur cet écran ; à zéro, la loi choisie (ou la première) lance la partie.
+
 ## Classé : trouver une partie, classé entre amis, emblèmes (v129)
 
 - **TROUVER UNE PARTIE** (`js/multi-ui.js`) : en haut de l’écran Multijoueur, un grand panneau doré

@@ -749,6 +749,11 @@ canvas.sphere { display: block; image-rendering: pixelated; image-rendering: cri
 .fam-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; letter-spacing: 0.12em; color: var(--c); }
 .fam-chip::before { content: ''; width: 6px; height: 6px; background: var(--c); }
 #lawGo { margin-top: 12px; }
+/* Choix de la loi en ligne (v130) : le compte à rebours commun remplace la phrase d'aide. */
+#laws .hint.law-timer { color: var(--gold); font-size: 14px; letter-spacing: 0.12em; }
+#laws .hint.law-timer.low { color: var(--hp); animation: lawLow 1s ease-in-out infinite; }
+#laws .hint.law-timer .mp-ranked-tag { margin-right: 6px; }
+@keyframes lawLow { 50% { opacity: 0.55; } }
 
 /* Combat accéléré (v126) : une petite pastille en bas, au centre (entre le « ? » et PASSER). */
 .fight-speed { position: absolute; left: 50%; bottom: calc(var(--safe-b) + 24px); z-index: 6; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; font-size: 11px; letter-spacing: 0.18em; color: var(--gold); background: rgba(3, 3, 5, 0.85); border: 1px solid rgba(255, 210, 110, 0.45); pointer-events: none; white-space: nowrap; }
