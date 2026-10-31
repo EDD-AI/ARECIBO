@@ -214,7 +214,7 @@ body.modal #gl { z-index: 35; }
 @keyframes caret { 50% { opacity: 0; } }
 
 /* ─── Menu : la planète se lève sur l'horizon ─────────────── */
-#menu { width: 100vw; padding: 0; overflow: hidden; }
+#menu { width: 100vw; padding: 0; overflow: hidden; touch-action: none; /* la planète se fait tourner au doigt (v128) */ }
 .menu-planet { position: absolute; left: 0; top: 0; pointer-events: none; }
 .menu-ground { position: absolute; left: 0; width: 100%; pointer-events: none; shape-rendering: crispEdges; }
 .menu-top {

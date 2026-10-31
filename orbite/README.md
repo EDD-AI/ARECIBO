@@ -370,6 +370,15 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Faire tourner sa planète au menu (v128)
+
+Au menu, glisser au doigt ou à la souris sur la partie visible de la planète la fait tourner, et la
+surface suit le doigt ; lâchée en mouvement, elle continue sur sa lancée puis reprend sa lente rotation.
+Le jeu décale simplement le départ de la rotation de l'astre (`spinOffset` du génome `horizon`) : ni
+saut au début ni à la fin, et rien ne change dans le moteur. Les boutons, les missions et les fiches ne
+sont pas concernés (un toucher sur eux marche comme avant) ; l'écran du menu a `touch-action: none`
+pour que le téléphone ne prenne pas le geste pour un défilement.
+
 ## En ligne : même départ pour tous, comme TFT et Champs de bataille (v127)
 
 - **Tout le monde revient en boutique au même moment** et a **le même temps d’achat**. La phase de
