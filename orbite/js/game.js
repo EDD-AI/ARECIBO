@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 122;
+  const VERSION = 123;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -87,6 +87,7 @@
     snow: ['..X.X..', 'X..X..X', '.X.X.X.', '..XXX..', '.X.X.X.', 'X..X..X', '..X.X..'],
     menu: ['XXXXXXX', '.......', 'XXXXXXX', '.......', 'XXXXXXX'],
     back: ['...X...', '..X....', '.XXXXXX', '..X....', '...X...'],
+    close: ['XX...XX', '.XX.XX.', '..XXX..', '.XX.XX.', 'XX...XX'],
     fwd: ['...X...', '....X..', 'XXXXXX.', '....X..', '...X...'],
     soundOn: ['...X...', '..XX.X.', 'XXXX..X', 'XXXX..X', '..XX.X.', '...X...'],
     soundOff: ['...X....', '..XX....', 'XXXX.X.X', 'XXXX..X.', '..XX.X.X', '...X....'],
@@ -2264,7 +2265,17 @@
     const n = container.children.length;
     const col = colOf(container);
     const k = SIZE[kind][Math.min(n, SIZE[kind].length - 1)];
-    container.style.setProperty('--u', Math.round(Math.min(ui.desk ? cap * 1.2 : cap, col * k)) + 'px');
+    let u = Math.min(ui.desk ? cap * 1.2 : cap, col * k);
+    // Boutique pleine sur téléphone (v123) : 6 ou 7 astres (niveau 6, Longue-vue, Féconde) doivent tenir
+    // dans la largeur, écarts compris ; sinon le premier et le dernier sortaient de l'écran (un petit
+    // iPhone ne montrait presque plus le premier, impossible à acheter). En dessous de 50 px, les
+    // chiffres passent en plus petit (.crowd) pour ne pas élargir les astres.
+    if (kind === 'shop' && n > 1 && !ui.desk) {
+      const gap = parseFloat(getComputedStyle(container).columnGap) || 0;
+      u = Math.min(u, (col - gap * (n - 1)) / n);
+      container.classList.toggle('crowd', u < 50);
+    } else container.classList.remove('crowd');
+    container.style.setProperty('--u', Math.floor(u) + 'px');
   }
 
   // ─── Rangées : l'avant face au rival, l'arrière à l'abri ─────
@@ -3031,7 +3042,10 @@
   function openSheet(html, o) {
     o = o || {};
     const ov = $('overlay');
-    $('sheet').innerHTML = html;
+    // Bouton ✕ toujours visible en haut (v123) : sur téléphone, une longue fiche (synergies, règles…)
+    // ne laissait presque pas de fond sombre à toucher pour la fermer, et parfois aucun sur iPhone.
+    // Pas de ✕ sur une fiche verrouillée (un choix à faire).
+    $('sheet').innerHTML = (o.locked ? '' : `<div class="sheet-xbar"><button class="sheet-x" type="button" data-sheet-x aria-label="${tr('Fermer')}">${icon('close')}</button></div>`) + html;
     ov.classList.toggle('center', !!o.center);
     ov.classList.toggle('top', !!o.top);
     if (ov.hidden) SFX.open();
@@ -3091,7 +3105,7 @@
   listen('sheet', 'change', (e) => { if (e.target.closest('[data-vol="fx"]')) SFX.tap(); });
 
   listen('overlay', 'click', (e) => {
-    if (e.target === $('overlay') && !ui.sheetLocked) { SFX.tap(); closeSheet(); }
+    if ((e.target === $('overlay') || e.target.closest('[data-sheet-x]')) && !ui.sheetLocked) { SFX.tap(); closeSheet(); }
   });
 
   function kwList(kw) {
