@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 129;
+  const VERSION = 130;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -2052,12 +2052,14 @@
     return a[0].toString(16).toUpperCase().padStart(8, '0');
   }
 
-  function renderLaws(seed) {
+  // ids : lois imposées (partie en ligne, v130) ; sinon les trois lois de la graine.
+  function renderLaws(seed, ids) {
     ui.seed = seed || randomSeed();
-    ui.lawOptions = R.lawChoices(ui.seed);
+    ui.lawOptions = ids || R.lawChoices(ui.seed);
     ui.lawPick = null;
     $('lawGo').disabled = true;
     $('lawsBack').innerHTML = icon('back');
+    if (!ids) lawOnline(null);
     $('lawList').innerHTML = ui.lawOptions.map((id) => {
       const l = R.LAW[id], st = R.CARD[l.starter], f = R.FAMILIES[l.fam];
       return `<button class="law" data-law="${id}" style="--c:${f.color}">
@@ -2068,7 +2070,7 @@
           <p class="tag">${esc(l.tagline)}</p>
           <p class="txt">${esc(l.text)}</p>
           <p class="awk"><b>${tr('ÉVEIL AU CYCLE {n}', { n: R.AWAKE_ROUND })}</b> ${esc(l.awake)}</p>
-          <p class="starter">${tr('PREMIER ASTRE : {name}', { name: esc(st.name).toUpperCase() })} ${st.atk}/${st.hp} · ${tr('{n} PV', { n: (l.hp || R.START_HP) * (ui.size === 8 ? 1 : R.DUEL.hp) })}</p>
+          <p class="starter">${tr('PREMIER ASTRE : {name}', { name: esc(st.name).toUpperCase() })} ${st.atk}/${st.hp} · ${tr('{n} PV', { n: (l.hp || R.START_HP) * (ui.size > 2 ? 1 : R.DUEL.hp) })}</p>
         </div>
       </button>`;
     }).join('');
@@ -2086,11 +2088,52 @@
     }
   }
 
+  // Choix de la loi en ligne (v130) : le même grand écran qu'en solo, avec le compte à rebours commun
+  // à la place de la phrase d'aide, PRÊT au lieu de CRÉER MON UNIVERS, et pas de retour (20 s).
+  // o : { ids, seed, size, pick, onPick(id), onGo(id) } ; null : retour à l'écran du solo.
+  function lawOnline(o) {
+    const was = ui.lawOnline;
+    ui.lawOnline = o || null;
+    $('laws').classList.toggle('online', !!o);
+    $('lawsBack').hidden = !!o;
+    if (o) $('lawGo').textContent = tr('PRÊT');
+    else if (was) {
+      $('lawGo').textContent = tr('CRÉER MON UNIVERS');
+      const h = $('laws').querySelector('.hint');
+      h.classList.remove('law-timer', 'low');
+      h.textContent = tr('Elle régit votre univers et vous offre votre premier astre.');
+    }
+  }
+  const lawScreen = {
+    async open(o) {
+      ui.size = o.size || 2;
+      ui.daily = null;
+      renderLaws(o.seed, o.ids);
+      lawOnline(o);
+      if (o.pick && o.ids.includes(o.pick)) {
+        ui.lawPick = o.pick;
+        for (const x of $('lawList').children) x.classList.toggle('on', x.dataset.law === o.pick);
+        $('lawGo').disabled = false;
+      }
+      await show('laws');
+    },
+    // Le compte à rebours, en doré à la place de la phrase d'aide (rouge dans les 5 dernières secondes).
+    timer(text, low) {
+      if (!ui.lawOnline) return;
+      const h = $('laws').querySelector('.hint');
+      h.classList.add('law-timer');
+      h.classList.toggle('low', !!low);
+      h.innerHTML = text;
+    },
+    done() { lawOnline(null); }
+  };
+
   listen('lawList', 'click', (e) => {
     const b = e.target.closest('.law');
     if (!b) return;
     SFX.tap();
     ui.lawPick = b.dataset.law;
+    if (ui.lawOnline && ui.lawOnline.onPick) ui.lawOnline.onPick(ui.lawPick);
     for (const x of $('lawList').children) x.classList.toggle('on', x === b);
     $('lawGo').disabled = false;
     window.OrbiteEnergy.pulse(b.querySelector('canvas.sphere'));
@@ -2099,6 +2142,7 @@
 
   listen('lawGo', 'click', async () => {
     if (!ui.lawPick || ui.entering) return;
+    if (ui.lawOnline) { const o = ui.lawOnline; lawOnline(null); o.onGo(ui.lawPick); return; }
     ui.state = R.newGame(ui.seed, ui.lawPick, { size: ui.size || 2, event: 'auto', daily: ui.daily || undefined });
     if (ui.daily) dailyStart(ui.daily);
     ui.daily = null;
@@ -5177,7 +5221,7 @@
   window.__orbite.api = {
     show, openSheet, closeSheet, sheetMore, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
     pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH, frameOf, framed, avatarOf, fontOf, nameHtml, myFont, myFrame, myAvatar, seatLook, emblem, myEmblem, myRankInfo, tierLabel,
-    coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation,
+    coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation, lawScreen,
     seeds, addSeeds, wallet, renderMkWallet, worldLook, worldList, playerTag
   };
 

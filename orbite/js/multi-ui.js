@@ -279,13 +279,28 @@
     const left = Math.max(0, Math.ceil((st.lawEnd - Date.now()) / 1000));
     // Les 5 dernières secondes du choix : un tic d'horloge par seconde (v103).
     if (left > 0 && left <= 5 && st.lawTick !== left && !(O.ui.state && O.ui.state.mp && O.ui.state.mp.mid === MP.state.mid)) { st.lawTick = left; if (SFX && SFX.tick) SFX.tick(left); }
+    const ranked = MP.rankedOf && MP.rankedOf(MP.state.match);
+    // Le même grand écran des lois qu'en solo (v130), avec le compte à rebours commun.
+    if (A.lawScreen) {
+      if (st.lawMid !== MP.state.mid) {
+        st.lawMid = MP.state.mid;
+        box.innerHTML = `<div class="mp-card"><b>${tr('LA PARTIE COMMENCE')}</b></div>`;
+        A.lawScreen.open({
+          ids: MP.lawChoices(), seed: MP.state.match.seed, size: MP.seatsOf(MP.state.match), pick: st.law,
+          onPick: (id) => { st.law = id; },
+          onGo: (id) => { st.law = id; begin(id); }
+        });
+      }
+      A.lawScreen.timer((ranked ? `<em class="mp-ranked-tag">${tr('PARTIE CLASSÉE')}</em> ` : '') + esc(tr('Choisissez votre loi · {n} s', { n: left })), left <= 5);
+      if (left <= 0) begin(st.law || MP.lawChoices()[0]);
+      return;
+    }
     const body = $('mpBody'), list = body.querySelector('.mp-laws');
     if (list && list.dataset.mid === String(MP.state.mid)) {
       body.querySelector('[data-law-left]').textContent = tr('Choisissez votre loi · {n} s', { n: left });
       for (const b of list.querySelectorAll('.mp-law')) b.classList.toggle('on', b.dataset.law === st.law);
       body.querySelector('[data-mp="go"]').disabled = !st.law;
     } else {
-      const ranked = MP.rankedOf && MP.rankedOf(MP.state.match);
       box.innerHTML = `<div class="mp-card"><b>${tr('LA PARTIE COMMENCE')}${ranked ? ` <em class="mp-ranked-tag">${tr('PARTIE CLASSÉE')}</em>` : ''}</b><p data-law-left>${tr('Choisissez votre loi · {n} s', { n: left })}</p></div>
         <div class="mp-laws" data-mid="${esc(MP.state.mid)}">${MP.lawChoices().map((id) => {
           const l = R.LAW[id], f = R.FAMILIES[l.fam];
@@ -301,6 +316,8 @@
   async function begin(law) {
     if (O.ui.state && O.ui.state.mp && O.ui.state.mp.mid === MP.state.mid) return;
     st.lawEnd = 0;
+    st.lawMid = null;
+    if (A.lawScreen) A.lawScreen.done();
     clearInterval(st.tick);
     O.ui.state = MP.newState(law);
     O.ui.stamp = (O.ui.stamp || 0) + 1;
@@ -389,7 +406,8 @@
     if (ON.configured && !ON.uid()) ON.boot();
     render();
     clearInterval(st.tick);
-    st.tick = setInterval(() => { if (document.getElementById('multi').classList.contains('active')) render(); }, 1000);
+    // Aussi pendant le choix de la loi, sur le grand écran des lois du solo (v130).
+    st.tick = setInterval(() => { if (document.getElementById('multi').classList.contains('active') || (O.ui.lawOnline && O.ui.screen === 'laws')) render(); }, 1000);
   }
 
   $('multiBack').innerHTML = A.icon('back');
