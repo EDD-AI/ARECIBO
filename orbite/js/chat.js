@@ -1,6 +1,8 @@
 /* ORBITE — discussion des parties en ligne : dans le salon d'attente et pendant la partie (bouton
- * bulle en haut de l'écran). Messages rapides partout, affichés dans la langue de chacun ; texte
- * libre seulement entre amis (parties privées). Les messages vivent dans le salon (js/multi.js). */
+ * bulle en haut de l'écran). Messages rapides, affichés dans la langue de chacun, et texte libre
+ * partout (en classé aussi depuis la v133) : les gros mots sont masqués et les liens retirés
+ * (js/moderation.js), et toucher un pseudo masque ses messages. Les messages vivent dans le salon
+ * (js/multi.js). */
 (function () {
   'use strict';
   const O = window.__orbite, MP = window.OrbiteMulti, ON = window.OrbiteOnline;
@@ -11,12 +13,16 @@
   const esc = A.esc;
   // L'ordre compte : un message rapide est enregistré par son numéro.
   const QUICK = ['Bonne chance !', 'Bien joué !', 'Aïe !', 'Joli combo !', 'GG', 'Revanche ?'];
-  const st = { mid: null, seen: new Set(), unread: 0, lastSent: 0 };
+  const st = { mid: null, seen: new Set(), unread: 0, lastSent: 0, muted: new Set() };
+  const MOD = window.OrbiteModeration;
+  const soft = (t) => (MOD ? MOD.soften(t) : t);
 
   const match = () => MP.state.match;
   const msgs = () => (match() && Array.isArray(match().chat) ? match().chat : []);
-  const free = () => !!match() && match().mode === 'private';
-  const textOf = (m) => (m.q != null && QUICK[m.q] ? tr(QUICK[m.q]) : String(m.text || ''));
+  const free = () => !!match();
+  const textOf = (m) => (m.q != null && QUICK[m.q] ? tr(QUICK[m.q]) : soft(String(m.text || '')));
+  // Joueurs masqués (pour cette partie) : leurs messages n'apparaissent plus.
+  const shown = (m) => m.uid === ON.uid() || !st.muted.has(m.uid);
   // Le nom de l'auteur dans la police de son pseudo, lue à sa place du salon (v96).
   const who = (m) => {
     const seat = match() && Array.isArray(match().seats) ? match().seats.find((x) => x && x.uid === m.uid) : null;
@@ -25,9 +31,11 @@
   const clean = (s) => String(s || '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
 
   function listHtml(n) {
-    const list = msgs().slice(-n);
-    if (!list.length) return `<p class="chat-empty">${tr('Aucun message pour l’instant.')}</p>`;
-    return list.map((m) => `<p class="chat-msg ${m.uid === ON.uid() ? 'me' : ''}"><b>${who(m)}</b> ${esc(textOf(m))}</p>`).join('');
+    const list = msgs().filter(shown).slice(-n);
+    const hidden = st.muted.size ? `<p class="chat-empty">${tr('{n} joueur(s) masqué(s).', { n: st.muted.size })} <button class="link" type="button" data-chat-unmute>${tr('Tout réafficher')}</button></p>` : '';
+    if (!list.length) return hidden + `<p class="chat-empty">${tr('Aucun message pour l’instant.')}</p>`;
+    // Toucher le pseudo d'un autre joueur masque ses messages.
+    return hidden + list.map((m) => `<p class="chat-msg ${m.uid === ON.uid() ? 'me' : ''}"><b ${m.uid === ON.uid() ? '' : `data-chat-mute="${esc(m.uid)}" data-name="${esc(m.name || '?')}" title="${esc(tr('Masquer ses messages'))}"`}>${who(m)}</b> ${esc(textOf(m))}</p>`).join('');
   }
   // Le bloc complet : la liste, les messages rapides et, entre amis, la saisie libre.
   function html(n) {
@@ -35,8 +43,9 @@
       <div class="chat-list">${listHtml(n || 30)}</div>
       <div class="chat-quick">${QUICK.map((q, i) => `<button class="chip" type="button" data-chat="${i}">${esc(tr(q))}</button>`).join('')}</div>
       ${free()
-        ? `<form class="chat-form" data-chat-form><input class="chat-input" maxlength="120" placeholder="${tr('Écrire un message…')}" autocomplete="off" enterkeyhint="send"><button class="btn" type="submit">${tr('ENVOYER')}</button></form>`
-        : `<p class="chat-note">${tr('En partie classée, seuls les messages rapides sont proposés.')}</p>`}
+        ? `<form class="chat-form" data-chat-form><input class="chat-input" maxlength="120" placeholder="${tr('Écrire un message…')}" autocomplete="off" enterkeyhint="send"><button class="btn" type="submit">${tr('ENVOYER')}</button></form>
+          <p class="chat-note">${tr('Restez fair-play : les gros mots sont masqués. Touchez un pseudo pour masquer ses messages.')}</p>`
+        : ''}
     </div>`;
   }
   const scrollDown = () => { for (const l of document.querySelectorAll('.chat-list')) l.scrollTop = l.scrollHeight; };
@@ -49,16 +58,28 @@
     try { await MP.say(msg); } catch (err) { A.toast(tr('Message non envoyé.')); }
   }
 
+  function refreshLists() { for (const l of document.querySelectorAll('.chat-list')) l.innerHTML = listHtml(30); scrollDown(); }
   document.addEventListener('click', (e) => {
     const b = e.target.closest('[data-chat]');
-    if (b) { e.preventDefault(); send({ q: Number(b.dataset.chat) }); }
+    if (b) { e.preventDefault(); send({ q: Number(b.dataset.chat) }); return; }
+    const mu = e.target.closest('[data-chat-mute]');
+    if (mu) {
+      e.preventDefault();
+      SFX.tap();
+      const id = mu.dataset.chatMute;
+      if (st.muted.has(id)) st.muted.delete(id); else st.muted.add(id);
+      A.toast(st.muted.has(id) ? tr('Messages de {name} masqués.', { name: esc(mu.dataset.name) }) : tr('Messages de {name} réaffichés.', { name: esc(mu.dataset.name) }), 2000);
+      refreshLists();
+      return;
+    }
+    if (e.target.closest('[data-chat-unmute]')) { e.preventDefault(); st.muted.clear(); refreshLists(); }
   });
   document.addEventListener('submit', (e) => {
     const f = e.target.closest('[data-chat-form]');
     if (!f) return;
     e.preventDefault();
     const input = f.querySelector('.chat-input');
-    const text = clean(input.value);
+    const text = soft(clean(input.value));
     if (!text || !free()) return;
     input.value = '';
     send({ text });
@@ -98,13 +119,13 @@
 
   window.addEventListener('orbite-match', () => {
     const m = match();
-    if (!m) { st.mid = null; st.seen = new Set(); st.unread = 0; badge(); return; }
-    // Nouveau salon : les messages déjà là ne s'annoncent pas.
-    if (m.id !== st.mid) { st.mid = m.id; st.seen = new Set(msgs().map((x) => x.id)); st.unread = 0; badge(); return; }
+    if (!m) { st.mid = null; st.seen = new Set(); st.unread = 0; st.muted = new Set(); badge(); return; }
+    // Nouveau salon : les messages déjà là ne s'annoncent pas, et plus personne n'est masqué.
+    if (m.id !== st.mid) { st.mid = m.id; st.seen = new Set(msgs().map((x) => x.id)); st.unread = 0; st.muted = new Set(); badge(); return; }
     const fresh = msgs().filter((x) => !st.seen.has(x.id));
     if (!fresh.length) return;
     for (const x of fresh) st.seen.add(x.id);
-    const others = fresh.filter((x) => x.uid !== ON.uid());
+    const others = fresh.filter((x) => x.uid !== ON.uid() && shown(x));
     if (sheetOpen()) {
       const list = document.querySelector('#sheet .chat-list');
       if (list) list.innerHTML = listHtml(30);

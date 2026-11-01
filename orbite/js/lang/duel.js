@@ -240,6 +240,12 @@
     ['PRÊT ?', 'READY?', '¿LISTO?', 'BEREIT?', 'PRONTO?'],
     ['En attente des autres créateurs · {n}/{t} prêts', 'Waiting for the other creators · {n}/{t} ready', 'Esperando a los demás creadores · {n}/{t} listos', 'Warten auf die anderen Schöpfer · {n}/{t} bereit', 'Aguardando os outros criadores · {n}/{t} prontos'],
     ['Touchez encore pour être prêt : vous ne pourrez plus acheter ce tour-ci.', 'Tap again to be ready: you won’t be able to buy anything else this turn.', 'Toca de nuevo para estar listo: ya no podrás comprar en este turno.', 'Tippe noch einmal, um bereit zu sein: In dieser Runde kannst du dann nichts mehr kaufen.', 'Toque de novo para ficar pronto: você não poderá mais comprar neste turno.'],
+    ['Restez fair-play : les gros mots sont masqués. Touchez un pseudo pour masquer ses messages.', 'Play fair: swear words are hidden. Tap a name to hide that player’s messages.', 'Juega limpio: las palabrotas se ocultan. Toca un apodo para ocultar sus mensajes.', 'Bleib fair: Schimpfwörter werden ausgeblendet. Tippe auf einen Namen, um seine Nachrichten auszublenden.', 'Jogue limpo: palavrões são ocultados. Toque num apelido para ocultar as mensagens dele.'],
+    ['Masquer ses messages', 'Hide their messages', 'Ocultar sus mensajes', 'Nachrichten ausblenden', 'Ocultar as mensagens'],
+    ['Messages de {name} masqués.', 'Messages from {name} hidden.', 'Mensajes de {name} ocultos.', 'Nachrichten von {name} ausgeblendet.', 'Mensagens de {name} ocultadas.'],
+    ['Messages de {name} réaffichés.', 'Messages from {name} shown again.', 'Mensajes de {name} visibles de nuevo.', 'Nachrichten von {name} wieder sichtbar.', 'Mensagens de {name} visíveis de novo.'],
+    ['{n} joueur(s) masqué(s).', '{n} player(s) hidden.', '{n} jugador(es) oculto(s).', '{n} Spieler ausgeblendet.', '{n} jogador(es) oculto(s).'],
+    ['Tout réafficher', 'Show all', 'Mostrar todo', 'Alle anzeigen', 'Mostrar tudo'],
     // Spectateur en ligne (v105)
     ['MANCHE EN COURS', 'ROUND IN PROGRESS', 'RONDA EN CURSO', 'RUNDE LÄUFT', 'RODADA EM ANDAMENTO'],
     ['Les autres créateurs jouent leur tour…', 'The other creators are playing their turn…', 'Los demás creadores juegan su turno…', 'Die anderen Schöpfer spielen ihren Zug…', 'Os outros criadores estão jogando o turno…'],
