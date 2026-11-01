@@ -370,6 +370,19 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## PRÊT en ligne : finir la boutique plus tôt (v131)
+
+En ligne, le compte à rebours de la boutique (dans le bouton de combat) se touche : « **PRÊT ?** ». Un
+premier toucher demande confirmation (« Touchez encore pour être prêt : vous ne pourrez plus acheter ce
+tour-ci »), un second dans les 2,5 s finit son tour : le système est publié tout de suite (comme à la
+fin du temps). Au-dessus du compte à rebours, tous voient combien de créateurs sont déjà prêts
+(« PRÊT ? · 2/3 », `MP.readyOf` : ceux dont le système de la manche est publié). Celui qui est prêt voit
+« PRÊT · En attente des autres créateurs · 2/3 prêts ». **Quand tous les créateurs humains en lice sont
+prêts, l’hôte écrit la manche aussitôt** (il le faisait déjà dès que tous avaient publié) : le combat
+part sans attendre la fin du temps. Les univers rivaux (bots) n’ont pas à être prêts. Au passage, les
+bannières « EN ATTENTE » et « PROCHAIN TOUR » restent affichées et seul leur compte change (avant,
+« PROCHAIN TOUR » clignotait chaque seconde).
+
 ## Le même grand écran des lois en ligne qu’en solo (v130)
 
 En ligne, le choix de la loi se faisait dans une petite liste du Multijoueur. Il prend maintenant le
@@ -1374,7 +1387,7 @@ amis sont dessous (voir « Classé : trouver une partie… (v129) »).
   - Chacun choisit une loi parmi trois, en 20 secondes, dans les familles de la partie (les mêmes
     pour tous). Depuis la v89, chaque loi montre la forme de son énergie, comme en solo ; la liste
     n’est dessinée qu’une fois, seul le compte à rebours change (`renderLaws`, js/multi-ui.js).
-  - Personne ne peut passer : un minuteur commun cadence la partie. La boutique est courte au
+  - Un minuteur commun cadence la partie ; depuis la v131, on peut être **PRÊT** plus tôt (voir « PRÊT en ligne (v131) »). La boutique est courte au
     début pour jouer vite (v80) : 25 s au cycle 1, 35 s au cycle 2, 50 s au cycle 3, puis 60 s,
     65 s, 70 s et 75 s au plus ; le bouton de combat affiche le compte à rebours et le tour
     se termine pour tous à zéro. Depuis la v104, c’est le **seul** compte à rebours : en gros

@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 130;
+  const VERSION = 131;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -3904,7 +3904,17 @@
   async function fight() {
     if (ui.busy || !ui.state || ui.state.phase !== 'shop' || ui.state.watching) return;
     // En ligne, personne ne passe : c'est le minuteur commun qui termine le tour.
-    if (ui.state.mp && !ui.mpAuto) { toast(tr('En ligne, le tour se termine pour tous à la fin du temps.'), 1800); return; }
+    // En ligne (v131) : PRÊT finit son tour plus tôt ; quand tous les créateurs sont prêts, la manche part
+    // sans attendre la fin du temps. Deux touchers pour confirmer : on ne peut plus rien acheter après.
+    if (ui.state.mp && !ui.mpAuto) {
+      if (!ui.readyArm || performance.now() - ui.readyArm > 2500) {
+        ui.readyArm = performance.now();
+        SFX.tap();
+        toast(tr('Touchez encore pour être prêt : vous ne pourrez plus acheter ce tour-ci.'), 2200);
+        return;
+      }
+      ui.readyArm = 0;
+    }
     const p = me();
     if (p.discover.length) { await openDiscover(); return; }
     if (p.relicChoice && p.relicChoice.length) { await openRelics(); return; }
@@ -3914,13 +3924,19 @@
     // Multijoueur : on publie son plateau et on attend ceux des autres créateurs.
     const MP = ui.state.mp && window.OrbiteMulti;
     const pre = uidRects();
-    let res;
+    let res, waitT = 0;
+    // En attente des autres : combien sont prêts, mis à jour chaque seconde (v131).
+    const waitSub = () => { const r = MP && MP.readyOf ? MP.readyOf(ui.state) : null; return r && r.total > 1 ? tr('En attente des autres créateurs · {n}/{t} prêts', { n: r.n, t: r.total }) : tr('Les autres créateurs terminent leur tour…'); };
     try {
-      res = MP ? await MP.endTurn(ui.state, () => banner(tr('EN ATTENTE'), tr('Les autres créateurs terminent leur tour…'))) : R.endTurn(ui.state);
+      res = MP ? await MP.endTurn(ui.state, () => {
+        banner(tr('PRÊT'), waitSub(), null, true);
+        waitT = setInterval(() => { const p = $('banner').querySelector('p'); if (p) p.textContent = waitSub(); }, 1000);
+      }) : R.endTurn(ui.state);
     } catch (err) {
       console.error(err);
       res = { ok: false, reason: tr('Connexion perdue avec la partie en ligne.') };
     }
+    clearInterval(waitT);
     if (MP) clearBanner();
     if (!res.ok) { refuse(tr(res.reason)); ui.busy = false; return; }
     tuto('combat');
@@ -3945,8 +3961,10 @@
     const end = MP.shopStart ? MP.shopStart(ui.state.round) : 0;
     let left = end - Date.now();
     if (left < 600) return;
+    banner(tr('PROCHAIN TOUR'), tr('Dans {n} s : les autres combats se terminent.', { n: Math.ceil(left / 1000) }), null, true);
     while (left > 300) {
-      banner(tr('PROCHAIN TOUR'), tr('Dans {n} s : les autres combats se terminent.', { n: Math.ceil(left / 1000) }));
+      const p = $('banner').querySelector('p');
+      if (p) p.textContent = tr('Dans {n} s : les autres combats se terminent.', { n: Math.ceil(left / 1000) });
       await new Promise((r) => setTimeout(r, Math.min(1000, left - (Math.ceil(left / 1000) - 1) * 1000)));
       left = end - Date.now();
     }

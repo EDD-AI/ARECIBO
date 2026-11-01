@@ -1893,8 +1893,11 @@ body.mp-game .chat-btn { display: inline-flex; }
 .mp-timer[hidden] { display: none; }
 /* Un seul compte à rebours en ligne (v104) : en gros chiffres dans le bouton de combat, comme un
    afficheur (fond sombre) ; rouge sous 10 secondes, il bat pendant les 5 dernières. */
-#fightBtn.mp-count { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; opacity: 1; color: var(--ink); background: rgba(0, 0, 0, 0.6); border: 1px solid var(--line); cursor: var(--cur, default); }
-#fightBtn.mp-count small { font-size: 10px; font-weight: 500; letter-spacing: 0.22em; color: var(--dim); }
+#fightBtn.mp-count { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; opacity: 1; color: var(--ink); background: rgba(0, 0, 0, 0.6); border: 1px solid var(--line); cursor: var(--cur-hand, pointer); }
+/* « PRÊT ? » (v131) : on touche le compte à rebours (deux fois) pour finir son tour plus tôt. */
+#fightBtn.mp-count small { font-size: 10px; font-weight: 500; letter-spacing: 0.22em; color: var(--gold); }
+#fightBtn.mp-count:disabled { cursor: var(--cur, default); }
+#fightBtn.mp-count:disabled small { color: var(--dim); }
 #fightBtn.mp-count b { font-size: 32px; font-weight: 600; line-height: 1; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
 #fightBtn.mp-count.low { border-color: rgba(255, 106, 90, 0.7); }
 #fightBtn.mp-count.low b { color: #ff8a7a; }

@@ -324,6 +324,12 @@
   }
   // Humains encore en lice (selon l'état local, identique partout).
   function aliveHumans(st) { return st.players.filter((p) => p.alive && !p.bot).map((p) => (p.id === 'you' ? uid() : p.id)); }
+  // Créateurs prêts (v131) : ceux qui ont déjà publié leur système de cette manche. Quand tous le sont,
+  // l'hôte écrit la manche sans attendre la fin du temps (assemble).
+  function readyOf(st) {
+    const hs = aliveHumans(st);
+    return { n: hs.filter((g) => M.posts[g] && M.posts[g].r === st.round).length, total: hs.length };
+  }
 
   // Fin du tour (appelée par game.js à la place de R.endTurn).
   async function endTurn(st, onWait) {
@@ -480,15 +486,18 @@
       }
       const left = Math.max(0, M.deadline - now());
       const txt = Math.floor(left / 60000) + ':' + String(Math.ceil(left / 1000) % 60).padStart(2, '0');
-      // Un seul compte à rebours (v104) : en gros chiffres dans le bouton de combat, qu'on ne peut
-      // pas toucher (le tour ne se finit pas en avance). Le petit minuteur du haut reste caché.
+      // Un seul compte à rebours (v104) : en gros chiffres dans le bouton de combat. Depuis la v131, on
+      // le touche (deux fois) pour être PRÊT ; le nombre de créateurs prêts s'affiche au-dessus.
       if (el) el.hidden = true;
       if (btn) {
         const count = st.phase === 'shop';
-        btn.disabled = true;
+        const r = readyOf(st);
+        btn.disabled = !count || !!O.ui.busy;
         btn.classList.toggle('mp-count', count);
         btn.classList.toggle('low', count && left < 10000);
-        btn.innerHTML = count ? `<small>${tr('COMBAT DANS')}</small><b>${txt}</b>` : tr('COMBAT');
+        const head = tr('PRÊT ?') + (r.total > 1 && r.n ? ' · ' + r.n + '/' + r.total : '');
+        const html = count ? `<small>${head}</small><b>${txt}</b>` : tr('COMBAT');
+        if (btn.innerHTML !== html) btn.innerHTML = html;
       }
       // Les 5 dernières secondes : un cadre rouge léger palpite autour de l'écran, le téléphone vibre
       // et un tic d'horloge sonne à chaque seconde (v103).
@@ -515,7 +524,7 @@
   window.OrbiteMulti = {
     get state() { return M; },
     searchRanked, cancelSearch, createPrivate, joinCode, start, leave, invite, setBots, newState, lawChoices, endTurn, startRound, stopRound, isHost, say, watchNext,
-    SEATS, seatsOf, botsOf, WAIT_MS, LAW_MS, startBase, shopStart, fightWindow,
+    SEATS, seatsOf, botsOf, WAIT_MS, LAW_MS, startBase, shopStart, fightWindow, readyOf,
     // La partie de ce salon comptera-t-elle pour le classement ? (humains présents au salon)
     rankedOf: (m) => !!m && K.counts(m.mode, (m.uids || []).length)
   };

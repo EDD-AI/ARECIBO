@@ -237,6 +237,9 @@
     ['ACCÉLÉRÉ', 'FAST-FORWARD', 'ACELERADO', 'BESCHLEUNIGT', 'ACELERADO'],
     ['PROCHAIN TOUR', 'NEXT TURN', 'PRÓXIMO TURNO', 'NÄCHSTE RUNDE', 'PRÓXIMO TURNO'],
     ['Dans {n} s : les autres combats se terminent.', 'In {n} s: the other fights are finishing.', 'En {n} s: los demás combates están terminando.', 'In {n} s: Die anderen Kämpfe gehen zu Ende.', 'Em {n} s: os outros combates estão terminando.'],
+    ['PRÊT ?', 'READY?', '¿LISTO?', 'BEREIT?', 'PRONTO?'],
+    ['En attente des autres créateurs · {n}/{t} prêts', 'Waiting for the other creators · {n}/{t} ready', 'Esperando a los demás creadores · {n}/{t} listos', 'Warten auf die anderen Schöpfer · {n}/{t} bereit', 'Aguardando os outros criadores · {n}/{t} prontos'],
+    ['Touchez encore pour être prêt : vous ne pourrez plus acheter ce tour-ci.', 'Tap again to be ready: you won’t be able to buy anything else this turn.', 'Toca de nuevo para estar listo: ya no podrás comprar en este turno.', 'Tippe noch einmal, um bereit zu sein: In dieser Runde kannst du dann nichts mehr kaufen.', 'Toque de novo para ficar pronto: você não poderá mais comprar neste turno.'],
     // Spectateur en ligne (v105)
     ['MANCHE EN COURS', 'ROUND IN PROGRESS', 'RONDA EN CURSO', 'RUNDE LÄUFT', 'RODADA EM ANDAMENTO'],
     ['Les autres créateurs jouent leur tour…', 'The other creators are playing their turn…', 'Los demás creadores juegan su turno…', 'Die anderen Schöpfer spielen ihren Zug…', 'Os outros criadores estão jogando o turno…'],
