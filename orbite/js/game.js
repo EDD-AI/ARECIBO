@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 134;
+  const VERSION = 135;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -1910,7 +1910,7 @@
       item(tr('Compositeur'), 'Victor Desrat')
     ], 'team') + `<div class="cr-cols">${group(tr('Musique et son'), [
       item(tr('Archives'), tr('Musiques, nappes et sons d’ARECIBO // Salvage Protocol')),
-      item(tr('Thèmes du menu'), '« Distant Earth », « Orbiting Wonder » · Studio EDDA (Suno)'),
+      item(tr('Thèmes du menu'), '« Distant Earth », « Orbiting Wonder » · Victor Desrat'),
       item(tr('Bruitages'), 'Kenney · kenney.nl · CC0, MIT')
     ], 'list')}${group(tr('Technique'), [
       item(tr('Planètes'), tr('Moteur de planètes d’ORBITE, pixel art calculé en direct (WebGL2)')),
