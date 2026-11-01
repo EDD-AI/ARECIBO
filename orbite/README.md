@@ -370,6 +370,12 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Crédits : thèmes du menu de Victor Desrat (v135)
+
+« Distant Earth » et « Orbiting Wonder » ont été entièrement retravaillés par Victor Desrat : les
+crédits indiquent maintenant « Thèmes du menu · Victor Desrat », sans mention de l’outil d’origine.
+Les anciens textes qui en parlaient (plus utilisés) sont retirés des traductions.
+
 ## Rejoindre une partie en ligne en cours (v134)
 
 Parti **sans le vouloir** (appli fermée, plantage, réseau coupé, page rechargée) ou par le menu : la
@@ -1632,7 +1638,7 @@ Quatre thèmes, qui se suivent l’un après l’autre :
 3. le **second thème d’ARECIBO** (`audio/arecibo2.mp3`), de Victor Desrat ;
 4. **« Orbiting Wonder »** (`audio/menu.mp3`).
 
-« Distant Earth » et « Orbiting Wonder » (Studio EDDA) ont été créés avec Suno. La musique démarre au toucher sur
+« Distant Earth » et « Orbiting Wonder » ont été retravaillés par Victor Desrat. La musique démarre au toucher sur
 le titre et accompagne l’accueil, le marché, le profil et le choix de la loi. Elle s’efface en
 fondu au début d’une partie, et l’ambiance spatiale reprend. Elle passe par le graphe WebAudio pour
 des fondus fiables, y compris sur iPhone.
