@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 133;
+  const VERSION = 134;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -250,6 +250,15 @@
     try {
       const s = JSON.parse(localStorage.getItem(SAVE_KEY));
       if (s && s.v === 1 && Array.isArray(s.players) && !s.over && s.phase === 'shop' && !s.mp && !s.watching) return s;
+    } catch (err) { /* sauvegarde illisible */ }
+    return null;
+  }
+  // Partie en ligne quittée sans être finie (v134) : appli fermée, plantage, réseau coupé, ou menu
+  // principal. Elle se rejoint (rejoinOnline) tant qu'elle n'est pas finie.
+  function loadOnline() {
+    try {
+      const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+      if (s && s.v === 1 && Array.isArray(s.players) && s.mp && s.mp.mid && !s.over && !s.watching && (s.phase === 'shop' || s.phase === 'lock')) return s;
     } catch (err) { /* sauvegarde illisible */ }
     return null;
   }
@@ -860,6 +869,7 @@
 
   function renderMenu() {
     renderMusicBar();
+    renderRejoinBtn();
     if (window.OrbiteMissions && window.OrbiteMissions.renderBox) window.OrbiteMissions.renderBox();
     applyFrame($('profileBtn'), myFrame());
     const pfa = document.querySelector('#profileBtn .pf-avatar');
@@ -991,6 +1001,8 @@
     const fin = loadFinished();
     if (fin) { ui.state = fin; await endScreen(); return true; }
     if (ses.s === 'game' && loadGame()) { await resumeGame(true); return true; }
+    // Partie en ligne coupée (plantage, appli fermée, rechargement) : on y retourne tout de suite (v134).
+    if (ses.s === 'game' && loadOnline() && window.OrbiteMulti) { await backToMenu(); setTimeout(() => rejoinOnline(), 300); return true; }
     // Campagne bloquée pendant sa refonte : on ne la reprend plus au lancement.
     await backToMenu();
     return true;
@@ -1009,6 +1021,8 @@
       // Une partie terminée pendant que l'appli était fermée : ses récompenses attendent.
       const fin = loadFinished();
       if (fin && ui.screen === 'menu') { ui.state = fin; await endScreen(); }
+      // Une partie en ligne en cours (v134) : on propose de la rejoindre.
+      else if (ui.screen === 'menu' && !coach.steps && loadOnline()) offerRejoin();
       openInvite();
     } catch (err) {
       console.error(err);
@@ -3502,7 +3516,8 @@
     const act = b.dataset.act;
     // Pendant un combat (en ligne, on ne peut pas le passer), le son et l'aide restent accessibles ;
     // quitter la partie attend la fin du combat. Les Paramètres ne dépendent jamais d'une partie.
-    const anytime = act === 'choose' || act === 'relic' || act === 'close' || act === 'rival' || act === 'set' || act === 'help' || (act === 'menu' && (b.dataset.v === 'sound' || b.dataset.v === 'help'));
+    // Quitter une partie en ligne (v134) reste possible pendant un combat ou une attente bloquée.
+    const anytime = act === 'choose' || act === 'relic' || act === 'close' || act === 'rival' || act === 'set' || act === 'help' || act === 'online' || (act === 'menu' && ['sound', 'help', 'away', 'awayGo', 'stay'].includes(b.dataset.v));
     if (act === 'help') { SFX.tap(); openSheet(helpHtml(b.dataset.from === '1', Number(b.dataset.v))); return; }
     if (ui.busy && !anytime) { if (act === 'menu') toast(tr('Possible à la fin du combat.'), 1800); return; }
     if (act === 'buy') {
@@ -3541,6 +3556,11 @@
       closeSheet();
     } else if (act === 'menu') {
       menuAction(b.dataset.v);
+    } else if (act === 'online') {
+      const v = b.dataset.v;
+      if (v === 'rejoin') rejoinOnline();
+      else if (v === 'quitAsk') { SFX.tap(); abandonAsk(true); }
+      else if (v === 'abandon') abandonOnline();
     } else if (act === 'set') {
       const v = b.dataset.v;
       if (v === 'resume') { closeSheet(); await resumeGame(); }
@@ -3831,12 +3851,18 @@
   }
 
   function openMenu() {
+    // En ligne (v134) : le menu principal ne fait plus abandonner, la partie se rejoint ensuite ; abandonner
+    // demande une confirmation.
+    const online = !!(ui.state && ui.state.mp && !ui.state.watching && !ui.state.over);
     openSheet(`<h3>${tr('MENU')}</h3><div class="menu-list-sheet">
       <button class="btn" data-act="menu" data-v="sound">${SFX.muted ? tr('ACTIVER LE SON') : tr('COUPER LE SON')}</button>
       ${volumesHtml()}
       <button class="btn" data-act="menu" data-v="help">${tr('COMMENT JOUER')}</button>
-      <button class="btn" data-act="menu" data-v="home">${tr('MENU PRINCIPAL (PARTIE SAUVEGARDÉE)')}</button>
-      <button class="btn ghost" data-act="menu" data-v="quit">${tr('ABANDONNER LA PARTIE')}</button>
+      ${online
+        ? `<button class="btn" data-act="menu" data-v="away">${tr('MENU PRINCIPAL (PARTIE EN COURS)')}</button>
+      <button class="btn ghost" data-act="menu" data-v="quitAsk">${tr('ABANDONNER LA PARTIE')}</button>`
+        : `<button class="btn" data-act="menu" data-v="home">${tr('MENU PRINCIPAL (PARTIE SAUVEGARDÉE)')}</button>
+      <button class="btn ghost" data-act="menu" data-v="quit">${tr('ABANDONNER LA PARTIE')}</button>`}
     </div>`);
   }
 
@@ -3884,22 +3910,167 @@
     else if (v === 'help') openSheet(helpHtml());
     else if ((v === 'home' || v === 'quit') && ui.state && ui.state.watching) { closeSheet(); ui.watchStop = true; ui.skip = true; if (ui.watchAbort) ui.watchAbort(); }
     else if (v === 'home' && !(ui.state && ui.state.mp)) { closeSheet(); saveGame(); await backToMenu(); }
+    else if (v === 'stay') closeSheet();
+    else if (v === 'away') {
+      openSheet(`<h3>${tr('QUITTER LA PARTIE ?')}</h3>
+        <p class="muted">${tr('Votre univers continue de se battre sans vous, avec votre dernier système. Revenez quand vous voulez : REJOINDRE LA PARTIE, au menu principal.')}</p>
+        <div class="sheet-actions"><button class="btn primary" data-act="menu" data-v="stay">${tr('RESTER')}</button><button class="btn" data-act="menu" data-v="awayGo">${tr('QUITTER')}</button></div>`);
+    }
+    else if (v === 'awayGo') { closeSheet(); await stepAway(); }
+    else if (v === 'quitAsk') abandonAsk(false);
     else if (v === 'quit' || v === 'home') {
       closeSheet();
       const s = ui.state;
       if (s.mp && window.OrbiteMulti) window.OrbiteMulti.leave();
-      const p = me();
-      p.alive = false;
-      p.rank = R.alivePlayers(s).length + 1;
-      s.over = true;
-      s.phase = 'over';
-      s.rank = p.rank;
-      s.reward = 0;
-      s.rewarded = true;
-      s.xpGiven = 'abandon';
+      abandonState(s);
       saveGame();
       await endScreen();
     }
+  }
+  // Abandon : le joueur prend la dernière place encore en jeu, sans récompense.
+  function abandonState(s) {
+    const p = s.players[0];
+    p.alive = false;
+    p.rank = R.alivePlayers(s).length + 1;
+    s.over = true;
+    s.phase = 'over';
+    s.rank = p.rank;
+    s.reward = 0;
+    s.rewarded = true;
+    s.xpGiven = 'abandon';
+  }
+  function abandonAsk(fromMenu) {
+    openSheet(`<h3>${tr('ABANDONNER ?')}</h3>
+      <p class="muted">${tr('Vous prenez la dernière place encore en jeu, sans récompense, et ne pourrez plus revenir dans cette partie.')}</p>
+      <div class="sheet-actions"><button class="btn primary" data-act="${fromMenu ? 'close' : 'menu'}" data-v="stay">${fromMenu ? tr('ANNULER') : tr('RESTER')}</button><button class="btn ghost" data-act="${fromMenu ? 'online' : 'menu'}" data-v="${fromMenu ? 'abandon' : 'quit'}">${tr('ABANDONNER')}</button></div>`);
+  }
+
+  // ─── Rejoindre une partie en ligne (v134) ───────────────────
+  // Parti sans le vouloir (appli fermée, plantage, réseau coupé) ou par le menu principal : la partie
+  // continue sans nous (notre univers se bat avec son dernier système) et se rejoint du menu
+  // (REJOINDRE LA PARTIE), de l'écran Multijoueur, ou toute seule si l'appli redémarre en pleine partie.
+  // Les manches jouées entre-temps sont rattrapées (js/multi.js, rejoin).
+  const AWAY = new WeakSet();
+  function onlineInfo(s) {
+    const mode = R.isDuel(s) ? tr('Duel en ligne') : tr('Mêlée en ligne');
+    return tr('{mode} · cycle {c} · {hp} PV', { mode, c: s.round, hp: Math.max(0, s.players[0].hp) });
+  }
+  function renderRejoinBtn() {
+    const b = $('rejoinBtn');
+    if (!b) return;
+    const s = window.OrbiteMulti ? loadOnline() : null;
+    b.hidden = !s;
+    if (s) b.innerHTML = `${tr('REJOINDRE LA PARTIE')} <small>${esc(onlineInfo(s))}</small>`;
+  }
+  function offerRejoin() {
+    const s = window.OrbiteMulti ? loadOnline() : null;
+    if (!s) return false;
+    openSheet(`<h3>${tr('PARTIE EN LIGNE EN COURS')}</h3><h2>${tr('Votre univers se bat toujours')}</h2>
+      <p class="muted">${esc(onlineInfo(s))}</p>
+      <p class="muted">${tr('Pendant votre absence, il combat avec votre dernier système. Revenez avant qu’il ne tombe !')}</p>
+      <div class="sheet-actions"><button class="btn primary" data-act="online" data-v="rejoin">${tr('REJOINDRE')}</button><button class="btn" data-act="close">${tr('PLUS TARD')}</button></div>
+      <p class="rejoin-quit"><button class="link" type="button" data-act="online" data-v="quitAsk">${tr('Abandonner la partie')}</button></p>`);
+    return true;
+  }
+  // Une seule partie à la fois : une partie en ligne en cours se rejoint ou s'abandonne avant d'en
+  // lancer une autre (sa sauvegarde serait remplacée).
+  function onlineGate() {
+    if (!window.OrbiteMulti || !loadOnline()) return false;
+    SFX.tap();
+    offerRejoin();
+    return true;
+  }
+  async function waitSignedIn(ms) {
+    const ON = window.OrbiteOnline;
+    if (!ON || !ON.configured) return false;
+    if (!ON.uid()) ON.boot();
+    const t0 = Date.now();
+    while (Date.now() - t0 < ms) {
+      if (ON.uid() && ON.fire()) return true;
+      if (['signedOut', 'offline', 'unconfigured'].includes(ON.state.status)) return false;
+      await wait(250);
+    }
+    return !!(ON.uid() && ON.fire());
+  }
+  // Quitter une partie en ligne sans l'abandonner : elle reste sauvegardée. Un combat ou une attente en
+  // cours s'arrête là (fight voit la partie dans AWAY) ; la manche se rattrapera au retour.
+  async function stepAway() {
+    const s = ui.state;
+    if (!s || !s.mp) return;
+    AWAY.add(s);
+    ui.skip = true;
+    ui.readyArm = 0;
+    saveGame();
+    clearBanner();
+    if (window.OrbiteMulti) window.OrbiteMulti.leave({ away: true }).catch(() => {});
+    document.body.classList.remove('in-combat');
+    if (s.over) { await endScreen(); return; }
+    await backToMenu();
+  }
+  async function rejoinOnline() {
+    const MP = window.OrbiteMulti, ON = window.OrbiteOnline;
+    const s = loadOnline();
+    if (!s || !MP || ui.rejoining || ui.entering) return;
+    ui.rejoining = true;
+    closeSheet();
+    SFX.tap();
+    banner(tr('RECONNEXION…'), tr('Retour dans votre partie en ligne.'), null, true);
+    try {
+      if (!(await waitSignedIn(20000))) { clearBanner(); refuse(tr('Connectez-vous avec Google (Multijoueur) pour rejoindre la partie.')); return; }
+      // La progression en ligne se règle d'abord (sa récupération peut recharger la page).
+      for (let i = 0; i < 32 && !ON.state.synced; i++) await wait(250);
+      const res = await MP.rejoin(s);
+      clearBanner();
+      if (!res.ok) {
+        if (res.gone === 'account') { refuse(tr('Cette partie a été lancée avec un autre compte Google.')); return; }
+        try { localStorage.removeItem(SAVE_KEY); } catch (err) { /* stockage indisponible */ }
+        toast(tr('Cette partie n’existe plus.'), 2600);
+        if (ui.screen === 'menu') { renderRejoinBtn(); layoutMenu(); }
+        return;
+      }
+      stopAmbient();
+      ui.state = s;
+      ui.stamp++;
+      ui.busy = false;
+      ui.readyArm = 0;
+      saveGame();
+      // Éliminé pendant l'absence : l'écran de fin, avec sa vraie place.
+      if (s.over) { await endScreen(); return; }
+      await portal(async () => { await show('game'); renderGame(true); });
+      banner(tr('DE RETOUR'), res.rounds ? tr('{n} cycle(s) joué(s) sans vous · cycle {c}', { n: res.rounds, c: s.round }) : tr('Cycle {c} : la partie continue.', { c: s.round }));
+      MP.startRound();
+      if (me().discover.length) setTimeout(() => { if (!ui.discoverDone) openDiscover(); }, 700);
+      else if (me().relicChoice && me().relicChoice.length) setTimeout(() => { if (!ui.relicDone) openRelics(); }, 700);
+    } catch (err) {
+      console.error(err);
+      clearBanner();
+      refuse(tr('Connexion impossible : réessayez dans un instant.'));
+    } finally { ui.rejoining = false; }
+  }
+  // Abandonner du menu : si possible, la partie est d'abord rattrapée (éliminé entre-temps, c'est sa
+  // vraie place qui compte, et l'hôte passe la main).
+  async function abandonOnline() {
+    const MP = window.OrbiteMulti;
+    const s = loadOnline();
+    if (!s || ui.rejoining) return;
+    ui.rejoining = true;
+    closeSheet();
+    banner(tr('UN INSTANT…'), '', null, true);
+    let linked = false;
+    try {
+      if (MP && await waitSignedIn(6000)) linked = !!(await MP.rejoin(s)).ok;
+    } catch (err) { /* hors ligne : abandon sur la partie sauvegardée */ }
+    clearBanner();
+    ui.rejoining = false;
+    stopAmbient();
+    ui.state = s;
+    ui.stamp++;
+    if (!s.over) {
+      if (linked) MP.leave();
+      abandonState(s);
+    }
+    saveGame();
+    await endScreen();
   }
 
   // ─── Combat ─────────────────────────────────────────────────
@@ -3925,6 +4096,8 @@
     ui.prevHp = Object.fromEntries(ui.state.players.map((x) => [x.id, x.hp]));
     // Multijoueur : on publie son plateau et on attend ceux des autres créateurs.
     const MP = ui.state.mp && window.OrbiteMulti;
+    // Parti au menu principal pendant la manche (v134) : la suite s'arrête, la partie se rejoindra.
+    const s0 = ui.state, gone = () => AWAY.has(s0);
     const pre = uidRects();
     let res, waitT = 0;
     // En attente des autres : combien sont prêts, mis à jour chaque seconde (v131).
@@ -3939,6 +4112,7 @@
       res = { ok: false, reason: tr('Connexion perdue avec la partie en ligne.') };
     }
     clearInterval(waitT);
+    if (gone() || res.away) return;
     if (MP) clearBanner();
     if (!res.ok) { refuse(tr(res.reason)); ui.busy = false; return; }
     tuto('combat');
@@ -3947,7 +4121,9 @@
       await playShopEvents(res.endEvents, null, pre);
       await sleep(250);
       if (res.battle) await playBattle(res.battle);
+      if (gone()) return;
       if (MP && !res.over) await waitTurnStart(MP);
+      if (gone()) return;
       await afterBattle(res);
     } catch (err) {
       console.error(err);
@@ -3961,10 +4137,11 @@
   // bataille) : qui a fini son combat plus tôt attend la fin de la phase de combat (js/multi.js).
   async function waitTurnStart(MP) {
     const end = MP.shopStart ? MP.shopStart(ui.state.round) : 0;
+    const st = ui.state;
     let left = end - Date.now();
     if (left < 600) return;
     banner(tr('PROCHAIN TOUR'), tr('Dans {n} s : les autres combats se terminent.', { n: Math.ceil(left / 1000) }), null, true);
-    while (left > 300) {
+    while (left > 300 && !AWAY.has(st)) {
       const p = $('banner').querySelector('p');
       if (p) p.textContent = tr('Dans {n} s : les autres combats se terminent.', { n: Math.ceil(left / 1000) });
       await new Promise((r) => setTimeout(r, Math.min(1000, left - (Math.ceil(left / 1000) - 1) * 1000)));
@@ -4917,6 +5094,7 @@
     return `<span class="end-daily">${tr('DÉFI DU JOUR · {n} points', { n: s.dailyScore })}</span><button class="link" data-daily-board>${tr('Classement du jour')}</button>`;
   }
   async function openDaily() {
+    if (onlineGate()) return;
     SFX.tap();
     const d = dailyKey(), rec = dailyRec(), s = loadGame();
     if (s && s.daily === d && !s.over) {
@@ -5054,6 +5232,7 @@
   // Jouer : le duel contre l'IA, le cœur du jeu. La mêlée à 8 est rangée dans Multijoueur.
   // Une seule partie solo à la fois : celle en cours se reprend, quel que soit son mode.
   function openMode(size) {
+    if (onlineGate()) return;
     SFX.tap();
     const s = loadGame();
     if (!s) { newGameFlow(size); return; }
@@ -5099,6 +5278,7 @@
   listen('codexBody', 'click', (e) => { const b = e.target.closest('[data-cxid]'); if (!b) return; SFX.tap(); openSheet(unitSheet(shopUnit(b.dataset.cxid))); });
   listen('endRanked', 'click', (e) => { if (e.target.closest('[data-daily-board]')) { SFX.tap(); openDailyBoard(); } });
   listen('quickBtn', 'click', () => openMode(8));
+  listen('rejoinBtn', 'click', () => rejoinOnline());
   listen('multiBtn', 'click', async () => {
     SFX.tap();
     if (window.OrbiteMultiUI) { stopAmbient(); window.OrbiteMultiUI.open(); return; }
@@ -5242,6 +5422,7 @@
     show, openSheet, closeSheet, sheetMore, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
     pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH, frameOf, framed, avatarOf, fontOf, nameHtml, myFont, myFrame, myAvatar, seatLook, emblem, myEmblem, myRankInfo, tierLabel,
     coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation, lawScreen,
+    loadOnline, onlineInfo, onlineGate, rejoinOnline,
     seeds, addSeeds, wallet, renderMkWallet, worldLook, worldList, playerTag
   };
 

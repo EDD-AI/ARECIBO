@@ -370,6 +370,45 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Rejoindre une partie en ligne en cours (v134)
+
+Parti **sans le vouloir** (appli fermée, plantage, réseau coupé, page rechargée) ou par le menu : la
+partie en ligne **continue sans vous** (comme dans TFT ou Champs de bataille) et se **rejoint** tant
+qu’elle n’est pas finie.
+- **Pendant l’absence**, votre univers combat avec **votre dernier système publié** (l’hôte le garde).
+  Chaque manche écrite garde donc le système de chaque créateur, même absent dès la première manche
+  (repli sur le plateau annoncé au départ, `posts`, `r: 0`).
+- **Au retour**, les manches écrites depuis sont relues et rejouées sur votre téléphone, exactement
+  comme chez les autres (`R.mpCatchUp`, règles pures testées) : même cycle, mêmes PV, même réserve. Une
+  découverte ou une relique en attente prend le premier choix, comme à la fin du temps. Éliminé pendant
+  l’absence ? L’écran de fin s’ouvre avec **votre vraie place** (classé compris).
+- **Comment on revient** :
+  - l’appli redémarre en pleine partie (plantage, fermeture, rechargement) : elle y retourne **toute
+    seule** (« RECONNEXION… », puis « DE RETOUR · 2 cycles joués sans vous ») ;
+  - sinon, au lancement, une fiche **PARTIE EN LIGNE EN COURS** propose **REJOINDRE** (ou plus tard) ;
+  - au menu principal, un bouton doré **REJOINDRE LA PARTIE** (mode, cycle, PV) ; et une carte
+    **PARTIE EN COURS** en haut de l’écran Multijoueur.
+  - De retour, on a jusqu’à 10 s de plus pour acheter (sans dépasser la patience de l’hôte).
+- **Menu de partie en ligne** : « MENU PRINCIPAL (PARTIE EN COURS) » ne fait plus abandonner (avant, ce
+  bouton disait « partie sauvegardée » mais abandonnait en ligne). Une fiche confirme : votre univers
+  continue de se battre, revenez avec REJOINDRE. C’est possible même pendant un combat ou une attente
+  bloquée. **ABANDONNER LA PARTIE** demande une confirmation (RESTER / ABANDONNER).
+- **Une partie à la fois** : tant qu’une partie en ligne est en cours, lancer une autre partie (solo,
+  défi du jour, recherche, salon, invitation) propose d’abord de la rejoindre ou de l’abandonner ;
+  abandonner rattrape d’abord la partie si possible (éliminé entre-temps, c’est la vraie place qui compte).
+- **Hôte** : en partant, l’hôte passe la main à un créateur présent (cela ne marchait pas avant : le
+  module était vidé avant le relais). Parti sans abandonner et seul humain de la table, il reste l’hôte et
+  la table l’attend ; une partie close alors qu’il est encore en lice reprend avec lui.
+- **Horloge commune plus solide** : chaque manche est notée **dès sa réception**, même si l’on fait encore
+  ses achats (`listenRounds`), et le garde-fou « au moins 8 s pour acheter » d’un téléphone en retard ne
+  dépasse plus la patience de l’hôte. Un téléphone en retard (revenu en cours de manche, combat plus
+  long) se recale ainsi en une manche ; avant, il pouvait rester une manche derrière, ses achats toujours
+  pris trop tard.
+- Vérifié contre les émulateurs Firebase avec deux téléphones (duel) : appli fermée deux cycles puis
+  relancée, MENU PRINCIPAL puis REJOINDRE, et élimination pendant l’absence. Tests :
+  `tests/multi.test.mjs` (rattrapage de trois manches, élimination pendant l’absence, départ juste après
+  PRÊT). Textes : `js/lang/reprise.js`.
+
 ## Discussion en classé (v133)
 
 On peut maintenant **écrire librement** dans la discussion de toutes les parties en ligne, classées

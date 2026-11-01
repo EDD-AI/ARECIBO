@@ -1,6 +1,6 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
 // Garder ce numéro égal à VERSION dans js/game.js et à version.json.
-const CACHE = 'orbite-v133';
+const CACHE = 'orbite-v134';
 const SHELL = [
   './',
   './index.html',
@@ -94,6 +94,7 @@ const SHELL = [
   './js/lang/rapports.js',
   './js/lang/visite.js',
   './js/lang/classe.js',
+  './js/lang/reprise.js',
   './js/rapports.js',
   './icons/icon-192.png',
   './icons/icon-512.png',

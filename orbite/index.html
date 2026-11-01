@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="orbite-version" content="133">
+<meta name="orbite-version" content="134">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -119,6 +119,8 @@
       <nav class="menu-list" id="menuList" aria-label="Menu principal" data-t-attr="aria-label">
         <!-- Trois pages : le menu principal, Jouer (solo ou multijoueur), puis les modes solo. -->
         <div class="menu-page on" data-page="main">
+          <!-- Partie en ligne en cours (v134) : visible tant qu'elle se rejoint. -->
+          <button class="menu-item rejoin" id="rejoinBtn" hidden>REJOINDRE LA PARTIE</button>
           <button class="menu-item" id="playBtn" data-t>JOUER <small>SOLO · MULTIJOUEUR</small></button>
           <button class="menu-item" id="codexBtn" data-t>CODEX</button>
           <button class="menu-item" id="creationBtn" data-t>CRÉATION</button>
@@ -589,6 +591,7 @@
   <script src="js/lang/rapports.js"></script>
   <script src="js/lang/visite.js"></script>
   <script src="js/lang/classe.js"></script>
+  <script src="js/lang/reprise.js"></script>
   <script src="js/rapports.js"></script>
   <script src="js/planet-engine.js"></script>
   <script src="js/planet-renderer.js"></script>

@@ -2538,6 +2538,29 @@
     return { ok: true, battle, watched, results, longest: longestOf(results), fallen: fallen.map((p) => p.id), endEvents: endEvents || [], startEvents, over: false };
   }
 
+  // Reprise d'une partie en ligne (v134) : parti sans le vouloir (appli fermée, plantage, réseau
+  // coupé), le joueur revient avec sa partie sauvegardée. Pendant son absence, son univers a continué de
+  // se battre avec son dernier système publié (l'hôte le garde). On rejoue ici, dans l'ordre, les
+  // manches écrites depuis (docs : numéro → { snaps }), exactement comme les autres téléphones les ont
+  // résolues. Une découverte ou une relique en attente prend le premier choix, comme à la fin du temps.
+  // Rend le nombre de manches rattrapées et le résultat de la dernière.
+  function mpCatchUp(state, docs) {
+    const me = you(state);
+    let rounds = 0, last = null;
+    while (!state.over && docs && docs[state.round]) {
+      const doc = docs[state.round];
+      if (state.phase === 'shop') {
+        if (me.discover.length) choose(state, 0, me);
+        if (me.relicChoice && me.relicChoice.length) chooseRelic(state, 0, me);
+        const lk = mpLock(state, false);
+        if (!lk.ok) break;
+      }
+      last = mpResolve(state, doc.snaps || {}, []);
+      rounds++;
+    }
+    return { rounds, last };
+  }
+
   // ─── Contrôle (tests) ───────────────────────────────────────
   function poolAudit(state) {
     const total = Object.assign({}, state.pool);
@@ -2557,6 +2580,6 @@
     cardOf, famOf, cardText, upgradeCost, lawChoices, newGame, alivePlayers,
     buy, canBuy, play, canMagnet, sell, roll, freeze, upgrade, reorder, usePower, canUsePower, choose, endTurn,
     fight, poolAudit, copiesOf, botTurn, botDeploy,
-    mpFamilies, mpLawChoices, mpSeatLaw, snapshotOf, mpLock, mpHostBots, mirror, mpResolve, planPairs, nextOpponent
+    mpFamilies, mpLawChoices, mpSeatLaw, snapshotOf, mpLock, mpHostBots, mirror, mpResolve, mpCatchUp, planPairs, nextOpponent
   };
 });

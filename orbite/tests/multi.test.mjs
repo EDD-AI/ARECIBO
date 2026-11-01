@@ -141,3 +141,93 @@ test('spectateur en ligne (v105) : l’éliminé rejoue les manches et voit les 
   assert.ok(states.a.watching, 'a a regardé la suite');
   assert.ok(watchedFights > 0 && compared > 0);
 });
+
+// ─── Reprise d'une partie en ligne (v134) ───────────────────────
+// Une table de téléphones ; à chaque manche, ceux qui sont là jouent et publient ; un absent garde son
+// dernier système publié (l'hôte le retient). Les documents de manche sont gardés comme dans Firestore.
+function table(seed, laws) {
+  const humans = Object.keys(laws), fam = R.mpFamilies(seed), states = {};
+  for (const h of humans) states[h] = R.newGame(seed, laws[h], { families: fam, seats: humans.filter((x) => x !== h).map((x) => ({ id: x, name: x, law: null })), mp: { me: h } });
+  return { humans, states, docs: {}, last: {} };
+}
+function playRound(t, present) {
+  const { states, humans, last } = t;
+  const live = present.filter((h) => !states[h].over);
+  if (!live.length) return null;
+  const host = live[0], r = states[host].round, snaps = {};
+  for (const h of live) {
+    const st = states[h];
+    R.botTurn(st, st.players[0]);
+    assert.ok(R.mpLock(st, h === host).ok);
+    snaps[h] = R.snapshotOf(st, st.players[0]);
+  }
+  for (const p of states[host].players) if (p.bot && p.alive) snaps[p.id] = R.snapshotOf(states[host], p);
+  for (const h of humans) if (!snaps[h] && last[h]) snaps[h] = last[h];
+  Object.assign(last, snaps);
+  t.docs[r] = { r, snaps: JSON.parse(JSON.stringify(snaps)) };
+  for (const h of live) assert.ok(R.mpResolve(states[h], snaps, []).ok);
+  return host;
+}
+const viewOf = (st) => st.players.map((p) => (p.id === 'you' ? st.mp.me : p.id) + ':' + p.hp + ':' + p.alive).sort().join(' ');
+
+test('reprise en ligne (v134) : parti trois manches, on rattrape et on voit les mêmes PV que les autres', () => {
+  const t = table('BACK1', { a: 'sacrifice', b: 'endurance', c: 'phenix' });
+  for (let i = 0; i < 2; i++) playRound(t, ['a', 'b', 'c']);
+  // c ferme l'appli au début de sa boutique : sa partie sauvegardée est celle-ci.
+  const saved = JSON.stringify(t.states.c);
+  for (let i = 0; i < 3; i++) playRound(t, ['a', 'b']);
+  const back = JSON.parse(saved);
+  const res = R.mpCatchUp(back, t.docs);
+  assert.equal(res.rounds, 3);
+  assert.equal(back.round, t.states.a.round, 'même manche que les autres');
+  assert.equal(back.phase, 'shop');
+  assert.equal(viewOf(back), viewOf(t.states.a), 'mêmes PV après le rattrapage');
+  assert.deepEqual(R.poolAudit(back), back.poolTotal, 'réserve conservée après le rattrapage');
+  // Revenu, c joue normalement : tout le monde reste d'accord jusqu'à la fin.
+  t.states.c = back;
+  for (let i = 0; i < 40 && !['a', 'b', 'c'].every((h) => t.states[h].over); i++) {
+    playRound(t, ['a', 'b', 'c']);
+    const live = ['a', 'b', 'c'].filter((h) => t.states[h].phase === 'shop' && !t.states[h].over);
+    for (const h of live) assert.equal(viewOf(t.states[h]), viewOf(t.states[live[0]]));
+  }
+});
+
+test('reprise en ligne (v134) : éliminé pendant l’absence, on retrouve sa vraie place', () => {
+  const t = table('BACK2', { a: 'sacrifice', b: 'endurance', c: 'sacrifice' });
+  playRound(t, ['a', 'b', 'c']);
+  const saved = JSON.stringify(t.states.c);
+  let rank = null;
+  for (let i = 0; i < 60 && rank == null; i++) {
+    const host = playRound(t, ['a', 'b']);
+    if (!host) break;
+    const pc = t.states[host].players.find((p) => p.id === 'c');
+    if (!pc.alive) rank = pc.rank;
+  }
+  assert.ok(rank != null, 'c est tombé pendant son absence');
+  const back = JSON.parse(saved);
+  // Une découverte était en attente au moment du départ : elle prend le premier choix.
+  const ids = Object.keys(back.pool).filter((k) => back.pool[k] > 0 && R.CARD[k].tier === 1).slice(0, 3);
+  for (const id of ids) back.pool[id]--;
+  back.players[0].discover = ids;
+  const res = R.mpCatchUp(back, t.docs);
+  assert.equal(back.players[0].discover.length, 0);
+  assert.ok(res.rounds > 0 && back.over && res.last.over, 'la partie est finie pour c');
+  assert.equal(back.rank, rank, 'même place que sur les autres téléphones');
+});
+
+test('reprise en ligne (v134) : parti juste après PRÊT (système déjà verrouillé), rien n’est joué deux fois', () => {
+  const t = table('BACK3', { a: 'endurance', b: 'phenix' });
+  playRound(t, ['a', 'b']);
+  // b verrouille son tour et publie, puis l'appli se ferme pendant l'attente.
+  const st = t.states.b;
+  R.botTurn(st, st.players[0]);
+  assert.ok(R.mpLock(st, false).ok);
+  const saved = JSON.stringify(st);
+  t.last.b = R.snapshotOf(st, st.players[0]);
+  playRound(t, ['a']);
+  playRound(t, ['a']);
+  const back = JSON.parse(saved);
+  const res = R.mpCatchUp(back, t.docs);
+  assert.equal(res.rounds, 2);
+  assert.equal(viewOf(back), viewOf(t.states.a));
+});
