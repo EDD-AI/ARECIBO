@@ -6,7 +6,7 @@
 
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 131;
+  const VERSION = 132;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -2380,7 +2380,9 @@
   }
   // Son emblème de rang en partie en ligne (v129) : le nôtre, ou celui de sa place au salon.
   function playerEmb(p, cls) {
-    if (!p || !ui.state || !ui.state.mp || p.bot || p.ghost) return '';
+    if (!p || !ui.state || !ui.state.mp || p.ghost) return '';
+    // Les bots d'une partie en ligne ont un rang proche de celui de la table (v132).
+    if (p.bot) return p.rankPts != null ? emblem({ points: p.rankPts, placed: true }, cls || 'emb-xs') : '';
     if (p.id === 'you') return myEmblem(cls || 'emb-xs');
     const seat = seatFor(p);
     return seat ? emblem(seat, cls || 'emb-xs') : '';

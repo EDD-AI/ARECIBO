@@ -370,6 +370,33 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Bots en ligne : des pseudos, un rang et un niveau qui suit le classement (v132)
+
+- **Des pseudos** : en ligne (classé ou entre amis), les bots ne s’appellent plus NOX-7 ou KEPLER mais
+  portent des pseudos de joueurs (Stellaria, Zephyr42, Pixelune… 60 noms, `MP_BOT_NAMES`), tirés de la
+  graine de la partie : les mêmes sur tous les téléphones. En solo, rien ne change.
+- **Un rang** : chaque bot a des points proches de la moyenne des créateurs placés de la table (± 120,
+  `K.botPoints`), et donc son emblème dans la barre et la liste des rivaux.
+- **Un niveau de jeu selon le rang de la table** (`K.botSkills`, les places du salon : même résultat
+  partout) ; les bots alternent entre deux niveaux voisins :
+
+  | Rang de la table | Niveaux des bots |
+  |---|---|
+  | Poussière | faible, faible |
+  | Astéroïde | faible, moyen |
+  | Lune | moyen, moyen |
+  | Planète | moyen, expert |
+  | Géante | expert, expert |
+  | Étoile | expert, fort |
+  | Nébuleuse, Pulsar, Singularité | fort, fort |
+  | personne encore placé | moyen, moyen |
+
+  Niveaux de l’IA (`skill`, `js/rules.js`) : **faible** (0,3 : IA de base, choix plus hasardeux en
+  boutique), **moyen** (0,7 : économie et famille de l’IA experte, sans essais de combat), **expert**
+  (1 : l’IA de toujours) et **fort** (1,3 : plus d’achats essayés contre plus de systèmes adverses,
+  plus d’actualisations). Sur 100 parties simulées à 8, deux bots de chaque niveau : place moyenne
+  6,75 (faible), 4,22 (moyen), 3,63 (expert), 3,40 (fort).
+
 ## PRÊT en ligne : finir la boutique plus tôt (v131)
 
 En ligne, le compte à rebours de la boutique (dans le bouton de combat) se touche : « **PRÊT ?** ». Un
