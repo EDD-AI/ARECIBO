@@ -370,6 +370,22 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Discussion en classé (v133)
+
+On peut maintenant **écrire librement** dans la discussion de toutes les parties en ligne, classées
+comprises (avant, le classé n’avait que les six messages rapides). Comme on y parle à des inconnus :
+- **Gros mots masqués** (`js/moderation.js`, `OrbiteModeration.soften`) : une liste d’insultes et de
+  grossièretés courantes en français, anglais, espagnol, allemand et portugais, reconnues malgré les
+  accents, les majuscules, l’écriture « leet » (`$h1t`) et les lettres répétées (`fuuuck`) ; elles
+  deviennent des étoiles. Les **liens** deviennent « [lien] ». Le filtre joue à l’envoi **et** à
+  l’affichage (un ancien client ou un message trafiqué est filtré chez celui qui le lit, bulles comprises).
+  Des mots courts ambigus (comme « con », qui veut dire « avec » en espagnol) ne sont pas filtrés.
+- **Masquer un joueur** : toucher le pseudo d’un autre joueur dans la discussion masque ses messages
+  (liste et bulles) pour la partie ; « Tout réafficher » les rend.
+- Une phrase le rappelle sous la saisie. Un message par seconde au plus, 120 caractères, comme avant.
+- Tests : `tests/moderation.test.mjs` (insultes dans les cinq langues, variantes, liens, et messages
+  normaux qui doivent passer intacts).
+
 ## Bots en ligne : des pseudos, un rang et un niveau qui suit le classement (v132)
 
 - **Des pseudos** : en ligne (classé ou entre amis), les bots ne s’appellent plus NOX-7 ou KEPLER mais
@@ -1377,8 +1393,7 @@ amis sont dessous (voir « Classé : trouver une partie… (v129) »).
   haut, avec une pastille quand un message arrive). Depuis la v81, un message
   reçu s’affiche en grosse bulle en haut de l’écran de l’autre (nom en doré, texte en grand, trois
   au plus, 4,5 s) ; la toucher ouvre la discussion. Six messages rapides (« Bonne chance ! », « Bien joué ! », « Aïe ! », « Joli combo ! »,
-  « GG », « Revanche ? »), affichés dans la langue de chacun ; texte libre (120 caractères) seulement
-  entre amis, en partie privée. Un message par seconde au plus. Les 40 derniers messages vivent dans
+  « GG », « Revanche ? »), affichés dans la langue de chacun ; texte libre (120 caractères) partout (en classé aussi depuis la v133, voir « Discussion en classé (v133) »). Un message par seconde au plus. Les 40 derniers messages vivent dans
   le salon (champ `chat` de `matches/{id}`, que ses membres peuvent modifier) : aucune règle
   Firestore à republier.
 - **Menu de la partie pendant un combat** (v77) : couper le son et « Comment jouer » marchent même
