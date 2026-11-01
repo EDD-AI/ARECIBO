@@ -321,7 +321,17 @@ body.modal #gl { z-index: 35; }
 @keyframes menu-page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .menu-item.back { font-size: 12px; color: var(--dim); padding: 10px 0; }
 .menu-item.back::before { content: '‹'; margin-right: 10px; }
-#campBtn[hidden], #creationBtn[hidden] { display: none; }
+#campBtn[hidden], #creationBtn[hidden], #rejoinBtn[hidden] { display: none; }
+/* Rejoindre une partie en ligne en cours (v134) : en or, avec un léger battement. */
+.menu-item.rejoin { color: var(--gold); text-shadow: 0 0 10px rgba(246, 196, 83, 0.45); }
+.menu-item.rejoin small { color: var(--gold); opacity: 0.8; letter-spacing: 0.16em; }
+.menu-item.rejoin::before { content: ''; position: absolute; inset: 4px 8%; border: 1px solid rgba(246, 196, 83, 0.5); animation: rejoin-pulse 1.6s ease-in-out infinite; pointer-events: none; }
+.menu-item.rejoin::after { background: var(--gold); }
+@keyframes rejoin-pulse { 0%, 100% { opacity: 0.35; transform: scale(0.98); } 50% { opacity: 1; transform: scale(1); } }
+.rejoin-quit { text-align: center; margin: 4px 0 0; }
+.mp-rejoin { border-color: rgba(246, 196, 83, 0.6); }
+.mp-rejoin b { color: var(--gold); }
+@media (prefers-reduced-motion: reduce) { .menu-item.rejoin::before { animation: none; opacity: 0.7; } }
 .title-version {
   position: absolute;
   bottom: calc(var(--safe-b) + 14px);

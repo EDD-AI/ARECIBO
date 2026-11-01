@@ -108,7 +108,11 @@
     const inv = ON.invites ? ON.invites() : [];
     const size = findSize(), rk = myRankLines();
     const mode = (n, name, sub) => `<button class="mpf-mode ${size === n ? 'on' : ''}" data-mp="mode" data-size="${n}" role="radio" aria-checked="${size === n}" ${off}><b>${name}</b><small>${sub}</small></button>`;
-    box.innerHTML = `
+    // Une partie en ligne en cours (v134) : elle passe avant une nouvelle recherche.
+    const back = A.loadOnline ? A.loadOnline() : null;
+    const backCard = back ? `<div class="mp-card mp-rejoin"><b>${tr('PARTIE EN COURS')}</b><p>${esc(A.onlineInfo(back))}</p>
+        <button class="btn primary" data-mp="rejoin" ${off}>${tr('REJOINDRE LA PARTIE')}</button></div>` : '';
+    box.innerHTML = `${backCard}
       <div class="mp-find">
         <div class="mpf-rank">${myEmb('mpf-emb')}<span class="mpf-rank-txt"><small>${tr('VOTRE RANG')}</small><b>${esc(rk.name)}</b><small>${esc(rk.more)}</small></span></div>
         <div class="mpf-play">
@@ -329,8 +333,12 @@
 
   const friendOf = (uid) => (ON.friendProfiles ? ON.friendProfiles().find((p) => p.uid === uid) : null) || null;
 
+  // Ce qui lance une nouvelle partie : bloqué tant qu'une partie en ligne est en cours (v134).
+  const STARTS = ['find', 'ranked', 'create', 'join', 'challenge', 'inviteGo'];
   async function act(k, b) {
     if (st.busy && k !== 'leave' && k !== 'cancel') return;
+    if (STARTS.includes(k) && A.onlineGate && A.onlineGate()) return;
+    if (k === 'rejoin') { if (A.rejoinOnline) await A.rejoinOnline(); return; }
     SFX.tap();
     try {
       if (k === 'signin') { await ON.signIn(); }

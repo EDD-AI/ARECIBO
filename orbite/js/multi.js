@@ -68,7 +68,10 @@
     started: false, posts: {}, roundDocs: {}, lastSnaps: {}, locked: null, lockAt: 0, timerRound: 0, deadline: 0, tick: 0, hostRoundStart: {},
     // Heures locales de réception (v126) : du lancement et de chaque manche. Les échéances partent de là
     // et non de l'horloge de l'hôte : un téléphone à l'heure fausse ne décale plus le minuteur.
-    roundRecv: {}, startLocal: 0, roundWin: {}
+    roundRecv: {}, startLocal: 0, roundWin: {},
+    // Numéro de passage dans un salon (v134) : une attente de manche d'avant un départ ne compte plus,
+    // même si l'on revient dans le même salon.
+    gen: 0
   };
   const fire = () => { const f = ON.fire(); if (!f || !ON.uid()) throw new Error(tr('Connectez-vous avec Google pour jouer en ligne.')); return f; };
   const uid = () => ON.uid();
@@ -163,11 +166,14 @@
     });
     watch(mid);
   }
-  async function leave() {
-    const mid = M.mid, m = M.match;
+  // Quitter le salon. En pleine partie, opts.away (v134) : on s'absente sans abandonner (la partie se
+  // rejoint ensuite, rejoin) ; si l'on était l'hôte, la main passe à un créateur présent, et s'il n'y
+  // en a aucun, la table attend notre retour au lieu d'être close.
+  async function leave(opts) {
+    const mid = M.mid, m = M.match, away = !!(opts && opts.away);
     stopRound();
     stopWatch();
-    Object.assign(M, { mid: null, match: null, started: false, posts: {}, roundDocs: {}, lastSnaps: {}, locked: null, timerRound: 0, roundRecv: {}, startLocal: 0, roundWin: {} });
+    Object.assign(M, { mid: null, match: null, started: false, posts: {}, roundDocs: {}, lastSnaps: {}, locked: null, timerRound: 0, roundRecv: {}, startLocal: 0, roundWin: {}, backAt: 0, gen: M.gen + 1 });
     notify();
     if (!mid || !m) return;
     try {
@@ -181,7 +187,7 @@
           if (!uids.length) { t.delete(ref(mid)); return; }
           t.update(ref(mid), { uids, seats: x.seats.filter((s) => s.uid !== uid()), host: x.host === uid() ? uids[0] : x.host });
         });
-      } else if (m.host === uid()) await handOver();
+      } else if (m.host === uid()) await handOver(m, mid, away);
     } catch (err) { /* sans importance : le salon expirera */ }
   }
 
@@ -312,6 +318,7 @@
     st.players[0].name = pseudo();
     M.posts = {}; M.roundDocs = {}; M.lastSnaps = {}; M.locked = null; M.timerRound = 0; M.roundRecv = {}; M.roundWin = {};
     listenPosts();
+    listenRounds();
     // Sa loi est annoncée tout de suite : les autres voient ses vrais PV dès la première manche.
     try { const { fs } = fire(); fs.setDoc(ref(M.mid, 'posts', me), { r: 0, snap: R.snapshotOf(st, st.players[0]), at: now() }).catch(() => {}); } catch (err) { /* hors ligne */ }
     return st;
@@ -324,6 +331,24 @@
       const st = O.ui.state;
       if (st && st.mp && st.mp.mid === M.mid) for (const [g, p] of Object.entries(M.posts)) if (p.snap) R.mpSeatLaw(st.players.find((x) => x.id === g), p.snap.law);
       if (isHost()) assemble();
+    }));
+  }
+  // Chaque manche écrite est notée dès sa réception (v134), même si l'on fait encore ses achats : un
+  // téléphone en retard (revenu dans la partie, combat plus long) repart ainsi de la même heure que les
+  // autres pour la phase de combat suivante, et se recale en une manche. Avant, l'heure n'était notée
+  // qu'une fois son propre tour fini : un retard plus long que la tolérance de l'hôte ne se rattrapait
+  // jamais.
+  function listenRounds() {
+    const { db, fs } = fire();
+    const mid = M.mid;
+    M.unsub.push(fs.onSnapshot(fs.collection(db, 'matches', mid, 'rounds'), (q) => {
+      if (M.mid !== mid) return;
+      for (const d of q.docs) {
+        const v = d.data(), r = Number(v.r);
+        if (!r) continue;
+        if (!M.roundRecv[r]) M.roundRecv[r] = now();
+        if (!M.roundDocs[r]) M.roundDocs[r] = v;
+      }
     }));
   }
   // Humains encore en lice (selon l'état local, identique partout).
@@ -349,6 +374,8 @@
     if (host) assemble(); else hostCheck();
     const doc = await waitRound(r);
     M.locked = null;
+    // Parti entre-temps (menu principal, v134) : la manche se rattrapera au retour.
+    if (!doc) return { ok: false, away: true, reason: '' };
     M.lastSnaps = Object.assign({}, M.lastSnaps, doc.snaps);
     const res = R.mpResolve(st, doc.snaps, lk.endEvents);
     M.roundWin[r] = fightWindow(res.longest);
@@ -368,6 +395,9 @@
       const p = M.posts[g];
       if (p && p.r === r) snaps[g] = p.snap;
       else if (M.lastSnaps[g]) snaps[g] = M.lastSnaps[g];
+      // Absent dès la première manche (v134) : son plateau annoncé au départ (posts, r: 0) ; chaque
+      // manche garde ainsi le système de chaque créateur, pour qu'il puisse la rattraper en revenant.
+      else if (p && p.snap) snaps[g] = p.snap;
     }
     snaps[uid()] = R.snapshotOf(st, st.players[0]);
     for (const p of st.players) if (p.bot && p.alive) snaps[p.id] = R.snapshotOf(st, p);
@@ -381,21 +411,23 @@
       });
     } catch (err) { console.error(err); L.writing = false; setTimeout(assemble, 3000); }
   }
+  // Rend null si l'on a quitté ce salon entre-temps (v134).
   function waitRound(r) {
     const { fs } = fire();
+    const mid = M.mid, gen = M.gen, gone = () => M.mid !== mid || M.gen !== gen;
     return new Promise((resolve) => {
-      let done = false;
-      const un = fs.onSnapshot(ref(M.mid, 'rounds', String(r)), (d) => {
+      let done = false, un = null, chk = 0, k = 0;
+      const stop = (v) => { if (done) return; done = true; clearInterval(chk); if (un) un(); resolve(v); };
+      un = fs.onSnapshot(ref(mid, 'rounds', String(r)), (d) => {
         if (done || !d.exists()) return;
-        done = true;
+        if (gone()) { stop(null); return; }
         M.roundDocs[r] = d.data();
         if (!M.roundRecv[r]) M.roundRecv[r] = now();
-        clearInterval(chk);
-        un();
-        resolve(d.data());
+        stop(d.data());
       });
+      if (done) { un(); return; }
       // Hôte muet trop longtemps : on reprend la main (les bots jouent alors chez nous).
-      const chk = setInterval(() => { if (!done) takeOverIfStale(r); }, 5000);
+      chk = setInterval(() => { if (gone()) stop(null); else if (++k % 5 === 0) takeOverIfStale(r); }, 1000);
     });
   }
   // Devenu hôte en cours de manche : les bots jouent chez nous avant d'écrire la manche.
@@ -423,17 +455,21 @@
       if (won && M.locked && M.locked.r === r) hostCheck();
     } catch (err) { /* un autre a pris le relais */ }
   }
-  // Éliminé ou parti : l'hôte passe la main au prochain humain encore présent.
-  async function handOver() {
-    const m = M.match;
-    if (!m || m.host !== uid()) return;
+  // Éliminé ou parti : l'hôte passe la main au prochain humain encore présent. Le salon et son
+  // identifiant sont passés par leave, qui a déjà vidé l'état du module (avant la v134, la main ne
+  // passait donc jamais en quittant). Absent seulement (away) : la main ne va qu'à un créateur présent ;
+  // sans personne, on reste l'hôte et la table attend notre retour.
+  async function handOver(mm, mid, away) {
+    const m = mm || M.match, id = mid || M.mid;
+    if (!m || !id || m.host !== uid()) return;
     const st = O.ui.state;
     const alive = st && st.mp ? aliveHumans(st).filter((g) => g !== uid()) : [];
-    const next = alive.find((g) => now() - ((m.beat || {})[g] || 0) < STALE_MS) || alive[0];
+    const next = alive.find((g) => now() - ((m.beat || {})[g] || 0) < STALE_MS) || (away ? null : alive[0]);
+    if (!next && away) return;
     try {
       const { fs } = fire();
-      if (next) await fs.updateDoc(ref(M.mid), { host: next });
-      else await fs.updateDoc(ref(M.mid), { status: 'done' });
+      if (next) await fs.updateDoc(ref(id), { host: next });
+      else await fs.updateDoc(ref(id), { status: 'done' });
     } catch (err) { /* sans importance */ }
   }
   // Mode spectateur en ligne (v105) : éliminé, on suit les manches que l'hôte écrit et on les rejoue
@@ -444,7 +480,7 @@
     if (!humans || !M.mid || (M.match && M.match.status === 'done')) return R.endTurn(st, { observer: true, watch: true });
     const r = st.round;
     const doc = M.roundDocs[r] || await waitRound(r);
-    if (st.over || !st.watching || st.round !== r) return null;
+    if (!doc || st.over || !st.watching || st.round !== r) return null;
     M.lastSnaps = Object.assign({}, M.lastSnaps, doc.snaps);
     const res = R.mpResolve(st, doc.snaps, [], { watch: true });
     M.roundWin[r] = fightWindow(res.longest);
@@ -454,6 +490,64 @@
   function finished() {
     stopRound();
     if (isHost()) handOver();
+  }
+
+  // ─── Reprise d'une partie (v134) ────────────────────────────
+  // Parti sans le vouloir (appli fermée, plantage, réseau coupé, menu principal) : on revient avec sa
+  // partie sauvegardée. Son univers a continué de se battre avec son dernier système (l'hôte le
+  // garde, assemble) ; on relit les manches écrites depuis et on les rejoue ici (R.mpCatchUp), puis
+  // le module repart sur ce salon comme au lancement. Rend { gone } si la partie n'existe plus pour
+  // nous ; sinon { ok, rounds (manches rattrapées), over (éliminé pendant l'absence) }.
+  async function peek(mid) {
+    const { fs } = fire();
+    const d = await fs.getDoc(ref(mid));
+    return d.exists() ? Object.assign({ id: d.id }, d.data()) : null;
+  }
+  async function roundsFrom(mid, r0) {
+    const { fs } = fire();
+    const docs = {};
+    // Par paquets de 4, jusqu'à la première manche pas encore écrite.
+    for (let r = Math.max(1, r0); r < r0 + 120; r += 4) {
+      const got = await Promise.all([0, 1, 2, 3].map((i) => fs.getDoc(ref(mid, 'rounds', String(r + i)))));
+      let end = false;
+      got.forEach((d, i) => { if (end || !d.exists()) { end = true; return; } docs[r + i] = d.data(); });
+      if (end) break;
+    }
+    return docs;
+  }
+  async function rejoin(st) {
+    const mid = st && st.mp && st.mp.mid;
+    if (!mid || st.mp.me !== uid()) return { gone: 'account' };
+    const m = await peek(mid);
+    if (!m || !Array.isArray(m.uids) || !m.uids.includes(uid()) || !m.seed) return { gone: 'missing' };
+    const docs = await roundsFrom(mid, st.round - 1);
+    const caught = R.mpCatchUp(st, docs);
+    stopRound();
+    stopWatch();
+    stopPoll();
+    Object.assign(M, {
+      mid, match: m, mode: m.mode, started: true, posts: {}, roundDocs: docs, lastSnaps: {}, locked: null, timerRound: 0,
+      roundRecv: {}, roundWin: {}, startLocal: m.startAt || now(), searchOff: true, backAt: now(), gen: M.gen + 1
+    });
+    for (const r of Object.keys(docs).map(Number).sort((a, b) => a - b)) Object.assign(M.lastSnaps, docs[r].snaps || {});
+    // La boutique en cours finit à la même heure pour tous : réception de la manche précédente (heure de
+    // l'hôte, bornée à la nôtre) + sa phase de combat, d'après son plus long combat (gardé dans l'historique).
+    const prevR = st.round - 1, prev = docs[prevR];
+    if (prev) {
+      const at = Number(prev.at) || 0;
+      M.roundRecv[prevR] = at && now() - at < 15 * 60000 ? Math.min(at, now()) : now();
+      const h = (st.history || []).find((x) => x.round === prevR);
+      M.roundWin[prevR] = fightWindow(h ? h.results.reduce((a, x) => Math.max(a, x.steps || 0), 0) : 0);
+    }
+    watch(mid);
+    listenPosts();
+    listenRounds();
+    if (st.over) finished();
+    else if (m.status === 'done') {
+      // Close alors que nous sommes encore en lice (plus aucun autre créateur) : la partie reprend avec nous.
+      try { const { fs } = fire(); await fs.updateDoc(ref(mid), { status: 'playing', host: uid() }); } catch (err) { /* on jouera tout de même */ }
+    }
+    return { ok: true, rounds: caught.rounds, over: !!st.over };
   }
 
   // Fin de la boutique de la manche r : la même pour tous (v126). La manche 1 suit le choix des lois ;
@@ -485,8 +579,15 @@
         // même pour tous (v126) : un combat court laisse plus de temps, un long combat accéléré moins.
         if (st.round > 1 && (O.ui.busy || document.body.classList.contains('in-combat'))) return;
         M.timerRound = st.round;
-        // Garde-fou : un téléphone très lent, sorti tard de son combat, garde au moins 8 s pour acheter.
-        M.deadline = st.round <= 1 ? deadlineOf(1) : Math.max(deadlineOf(st.round), now() + 8000);
+        // Garde-fou : un téléphone très lent, sorti tard de son combat, garde au moins 8 s pour acheter,
+        // mais jamais au-delà de la patience de l'hôte (v134) : son système doit compter pour cette
+        // manche, et il se recale ainsi sur les autres dès la suivante (sinon il restait en retard d'une
+        // manche, ses achats toujours pris trop tard).
+        const due = deadlineOf(st.round);
+        M.deadline = st.round <= 1 ? due : Math.max(due, Math.min(now() + 8000, due + GRACE_MS - 2000));
+        // De retour dans la partie (v134) : jusqu'à 10 s de plus pour se retrouver, sans dépasser la
+        // tolérance de l'hôte (son système doit arriver avant que la manche ne s'écrive sans lui).
+        if (M.backAt) { M.deadline = Math.max(M.deadline, Math.min(M.backAt + 10000, due + GRACE_MS - 2000)); M.backAt = 0; }
       }
       const left = Math.max(0, M.deadline - now());
       const txt = Math.floor(left / 60000) + ':' + String(Math.ceil(left / 1000) % 60).padStart(2, '0');
@@ -527,7 +628,7 @@
 
   window.OrbiteMulti = {
     get state() { return M; },
-    searchRanked, cancelSearch, createPrivate, joinCode, start, leave, invite, setBots, newState, lawChoices, endTurn, startRound, stopRound, isHost, say, watchNext,
+    searchRanked, cancelSearch, createPrivate, joinCode, start, leave, invite, setBots, newState, lawChoices, endTurn, startRound, stopRound, isHost, say, watchNext, rejoin,
     SEATS, seatsOf, botsOf, WAIT_MS, LAW_MS, startBase, shopStart, fightWindow, readyOf,
     // La partie de ce salon comptera-t-elle pour le classement ? (humains présents au salon)
     rankedOf: (m) => !!m && K.counts(m.mode, (m.uids || []).length)
