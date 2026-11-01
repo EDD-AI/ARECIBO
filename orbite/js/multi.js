@@ -304,7 +304,11 @@
     // à deux humains ou plus (classement.js, counts).
     const lobby = K.lobbyOf(m.seats, me);
     const humans = m.seats.length;
-    const st = R.newGame(m.seed, lawId, { families, seats, size: seatsOf(m), event: 'auto', mp: { me, mid: M.mid, mode: m.mode, lobby, humans, ranked: K.counts(m.mode, humans) } });
+    // Bots (v132) : niveau de jeu selon le rang de la table, et des points proches pour leur emblème.
+    const nBots = Math.max(0, seatsOf(m) - humans);
+    const botSkill = K.botSkills ? K.botSkills(m.seats) : undefined;
+    const botPoints = K.botPoints ? Array.from({ length: nBots }, (_, i) => K.botPoints(m.seats, m.seed, i)) : undefined;
+    const st = R.newGame(m.seed, lawId, { families, seats, size: seatsOf(m), event: 'auto', botSkill, botPoints, mp: { me, mid: M.mid, mode: m.mode, lobby, humans, ranked: K.counts(m.mode, humans) } });
     st.players[0].name = pseudo();
     M.posts = {}; M.roundDocs = {}; M.lastSnaps = {}; M.locked = null; M.timerRound = 0; M.roundRecv = {}; M.roundWin = {};
     listenPosts();

@@ -653,6 +653,12 @@
   const hasRelic = (p, id) => !!(p && p.relics && p.relics.includes(id));
 
   const BOT_NAMES = ['NOX-7', 'KEPLER', 'VESPER', 'ANDROMÈDE', 'ORION', 'CASSIOPÉE', 'ATLAS', 'LYRA', 'HYDRA', 'VÉGA', 'DRACO', 'PHÉNIX'];
+  // En ligne (v132), les bots portent des pseudos comme ceux des joueurs.
+  const MP_BOT_NAMES = ['Stellaria', 'NovaKid', 'Zephyr42', 'Lunaire', 'Kosmo', 'Astrid_7', 'Quasar', 'Pixelune', 'Nébulo', 'Orbitale',
+    'CometeX', 'Solenn', 'Vortex', 'Eclipsia', 'Galaxor', 'Mira', 'Titania', 'Polaris_', 'Ryuu', 'Selena', 'Hélio', 'Andro',
+    'Kaïros', 'Luma', 'Nimbus', 'Oberon', 'Pléiade', 'Rigel_9', 'Saturnin', 'Tycho', 'Umbra', 'Vela', 'Xenon', 'Yuna', 'Zénith',
+    'Altaïr', 'Bételge', 'Cosmia', 'Deneb', 'Elara', 'Fomalo', 'Gaïa_', 'Halley', 'Ionix', 'Jovia', 'Kiran', 'Léto', 'Mimas',
+    'Naos', 'Opale', 'Proxima', 'Quinn', 'Rhéa', 'Sirius', 'Thalia', 'Ulysse', 'Vénus_', 'Wolf359', 'Ysolde', 'Zora'];
 
   // ─── Outils ─────────────────────────────────────────────────
   function hashStr(s) {
@@ -1007,7 +1013,7 @@
     const botLaws = LAWS.filter((l) => families.includes(l.fam));
     // En ligne, les noms des bots ne dépendent que de la graine (pas de la loi choisie) : les mêmes
     // sur tous les téléphones.
-    const names = shuffle(BOT_NAMES.slice(), opts.mp ? mulberry(hashStr(seed + '|names')) : rng);
+    const names = shuffle((opts.mp ? MP_BOT_NAMES : BOT_NAMES).slice(), opts.mp ? mulberry(hashStr(seed + '|names')) : rng);
     // Sièges des autres joueurs humains (multijoueur) : ni boutique ni décisions locales, leur
     // plateau arrive du réseau à chaque manche.
     for (const seat of seats) {
@@ -1036,7 +1042,10 @@
       if (bl.fam !== 'neutre') crowd[bl.fam] = (crowd[bl.fam] || 0) + 1;
       const b = newPlayer(state, 'bot' + i, names[i], bl.id, true);
       b.greed = Math.floor(rng() * 4) - 1;
-      b.skill = 1;
+      // Niveau imposé (classé, v132) : un nombre, ou une liste parcourue bot après bot.
+      const lv = Array.isArray(opts.botSkill) ? opts.botSkill[botIndex % opts.botSkill.length] : opts.botSkill;
+      b.skill = lv != null ? Number(lv) : 1;
+      if (Array.isArray(opts.botPoints)) b.rankPts = opts.botPoints[botIndex];
       if (rng() < BOT.randPref) b.pref = families[Math.floor(rng() * families.length)];
       // Un bot sur dix vise une Alliance de deux familles.
       const pairUp = rng() < BOT.pref2;
@@ -1971,8 +1980,13 @@
 
   // ─── Bots ───────────────────────────────────────────────────
   // Les bots des parties ont skill 1 (IA experte) ; skill 0 garde l'IA de base, utile pour
-  // mesurer l'écart (orbite/tools/bots-duel.js).
-  const expert = (p) => p.skill > 0;
+  // mesurer l'écart (orbite/tools/bots-duel.js). Niveaux intermédiaires (v132, classé : niveau des
+  // bots selon le rang de la partie, BOT_LEVELS) :
+  //   < 0,5 : IA de base, choix plus hasardeux ; 0,5 à 1 : experte (économie, famille) mais sans
+  //   essais de combat ; 1 : experte complète ; 1,3 et plus : experte, plus d'essais et d'actualisations.
+  const expert = (p) => p.skill >= 0.5;
+  const thinks = (p) => p.skill >= 1;
+  const strong = (p) => p.skill >= 1.3;
   // Réglages de l'IA experte (choisis par simulation : orbite/tools/bots-mono.js).
   const BOT = { randPref: 0, pref2: 0.1, famBase: 6, famPer: 2, levelLag: 3, sim: 2, simOpp: 3, simCand: 4, famWeight: 6, weak: 0.5, crowd: 0.1 };
   // Force d'une famille jouée seule (part de victoires d'un joueur « tout dans une famille »
@@ -2041,15 +2055,17 @@
   // Achat réfléchi : chaque option est jouée sur une copie de la partie (effets à l'achat,
   // triplés, découvertes compris), puis le plateau obtenu est mis à l'épreuve.
   function simPick(state, p, opts) {
-    const base = simScore(state, p, p.board);
+    // Une IA forte (classé haut) essaie chaque achat contre plus de systèmes adverses.
+    const nOpp = strong(p) ? BOT.simOpp + 2 : BOT.simOpp;
+    const base = simScore(state, p, p.board, nOpp);
     let best = null;
-    for (const o of opts.slice(0, BOT.simCand)) {
+    for (const o of opts.slice(0, BOT.simCand + (strong(p) ? 3 : 0))) {
       if (!canBuy(state, o.i, p).ok) continue;
       const sc = JSON.parse(JSON.stringify(state));
       const pc = findPlayer(sc, p.id);
       buy(sc, o.i, pc);
       botDeploy(sc, pc);
-      const gain = simScore(sc, pc, pc.board) - base;
+      const gain = simScore(sc, pc, pc.board, nOpp) - base;
       const total = o.v + BOT.sim * gain;
       if (!best || total > best.total) best = Object.assign({}, o, { total, gain });
     }
@@ -2124,8 +2140,8 @@
     if (p.board.length <= 1) { for (const u of p.board) u.row = 0; return; }
     const cands = placements(p.board);
     let best = cands[0];
-    if (expert(p) && state.round >= 2 && cands.length > 1) {
-      const nOpp = state.players.length <= 2 ? 1 : 2;
+    if (thinks(p) && state.round >= 2 && cands.length > 1) {
+      const nOpp = state.players.length <= 2 ? 1 : strong(p) ? 3 : 2;
       let top = -Infinity;
       for (const place of cands) {
         const [front, back] = place;
@@ -2159,13 +2175,15 @@
     }
     // Les Comètes grandissent à chaque actualisation : le bot en profite.
     if (rollCost(p) === 0) roll(state, p);
-    const maxRolls = 3 + Math.min(3, p.board.filter((u) => famOf(u) === 'comete').length) + (expert(p) && p.tier >= 4 ? 4 : 0);
+    const maxRolls = 3 + Math.min(3, p.board.filter((u) => famOf(u) === 'comete').length) + (expert(p) && p.tier >= 4 ? 4 : 0) + (strong(p) ? 2 : 0);
+    // Une IA faible choisit plus au hasard dans la boutique.
+    const noise = p.skill < 0.5 ? 7 : 2;
     let rolls = 0;
     for (let guard = 0; guard < 40; guard++) {
       botDeploy(state, p);
       if (p.gold < BUY_COST) break;
-      const opts = p.shop.map((id, i) => (id ? { i, id, v: cardValue(p, id) + rng() * 2 } : null)).filter(Boolean).sort((a, b) => b.v - a.v);
-      const thinking = expert(p) && BOT.sim > 0 && state.round >= 2 && opts.length > 1;
+      const opts = p.shop.map((id, i) => (id ? { i, id, v: cardValue(p, id) + rng() * noise } : null)).filter(Boolean).sort((a, b) => b.v - a.v);
+      const thinking = thinks(p) && BOT.sim > 0 && state.round >= 2 && opts.length > 1;
       const best = thinking ? simPick(state, p, opts) || opts[0] : opts[0];
       const full = p.board.length >= BOARD_MAX;
       const weak = full ? p.board.slice().sort((a, b) => unitValue(p, a) - unitValue(p, b))[0] : null;

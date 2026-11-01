@@ -97,3 +97,25 @@ test('divisions : étapes de 0 (Poussière III) à 24 (Singularité), montée et
   r = K.record(c, 4, 150);
   assert.ok(!r.divUp && !r.divDown && !r.up && !r.down, 'même division');
 });
+
+// Bots des parties en ligne (v132) : niveau de jeu et rang selon la table.
+test('bots : niveau selon le rang de la table, même résultat partout', () => {
+  const at = (pts) => K.botSkills([{ placed: true, points: pts }, { placed: false, points: 0 }]);
+  assert.deepEqual(at(0), [0.3, 0.3]);
+  assert.deepEqual(at(K.TIER_SPAN * 2), [0.7, 0.7]);
+  assert.deepEqual(at(K.TIER_SPAN * 4), [1, 1]);
+  assert.deepEqual(at(K.TIER_SPAN * 8), [1.3, 1.3]);
+  // Personne n'est encore placé : niveau moyen.
+  assert.deepEqual(K.botSkills([{ placed: false, points: 0 }]), [0.7, 0.7]);
+  // Plus la table est haute, plus les bots sont forts (jamais l'inverse).
+  let prev = 0;
+  for (let pts = 0; pts <= K.TIER_SPAN * 8; pts += 50) { const s = at(pts); assert.ok(s[0] >= prev); prev = s[0]; }
+  // Points d'un bot : proches de la moyenne, positifs, identiques pour la même graine.
+  const seats = [{ placed: true, points: 900 }, { placed: true, points: 1100 }];
+  for (let n = 0; n < 7; n++) {
+    const p = K.botPoints(seats, 'graine', n);
+    assert.ok(p >= 880 && p <= 1120, String(p));
+    assert.equal(p, K.botPoints(seats, 'graine', n));
+  }
+  assert.ok(K.botPoints([{ placed: true, points: 10 }], 'g', 3) >= 0);
+});

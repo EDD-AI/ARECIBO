@@ -46,6 +46,33 @@
     return Math.max(0, Math.min(1050, Math.round(1100 - avg * 150)));
   }
 
+  // Bots d'une partie en ligne (v132) : leur niveau de jeu suit le rang de la partie (moyenne des
+  // points des créateurs humains placés), en alternant entre deux niveaux voisins pour varier ; chaque
+  // bot reçoit aussi des points proches de cette moyenne (son emblème). Mêmes valeurs sur tous les
+  // téléphones : tout vient des places du salon et de la graine. Niveaux de l'IA (rules.js) :
+  // 0,3 faible, 0,7 moyenne, 1 experte, 1,3 forte.
+  const BOT_LEVELS = [[0.3, 0.3], [0.3, 0.7], [0.7, 0.7], [0.7, 1], [1, 1], [1, 1.3], [1.3, 1.3], [1.3, 1.3], [1.3, 1.3]];
+  const BOT_UNPLACED = [0.7, 0.7];
+  function tableLevel(seats) {
+    const placedPts = (seats || []).filter((s) => s && s.placed).map((s) => Math.max(0, Number(s.points) || 0));
+    if (!placedPts.length) return null;
+    return Math.round(placedPts.reduce((a, b) => a + b, 0) / placedPts.length);
+  }
+  function botSkills(seats) {
+    const avg = tableLevel(seats);
+    const pair = avg == null ? BOT_UNPLACED : BOT_LEVELS[tierOf(avg).idx];
+    return [pair[0], pair[1]];
+  }
+  // Points affichés d'un bot (n : son rang parmi les bots) : la moyenne ± 120, jamais négatifs.
+  function botPoints(seats, seed, n) {
+    const avg = tableLevel(seats);
+    let h = 2166136261;
+    const key = String(seed) + '|bot|' + n;
+    for (let i = 0; i < key.length; i++) h = Math.imul(h ^ key.charCodeAt(i), 16777619) >>> 0;
+    const base = avg == null ? 150 : avg;
+    return Math.max(0, base + (h % 241) - 120);
+  }
+
   // Enregistre une partie classée (rang 1 à 8 ; un abandon compte comme 8e). lobby : moyenne des
   // points des autres créateurs de la partie (null : pas d'ajustement). Renvoie le changement.
   function record(c, rank, lobby) {
@@ -109,5 +136,5 @@
     return { idx, name: tr(TIERS[idx]), div: DIVS[d], into, span: 100, label: `${tr(TIERS[idx])} ${DIVS[d]}` };
   }
 
-  return { PLACEMENTS, DELTA, deltaFor, TIERS, TIER_SPAN, DIVS, fresh, sanitize, placed, seed, record, tierOf, step, MIN_HUMANS, counts, lobbyOf, placeOf };
+  return { PLACEMENTS, DELTA, deltaFor, TIERS, TIER_SPAN, DIVS, fresh, sanitize, placed, seed, record, tierOf, step, MIN_HUMANS, counts, lobbyOf, placeOf, botSkills, botPoints, tableLevel };
 });

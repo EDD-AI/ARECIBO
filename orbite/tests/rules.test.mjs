@@ -497,3 +497,18 @@ test('appariements façon Battlegrounds : adversaire annoncé, pas de revanche i
   assert.ok(fights > 100);
   assert.equal(rematch, 0, 'jamais le même adversaire deux fois de suite tant que 4 univers ou plus sont en vie');
 });
+
+// Niveau imposé des bots (v132, classé) : nombre ou liste parcourue bot après bot.
+test('bots : niveau imposé à la création de la partie', () => {
+  const law = R.lawChoices('niv-1')[0];
+  const a = R.newGame('niv-1', law, { size: 8, event: 'auto' });
+  assert.ok(a.players.filter((p) => p.bot).every((p) => p.skill === 1));
+  const b = R.newGame('niv-1', law, { size: 8, event: 'auto', botSkill: [0.3, 0.7], botPoints: [10, 20, 30, 40, 50, 60, 70] });
+  const bots = b.players.filter((p) => p.bot);
+  assert.deepEqual(bots.map((p) => p.skill), [0.3, 0.7, 0.3, 0.7, 0.3, 0.7, 0.3]);
+  assert.deepEqual(bots.map((p) => p.rankPts), [10, 20, 30, 40, 50, 60, 70]);
+  // Une partie entière se joue avec des bots de niveaux différents.
+  let r = 0;
+  while (!b.over && r++ < 80) { if (b.players[0].alive) R.botTurn(b, b.players[0]); R.endTurn(b, { observer: true }); }
+  assert.ok(b.over);
+});
