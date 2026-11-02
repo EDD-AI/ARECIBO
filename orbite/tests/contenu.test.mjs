@@ -160,8 +160,10 @@ test('éveil : au cycle 6, chaque loi s’éveille ; passage, ingénierie et sac
   assert.ok(m.players[0].hand.some((u) => u.id === 'sonde-t' && u.kw.includes('bouclier')), 'Sonde éveillée avec Bouclier');
   // Sacrifice éveillé : 2 énergies de plus, même au maximum.
   const t = R.newGame('awk2', 'sacrifice', { size: 2 });
-  playRounds(t, 12);
-  if (!t.over && t.round >= 9) assert.equal(t.players[0].gold, R.MAX_GOLD + 1);
+  const rt = playRounds(t, 12);
+  // Plus l'énergie donnée au début du cycle par les astres du système (Forge…), s'il y en a.
+  const extra = rt.length ? (rt[rt.length - 1].startEvents || []).filter((e) => e.t === 'gold').reduce((n, e) => n + e.n, 0) : 0;
+  if (!t.over && t.round >= 9) assert.equal(t.players[0].gold, R.MAX_GOLD + 1 + extra);
 });
 
 test('anciennes sauvegardes : sans reliques ni éveil ni événement, la partie continue', () => {

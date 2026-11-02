@@ -512,3 +512,70 @@ test('bots : niveau imposé à la création de la partie', () => {
   while (!b.over && r++ < 80) { if (b.players[0].alive) R.botTurn(b, b.players[0]); R.endTurn(b, { observer: true }); }
   assert.ok(b.over);
 });
+
+test('Abysse (v137) : son propre pouvoir, plus celui d’Umbra ; quand un allié s’effondre, 2 dégâts au plus faible ennemi', () => {
+  assert.notEqual(R.CARD.abysse.text, R.CARD.umbra.text, 'Abysse et Umbra ont des pouvoirs différents');
+  const s = gameWith('neant', 'abys');
+  const mk = (id, extra = {}) => Object.assign({ uid: 'x' + Math.random(), id, golden: false, atk: R.CARD[id].atk, hp: R.CARD[id].hp, kw: (R.CARD[id].kw || []).slice(), att: [] }, extra);
+  // Une Cendre fragile devant, Abysse derrière ; en face, un ennemi solide et un ennemi à 3 PV.
+  const A = { id: 'A', tier: 1, law: 'symbiose', board: [mk('cendre', { row: 0 }), mk('abysse', { row: 1, atk: 0, hp: 50 })] };
+  const B = { id: 'B', tier: 1, law: 'symbiose', board: [mk('errante', { row: 0, atk: 9, hp: 40 }), mk('errante', { row: 1, atk: 0, hp: 3 })] };
+  const r = R.fight(s, A, B, 'abysse', true);
+  const hits = r.events.filter((e) => e.t === 'hit' && e.kind !== 'attack' && e.n === 2);
+  assert.ok(hits.length >= 1, 'Abysse inflige 2 dégâts quand un allié s’effondre');
+  // Doré : 4 dégâts.
+  const C = { id: 'C', tier: 1, law: 'symbiose', board: [mk('cendre', { row: 0 }), mk('abysse', { row: 1, atk: 0, hp: 50, golden: true })] };
+  const D = { id: 'D', tier: 1, law: 'symbiose', board: [mk('errante', { row: 0, atk: 9, hp: 40 }), mk('errante', { row: 1, atk: 0, hp: 30 })] };
+  const r2 = R.fight(s, C, D, 'abysse-dore', true);
+  assert.ok(r2.events.some((e) => e.t === 'hit' && e.kind !== 'attack' && e.n === 4), 'Abysse dorée : 4 dégâts');
+});
+
+test('Pèlerin et Luna (v137) : plus aucun astre n’a exactement le pouvoir d’un autre', () => {
+  // Aucun texte de pouvoir en double (hors jetons et astres sans pouvoir propre).
+  const seen = new Map();
+  for (const c of R.CARDS.filter((c) => !c.token)) {
+    assert.ok(!seen.has(c.text), c.name + ' a le même pouvoir que ' + seen.get(c.text));
+    seen.set(c.text, c.name);
+  }
+  // Pèlerin : +1/+1 par famille différente parmi les autres astres (hors neutres), 3 au plus.
+  const unit = (id) => ({ uid: id + Math.random(), id, golden: false, atk: R.CARD[id].atk, hp: R.CARD[id].hp, kw: [] });
+  const ctx = (board) => ({ others: (u) => board.filter((v) => v !== u), buff: (u, a, h) => { u.atk += a; u.hp += h; } });
+  const run = (ids, golden) => {
+    const pel = unit('pelerin'); pel.golden = !!golden;
+    const board = [pel].concat(ids.map(unit));
+    R.CARD.pelerin.endTurn(ctx(board), pel, golden ? 2 : 1);
+    return [pel.atk - R.CARD.pelerin.atk, pel.hp - R.CARD.pelerin.hp];
+  };
+  assert.deepEqual(run([]), [0, 0]);
+  assert.deepEqual(run(['cendre', 'umbra', 'luna']), [1, 1], 'une seule famille (Néant), Luna neutre ne compte pas');
+  assert.deepEqual(run(['cendre', 'silex', 'aube']), [3, 3]);
+  assert.deepEqual(run(['cendre', 'silex', 'aube', 'meteore', 'sonde']), [3, 3], '3 au plus');
+  assert.deepEqual(run(['cendre', 'silex'], true), [4, 4], 'doré : +2/+2 par famille');
+  // Luna : Rempart, et +0/+1 à chaque fin de cycle (doré : +0/+2).
+  const l = unit('luna');
+  R.CARD.luna.endTurn(ctx([l]), l, 1);
+  assert.deepEqual([l.atk, l.hp], [2, 5]);
+  assert.ok(R.CARD.luna.kw.includes('rempart'));
+});
+
+test('Comètes (v137) : « Quand vous actualisez » ne compte que 3 actualisations par cycle', () => {
+  const s = gameWith('comete', 'cap-roll');
+  const p = s.players[0];
+  p.gold = 40;
+  offer(s, 'meteore');
+  const r = R.buy(s, 0);
+  assert.equal(R.play(s, r.uid, p.board.length).ok, true);
+  const met = p.board.find((u) => u.id === 'meteore');
+  const atk0 = met.atk;
+  for (let i = 0; i < 8; i++) assert.equal(R.roll(s, p).ok, true);
+  assert.equal(met.atk, atk0 + 3, 'Météore ne grandit que sur les 3 premières actualisations');
+  assert.ok(R.CARD.meteore.text.includes('3 fois par cycle'));
+  // Au cycle suivant, le compteur repart.
+  R.endTurn(s);
+  if (!s.over) {
+    p.gold = 20;
+    const a1 = met.atk;
+    for (let i = 0; i < 5; i++) R.roll(s, p);
+    assert.equal(met.atk, a1 + 3);
+  }
+});

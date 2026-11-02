@@ -17,6 +17,8 @@
   const MAX_GOLD = 10;
   const BUY_COST = 3;
   const ROLL_COST = 1;
+  // Comètes (v137) : seules les 3 premières actualisations de chaque cycle déclenchent « Quand vous actualisez ».
+  const ROLL_TRIGGERS = 3;
   const HAND_MAX = 10;
   const BOARD_MAX = 7;
   const PLAYERS = 8;
@@ -161,9 +163,10 @@
     { id: 'nyx', fam: 'neant', tier: 2, atk: 2, hp: 2, name: 'Nyx', look: { type: 'moon', seed: 444, moons: 1, light: [-0.85, -0.2, -0.45], hueShift: 230 },
       text: 'Effondrement : invoque deux Débris {1}/{1}.',
       death(c, u, m, i) { c.summon(u.side, 'debris', i, m); c.summon(u.side, 'debris', i, m); } },
+    // Abysse (v137) : n'a plus le même pouvoir qu'Umbra ; l'abîme avale le plus faible des ennemis.
     { id: 'abysse', fam: 'neant', tier: 3, atk: 3, hp: 4, name: 'Abysse', look: { type: 'blackhole', seed: 555, disk: false, lens: 1.95, hot: [[0.28, 0.13, 305], [0.48, 0.2, 300], [0.66, 0.19, 295], [0.82, 0.12, 290]] },
-      text: 'Quand un autre allié s’effondre, gagne +{1}/+{1} pour le combat.',
-      allyDeath(c, u, m) { c.buff(u, m, m); } },
+      text: 'Quand un autre allié s’effondre, inflige {2} dégâts à l’ennemi qui a le moins de PV.',
+      allyDeath(c, u, m) { const t = c.allies(1 - u.side).slice().sort((a, b) => a.hp - b.hp)[0]; if (t) c.dmg(u, t, 2 * m); } },
     { id: 'eclipse', fam: 'neant', tier: 3, atk: 4, hp: 3, name: 'Éclipse', look: { type: 'eclipse', seed: 666 },
       text: 'Effondrement : un allié aléatoire gagne +{3}/+{3} pour le combat.',
       death(c, u, m) { c.buff(c.rnd(c.allies(u.side)), 3 * m, 3 * m); } },
@@ -348,11 +351,14 @@
     { id: 'satellite', fam: 'neutre', tier: 2, atk: 2, hp: 3, name: 'Satellite', look: { type: 'moon', seed: 7373, ring: true },
       text: 'Naissance : un autre allié aléatoire gagne +{1}/+{1}.',
       play(x, u, m) { x.buff(x.rnd(x.others(u)), m, m); } },
+    // Luna et Pèlerin (v137) : n'ont plus le pouvoir de Silex et d'Ocre. La lune grossit à chaque
+    // cycle ; le pèlerin grandit de chaque famille qu'il croise (3 au plus).
     { id: 'luna', fam: 'neutre', tier: 2, atk: 2, hp: 4, name: 'Luna', kw: ['rempart'], look: { type: 'moon', seed: 7474, light: [0.8, 0.3, -0.4] },
-      text: 'Rempart.' },
+      text: 'Rempart. Fin de cycle : gagne +{0}/+{1}.',
+      endTurn(x, u, m) { x.buff(u, 0, m); } },
     { id: 'pelerin', fam: 'neutre', tier: 3, atk: 3, hp: 4, name: 'Pèlerin', look: { type: 'terran', seed: 7575, ring: true },
-      text: 'Fin de cycle : un autre allié aléatoire gagne +{1}/+{2}.',
-      endTurn(x, u, m) { x.buff(x.rnd(x.others(u)), m, 2 * m); } },
+      text: 'Fin de cycle : gagne +{1}/+{1} par famille différente parmi vos autres astres (3 au plus).',
+      endTurn(x, u, m) { const n = Math.min(3, new Set(x.others(u).map(famOf).filter((f) => f !== 'neutre')).size); x.buff(u, n * m, n * m); } },
     { id: 'pulsar', fam: 'neutre', tier: 4, atk: 4, hp: 4, name: 'Pulsar', kw: ['bouclier', 'rafale'], look: { type: 'star', seed: 7676, starClass: 'géante bleue' },
       text: 'Bouclier. Rafale.' },
     { id: 'nebuleuse', fam: 'neutre', tier: 5, atk: 4, hp: 6, name: 'Nébuleuse', look: { type: 'gas', seed: 7777, shell: true },
@@ -393,19 +399,19 @@
 
     // COMÈTES : elles grandissent quand vous actualisez et récompensent la vente.
     { id: 'meteore', fam: 'comete', tier: 1, atk: 3, hp: 4, name: 'Météore', look: { type: 'comet', seed: 9201, warm: true },
-      text: 'Quand vous actualisez la Création, gagne +{1} Attaque.',
+      text: 'Quand vous actualisez la Création (3 fois par cycle), gagne +{1} Attaque.',
       roll(x, u, m) { x.buff(u, m, 0); } },
     { id: 'halley', fam: 'comete', tier: 1, atk: 3, hp: 4, name: 'Halley', look: { type: 'comet', seed: 9202 },
       text: 'Vendu : un astre aléatoire de votre système gagne +{1}/+{1}.',
       sold(x, u, m) { x.buff(x.rnd(x.others(u)), m, m); } },
     { id: 'encke', fam: 'comete', tier: 2, atk: 4, hp: 5, name: 'Encke', look: { type: 'comet', seed: 9203, hueShift: 40 },
-      text: 'Quand vous actualisez : une Comète aléatoire gagne +{1}/+{1}.',
+      text: 'Quand vous actualisez (3 fois par cycle) : une Comète aléatoire gagne +{1}/+{1}.',
       roll(x, u, m) { x.buff(x.rnd(x.fam('comete')), m, m); } },
     { id: 'swift', fam: 'comete', tier: 2, atk: 4, hp: 4, name: 'Swift', kw: ['rafale'], look: { type: 'asteroid', seed: 9204, debris: true },
-      text: 'Rafale. Quand vous actualisez, gagne +{1} PV.',
+      text: 'Rafale. Quand vous actualisez (3 fois par cycle), gagne +{1} PV.',
       roll(x, u, m) { x.buff(u, 0, m); } },
     { id: 'halebopp', fam: 'comete', tier: 3, atk: 5, hp: 6, name: 'Hale-Bopp', look: { type: 'comet', seed: 9205, hueShift: -60 },
-      text: 'Quand vous actualisez : vos autres Comètes gagnent +{1} PV.',
+      text: 'Quand vous actualisez (3 fois par cycle) : vos autres Comètes gagnent +{1} PV.',
       roll(x, u, m) { for (const v of x.fam('comete', u)) x.buff(v, 0, m); } },
     { id: 'tchouri', fam: 'comete', tier: 3, atk: 5, hp: 6, name: 'Tchouri', look: { type: 'asteroid', seed: 9206, shape: 'double' },
       text: 'Fin de cycle : gagne +{1}/+{1} par actualisation faite ce cycle (3 au plus).',
@@ -417,7 +423,7 @@
       text: 'Début de combat : inflige {2} dégâts à un ennemi aléatoire pour chaque Comète.',
       start(c, u, m) { const n = c.alliesFam(u.side, 'comete').length; for (let i = 0; i < n; i++) c.dmg(u, c.rnd(c.allies(1 - u.side)), 2 * m); } },
     { id: 'hyakutake', fam: 'comete', tier: 6, atk: 9, hp: 10, name: 'Hyakutake', look: { type: 'comet', seed: 9209, hueShift: 100, debris: true },
-      text: 'Quand vous actualisez : deux Comètes aléatoires gagnent +{1}/+{1}.',
+      text: 'Quand vous actualisez (3 fois par cycle) : deux Comètes aléatoires gagnent +{1}/+{1}.',
       roll(x, u, m) { const l = x.fam('comete'), a = x.rnd(l); x.buff(a, m, m); x.buff(x.rnd(l.filter((v) => v !== a)), m, m); } },
 
     // CRISTAL : résonance, chaque Cristal joué renforce les autres. Allégés en v90 : un joueur « tout
@@ -554,7 +560,7 @@
       text: 'Rempart. Fin de cycle : vos Remparts gagnent +{1}/+{2}.',
       endTurn(x, u, m) { for (const v of x.board().filter((v) => v.kw.includes('rempart'))) x.buff(v, m, 2 * m); } },
     { id: 'oumuamua', fam: 'comete', tier: 2, atk: 3, hp: 4, name: 'Oumuamua', legend: true, look: { type: 'asteroid', seed: 8909, shape: 'monolithe', hueShift: 25 },
-      text: 'Quand vous actualisez, gagne +{1}/+{1}.',
+      text: 'Quand vous actualisez (3 fois par cycle), gagne +{1}/+{1}.',
       roll(x, u, m) { x.buff(u, m, m); } },
     { id: 'betelgeuse', fam: 'brasier', tier: 3, atk: 3, hp: 5, name: 'Bételgeuse', legend: true, look: { type: 'star', seed: 9010, starClass: 'naine rouge', shell: true, debris: true },
       text: 'Début de combat et Effondrement : inflige {2} dégâts à tous les ennemis.',
@@ -1272,7 +1278,9 @@
     rollShop(state, p);
     p.rolls = (p.rolls || 0) + 1;
     const x = shopCtx(state, p);
-    for (const v of p.board.slice()) hook(v, 'roll', x);
+    // Comètes (v137) : « Quand vous actualisez » ne compte que les premières actualisations de
+    // chaque cycle ; actualiser en boucle ne les fait plus grandir sans fin.
+    if (p.rolls <= ROLL_TRIGGERS) for (const v of p.board.slice()) hook(v, 'roll', x);
     return { ok: true, events: x.events };
   }
   // Les anciennes sauvegardes n'ont que freeRoll (vrai : la gratuite est déjà prise).

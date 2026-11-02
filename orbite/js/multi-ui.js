@@ -237,7 +237,9 @@
       const lk = s && A.seatLook ? A.seatLook(s) : null;
       // Et son emblème de rang (v129).
       const mine = s && s.uid === ON.uid();
-      return s ? `<div class="mp-seat on">${lk ? A.framed(`<span class="orb" data-planet="${lk.avatar}"></span>`, lk.frame) : ''}<span class="mp-seat-txt"><b>${A.nameHtml ? A.nameHtml(s.name, lk && lk.font) : esc(s.name)}</b><small>${[mine ? tr('vous') : s.uid === m.host ? tr('hôte') : '', mine ? '' : esc(seatRank(s))].filter(Boolean).join(' · ')}</small></span>${mine ? myEmb('mp-seat-emb') : emb(s, 'mp-seat-emb')}</div>`
+      // Toucher un autre créateur (v137) : sa petite fiche, pour l'ajouter en ami.
+      const pick = !!s && !mine && !!A.friendStatus && A.friendStatus(s.uid) === 'autre';
+      return s ? `<div class="mp-seat on${pick ? ' can-friend' : ''}"${pick ? ` data-mp="seat" data-uid="${esc(s.uid)}" data-name="${esc(s.name)}" role="button" tabindex="0" title="${esc(tr('+ AJOUTER EN AMI'))}"` : ''}>${lk ? A.framed(`<span class="orb" data-planet="${lk.avatar}"></span>`, lk.frame) : ''}<span class="mp-seat-txt"><b>${A.nameHtml ? A.nameHtml(s.name, lk && lk.font) : esc(s.name)}</b><small>${[mine ? tr('vous') : s.uid === m.host ? tr('hôte') : '', mine ? '' : esc(seatRank(s))].filter(Boolean).join(' · ')}</small></span>${mine ? myEmb('mp-seat-emb') : emb(s, 'mp-seat-emb')}</div>`
         : i < m.seats.length + nBots ? `<div class="mp-seat bot"><b>${tr('BOT')}</b><small>${tr('univers rival')}</small></div>`
         : `<div class="mp-seat"><b>…</b><small>${tr('place libre')}</small></div>`;
     }).join('');
@@ -343,6 +345,7 @@
     if (st.busy && k !== 'leave' && k !== 'cancel') return;
     if (STARTS.includes(k) && A.onlineGate && A.onlineGate()) return;
     if (k === 'rejoin') { if (A.rejoinOnline) await A.rejoinOnline(); return; }
+    if (k === 'seat') { if (A.playerCard) A.playerCard(b.dataset.uid, b.dataset.name); return; }
     SFX.tap();
     try {
       if (k === 'signin') { await ON.signIn(); }
@@ -438,6 +441,8 @@
     await O.api.backToMenu();
   });
   $('mpBody').addEventListener('click', (e) => { const b = e.target.closest('[data-mp]'); if (b && !b.disabled) act(b.dataset.mp, b); });
+  // Les places des créateurs se touchent aussi au clavier (v137).
+  $('mpBody').addEventListener('keydown', (e) => { const b = e.target.closest('[data-mp="seat"]'); if (b && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); act('seat', b); } });
   MP.state.onChange = () => { if (document.getElementById('multi').classList.contains('active')) render(); };
   MP.state.onStart = () => { if (document.getElementById('multi').classList.contains('active')) render(); };
   ON.on(() => { if (document.getElementById('multi').classList.contains('active')) render(); });

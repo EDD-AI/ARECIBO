@@ -370,6 +370,33 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Pouvoirs uniques, Comètes, PRÊT à maintenir, ajouter en ami (v137)
+
+- **Plus aucun astre n’a le pouvoir d’un autre** (un test le vérifie pour tous les astres) :
+  - **Abysse** (Néant, niveau 3) avait exactement le pouvoir d’Umbra. Désormais : « Quand un autre allié
+    s’effondre, inflige 2 dégâts à l’ennemi qui a le moins de PV » (4 si dorée).
+  - **Pèlerin** (neutre, niveau 3) avait celui d’Ocre. Désormais : « Fin de cycle : gagne +1/+1 par
+    famille différente parmi vos autres astres (3 au plus) » ; les neutres ne comptent pas.
+  - **Luna** (neutre, niveau 2) n’avait que « Rempart », comme Silex. Désormais : « Rempart. Fin de
+    cycle : gagne +0/+1 ».
+  - Néant en duel (outil `familles.js`, 400 duels) : 51 % avant, 53 % ± 5 après.
+- **Comètes : fin de la boucle « tout Comète + actualiser sans arrêt ».** Les effets « Quand vous
+  actualisez » (Météore, Encke, Swift, Hale-Bopp, Hyakutake, Oumuamua) ne se déclenchent plus que sur
+  les **3 premières actualisations de chaque cycle** (comme Tchouri, déjà plafonné à 3) ; le texte de
+  chaque astre le dit. Les valeurs ne changent pas.
+  - Mesures en duel contre l’IA experte : un joueur qui boucle gagnait 73 % (62 % pour une boucle
+    « humaine » qui actualise avant d’acheter), contre 54 % en jouant normalement ; avec la limite, la
+    boucle n’apporte plus rien (46-52 %). Comètes jouées normalement : 42 % ± 5 sur 400 duels.
+- **PRÊT en ligne : maintenir appuyé** au lieu de toucher deux fois. Une barre dorée remplit le compte à
+  rebours en une seconde ; si on lâche avant, elle se vide et rien ne part. Doigt, souris, ou Espace /
+  Entrée au clavier. Un toucher court rappelle le geste. En solo, COMBATTRE part toujours d’un toucher.
+- **Ajouter en ami un créateur croisé en ligne** :
+  - en partie : toucher son nom dans la liste des rivaux montre « + AJOUTER EN AMI » (au-dessus de son
+    système) ;
+  - dans la salle d’attente : toucher sa place ouvre sa petite fiche avec le même bouton.
+  - C’est la même demande qu’avec le code ami (elle attend son accord). Pas de bouton pour soi-même, les
+    bots ou les amis déjà acceptés.
+
 ## Prêt pour itch.io (v136)
 
 Le jeu peut maintenant tourner dans la page itch.io (https://edda-studio.itch.io/orbite), où il est

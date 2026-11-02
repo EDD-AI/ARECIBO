@@ -9,7 +9,7 @@
   const EMBED = (() => { try { return window.self !== window.top; } catch (err) { return true; } })();
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 136;
+  const VERSION = 137;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -3520,7 +3520,7 @@
     // Pendant un combat (en ligne, on ne peut pas le passer), le son et l'aide restent accessibles ;
     // quitter la partie attend la fin du combat. Les Paramètres ne dépendent jamais d'une partie.
     // Quitter une partie en ligne (v134) reste possible pendant un combat ou une attente bloquée.
-    const anytime = act === 'choose' || act === 'relic' || act === 'close' || act === 'rival' || act === 'set' || act === 'help' || act === 'online' || (act === 'menu' && ['sound', 'help', 'away', 'awayGo', 'stay'].includes(b.dataset.v));
+    const anytime = act === 'choose' || act === 'relic' || act === 'close' || act === 'rival' || act === 'friend' || act === 'set' || act === 'help' || act === 'online' || (act === 'menu' && ['sound', 'help', 'away', 'awayGo', 'stay'].includes(b.dataset.v));
     if (act === 'help') { SFX.tap(); openSheet(helpHtml(b.dataset.from === '1', Number(b.dataset.v))); return; }
     if (ui.busy && !anytime) { if (act === 'menu') toast(tr('Possible à la fin du combat.'), 1800); return; }
     if (act === 'buy') {
@@ -3574,6 +3574,8 @@
     } else if (act === 'rival') {
       const row = b.nextElementSibling;
       if (row && row.classList.contains('rival-board')) row.hidden = !row.hidden;
+    } else if (act === 'friend') {
+      await addFriend(b.dataset.uid, b.dataset.name, b);
     }
   });
 
@@ -3634,6 +3636,44 @@
   }
   const staticUnit = (u) => `<div class="unit" data-id="${u.id}" data-golden="${u.golden ? 1 : 0}" data-kw="${u.kw.join(' ')}"><div class="orb" data-planet="${u.id}" data-golden="${u.golden ? 1 : 0}"></div><div class="stats"><b class="atk">${u.atk}</b><b class="hp">${u.hp}</b></div></div>`;
 
+  // Ajouter en ami un créateur croisé en ligne (v137) : en touchant son nom dans la liste des rivaux
+  // (en partie) ou dans la salle d'attente. C'est la même demande qu'avec son code ami.
+  function friendStatus(uid) {
+    const ON = window.OrbiteOnline;
+    if (!ON || !ON.state || ON.state.status !== 'signedIn' || !uid || uid === ON.uid()) return '';
+    return ON.friendProfiles().some((f) => f.uid === uid) ? 'ami' : 'autre';
+  }
+  function friendBtn(uid, name, cls) {
+    const st = friendStatus(uid);
+    if (!st) return '';
+    return st === 'ami'
+      ? `<p class="friend-tag ${cls || ''}">${tr('Vous êtes déjà amis.')}</p>`
+      : `<button class="btn friend-add ${cls || ''}" data-act="friend" data-uid="${esc(uid)}" data-name="${esc(name)}">${tr('+ AJOUTER EN AMI')}</button>`;
+  }
+  async function addFriend(uid, name, b) {
+    const ON = window.OrbiteOnline;
+    if (!friendStatus(uid)) { refuse(tr('Connectez-vous d’abord.')); return null; }
+    SFX.tap();
+    if (b) b.disabled = true;
+    const r = await ON.addByCode(ON.codeOf(uid)).catch(() => ({ ok: false, reason: tr('Le serveur ne répond pas.') }));
+    if (!r.ok) {
+      refuse(r.reason);
+      // Déjà amis ou demande déjà partie : le bouton reste éteint.
+      if (b) b.disabled = r.reason === tr('Vous êtes déjà amis.') || r.reason === tr('Demande déjà envoyée.');
+      return r;
+    }
+    toast(r.accepted ? tr('Vous êtes maintenant ami avec {nom}.', { nom: esc(name) }) : tr('Demande envoyée à {nom}.', { nom: esc(name) }), 2600);
+    if (b) b.textContent = r.accepted ? tr('AMIS') : tr('DEMANDE ENVOYÉE');
+    return r;
+  }
+  // La petite fiche d'un créateur (salle d'attente) : son nom et « ajouter en ami ».
+  function playerCard(uid, name) {
+    if (!friendStatus(uid)) return;
+    SFX.tap();
+    openSheet(`<h3>${esc(name)}</h3>
+      <div class="sheet-actions">${friendBtn(uid, name)}<button class="btn ghost" data-act="close">${tr('FERMER')}</button></div>`);
+  }
+
   function openRivals() {
     const s = ui.state;
     const duel = R.isDuel(s);
@@ -3653,7 +3693,7 @@
           <span class="rv-who"><span class="n">${playerEmb(p)}${playerName(p, mine ? tr('VOUS') : p.name)}</span>${tag}<span class="l">${tr('niveau {n}', { n: p.tier })}${p.alive ? '' : ' · ' + tr('éliminé {rank}', { rank: ordinal(p.rank) })}</span></span>
           <span class="rv-hp">${lost ? `<small>−${lost}</small>` : ''}<b>${p.alive ? hp : '–'}</b><i class="hp-bar"><i style="width:${p.alive ? Math.min(100, hp / (p.maxHp || R.START_HP) * 100) : 0}%"></i></i></span>
         </button>
-        <div class="rival-board" ${(duel && p !== me()) || isNext ? '' : 'hidden'}><p class="rv-last">${p.bot || p.remote ? tr('Système joué au dernier combat') : tr('Votre système')}</p>${board}</div>`;
+        <div class="rival-board" ${(duel && p !== me()) || isNext ? '' : 'hidden'}>${s.mp && p.remote && !mine ? friendBtn(p.id, p.name, 'rv-friend') : ''}<p class="rv-last">${p.bot || p.remote ? tr('Système joué au dernier combat') : tr('Votre système')}</p>${board}</div>`;
     }).join('');
     const note = duel
       ? tr('Voici le système que votre rival a joué au dernier combat. Préparez votre placement : chaque astre de l’avant frappe celui d’en face.')
@@ -4002,7 +4042,7 @@
     if (!s || !s.mp) return;
     AWAY.add(s);
     ui.skip = true;
-    ui.readyArm = 0;
+    readyHoldStop();
     saveGame();
     clearBanner();
     if (window.OrbiteMulti) window.OrbiteMulti.leave({ away: true }).catch(() => {});
@@ -4035,7 +4075,7 @@
       ui.state = s;
       ui.stamp++;
       ui.busy = false;
-      ui.readyArm = 0;
+      readyHoldStop();
       saveGame();
       // Éliminé pendant l'absence : l'écran de fin, avec sa vraie place.
       if (s.over) { await endScreen(); return; }
@@ -4076,20 +4116,60 @@
     await endScreen();
   }
 
+  // PRÊT en ligne (v137) : on maintient le bouton (doigt, souris, Espace ou Entrée) ; une barre dorée
+  // se remplit en une seconde et, si on lâche avant, elle repart à zéro. Un toucher trop court rappelle
+  // le geste.
+  const READY_HOLD_MS = 1000;
+  function readyHoldable() {
+    const b = $('fightBtn');
+    return !!(ui.state && ui.state.mp && ui.state.phase === 'shop' && !ui.state.watching && !ui.busy && b && b.classList.contains('mp-count') && !b.disabled);
+  }
+  function readyHoldStop() {
+    clearTimeout(ui.holdT);
+    ui.holdT = 0;
+    ui.readyHeld = false;
+    const b = $('fightBtn');
+    if (b) b.classList.remove('holding');
+  }
+  function readyHoldStart(ev) {
+    if (ui.holdT || !readyHoldable()) return;
+    if (ev.type === 'keydown') {
+      if (ev.repeat || (ev.key !== ' ' && ev.key !== 'Enter')) return;
+    } else {
+      if (ev.button > 0) return;
+      try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (err) { /* déjà relâché */ }
+    }
+    ev.preventDefault();
+    const b = $('fightBtn');
+    b.classList.add('holding');
+    ui.holdAt = performance.now();
+    ui.holdT = setTimeout(() => {
+      ui.holdT = 0;
+      b.classList.remove('holding');
+      if (!readyHoldable()) return;
+      vibrate(30);
+      ui.readyHeld = true;
+      fight();
+    }, READY_HOLD_MS);
+  }
+  function readyHoldEnd(ev) {
+    if (ev.type === 'keyup' && ev.key !== ' ' && ev.key !== 'Enter') return;
+    if (!ui.holdT) return;
+    const quick = performance.now() - ui.holdAt < 600;
+    readyHoldStop();
+    if (quick && ev.type !== 'pointercancel') { SFX.tap(); toast(tr('Maintenez le bouton appuyé pour être prêt : vous ne pourrez plus acheter ce tour-ci.'), 2200); }
+  }
+
   // ─── Combat ─────────────────────────────────────────────────
   async function fight() {
     if (ui.busy || !ui.state || ui.state.phase !== 'shop' || ui.state.watching) return;
     // En ligne, personne ne passe : c'est le minuteur commun qui termine le tour.
     // En ligne (v131) : PRÊT finit son tour plus tôt ; quand tous les créateurs sont prêts, la manche part
-    // sans attendre la fin du temps. Deux touchers pour confirmer : on ne peut plus rien acheter après.
+    // sans attendre la fin du temps. Depuis la v137, on maintient le bouton appuyé (readyHold) au lieu de
+    // le toucher deux fois : un simple toucher ne fait rien (on ne peut plus rien acheter après).
     if (ui.state.mp && !ui.mpAuto) {
-      if (!ui.readyArm || performance.now() - ui.readyArm > 2500) {
-        ui.readyArm = performance.now();
-        SFX.tap();
-        toast(tr('Touchez encore pour être prêt : vous ne pourrez plus acheter ce tour-ci.'), 2200);
-        return;
-      }
-      ui.readyArm = 0;
+      if (!ui.readyHeld) return;
+      ui.readyHeld = false;
     }
     const p = me();
     if (p.discover.length) { await openDiscover(); return; }
@@ -5374,6 +5454,11 @@
   listen('rollBtn', 'click', guard(doRoll));
   listen('freezeBtn', 'click', () => { if (!ui.busy) doFreeze(); });
   listen('fightBtn', 'click', fight);
+  // PRÊT en ligne : appui long (v137).
+  listen('fightBtn', 'pointerdown', readyHoldStart);
+  listen('fightBtn', 'keydown', readyHoldStart);
+  for (const t of ['pointerup', 'pointercancel', 'keyup', 'blur']) listen('fightBtn', t, readyHoldEnd);
+  listen('fightBtn', 'contextmenu', (e) => { if (ui.state && ui.state.mp) e.preventDefault(); });
   listen('rivals', 'click', () => { if (!ui.busy) { SFX.tap(); openRivals(); } });
   listen('famsBtn', 'click', () => { SFX.tap(); openFamilies(); });
   $('termBtn').insertAdjacentHTML('afterbegin', pixArt(FAM_ART.terminal, 'term-ico'));
@@ -5426,6 +5511,7 @@
     pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH, frameOf, framed, avatarOf, fontOf, nameHtml, myFont, myFrame, myAvatar, seatLook, emblem, myEmblem, myRankInfo, tierLabel,
     coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation, lawScreen,
     loadOnline, onlineInfo, onlineGate, rejoinOnline, embedded: EMBED,
+    friendStatus, addFriend, playerCard,
     seeds, addSeeds, wallet, renderMkWallet, worldLook, worldList, playerTag
   };
 

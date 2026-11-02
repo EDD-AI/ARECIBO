@@ -592,7 +592,7 @@
       const left = Math.max(0, M.deadline - now());
       const txt = Math.floor(left / 60000) + ':' + String(Math.ceil(left / 1000) % 60).padStart(2, '0');
       // Un seul compte à rebours (v104) : en gros chiffres dans le bouton de combat. Depuis la v131, on
-      // le touche (deux fois) pour être PRÊT ; le nombre de créateurs prêts s'affiche au-dessus.
+      // le maintient appuyé (v137) pour être PRÊT ; le nombre de créateurs prêts s'affiche au-dessus.
       if (el) el.hidden = true;
       if (btn) {
         const count = st.phase === 'shop';
