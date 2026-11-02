@@ -72,7 +72,7 @@
     Kit.halo(ctx, e.x, e.y, { pixel: p, rayon: r * 1.6, couleur: cols[2], force: 0.55, tons: 3, profil: 1.6 });
     Kit.halo(ctx, e.x, e.y, { pixel: p, rayon: r, couleur: cols[1], coeur: '#ffffff', force: 1, tons: 4, profil: 1.1 });
     Kit.impact(ctx, e.x, e.y, { pixel: p, rayon: r * 1.7, couleurs: cols, n: e.n || 110, graine: e.graine || 3, anneau: false, eclat: false });
-    rayons(ctx, e.x, e.y, { pixel: p, long: r * 2.6 });
+    rayons(ctx, e.x, e.y, { pixel: p, long: r * 2.3 });
     Kit.eclat(ctx, e.x, e.y, { pixel: p, taille: 9, couleur: '#ffffff', halo: cols[1] });
   }
 
@@ -99,6 +99,8 @@
     Kit.etoiles(ctx, Object.assign({ pixel: 2, graine: 0x0b17, eviter: [{ x: T.x, y: T.y, r: T.r + 8 }] }, L.etoiles || {}));
     if (L.horizon) dome(ctx, L.horizon.cx, L.horizon.cy, L.horizon.R, PX, L.horizon.o);
     Kit.poser(ctx, Kit.astre('umbra', { rayonEcran: T.r, pixel: PX }), T.x, T.y);
+    // Comètes au loin (traînée bleue des Comètes, tête blanche) : décor, pas des tirs.
+    for (const c of L.cometes || []) Kit.trainee(ctx, c.de[0], c.de[1], c.a[0], c.a[1], { pixel: PX, couleur: '#ffffff', queue: fam('comete'), epaisseur: c.epaisseur || 2, tete: 5, tons: 5 });
     for (const t of L.tirs || []) tir(ctx, t, PX);
     for (const e of L.explosions || []) explosion(ctx, e, PX);
     for (const a of L.astres) Kit.poser(ctx, Kit.astre(a.id, Object.assign({ taille: a.taille, pixel: PX }, a.o || {})), a.x, a.y);
@@ -108,7 +110,16 @@
     Kit.poser(ctx, Kit.logo({ pixel: X.logo }), T.x, T.y + X.logoDy);
     const oA = { taille: X.accroche, poids: 500, align: 'centre', couleur: C.blanc };
     deuxLignes(ctx, Kit.texte('accroche', s.lang), oA).forEach((l, i) => Kit.ecrire(ctx, l, T.x, T.y + X.accrocheDy + i * X.interligne, oA));
-    if (X.genre) Kit.ecrire(ctx, Kit.texte('genre', s.lang), W / 2, X.genreY, { taille: X.genre, poids: 600, align: 'centre', espacement: 0.28, couleur: C.or });
+    if (X.genre) {
+      // Ligne du genre posée sur la planète d'horizon : contour noir net de 2 px (8 copies
+      // décalées, sans flou) pour qu'elle reste lisible sur les continents comme sur l'océan.
+      const oG = { taille: X.genre, poids: 600, align: 'centre', espacement: 0.28 };
+      const g = Kit.texte('genre', s.lang);
+      for (const [dx, dy] of [[-2, 0], [2, 0], [0, -2], [0, 2], [-2, -2], [2, -2], [-2, 2], [2, 2]]) {
+        Kit.ecrire(ctx, g, W / 2 + dx, X.genreY + dy, Object.assign({ couleur: '#000000' }, oG));
+      }
+      Kit.ecrire(ctx, g, W / 2, X.genreY, Object.assign({ couleur: C.or }, oG));
+    }
   }
 
   // ─── Affiche 1920 × 1080 ──────────────────────────────────────
@@ -121,7 +132,7 @@
       { de: [500, 705], a: [920, 820], famille: 'tempete' },
       { de: [1420, 715], a: [1000, 820], famille: 'nebuleuse' }
     ],
-    explosions: [{ x: 960, y: 820, rayon: 64 }],
+    explosions: [{ x: 960, y: 820, rayon: 70 }],
     astres: [
       { id: 'supernova', x: 150, y: 285, taille: 200 },
       { id: 'europe', x: 120, y: 985, taille: 150 },
@@ -153,15 +164,14 @@
     trou: { x: 1920, y: 800, r: 620 },
     horizon: { cx: 1920, cy: 2160 + 4000, R: 4280 },
     tirs: [
-      { de: [3050, 370], a: [2780, 250], famille: 'anomalie', epaisseur: 3, lueur: 30, impact: null },
       { de: [1440, 1930], a: [2400, 1900], famille: 'vie', epaisseur: 3, lueur: 36, impact: { dx: 30, dy: -4, rayon: 90, n: 60, graine: 9 } },
       { de: [1010, 1410], a: [1840, 1640], famille: 'tempete', epaisseur: 5, lueur: 50 },
       { de: [2830, 1430], a: [2000, 1640], famille: 'nebuleuse', epaisseur: 5, lueur: 50 }
     ],
-    explosions: [{ x: 1920, y: 1640, rayon: 130, n: 200 }],
+    cometes: [{ de: [3520, 120], a: [3180, 300], epaisseur: 3 }],
+    explosions: [{ x: 1920, y: 1640, rayon: 140, n: 220 }],
     astres: [
-      { id: 'multivers', x: 3420, y: 200, taille: 220 },
-      { id: 'hyakutake', x: 520, y: 140, taille: 260, o: { legendaire: false } },
+      { id: 'banquise', x: 560, y: 150, taille: 230 },
       { id: 'supernova', x: 300, y: 590, taille: 400 },
       { id: 'europe', x: 230, y: 1960, taille: 300 },
       { id: 'eden', x: 1280, y: 1900, taille: 380 },
@@ -189,17 +199,17 @@
     horizon: { cx: 585, cy: 2532 + 1500, R: 1720 },
     tirs: [
       { de: [470, 1700], a: [575, 1350], famille: 'tempete', epaisseur: 4, lueur: 30 },
-      { de: [800, 930], a: [600, 1310], famille: 'nebuleuse', epaisseur: 4, lueur: 30 },
-      { de: [930, 2050], a: [960, 2400], famille: 'vie', epaisseur: 3, lueur: 18, impact: null }
+      { de: [800, 930], a: [600, 1310], famille: 'nebuleuse', epaisseur: 4, lueur: 30 }
     ],
     explosions: [{ x: 588, y: 1330, rayon: 72, n: 130 }],
     astres: [
-      { id: 'coeurcristal', x: 200, y: 860, taille: 210 },
-      { id: 'tarentule', x: 1010, y: 1610, taille: 190 },
+      { id: 'tarentule', x: 1035, y: 600, taille: 150 },
+      { id: 'coeurcristal', x: 200, y: 850, taille: 210 },
       { id: 'attracteur', x: 860, y: 850, taille: 420, o: { legendaire: false } },
-      { id: 'supernova', x: 1000, y: 2000, taille: 200 },
-      { id: 'europe', x: 130, y: 2280, taille: 150 },
-      { id: 'maelstrom', x: 350, y: 1860, taille: 520, o: { dore: true } }
+      { id: 'supernova', x: 1010, y: 1700, taille: 180 },
+      { id: 'eden', x: 930, y: 2080, taille: 210 },
+      { id: 'europe', x: 150, y: 2160, taille: 150 },
+      { id: 'maelstrom', x: 360, y: 1850, taille: 520, o: { dore: true } }
     ],
     texte: null
   };
@@ -220,8 +230,8 @@
     ],
     explosions: [{ x: 540, y: 1030, rayon: 58 }],
     astres: [
-      { id: 'supernova', x: 110, y: 110, taille: 170 },
-      { id: 'coeurcristal', x: 972, y: 110, taille: 175 },
+      { id: 'supernova', x: 96, y: 96, taille: 150 },
+      { id: 'coeurcristal', x: 984, y: 96, taille: 155 },
       { id: 'europe', x: 90, y: 1220, taille: 130 },
       { id: 'sentinelle', x: 990, y: 1225, taille: 130 },
       { id: 'attracteur', x: 850, y: 860, taille: 360, o: { legendaire: false } },

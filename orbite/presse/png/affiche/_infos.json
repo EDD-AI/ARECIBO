@@ -1,0 +1,51 @@
+{
+ "affiche-1920x1080-fr.png": {
+  "titre": "Affiche 1920 × 1080",
+  "usage": "Image phare (key art) : page du jeu, presse, bannières, vidéos.",
+  "scene": "affiche-1920x1080",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "affiche-1920x1080-en.png": {
+  "titre": "Affiche 1920 × 1080",
+  "usage": "Image phare (key art) : page du jeu, presse, bannières, vidéos.",
+  "scene": "affiche-1920x1080",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "affiche-1920x1080-sans-texte.png": {
+  "titre": "Affiche 1920 × 1080 sans texte",
+  "usage": "Image phare sans logo ni texte (le centre du trou noir reste libre pour un titre).",
+  "scene": "affiche-1920x1080-sans-texte",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "affiche-3840x2160-sans-texte.png": {
+  "titre": "Fond d’écran 4K 3840 × 2160",
+  "usage": "Fond d’écran d’ordinateur, sans texte.",
+  "scene": "affiche-3840x2160-sans-texte",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "fond-ecran-telephone-1170x2532-sans-texte.png": {
+  "titre": "Fond d’écran de téléphone 1170 × 2532",
+  "usage": "Écran de verrouillage ou d’accueil (le haut reste libre pour l’heure).",
+  "scene": "fond-ecran-telephone-1170x2532-sans-texte",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "affiche-verticale-1080x1350-fr.png": {
+  "titre": "Affiche verticale 1080 × 1350",
+  "usage": "Réseaux sociaux en portrait (4:5).",
+  "scene": "affiche-verticale-1080x1350",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "affiche-verticale-1080x1350-en.png": {
+  "titre": "Affiche verticale 1080 × 1350",
+  "usage": "Réseaux sociaux en portrait (4:5).",
+  "scene": "affiche-verticale-1080x1350",
+  "transparent": false,
+  "apercu": "sombre"
+ }
+}

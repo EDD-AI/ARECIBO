@@ -1,0 +1,93 @@
+{
+ "ia-x-entete-1500x500-fr.png": {
+  "titre": "En-tête X (fond IA : deux camps)",
+  "usage": "Bannière de profil X / Twitter.",
+  "scene": "ia-x-entete-1500x500",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "ia-x-entete-1500x500-en.png": {
+  "titre": "En-tête X (fond IA : deux camps)",
+  "usage": "Bannière de profil X / Twitter.",
+  "scene": "ia-x-entete-1500x500",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "ia-itch-banniere-960x300-fr.png": {
+  "titre": "Bannière itch.io (fond IA : deux camps)",
+  "usage": "En-tête de la page itch.io.",
+  "scene": "ia-itch-banniere-960x300",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "ia-itch-banniere-960x300-en.png": {
+  "titre": "Bannière itch.io (fond IA : deux camps)",
+  "usage": "En-tête de la page itch.io.",
+  "scene": "ia-itch-banniere-960x300",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "ia-story-1080x1920-fr.png": {
+  "titre": "Story 9:16 (fond IA : piliers et horizon)",
+  "usage": "Stories, Reels, TikTok.",
+  "scene": "ia-story-1080x1920",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "ia-story-1080x1920-en.png": {
+  "titre": "Story 9:16 (fond IA : piliers et horizon)",
+  "usage": "Stories, Reels, TikTok.",
+  "scene": "ia-story-1080x1920",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "ia-fond-ecran-telephone-1170x2532.png": {
+  "titre": "Fond d’écran téléphone (IA, sans texte)",
+  "usage": "Fond d’écran à offrir aux joueurs.",
+  "scene": "ia-fond-ecran-telephone-1170x2532",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "ia-instagram-carre-1080x1080-fr.png": {
+  "titre": "Instagram carré (fond IA : trou noir)",
+  "usage": "Publication carrée (Instagram, Facebook).",
+  "scene": "ia-instagram-carre-1080x1080",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "ia-instagram-carre-1080x1080-en.png": {
+  "titre": "Instagram carré (fond IA : trou noir)",
+  "usage": "Publication carrée (Instagram, Facebook).",
+  "scene": "ia-instagram-carre-1080x1080",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "ia-youtube-miniature-1280x720-fr.png": {
+  "titre": "Miniature YouTube (fond IA : bataille)",
+  "usage": "Miniature de vidéo (coin bas-droit libre).",
+  "scene": "ia-youtube-miniature-1280x720",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "ia-youtube-miniature-1280x720-en.png": {
+  "titre": "Miniature YouTube (fond IA : bataille)",
+  "usage": "Miniature de vidéo (coin bas-droit libre).",
+  "scene": "ia-youtube-miniature-1280x720",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "ia-x-publication-1600x900-fr.png": {
+  "titre": "Publication 16:9 (fond IA : bataille)",
+  "usage": "Publication X, Facebook, Bluesky, Mastodon.",
+  "scene": "ia-x-publication-1600x900",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "ia-x-publication-1600x900-en.png": {
+  "titre": "Publication 16:9 (fond IA : bataille)",
+  "usage": "Publication X, Facebook, Bluesky, Mastodon.",
+  "scene": "ia-x-publication-1600x900",
+  "transparent": false,
+  "apercu": "sombre"
+ }
+}

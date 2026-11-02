@@ -10,7 +10,6 @@
 (function () {
   'use strict';
   const C = Kit.COULEURS;
-  const PISTES = true; // true : ajoute les scènes d'essai (jamais exportées dans png/)
   const NB = ' ', FINE = ' ';
 
   // ─── Textes absents de outils/textes.js : table locale (À AJOUTER À textes.js) ──────
@@ -109,11 +108,11 @@
       const W = s.largeur, H = s.hauteur, PX = 4, cy = 214;
       Kit.etoiles(ctx, { pixel: 2, graine: 23 });
       Kit.poser(ctx, Kit.astre('umbra', { rayonEcran: 196, pixel: PX, phase: 0.2 }), W / 2, cy);
-      Kit.poser(ctx, Kit.astre('betelgeuse', { taille: 128, pixel: PX, legendaire: false }), 74, 350);
+      Kit.poser(ctx, Kit.astre('betelgeuse', { taille: 150, pixel: PX, legendaire: false }), 62, 352);
       Kit.poser(ctx, Kit.astre('pelagia', { taille: 88, pixel: PX }), 556, 82);
       Kit.tramage(ctx, 0, 405, W, H - 405, { couleur: '#000000', sens: 'bas', de: 0, a: 1, pixel: 2, courbe: 0.7 });
       Kit.poser(ctx, Kit.logo({ pixel: 10 }), W / 2, cy);
-      Kit.ecrire(ctx, t('genreCourt', s.lang), W / 2, 470, { taille: 22, poids: 600, align: 'centre', espacement: 0.2, couleur: C.or });
+      Kit.ecrire(ctx, t('genreCourt', s.lang), W / 2, 472, { taille: 24, poids: 600, align: 'centre', espacement: 0.2, couleur: C.or });
     }
   });
 
@@ -139,7 +138,8 @@
   // ─── Fond de page 1920 × 1080 (sans texte) ───────────────────
   // La colonne de la page itch (960 px, x 480–1440) reste calme et très sombre ; deux petits
   // systèmes avec leurs orbites sur les côtés, près des bords de la colonne (visibles dès un écran
-  // de 1366 px), et tout se fond dans le noir en bas (couleur de page #000000).
+  // de 1366 px), avec d'autres astres que la bannière (posée entre eux, sinon deux trous noirs se
+  // touchent) ; tout se fond dans le noir en bas (couleur de page #000000).
   Kit.scene({
     nom: 'itch-fond-1920x1080', largeur: 1920, hauteur: 1080, langues: [],
     titre: 'Fond de page itch.io (1920 × 1080)',
@@ -152,21 +152,23 @@
       Kit.etoiles(ctx, { pixel: 2, graine: 43, x: col0, y: 0, largeur: col1 - col0, hauteur: 820, densite: 0.3, eclat: 0.45, croix: false });
       // Lueur tramée très sombre en haut (le ciel s'allume vers le haut de la page).
       Kit.tramage(ctx, 0, 0, W, 300, { couleur: '#0c1328', sens: 'haut', de: 0, a: 0.55, pixel: 2, courbe: 1.6 });
-      // Système de gauche : Bételgeuse, ses orbites, Pélagia (Vie) et la Lune de sang.
+      // Système de gauche : la planète du joueur (menu), ses orbites, la Lune de sang et Séléné.
+      // (Pas de Bételgeuse ni de trou noir ici : la bannière, posée au milieu, les montre déjà.)
       const G = { x: 300, y: 300, i: -0.22 };
       orbite(ctx, G.x, G.y, 250, 92, { inclinaison: G.i, couleur: '#3a4358', pas: 3 });
       orbite(ctx, G.x, G.y, 390, 150, { inclinaison: G.i, couleur: '#2a3144', pas: 3 });
-      Kit.poser(ctx, Kit.astre('betelgeuse', { rayonEcran: 132, pixel: PX, legendaire: false, phase: 0.3 }), G.x, G.y);
+      Kit.poser(ctx, Kit.horizon({ rayonEcran: 128, pixel: PX, canaux: { moon: 0 } }), G.x, G.y);
       const g1 = surOrbite(G.x, G.y, 250, 92, G.i, 1.15), g2 = surOrbite(G.x, G.y, 390, 150, G.i, 2.2);
-      Kit.poser(ctx, Kit.astre('pelagia', { taille: 96, pixel: PX }), g1[0], g1[1]);
-      Kit.poser(ctx, Kit.astre('lunesang', { taille: 64, pixel: PX, legendaire: false }), g2[0], g2[1]);
-      // Système de droite : Umbra, Tempest doré sur son orbite, la nébuleuse du Crabe plus bas.
-      const D = { x: 1620, y: 300, i: 0.2 };
+      Kit.poser(ctx, Kit.astre('lunesang', { taille: 92, pixel: PX, legendaire: false }), g1[0], g1[1]);
+      Kit.poser(ctx, Kit.astre('selene', { taille: 64, pixel: PX }), g2[0], g2[1]);
+      // Système de droite : le Grand Attracteur (Nébuleuses), Tempest doré sur son orbite,
+      // le Prisme absolu (Cristal) plus bas.
+      const D = { x: 1620, y: 290, i: 0.2 };
       orbite(ctx, D.x, D.y, 300, 112, { inclinaison: D.i, couleur: '#3a4358', pas: 3 });
-      Kit.poser(ctx, Kit.astre('umbra', { rayonEcran: 116, pixel: PX, phase: 0.2 }), D.x, D.y);
+      Kit.poser(ctx, Kit.astre('attracteur', { taille: 300, pixel: PX, legendaire: false, phase: 0.4 }), D.x, D.y);
       const d1 = surOrbite(D.x, D.y, 300, 112, D.i, -2.05);
       Kit.poser(ctx, Kit.astre('tempest', { taille: 140, pixel: PX, dore: true }), d1[0], d1[1]);
-      Kit.poser(ctx, Kit.astre('crabe', { taille: 150, pixel: PX }), 1580, 640);
+      Kit.poser(ctx, Kit.astre('prismeabsolu', { taille: 150, pixel: PX, legendaire: false }), 1575, 640);
       Kit.trainee(ctx, 30, 700, 200, 650, { pixel: 3, queue: Kit.couleurFamille('comete'), epaisseur: 2 });
       // Fondu tramé vers le noir de la page.
       Kit.tramage(ctx, 0, 540, W, 440, { couleur: '#000000', sens: 'bas', de: 0, a: 1, pixel: 2 });
@@ -321,20 +323,6 @@
           verbe: Kit.liste('verbes', s.lang)[P.n],
           phrase: t(P.phrase, s.lang),
           appui: P.appui ? Kit.texte(P.appui, s.lang) : null
-        });
-      }
-    });
-  }
-
-  if (PISTES) {
-    Kit.scene({
-      nom: 'piste-petits', largeur: 900, hauteur: 300, langues: [],
-      dessiner(ctx, s) {
-        const ids = ['braise', 'scorie', 'vulcain', 'magma', 'pyro', 'nive', 'banquise', 'boreale', 'comete', 'cendre', 'vestige', 'ossuaire', 'nyx', 'abysse', 'sylve', 'gaia', 'cumulus', 'titania'];
-        ids.forEach((id, i) => {
-          const x = 50 + (i % 9) * 100, y = 60 + Math.floor(i / 9) * 140;
-          Kit.poser(ctx, Kit.astre(id, { rayonEcran: 21, pixel: 3, legendaire: false }), x, y);
-          Kit.ecrire(ctx, id, x, y + 56, { taille: 12, align: 'centre', couleur: C.gris });
         });
       }
     });

@@ -1,0 +1,51 @@
+ORBITE : THÈME CONSEILLÉ POUR LA PAGE ITCH.IO
+(kit visuel, groupe « itch » ; images dans ce dossier, source presse/scenes/itch.js)
+
+COULEURS (hex)
+  Fond de la page (BG)                  #000000   noir pur ; le bas du fond d'écran s'y fond sans raccord
+  Fond de la colonne de contenu (BG 2)  #05060a   le noir du jeu (menus)
+  Texte courant                         #e8ecf2   contraste 17,1:1 sur #05060a
+  Texte secondaire (notes, légendes)    #8a94a6   contraste 6,6:1 sur #05060a
+  Liens                                 #f6c453   l'or du jeu ; contraste 12,5:1 sur #05060a
+  Boutons (Jouer, Télécharger…)         fond #f6c453, texte #05060a (contraste 12,5:1)
+  Bordures et filets                    #161b27   (le cadre des cartes « points forts »)
+  Accent rare                           les couleurs des familles, seulement dans les images
+
+POLICES
+  Titres : Chakra Petch 600, EN MAJUSCULES, lettres espacées (0,2 à 0,3 em), comme les
+  bandeaux de section. Texte courant : Chakra Petch 400, casse normale.
+  Pas vérifié ici : je ne sais pas si l'éditeur de thème d'itch.io propose Chakra Petch dans sa
+  liste. Sinon, prendre la linéale la plus sobre et la plus géométrique de la liste et garder
+  les titres en majuscules espacées. Les titres de section sont de toute façon en image.
+  Le logo ORBITE n'est jamais écrit avec une police : c'est toujours l'image (police pixel du jeu).
+
+IMAGES DE LA PAGE
+  Couverture (« Cover image »)          itch-couverture-630x500-fr.png ou -en.png
+                                        conçue pour rester lisible à 315 × 250 (vignette des listes)
+  Bannière (éditeur de thème)           itch-banniere-960x300-fr.png ou -en.png
+                                        logo et accroche dans la zone sûre (80 px de marge)
+  Fond (éditeur de thème)               itch-fond-1920x1080.png : sans répétition, centré en haut.
+                                        La colonne de 960 px (x 480 à 1440) tombe sur la zone calme
+                                        et très sombre. Les astres sont sur les côtés, près des
+                                        bords de la colonne : on les voit dès un écran de 1366 px.
+                                        Le bas se fond dans #000000.
+  Description, dans cet ordre conseillé :
+    1. un court paragraphe d'accroche (texte)
+    2. itch-section-comment-jouer-630x90-<lang>.png
+       puis itch-point-achetez-630x260-<lang>.png, itch-point-placez-…, itch-point-affrontez-…
+    3. itch-section-familles-630x90-<lang>.png  + texte
+    4. itch-section-modes-630x90-<lang>.png     + texte
+    5. itch-section-en-ligne-630x90-<lang>.png  + texte
+  Les bandeaux de section ont un fond transparent, prévu pour une colonne sombre (#05060a).
+  Les cartes « points forts » ont leur propre fond noir et leur cadre : elles marchent sur
+  n'importe quel fond sombre. Toutes les images de la description font 630 px de large.
+  Les insérer en taille réelle (pas d'agrandissement : les pixels resteraient nets seulement à
+  ×2, ×3…).
+
+LANGUE
+  Chaque image avec texte existe en -fr et en -en. Une page itch n'a qu'une description : choisir
+  une langue pour les images, ou mettre les deux versions l'une sous l'autre.
+
+À NE PAS FAIRE (brief)
+  Aucun autre jeu ni marque, aucun numéro de version, aucune adresse web dans les images,
+  aucune note, aucun avis ni récompense inventés, aucune fausse capture.
