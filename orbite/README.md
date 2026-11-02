@@ -370,6 +370,36 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Prêt pour itch.io (v136)
+
+Le jeu peut maintenant tourner dans la page itch.io (https://edda-studio.itch.io/orbite), où il est
+affiché dans un cadre (iframe) servi par `html-classic.itch.zone`, une adresse **partagée par tous les
+jeux HTML d’itch.io**.
+- **Paquet** : `tools/itch-zip.sh [chemin.zip]` fabrique le ZIP à téléverser (`index.html` à la racine,
+  seulement les fichiers du jeu : ~15 Mo, 158 fichiers ; il refuse si un fichier demandé manque ou si les
+  quatre numéros de version diffèrent). Testé dans un cadre d’une autre origine, sur PC (1280×720) et
+  téléphone : duel complet, son, sauvegarde, aucune erreur, aucun fichier manquant.
+- **Caches** : le service worker ne supprime plus que les anciens caches d’ORBITE (`orbite-…`) ; avant, il
+  vidait tous les caches de l’adresse, donc ceux des autres jeux sur itch.io. Le bouton RÉPARER ne touche
+  plus qu’au service worker de ce dossier et aux caches d’ORBITE.
+- **Dans un cadre** (`window.self !== window.top`) :
+  - pas de service worker (la page itch.io a besoin du réseau, et l’adresse change à chaque
+    téléversement : tout serait retéléchargé) ;
+  - pas de bouton « INSTALLER SUR LE TÉLÉPHONE » (impossible depuis un cadre) ;
+  - **invitations** : le lien envoyé est la page itch.io et le **code** de la partie (« ouvre le jeu, va
+    dans Multijoueur et entre le code ABC123 ») ; l’adresse brute du cadre change à chaque téléversement
+    et ouvrirait le jeu sans la progression ;
+  - **partager** essaie le partage du téléphone, puis la copie, puis affiche une fiche avec le code et
+    l’adresse (un cadre peut refuser les deux) ;
+  - **connexion Google** : si la fenêtre est bloquée, un message clair au lieu d’une redirection (la page
+    de connexion Google refuse de s’afficher dans un cadre). À faire dans Firebase : ajouter
+    `html-classic.itch.zone` et `html.itch.zone` aux domaines autorisés.
+- **Correctif** : sur téléphone, un bouton « REGARDER LA SUITE » mort restait affiché en fin de duel
+  (`.btn` l’emportait sur l’attribut `hidden` ; la version PC le corrigeait déjà).
+- Tout pour la page est dans `presse/itch/` : `GUIDE.md` (le pas-à-pas), `PAGE.md` (tous les textes EN et
+  FR, vérifiés dans le code), deux propositions de couverture 630×500 ; captures réelles du jeu (PC et
+  téléphone, EN et FR) dans `presse/captures/`.
+
 ## Crédits : thèmes du menu de Victor Desrat (v135)
 
 « Distant Earth » et « Orbiting Wonder » ont été entièrement retravaillés par Victor Desrat : les

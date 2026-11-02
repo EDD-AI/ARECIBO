@@ -1,0 +1,135 @@
+{
+ "itch-couverture-630x500-fr.png": {
+  "titre": "Couverture itch.io (630 × 500)",
+  "usage": "Image de couverture de la page itch.io : vignette des listes (affichée à 315 × 250).",
+  "scene": "itch-couverture-630x500",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "itch-couverture-630x500-en.png": {
+  "titre": "Couverture itch.io (630 × 500)",
+  "usage": "Image de couverture de la page itch.io : vignette des listes (affichée à 315 × 250).",
+  "scene": "itch-couverture-630x500",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "itch-banniere-960x300-fr.png": {
+  "titre": "Bannière d’en-tête itch.io (960 × 300)",
+  "usage": "Bannière en haut de la page itch.io (éditeur de thème). Zone sûre : 80 px sur chaque bord.",
+  "scene": "itch-banniere-960x300",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "itch-banniere-960x300-en.png": {
+  "titre": "Bannière d’en-tête itch.io (960 × 300)",
+  "usage": "Bannière en haut de la page itch.io (éditeur de thème). Zone sûre : 80 px sur chaque bord.",
+  "scene": "itch-banniere-960x300",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "itch-fond-1920x1080.png": {
+  "titre": "Fond de page itch.io (1920 × 1080)",
+  "usage": "Image de fond de la page itch.io (sans répétition, centrée en haut). Couleur de page : #000000.",
+  "scene": "itch-fond-1920x1080",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "itch-section-comment-jouer-630x90-fr.png": {
+  "titre": "Bandeau de section « COMMENT JOUER » (630 × 90)",
+  "usage": "Titre de section dans la description itch.io. Fond transparent (pour une colonne sombre).",
+  "scene": "itch-section-comment-jouer-630x90",
+  "transparent": true,
+  "apercu": "sombre"
+ },
+ "itch-section-comment-jouer-630x90-en.png": {
+  "titre": "Bandeau de section « COMMENT JOUER » (630 × 90)",
+  "usage": "Titre de section dans la description itch.io. Fond transparent (pour une colonne sombre).",
+  "scene": "itch-section-comment-jouer-630x90",
+  "transparent": true,
+  "apercu": "sombre"
+ },
+ "itch-section-familles-630x90-fr.png": {
+  "titre": "Bandeau de section « 13 FAMILLES » (630 × 90)",
+  "usage": "Titre de section dans la description itch.io. Fond transparent (pour une colonne sombre).",
+  "scene": "itch-section-familles-630x90",
+  "transparent": true,
+  "apercu": "sombre"
+ },
+ "itch-section-familles-630x90-en.png": {
+  "titre": "Bandeau de section « 13 FAMILLES » (630 × 90)",
+  "usage": "Titre de section dans la description itch.io. Fond transparent (pour une colonne sombre).",
+  "scene": "itch-section-familles-630x90",
+  "transparent": true,
+  "apercu": "sombre"
+ },
+ "itch-section-modes-630x90-fr.png": {
+  "titre": "Bandeau de section « MODES DE JEU » (630 × 90)",
+  "usage": "Titre de section dans la description itch.io. Fond transparent (pour une colonne sombre).",
+  "scene": "itch-section-modes-630x90",
+  "transparent": true,
+  "apercu": "sombre"
+ },
+ "itch-section-modes-630x90-en.png": {
+  "titre": "Bandeau de section « MODES DE JEU » (630 × 90)",
+  "usage": "Titre de section dans la description itch.io. Fond transparent (pour une colonne sombre).",
+  "scene": "itch-section-modes-630x90",
+  "transparent": true,
+  "apercu": "sombre"
+ },
+ "itch-section-en-ligne-630x90-fr.png": {
+  "titre": "Bandeau de section « JOUER EN LIGNE » (630 × 90)",
+  "usage": "Titre de section dans la description itch.io. Fond transparent (pour une colonne sombre).",
+  "scene": "itch-section-en-ligne-630x90",
+  "transparent": true,
+  "apercu": "sombre"
+ },
+ "itch-section-en-ligne-630x90-en.png": {
+  "titre": "Bandeau de section « JOUER EN LIGNE » (630 × 90)",
+  "usage": "Titre de section dans la description itch.io. Fond transparent (pour une colonne sombre).",
+  "scene": "itch-section-en-ligne-630x90",
+  "transparent": true,
+  "apercu": "sombre"
+ },
+ "itch-point-achetez-630x260-fr.png": {
+  "titre": "Point fort « ACHETEZ » (630 × 260)",
+  "usage": "Carte dans la description itch.io (étape 1 sur 3 : achetez, placez, affrontez).",
+  "scene": "itch-point-achetez-630x260",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "itch-point-achetez-630x260-en.png": {
+  "titre": "Point fort « ACHETEZ » (630 × 260)",
+  "usage": "Carte dans la description itch.io (étape 1 sur 3 : achetez, placez, affrontez).",
+  "scene": "itch-point-achetez-630x260",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "itch-point-placez-630x260-fr.png": {
+  "titre": "Point fort « PLACEZ » (630 × 260)",
+  "usage": "Carte dans la description itch.io (étape 2 sur 3 : achetez, placez, affrontez).",
+  "scene": "itch-point-placez-630x260",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "itch-point-placez-630x260-en.png": {
+  "titre": "Point fort « PLACEZ » (630 × 260)",
+  "usage": "Carte dans la description itch.io (étape 2 sur 3 : achetez, placez, affrontez).",
+  "scene": "itch-point-placez-630x260",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "itch-point-affrontez-630x260-fr.png": {
+  "titre": "Point fort « AFFRONTEZ » (630 × 260)",
+  "usage": "Carte dans la description itch.io (étape 3 sur 3 : achetez, placez, affrontez).",
+  "scene": "itch-point-affrontez-630x260",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "itch-point-affrontez-630x260-en.png": {
+  "titre": "Point fort « AFFRONTEZ » (630 × 260)",
+  "usage": "Carte dans la description itch.io (étape 3 sur 3 : achetez, placez, affrontez).",
+  "scene": "itch-point-affrontez-630x260",
+  "transparent": false,
+  "apercu": "sombre"
+ }
+}

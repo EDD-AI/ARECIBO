@@ -29,7 +29,11 @@
     ['{n} cycle(s) joué(s) sans vous · cycle {c}', '{n} cycle(s) played without you · cycle {c}', '{n} ciclo(s) jugado(s) sin ti · ciclo {c}', '{n} Zyklus/Zyklen ohne dich gespielt · Zyklus {c}', '{n} ciclo(s) jogado(s) sem você · ciclo {c}'],
     ['Cycle {c} : la partie continue.', 'Cycle {c}: the game goes on.', 'Ciclo {c}: la partida continúa.', 'Zyklus {c}: Die Partie geht weiter.', 'Ciclo {c}: a partida continua.'],
     ['Connexion impossible : réessayez dans un instant.', 'Cannot connect: try again in a moment.', 'No se puede conectar: inténtalo de nuevo en un momento.', 'Keine Verbindung: Versuche es gleich noch einmal.', 'Não foi possível conectar: tente de novo em instantes.'],
-    ['UN INSTANT…', 'ONE MOMENT…', 'UN MOMENTO…', 'EINEN MOMENT…', 'UM INSTANTE…']
+    ['UN INSTANT…', 'ONE MOMENT…', 'UN MOMENTO…', 'EINEN MOMENT…', 'UM INSTANTE…'],
+    // Jouer depuis itch.io (v136) : invitation par code, connexion Google dans un cadre.
+    ['Rejoins ma partie ORBITE : ouvre le jeu, va dans Multijoueur et entre le code {c}.', 'Join my ORBITE game: open the game, go to Multiplayer and enter the code {c}.', 'Únete a mi partida de ORBITE: abre el juego, ve a Multijugador e introduce el código {c}.', 'Tritt meinem ORBITE-Spiel bei: Öffne das Spiel, geh zu Mehrspieler und gib den Code {c} ein.', 'Entre na minha partida de ORBITE: abra o jogo, vá em Multijogador e digite o código {c}.'],
+    ['INVITER UN AMI', 'INVITE A FRIEND', 'INVITAR A UN AMIGO', 'FREUND EINLADEN', 'CONVIDAR UM AMIGO'],
+    ['La fenêtre de connexion Google est bloquée : autorisez les fenêtres pop-up pour ce site, puis réessayez.', 'The Google sign-in window is blocked: allow pop-up windows for this site, then try again.', 'La ventana de inicio de sesión de Google está bloqueada: permite las ventanas emergentes para este sitio y vuelve a intentarlo.', 'Das Google-Anmeldefenster ist blockiert: Erlaube Pop-up-Fenster für diese Website und versuche es erneut.', 'A janela de login do Google está bloqueada: permita janelas pop-up para este site e tente de novo.']
   ];
   const langs = ['en', 'es', 'de', 'pt'];
   window.OrbiteI18n.add(Object.fromEntries(langs.map((l, i) => [l, Object.fromEntries(rows.map((r) => [r[0], r[i + 1]]))])));

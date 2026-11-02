@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORBITE · kit visuel</title>
+<meta name="description" content="Kit visuel d’ORBITE (Studio EDDA) : logos, bannières, couvertures, visuels pour les réseaux et références de style.">
+<!-- Galerie du kit : lit png/manifest.json (réécrit par outils/exporter.cjs après chaque export). -->
+<style>
+  @font-face { font-family: 'Chakra Petch'; font-weight: 400; src: url(../fonts/chakra-petch-400.woff2) format('woff2'); font-display: swap; }
+  @font-face { font-family: 'Chakra Petch'; font-weight: 500; src: url(../fonts/chakra-petch-500.woff2) format('woff2'); font-display: swap; }
+  @font-face { font-family: 'Chakra Petch'; font-weight: 600; src: url(../fonts/chakra-petch-600.woff2) format('woff2'); font-display: swap; }
+  :root {
+    --bg: #000; --panel: #05060a; --ink: #e8ecf2; --dim: #8a94a6; --line: rgba(232, 236, 242, 0.14);
+    --gold: #f6c453; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Chakra Petch', system-ui, sans-serif; }
+  body { min-height: 100vh; }
+  a { color: inherit; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 32px 16px 64px; }
+  header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 18px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+  .titre { display: flex; flex-direction: column; gap: 12px; }
+  #logo { display: block; image-rendering: pixelated; }
+  .titre small { font-size: 12px; letter-spacing: 0.32em; color: var(--dim); text-transform: uppercase; }
+  .filtres { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filtres button {
+    font: 500 12px/1 'Chakra Petch', sans-serif; letter-spacing: 0.2em; color: var(--dim); background: none;
+    border: 1px solid var(--line); padding: 9px 14px; cursor: pointer;
+  }
+  .filtres button[aria-pressed="true"] { color: var(--gold); border-color: var(--gold); }
+  .filtres button:focus-visible, .carte a:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .resume { margin: 18px 0 6px; font-size: 13px; color: var(--dim); letter-spacing: 0.06em; }
+  section { margin-top: 38px; }
+  section h2 { margin: 0 0 14px; font-size: 13px; font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; display: flex; gap: 12px; align-items: baseline; }
+  section h2 span { color: var(--dim); font-weight: 400; letter-spacing: 0.12em; }
+  .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+  .carte { background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; min-width: 0; }
+  .apercu {
+    display: flex; align-items: center; justify-content: center; aspect-ratio: 4 / 3; padding: 10px; cursor: zoom-in;
+    background: #000; border: 0; width: 100%; border-bottom: 1px solid var(--line);
+  }
+  .apercu.alpha { background-color: #1a1d26; background-image: conic-gradient(#232734 25%, transparent 0 50%, #232734 0 75%, transparent 0); background-size: 16px 16px; }
+  .apercu.alpha.clair, .vue-corps.alpha.clair { background-color: #e8ecf2; background-image: conic-gradient(#d3d8e2 25%, transparent 0 50%, #d3d8e2 0 75%, transparent 0); }
+  .apercu img { max-width: 100%; max-height: 100%; display: block; }
+  .apercu img.px { image-rendering: pixelated; }
+  .infos { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+  .infos b { font-weight: 600; font-size: 12px; letter-spacing: 0.04em; word-break: break-all; }
+  .infos .meta { color: var(--dim); display: flex; gap: 8px; flex-wrap: wrap; letter-spacing: 0.06em; }
+  .infos .usage { color: var(--dim); line-height: 1.4; }
+  .lang { color: var(--gold); letter-spacing: 0.16em; }
+  .dl { align-self: flex-start; margin-top: 2px; color: var(--gold); text-decoration: none; letter-spacing: 0.18em; font-weight: 500; font-size: 11px; border-bottom: 1px solid currentColor; }
+  .vide { color: var(--dim); padding: 40px 0; text-align: center; letter-spacing: 0.08em; }
+  /* Visionneuse */
+  dialog { border: 0; padding: 0; background: #000; color: var(--ink); max-width: 100vw; max-height: 100vh; width: 100vw; height: 100vh; }
+  dialog::backdrop { background: #000; }
+  .vue { display: flex; flex-direction: column; height: 100%; }
+  .vue-barre { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 12px; letter-spacing: 0.08em; flex-wrap: wrap; }
+  .vue-barre .act { display: flex; gap: 8px; }
+  .vue-barre button, .vue-barre a { font: 500 12px/1 'Chakra Petch', sans-serif; letter-spacing: 0.18em; color: var(--ink); background: none; border: 1px solid var(--line); padding: 8px 12px; cursor: pointer; text-decoration: none; }
+  .vue-corps { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .vue-corps.alpha { background-color: #1a1d26; background-image: conic-gradient(#232734 25%, transparent 0 50%, #232734 0 75%, transparent 0); background-size: 16px 16px; }
+  .vue-corps img { image-rendering: pixelated; display: block; }
+  .vue-corps.ajuste img { width: 100%; height: 100%; object-fit: contain; }
+  @media (max-width: 480px) { .grille { grid-template-columns: 1fr 1fr; gap: 10px; } .infos { padding: 8px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="titre">
+      <canvas id="logo" width="280" height="56" role="img" aria-label="ORBITE"></canvas>
+      <small>Kit visuel · Studio EDDA</small>
+    </div>
+    <div class="filtres" role="group" aria-label="Langue">
+      <button type="button" data-f="tout" aria-pressed="true">TOUT</button>
+      <button type="button" data-f="fr" aria-pressed="false">FR</button>
+      <button type="button" data-f="en" aria-pressed="false">EN</button>
+      <button type="button" data-f="sans" aria-pressed="false">SANS TEXTE</button>
+    </div>
+  </header>
+  <p class="resume" id="resume"></p>
+  <main id="galerie"><p class="vide">Chargement…</p></main>
+</div>
+<dialog id="vue" aria-label="Aperçu">
+  <div class="vue">
+    <div class="vue-barre">
+      <span id="vue-nom"></span>
+      <span class="act">
+        <button type="button" id="vue-taille">TAILLE RÉELLE</button>
+        <a id="vue-dl" download>TÉLÉCHARGER</a>
+        <button type="button" id="vue-fermer">FERMER</button>
+      </span>
+    </div>
+    <div class="vue-corps ajuste" id="vue-corps"><img id="vue-img" alt=""></div>
+  </div>
+</dialog>
+<script src="outils/glyphes.js"></script>
+<script>
+(function () {
+  'use strict';
+  // Logo en pixels (police du jeu, presse/outils/glyphes.js).
+  (function logo() {
+    const cv = document.getElementById('logo'), g = cv.getContext('2d'), px = 8;
+    let x = 0;
+    g.fillStyle = '#ffffff';
+    for (const ch of 'ORBITE') {
+      const gl = window.KitGlyphes.glyphe(ch);
+      gl.forEach((row, y) => [...row].forEach((b, i) => { if (b === '1') g.fillRect((x + i) * px, y * px, px, px); }));
+      x += gl[0].length + 1;
+    }
+  })();
+
+  const ORDRE = ['logo', 'references'];
+  const NOMS = { logo: 'Logos et icônes', references: 'Références de style (Midjourney)', exemple: 'Exemple du kit' };
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const ko = (n) => (n >= 1048576 ? (n / 1048576).toFixed(1).replace('.', ',') + ' Mo' : Math.max(1, Math.round(n / 1024)) + ' Ko');
+  let data = null, filtre = 'tout';
+
+  function rendre() {
+    const box = $('galerie');
+    if (!data || !data.fichiers.length) { box.innerHTML = '<p class="vide">Aucun visuel exporté pour l’instant.</p>'; $('resume').textContent = ''; return; }
+    const garde = (f) => filtre === 'tout' || (filtre === 'sans' ? !f.lang : f.lang === filtre);
+    const fichiers = data.fichiers.filter(garde);
+    const dossiers = [...new Set(data.fichiers.map((f) => f.dossier))].sort((a, b) => {
+      const ia = ORDRE.indexOf(a), ib = ORDRE.indexOf(b);
+      if (a === 'exemple' || b === 'exemple') return a === 'exemple' ? 1 : -1;
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b);
+    });
+    const total = fichiers.reduce((s, f) => s + f.octets, 0);
+    $('resume').textContent = fichiers.length + ' fichier' + (fichiers.length > 1 ? 's' : '') + ' · ' + ko(total) + ' · mis à jour le ' + new Date(data.genere).toLocaleString('fr-FR');
+    let html = '';
+    for (const d of dossiers) {
+      const liste = fichiers.filter((f) => f.dossier === d);
+      if (!liste.length) continue;
+      html += `<section><h2>${esc(NOMS[d] || d || 'Divers')} <span>${esc(d)}/ · ${liste.length}</span></h2><div class="grille">`;
+      for (const f of liste) {
+        const src = 'png/' + f.chemin.split('/').map(encodeURIComponent).join('/') + '?v=' + encodeURIComponent(f.modifie);
+        html += `<article class="carte">
+          <button type="button" class="apercu${f.transparent ? ' alpha' : ''}${f.apercu === 'clair' ? ' clair' : ''}" data-src="${esc(src)}" data-nom="${esc(f.nom)}" data-alpha="${f.transparent ? 1 : 0}" data-clair="${f.apercu === 'clair' ? 1 : 0}" aria-label="Agrandir ${esc(f.nom)}">
+            <img src="${esc(src)}" alt="${esc(f.titre || f.nom)}" loading="lazy" ${f.largeur <= 240 && f.hauteur <= 180 ? 'class="px"' : ''}>
+          </button>
+          <div class="infos">
+            <b>${esc(f.nom)}</b>
+            <span class="meta"><span>${f.largeur} × ${f.hauteur}</span><span>${ko(f.octets)}</span><span>${f.type.toUpperCase()}</span>${f.transparent ? '<span>TRANSPARENT</span>' : ''}${f.lang ? `<span class="lang">${f.lang.toUpperCase()}</span>` : ''}</span>
+            ${f.titre ? `<span class="usage">${esc(f.titre)}${f.usage ? ' — ' + esc(f.usage) : ''}</span>` : ''}
+            <a class="dl" href="${esc(src)}" download="${esc(f.nom)}">TÉLÉCHARGER</a>
+          </div>
+        </article>`;
+      }
+      html += '</div></section>';
+    }
+    box.innerHTML = html || '<p class="vide">Aucun visuel pour ce filtre.</p>';
+  }
+
+  document.querySelector('.filtres').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-f]');
+    if (!b) return;
+    filtre = b.dataset.f;
+    for (const x of document.querySelectorAll('.filtres button')) x.setAttribute('aria-pressed', String(x === b));
+    rendre();
+  });
+
+  // Visionneuse
+  const vue = $('vue');
+  $('galerie').addEventListener('click', (e) => {
+    const b = e.target.closest('.apercu');
+    if (!b) return;
+    $('vue-img').src = b.dataset.src;
+    $('vue-img').alt = b.dataset.nom;
+    $('vue-nom').textContent = b.dataset.nom;
+    $('vue-dl').href = b.dataset.src;
+    $('vue-dl').setAttribute('download', b.dataset.nom);
+    $('vue-corps').classList.toggle('alpha', b.dataset.alpha === '1');
+    $('vue-corps').classList.toggle('clair', b.dataset.clair === '1');
+    $('vue-corps').classList.add('ajuste');
+    $('vue-taille').textContent = 'TAILLE RÉELLE';
+    if (vue.showModal) vue.showModal(); else vue.setAttribute('open', '');
+  });
+  $('vue-taille').addEventListener('click', () => {
+    const on = $('vue-corps').classList.toggle('ajuste');
+    $('vue-taille').textContent = on ? 'TAILLE RÉELLE' : 'AJUSTER';
+  });
+  $('vue-fermer').addEventListener('click', () => vue.close());
+  vue.addEventListener('click', (e) => { if (e.target === $('vue-corps')) vue.close(); });
+
+  fetch('png/manifest.json', { cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((m) => { data = m; rendre(); })
+    .catch(() => { $('galerie').innerHTML = '<p class="vide">png/manifest.json introuvable : lancer un export (outils/exporter.cjs).</p>'; });
+})();
+</script>
+</body>
+</html>

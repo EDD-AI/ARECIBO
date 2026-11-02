@@ -1,6 +1,6 @@
 /* ORBITE — service worker : le jeu reste jouable hors ligne une fois installé. */
 // Garder ce numéro égal à VERSION dans js/game.js et à version.json.
-const CACHE = 'orbite-v135';
+const CACHE = 'orbite-v136';
 const SHELL = [
   './',
   './index.html',
@@ -168,7 +168,9 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  // Seulement les anciens caches d'ORBITE (v136) : sur itch.io, tous les jeux HTML partagent la même
+  // origine, et vider tous les caches effaçait aussi ceux des autres jeux.
+  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k.indexOf('orbite-') === 0).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 // Les lecteurs audio demandent des morceaux de fichier (en-tête Range) : hors ligne, on découpe

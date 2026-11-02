@@ -1,0 +1,74 @@
+{
+ "ref-01-planete-horizon.png": {
+  "titre": "La planète d’horizon du menu (le monde du joueur, stade Vie)",
+  "usage": "Référence de style (Midjourney) : noir pur, sans texte, pixels nets.",
+  "scene": "ref-01-planete-horizon",
+  "transparent": false
+ },
+ "ref-02-trou-noir-umbra.png": {
+  "titre": "Trou noir « Umbra » (Néant) : anneau de photons et disque d’accrétion",
+  "usage": "Référence de style (Midjourney) : noir pur, sans texte, pixels nets.",
+  "scene": "ref-02-trou-noir-umbra",
+  "transparent": false
+ },
+ "ref-03-oeil-du-vide.png": {
+  "titre": "Œil du Vide (légendaire du Néant), trou noir au disque turquoise",
+  "usage": "Référence de style (Midjourney) : noir pur, sans texte, pixels nets.",
+  "scene": "ref-03-oeil-du-vide",
+  "transparent": false
+ },
+ "ref-04-piliers-de-la-creation.png": {
+  "titre": "Piliers de la Création (légendaire des Nébuleuses)",
+  "usage": "Référence de style (Midjourney) : noir pur, sans texte, pixels nets.",
+  "scene": "ref-04-piliers-de-la-creation",
+  "transparent": false
+ },
+ "ref-05-grand-attracteur.png": {
+  "titre": "Grand Attracteur (légendaire des Nébuleuses)",
+  "usage": "Référence de style (Midjourney) : noir pur, sans texte, pixels nets.",
+  "scene": "ref-05-grand-attracteur",
+  "transparent": false
+ },
+ "ref-06-betelgeuse.png": {
+  "titre": "Bételgeuse (légendaire du Brasier), étoile rouge et sa coquille",
+  "usage": "Référence de style (Midjourney) : noir pur, sans texte, pixels nets.",
+  "scene": "ref-06-betelgeuse",
+  "transparent": false
+ },
+ "ref-07-maelstrom-legendaire.png": {
+  "titre": "Maelström (légendaire de la Tempête) avec son halo de légendaire, comme en jeu",
+  "usage": "Référence de style (Midjourney) : noir pur, sans texte, pixels nets.",
+  "scene": "ref-07-maelstrom-legendaire",
+  "transparent": false
+ },
+ "ref-08-primordia.png": {
+  "titre": "Primordia (légendaire de la Vie), océan, anneau et deux lunes",
+  "usage": "Référence de style (Midjourney) : noir pur, sans texte, pixels nets.",
+  "scene": "ref-08-primordia",
+  "transparent": false
+ },
+ "ref-09-cerveau-matriochka.png": {
+  "titre": "Cerveau Matriochka (légendaire des Machines), station sphérique",
+  "usage": "Référence de style (Midjourney) : noir pur, sans texte, pixels nets.",
+  "scene": "ref-09-cerveau-matriochka",
+  "transparent": false
+ },
+ "ref-10-tempest-dore.png": {
+  "titre": "Tempest (Tempête, niveau 6) en version dorée, halo d’or",
+  "usage": "Référence de style (Midjourney) : noir pur, sans texte, pixels nets.",
+  "scene": "ref-10-tempest-dore",
+  "transparent": false
+ },
+ "ref-11-nebuleuse-du-crabe.png": {
+  "titre": "Nébuleuse du Crabe (Nébuleuses, niveau 4)",
+  "usage": "Référence de style (Midjourney) : noir pur, sans texte, pixels nets.",
+  "scene": "ref-11-nebuleuse-du-crabe",
+  "transparent": false
+ },
+ "ref-12-singularite-nue.png": {
+  "titre": "Singularité nue (légendaire des Anomalies) avec son halo de légendaire",
+  "usage": "Référence de style (Midjourney) : noir pur, sans texte, pixels nets.",
+  "scene": "ref-12-singularite-nue",
+  "transparent": false
+ }
+}

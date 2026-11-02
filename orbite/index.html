@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="orbite-version" content="135">
+<meta name="orbite-version" content="136">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -52,11 +52,13 @@
       var nodes = document.querySelectorAll('script[src], link[rel="stylesheet"]');
       for (var i = 0; i < nodes.length; i++) jobs.push(fetch(nodes[i].src || nodes[i].href, { cache: 'reload' }).catch(function () {}));
       jobs.push(fetch(location.pathname, { cache: 'reload' }).catch(function () {}));
+      // Seulement le service worker de ce dossier et les caches d'ORBITE (v136) : sur itch.io, l'origine
+      // est partagée avec les autres jeux.
       if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) {
-        return Promise.all(rs.map(function (r) { return r.unregister(); }));
+        return Promise.all(rs.filter(function (r) { return r.scope && location.href.indexOf(r.scope) === 0; }).map(function (r) { return r.unregister(); }));
       }).catch(function () {}));
       if (window.caches) jobs.push(caches.keys().then(function (ks) {
-        return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+        return Promise.all(ks.filter(function (k) { return k.indexOf('orbite-') === 0; }).map(function (k) { return caches.delete(k); }));
       }).catch(function () {}));
       Promise.all(jobs).then(go, go);
       setTimeout(go, 6000);

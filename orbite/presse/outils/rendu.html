@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORBITE · rendu de scène</title>
+<!--
+  Rendu d'une scène du kit visuel.
+  rendu.html?groupe=exemple                       → liste des scènes du groupe (liens d'aperçu)
+  rendu.html?groupe=exemple&scene=carte&lang=fr   → dessine la scène à sa taille exacte
+  window.__pret = true quand tout est dessiné (polices + astres) ; window.__erreur si ça a échoué.
+  L'export (outils/exporter.cjs) charge cette page puis appelle Kit.rendreScene / Kit.rendreGif.
+-->
+<style>
+  html, body { margin: 0; padding: 0; background: #000; color: #e8ecf2; font-family: 'Chakra Petch', system-ui, sans-serif; }
+  #scene { position: relative; overflow: hidden; }
+  #toile { display: block; image-rendering: pixelated; }
+  #calque { position: absolute; inset: 0; pointer-events: none; }
+  .liste { padding: 24px; line-height: 1.8; letter-spacing: 0.04em; }
+  .liste a { color: #f6c453; }
+  .liste small { color: #8a94a6; }
+  .err { padding: 24px; color: #ff6f6f; white-space: pre-wrap; font: 14px/1.5 monospace; }
+</style>
+</head>
+<body>
+<div id="scene"><canvas id="toile"></canvas><div id="calque"></div></div>
+<script src="../../js/planet-engine.js"></script>
+<script src="../../js/planet-renderer.js"></script>
+<script src="../../js/rules.js"></script>
+<script src="../../js/world.js"></script>
+<script src="glyphes.js"></script>
+<script src="textes.js"></script>
+<script src="kit.js"></script>
+<script src="../../js/lang/regles.js"></script>
+<script src="../../js/lang/duel.js"></script>
+<script src="../../js/lang/jeu.js"></script>
+<script>
+(function () {
+  'use strict';
+  const q = new URLSearchParams(location.search);
+  const groupe = q.get('groupe');
+  const nomScene = q.get('scene');
+  const lang = q.get('lang') || null;
+  window.__pret = false;
+  window.__erreur = null;
+  const echec = (err) => {
+    window.__erreur = String(err && err.stack || err);
+    console.error(err);
+    const p = document.createElement('pre');
+    p.className = 'err';
+    p.textContent = window.__erreur;
+    document.body.appendChild(p);
+  };
+  window.addEventListener('error', (e) => { if (!window.__erreur) echec(e.error || e.message); });
+  window.addEventListener('unhandledrejection', (e) => { if (!window.__erreur) echec(e.reason); });
+
+  function charger(src) {
+    return new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = src + '?v=' + Date.now();
+      s.onload = res;
+      s.onerror = () => rej(new Error('Fichier de scènes introuvable : ' + src));
+      document.body.appendChild(s);
+    });
+  }
+
+  async function main() {
+    if (!groupe) throw new Error('Paramètre manquant : ?groupe=<nom du fichier de scènes>');
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(groupe)) throw new Error('Nom de groupe invalide : ' + groupe);
+    Kit.groupe = groupe;
+    await charger('../scenes/' + groupe + '.js');
+    await Kit.pret();
+    if (!nomScene) {
+      // Liste des scènes du groupe.
+      document.getElementById('scene').style.display = 'none';
+      const div = document.createElement('div');
+      div.className = 'liste';
+      div.innerHTML = '<b>GROUPE ' + groupe.toUpperCase() + '</b><br>' + Kit.listeScenes().map((s) =>
+        s.nom + ' <small>' + s.largeur + '×' + s.hauteur + (s.gif ? ' · GIF' : '') + '</small> : ' +
+        (s.langues.length ? s.langues : [null]).map((l) =>
+          '<a href="?groupe=' + groupe + '&scene=' + s.nom + (l ? '&lang=' + l : '') + '">' + (l || 'aperçu') + '</a>').join(' · ')
+      ).join('<br>');
+      document.body.appendChild(div);
+      window.__pret = true;
+      return;
+    }
+    const sc = Kit.trouverScene(nomScene);
+    const l = lang || (sc.langues.length ? sc.langues[0] : null);
+    const t0 = performance.now();
+    await Kit.rendreScene(nomScene, l, { t: parseFloat(q.get('t') || '0') || 0 });
+    document.title = Kit.fichierDe(sc, l) + ' · ' + Math.round(performance.now() - t0) + ' ms';
+    window.__pret = true;
+  }
+  main().catch(echec);
+})();
+</script>
+</body>
+</html>

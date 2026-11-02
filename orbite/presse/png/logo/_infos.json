@@ -1,0 +1,86 @@
+{
+ "logo-orbite-blanc-px4.png": {
+  "titre": "Logo ORBITE blanc (pixel de 4 px)",
+  "usage": "Sur fond sombre ou sur une image. Fond transparent.",
+  "scene": "logo-orbite-blanc-px4",
+  "transparent": true,
+  "apercu": "sombre"
+ },
+ "logo-orbite-blanc-px8.png": {
+  "titre": "Logo ORBITE blanc (pixel de 8 px)",
+  "usage": "Sur fond sombre ou sur une image. Fond transparent.",
+  "scene": "logo-orbite-blanc-px8",
+  "transparent": true,
+  "apercu": "sombre"
+ },
+ "logo-orbite-blanc-px16.png": {
+  "titre": "Logo ORBITE blanc (pixel de 16 px)",
+  "usage": "Sur fond sombre ou sur une image. Fond transparent.",
+  "scene": "logo-orbite-blanc-px16",
+  "transparent": true,
+  "apercu": "sombre"
+ },
+ "logo-orbite-fonce-px8.png": {
+  "titre": "Logo ORBITE foncé (pixel de 8 px)",
+  "usage": "Pour un fond clair. Fond transparent.",
+  "scene": "logo-orbite-fonce-px8",
+  "transparent": true,
+  "apercu": "clair"
+ },
+ "logo-orbite-fonce-px16.png": {
+  "titre": "Logo ORBITE foncé (pixel de 16 px)",
+  "usage": "Pour un fond clair. Fond transparent.",
+  "scene": "logo-orbite-fonce-px16",
+  "transparent": true,
+  "apercu": "clair"
+ },
+ "logo-orbite-studio-edda-blanc-px8.png": {
+  "titre": "Logo ORBITE + STUDIO EDDA blanc (pixel de 8 px)",
+  "usage": "Sur fond sombre. Fond transparent.",
+  "scene": "logo-orbite-studio-edda-blanc-px8",
+  "transparent": true,
+  "apercu": "sombre"
+ },
+ "logo-orbite-studio-edda-blanc-px16.png": {
+  "titre": "Logo ORBITE + STUDIO EDDA blanc (pixel de 16 px)",
+  "usage": "Sur fond sombre. Fond transparent.",
+  "scene": "logo-orbite-studio-edda-blanc-px16",
+  "transparent": true,
+  "apercu": "sombre"
+ },
+ "logo-orbite-studio-edda-fonce-px8.png": {
+  "titre": "Logo ORBITE + STUDIO EDDA foncé (pixel de 8 px)",
+  "usage": "Pour un fond clair. Fond transparent.",
+  "scene": "logo-orbite-studio-edda-fonce-px8",
+  "transparent": true,
+  "apercu": "clair"
+ },
+ "logo-orbite-studio-edda-fonce-px16.png": {
+  "titre": "Logo ORBITE + STUDIO EDDA foncé (pixel de 16 px)",
+  "usage": "Pour un fond clair. Fond transparent.",
+  "scene": "logo-orbite-studio-edda-fonce-px16",
+  "transparent": true,
+  "apercu": "clair"
+ },
+ "icone-1024.png": {
+  "titre": "Icône carrée 1024 × 1024",
+  "usage": "Icône de l’appli, page de jeu, profil. La planète du joueur (menu) et le logo.",
+  "scene": "icone-1024",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "avatar-400.png": {
+  "titre": "Avatar 400 × 400",
+  "usage": "Photo de profil des réseaux (tient dans le cercle de recadrage).",
+  "scene": "avatar-400",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "favicon-512.png": {
+  "titre": "Favicon 512 × 512 (32 × 32 pixels agrandis 16 fois)",
+  "usage": "Favicon, icône d’onglet : réduite à 32 ou 16 px, chaque pixel reste net.",
+  "scene": "favicon-512",
+  "transparent": false,
+  "apercu": "sombre"
+ }
+}
