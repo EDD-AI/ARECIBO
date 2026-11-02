@@ -1907,7 +1907,7 @@ body.mp-game .chat-btn { display: inline-flex; }
 /* Un seul compte à rebours en ligne (v104) : en gros chiffres dans le bouton de combat, comme un
    afficheur (fond sombre) ; rouge sous 10 secondes, il bat pendant les 5 dernières. */
 #fightBtn.mp-count { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; opacity: 1; color: var(--ink); background: rgba(0, 0, 0, 0.6); border: 1px solid var(--line); cursor: var(--cur-hand, pointer); }
-/* « PRÊT ? » (v131) : on touche le compte à rebours (deux fois) pour finir son tour plus tôt. */
+/* « PRÊT ? » (v131) : on maintient le compte à rebours appuyé (v137) pour finir son tour plus tôt. */
 #fightBtn.mp-count small { font-size: 10px; font-weight: 500; letter-spacing: 0.22em; color: var(--gold); }
 #fightBtn.mp-count:disabled { cursor: var(--cur, default); }
 #fightBtn.mp-count:disabled small { color: var(--dim); }
@@ -1917,6 +1917,13 @@ body.mp-game .chat-btn { display: inline-flex; }
 body.mp-hurry #fightBtn.mp-count b { animation: countBeat 1s ease-in-out infinite; }
 @keyframes countBeat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.18); } }
 @media (prefers-reduced-motion: reduce) { body.mp-hurry #fightBtn.mp-count b { animation: none; } }
+/* PRÊT (v137) : on maintient le compte à rebours appuyé ; une barre dorée le remplit en 1 s, et se
+   vide vite si on lâche avant. Pas de sélection de texte ni de menu du téléphone pendant l'appui. */
+#fightBtn { position: relative; overflow: hidden; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+#fightBtn.mp-count::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: rgba(246, 196, 83, 0.22); box-shadow: inset 0 -3px 0 var(--gold); transform: scaleX(0); transform-origin: left center; transition: transform 0.18s ease-out; }
+#fightBtn.mp-count.holding::before { transform: scaleX(1); transition: transform 1s linear; }
+#fightBtn.mp-count.holding { border-color: rgba(246, 196, 83, 0.7); }
+#fightBtn.mp-count > * { position: relative; }
 body.mp-game #skipBtn, body.no-skip #skipBtn { display: none; }
 /* En ligne, les 5 dernières secondes avant le combat : un cadre rouge léger qui palpite et tremble. */
 body.mp-hurry::after {
@@ -2774,3 +2781,12 @@ body:not(.desk) #end { overflow-y: auto; justify-content: flex-start; scrollbar-
 body:not(.desk) #end > * { flex-shrink: 0; }
 body:not(.desk) #end > :first-child { margin-top: auto; }
 body:not(.desk) #end > :last-child { margin-bottom: auto; }
+
+/* Ajouter en ami (v137) : bouton doré dans la liste des rivaux (en partie) et dans la fiche d'un
+   créateur de la salle d'attente ; ses places se touchent. */
+.btn.friend-add { min-height: 36px; padding: 0 14px; font-size: 12px; letter-spacing: 0.12em; color: var(--gold); border-color: rgba(246, 196, 83, 0.5); }
+.btn.friend-add:disabled { color: var(--dim); border-color: var(--line); }
+.rival-board .rv-friend { margin: 6px 0 8px; }
+.friend-tag { margin: 6px 0; font-size: 12px; color: var(--dim); }
+.mp-seat.can-friend { cursor: var(--cur-hand, pointer); }
+.mp-seat.can-friend:hover, .mp-seat.can-friend:focus-visible { border-color: rgba(246, 196, 83, 0.6); outline: none; }
