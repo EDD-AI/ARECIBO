@@ -9,7 +9,7 @@
   const EMBED = (() => { try { return window.self !== window.top; } catch (err) { return true; } })();
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 137;
+  const VERSION = 138;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -138,7 +138,10 @@
   const dur = (ms) => ms / ui.time;
   const center = (el) => { const b = el.getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; };
   const vibrate = (p) => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (err) { /* pas de vibreur */ } };
-  const famColor = (f) => R.FAMILIES[f].color;
+  // La formation Mélange (v138) n'est pas une famille : elle prend l'or des bonus.
+  const famColor = (f) => (f === 'melange' ? '#f6c453' : R.FAMILIES[f].color);
+  // Le nom de la famille d'un astre, et sa seconde famille s'il en a deux (v138).
+  const famLabel = (c) => R.FAMILIES[c.fam].name.toUpperCase() + (c.fam2 ? ' · ' + R.FAMILIES[c.fam2].name.toUpperCase() : '');
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   // Nombres ordinaux (1er, 2e…) selon la langue ; plain = sans balise (pour un toast).
   function ordinal(n, plain) {
@@ -310,6 +313,9 @@
     el.querySelector('.atk').textContent = u.atk;
     el.querySelector('.hp').textContent = u.hp;
     el.style.setProperty('--fam', famColor(c.fam));
+    // Deux familles (v138) : le petit trait est moitié l'une, moitié l'autre.
+    el.classList.toggle('duo', !!c.fam2);
+    if (c.fam2) el.style.setProperty('--fam2', famColor(c.fam2)); else el.style.removeProperty('--fam2');
     let k = '';
     if (u.kw.includes('megarafale')) k += icon('wind') + icon('wind');
     else if (u.kw.includes('rafale')) k += icon('wind');
@@ -2601,7 +2607,7 @@
 
   // Formations : deux astres (ou plus) d'une même famille dans la même rangée.
   const FORM_KEY = 'orbite.formation';
-  const famName = (f) => R.FAMILIES[f].name.toUpperCase();
+  const famName = (f) => (f === 'melange' ? tr('MÉLANGE') : R.FAMILIES[f].name.toUpperCase());
   const kwName = (k) => R.KEYWORDS[k].name.toUpperCase();
   const ROMAN = ['', 'I', 'II', 'III'];
   const rowName = (row) => (row ? tr('ARRIÈRE') : tr('AVANT'));
@@ -2609,8 +2615,8 @@
   // Marque les astres d'une formation (un trait de la couleur de leur famille).
   function markForms(container, forms) {
     for (const el of container.querySelectorAll('.unit')) {
-      const fam = R.CARD[el.dataset.id] && R.CARD[el.dataset.id].fam;
-      const f = forms.find((g) => g.fam === fam && g.row === rowOfEl(el));
+      const c = R.CARD[el.dataset.id];
+      const f = c && forms.find((g) => g.fam !== 'melange' && (g.fam === c.fam || g.fam === c.fam2) && g.row === rowOfEl(el));
       el.classList.toggle('in-form', !!f);
       if (f) el.style.setProperty('--fc', famColor(f.fam));
     }
@@ -3411,7 +3417,7 @@
     return `<div class="sheet-top">
         <div class="orb sheet-orb" data-planet="${u.id}" data-golden="${u.golden ? 1 : 0}" data-shield="${u.kw.includes('bouclier') ? 1 : 0}" data-ghost="${u.kw.includes('renaissance') ? 1 : 0}"></div>
         <div>
-          <span class="fam-chip" style="--c:${f.color}">${c.legend ? tr('LÉGENDAIRE') + ' · ' : ''}${f.name.toUpperCase()} · ${tr('NIVEAU {n}', { n: c.tier })}${u.golden ? ' · ' + tr('DORÉ') : ''}</span>
+          <span class="fam-chip" style="--c:${f.color}">${c.legend ? tr('LÉGENDAIRE') + ' · ' : ''}${famLabel(c)} · ${tr('NIVEAU {n}', { n: c.tier })}${u.golden ? ' · ' + tr('DORÉ') : ''}</span>
           <h2>${esc(c.name)}</h2>
           ${statsHtml(u.atk, u.hp, 'sheet-stats')}
         </div>
@@ -3488,7 +3494,7 @@
     if (orb && orb.dataset.ghost === '1') kw.add('renaissance'); else if (orb && orb.dataset.ghost === '0') kw.delete('renaissance');
     const atk = el.querySelector('.atk') ? el.querySelector('.atk').textContent : c.atk;
     const hp = el.querySelector('.hp') ? el.querySelector('.hp').textContent : c.hp;
-    peek.innerHTML = `<span class="fam-chip" style="--c:${f.color}">${c.legend ? tr('LÉGENDAIRE') + ' · ' : ''}${f.name.toUpperCase()} · ${tr('NIVEAU {n}', { n: c.tier })}${golden ? ' · ' + tr('DORÉ') : ''}</span>
+    peek.innerHTML = `<span class="fam-chip" style="--c:${f.color}">${c.legend ? tr('LÉGENDAIRE') + ' · ' : ''}${famLabel(c)} · ${tr('NIVEAU {n}', { n: c.tier })}${golden ? ' · ' + tr('DORÉ') : ''}</span>
       <h4>${esc(c.name)}</h4>${statsHtml(atk, hp, 'peek-stats')}${effectHtml(id, golden, [...kw])}`;
     peek.hidden = false;
     peek.style.zoom = ui.z === 1 ? '' : String(ui.z);
@@ -3589,10 +3595,10 @@
       const items = p.discover.map((id, i) => {
         const c = R.CARD[id], f = R.FAMILIES[c.fam];
         // La couleur de la famille encadre l'astre ; on rappelle combien de ses cousins sont déjà là.
-        const kin = c.fam === 'neutre' ? 0 : p.board.concat(p.hand).filter((u) => R.famOf(u) === c.fam).length;
-        const mine = R.LAW[p.law].fam === c.fam;
+        const kin = c.fam === 'neutre' ? 0 : p.board.concat(p.hand).filter((u) => R.famsOf(id).some((g) => R.isFam(u, g))).length;
+        const mine = R.isFam(id, R.LAW[p.law].fam);
         return `<button class="discover-item${mine ? ' mine' : ''}${c.legend ? ' legend' : ''}" data-act="choose" data-i="${i}" style="--c:${f.color}">
-          <span class="fam-chip">${c.legend ? tr('LÉGENDAIRE') + ' · ' : ''}${f.name.toUpperCase()}</span>
+          <span class="fam-chip">${c.legend ? tr('LÉGENDAIRE') + ' · ' : ''}${famLabel(c)}</span>
           <div class="orb" data-planet="${id}"></div>
           <b>${esc(c.name)}</b>
           <em class="kin">${mine ? tr('Famille de votre loi') : kin ? tr('{n} dans votre système', { n: kin }) : '&nbsp;'}</em>
@@ -3709,7 +3715,7 @@
   function openFamilies() {
     const p = me();
     const cards = ui.state.families.map((f) => {
-      const n = p.board.filter((u) => R.famOf(u) === f).length;
+      const n = p.board.filter((u) => R.isFam(u, f)).length;
       const ex = [1, 3, 6].map((t) => R.CARDS.find((c) => c.fam === f && c.tier === t && !c.legend && !c.token)).filter(Boolean);
       return `<div class="fam-card${n ? ' mine' : ''}" style="--c:${famColor(f)}">
         <span class="fam-pic">${famIcon(f)}</span>
@@ -3728,10 +3734,12 @@
     const line = (f, head, body) => `<div class="tm-line" style="--c:${famColor(f)}">${famIcon(f, 'tm-ico')}<div><b>${head}</b>${body}</div></div>`;
     const active = R.formationsOf(p.board);
     const now = active.length
-      ? active.map((f) => line(f.fam, `${formLabel(f)} <small>· ${tr('{n} astres', { n: f.n })}</small>`, `<p>${esc(R.formText(f.fam, f.row, f.lvl))}</p>`)).join('')
+      ? active.map((f) => line(f.fam, `${formLabel(f)} <small>· ${f.fam === 'melange' ? tr('{n} familles', { n: f.n }) : tr('{n} astres', { n: f.n })}</small>`, `<p>${esc(R.formText(f.fam, f.row, f.lvl))}</p>`)).join('')
       : `<p class="tm-dim">${tr('Aucune formation pour l’instant.')}</p>`;
     const bonus = ui.state.families.map((f) => line(f, esc(R.FAMILIES[f].name).toUpperCase(),
-      `<p class="fam-form"><b>${tr('AVANT')}</b> ${esc(R.formText(f, 0, 1))}</p><p class="fam-form"><b>${tr('ARRIÈRE')}</b> ${esc(R.formText(f, 1, 1))}</p>`)).join('');
+      `<p class="fam-form"><b>${tr('AVANT')}</b> ${esc(R.formText(f, 0, 1))}</p><p class="fam-form"><b>${tr('ARRIÈRE')}</b> ${esc(R.formText(f, 1, 1))}</p>`)).join('') +
+      // Mélange (v138) : I à 3 familles différentes dans la rangée, II à 4 ou plus.
+      line('melange', tr('MÉLANGE'), `<p class="fam-form">${esc(R.formText('melange', 0, 1))} ${esc(tr('II à 4 familles ou plus : +2/+2.'))}</p>`);
     const phen = R.phenomenaOf(p.board).map((x) => x.kind);
     const phenHtml = Object.entries(R.PHENOMENA).map(([k, ph]) => `<div class="tm-ph ${phen.includes(k) ? 'on' : ''}"><b>✦ ${esc(tr(ph.name)).toUpperCase()}</b>${phen.includes(k) ? ` <small>· ${tr('actif')}</small>` : ''}<p>${esc(tr(ph.text))}</p></div>`).join('');
     const posHtml = ['portee', 'percee', 'garde'].map((k) => `<div class="tm-ph"><b>${icon({ portee: 'range', percee: 'pierce', garde: 'guard' }[k])} ${esc(R.KEYWORDS[k].name).toUpperCase()}</b><p>${esc(R.KEYWORDS[k].text)}</p></div>`).join('');
@@ -3739,7 +3747,7 @@
     openSheet(`<div class="term">
       <div class="tm-bar">${pixArt(FAM_ART.terminal, 'tm-logo')}<span>ORBITE://${tr('SYNERGIES')}</span><i class="tm-cur"></i></div>
       ${sec(tr('VOS FORMATIONS'))}${now}
-      <p class="tm-dim">${tr('Deux astres d’une même famille dans la même rangée forment une formation : niveau I à 2 astres, II à 3, III à 4. Chaque famille a un bonus à l’avant et un autre à l’arrière, au début du combat.')}</p>
+      <p class="tm-dim">${tr('Deux astres d’une même famille dans la même rangée forment une formation : niveau I à 2 astres, II à 3 ou plus. Chaque famille a un bonus à l’avant et un autre à l’arrière, au début du combat. Trois familles différentes dans une rangée forment un Mélange, et un astre à deux familles compte pour les deux.')}</p>
       ${sec(tr('BONUS DE FORMATION'))}${bonus}
       ${sec(tr('PHÉNOMÈNES'))}<p class="tm-dim">${tr('Des combinaisons de placement qui transforment un astre au début du combat. « Juste derrière » : l’astre de l’arrière dans la même colonne.')}</p>${phenHtml}
       ${sec(tr('L’ARRIÈRE AU COMBAT'))}${posHtml}
@@ -3784,6 +3792,8 @@
     anomalie: { pal: { l: '#c8ff3a', m: '#ff4fd8', c: '#5ee7ff' }, rows: ['............', '..mllllllc..', '.mll....llc.', '.mll....llc.', '........llc.', '.......llc..', '......llc...', '.....mll....', '.....mll....', '............', '.....mllc...', '.....mllc...'] },
     nebuleuse: { pal: { p: '#e58bff', v: '#9a6bff', w: '#ffffff', b: '#5ee7ff' }, rows: ['..........w.', '....pp..w...', '..ppvvpp....', '.pvvvvvvpp..', 'pvvwvvbvvvp.', 'pvvvvbbvvvpp', '.pvvvvvvwvvp', '..ppvvvvvpp.', '....ppppp...', '.w.......w..', '............', '............'] },
     neutre: { pal: { w: '#f2efe6', g: '#b8b4a8', d: '#7d796f' }, rows: ['............', '............', '....wwww....', '...wwwwgg...', '..wwwwwggg..', '..wwwwgggd..', '..wwwggggd..', '..wwgggggd..', '...gggggd...', '....dddd....', '............', '............'] },
+    // Mélange (v138) : trois familles qui se rejoignent (Vie, Néant, Brasier), un cœur doré.
+    melange: { pal: { g: '#5fd35a', v: '#9a6bff', o: '#ff8a2a', w: '#f6c453' }, rows: ['............', '....gggg....', '...gggggg...', '...gggggg...', '..vvgwwgoo..', '.vvvvwwoooo.', '.vvvvvooooo.', '.vvvvvooooo.', '.vvvvvooooo.', '..vvvv.ooo..', '............', '............'] },
     legende: { pal: { y: '#ffe28c', o: '#c98a1a', w: '#fff6d0', r: '#ff5a7a', b: '#5ee7ff' }, rows: ['............', '............', '.....ww.....', '.y...yy...y.', '.yy.yyyy.yy.', '.yyyyyyyyyy.', '.yyyyyyyyyy.', '.yyryybyyry.', '.yyyyyyyyyy.', '.oooooooooo.', '............', '............'] },
     terminal: { pal: { s: '#d9d4c4', d: '#8a8678', k: '#0b1f14', g: '#6dff9a' }, rows: ['............', '.ssssssssss.', '.skkkkkkkks.', '.skgkkkkkks.', '.skkgkkkkks.', '.skgkggkkks.', '.skkkkkkkks.', '.sddddddddd.', '.....dd.....', '...ssssss...', '............', '............'] }
   };
@@ -3923,7 +3933,7 @@
         tr('Chaque astre de l’avant frappe l’ennemi <b>en face</b> de lui (les Remparts d’abord), de gauche à droite. Aucun hasard dans les cibles : votre placement décide.'),
         tr('L’arrière a son rôle : <b>Portée</b> attaque depuis l’arrière sans riposte ; <b>Percée</b> frappe l’arrière ennemi ; <b>Garde</b>, à l’avant, protège votre arrière de la Percée.')]],
       [tr('LES SYNERGIES'), [
-        tr('<b>Formation</b> : deux astres d’une même famille dans la même rangée. Chaque famille a un bonus à l’avant et un autre à l’arrière, plus fort à 3 et 4 astres. Mélangez : trois Brasier devant, deux Glace derrière…'),
+        tr('<b>Formation</b> : deux astres d’une même famille dans la même rangée. Chaque famille a un bonus à l’avant et un autre à l’arrière, plus fort à 3 astres. Trois familles différentes dans une rangée : la formation <b>Mélange</b>. Certains astres ont deux familles et comptent pour les deux.'),
         tr('<b>Phénomènes</b> : certaines combinaisons de placement transforment un astre au début du combat. Un Minéral juste derrière un astre le fait grossir ; deux Néant l’un derrière l’autre forment un trou noir ; deux Brasier, une supernova… La liste est dans le terminal des synergies (le petit ordinateur).'),
         tr('<b>Trois copies</b> d’un même astre fusionnent en un <b>astre doré</b> (stats doublées). Le placer offre une <b>découverte</b> du niveau supérieur.')]],
       [tr('LIRE LA PARTIE'), [
@@ -5257,15 +5267,15 @@
       const g = ui.cxFam;
       const groups = R.FAMILY_KEYS.concat(['neutre', 'legend']);
       $('codexFams').innerHTML = groups.map((k) => {
-        const list = cards.filter((c) => (k === 'legend' ? c.legend : c.fam === k && !c.legend));
+        const list = cards.filter((c) => (k === 'legend' ? c.legend : (c.fam === k || c.fam2 === k) && !c.legend));
         const got = list.filter((c) => seen.has(c.id)).length;
         const name = k === 'legend' ? tr('LÉGENDAIRES') : R.FAMILIES[k].name.toUpperCase();
         return `<button class="cx-fam${k === g ? ' on' : ''}" data-cxf="${k}" style="--c:${k === 'legend' ? '#ffe28c' : famColor(k)}">${famIcon(k === 'legend' ? 'legende' : k, 'cx-ico')}<span>${name}</span><small>${got}/${list.length}</small></button>`;
       }).join('');
-      const list = cards.filter((c) => (g === 'legend' ? c.legend : c.fam === g && !c.legend)).sort((a, b) => a.tier - b.tier || (a.name < b.name ? -1 : 1));
+      const list = cards.filter((c) => (g === 'legend' ? c.legend : (c.fam === g || c.fam2 === g) && !c.legend)).sort((a, b) => a.tier - b.tier || (a.name < b.name ? -1 : 1));
       const about = g === 'legend' ? tr('Un seul exemplaire par partie, et rares : 1 chance sur 100 par emplacement de la Création.') : R.FAMILIES[g].text;
       html = `<p class="muted cx-about">${esc(about)}</p><div class="cx-grid">${list.map((c) => (seen.has(c.id)
-        ? `<button class="cx-card" data-cxid="${c.id}" style="--c:${famColor(c.fam)}"><div class="orb" data-planet="${c.id}"></div><b>${esc(c.name)}</b><small>${tr('NIVEAU {n}', { n: c.tier })} · ${c.atk}/${c.hp}</small></button>`
+        ? `<button class="cx-card${c.fam2 ? ' duo' : ''}" data-cxid="${c.id}" style="--c:${famColor(c.fam)}${c.fam2 ? ';--c2:' + famColor(c.fam2) : ''}"><div class="orb" data-planet="${c.id}"></div><b>${esc(c.name)}</b><small>${tr('NIVEAU {n}', { n: c.tier })} · ${c.atk}/${c.hp}</small>${c.fam2 ? `<em class="cx-duo">${famLabel(c)}</em>` : ''}</button>`
         : `<div class="cx-card unknown"><div class="cx-q">?</div><b>???</b><small>${tr('NIVEAU {n}', { n: c.tier })}</small></div>`)).join('')}</div>
         <p class="muted cx-hint">${tr('Les astres se dévoilent quand vous les croisez en partie : dans la Création, une découverte ou chez un rival.')}</p>`;
     } else if (tab === 'lois') {

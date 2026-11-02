@@ -72,7 +72,7 @@ test('nouvelle partie : 8 univers, 5 familles dont celle de la loi, réserve coh
   for (const id of Object.keys(s.pool)) {
     const c = R.CARD[id];
     if (c.legend) { assert.equal(s.poolTotal[id], 1); continue; }
-    assert.ok(c.fam === 'neutre' || s.families.includes(c.fam));
+    assert.ok(c.fam === 'neutre' || s.families.includes(c.fam) || (!!c.fam2 && s.families.includes(c.fam2)), id);
     assert.equal(s.poolTotal[id], R.COPIES[c.tier]);
   }
   assert.equal(s.players[0].board[0].id, 'aube');

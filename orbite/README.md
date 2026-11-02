@@ -370,6 +370,44 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Moins « mono famille » : astres à deux familles, Mélange, combos entre familles (v138)
+
+Pour qu’un système n’ait plus besoin d’une seule famille (comme dans Battlegrounds, où les meilleurs
+plateaux mélangent souvent), plusieurs changements :
+- **7 astres à deux familles** (`fam2`), au moins un par famille. Ils comptent pour les deux partout
+  (synergies « vos X gagnent », formations, phénomènes, réserve, Arrimage, IA) :
+  Comète (Glace + Comètes), Sol (Vie + Brasier), Revenant (Envers + Néant), Tesseract (Anomalies +
+  Machine), Obsidienne (Minéral + Cristal), Voile (Nébuleuses + Tempête), Europe (Lunes + Vie). Ils
+  entrent dans la réserve dès que l’une de leurs familles est en jeu. À l’écran : un trait bicolore sous
+  l’astre, « GLACE · COMÈTES » sur sa fiche, et dans le Codex sous ses deux familles.
+- **Formations moins tout-ou-rien** : une formation monte au plus au **niveau II** (3 astres) ; le 4e
+  astre d’une même famille n’ajoute plus rien. Nouvelle formation **Mélange** : 3 familles différentes
+  ou plus dans une rangée donnent +1/+1 à ses astres (II à 4 familles : +2/+2) ; les neutres ne comptent
+  pas, un astre à deux familles en apporte deux. Elle a son étiquette, sa ligne dans le terminal et son
+  icône pixel.
+- **Combos de placement entre familles** (phénomènes) : **Vapeur** (Glace à l’avant, Brasier juste
+  derrière : 3 dégâts à l’ennemi en face), **Orbite basse** (Lune devant une Machine : Bouclier pour la
+  Lune, +2/+2 pour la Machine), **Pouponnière d’étoiles** (Nébuleuse devant un astre de Vie : +2/+2 et
+  Renaissance).
+- **4 neutres du mélange** (144 astres au total) : **Amas** (niv. 2 : un astre de chaque famille du
+  système gagne +1/+1), **Radiotélescope** (niv. 3 : découverte d’une famille absente du système),
+  **Point de Lagrange** (niv. 4 : un astre d’une famille absente gagne +2/+2 quand on le joue),
+  **Constellation** (niv. 6 : +1/+1 aux autres astres par famille différente, 4 au plus).
+- **Équilibrage** (outil `familles.js`, IA experte) : les Anomalies, dont la formation de l’avant perdait
+  le plus au plafond, gagnent un mot-clé de plus par niveau (I : 2, II : 3) : 38 % → 50 % ; la formation
+  de l’arrière du Minéral donne +n/+n (au lieu de +n/+2n) : 59 % → 52 %. Comètes laissées telles quelles
+  (demande du créateur). En duel (300 parties par famille, ± 6) : Tempête 57 %, Glace 55, Minéral 54,
+  Anomalies 53, Néant 52, Machine 49, Cristal 49, Brasier 49, Vie 48, Lunes 46, Nébuleuses 45,
+  Comètes 45, Envers 43. En mêlée (`hybrides.js`, 120 parties), les IA à deux familles gagnent
+  maintenant plus souvent que les IA à une seule : 14,0 % contre 11,0 % (rang moyen 4,40 contre 4,60).
+- **Demandes d’ami** : celui qui reçoit une demande voit tout de suite une bulle « X vous demande en
+  ami » avec **ACCEPTER**, même en partie ; au lancement, aussi pour les demandes reçues hors ligne (3 au
+  plus). Avant, la demande attendait dans Profil → Amis sans prévenir, et l’autre croyait que l’ajout
+  ne marchait pas. Parcours vérifié contre les émulateurs Firebase (code ami, salle d’attente, ACCEPTER).
+- Corrigé au passage : le texte complet de Luna (« Garde. Rempart. Fin de cycle… », v137) n’était pas
+  traduit. Nouveau fichier de traductions : `js/lang/melange.js`. Tests : `tests/melange.test.mjs` ;
+  `tools/combinaisons.js` compte maintenant les astres à deux familles dans la réserve.
+
 ## Pouvoirs uniques, Comètes, PRÊT à maintenir, ajouter en ami (v137)
 
 - **Plus aucun astre n’a le pouvoir d’un autre** (un test le vérifie pour tous les astres) :

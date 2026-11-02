@@ -93,8 +93,10 @@ Free, in your browser, on phone or PC.
 3. **Place them on two rows.** The front row attacks and takes the hits. The back row stays safe and
    moves up once the front has fallen. Each front-row orb strikes the enemy right in front of it: no
    random targets, your placement decides.
-4. **Form families.** Two or more orbs of the same family in the same row form a formation (levels I,
-   II and III). Each family has one bonus in the front row and another in the back.
+4. **Form families, or mix them.** Two or more orbs of the same family in the same row form a formation
+   (levels I and II). Each family has one bonus in the front row and another in the back. Three different
+   families in one row form a **Mix**, some orbs belong to two families, and placement combos link
+   families together (Ice in front of Blaze makes Steam…).
 5. **Fuse.** Three copies of the same orb fuse into a **golden orb**: stats and effects doubled, and you
    pick one of three orbs from the next level up.
 6. **Let them fight.** Combat plays out on its own. In a duel, the first universe at 0 HP loses. In a
@@ -134,7 +136,7 @@ Your first duel is guided step by step.
 - **Anomalies**: chaos. Random orbs, discoveries and unexpected keywords.
 - **Nebulae**: gas clouds that drain enemy life and steal the orbs they have met.
 
-**140 orbs**, including **15 legendaries**. A legendary exists in a single copy per game, and it rarely
+**144 orbs**, including **15 legendaries**. A legendary exists in a single copy per game, and it rarely
 shows up: Primordia, Ouroboros, Eye of the Void, Maelstrom, Great Attractor, Omega, Blood Moon, Pangaea,
 Oumuamua, Betelgeuse, Absolute Prism, Absolute Zero, Matrioshka Brain, Naked Singularity, Pillars of
 Creation.
@@ -264,8 +266,10 @@ Gratuit, dans votre navigateur, sur téléphone ou sur PC.
 3. **Placez-les sur deux rangées.** L’avant attaque et encaisse. L’arrière reste à l’abri et avance
    quand l’avant est tombé. Chaque astre de l’avant frappe l’ennemi en face de lui : aucune cible au
    hasard, c’est le placement qui décide.
-4. **Formez des familles.** Deux astres ou plus d’une même famille dans la même rangée forment une
-   formation (niveaux I, II et III). Chaque famille a un bonus à l’avant et un autre à l’arrière.
+4. **Formez des familles, ou mélangez-les.** Deux astres ou plus d’une même famille dans la même
+   rangée forment une formation (niveaux I et II). Chaque famille a un bonus à l’avant et un autre à
+   l’arrière. Trois familles différentes dans une rangée forment un **Mélange**, certains astres ont deux
+   familles, et des combos de placement relient les familles (la Glace devant un Brasier : Vapeur…).
 5. **Fusionnez.** Trois copies d’un même astre fusionnent en un **astre doré** : statistiques et effets
    doublés, et vous choisissez un astre parmi trois du niveau supérieur.
 6. **Laissez-les combattre.** Le combat se joue tout seul. En duel, le premier univers à 0 PV perd. En
@@ -309,7 +313,7 @@ Votre premier duel est guidé pas à pas.
 - **Nébuleuses** : des nuages de gaz qui aspirent la vie des ennemis et volent les astres qu’ils ont
   croisés.
 
-**140 astres**, dont **15 légendaires**. Une légendaire n’existe qu’en un seul exemplaire par partie, et
+**144 astres**, dont **15 légendaires**. Une légendaire n’existe qu’en un seul exemplaire par partie, et
 elle se montre rarement : Primordia, Ouroboros, Œil du Vide, Maelström, Grand Attracteur, Oméga, Lune de
 sang, Pangée, Oumuamua, Bételgeuse, Prisme absolu, Zéro absolu, Cerveau Matriochka, Singularité nue,
 Piliers de la Création.
@@ -443,7 +447,7 @@ of the same family in the same row form a formation. Three copies of an orb fuse
 one standing wins.
 
 **In this version:**
-- 13 families and 140 orbs, including 15 legendaries
+- 13 families and 144 orbs, including 15 legendaries
 - 16 laws, 11 cosmic events, 12 relics
 - Duel and 8-player melee against the AI, a daily challenge and daily missions
 - Online play with friends, and ranked games with 9 ranks
@@ -468,7 +472,7 @@ son tour. Deux astres d’une même famille dans la même rangée forment une fo
 astre fusionnent en un astre doré. Le dernier debout gagne.
 
 **Dans cette version :**
-- 13 familles et 140 astres, dont 15 légendaires
+- 13 familles et 144 astres, dont 15 légendaires
 - 16 lois, 11 événements cosmiques, 12 reliques
 - Duel et mêlée à 8 contre l’IA, défi du jour et missions du jour
 - Parties en ligne entre amis, et classé en 9 rangs
@@ -513,7 +517,7 @@ Rien de tout cela n’a pu être testé d’ici : le réseau du conteneur bloqu
 
 - 13 familles : `FAMILY_KEYS` dans `js/rules.js` ; noms et phrases d’identité : `FAMILIES` (anglais :
   `js/lang/regles.js`).
-- 140 astres = 13 × 9 + 8 neutres + 15 légendaires : `CARDS` dans `js/rules.js`, sans les 2 jetons
+- 144 astres = 13 × 9 + 12 neutres + 15 légendaires : `CARDS` dans `js/rules.js`, sans les 2 jetons
   (`token`) ; c’est aussi le compteur du Codex (`codexCards` dans `js/game.js`).
 - 15 légendaires (`legend: true`), un seul exemplaire par partie : `newGame` (`state.pool[c.id] = 1`).
 - 5 familles par partie : `ACTIVE_FAMILIES` ; 1 287 = combinaisons de 5 parmi 13.
@@ -521,7 +525,7 @@ Rien de tout cela n’a pu être testé d’ici : le réseau du conteneur bloqu
 - 11 événements : `EVENTS` ; 12 reliques aux cycles 4 et 8 : `RELICS`, `RELIC_ROUNDS`.
 - 10 phénomènes : `PHENOMENA` ; 11 mots-clés : `KEYWORDS` (dont Portée, Percée, Garde : `POSITION_KW`).
 - Coûts : `BUY_COST` 3, `ROLL_COST` 1 ; énergie `min(10, cycle + 2)` (`MAX_GOLD`) ; vente `sellGain`.
-- Deux rangées de 4 : `ROW_MAX` ; formation dès 2 astres : `FORM_MIN`, niveaux I à III : `FORMATIONS`.
+- Deux rangées de 4 : `ROW_MAX` ; formation dès 2 astres : `FORM_MIN`, niveaux I et II : `FORM_LVL_MAX` ; Mélange dès 3 familles : `MIX_MIN` ; 7 astres à deux familles : `fam2`.
 - Doré : trois copies, statistiques doublées (`makeUnit`), découverte au niveau supérieur (`dtier`),
   3 choix (4 avec Révélation) : `openDiscover`.
 - Duel à 60 PV : `START_HP` 30 × `DUEL.hp` 2 ; mêlée à 8 : `PLAYERS`.

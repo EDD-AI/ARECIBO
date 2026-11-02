@@ -45,6 +45,9 @@
   // {n} = niveau, {d} = deux fois le niveau. « Ils » : les astres de la formation. front1 / back1 :
   // la phrase du niveau I quand le pluriel ne convient pas.
   const FORM_MIN = 2;
+  const FORM_LVL_MAX = 2;
+  // Formation Mélange (v138) : à partir de 3 familles différentes dans une rangée.
+  const MIX_MIN = 3;
   const FORMATIONS = {
     vie: { front: 'Ils gagnent +{n}/+{n}.', back: 'Après chaque attaque de votre avant, l’attaquant récupère {d} PV.' },
     neant: { front: 'Quand l’un d’eux s’effondre, les autres gagnent +{n}/+{n}.', back: 'Quand un astre de votre avant s’effondre, ils gagnent +{n}/+{n}.' },
@@ -52,13 +55,17 @@
     brasier: { front: 'Chacun inflige {d} dégâts à l’ennemi en face.', back: 'Inflige {d} dégâts à l’ennemi de l’avant qui a le moins de PV.' },
     glace: { front: 'Ils gagnent +{n}/+{n} ; les {n} premiers gagnent Bouclier.', front1: 'Ils gagnent +{n}/+{n} ; le premier gagne Bouclier.', back: 'Les ennemis de l’avant perdent {d} Attaque.' },
     tempete: { front: 'Ils gagnent +{n}/+{d}, puis +{n} Attaque après chacune de leurs attaques.', back: 'Vos astres de l’avant gagnent +{n}/+{d}, et le premier Rafale.' },
-    mineral: { front: 'Ils gagnent +{n}/+{d} ; le plus robuste gagne Rempart.', back: 'Vos astres de l’avant gagnent +{n}/+{d}.' },
+    // v138 : l'arrière donne +{n}/+{n} (et non plus +{n}/+{d}) : le Minéral restait à 59 % en duel.
+    mineral: { front: 'Ils gagnent +{n}/+{d} ; le plus robuste gagne Rempart.', back: 'Vos astres de l’avant gagnent +{n}/+{n}.' },
     machine: { front: 'Ils gagnent +{d} Attaque.', back: 'Chacun donne ses mots-clés et +{n}/+{n} à l’astre de l’avant juste devant lui.' },
     lune: { front: 'Leurs voisins de rangée gagnent +{n}/+{n}.', back: 'L’astre de l’avant juste devant chacune gagne +{d}/+{d}.' },
     comete: { front: 'Ils gagnent +{n} Attaque et attaquent avant le reste de l’avant.', back: 'Quand votre avant est tombé, ils avancent avec +{d}/+{n}.' },
     cristal: { front: 'Ils gagnent +{n}/+{n}, le double si l’arrière a aussi une formation de Cristal.', back: 'Tous vos Cristaux gagnent +{n}/+{n}.' },
-    anomalie: { front: 'Chacun gagne {n} mots-clés aléatoires.', front1: 'Chacun gagne un mot-clé aléatoire.', back: '{n} astres de votre avant gagnent un mot-clé aléatoire.', back1: 'Un astre de votre avant gagne un mot-clé aléatoire.' },
-    nebuleuse: { front: 'Après leur attaque, ils volent {n} PV à un ennemi de l’avant.', back: 'Début de combat : vos astres de l’avant volent chacun {n} PV à l’ennemi en face.' }
+    // v138 : un mot-clé de plus par niveau (I : 2, II : 3), pour compenser le plafond au niveau II.
+    anomalie: { front: 'Chacun gagne {m} mots-clés aléatoires.', back: '{n} astres de votre avant gagnent un mot-clé aléatoire.', back1: 'Un astre de votre avant gagne un mot-clé aléatoire.' },
+    nebuleuse: { front: 'Après leur attaque, ils volent {n} PV à un ennemi de l’avant.', back: 'Début de combat : vos astres de l’avant volent chacun {n} PV à l’ennemi en face.' },
+    // v138 : pas une famille ; 3 familles différentes dans la rangée (II : 4 ou plus).
+    melange: { front: 'Trois familles différentes ou plus dans la rangée : ses astres gagnent +{n}/+{n}.', back: 'Trois familles différentes ou plus dans la rangée : ses astres gagnent +{n}/+{n}.' }
   };
 
   const FAMILIES = {
@@ -110,6 +117,10 @@
     trounoir: { name: 'Trou noir', text: 'Un astre du Néant à l’avant, avec un astre du Néant juste derrière lui, s’effondre en trou noir : Rempart, et +1/+1 chaque fois qu’un astre s’effondre pendant le combat.' },
     supernova: { name: 'Supernova', text: 'Un astre du Brasier à l’avant, avec un astre du Brasier juste derrière lui, explose en s’effondrant : 4 dégâts à tous les ennemis de l’avant.' },
     eclipse: { name: 'Éclipse', text: 'Une Lune à l’avant, avec un Soleil juste derrière elle : l’ennemi en face d’elle perd la moitié de son Attaque.' },
+    // v138 : combos entre deux familles différentes.
+    vapeur: { name: 'Vapeur', text: 'Un astre de Glace à l’avant, avec un Brasier juste derrière lui : un jet de vapeur inflige 3 dégâts à l’ennemi en face.' },
+    orbitebasse: { name: 'Orbite basse', text: 'Une Lune à l’avant, avec une Machine juste derrière elle : la Lune gagne Bouclier et la Machine +2/+2.' },
+    pepiniere: { name: 'Pouponnière d’étoiles', text: 'Une Nébuleuse à l’avant, avec un astre de Vie juste derrière elle : la Nébuleuse gagne +2/+2 et l’astre de Vie Renaissance.' },
     habitable: { name: 'Zone habitable', text: 'Un astre de Vie à l’avant, avec un Soleil juste derrière lui : +2/+3 et Renaissance.' },
     queue: { name: 'Queue de comète', text: 'Une Comète à l’avant, avec une Comète juste derrière elle : Rafale et +2 Attaque.' },
     halo: { name: 'Halo', text: 'Un astre de Glace à l’avant, avec un astre de Glace juste derrière lui : tous deux gagnent Bouclier.' },
@@ -135,8 +146,8 @@
       play(x, u, m) { for (const v of x.fam('vie', u)) x.buff(v, m, m); } },
     { id: 'sylve', fam: 'vie', tier: 2, atk: 3, hp: 4, name: 'Sylve', look: { type: 'terran', seed: 404, hueShift: 40 },
       text: 'Habitable : fin de cycle, avec un Soleil, ses voisins de Vie gagnent +{1}/+{1}.',
-      endTurn(x, u, m) { x.habitable((b) => { for (const v of x.neighbors(u)) if (famOf(v) === 'vie') x.buff(v, m + b, m + b); }); } },
-    { id: 'sol', fam: 'vie', tier: 3, atk: 3, hp: 5, name: 'Sol', sun: true, look: { type: 'star', seed: 505, starClass: 'naine jaune' },
+      endTurn(x, u, m) { x.habitable((b) => { for (const v of x.neighbors(u)) if (isFam(v, 'vie')) x.buff(v, m + b, m + b); }); } },
+    { id: 'sol', fam: 'vie', fam2: 'brasier', tier: 3, atk: 3, hp: 5, name: 'Sol', sun: true, look: { type: 'star', seed: 505, starClass: 'naine jaune' },
       text: 'Soleil. Vos effets Habitable donnent +{1}/+{1} de plus.' },
     { id: 'terra', fam: 'vie', tier: 3, atk: 3, hp: 5, name: 'Terra', look: { type: 'earth', seed: 606, moons: 1 },
       text: 'Habitable : fin de cycle, avec un Soleil, 2 autres astres de Vie gagnent +{1}/+{1}.',
@@ -188,7 +199,7 @@
     { id: 'miroir', fam: 'envers', tier: 2, atk: 3, hp: 4, name: 'Miroir', look: { type: 'crystal', seed: 1414, mood: 'envers', flip: true },
       text: 'Effondrement : l’allié à sa gauche gagne Renaissance.',
       death(c, u, m, i) { c.kw(c.sideList(u.side)[i - 1], 'renaissance'); } },
-    { id: 'revenant', fam: 'envers', tier: 2, atk: 3, hp: 3, name: 'Revenant', kw: ['renaissance'], look: { type: 'dead', seed: 1515, mood: 'envers', flip: true },
+    { id: 'revenant', fam: 'envers', fam2: 'neant', tier: 2, atk: 3, hp: 3, name: 'Revenant', kw: ['renaissance'], look: { type: 'dead', seed: 1515, mood: 'envers', flip: true },
       text: 'Renaissance. Quand il revient, gagne +{3}/+{3}.',
       reborn(c, u, m) { c.buff(u, 3 * m, 3 * m); } },
     { id: 'antipode', fam: 'envers', tier: 3, atk: 4, hp: 4, name: 'Antipode', look: { type: 'toxic', seed: 1616, mood: 'envers', flip: true, shape: 'fendu' },
@@ -224,7 +235,7 @@
       start(c, u, m) { c.dmg(u, c.ranked(1 - u.side)[0], 3 * m); } },
     { id: 'pyro', fam: 'brasier', tier: 3, atk: 3, hp: 5, name: 'Pyrosphère', look: { type: 'lava', seed: 2626, debris: true },
       text: 'Après l’attaque d’un allié de Brasier : inflige {1} dégât à un ennemi aléatoire.',
-      allyAttack(c, u, m, a) { if (famOf(a) === 'brasier') c.dmg(u, c.rnd(c.allies(1 - u.side)), m); } },
+      allyAttack(c, u, m, a) { if (isFam(a, 'brasier')) c.dmg(u, c.rnd(c.allies(1 - u.side)), m); } },
     { id: 'nova', fam: 'brasier', tier: 4, atk: 5, hp: 4, name: 'Nova', look: { type: 'star', seed: 2727, starClass: 'naine jaune', shell: true },
       text: 'Effondrement : inflige {3} dégâts à tous les ennemis.',
       death(c, u, m) { for (const v of c.allies(1 - u.side)) c.dmg(u, v, 3 * m); } },
@@ -244,7 +255,7 @@
     { id: 'boreale', fam: 'glace', tier: 2, atk: 3, hp: 4, name: 'Boréale', look: { type: 'ice', seed: 3333 },
       text: 'Quand un Bouclier allié se brise, gagne +{2} Attaque pour le combat.',
       shieldBreak(c, u, m) { c.buff(u, 2 * m, 0); } },
-    { id: 'comete', fam: 'glace', tier: 2, atk: 3, hp: 3, name: 'Comète', kw: ['bouclier'], look: { type: 'ice', seed: 3434, shape: 'double' },
+    { id: 'comete', fam: 'glace', fam2: 'comete', tier: 2, atk: 3, hp: 3, name: 'Comète', kw: ['bouclier'], look: { type: 'ice', seed: 3434, shape: 'double' },
       text: 'Bouclier. Effondrement : un allié aléatoire gagne Bouclier.',
       death(c, u) { c.kw(c.rnd(c.allies(u.side).filter((v) => !v.kw.includes('bouclier'))), 'bouclier'); } },
     // Sérac (v89, ex-« Cristal », trop proche de la famille Cristal) : un monde de glace fracturé au cœur
@@ -262,7 +273,7 @@
       shieldBreak(c, u, m) { for (const v of c.alliesFam(u.side, 'glace')) c.buff(v, 3 * m, 3 * m); } },
     { id: 'hiver', fam: 'glace', tier: 6, atk: 8, hp: 10, name: 'Hiver éternel', kw: ['rempart', 'bouclier'], look: { type: 'ice', seed: 3939, ring: true, moons: 1 },
       text: 'Rempart. Bouclier. Quand un allié de Glace détruit un ennemi, il regagne Bouclier.',
-      allyKill(c, u, m, killer) { if (famOf(killer) === 'glace') c.kw(killer, 'bouclier'); } },
+      allyKill(c, u, m, killer) { if (isFam(killer, 'glace')) c.kw(killer, 'bouclier'); } },
 
     // TEMPÊTE
     { id: 'brume', fam: 'tempete', tier: 1, atk: 2, hp: 4, name: 'Brume', look: { type: 'gas', seed: 4141, hueShift: 180 },
@@ -281,7 +292,7 @@
       attack(c, u, m) { c.buff(u, m, 0); } },
     { id: 'orage', fam: 'tempete', tier: 3, atk: 3, hp: 6, name: 'Orage', look: { type: 'gas', seed: 4646, moons: 2 },
       text: 'Quand vous achetez un astre de Tempête, vos astres de Tempête gagnent +{1}/+{1}.',
-      buy(x, u, m, b) { if (famOf(b) === 'tempete') for (const v of x.fam('tempete')) x.buff(v, m, m); } },
+      buy(x, u, m, b) { if (isFam(b, 'tempete')) for (const v of x.fam('tempete')) x.buff(v, m, m); } },
     { id: 'titan', fam: 'tempete', tier: 4, atk: 5, hp: 7, name: 'Titan', look: { type: 'gas', seed: 4747, ring: true, moons: 1 },
       text: 'Fin de cycle : vos astres de Tempête gagnent +{2}/+{1}.',
       endTurn(x, u, m) { for (const v of x.fam('tempete')) x.buff(v, 2 * m, m); } },
@@ -309,7 +320,7 @@
     { id: 'geode', fam: 'mineral', tier: 3, atk: 4, hp: 4, name: 'Géode', look: { type: 'moon', seed: 5656, shape: 'brisee', coreHue: 150 },
       text: 'Fin de cycle : vos Remparts gagnent +{0}/+{1}.',
       endTurn(x, u, m) { for (const v of x.board().filter((v) => v.kw.includes('rempart'))) x.buff(v, 0, m); } },
-    { id: 'obsidienne', fam: 'mineral', tier: 4, atk: 4, hp: 7, name: 'Obsidienne', kw: ['rempart', 'bouclier'], look: { type: 'crystal', seed: 5757, debris: true, shape: 'amas', mood: 'obsidienne' },
+    { id: 'obsidienne', fam: 'mineral', fam2: 'cristal', tier: 4, atk: 4, hp: 7, name: 'Obsidienne', kw: ['rempart', 'bouclier'], look: { type: 'crystal', seed: 5757, debris: true, shape: 'amas', mood: 'obsidienne' },
       text: 'Rempart. Bouclier.' },
     { id: 'monolithe', fam: 'mineral', tier: 5, atk: 5, hp: 9, name: 'Monolithe', kw: ['rempart'], look: { type: 'desert', seed: 5858, ring: true, shape: 'monolithe' },
       text: 'Rempart. Début de combat : vos autres Remparts gagnent +{2}/+{2}.',
@@ -359,11 +370,24 @@
     { id: 'pelerin', fam: 'neutre', tier: 3, atk: 3, hp: 4, name: 'Pèlerin', look: { type: 'terran', seed: 7575, ring: true },
       text: 'Fin de cycle : gagne +{1}/+{1} par famille différente parmi vos autres astres (3 au plus).',
       endTurn(x, u, m) { const n = Math.min(3, new Set(x.others(u).map(famOf).filter((f) => f !== 'neutre')).size); x.buff(u, n * m, n * m); } },
+    // Neutres du mélange (v138) : ils récompensent les systèmes à plusieurs familles.
+    { id: 'amas', fam: 'neutre', tier: 2, atk: 3, hp: 3, name: 'Amas', look: { type: 'star', seed: 7801, starClass: 'géante bleue', shape: 'amas' },
+      text: 'Naissance : un astre aléatoire de chaque famille de votre système gagne +{1}/+{1}.',
+      play(x, u, m) { for (const f of FAMILY_KEYS) x.buff(x.rnd(x.fam(f, u)), m, m); } },
+    { id: 'radiotelescope', fam: 'neutre', tier: 3, atk: 2, hp: 5, name: 'Radiotélescope', look: { type: 'mecha', seed: 7802, shape: 'antenne', hueShift: 200 },
+      text: 'Naissance : découvrez un astre de votre niveau d’une famille absente de votre système.',
+      play(x, u) { u.dtier = Math.max(1, x.p.tier); u.dnew = true; } },
+    { id: 'lagrange', fam: 'neutre', tier: 4, atk: 4, hp: 6, name: 'Point de Lagrange', look: { type: 'glass', seed: 7803, ring: true },
+      text: 'Quand vous jouez un astre d’une famille absente de votre système, il gagne +{2}/+{2}.',
+      allyPlay(x, u, m, b) { const others = x.board().filter((v) => v !== b); if (famsOf(b).some((f) => f !== 'neutre' && !others.some((v) => isFam(v, f)))) x.buff(b, 2 * m, 2 * m); } },
     { id: 'pulsar', fam: 'neutre', tier: 4, atk: 4, hp: 4, name: 'Pulsar', kw: ['bouclier', 'rafale'], look: { type: 'star', seed: 7676, starClass: 'géante bleue' },
       text: 'Bouclier. Rafale.' },
     { id: 'nebuleuse', fam: 'neutre', tier: 5, atk: 4, hp: 6, name: 'Nébuleuse', look: { type: 'gas', seed: 7777, shell: true },
       text: 'Fin de cycle : vos autres astres gagnent +{1}/+{1}.',
       endTurn(x, u, m) { for (const v of x.others(u)) x.buff(v, m, m); } },
+    { id: 'constellation', fam: 'neutre', tier: 6, atk: 6, hp: 8, name: 'Constellation', look: { type: 'star', seed: 7804, starClass: 'naine jaune', shell: true, debris: true },
+      text: 'Début de combat : vos autres astres gagnent +{1}/+{1} pour le combat par famille différente dans votre système (4 au plus).',
+      start(c, u, m) { const set = new Set(); for (const v of c.allies(u.side)) for (const f of famsOf(v)) if (f !== 'neutre') set.add(f); const n = Math.min(4, set.size) * m; if (n) for (const v of c.allies(u.side)) if (v !== u) c.buff(v, n, n); } },
     { id: 'origine', fam: 'neutre', tier: 6, atk: 7, hp: 7, name: 'Origine', look: { type: 'crystal', seed: 7878, shell: true },
       text: 'Début de combat : vos autres astres gagnent +{2}/+{2}.',
       start(c, u, m) { for (const v of c.allies(u.side)) if (v !== u) c.buff(v, 2 * m, 2 * m); } },
@@ -384,7 +408,7 @@
     { id: 'titania', fam: 'lune', tier: 3, atk: 3, hp: 5, name: 'Titania', kw: ['rempart'], look: { type: 'ice', seed: 9105 },
       text: 'Rempart. Début de combat : ses voisins gagnent Bouclier.',
       start(c, u) { for (const v of c.neighbors(u)) c.kw(v, 'bouclier'); } },
-    { id: 'europe', fam: 'lune', tier: 3, atk: 4, hp: 4, name: 'Europe', look: { type: 'moon', seed: 9106, hueShift: 195, light: [0.8, 0.22, -0.5], crescent: true },
+    { id: 'europe', fam: 'lune', fam2: 'vie', tier: 3, atk: 4, hp: 4, name: 'Europe', look: { type: 'moon', seed: 9106, hueShift: 195, light: [0.8, 0.22, -0.5], crescent: true },
       text: 'Fin de cycle : vos autres Lunes gagnent +{1}/+{1}.',
       endTurn(x, u, m) { for (const v of x.fam('lune', u)) x.buff(v, m, m); } },
     { id: 'ganymede', fam: 'lune', tier: 4, atk: 5, hp: 6, name: 'Ganymède', look: { type: 'moon', seed: 9107, hueShift: 200, moons: 1 },
@@ -433,7 +457,7 @@
     { id: 'quartz', fam: 'cristal', tier: 1, atk: 2, hp: 2, name: 'Quartz', look: { type: 'crystal', seed: 9301, shape: 'monolithe' },
       text: 'Quand vous jouez un autre Cristal, gagne +{2}/+{2} (une seule fois).',
       textGold: 'Quand vous jouez un autre Cristal, gagne +3/+3 (2 fois au plus).',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal' && (u.res || 0) < m) { u.res = (u.res || 0) + 1; x.buff(u, m + 1, m + 1); } } },
+      allyPlay(x, u, m, b) { if (isFam(b, 'cristal') && (u.res || 0) < m) { u.res = (u.res || 0) + 1; x.buff(u, m + 1, m + 1); } } },
     { id: 'amethyste', fam: 'cristal', tier: 1, atk: 2, hp: 3, name: 'Améthyste', look: { type: 'crystal', seed: 9302, hueShift: 60, shape: 'amas' },
       text: 'Naissance : un autre Cristal aléatoire gagne +{1} PV.',
       play(x, u, m) { x.buff(x.rnd(x.fam('cristal', u)), 0, m); } },
@@ -445,14 +469,14 @@
       start(c, u, m) { const n = Math.min(3, c.alliesFam(u.side, 'cristal').length - 1) * m; if (n > 0) c.buff(u, n, n); } },
     { id: 'rubis', fam: 'cristal', tier: 3, atk: 4, hp: 4, name: 'Rubis', look: { type: 'crystal', seed: 9305, hueShift: 300 },
       text: 'Quand vous jouez un Cristal, il gagne +{1}/+{1}.',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') x.buff(b, m, m); } },
+      allyPlay(x, u, m, b) { if (isFam(b, 'cristal')) x.buff(b, m, m); } },
     { id: 'opale', fam: 'cristal', tier: 3, atk: 3, hp: 5, name: 'Opale', kw: ['bouclier'], look: { type: 'crystal', seed: 9306, shell: true },
       text: 'Bouclier. Début de combat : les Cristaux à ses côtés gagnent Bouclier.',
-      start(c, u) { for (const v of c.neighbors(u)) if (famOf(v) === 'cristal') c.kw(v, 'bouclier'); } },
+      start(c, u) { for (const v of c.neighbors(u)) if (isFam(v, 'cristal')) c.kw(v, 'bouclier'); } },
     { id: 'emeraude', fam: 'cristal', tier: 4, atk: 5, hp: 5, name: 'Émeraude', look: { type: 'crystal', seed: 9307, hueShift: 120, shape: 'foret' },
       text: 'Quand vous jouez un Cristal, deux Cristaux aléatoires gagnent +{1} Attaque.',
       allyPlay(x, u, m, b) {
-        if (famOf(b) !== 'cristal') return;
+        if (!isFam(b, 'cristal')) return;
         const l = x.fam('cristal'), a = x.rnd(l);
         x.buff(a, m, 0);
         x.buff(x.rnd(l.filter((v) => v !== a)), m, 0);
@@ -462,7 +486,7 @@
       start(c, u, m) { for (const v of c.alliesFam(u.side, 'cristal')) if (v !== u) c.buff(v, m, m); } },
     { id: 'coeurcristal', fam: 'cristal', tier: 6, atk: 8, hp: 8, name: 'Cœur de cristal', look: { type: 'crystal', seed: 9309, shell: true, shape: 'amas' },
       text: 'Quand vous jouez un Cristal, vos Cristaux gagnent +{1}/+{1}.',
-      allyPlay(x, u, m, b) { if (famOf(b) === 'cristal') for (const v of x.fam('cristal')) x.buff(v, m, m); } },
+      allyPlay(x, u, m, b) { if (isFam(b, 'cristal')) for (const v of x.fam('cristal')) x.buff(v, m, m); } },
 
     // ANOMALIES : le hasard, des astres qui surgissent de nulle part.
     { id: 'fluctuation', fam: 'anomalie', tier: 1, atk: 2, hp: 2, name: 'Fluctuation', look: { type: 'portal', seed: 9401, hueShift: 90 },
@@ -477,7 +501,7 @@
     { id: 'troublanc', fam: 'anomalie', tier: 2, atk: 2, hp: 4, name: 'Trou blanc', look: { type: 'star', seed: 9404, starClass: 'étoile blanche' },
       text: 'Effondrement : invoque un astre de niveau 2 aléatoire.',
       death(c, u, m, i) { for (let k = 0; k < m; k++) c.summonRandom(u.side, 2, i); } },
-    { id: 'tesseract', fam: 'anomalie', tier: 3, atk: 4, hp: 4, name: 'Tesseract', look: { type: 'mecha', seed: 9405, hueShift: 80, shape: 'bloc' },
+    { id: 'tesseract', fam: 'anomalie', fam2: 'machine', tier: 3, atk: 4, hp: 4, name: 'Tesseract', look: { type: 'mecha', seed: 9405, hueShift: 80, shape: 'bloc' },
       text: 'Naissance : découvrez un astre de votre niveau.',
       play(x, u) { u.dtier = Math.max(1, x.p.tier); } },
     { id: 'pulsation', fam: 'anomalie', tier: 3, atk: 3, hp: 5, name: 'Pulsation', look: { type: 'star', seed: 9406, starClass: 'géante bleue', shape: 'diamant' },
@@ -495,7 +519,7 @@
 
     // NÉBULEUSES (v107) : des nuages de gaz qui volent des PV en combat (le drain : la cible les perd,
     // la Nébuleuse les gagne) et volent des astres déjà affrontés (une copie prise dans la réserve).
-    { id: 'voile', fam: 'nebuleuse', tier: 1, atk: 3, hp: 4, name: 'Voile', look: { type: 'nebula', seed: 7111, neb: { style: 'bulle', rim: 230, gas: 212, offset: 0.28, fill: 0.85 } },
+    { id: 'voile', fam: 'nebuleuse', fam2: 'tempete', tier: 1, atk: 3, hp: 4, name: 'Voile', look: { type: 'nebula', seed: 7111, neb: { style: 'bulle', rim: 230, gas: 212, offset: 0.28, fill: 0.85 } },
       kw: ['voldevie'], text: 'Vol de vie.' },
     { id: 'hibou', fam: 'nebuleuse', tier: 1, atk: 3, hp: 3, name: 'Hibou', look: { type: 'nebula', seed: 7112, neb: { style: 'anneau', rim: 28, gas: 222 } },
       text: 'Naissance : volez un astre de niveau 1 ou 2 déjà affronté (il rejoint votre main).',
@@ -568,7 +592,7 @@
       death(c, u, m) { for (const v of c.allies(1 - u.side)) c.dmg(u, v, 2 * m); } },
     { id: 'prismeabsolu', fam: 'cristal', tier: 3, atk: 3, hp: 5, name: 'Prisme absolu', legend: true, look: { type: 'crystal', seed: 9111, ring: true, shape: 'bloc', hueShift: 200 },
       text: 'Quand vous jouez un autre Cristal, il gagne +{2}/+{2}.',
-      allyPlay(x, u, m, b) { if (b !== u && famOf(b) === 'cristal') x.buff(b, 2 * m, 2 * m); } },
+      allyPlay(x, u, m, b) { if (b !== u && isFam(b, 'cristal')) x.buff(b, 2 * m, 2 * m); } },
     { id: 'zeroabsolu', fam: 'glace', tier: 4, atk: 4, hp: 6, name: 'Zéro absolu', legend: true, kw: ['bouclier'], look: { type: 'glass', seed: 9212, ring: true, moons: 1 },
       text: 'Bouclier. Début de combat : vos autres astres gagnent Bouclier.',
       start(c, u) { for (const v of c.allies(u.side)) if (v !== u) c.kw(v, 'bouclier'); } },
@@ -693,6 +717,12 @@
   }
   const cardOf = (u) => CARD[typeof u === 'string' ? u : u.id];
   const famOf = (u) => cardOf(u).fam;
+  // Astres à deux familles (v138) : fam2 compte comme une vraie famille partout (synergies,
+  // formations, phénomènes, réserve, Arrimage). famOf reste la famille principale (affichage).
+  const famsOf = (u) => { const c = cardOf(u); return c.fam2 ? [c.fam, c.fam2] : [c.fam]; };
+  const isFam = (u, f) => { const c = cardOf(u); return c.fam === f || c.fam2 === f; };
+  // Un astre est dans la réserve d'une partie si l'une de ses familles y est active (ou s'il est neutre).
+  const inFamilies = (c, families) => c.fam === 'neutre' || families.includes(c.fam) || (!!c.fam2 && families.includes(c.fam2));
   const fail = (reason) => ({ ok: false, reason });
   const you = (state) => state.players[0];
   const findPlayer = (state, id) => state.players.find((p) => p.id === id);
@@ -729,13 +759,20 @@
     p.board = front.concat(back);
   }
   // Les formations d'une liste d'astres déjà rangés : { fam, row, n, lvl, units }.
+  // v138 : une formation monte au plus au niveau II (3 astres) ; le 4e astre d'une même famille
+  // n'ajoute plus rien, il vaut mieux une autre famille. Mélange : 3 familles différentes ou plus
+  // dans une rangée (les neutres ne comptent pas ; un astre à deux familles en apporte deux).
   function groupForms(units) {
     const out = [];
     for (const row of [0, 1]) {
+      const inRow = units.filter((u) => rowOf(u) === row);
       for (const fam of FAMILY_KEYS) {
-        const list = units.filter((u) => rowOf(u) === row && famOf(u) === fam);
-        if (list.length >= FORM_MIN) out.push({ fam, row, n: list.length, lvl: Math.min(3, list.length - 1), units: list });
+        const list = inRow.filter((u) => isFam(u, fam));
+        if (list.length >= FORM_MIN) out.push({ fam, row, n: list.length, lvl: Math.min(FORM_LVL_MAX, list.length - 1), units: list });
       }
+      const fams = new Set();
+      for (const u of inRow) for (const f of famsOf(u)) if (f !== 'neutre') fams.add(f);
+      if (fams.size >= MIX_MIN) out.push({ fam: 'melange', row, n: fams.size, lvl: fams.size > MIX_MIN ? 2 : 1, units: inRow });
     }
     return out;
   }
@@ -749,7 +786,7 @@
     const f = FORMATIONS[fam];
     if (!f) return '';
     const text = row ? (lvl === 1 && f.back1) || f.back : (lvl === 1 && f.front1) || f.front;
-    return tr(text, { n: lvl, d: 2 * lvl });
+    return tr(text, { n: lvl, d: 2 * lvl, m: lvl + 1 });
   }
 
   // L'astre de l'avant juste devant un astre de l'arrière : le plus proche en colonne, rangées
@@ -763,28 +800,30 @@
   // Phénomènes d'un système rangé : [{ kind, unit, partner }]. unit : l'astre transformé.
   function findPhenomena(front, back) {
     const out = [];
-    const fam = (u) => famOf(u);
     const sun = (u) => !!cardOf(u).sun;
     const behind = (u) => back.filter((v) => aheadOf(front, back, v) === u);
     for (const u of front) {
       const bs = behind(u);
       const with_ = (test) => bs.find(test);
       let v;
-      if ((v = with_((b) => fam(b) === 'mineral'))) out.push({ kind: 'accretion', unit: u, partner: v });
-      if (fam(u) === 'neant' && (v = with_((b) => fam(b) === 'neant'))) out.push({ kind: 'trounoir', unit: u, partner: v });
-      if (fam(u) === 'brasier' && (v = with_((b) => fam(b) === 'brasier'))) out.push({ kind: 'supernova', unit: u, partner: v });
-      if (fam(u) === 'lune' && (v = with_(sun))) out.push({ kind: 'eclipse', unit: u, partner: v });
-      if (fam(u) === 'vie' && !sun(u) && (v = with_(sun))) out.push({ kind: 'habitable', unit: u, partner: v });
-      if (fam(u) === 'comete' && (v = with_((b) => fam(b) === 'comete'))) out.push({ kind: 'queue', unit: u, partner: v });
-      if (fam(u) === 'glace' && (v = with_((b) => fam(b) === 'glace'))) out.push({ kind: 'halo', unit: u, partner: v });
-      if (fam(u) === 'envers' && (v = with_((b) => fam(b) === 'envers'))) out.push({ kind: 'jumeaux', unit: u, partner: v });
-      if (fam(u) === 'tempete' && (v = with_((b) => fam(b) === 'tempete'))) out.push({ kind: 'cyclone', unit: u, partner: v });
+      if ((v = with_((b) => isFam(b, 'mineral')))) out.push({ kind: 'accretion', unit: u, partner: v });
+      if (isFam(u, 'neant') && (v = with_((b) => isFam(b, 'neant')))) out.push({ kind: 'trounoir', unit: u, partner: v });
+      if (isFam(u, 'brasier') && (v = with_((b) => isFam(b, 'brasier')))) out.push({ kind: 'supernova', unit: u, partner: v });
+      if (isFam(u, 'lune') && (v = with_(sun))) out.push({ kind: 'eclipse', unit: u, partner: v });
+      if (isFam(u, 'vie') && !sun(u) && (v = with_(sun))) out.push({ kind: 'habitable', unit: u, partner: v });
+      if (isFam(u, 'comete') && (v = with_((b) => isFam(b, 'comete')))) out.push({ kind: 'queue', unit: u, partner: v });
+      if (isFam(u, 'glace') && (v = with_((b) => isFam(b, 'glace')))) out.push({ kind: 'halo', unit: u, partner: v });
+      if (isFam(u, 'envers') && (v = with_((b) => isFam(b, 'envers')))) out.push({ kind: 'jumeaux', unit: u, partner: v });
+      if (isFam(u, 'tempete') && (v = with_((b) => isFam(b, 'tempete')))) out.push({ kind: 'cyclone', unit: u, partner: v });
+      if (isFam(u, 'glace') && (v = with_((b) => isFam(b, 'brasier')))) out.push({ kind: 'vapeur', unit: u, partner: v });
+      if (isFam(u, 'lune') && (v = with_((b) => isFam(b, 'machine')))) out.push({ kind: 'orbitebasse', unit: u, partner: v });
+      if (isFam(u, 'nebuleuse') && (v = with_((b) => isFam(b, 'vie')))) out.push({ kind: 'pepiniere', unit: u, partner: v });
     }
     for (const row of [front, back]) {
       row.forEach((u, i) => {
         const l = row[i - 1], r = row[i + 1];
         if (!l || !r) return;
-        if (fam(u) === 'cristal' && fam(l) === 'cristal' && fam(r) === 'cristal') out.push({ kind: 'prisme', unit: u, partner: l });
+        if (isFam(u, 'cristal') && isFam(l, 'cristal') && isFam(r, 'cristal')) out.push({ kind: 'prisme', unit: u, partner: l });
       });
     }
     return out;
@@ -829,7 +868,7 @@
       board: () => p.board,
       rnd: (list) => (list && list.length ? list[Math.floor(rng() * list.length)] : null),
       pick: (list, n) => shuffle(list.slice(), rng).slice(0, n),
-      fam: (f, except) => p.board.filter((v) => v !== except && famOf(v) === f),
+      fam: (f, except) => p.board.filter((v) => v !== except && isFam(v, f)),
       others: (u) => p.board.filter((v) => v !== u),
       // Gauche et droite : dans la même rangée.
       mates: (u) => p.board.filter((v) => rowOf(v) === rowOf(u)),
@@ -1009,8 +1048,8 @@
     for (const c of CARDS) {
       if (c.token) continue;
       // Légendaires : une seule de chaque, et seulement celles des familles en jeu (v98).
-      if (c.legend) { if (c.fam === 'neutre' || families.includes(c.fam)) state.pool[c.id] = 1; }
-      else if (c.fam === 'neutre' || families.includes(c.fam)) state.pool[c.id] = COPIES[c.tier];
+      if (c.legend) { if (inFamilies(c, families)) state.pool[c.id] = 1; }
+      else if (inFamilies(c, families)) state.pool[c.id] = COPIES[c.tier];
     }
     state.poolTotal = Object.assign({}, state.pool);
     const you = newPlayer(state, 'you', 'VOUS', law.id, false);
@@ -1194,7 +1233,7 @@
   }
 
   function canMagnet(u, target) {
-    return !!target && u.kw.includes('arrimage') && famOf(target) === 'machine' && target !== u;
+    return !!target && u.kw.includes('arrimage') && isFam(target, 'machine') && target !== u;
   }
 
   // index : la place dans la rangée ; row : 0 (avant) ou 1 (arrière). Sans rangée, l'astre va à
@@ -1234,15 +1273,19 @@
     p.board.splice((r ? count(0) : 0) + at, 0, u);
     hook(u, 'play', x, at);
     for (const v of p.board.slice()) if (v !== u) hook(v, 'allyPlay', x, u);
-    if (p.law === 'resonance' && famOf(u) === 'cristal') {
+    if (p.law === 'resonance' && isFam(u, 'cristal')) {
       if (p.awake) x.buff(x.rnd(x.fam('cristal', u)), 1, 1);
       else x.buff(x.rnd(x.fam('cristal', u)), 0, 1);
     }
     let discover = false;
     if (u.dtier) {
-      const t = u.dtier;
+      const t = u.dtier, fresh = u.dnew;
       delete u.dtier;
-      openDiscover(state, p, t);
+      delete u.dnew;
+      // Radiotélescope (v138) : seulement des familles absentes du système (sinon, une découverte normale).
+      const owned = new Set();
+      for (const v of p.board.concat(p.hand)) for (const f of famsOf(v)) owned.add(f);
+      openDiscover(state, p, t, fresh ? (cd) => cd.fam !== 'neutre' && !famsOf(cd.id).some((f) => owned.has(f)) : null);
       discover = p.discover.length > 0;
     }
     return { ok: true, index: at, row: r, events: x.events, discover };
@@ -1375,15 +1418,15 @@
     return { ok: true, events: x.events };
   }
 
-  function openDiscover(state, p, tier) {
+  function openDiscover(state, p, tier, only) {
     const rng = rngFor(state, 'discover:' + p.id);
     p.discover = [];
     // Parfois, une légendaire se glisse parmi les choix.
     const n = state.event === 'revelation' ? 4 : 3;
-    if (rng() < LEGEND_DISCOVER * (state.event === 'legendes' ? 3 : 1)) { const l = drawLegend(state, tier, rng); if (l) p.discover.push(l); }
+    if (!only && rng() < LEGEND_DISCOVER * (state.event === 'legendes' ? 3 : 1)) { const l = drawLegend(state, tier, rng); if (l) p.discover.push(l); }
     for (let t = tier; t >= 1 && p.discover.length < n; t--) {
       while (p.discover.length < n) {
-        const avail = Object.keys(state.pool).filter((id) => CARD[id].tier === t && !CARD[id].legend && state.pool[id] > 0 && !p.discover.includes(id));
+        const avail = Object.keys(state.pool).filter((id) => CARD[id].tier === t && !CARD[id].legend && state.pool[id] > 0 && !p.discover.includes(id) && (!only || only(CARD[id])));
         if (!avail.length) break;
         const total = avail.reduce((s, id) => s + state.pool[id], 0);
         let r = rng() * total, pick = avail[avail.length - 1];
@@ -1392,6 +1435,7 @@
         p.discover.push(pick);
       }
     }
+    if (only && !p.discover.length) openDiscover(state, p, tier);
   }
 
   function choose(state, index, p) {
@@ -1445,7 +1489,7 @@
       else x.buff(weakest()[0], 0, 1);
     }
     if (p.law === 'marees') {
-      const moons = p.board.filter((u) => famOf(u) === 'lune');
+      const moons = p.board.filter((u) => isFam(u, 'lune'));
       if (moons.length) x.events.push({ t: 'law' });
       for (const l of moons) {
         if (p.awake) for (const v of x.neighbors(l)) x.buff(v, 0, 1);
@@ -1550,7 +1594,7 @@
       rnd: (list) => (list && list.length ? list[Math.floor(rng() * list.length)] : null),
       allies: (s) => alive(s),
       sideList: (s) => sides[s].filter((u) => !u.dead),
-      alliesFam: (s, f) => alive(s).filter((u) => famOf(u) === f),
+      alliesFam: (s, f) => alive(s).filter((u) => isFam(u, f)),
       front: (s) => inRow(s, 0),
       back: (s) => inRow(s, 1),
       ranked: (s) => alive(s).slice().sort((x, y) => y.atk - x.atk || y.hp - x.hp),
@@ -1567,7 +1611,7 @@
       },
       // Un astre aléatoire du niveau donné, parmi les familles de la partie (hors réserve).
       summonRandom(s, tier, index) {
-        const ids = CARDS.filter((cd) => !cd.token && !cd.legend && cd.tier === tier && (cd.fam === 'neutre' || state.families.includes(cd.fam))).map((cd) => cd.id);
+        const ids = CARDS.filter((cd) => !cd.token && !cd.legend && cd.tier === tier && inFamilies(cd, state.families)).map((cd) => cd.id);
         if (!ids.length) return null;
         return c.summon(s, ids[Math.floor(rng() * ids.length)], index, 1);
       },
@@ -1590,8 +1634,8 @@
         log({ t: 'heal', cid: u.cid, n: k, hp: u.hp });
       },
       permFam(s, f, da, dh) {
-        for (const v of players[s].board) if (famOf(v) === f) { v.atk = Math.max(0, v.atk + da); v.hp += dh; }
-        for (const u of alive(s)) if (famOf(u) === f) c.buff(u, da, dh);
+        for (const v of players[s].board) if (isFam(v, f)) { v.atk = Math.max(0, v.atk + da); v.hp += dh; }
+        for (const u of alive(s)) if (isFam(u, f)) c.buff(u, da, dh);
       },
       dmg(src, t, n) {
         if (!t || n <= 0) return;
@@ -1663,7 +1707,7 @@
         const u = {
           cid: 'c' + cidc++, ref: o.ref || null, id, golden: !!o.golden, m: o.golden ? 2 : 1,
           // Renaissance : 1 PV, 3 pour un astre de l'Envers (v107).
-          atk: card.atk * k, hp: o.reborn ? (card.fam === 'envers' ? 3 * k : 1) : card.hp * k, maxHp: o.reborn ? (card.fam === 'envers' ? 3 * k : 1) : card.hp * k,
+          atk: card.atk * k, hp: o.reborn ? (isFam(card.id, 'envers') ? 3 * k : 1) : card.hp * k, maxHp: o.reborn ? (isFam(card.id, 'envers') ? 3 * k : 1) : card.hp * k,
           kw: (card.kw || []).filter((kk) => !(o.reborn && kk === 'renaissance')), side: s, row,
           dead: false, attacked: false, rebornUsed: !!o.reborn, killer: null, form: null
         };
@@ -1681,7 +1725,7 @@
     // effets « quand un allié vole des PV » (Spirographe, Sablier).
     function stolen(src, k) {
       const hx = countOf(src.side, 'helice');
-      if (hx && famOf(src) === 'nebuleuse' && (src.kept || 0) < 3) {
+      if (hx && isFam(src, 'nebuleuse') && (src.kept || 0) < 3) {
         const ref = players[src.side].board.find((v) => v.uid === src.ref);
         src.kept = (src.kept || 0) + 1;
         c.buff(src, 0, 2 * hx);
@@ -1730,7 +1774,7 @@
       for (const f of forms[s]) {
         if (f.fam !== 'neant') continue;
         const live = f.units.filter((v) => v !== u && !v.dead && v.hp > 0);
-        if (f.row === 0 && u.form === f) for (const v of live) c.buff(v, f.lvl, f.lvl);
+        if (f.row === 0 && (u.forms || []).includes(f)) for (const v of live) c.buff(v, f.lvl, f.lvl);
         if (f.row === 1 && u.row === 0) for (const v of live) if (v.row === 1) c.buff(v, f.lvl, f.lvl);
       }
     }
@@ -1771,7 +1815,7 @@
               for (let k = 0; k < times; k++) { log({ t: 'fx', cid: u.cid }); card.death(c, u, u.m, idx); }
             }
             for (const v of alive(s)) fire(v, 'allyDeath', u);
-            if (players[s].law === 'entropie') for (const v of alive(s)) if (famOf(v) === 'neant') c.buff(v, 1, players[s].awake ? 1 : 0);
+            if (players[s].law === 'entropie') for (const v of alive(s)) if (isFam(v, 'neant')) c.buff(v, 1, players[s].awake ? 1 : 0);
             formDeath(s, u);
             // Trou noir : il grossit à chaque astre qui s'effondre, d'un camp comme de l'autre.
             for (let w = 0; w < 2; w++) for (const v of alive(w)) if (v.blackhole) c.buff(v, 1, 1);
@@ -1840,7 +1884,7 @@
       const able = inRow(s, 0).filter((u) => u.atk > 0);
       const shooters = inRow(s, 1).filter((u) => u.atk > 0 && u.kw.includes('portee'));
       if (!able.length && !shooters.length) return null;
-      const quick = (u) => u.form && u.form.fam === 'comete' && u.form.row === 0;
+      const quick = (u) => (u.forms || []).some((f) => f.fam === 'comete' && f.row === 0);
       const order = able.filter(quick).concat(able.filter((u) => !quick(u)), shooters);
       let cand = order.find((u) => !u.attacked);
       if (!cand) {
@@ -1855,7 +1899,7 @@
       if (u.dead || u.hp <= 0) return;
       log({ t: 'phenom', side: s, kind: p.kind, cid: u.cid, partner: v.cid });
       switch (p.kind) {
-        case 'accretion': if (famOf(u) === 'mineral') c.buff(u, 3, 7); else c.buff(u, 2, 5); break;
+        case 'accretion': if (isFam(u, 'mineral')) c.buff(u, 3, 7); else c.buff(u, 2, 5); break;
         case 'trounoir': u.blackhole = true; c.kw(u, 'rempart'); break;
         case 'supernova': u.supernova = true; break;
         case 'eclipse': { const t = facing(u, inRow(1 - s, 0)); if (t && t.atk > 0) c.buff(t, -Math.ceil(t.atk / 2), 0); break; }
@@ -1865,6 +1909,9 @@
         case 'jumeaux': c.kw(u, 'renaissance'); c.kw(v, 'renaissance'); break;
         case 'prisme': c.buff(u, 4, 4); c.kw(u, 'bouclier'); break;
         case 'cyclone': c.kw(u, u.kw.includes('rafale') ? 'megarafale' : 'rafale'); break;
+        case 'vapeur': { const t = facing(u, inRow(1 - s, 0)); if (t) c.dmg(u, t, 3); break; }
+        case 'orbitebasse': c.kw(u, 'bouclier'); c.buff(v, 2, 2); break;
+        case 'pepiniere': c.buff(u, 2, 2); c.kw(v, 'renaissance'); break;
         default: break;
       }
     }
@@ -1884,7 +1931,7 @@
         case 'glace:1': for (const u of inRow(e, 0)) if (u.atk > 0) c.buff(u, -Math.min(d, u.atk), 0); break;
         case 'tempete:1': { const fr = inRow(s, 0); for (const u of fr) c.buff(u, L, d); if (fr[0]) c.kw(fr[0], 'rafale'); break; }
         case 'mineral:0': { for (const u of F) c.buff(u, L, d); c.kw(F.slice().sort((x, y) => y.hp - x.hp)[0], 'rempart'); break; }
-        case 'mineral:1': for (const u of inRow(s, 0)) c.buff(u, L, d); break;
+        case 'mineral:1': for (const u of inRow(s, 0)) c.buff(u, L, L); break;
         case 'machine:0': for (const u of F) c.buff(u, d, 0); break;
         case 'machine:1': for (const u of F) { const t = ahead(u); if (!t) continue; for (const k of u.kw) if (k !== 'arrimage') c.kw(t, k); c.buff(t, L, L); } break;
         case 'lune:0': for (const u of F) for (const v of c.neighbors(u)) c.buff(v, L, L); break;
@@ -1893,10 +1940,11 @@
         case 'tempete:0': for (const u of F) c.buff(u, L, d); break;
         case 'cristal:0': { const k = forms[s].some((g) => g.fam === 'cristal' && g.row === 1) ? 2 * L : L; for (const u of F) c.buff(u, k, k); break; }
         case 'cristal:1': for (const u of c.alliesFam(s, 'cristal')) c.buff(u, L, L); break;
-        case 'anomalie:0': for (const u of F) for (let i = 0; i < L; i++) c.randomKw(u); break;
+        case 'anomalie:0': for (const u of F) for (let i = 0; i <= L; i++) c.randomKw(u); break;
         case 'anomalie:1': for (const u of shuffle(inRow(s, 0), rng).slice(0, L)) c.randomKw(u); break;
         // v109 : chaque astre de l'avant vole {n} PV à l'ennemi en face (s'il en reste un).
         case 'nebuleuse:1': for (const u of inRow(s, 0)) { const t = facing(u, inRow(e, 0)); if (t) c.drain(u, t, L); } break;
+        case 'melange:0': case 'melange:1': for (const u of F) c.buff(u, L, L); break;
         default: break; // vie:1, neant, tempete:0 et comete:1 agissent pendant le combat.
       }
     }
@@ -1945,7 +1993,8 @@
     // Les formations sont comptées pour les deux camps avant d'agir.
     for (const s of [0, 1]) {
       forms[s] = groupForms(alive(s));
-      for (const f of forms[s]) for (const u of f.units) u.form = f;
+      for (const u of alive(s)) u.forms = [];
+      for (const f of forms[s]) for (const u of f.units) u.forms.push(f);
     }
     for (const s of [turn, 1 - turn]) {
       for (const f of forms[s]) {
@@ -2005,19 +2054,20 @@
     if (fam === p.pref2) return BOT.famBase + (expert(p) ? BOT.famPer * 0.5 * famCount(p, fam) : 0);
     return 0;
   };
-  function famCount(p, fam) { return fam === 'neutre' ? 0 : p.board.concat(p.hand).filter((u) => famOf(u) === fam).length; }
+  const famBonus2 = (p, c) => (c.fam2 ? Math.max(famBonus(p, c.fam), famBonus(p, c.fam2)) : famBonus(p, c.fam));
+  function famCount(p, fam) { return fam === 'neutre' ? 0 : p.board.concat(p.hand).filter((u) => isFam(u, fam)).length; }
   function cardValue(p, id) {
     const c = CARD[id];
     let v = c.atk + c.hp + c.tier * 3.2 + (c.kw ? c.kw.length * 1.5 : 0);
-    v += famBonus(p, c.fam);
-    if (c.sun && p.board.concat(p.hand).some((u) => famOf(u) === 'vie')) v += 4;
+    v += famBonus2(p, c);
+    if (c.sun && p.board.concat(p.hand).some((u) => isFam(u, 'vie'))) v += 4;
     v += ownedCopies(p, id).length * 7;
     return v;
   }
 
   function unitValue(p, u) {
     const c = cardOf(u);
-    return u.atk + u.hp + c.tier * 3.2 + famBonus(p, c.fam) + (u.golden ? 8 : 0) + u.kw.length * 1.5;
+    return u.atk + u.hp + c.tier * 3.2 + famBonus2(p, c) + (u.golden ? 8 : 0) + u.kw.length * 1.5;
   }
 
   function botDeploy(state, p) {
@@ -2030,7 +2080,7 @@
       if (!p.hand.length) break;
       const u = p.hand.slice().sort((a, b) => unitValue(p, b) - unitValue(p, a))[0];
       if (u.kw.includes('arrimage')) {
-        const host = p.board.filter((v) => famOf(v) === 'machine').sort((a, b) => unitValue(p, b) - unitValue(p, a))[0];
+        const host = p.board.filter((v) => isFam(v, 'machine')).sort((a, b) => unitValue(p, b) - unitValue(p, a))[0];
         if (host && (p.board.length >= BOARD_MAX || unitValue(p, u) < 14)) { play(state, u.uid, null, host.uid, p); continue; }
       }
       if (p.board.length >= BOARD_MAX) {
@@ -2109,7 +2159,7 @@
     };
     const out = [];
     for (let k = kMax; k >= kMin; k--) out.push(build([], k));
-    const fams = FAMILY_KEYS.map((f) => board.filter((u) => famOf(u) === f)).filter((l) => l.length >= FORM_MIN).sort((a, b) => b.length - a.length).slice(0, 2);
+    const fams = FAMILY_KEYS.map((f) => board.filter((u) => isFam(u, f))).filter((l) => l.length >= FORM_MIN).sort((a, b) => b.length - a.length).slice(0, 2);
     for (const l of fams) {
       const mine = order.filter((u) => l.includes(u));
       out.push(build(mine, Math.max(kMin, Math.min(kMax, Math.max(mine.length, Math.ceil(n / 2))))));
@@ -2183,7 +2233,7 @@
     }
     // Les Comètes grandissent à chaque actualisation : le bot en profite.
     if (rollCost(p) === 0) roll(state, p);
-    const maxRolls = 3 + Math.min(3, p.board.filter((u) => famOf(u) === 'comete').length) + (expert(p) && p.tier >= 4 ? 4 : 0) + (strong(p) ? 2 : 0);
+    const maxRolls = 3 + Math.min(3, p.board.filter((u) => isFam(u, 'comete')).length) + (expert(p) && p.tier >= 4 ? 4 : 0) + (strong(p) ? 2 : 0);
     // Une IA faible choisit plus au hasard dans la boutique.
     const noise = p.skill < 0.5 ? 7 : 2;
     let rolls = 0;
@@ -2206,7 +2256,7 @@
     if (p.gold >= 1 && p.tier < (p.tutor ? TUTOR.tier : 6) && p.gold >= upgradeCost(p, state)) upgrade(state, p);
     if (expert(p) && !p.frozen) {
       // Garde le marché s'il contient une copie d'un astre déjà possédé ou un astre de sa famille.
-      const keep = p.shop.some((id) => id && (ownedCopies(p, id).length >= 1 || (CARD[id].fam === p.pref && CARD[id].tier >= p.tier)));
+      const keep = p.shop.some((id) => id && (ownedCopies(p, id).length >= 1 || (isFam(id, p.pref) && CARD[id].tier >= p.tier)));
       if (keep) freeze(state, p);
     }
     botArrange(state, p);
@@ -2585,7 +2635,7 @@
     rollCost, DUEL, TUTOR, spectate, isDuel, rewardsOf, ROW_MAX, FORM_MIN, FORMATIONS, formationsOf, formText, PHENOMENA, phenomenaOf, POSITION_KW, layout, arrange, rowOf, move, botArrange, LEGEND_SHOP, LEGEND_DISCOVER, START_HP, MAX_GOLD, BUY_COST, ROLL_COST, HAND_MAX, BOARD_MAX, COPIES, SHOP_SIZE, UPGRADE, DAMAGE_CAP, REWARDS,
     FAMILIES, FAMILY_KEYS, KEYWORDS, CARDS, CARD, LAWS, LAW,
     EVENTS, EVENT, eventFor, RELICS, RELIC, RELIC_ROUNDS, AWAKE_ROUND, chooseRelic, hasRelic, powerCost, sellGain, shopSize,
-    cardOf, famOf, cardText, upgradeCost, lawChoices, newGame, alivePlayers,
+    cardOf, famOf, famsOf, isFam, MIX_MIN, FORM_LVL_MAX, cardText, upgradeCost, lawChoices, newGame, alivePlayers,
     buy, canBuy, play, canMagnet, sell, roll, freeze, upgrade, reorder, usePower, canUsePower, choose, endTurn,
     fight, poolAudit, copiesOf, botTurn, botDeploy,
     mpFamilies, mpLawChoices, mpSeatLaw, snapshotOf, mpLock, mpHostBots, mirror, mpResolve, mpCatchUp, planPairs, nextOpponent

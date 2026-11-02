@@ -500,7 +500,28 @@
       if (navigator.vibrate) try { navigator.vibrate([30, 60, 30]); } catch (err) { /* sans importance */ }
     }
   }
+  // Demande d'ami reçue (v138) : une bulle avec ACCEPTER, où que l'on soit, même en partie (elle ne
+  // bloque rien et disparaît seule). Sans elle, la demande attendait dans Profil → Amis sans prévenir.
+  window.addEventListener('orbite-friend-request', (e) => {
+    const r = e.detail || {};
+    if (!r.pair) return;
+    const d = document.createElement('div');
+    d.className = 'ami-pop';
+    d.innerHTML = `<i class="on-dot on"></i><span>${tr('{name} vous demande en ami', { name: `<b>${esc(r.name)}</b>` })}</span><button class="btn" data-accept="${esc(r.pair)}" data-name="${esc(r.name)}">${tr('ACCEPTER')}</button>`;
+    pops.appendChild(d);
+    (SFX.friend || SFX.on)();
+    setTimeout(() => d.classList.add('out'), 11500);
+    setTimeout(() => d.remove(), 12000);
+  });
   pops.addEventListener('click', async (e) => {
+    const acc = e.target.closest('[data-accept]');
+    if (acc) {
+      acc.closest('.ami-pop').remove();
+      SFX.tap();
+      try { await ON.accept(acc.dataset.accept); A.toast(tr('Vous êtes maintenant ami avec {nom}.', { nom: acc.dataset.name }), 2600); }
+      catch (err) { A.refuse(tr('Le serveur ne répond pas.')); }
+      return;
+    }
     const ami = e.target.closest('[data-ami]');
     if (ami) { ami.closest('.ami-pop').remove(); SFX.tap(); await challenge(ami.dataset.ami); return; }
     const b = e.target.closest('[data-defi]');

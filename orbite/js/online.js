@@ -301,7 +301,7 @@
     } catch (err) { /* salon illisible : pas d'invitation */ }
     friendsChanged();
   }
-  const live = { q: null, docs: {}, profiles: {}, ready: false };
+  const live = { q: null, docs: {}, profiles: {}, ready: false, asked: new Set() };
   const friendsChanged = () => { try { window.dispatchEvent(new Event('orbite-friends')); } catch (err) { /* sans importance */ } };
   function watchFriends() {
     if (live.q || !fb || state.status !== 'signedIn') return;
@@ -309,11 +309,14 @@
     live.q = fs.onSnapshot(fs.query(fs.collection(db, 'friends'), fs.where('members', 'array-contains', me)), (snap) => {
       const ok = new Set();
       let incoming = 0;
+      const asked = new Set();
       snap.docs.forEach((d) => {
         const x = d.data();
         if (x.status === 'accepted') ok.add(x.members.find((m) => m !== me));
-        else if (x.from !== me) incoming++;
+        // Nouvelles demandes, et au lancement celles reçues hors ligne (3 bulles au plus).
+        else if (x.from !== me) { incoming++; asked.add(d.id); if (!live.asked.has(d.id) && (live.ready || incoming <= 3)) friendAsked(d.id, x.from); }
       });
+      live.asked = asked;
       for (const uid of Object.keys(live.docs)) if (!ok.has(uid)) { live.docs[uid](); delete live.docs[uid]; delete live.profiles[uid]; }
       for (const uid of ok) {
         if (live.docs[uid]) continue;
@@ -328,10 +331,17 @@
       friendsChanged();
     }, () => { live.ready = true; friendsChanged(); });
   }
+  // Une demande d'ami vient d'arriver (v138) : l'écran prévient tout de suite, même en partie ; avant,
+  // elle n'apparaissait que dans Profil → Amis, et l'autre croyait que l'ajout ne marchait pas.
+  function friendAsked(pair, uid) {
+    profileOf(uid).catch(() => null).then((p) => {
+      try { window.dispatchEvent(new CustomEvent('orbite-friend-request', { detail: { pair, uid, name: String((p && p.pseudo) || tr('Créateur')) } })); } catch (err) { /* sans importance */ }
+    });
+  }
   function stopFriends() {
     if (live.q) live.q();
     for (const u of Object.values(live.docs)) u();
-    Object.assign(live, { q: null, docs: {}, profiles: {}, ready: false });
+    Object.assign(live, { q: null, docs: {}, profiles: {}, ready: false, asked: new Set() });
     for (const k of Object.keys(groupInv)) delete groupInv[k];
     inviteTag = '';
     friendsChanged();

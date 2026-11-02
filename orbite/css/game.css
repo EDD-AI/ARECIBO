@@ -1029,6 +1029,8 @@ body.in-combat .game-foot { margin-top: auto; }
   pointer-events: none;
 }
 .unit .fam { width: 10px; height: 2px; margin-top: 3px; background: var(--fam); opacity: 0.85; }
+/* Deux familles (v138) : le trait est moitié l'une, moitié l'autre (l'or des dorés et des légendaires reste prioritaire). */
+.unit.duo:not(.golden):not(.legend) .fam { width: 14px; background: linear-gradient(90deg, var(--fam) 50%, var(--fam2) 50%); }
 .unit .kws { position: absolute; top: 0; right: -2px; display: flex; flex-direction: column; gap: 2px; font-size: 10px; color: var(--ink); }
 .unit .kws .pix { width: auto; height: 8px; }
 .unit .kws .mark { display: flex; padding: 1px; color: var(--ink); background: #000; border: 1px solid rgba(241, 236, 218, 0.4); }
@@ -2790,3 +2792,7 @@ body:not(.desk) #end > :last-child { margin-bottom: auto; }
 .friend-tag { margin: 6px 0; font-size: 12px; color: var(--dim); }
 .mp-seat.can-friend { cursor: var(--cur-hand, pointer); }
 .mp-seat.can-friend:hover, .mp-seat.can-friend:focus-visible { border-color: rgba(246, 196, 83, 0.6); outline: none; }
+
+/* Codex (v138) : un astre à deux familles rappelle les deux. */
+.cx-card.duo { border-image: linear-gradient(90deg, var(--c), var(--c2)) 1; }
+.cx-card .cx-duo { display: block; margin-top: 2px; font-style: normal; font-size: 9px; letter-spacing: 0.12em; color: var(--c2); }
