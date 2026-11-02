@@ -49,7 +49,7 @@ test('le rapport distingue les identités ordinaires, légendaires, jetons et lo
     families: report.catalogue.playableFamilies,
     laws: report.catalogue.laws,
     neutralRegular: report.catalogue.neutralRegularTypes,
-  }, { total: 142, regular: 125, legendary: 15, tokens: 2, families: 13, laws: 16, neutralRegular: 8 });
+  }, { total: 146, regular: 129, legendary: 15, tokens: 2, families: 13, laws: 16, neutralRegular: 12 });
   assert.equal(report.families.activePerGame, 5);
   assert.equal(report.families.possibleSelections, '1287');
   assert.equal(report.families.selectionsWithSpecifiedNonNeutralFamily, '495');
@@ -62,24 +62,26 @@ test('le rapport distingue les identités ordinaires, légendaires, jetons et lo
 test('le catalogue nominal ne garde que les légendaires des familles en jeu et exclut les jetons', () => {
   const report = computeCombinationsReport();
   const families = new Set(report.nominalPool.referenceFamilies);
-  const expectedIds = R.CARDS.filter((c) => !c.token && (c.fam === 'neutre' || families.has(c.fam)));
-  assert.equal(expectedIds.length, 59);
+  // v138 : un astre à deux familles entre si l'une d'elles est en jeu (Europe, Lune et Vie, ici).
+  const expectedIds = R.CARDS.filter((c) => !c.token && (c.fam === 'neutre' || families.has(c.fam) || (!!c.fam2 && families.has(c.fam2))));
+  assert.equal(expectedIds.length, 64);
   assert.equal(report.nominalPool.totalTypes, expectedIds.length);
-  assert.equal(report.nominalPool.regularTypes, 53);
+  assert.equal(report.nominalPool.regularTypes, 58);
   assert.equal(report.nominalPool.legendaryTypes, 6);
   assert.ok(!R.CARDS.some((c) => c.legend && report.nominalPool.referenceFamilies.length && c.fam !== 'neutre' && !families.has(c.fam) && expectedIds.includes(c)));
-  // 60 identités quand les Nébuleuses (deux légendaires) sont en jeu, 59 sinon.
+  // De 63 à 68 identités selon les familles en jeu : la seconde légendaire des Nébuleuses, et les
+  // astres à deux familles dont seule la seconde est en jeu (v138).
   assert.equal(report.nominalPool.uniformSizeAcrossFamilySelections, false);
-  assert.equal(report.nominalPool.minTypesAcrossFamilySelections, 59);
-  assert.equal(report.nominalPool.maxTypesAcrossFamilySelections, 60);
+  assert.equal(report.nominalPool.minTypesAcrossFamilySelections, 63);
+  assert.equal(report.nominalPool.maxTypesAcrossFamilySelections, 68);
 });
 
 test('les dénombrements du sous-modèle à sept identités sont exacts et sérialisables', () => {
   const report = computeCombinationsReport();
   assert.equal(report.distinctIdentityModel.units, 7);
-  assert.equal(report.distinctIdentityModel.unorderedSelections, '341149446');
+  assert.equal(report.distinctIdentityModel.unorderedSelections, '621216192');
   assert.equal(report.distinctIdentityModel.ordersPerSelection, '5040');
-  assert.equal(report.distinctIdentityModel.orderedArrangements, '1719393207840');
+  assert.equal(report.distinctIdentityModel.orderedArrangements, '3130929607680');
   assert.deepEqual(JSON.parse(JSON.stringify(report)), report);
   assert.ok(report.limitations.some((s) => s.includes('états légalement atteignables')));
   assert.ok(report.limitations.some((s) => s.includes('placement')));
@@ -90,9 +92,9 @@ test('le modèle distingue une sélection vide, une paire et un nombre d’astre
   assert.equal(empty.unorderedSelections, '1');
   assert.equal(empty.orderedArrangements, '1');
   const pair = computeCombinationsReport({ units: 2 }).distinctIdentityModel;
-  assert.equal(pair.unorderedSelections, '1711');
+  assert.equal(pair.unorderedSelections, '2016');
   assert.equal(pair.ordersPerSelection, '2');
-  assert.equal(pair.orderedArrangements, '3422');
+  assert.equal(pair.orderedArrangements, '4032');
   assert.throws(() => computeCombinationsReport({ units: R.BOARD_MAX + 1 }), RangeError);
   assert.throws(() => computeCombinationsReport({ units: -1 }), RangeError);
   assert.throws(() => computeCombinationsReport({ units: 2.5 }), RangeError);
@@ -111,7 +113,7 @@ test('la CLI produit du JSON seul ou un rapport humain qui annonce les limites',
   assert.match(human.stdout, /profondeur/);
   const pair = run('--units=2', '--json');
   assert.equal(pair.status, 0, pair.stderr);
-  assert.equal(JSON.parse(pair.stdout).distinctIdentityModel.orderedArrangements, '3422');
+  assert.equal(JSON.parse(pair.stdout).distinctIdentityModel.orderedArrangements, '4032');
 });
 
 test('la CLI refuse les options inconnues et les nombres invalides avec un statut non nul', () => {

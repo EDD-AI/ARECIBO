@@ -37,7 +37,9 @@
     // Ajouter en ami un créateur croisé en ligne (v137) et PRÊT à maintenir.
     ['+ AJOUTER EN AMI', '+ ADD FRIEND', '+ AÑADIR AMIGO', '+ ALS FREUND HINZUFÜGEN', '+ ADICIONAR AMIGO'],
     ['DEMANDE ENVOYÉE', 'REQUEST SENT', 'SOLICITUD ENVIADA', 'ANFRAGE GESENDET', 'PEDIDO ENVIADO'],
-    ['AMIS', 'FRIENDS', 'AMIGOS', 'FREUNDE', 'AMIGOS']
+    ['AMIS', 'FRIENDS', 'AMIGOS', 'FREUNDE', 'AMIGOS'],
+    // Demande d'ami reçue, prévenue tout de suite (v138).
+    ['{name} vous demande en ami', '{name} wants to be your friend', '{name} quiere ser tu amigo', '{name} möchte dein Freund sein', '{name} quer ser seu amigo']
   ];
   const langs = ['en', 'es', 'de', 'pt'];
   window.OrbiteI18n.add(Object.fromEntries(langs.map((l, i) => [l, Object.fromEntries(rows.map((r) => [r[0], r[i + 1]]))])));

@@ -58,7 +58,10 @@ test('réserve partagée en ligne (v106) : les astres des autres sortent de la r
   const starters = new Set(R.LAWS.map((l) => l.starter));
   const id = Object.keys(a.pool).find((k) => R.CARD[k].tier === 1 && !R.CARD[k].legend && !starters.has(k));
   // Copies encore disponibles chez b : réserve + vitrines (les vitrines se renouvellent à la manche).
-  const avail = (st) => st.pool[id] + st.players.reduce((n, p) => n + p.shop.concat(p.discover).filter((x) => x === id).length, 0);
+  // (v138) Plus les copies que les bots ont achetées pendant la manche : ils jouent pareil sur chaque
+  // téléphone, ces copies ne viennent pas de a.
+  const botHeld = (st) => st.players.filter((p) => p.bot).reduce((n, p) => n + p.board.concat(p.hand).reduce((k, u) => k + R.copiesOf(u).filter((x) => x === id).length, 0), 0);
+  const avail = (st) => st.pool[id] + botHeld(st) + st.players.reduce((n, p) => n + p.shop.concat(p.discover).filter((x) => x === id).length, 0);
   const before = avail(b);
   a.pool[id] -= 4;
   a.players[0].board = [{ uid: 'x1', id, golden: true, atk: 4, hp: 4, kw: [], att: [], row: 0 }, { uid: 'x2', id, golden: false, atk: 2, hp: 2, kw: [], att: [], row: 0 }];

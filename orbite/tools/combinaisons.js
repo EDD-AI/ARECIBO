@@ -56,11 +56,21 @@ function computeCombinationsReport({ units = R.BOARD_MAX } = {}) {
   const reference = R.newGame('combinaisons-reference', R.LAWS[0].id);
   const active = reference.families.length;
   const poolIds = Object.keys(reference.pool);
-  const familySizes = R.FAMILY_KEYS.map((fam) => regularByFamily[fam] + legendaryByFamily[fam]).sort((a, b) => a - b);
-  const sum = (list) => list.reduce((total, n) => total + n, 0);
-  const commonTypes = neutralRegular + neutralLegendary;
-  const minPoolTypes = commonTypes + sum(familySizes.slice(0, active));
-  const maxPoolTypes = commonTypes + sum(familySizes.slice(familySizes.length - active));
+  // Taille de la réserve pour chaque sélection de familles. Depuis la v138, un astre à deux familles
+  // entre dans la réserve si l'une d'elles est en jeu : on parcourt donc toutes les sélections.
+  const playable = R.CARDS.filter((c) => !c.token);
+  const inSelection = (c, sel) => c.fam === 'neutre' || sel.has(c.fam) || (!!c.fam2 && sel.has(c.fam2));
+  let minPoolTypes = Infinity, maxPoolTypes = 0;
+  (function choose(start, sel) {
+    if (sel.length === active) {
+      const set = new Set(sel);
+      const n = playable.filter((c) => inSelection(c, set)).length;
+      minPoolTypes = Math.min(minPoolTypes, n);
+      maxPoolTypes = Math.max(maxPoolTypes, n);
+      return;
+    }
+    for (let i = start; i < R.FAMILY_KEYS.length; i++) choose(i + 1, sel.concat([R.FAMILY_KEYS[i]]));
+  })(0, []);
 
   return {
     schemaVersion: 1,
@@ -91,7 +101,7 @@ function computeCombinationsReport({ units = R.BOARD_MAX } = {}) {
       uniformSizeAcrossFamilySelections: minPoolTypes === maxPoolTypes,
       minTypesAcrossFamilySelections: minPoolTypes,
       maxTypesAcrossFamilySelections: maxPoolTypes,
-      description: 'Identités de la réserve nominale : familles retenues et neutres, avec leurs légendaires ; jetons exclus.',
+      description: 'Identités de la réserve nominale : familles retenues et neutres, avec leurs légendaires, et les astres à deux familles dont l’une est retenue ; jetons exclus.',
     },
     distinctIdentityModel: {
       units,
