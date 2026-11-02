@@ -19,7 +19,7 @@
     Kit.scene({
       nom: 'logo-orbite-fonce-px' + px, titre: 'Logo ORBITE foncé (pixel de ' + px + ' px)',
       usage: 'Pour un fond clair. Fond transparent.',
-      largeur: 35 * px, hauteur: 7 * px, langues: [], fond: 'transparent',
+      largeur: 35 * px, hauteur: 7 * px, langues: [], fond: 'transparent', apercu: 'clair',
       dessiner(ctx) { Kit.poser(ctx, Kit.logo({ pixel: px, couleur: FONCE }), 0, 0, 'haut-gauche'); }
     });
   }
@@ -34,7 +34,7 @@
       nom: 'logo-orbite-studio-edda-' + variante + '-px' + px,
       titre: 'Logo ORBITE + STUDIO EDDA ' + (sombre ? 'foncé' : 'blanc') + ' (pixel de ' + px + ' px)',
       usage: (sombre ? 'Pour un fond clair.' : 'Sur fond sombre.') + ' Fond transparent.',
-      largeur: 35 * px, hauteur: hStudio(px), langues: [], fond: 'transparent',
+      largeur: 35 * px, hauteur: hStudio(px), langues: [], fond: 'transparent', apercu: sombre ? 'clair' : 'sombre',
       dessiner(ctx) {
         const L = Kit.logoStudio({ pixel: px, couleur: sombre ? FONCE : '#ffffff', couleurSousTitre: sombre ? '#3a4252' : C.gris });
         Kit.poser(ctx, L, 35 * px / 2, 0, 'haut');

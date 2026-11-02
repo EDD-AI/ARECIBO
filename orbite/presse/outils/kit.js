@@ -306,7 +306,9 @@
 
   // Le plus grand rendu d'un astre (tout son décor compris : anneaux, lunes, halos) qui tient dans
   // largeur × hauteur px, à pixel fixe. o : options de Kit.astre + { largeur, hauteur } (défaut 512).
-  // Quelques rendus d'essai (rapides une fois le shader compilé).
+  // Quelques rendus d'essai (rapides une fois le shader compilé). PAS pour une animation : la
+  // taille trouvée dépend de la phase (position des lunes) ; dans un GIF, utiliser Kit.astre avec
+  // une taille fixe (ou appeler astreCadre une fois à t = 0 et réutiliser son .kit.rayon).
   function astreCadre(x, o) {
     o = Object.assign({}, o || {});
     const Wm = o.largeur || 512, Hm = o.hauteur || Wm;
@@ -913,7 +915,7 @@
   }
   function listeScenes() {
     return SCENES.map((s) => ({
-      nom: s.nom, groupe: s.groupe, largeur: s.largeur, hauteur: s.hauteur, titre: s.titre || '', usage: s.usage || '',
+      nom: s.nom, groupe: s.groupe, largeur: s.largeur, hauteur: s.hauteur, titre: s.titre || '', usage: s.usage || '', apercu: s.apercu || 'sombre',
       langues: s.langues.slice(), gif: s.gif || null, fond: s.fond,
       fichiers: (s.langues.length ? s.langues : [null]).map((l) => ({ lang: l, fichier: fichierDe(s, l) }))
     }));
@@ -933,6 +935,10 @@
       document.body.appendChild(zone);
     }
     const cv = document.getElementById('toile'), calque = document.getElementById('calque');
+    // La page a pu être ouverte en mode liste (rendu.html?groupe=…) : on montre la zone de la scène.
+    zone.style.display = '';
+    for (const el of document.querySelectorAll('.liste, .err')) el.remove();
+    window.scrollTo(0, 0);
     zone.style.width = sc.largeur + 'px';
     zone.style.height = sc.hauteur + 'px';
     cv.width = sc.largeur;

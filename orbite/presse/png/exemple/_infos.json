@@ -1,0 +1,22 @@
+{
+ "exemple-banniere-1200x630-fr.png": {
+  "titre": "Exemple : bannière 1200 × 630",
+  "usage": "Démonstration du kit (fond étoilé, trois astres, logo, accroche).",
+  "scene": "exemple-banniere-1200x630",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "exemple-banniere-1200x630-en.png": {
+  "titre": "Exemple : bannière 1200 × 630",
+  "usage": "Démonstration du kit (fond étoilé, trois astres, logo, accroche).",
+  "scene": "exemple-banniere-1200x630",
+  "transparent": false,
+  "apercu": "sombre"
+ },
+ "exemple-gif-maelstrom-320.gif": {
+  "titre": "Exemple : GIF animé (Maelström qui tourne)",
+  "usage": "Démonstration de l’export GIF (30 images, boucle parfaite).",
+  "scene": "exemple-gif-maelstrom-320",
+  "transparent": false
+ }
+}

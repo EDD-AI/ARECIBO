@@ -33,8 +33,7 @@
       const brasier = Kit.astre('betelgeuse', { taille: 300, pixel: PX, legendaire: false, phase: 0.3 });
       const tempete = Kit.astre('tempest', { taille: 360, pixel: PX, dore: true, phase: 0.1 });
       const neb = Kit.astre('attracteur', { taille: 300, pixel: PX, legendaire: false, phase: 0.6 });
-      // Un halo tramé discret derrière l'astre doré (couleur d'accent du kit).
-      Kit.halo(ctx, pos.tempete[0], pos.tempete[1], { rayon: 230, couleur: C.or, force: 0.32, pixel: PX, vide: 120 });
+      // (L'astre doré a déjà le halo d'or du jeu : pas de Kit.halo en plus, il ferait doublon.)
       Kit.poser(ctx, brasier, pos.brasier[0], pos.brasier[1]);
       Kit.poser(ctx, neb, pos.neb[0], pos.neb[1]);
       Kit.poser(ctx, tempete, pos.tempete[0], pos.tempete[1]);
@@ -62,8 +61,9 @@
     gif: { images: 30, delai: 8 },                               // delai en centièmes de seconde
     dessiner(ctx, s) {
       // s.t va de 0 à 1 (exclu) : on le donne comme phase, la boucle du jeu est parfaite.
+      // Taille FIXE (Kit.astre + taille) : Kit.astreCadre recalculerait l'échelle à chaque image.
       Kit.etoiles(ctx, { pixel: 2, graine: 3, phase: s.t });
-      Kit.poser(ctx, Kit.astreCadre('maelstrom', { largeur: 290, hauteur: 290, pixel: 3, phase: s.t, decalage: false }), 160, 160);
+      Kit.poser(ctx, Kit.astre('maelstrom', { taille: 250, pixel: 3, phase: s.t, decalage: false }), 160, 160);
     }
   });
 })();

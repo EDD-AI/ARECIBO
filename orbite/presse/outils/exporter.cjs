@@ -76,9 +76,10 @@ function construireManifeste() {
     try { info = (JSON.parse(fs.readFileSync(path.join(PNG, dossier, '_infos.json'), 'utf8'))[path.basename(r)]) || {}; } catch (err) { info = {}; }
     return {
       chemin: r, dossier, nom: path.basename(r), type: r.toLowerCase().endsWith('.gif') ? 'gif' : 'png',
-      largeur: d.largeur || 0, hauteur: d.hauteur || 0, transparent: !!d.alpha,
+      // transparent : d'après le fond de la scène (un PNG du kit est toujours RGBA, même opaque).
+      largeur: d.largeur || 0, hauteur: d.hauteur || 0, transparent: info.transparent != null ? !!info.transparent : !!d.alpha,
       octets: st.size, lang: m ? m[1].toLowerCase() : null,
-      titre: info.titre || '', usage: info.usage || '', modifie: st.mtime.toISOString()
+      titre: info.titre || '', usage: info.usage || '', apercu: info.apercu || 'sombre', modifie: st.mtime.toISOString()
     };
   }).sort((a, b) => (a.dossier.localeCompare(b.dossier) || a.nom.localeCompare(b.nom)));
   const dossiers = [...new Set(fichiers.map((f) => f.dossier))];
@@ -182,7 +183,7 @@ async function main() {
         if (!d || d.largeur !== s.largeur || d.hauteur !== s.hauteur) {
           throw new Error(f.fichier + ' : taille ' + (d ? d.largeur + '×' + d.hauteur : '?') + ' au lieu de ' + s.largeur + '×' + s.hauteur);
         }
-        infos[f.fichier] = { titre: s.titre, usage: s.usage, scene: s.nom };
+        infos[f.fichier] = { titre: s.titre, usage: s.usage, scene: s.nom, transparent: s.fond === 'transparent', apercu: s.apercu === 'clair' ? 'clair' : 'sombre' };
         n++;
         console.log(`✔ ${path.relative(process.cwd(), file)}  ${s.largeur}×${s.hauteur}  ${(buf.length / 1024).toFixed(0)} Ko  ${((Date.now() - t1) / 1000).toFixed(1)} s`);
       }
