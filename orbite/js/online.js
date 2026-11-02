@@ -121,8 +121,13 @@
       await a.signInWithPopup(auth, provider);
     } catch (err) {
       const c = err && err.code || '';
-      // Fenêtre bloquée ou appli installée qui ne les permet pas : on passe par une redirection.
-      if (c.includes('popup-blocked') || c.includes('operation-not-supported') || c.includes('web-storage-unsupported')) {
+      // Fenêtre bloquée ou appli installée qui ne les permet pas : on passe par une redirection. Pas dans
+      // un cadre (itch.io, v136) : la page de connexion Google refuse de s'y afficher.
+      let framed = true;
+      try { framed = window.self !== window.top; } catch (e) { /* cadre d'un autre site */ }
+      if (framed && (c.includes('popup-blocked') || c.includes('operation-not-supported') || c.includes('web-storage-unsupported'))) {
+        set({ error: tr('La fenêtre de connexion Google est bloquée : autorisez les fenêtres pop-up pour ce site, puis réessayez.') });
+      } else if (c.includes('popup-blocked') || c.includes('operation-not-supported') || c.includes('web-storage-unsupported')) {
         try { await a.signInWithRedirect(auth, provider); } catch (e2) { set({ error: messageOf(e2) }); }
       } else set({ error: messageOf(err) });
     }

@@ -4,9 +4,12 @@
 (function () {
   'use strict';
 
+  // Dans un cadre (iframe) : la page itch.io (v136). Accéder à window.top peut être refusé : c'est
+  // alors aussi un cadre.
+  const EMBED = (() => { try { return window.self !== window.top; } catch (err) { return true; } })();
   // Version du jeu : à augmenter à chaque mise en ligne, avec version.json, le cache de sw.js et la
   // balise orbite-version d'index.html.
-  const VERSION = 135;
+  const VERSION = 136;
   // Une page index.html restée en cache (navigateur, appli installée) avec des scripts plus récents :
   // on recharge une fois la page à jour, au lieu de planter sur un élément qui lui manque.
   const PAGE_VERSION = Number((document.querySelector('meta[name="orbite-version"]') || {}).content) || 0;
@@ -1799,7 +1802,7 @@
       ${volumesHtml()}
       <button class="btn" data-act="set" data-v="lang">${tr('LANGUE : {lang}', { lang: I18N.LANGS.find((l) => l.id === I18N.lang).name.toUpperCase() })}</button>
       <button class="btn" data-act="set" data-v="tutos">${tr('TUTORIELS ET AIDE')}</button>
-      ${installed() ? '' : `<button class="btn" data-act="set" data-v="install">${tr('INSTALLER SUR LE TÉLÉPHONE')}</button>`}
+      ${installed() || EMBED ? '' : `<button class="btn" data-act="set" data-v="install">${tr('INSTALLER SUR LE TÉLÉPHONE')}</button>`}
       <button class="btn" data-act="set" data-v="code">${tr('CODE CADEAU')}</button>
       ${bugs == null ? '' : `<button class="btn rp-entry" data-act="set" data-v="rapports">${tr('RAPPORTS DE BUGS')}<span class="rp-badge${bugs ? ' on' : ''}" id="rpBadge">${bugs}</span></button>`}
       <button class="btn" data-act="set" data-v="credits">${tr('CRÉDITS')}</button>
@@ -5422,7 +5425,7 @@
     show, openSheet, closeSheet, sheetMore, toast, refuse, popAt, popOn, banner, clearBanner, icon, esc, center, sleep, wait, waitTap, vibrate,
     pixelWord, pixelSize, mountEnergy, revealIn, store, dust, addDust, giveXp, levelInfo, xpTotal, backToMenu, stopAmbient, viewW, viewH, frameOf, framed, avatarOf, fontOf, nameHtml, myFont, myFrame, myAvatar, seatLook, emblem, myEmblem, myRankInfo, tierLabel,
     coachStart, coachStop, tuto, famColor, renderMenu, marketTab, renderProfile, readJson, openCreation, lawScreen,
-    loadOnline, onlineInfo, onlineGate, rejoinOnline,
+    loadOnline, onlineInfo, onlineGate, rejoinOnline, embedded: EMBED,
     seeds, addSeeds, wallet, renderMkWallet, worldLook, worldList, playerTag
   };
 
@@ -5430,9 +5433,12 @@
   boot();
 
   // Certains cadres (aperçus, iframes isolées) refusent même l'accès à navigator.serviceWorker.
+  // Dans le cadre d'itch.io (v136), pas de service worker : la page d'itch.io a de toute façon besoin
+  // du réseau, l'adresse change à chaque téléversement (tout serait retéléchargé), et l'origine est
+  // partagée avec les autres jeux.
   let swReg = null;
   try {
-    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !EMBED) {
       navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((r) => { swReg = r; }).catch(() => { /* hors ligne indisponible */ });
     }
   } catch (err) { /* hors ligne indisponible */ }

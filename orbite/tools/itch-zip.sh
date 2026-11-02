@@ -111,7 +111,7 @@ BRUT=0
 while IFS= read -r f; do BRUT=$((BRUT + $(wc -c < "$f"))); done < "$LISTE"
 
 # index.html doit être à la racine du ZIP (vérifié dans le ZIP lui-même quand unzip est là).
-if command -v unzip >/dev/null && ! unzip -Z1 "$SORTIE" | grep -qx 'index.html'; then
+if command -v unzip >/dev/null && ! unzip -Z1 "$SORTIE" | grep -x 'index.html' >/dev/null; then
   echo "Erreur : index.html n'est pas à la racine du ZIP." >&2
   exit 1
 fi

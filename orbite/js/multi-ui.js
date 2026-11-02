@@ -19,8 +19,12 @@
   const myEmb = (cls) => (A.myEmblem ? A.myEmblem(cls) : '');
   const INVITE_KEY = 'orbite.invite';
   const dropInvite = () => { st.invite = null; try { sessionStorage.removeItem(INVITE_KEY); } catch (err) { /* sans importance */ } };
-  // Le lien d'invitation : la page du jeu, avec le code de la partie après #rejoindre=.
-  const inviteUrl = (code) => location.origin + location.pathname + '#rejoindre=' + code;
+  // Le lien d'invitation : la page du jeu, avec le code de la partie après #rejoindre=. Dans le cadre
+  // d'itch.io (v136), l'adresse du cadre change à chaque téléversement et l'ouvrir seule perd la
+  // progression : on donne la page itch.io, et l'ami saisit le code dans Multijoueur.
+  const ITCH_URL = 'https://edda-studio.itch.io/orbite';
+  const embedded = () => !!(A.embedded || /(^|\.)itch\.zone$/.test(location.hostname));
+  const inviteUrl = (code) => (embedded() ? ITCH_URL : location.origin + location.pathname + '#rejoindre=' + code);
 
   function myClasse() { try { return K.sanitize(JSON.parse(localStorage.getItem('orbite.classe') || 'null')); } catch (err) { return K.fresh(); } }
   // Son rang en deux lignes : le nom (Lune II) et le détail (412 pts · 12 / 100), ou le placement.
@@ -387,9 +391,13 @@
       else if (k === 'start') { await MP.start(); }
       else if (k === 'leave') { st.target = null; st.search = null; await (MP.cancelSearch ? MP.cancelSearch() : MP.leave()); }
       else if (k === 'share') {
-        const code = MP.state.match.code, url = inviteUrl(code), text = tr('Rejoins ma partie ORBITE avec le code {c}', { c: code });
-        if (navigator.share) navigator.share({ title: 'ORBITE', text, url }).catch(() => {});
-        else if (navigator.clipboard) { await navigator.clipboard.writeText(text + ' ' + url); A.toast(tr('Lien copié.')); }
+        const code = MP.state.match.code, url = inviteUrl(code);
+        const text = embedded() ? tr('Rejoins ma partie ORBITE : ouvre le jeu, va dans Multijoueur et entre le code {c}.', { c: code }) : tr('Rejoins ma partie ORBITE avec le code {c}', { c: code });
+        // Partager, sinon copier, sinon montrer le code (un cadre peut refuser les deux, v136).
+        let ok = false;
+        if (navigator.share) { try { await navigator.share({ title: 'ORBITE', text, url }); ok = true; } catch (err) { ok = !!(err && err.name === 'AbortError'); } }
+        if (!ok && navigator.clipboard) { try { await navigator.clipboard.writeText(text + ' ' + url); A.toast(tr('Lien copié.')); ok = true; } catch (err) { /* copie refusée */ } }
+        if (!ok) A.openSheet(`<h3>${tr('INVITER UN AMI')}</h3><p class="muted">${esc(text)}</p><div class="mp-code">${esc(code)}</div><p class="muted">${esc(url)}</p>`);
       }
       else if (k === 'law') { st.law = b.dataset.law; if (window.OrbiteEnergy) window.OrbiteEnergy.pulse(b.querySelector('canvas.sphere')); }
       else if (k === 'go') { if (st.law) await begin(st.law); return; }
