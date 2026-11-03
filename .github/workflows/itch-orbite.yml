@@ -44,7 +44,13 @@ jobs:
       - name: butler
         if: steps.cle.outputs.ok == '1'
         run: |
-          curl -sSL -o "$RUNNER_TEMP/butler.zip" https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+          # itch.io sert butler depuis broth.itch.zone (l'ancienne adresse broth.itch.ovh, en secours).
+          ok=0
+          for h in broth.itch.zone broth.itch.ovh; do
+            if curl -fsSL --retry 3 -o "$RUNNER_TEMP/butler.zip" "https://$h/butler/linux-amd64/LATEST/archive/default"; then ok=1; break; fi
+            echo "::warning::butler introuvable sur $h"
+          done
+          [ "$ok" = 1 ] || { echo "::error::Impossible de télécharger butler."; exit 1; }
           unzip -q "$RUNNER_TEMP/butler.zip" -d "$RUNNER_TEMP/butler"
           chmod +x "$RUNNER_TEMP/butler/butler"
           "$RUNNER_TEMP/butler/butler" -V
