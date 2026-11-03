@@ -1,6 +1,6 @@
 # Mettre ORBITE sur itch.io : le pas-à-pas
 
-Page visée : **https://edda-studio.itch.io/orbite**. Compte : `edda-studio`.
+Page : **https://edda-studio.itch.io/orbite-game**. Compte : `EDDA_STUDIO`.
 
 ## Ce qu’il te faut (déjà prêt)
 

@@ -2,7 +2,7 @@
 
 Tous les textes de la page, prêts à copier-coller : les champs du formulaire (partie 1), la description
 complète en anglais puis en français (partie 2) et un premier devlog (partie 3). Chaque chiffre et chaque
-nom vient du code du jeu (version PRE.ALPHA 1.35) : voir l’annexe en bas.
+nom vient du code du jeu (version PRE.ALPHA 1.40) : voir l’annexe en bas.
 
 ## Mode d’emploi
 
@@ -26,8 +26,8 @@ nom vient du code du jeu (version PRE.ALPHA 1.35) : voir l’annexe en bas.
 ## 1. Champs de la page
 
 - **Title** : `ORBITE`
-- **Project URL** : `orbite` (adresse finale : `https://edda-studio.itch.io/orbite`). Garde bien `orbite` :
-  depuis la version 136, les invitations envoyées depuis itch.io renvoient à cette adresse.
+- **Project URL** : `orbite-game` (adresse : `https://edda-studio.itch.io/orbite-game`). Garde bien
+  `orbite-game` : depuis la version 140, les invitations envoyées depuis itch.io renvoient à cette adresse.
 - **Short description or tagline** (une seule par page ; l’anglais conseillé, la page est bilingue) :
   - EN (82 caractères) : `Build the mightiest solar system in the universe. A cosmic pixel-art auto-battler.`
   - FR (97 caractères) : `Composez le système solaire le plus puissant de l’univers. Un auto-battler cosmique en pixel art.`
@@ -108,7 +108,7 @@ Your first duel is guided step by step.
 
 - **Placement is everything.** Rows and columns both matter. **Range** orbs fire from the back row,
   **Breach** orbs strike the enemy back row, **Guard** orbs shut Breach down.
-- **10 phenomena.** Some placements transform an orb at the start of combat. Two Void orbs, one behind
+- **13 phenomena.** Some placements transform an orb at the start of combat. Two Void orbs, one behind
   the other: a black hole. Two Blaze orbs: a supernova. A Moon in front of a Sun: an eclipse.
 - **No two games alike.** Each game draws 5 of the 13 families (1,287 combinations) and one cosmic event
   out of 11. At cycles 4 and 8, you choose a relic. At cycle 6, every law awakens and gets stronger.
@@ -120,7 +120,7 @@ Your first duel is guided step by step.
 
 ### Families and content
 
-**13 families**, 9 orbs each, plus 8 neutral orbs found in every game:
+**13 families**, 9 orbs each, plus 12 neutral orbs found in every game:
 
 - **Life**: Suns make Habitable worlds grow at each end of cycle.
 - **Void**: black holes and dead planets. Every collapse feeds the others.
@@ -281,7 +281,7 @@ Votre premier duel est guidé pas à pas.
 
 - **Le placement décide de tout.** Les rangées comptent, les colonnes aussi. Les astres à **Portée**
   tirent depuis l’arrière, ceux à **Percée** frappent l’arrière ennemi, la **Garde** bloque la Percée.
-- **10 phénomènes.** Certains placements transforment un astre au début du combat. Deux astres du
+- **13 phénomènes.** Certains placements transforment un astre au début du combat. Deux astres du
   Néant l’un derrière l’autre : un trou noir. Deux du Brasier : une supernova. Une Lune devant un
   Soleil : une éclipse.
 - **Aucune partie ne se ressemble.** Chaque partie tire 5 des 13 familles (1 287 combinaisons) et un
@@ -296,7 +296,7 @@ Votre premier duel est guidé pas à pas.
 
 ### Familles et contenu
 
-**13 familles**, de 9 astres chacune, plus 8 astres neutres présents dans toutes les parties :
+**13 familles**, de 9 astres chacune, plus 12 astres neutres présents dans toutes les parties :
 
 - **Vie** : les Soleils font grandir les mondes Habitables à chaque fin de cycle.
 - **Néant** : trous noirs et planètes mortes. Chaque effondrement nourrit les autres.
@@ -513,7 +513,7 @@ Rien de tout cela n’a pu être testé d’ici : le réseau du conteneur bloqu
 
 ---
 
-## Annexe : d’où viennent les chiffres (vérifiés le 2 novembre 2026, version 135)
+## Annexe : d’où viennent les chiffres (vérifiés le 3 novembre 2026, version 140)
 
 - 13 familles : `FAMILY_KEYS` dans `js/rules.js` ; noms et phrases d’identité : `FAMILIES` (anglais :
   `js/lang/regles.js`).
@@ -523,7 +523,7 @@ Rien de tout cela n’a pu être testé d’ici : le réseau du conteneur bloqu
 - 5 familles par partie : `ACTIVE_FAMILIES` ; 1 287 = combinaisons de 5 parmi 13.
 - 16 lois, 3 proposées, lois de vie (`hp`) : `LAWS` ; éveil au cycle 6 : `AWAKE_ROUND`.
 - 11 événements : `EVENTS` ; 12 reliques aux cycles 4 et 8 : `RELICS`, `RELIC_ROUNDS`.
-- 10 phénomènes : `PHENOMENA` ; 11 mots-clés : `KEYWORDS` (dont Portée, Percée, Garde : `POSITION_KW`).
+- 13 phénomènes : `PHENOMENA` ; 11 mots-clés : `KEYWORDS` (dont Portée, Percée, Garde : `POSITION_KW`).
 - Coûts : `BUY_COST` 3, `ROLL_COST` 1 ; énergie `min(10, cycle + 2)` (`MAX_GOLD`) ; vente `sellGain`.
 - Deux rangées de 4 : `ROW_MAX` ; formation dès 2 astres : `FORM_MIN`, niveaux I et II : `FORM_LVL_MAX` ; Mélange dès 3 familles : `MIX_MIN` ; 7 astres à deux familles : `fam2`.
 - Doré : trois copies, statistiques doublées (`makeUnit`), découverte au niveau supérieur (`dtier`),

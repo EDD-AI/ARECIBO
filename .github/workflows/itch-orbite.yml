@@ -1,5 +1,5 @@
 # ORBITE → itch.io : fabrique le ZIP du jeu (orbite/tools/itch-zip.sh) et l'envoie sur
-# https://edda-studio.itch.io/orbite avec butler, l'outil officiel d'itch.io.
+# https://edda-studio.itch.io/orbite-game avec butler, l'outil officiel d'itch.io.
 # - À la main : onglet Actions → « itch.io (ORBITE) » → Run workflow.
 # - Tout seul : à chaque nouvelle version du jeu sur main (orbite/version.json change).
 # La clé vient du secret BUTLER_API_KEY du dépôt (itch.io → Settings → API keys), jamais du code.
@@ -71,9 +71,11 @@ jobs:
           print('compte itch.io :', me.get('username'), me.get('url'))
           for g in games:
               print('page :', g.get('title'), '|', g.get('url'), '|', 'publiée' if g.get('published') else 'brouillon')
-          pick = [g for g in games if (g.get('url') or '').rstrip('/').endswith('/orbite')] or [g for g in games if (g.get('title') or '').strip().upper() == 'ORBITE']
+          # La page d'ORBITE : son adresse finit par /orbite ou /orbite-game, sinon son titre commence par ORBITE.
+          slug_of = lambda g: (g.get('url') or '').rstrip('/').split('/')[-1]
+          pick = [g for g in games if slug_of(g) in ('orbite', 'orbite-game')] or [g for g in games if (g.get('title') or '').strip().upper().startswith('ORBITE')]
           if not pick:
-              print('::error::Aucune page ORBITE sur ce compte itch.io : créez-la (Dashboard → Create new project, Project URL « orbite », Kind of project HTML), puis enregistrez.')
+              print('::error::Aucune page ORBITE sur ce compte itch.io : créez-la (Dashboard → Create new project, Kind of project HTML), puis enregistrez.')
               raise SystemExit(1)
           slug = pick[0]['url'].rstrip('/').split('/')[-1]
           target = '%s/%s:html5' % (me['username'], slug)
