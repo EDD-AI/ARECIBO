@@ -77,8 +77,12 @@ jobs:
           if not pick:
               print('::error::Aucune page ORBITE sur ce compte itch.io : créez-la (Dashboard → Create new project, Kind of project HTML), puis enregistrez.')
               raise SystemExit(1)
-          slug = pick[0]['url'].rstrip('/').split('/')[-1]
-          target = '%s/%s:html5' % (me['username'], slug)
+          # butler veut le nom du compte tel qu'il est dans l'adresse (edda-studio.itch.io → edda-studio),
+          # pas le nom affiché (EDDA_STUDIO : « invalid target (bad user) »).
+          url = pick[0]['url'].rstrip('/')
+          slug = url.split('/')[-1]
+          user = url.split('//')[-1].split('.')[0]
+          target = '%s/%s:html5' % (user, slug)
           print('cible :', target)
           with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write('cible=%s\n' % target)
