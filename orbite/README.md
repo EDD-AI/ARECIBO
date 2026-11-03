@@ -370,6 +370,15 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## La vraie adresse de la page itch.io, envoi automatique (v140)
+
+- La page itch.io s’appelle « ORBITE Game » : **https://edda-studio.itch.io/orbite-game**. Les invitations envoyées
+  depuis itch.io donnent maintenant cette adresse (`ITCH_URL`, `js/multi-ui.js`).
+- **Envoi automatique sur itch.io** : l’action GitHub « itch.io (ORBITE) » (`.github/workflows/itch-orbite.yml`)
+  fabrique le ZIP (`tools/itch-zip.sh`) et l’envoie avec butler sur le canal `html5`, à chaque nouvelle version sur
+  `main` ou à la main. Elle lit le compte et la page avec l’API itch.io (le compte s’écrit `EDDA_STUDIO`) ; la clé
+  vient du secret `BUTLER_API_KEY` du dépôt. Les étapes à faire une seule fois sont dans `presse/itch/GUIDE.md`.
+
 ## Quatre nouveaux modèles d’astres : Radiotélescope, Point de Lagrange, Amas, Constellation (v139)
 
 Les 4 neutres de la v138 réutilisaient des modèles existants (Radiotélescope = Arecibo, Point de Lagrange ≈

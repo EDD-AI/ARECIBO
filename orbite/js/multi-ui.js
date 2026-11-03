@@ -22,7 +22,8 @@
   // Le lien d'invitation : la page du jeu, avec le code de la partie après #rejoindre=. Dans le cadre
   // d'itch.io (v136), l'adresse du cadre change à chaque téléversement et l'ouvrir seule perd la
   // progression : on donne la page itch.io, et l'ami saisit le code dans Multijoueur.
-  const ITCH_URL = 'https://edda-studio.itch.io/orbite';
+  // La page itch.io d'ORBITE (v140 : son adresse réelle est /orbite-game).
+  const ITCH_URL = 'https://edda-studio.itch.io/orbite-game';
   const embedded = () => !!(A.embedded || /(^|\.)itch\.zone$/.test(location.hostname));
   const inviteUrl = (code) => (embedded() ? ITCH_URL : location.origin + location.pathname + '#rejoindre=' + code);
 
