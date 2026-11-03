@@ -370,6 +370,29 @@ garde `fam` et `combo`. Pour les parties d’avant la v102, on part des compteur
 avec une majorité d’une famille) : les joueurs voient leur famille tout de suite. Le combo, lui, n’a
 pas d’historique avant la v102.
 
+## Quatre nouveaux modèles d’astres : Radiotélescope, Point de Lagrange, Amas, Constellation (v139)
+
+Les 4 neutres de la v138 réutilisaient des modèles existants (Radiotélescope = Arecibo, Point de Lagrange ≈
+Zéro absolu, Constellation = Nova). Chacun a maintenant sa propre nature, dessinée par le moteur (nouveau
+programme de surface `SH` dans `js/planet-renderer.js`, nouvelle clé de type réservée dans
+`js/planet-engine.js`) :
+- **Radiotélescope** (`type: 'radio'`, SH 16, silhouette kind 10) : un réseau de 3 paraboles sur un plateau
+  hexagonal en béton posé sur un îlot de roche flottant ; elles suivent une étoile, des ondes radio
+  convergent vers elles, des impulsions courent dans les câbles et les feux clignotent. En petit, les
+  paraboles grossissent un peu pour rester lisibles.
+- **Point de Lagrange** (`type: 'lagrange'`, SH 17) : une selle de potentiel en grille d’espace-temps vue
+  de trois quarts (fil de fer pixel, du violet des creux au cyan des crêtes), ses deux lignes maîtresses en
+  or qui se croisent sur le point d’équilibre (une étoile à quatre branches), et trois cailloux piégés qui
+  oscillent ; la nappe balance doucement.
+- **Amas** (`type: 'cluster'`, SH 18) : un amas ouvert façon Pléiades : des étoiles jeunes bleu-blanc à
+  aigrettes dans des voiles de poussière bleue striés qui ondulent, des grains d’étoiles qui clignotent.
+- **Constellation** (`type: 'constellation'`, SH 19) : une carte du ciel dans un astrolabe en laiton
+  gradué : 6 à 8 étoiles reliées en figure (tirée de la graine), une voie lactée tramée, une lumière qui
+  parcourt les traits en boucle.
+- Le halo doré passe derrière ces quatre astres (comme pour les nébuleuses). Vérifié : rendu au vrai moteur
+  du catalogue complet (144 astres, aucune erreur WebGL, les autres inchangés), états doré, gelé et
+  bouclier, tailles 44 à 230 px. Créés par deux propositions par astre puis un choix et une finition.
+
 ## Moins « mono famille » : astres à deux familles, Mélange, combos entre familles (v138)
 
 Pour qu’un système n’ait plus besoin d’une seule famille (comme dans Battlegrounds, où les meilleurs

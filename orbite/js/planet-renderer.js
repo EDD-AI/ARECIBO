@@ -554,7 +554,7 @@ float asteroidR(vec3 dir) {
 // Silhouettes non sphériques, tracées par marche de rayon dans le repère de l'astre :
 // 1 astéroïde, 2 double (deux lobes soudés), 3 planète brisée, 4 amas de cristaux,
 // 5 anneau-monde, 6 bloc (cube, monolithe), 7 bipyramide (diamant, foret), 8 radiotélescope,
-// 9 fendue en deux.
+// 9 fendue en deux, 10 réseau de paraboles (v139).
 int shapeKind() { return uShape > 0 ? uShape : (uType == 7 ? 1 : 0); }
 float smin(float a, float b, float k) { float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0); return mix(b, a, h) - k * h * (1.0 - h); }
 vec3 spikeDir(int i) { return normalize(hash33(uSeed + float(i) * 7.31) * 2.0 - 1.0); }
@@ -576,6 +576,67 @@ float brokenSDF(vec3 b, out float cut) {
   cut = dp > ds ? 1.0 : 0.0;
   return max(ds, dp);
 }
+// Réseau interférométrique (v139, silhouette 10) : un pont de béton hexagonal sur une roche en
+// gradins qui flotte, des paraboles en Y (uSh.w) toutes tournées vers la même étoile, un radôme au
+// centre. uSh : [rayon du pont, angle du Y, ouverture des paraboles, nombre] ; uSh2.x : hauteur du
+// pont. gDish : direction visée dans le repère de l'astre (calculée une fois dans main). cut rend la
+// pièce touchée : 0 pont, 1 roche, 2 parabole, 3 pied et cornet, 4 radôme.
+vec3 gDish = vec3(0.0, 1.0, 0.0);
+vec2 rot2(vec2 p, float a) { float c = cos(a), s = sin(a); return vec2(c * p.x - s * p.y, s * p.x + c * p.y); }
+float hexD(vec2 p, float r) {
+  const vec3 k = vec3(-0.8660254, 0.5, 0.57735);
+  p = abs(p);
+  p -= 2.0 * min(dot(k.xy, p), 0.0) * k.xy;
+  p -= vec2(clamp(p.x, -k.z * r, k.z * r), r);
+  return length(p) * sign(p.y);
+}
+float hexSlab(vec3 p, float r, float y0, float y1) {
+  vec2 w = vec2(hexD(p.xz, r), abs(p.y - (y0 + y1) * 0.5) - (y1 - y0) * 0.5);
+  return min(max(w.x, w.y), 0.0) + length(max(w, 0.0));
+}
+float capsD(vec3 p, vec3 a, vec3 b, float r) {
+  vec3 pa = p - a, ba = b - a;
+  return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0)) - r;
+}
+// En petit, les paraboles grossissent (et leur pied monte d'autant) pour rester lisibles.
+float radioK() { return mix(1.3, 1.0, smoothstep(10.0, 22.0, uRadius)); }
+vec3 radioDish(int i) {
+  float a = float(i) * TAU / uSh.w + uSh.y;
+  return vec3(cos(a) * uSh.x * 0.68, uSh2.x + 0.2 * radioK(), sin(a) * uSh.x * 0.68);
+}
+float radioSDF(vec3 b, out float mat) {
+  float yt = uSh2.x, R = uSh.x;
+  float d = hexSlab(b, R, yt - 0.13, yt);
+  mat = 0.0;
+  // Roche en gradins : deux dalles plus petites, un peu tournées, puis une pointe qui se resserre.
+  float rk = hexSlab(vec3(rot2(b.xz, 0.32), b.y).xzy, R * 0.82, yt - 0.36, yt - 0.12);
+  rk = min(rk, hexSlab(vec3(rot2(b.xz, -0.26), b.y).xzy, R * 0.58, yt - 0.6, yt - 0.34));
+  float t = clamp((yt - 0.58 - b.y) / 0.44, 0.0, 1.0);
+  rk = min(rk, max(hexD(rot2(b.xz, 0.6), R * 0.38 * (1.0 - t)) * 0.7, max(b.y - (yt - 0.58), yt - 1.02 - b.y)));
+  if (rk < d) { d = rk; mat = 1.0; }
+  float dome = max(length(b - vec3(0.0, yt, 0.0)) - 0.12, yt - b.y);
+  if (dome < d) { d = dome; mat = 4.0; }
+  // Les paraboles ne sont calculées que près du pont (au-delà, cette borne suffit).
+  float far = max(length(b.xz) - R * 0.68 - 0.4, max(yt - 0.02 - b.y, b.y - yt - 0.7));
+  if (far > d) return d;
+  float A = uSh.z * radioK(), Rs = A * 1.7;
+  float h = Rs - sqrt(Rs * Rs - A * A);
+  // Le cornet (une tige d'un pixel) n'est tracé qu'en grand : en petit, il salirait le blanc du bol.
+  float feed = uRadius > 13.0 ? 0.016 : -1.0;
+  for (int i = 0; i < 5; i++) {
+    if (float(i) >= uSh.w) break;
+    vec3 o = radioDish(i);
+    vec3 pd = b - o;
+    // Bol : calotte d'une sphère creuse dont le centre est sur l'axe visé ; cornet au foyer ; pied.
+    float bowl = max(abs(length(pd - gDish * Rs) - Rs) - 0.024, dot(pd, gDish) - h);
+    float leg = min(capsD(pd, vec3(0.0), gDish * Rs * 0.55, feed), capsD(b, vec3(o.x, yt, o.z), o - gDish * 0.02, 0.04));
+    // Le récepteur au foyer : un petit bouton clair au bout du cornet.
+    leg = min(leg, length(pd - gDish * Rs * 0.55) - feed * 2.6);
+    if (bowl < d) { d = bowl; mat = 2.0; }
+    if (leg < d) { d = leg; mat = 3.0; }
+  }
+  return d;
+}
 float shapeSDF(vec3 q, out float cut) {
   cut = 0.0;
   int k = shapeKind();
@@ -584,6 +645,7 @@ float shapeSDF(vec3 q, out float cut) {
     return lq - asteroidR(rotY(uTilt * (q / max(lq, 1e-4)), -uSpin));
   }
   vec3 b = rotY(uTilt * q, -uSpin);
+  if (k == 10) return radioSDF(b, cut);
   if (k == 3) return brokenSDF(b, cut);
   if (k == 9) {
     // Fendue en deux : deux hémisphères écartés de part et d'autre de l'équateur ; cut > 0.5 sur la cassure.
@@ -650,6 +712,98 @@ vec3 shapeNormal(vec3 q) {
     shapeSDF(q + e.xyy, c) - shapeSDF(q - e.xyy, c),
     shapeSDF(q + e.yxy, c) - shapeSDF(q - e.yxy, c),
     shapeSDF(q + e.yyx, c) - shapeSDF(q - e.yyx, c)));
+}
+
+// Radiotélescope (v139) : la surface de chaque pièce du réseau (cut de radioSDF). Pont de béton en
+// dalles, câbles sombres où courent des impulsions vers le radôme, ombres des paraboles ; roche ocre
+// en strates ; paraboles blanches (creux éclairé, dos gris) ; balise du radôme qui s'allume quand
+// le signal arrive au centre.
+Surf radioSurf(vec3 pv, vec3 nv, float mat, float dth) {
+  vec3 b = rotY(uTilt * pv, -uSpin);
+  vec3 n = rotY(uTilt * nv, -uSpin);
+  int m = int(mat + 0.5);
+  float yt = uSh2.x, px = 1.0 / uRadius, A = uSh.z * radioK();
+  float t = fract(uPhase * uD.y);
+  if (m == 0 && n.y < 0.55) m = 1;
+  Surf s;
+  if (m == 0) {
+    s = surf(5);
+    s.spec = 0.25;
+    if (uRadius > 22.0) {
+      vec2 g = abs(fract(b.xz * 3.0) - 0.5);
+      if (max(g.x, g.y) > 0.5 - 2.4 * px) s.row = 6;
+    }
+    // Cercle peint autour du radôme.
+    if (uRadius > 22.0 && abs(length(b.xz) - 0.21) < 0.7 * px) s.bump = 0.45;
+    // Le bord du pont : une bordure sombre, et son arête claire d'un pixel qui dessine l'hexagone.
+    float e = hexD(b.xz, uSh.x);
+    if (uRadius > 14.0 && e > -max(0.07, 2.2 * px)) { s.row = 6; s.bump = 0.3; }
+    if (e > -max(0.025, 0.9 * px)) { s.row = 5; s.bump = 1.0; s.spec = 0.0; }
+    // Feux rouges aux coins du pont, qui clignotent l'un après l'autre.
+    if (uRadius > 22.0 && e > -0.1) {
+      for (int i = 0; i < 6; i++) {
+        float a = float(i) * TAU / 6.0;
+        if (length(b.xz - vec2(cos(a), sin(a)) * uSh.x * 1.08) < 1.6 * px && fract(uPhase * 6.0 + float(i) / 6.0) < 0.5) { s.row = 9; s.emis = 6; }
+      }
+    }
+    vec3 Lb = rotY(uTilt * uLight, -uSpin);
+    vec2 sh = -Lb.xz / max(Lb.y, 0.35) * 0.2;
+    for (int i = 0; i < 5; i++) {
+      if (float(i) >= uSh.w) break;
+      vec2 D = radioDish(i).xz;
+      // Socle rond, plus clair, sous chaque parabole ; son ombre portée par-dessus.
+      if (length(b.xz - D) < A * 0.72) { s.row = 5; s.bump = 0.35; }
+      if (length(b.xz - D - sh) < A * 0.85) { s.row = 6; s.bump = -0.55; s.spec = 0.0; }
+      float h = clamp(dot(b.xz, D) / dot(D, D), 0.0, 1.0);
+      if (uRadius > 14.0 && length(b.xz - D * h) < max(0.025, 0.9 * px)) {
+        s.row = 11; s.bump = -0.2; s.spec = 0.0;
+        if (t < 0.45 && abs(h - (1.0 - t / 0.45)) < 0.09) { s.row = 10; s.emis = 6; }
+      }
+    }
+  } else if (m == 1) {
+    if (b.y > yt - 0.125) {
+      s = surf(b.y < yt - 0.105 ? 11 : 6);
+      s.bump = 0.1;
+    } else {
+      float nz = fbm01(b * 5.0 + uSeed, 3);
+      float st = fract((b.y - yt) * (uRadius > 22.0 ? 9.0 : 4.5) + nz * 0.8);
+      s = surf(st < 0.42 ? 8 : 7);
+      s.bump = (nz - 0.5) * 0.9;
+      if (nz < 0.3) s.row = 11;
+    }
+  } else if (m == 2) {
+    // La parabole la plus proche : rebord clair, un cercle de panneaux, le moyeu sombre au centre.
+    vec3 pd = b - radioDish(0);
+    for (int i = 1; i < 5; i++) {
+      if (float(i) >= uSh.w) break;
+      vec3 q = b - radioDish(i);
+      if (dot(q, q) < dot(pd, pd)) pd = q;
+    }
+    float rad = length(pd - gDish * dot(pd, gDish)) / A;
+    bool inside = dot(n, gDish) > 0.0;
+    s = surf(inside ? 4 : 6);
+    s.spec = inside ? 0.5 : 0.15;
+    if (inside) {
+      // Quand une onde arrive, le rebord des paraboles s'allume.
+      if (rad > 0.84 && t > 0.94) { s.row = 12; s.emis = 6; }
+      else if (rad > 0.86) s.bump = 0.5;
+      else if (uRadius > 22.0 && abs(rad - 0.55) < 0.9 * px / A) s.bump = -0.45;
+      else if (rad < 0.17) s.row = 6;
+    }
+  } else if (m == 3) {
+    s = surf(11);
+    s.spec = 0.3;
+    // Le bouton du foyer, blanc, qui s'allume en cyan avec le rebord quand l'onde arrive.
+    for (int i = 0; i < 5; i++) {
+      if (float(i) >= uSh.w) break;
+      if (length(b - radioDish(i) - gDish * A * 0.935) < 0.05) { s.row = 4; s.spec = 0.8; if (t > 0.94) { s.row = 12; s.emis = 7; } }
+    }
+  } else {
+    s = surf(4);
+    s.spec = 0.6;
+    if (b.y > yt + 0.1) { s.row = 9; s.emis = t > 0.4 && t < 0.62 ? 7 : 4; }
+  }
+  return s;
 }
 
 vec3 portalColor(vec2 xy, float dth) {
@@ -740,6 +894,49 @@ vec3 nebulaColor(vec2 xy, float dth, vec2 fc) {
   return t + (dth - 0.5) * 0.45 > 0.5 ? pal(0, idx) : pal(1, idx);
 }
 
+// Ciel du radiotélescope (v139) : l'étoile visée scintille au loin ; des ondes radio (arcs tramés
+// centrés sur le réseau) arrivent de sa direction et se resserrent sur les paraboles, en boucle.
+// uD : [distance de l'étoile, ondes par boucle, écart entre deux ondes, rayon où elles s'éteignent] ;
+// l'écart grandit sur un petit astre pour que les arcs restent séparés.
+vec4 radioSky(vec2 xy, float dth) {
+  vec2 F = bodyToView(vec3(0.0, uSh2.x + 0.22, 0.0), uSpin).xy;
+  vec2 S = normalize(uC.xy);
+  vec2 v = xy - F;
+  float r = length(v);
+  float t = fract(uPhase * uD.y);
+  // Quelques cailloux flottent sous la roche et dansent doucement.
+  if (uRadius > 14.0) {
+    const vec2 PB[3] = vec2[3](vec2(-0.44, -0.98), vec2(0.14, -1.16), vec2(0.52, -0.9));
+    for (int k = 0; k < 3; k++) {
+      float fk = float(k);
+      vec2 pc = PB[k] + vec2(0.0, 0.03 * sin(TAU * (uPhase * 3.0 + fk * 0.37)));
+      vec2 dp = (xy - pc) * uRadius;
+      vec2 ap = abs(dp);
+      float sz = max(1.2, uRadius * (0.06 - 0.012 * fk));
+      if (max(ap.x, ap.y) < sz && ap.x + ap.y < sz * 1.5) return vec4(dp.y > 0.0 ? pal(7, 4) : pal(8, 2), 1.0);
+    }
+  }
+  vec2 ad = abs((v - S * uD.x) * uRadius);
+  if (max(ad.x, ad.y) < 0.75) return vec4(pal(12, 7), 1.0);
+  if (min(ad.x, ad.y) < 0.6 && max(ad.x, ad.y) < 1.4 + 2.6 * (1.0 - smoothstep(0.0, 0.3, t))) return vec4(pal(12, 6), 1.0);
+  float c = dot(v, S) / max(r, 1e-4);
+  if (c < 0.5) return vec4(0.0);
+  float sp = max(uD.z, 2.4 / uRadius);
+  // Les ondes restent dans le cercle de l'astre (uSh2.z), un peu en deçà.
+  float N = clamp(floor((uSh2.z - 0.1 - uD.w) / sp + 0.05), 1.0, 3.0);
+  float w = max(1.3 / uRadius, 0.035);
+  float best = 0.0;
+  for (int k = 0; k < 3; k++) {
+    if (float(k) >= N) break;
+    float rk = uD.w + (float(k) + 1.0 - t) * sp;
+    float u = (rk - uD.w) / (N * sp);
+    if (abs(r - rk) < w * 0.5) best = max(best, smoothstep(1.0, 0.72, u) * min(1.0, u * 6.0 + 0.3));
+  }
+  best *= smoothstep(0.5, 0.78, c);
+  if (best < 0.05 || dth > best * 1.1) return vec4(0.0);
+  return vec4(pal(12, clamp(int(best * 4.0 + 3.0 + (dth - 0.5)), 3, 7)), 1.0);
+}
+
 // Big Bang (v118) : une explosion qui ne finit jamais, à plat, sans lumière. Un cœur blanc qui palpite
 // avec son éclat en croix, une boule de feu turbulente qui file vers l'extérieur, trois ondes de choc
 // déchirées qui s'étendent en refroidissant (du blanc au bleu), des jets de matière de longueurs
@@ -795,6 +992,419 @@ vec4 bigbangColor(vec2 xy, float dth, vec2 fc) {
   return vec4(pal(0, idx), 1.0);
 }
 
+// Point de Lagrange (v139) : une selle de potentiel en fil de fer, à plat, sans corps solide. Un morceau rond
+// d'espace-temps vu de trois quarts (projection pseudo-3D) : il remonte à gauche et à droite, plonge devant
+// et derrière, et balance doucement. Pour chaque pixel, on cherche à rebours le point de la nappe qu'il
+// montre : la selle est quadratique (racines exactes), puis deux pas de Newton ajoutent les puits creusés
+// par les cailloux et l'onde qui converge vers le col. Première racine : la nappe vue de dessus ; seconde :
+// vue par-dessous, à travers les mailles. La teinte suit la hauteur (pal 4 : violet dans les creux, cyan
+// puis blanc sur les crêtes ; pal 5 par-dessous, et la trame de la nappe entre les mailles). Au col, le
+// point d'équilibre (pal 1), où se croisent les deux lignes maîtresses en or ; trois cailloux (pal 6)
+// oscillent autour. Lignes d'un pixel : distance à la ligne / fwidth. Repère : v = (x, d) colonne et
+// profondeur de la vue ; q = l'objet, tourné de th autour de la verticale.
+float lgH(vec2 q, vec2 r0, vec2 r1, vec2 r2) {
+  float h = uA.x * q.x * q.x - uC.w * q.y * q.y;
+  vec2 e0 = q - r0, e1 = q - r1, e2 = q - r2;
+  h -= uC.z * (exp(-dot(e0, e0) * 60.0) + exp(-dot(e1, e1) * 60.0) + exp(-dot(e2, e2) * 60.0));
+  float rq = length(q);
+  return h + uC.y * sin(TAU * (rq * 2.4 + uPhase * 4.0)) * smoothstep(0.05, 0.35, rq) * (1.0 - smoothstep(0.6, 1.0, rq / uA.z));
+}
+float lgSolve(float x, float yr, float d, float cs, float sn, float c, vec2 r0, vec2 r1, vec2 r2) {
+  for (int i = 0; i < 2; i++) {
+    float f = uA.y * d + c * lgH(vec2(x * cs + d * sn, d * cs - x * sn), r0, r1, r2) - yr;
+    float d2 = d + 0.01;
+    float f2 = uA.y * d2 + c * lgH(vec2(x * cs + d2 * sn, d2 * cs - x * sn), r0, r1, r2) - yr;
+    float fp = (f2 - f) / 0.01;
+    d -= clamp(f / (abs(fp) > 0.02 ? fp : 0.02), -0.25, 0.25);
+  }
+  return d;
+}
+// L'étoile du point d'équilibre, en pixels entiers depuis son centre (a = |écart|) : teinte de pal 1, ou -1.
+int lgStar(vec2 a, vec2 Lhv, float Ld, float R, float dth) {
+  if (a.x + a.y <= (R >= 40.0 ? 2.0 : R >= 14.0 ? 1.0 : 0.0)) return 7;
+  if (a.y < 0.5 && a.x <= Lhv.x) return clamp(int(7.6 - a.x / Lhv.x * 3.6 + (dth - 0.5)), 3, 7);
+  if (a.x < 0.5 && a.y <= Lhv.y) return clamp(int(7.6 - a.y / Lhv.y * 3.6 + (dth - 0.5)), 3, 7);
+  if (R >= 14.0 && a.x == a.y && a.x <= Ld) return 5;
+  return -1;
+}
+vec3 lagrangeColor(vec2 xy, float dth, vec2 fc) {
+  float s = uA.y, c = sqrt(1.0 - s * s), rho = uA.z;
+  float th = uB.x + uB.y * sin(TAU * uPhase);
+  float cs = cos(th), sn = sin(th);
+  // Les cailloux : chacun balance sur un petit arc autour du col, en flottant un peu au-dessus de la nappe.
+  vec2 rq[3];
+  vec2 rs[3];
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    vec3 hh = hash33(uSeed + fi * 5.17);
+    float ph = TAU * (uPhase * (i == 1 ? 2.0 : 1.0) + hh.x);
+    float a = TAU * fi / 3.0 + hh.y * 0.8 + 0.5 * sin(ph);
+    float rad = uC.x * (0.65 + 0.45 * hh.z) * (1.0 + 0.12 * cos(ph));
+    rq[i] = vec2(cos(a), sin(a)) * rad;
+  }
+  for (int i = 0; i < 3; i++) {
+    vec2 q = rq[i];
+    float lift = 0.07 + 0.025 * sin(TAU * (uPhase * 2.0 + float(i) * 0.37));
+    float h = uA.x * q.x * q.x - uC.w * q.y * q.y - uC.z + lift;
+    vec2 v = vec2(q.x * cs - q.y * sn, q.x * sn + q.y * cs);
+    float yr = v.y * s + h * c;
+    rs[i] = vec2(v.x / (1.0 + uB.z * yr), yr + uB.w);
+  }
+  // La nappe : la selle seule donne une équation du second degré en d pour la colonne x (la fuite resserre
+  // le fond, comme en perspective).
+  float yr = xy.y - uB.w;
+  float x = xy.x * (1.0 + uB.z * yr);
+  float q2 = c * (uA.x * sn * sn - uC.w * cs * cs);
+  float q1 = s + c * 2.0 * x * cs * sn * (uA.x + uC.w);
+  float q0 = c * x * x * (uA.x * cs * cs - uC.w * sn * sn) - yr;
+  float D = q1 * q1 - 4.0 * q2 * q0;
+  float sD = sqrt(max(D, 0.0));
+  float t = -0.5 * (q1 + (q1 >= 0.0 ? sD : -sD));
+  float ra = t / min(q2, -1e-4), rb = q0 / (abs(t) > 1e-5 ? t : 1e-5);
+  float d1 = lgSolve(x, yr, min(ra, rb), cs, sn, c, rq[0], rq[1], rq[2]);
+  float d2 = lgSolve(x, yr, max(ra, rb), cs, sn, c, rq[0], rq[1], rq[2]);
+  vec2 p1 = vec2(x * cs + d1 * sn, d1 * cs - x * sn);
+  vec2 p2 = vec2(x * cs + d2 * sn, d2 * cs - x * sn);
+  // Racine vérifiée : près du pli, Newton peut s'égarer ; un point qui ne retombe pas sur le pixel est écarté.
+  float tol = 1.5 / uRadius;
+  bool ok1 = D >= 0.0 && abs(s * d1 + c * lgH(p1, rq[0], rq[1], rq[2]) - yr) < tol;
+  bool ok2 = D >= 0.0 && abs(s * d2 + c * lgH(p2, rq[0], rq[1], rq[2]) - yr) < tol;
+  // La grille : plus fine quand l'astre est grand ; toujours une ligne par le col.
+  float nh = clamp(floor(uRadius / 9.0), 2.0, 6.0);
+  vec2 g1 = p1 * (nh / rho), g2 = p2 * (nh / rho);
+  float l1 = length(p1), l2 = length(p2);
+  vec2 w1 = max(fwidth(g1), vec2(1e-4)), w2 = max(fwidth(g2), vec2(1e-4));
+  float wl1 = max(fwidth(l1), 1e-4), wl2 = max(fwidth(l2), 1e-4);
+
+  // Le point d'équilibre, calé sur un pixel (en pixels entiers) : un cœur blanc, une étoile à quatre
+  // branches qui battent en alternance et, en grand, de petits éclats en diagonale. Un liseré noir d'un
+  // pixel la détache de la grille, même sur une petite carte.
+  float R = uRadius;
+  vec2 pq = floor(fc) - floor(uCenter + vec2(0.0, uB.w * R * uFlip));
+  float tw = sin(TAU * uPhase * 4.0);
+  float L0 = max(3.0, R * 0.16), Ld = floor(L0 * (0.3 + 0.1 * sin(TAU * uPhase * 8.0)) + 0.5);
+  vec2 Lhv = floor(L0 * vec2(0.85 + 0.15 * tw, 0.85 - 0.15 * tw) + 0.5);
+  int st = lgStar(abs(pq), Lhv, Ld, R, dth);
+  if (st >= 0) return pal(1, st);
+  if (max(abs(pq.x), abs(pq.y)) <= L0 + 1.0 && max(max(lgStar(abs(pq + vec2(1.0, 0.0)), Lhv, Ld, R, 0.5), lgStar(abs(pq - vec2(1.0, 0.0)), Lhv, Ld, R, 0.5)),
+      max(lgStar(abs(pq + vec2(0.0, 1.0)), Lhv, Ld, R, 0.5), lgStar(abs(pq - vec2(0.0, 1.0)), Lhv, Ld, R, 0.5))) >= 0) return vec3(0.0);
+  // Les cailloux, devant la nappe : de petites boules éclairées d'en haut à gauche (un ou deux pixels
+  // sur une petite carte, pour ne pas noyer le point d'équilibre).
+  float rr = max(0.042, 0.8 / R);
+  for (int i = 0; i < 3; i++) {
+    vec2 e = (xy - rs[i]) / rr;
+    float de = dot(e, e);
+    if (de < 1.0) {
+      float lit = dot(vec3(e, sqrt(1.0 - de)), normalize(vec3(-0.55, 0.6, 0.6)));
+      return pal(6, clamp(int(lit * 4.0 + 1.2 + (dth - 0.5) * 0.8), 0, 4));
+    }
+  }
+  float km = max(uA.x, uC.w) * rho * rho;
+  for (int k = 0; k < 2; k++) {
+    if (!(k == 0 ? ok1 : ok2)) continue;
+    vec2 p = k == 0 ? p1 : p2;
+    vec2 g = k == 0 ? g1 : g2;
+    vec2 f = abs(g - floor(g + 0.5)) / (k == 0 ? w1 : w2);
+    float l = k == 0 ? l1 : l2;
+    // Le bord du morceau ; près du pli de la nappe, fwidth s'emballe : rien au-delà du bord.
+    float rf = abs(l - rho) / (k == 0 ? wl1 : wl2);
+    if (l > rho * 1.06 || (l > rho && rf >= 0.5)) continue;
+    bool rim = rf < 0.5;
+    bool line = rim || min(f.x, f.y) < 0.5;
+    // La teinte suit la hauteur : violet dans les creux, cyan puis blanc sur les crêtes ; plus vif près du
+    // col, aux nœuds et sur la crête de l'onde ; plus sombre et en pointillés par-dessous.
+    float hgt = (uA.x * p.x * p.x - uC.w * p.y * p.y) / km;
+    float crest = sin(TAU * (l * 2.4 + uPhase * 4.0));
+    float v = 0.45 + 0.42 * hgt + 0.2 * (1.0 - smoothstep(0.0, 0.4, l)) + (crest > 0.7 && l > 0.12 && l < rho * 0.9 ? 0.14 : 0.0);
+    if (rim) v += 0.14;
+    if (max(f.x, f.y) < 0.75) v += 0.1;
+    if (k == 1) {
+      if (!line || (!rim && dth > 0.7)) continue;
+      return pal(5, clamp(int(v * 5.0 + 1.5 + (dth - 0.5)), 2, 7));
+    }
+    if (line) {
+      // Les deux lignes maîtresses du col, en or : celle qui monte vers les crêtes, celle qui plonge vers
+      // les creux. Elles se croisent sur le point d'équilibre et pâlissent vers le bord.
+      if (!rim && ((f.x < 0.5 && abs(g.x) < 0.5) || (f.y < 0.5 && abs(g.y) < 0.5))) return pal(1, clamp(int(5.4 - 2.6 * l / rho + (dth - 0.5)), 2, 5));
+      return pal(4, clamp(int(v * 7.0 + (dth - 0.5) * 1.2), 1, 7));
+    }
+    // Entre les mailles, la nappe elle-même : une trame lâche, plus dense là où sa pente regarde la
+    // lumière (en haut à gauche) ; elle donne du corps à la selle sur une petite carte.
+    vec3 nq = normalize(vec3(-2.0 * uA.x * p.x, 2.0 * uC.w * p.y, 1.0));
+    float lit = clamp(dot(vec3(nq.x * cs - nq.y * sn, nq.x * sn + nq.y * cs, nq.z), vec3(-0.56, -0.36, 0.75)), 0.0, 1.0);
+    if (dth < 0.45 * (0.15 + 0.85 * lit)) return pal(5, clamp(int(lit * 4.0 + dth - 0.3), 0, 4));
+  }
+  discard;
+  return vec3(0.0);
+}
+
+// Amas ouvert (v139) : des étoiles jeunes (pal 0) dans leurs voiles de poussière bleue (pal 1), à plat,
+// sans relief. Chaque étoile : un cœur blanc, une croix d'aigrettes d'un pixel qui scintille, un halo
+// tramé. Les voiles ne brillent que près des étoiles (lumière renvoyée), étirés en stries parallèles
+// qui ondulent, semés de grains d'étoiles faibles qui clignotent ; ailleurs, le noir, et de rares
+// étoiles lointaines (un tiers en jaune pâle, pal 2).
+// uStars : 12 × [x, y, éclat, phase] (éclat 0 : fin de la liste) ; uA : [angle des stries, finesse,
+// force des voiles, étirement].
+uniform vec4 uStars[12];
+vec3 clusterColor(vec2 xy, float dth, vec2 fc) {
+  // Pixel relatif au centre (uCenter est entier) : les étoiles tombent pile sur un pixel.
+  vec2 ip = floor(fc) - uCenter;
+  // Sur une petite carte, le dessin s'écarte un peu : il remplit mieux la case.
+  float sp = mix(1.12, 1.0, clamp((uRadius - 9.0) / 20.0, 0.0, 1.0));
+  xy /= sp;
+  vec2 dir = vec2(cos(uA.x), sin(uA.x)), nrm = vec2(-dir.y, dir.x);
+  int sh = -1;
+  float lit = 0.0;
+  for (int i = 0; i < 12; i++) {
+    vec4 s = uStars[i];
+    if (s.z <= 0.0) break;
+    float m = s.z;
+    // Lumière renvoyée par la poussière : une tache étirée le long des stries.
+    vec2 d = xy - s.xy;
+    vec2 dq = vec2(dot(d, dir) / uA.w, dot(d, nrm));
+    float sig = 0.08 + 0.3 * m * m;
+    lit += m * m * exp(-dot(dq, dq) / (sig * sig));
+    // L'étoile, au pixel près.
+    vec2 id = ip - floor(vec2(s.x, s.y * uFlip) * uRadius * sp);
+    vec2 ad = abs(id);
+    float dd = length(id);
+    float tw = 0.5 + 0.5 * sin(TAU * (uPhase * float(3 + i % 3) + s.w));
+    int k = -1;
+    if (m < 0.3) {
+      // Étoile faible : un seul pixel qui clignote.
+      if (dd < 0.5 && tw > 0.3) k = tw > 0.75 ? 6 : 5;
+    } else {
+      float rc = max(0.5, m * m * 0.055 * uRadius);
+      float la = m * m * m * (0.2 + 0.1 * tw) * uRadius;
+      if (m > 0.55) la = max(la, 1.0);
+      float ext = max(ad.x, ad.y) - rc;
+      float t = ext / max(la, 1e-3);
+      if (dd <= rc) k = 7;
+      // Aigrettes : une croix d'un pixel de large (trois près du cœur des plus grosses), tramée au bout.
+      else if (min(ad.x, ad.y) <= (la > 6.0 && t < 0.28 ? 1.0 : 0.0) && t <= 1.0 && (t < 0.5 || (1.0 - t) * 2.2 > dth)) k = t < 0.3 ? 6 : (t < 0.65 ? 5 : 4);
+      // Petits éclats en diagonale sur les plus brillantes.
+      else if (m > 0.75 && ad.x == ad.y && dd < rc + la * 0.42) k = 5;
+      else {
+        float hr = m * 0.1 * uRadius;
+        float g = 1.0 - (dd - rc) / max(hr, 0.5);
+        if (g > 0.0 && g * g * 1.3 > dth) k = g > 0.55 ? 4 : 3;
+      }
+    }
+    sh = max(sh, k);
+  }
+  if (sh >= 0) return pal(0, sh);
+  float r = length(xy);
+  // Sur une petite carte, les voiles sont un peu plus denses : l'amas reste une tache bleue lisible.
+  float veil = lit * uA.z * (1.0 - smoothstep(0.8, 1.18, r)) * mix(1.45, 1.0, clamp((uRadius - 9.0) / 22.0, 0.0, 1.0));
+  float h = hash12(ip + uSeed.xy * 13.0);
+  // Loin des étoiles : le noir (sans calculer de bruit), et de rares étoiles lointaines.
+  if (veil > 0.035) {
+    // Les membres faibles de l'amas : des grains d'étoile dans les voiles, qui clignotent.
+    if (h > 1.0 - 0.012 * min(veil, 1.0) && sin(TAU * (uPhase * 3.0 + h * 70.0)) > -0.3) return pal(0, h > 1.0 - 0.005 * min(veil, 1.0) ? 6 : 5);
+    vec2 q = vec2(dot(xy, dir), dot(xy, nrm));
+    vec3 drift = vec3(cos(TAU * uPhase), sin(TAU * uPhase), 0.0) * 0.12;
+    float warp = fbm(vec3(xy * 1.2, 1.3) + uSeed, 3);
+    // Stries : fines sur une grande fiche, plus larges sur une petite (sinon ce n'est que du bruit).
+    // Elles ondulent : une vague court le long des stries et les écarte doucement.
+    float fq = uA.y * clamp(uRadius / 36.0, 0.4, 1.0);
+    float wave = 0.3 * sin(TAU * uPhase * 2.0 - q.x * 2.6);
+    float st = 1.0 - abs(snoise(vec3(q.x * 0.55, q.y * fq + warp * 1.3 + wave, 0.0) + uSeed * 0.37));
+    st *= st * st;
+    float cloud = fbm01(vec3(xy * 1.3, 4.1) + uSeed * 0.61 - drift, 3);
+    // Les stries s'éteignent au bord des voiles (sans quoi elles débordent en hachures éparses).
+    float dens = veil * (0.45 + 1.6 * st * (0.35 + 0.65 * smoothstep(0.04, 0.22, veil))) * (0.35 + 0.85 * smoothstep(0.3, 0.7, cloud));
+    int idx = int(dens * 5.6 + (dth - 0.5) * 1.3 - 0.25);
+    // Petite carte : des voiles plus sombres, pour que les croix blanches ressortent.
+    if (idx >= 1) return pal(1, min(idx, uRadius < 14.0 ? 4 : uRadius < 26.0 ? 5 : 6));
+  }
+  if (h > 0.9965 && r < 1.1 && sin(TAU * (uPhase * 2.0 + h * 50.0)) > -0.2) return pal(h > 0.9988 ? 2 : 0, h > 0.9978 ? 5 : 4);
+  discard;
+}
+
+// Constellation (v139) : une carte du ciel, à plat, sans lumière. Un cercle gradué d'astrolabe (pal 2,
+// laiton) et ses quatre pointes entourent un fond bleu nuit (pal 3) traversé d'une voie lactée ; 8 étoiles
+// (uA…uD, deux par vecteur, voir bodyConstellation) d'éclats variés (pal 0 bleutées, 4 chaudes, 5 rouges)
+// sont reliées par des traits d'un pixel (pal 1) qui s'arrêtent avant elles. Une lumière parcourt les
+// traits l'un après l'autre (trois tours par boucle) et ravive chaque étoile qu'elle atteint.
+// Tout est calé sur la grille : étoiles au pixel près, traits façon Bresenham, un pixel par pas.
+vec4 constellationColor(vec2 xy, float dth, vec2 fc) {
+  float R = uRadius;
+  vec2 p = xy * R;
+  float rp = length(p);
+  float ro = R - 0.5;
+  float band = max(1.0, floor(R * 0.085));
+  float ri = ro - band;
+  vec2 dir = rp > 1e-4 ? p / rp : vec2(1.0, 0.0);
+  float bevel = dot(dir, vec2(-0.6, 0.8));
+  // Hors du cercle : les quatre pointes cardinales, en laiton, éclairées en haut à gauche.
+  if (rp > ro + 0.5) {
+    vec2 ad = abs(p);
+    float along = max(ad.x, ad.y) - ro - 0.5;
+    float across = min(ad.x, ad.y) - 0.5;
+    float lp = max(1.0, floor(R * 0.1 + 0.5));
+    if (along > lp || across > max(0.5, R * 0.05) * (1.0 - along / lp)) return vec4(0.0);
+    vec2 side = ad.x > ad.y ? vec2(0.0, sign(p.y)) : vec2(sign(p.x), 0.0);
+    float sl = dot(side, vec2(-0.6, 0.8)) + bevel * 0.5;
+    return vec4(pal(2, sl > 0.2 ? 6 : sl < -0.2 ? 3 : 5), 1.0);
+  }
+  // Le limbe : deux cercles et la graduation entre eux ; un reflet fait le tour du laiton une fois par boucle.
+  if (rp > ri - 0.5) {
+    float a = atan(p.y, p.x);
+    float gl = cos(a - TAU * uPhase);
+    gl = gl > 0.0 ? pow(gl, 40.0) : 0.0;
+    if (rp > ro - 0.5) return vec4(pal(2, gl + (dth - 0.5) * 0.3 > 0.45 ? 7 : bevel > 0.3 ? 6 : bevel < -0.3 ? 4 : 5), 1.0);
+    if (rp <= ri + 0.5) return vec4(pal(2, gl + (dth - 0.5) * 0.3 > 0.55 ? 6 : bevel > 0.3 ? 5 : 3), 1.0);
+    float depth = (ro - 0.5 - rp) / max(band - 1.0, 1.0);
+    for (int k = 0; k < 3; k++) {
+      float nt = k == 0 ? 12.0 : k == 1 ? 36.0 : 72.0;
+      if ((k == 1 && R < 22.0) || (k == 2 && R < 40.0)) break;
+      float len = k == 0 ? 1.0 : k == 1 ? 0.55 : 0.3;
+      float s = TAU / nt;
+      float at = floor(a / s + 0.5) * s;
+      vec2 u = vec2(cos(at), sin(at));
+      // Écart signé, intervalle semi-ouvert : un seul pixel par pas, même quand le trait tombe entre deux colonnes.
+      float perp = (p.x * u.y - p.y * u.x) / max(abs(u.x), abs(u.y)) + 0.001;
+      if (perp > -0.5 && perp <= 0.5 && depth < len) return vec4(pal(2, k == 0 ? 0 : 1), 1.0);
+    }
+    return vec4(pal(2, bevel > 0.35 ? 4 : bevel < -0.35 ? 2 : 3), 1.0);
+  }
+  // Les étoiles, rangées dans l'ordre où la lumière les visite.
+  vec4 raw[4] = vec4[4](uA, uB, uC, uD);
+  vec2 sp[8];
+  int par[8];
+  int mag[8];
+  int tnt[8];
+  float arr[8];
+  for (int i = 0; i < 4; i++) {
+    vec4 v = raw[i];
+    vec4 k = floor((v + 2.0) / 4.0);
+    vec4 c = v - 4.0 * k;
+    sp[2 * i] = floor(c.xy * R) + 0.5;
+    sp[2 * i + 1] = floor(c.zw * R) + 0.5;
+    par[2 * i] = int(k.x); par[2 * i + 1] = int(k.z);
+    mag[2 * i] = int(mod(k.y, 4.0)); mag[2 * i + 1] = int(mod(k.w, 4.0));
+    tnt[2 * i] = int(k.y) / 4; tnt[2 * i + 1] = int(k.w) / 4;
+  }
+  // Rang de chaque trait (1 à 7, puis la boucle qui revient à l'étoile 0) et instant où la lumière
+  // atteint chaque étoile, en traits parcourus.
+  int nE = 0;
+  for (int j = 1; j <= 8; j++) {
+    int i = j == 8 ? 0 : j;
+    arr[i] = -1.0;
+    if (par[i] != i) { nE++; arr[i] = float(nE); }
+  }
+  if (arr[0] < 0.0 && mag[0] < 3) arr[0] = 0.0;
+  float fE = float(max(nE, 1));
+  float s = fract(uPhase * 3.0) * fE;
+  // 1) Les étoiles : un cœur blanc, un éclat en croix qui scintille, plus long sur les plus vives ;
+  //    l'étoile que la lumière vient d'atteindre s'embrase un instant.
+  float glowI = 0.0;
+  int glowRow = 0;
+  for (int i = 0; i < 8; i++) {
+    int m = mag[i];
+    vec2 d = p - sp[i];
+    vec2 ad = abs(d);
+    float cheb = max(ad.x, ad.y);
+    if (cheb > R * 0.3 + 3.0) continue;
+    int row = tnt[i] == 1 ? 4 : tnt[i] == 2 ? 5 : 0;
+    float h = hash11(float(i) * 7.13 + uSeed.x);
+    float tw = 0.5 + 0.5 * sin(TAU * (uPhase * float(2 + i % 4) + h));
+    float fl = 0.0;
+    if (arr[i] >= 0.0) { float age = mod(s - arr[i], fE); fl = exp(-age * 2.2); }
+    float arm = m == 0 ? 1.0 + floor(R * 0.085) : m == 1 ? max(1.0, floor(R * 0.05 + 0.5)) : m == 2 ? (R >= 20.0 ? 1.0 : 0.0) : 0.0;
+    arm = floor(arm * (0.6 + 0.4 * tw) + fl * (1.0 + R * 0.04) + 0.5);
+    if (m == 3 && R < 14.0) continue;
+    if (ad.x + ad.y < 0.5) return vec4(pal(row, m == 3 ? (tw > 0.6 ? 5 : 4) : 7), 1.0);
+    bool big = m == 0 && R >= 22.0;
+    if (big && ad.x + ad.y < 1.5) return vec4(pal(row, 7), 1.0);
+    if (min(ad.x, ad.y) < 0.5 && cheb <= arm) {
+      float t = cheb / (arm + 1.0);
+      return vec4(pal(row, t < 0.34 ? 6 : t < 0.67 ? 5 : 4), 1.0);
+    }
+    float dg = floor(arm * 0.45);
+    if (m == 0 && abs(ad.x - ad.y) < 0.5 && cheb <= dg) return vec4(pal(row, 5), 1.0);
+    // Un cœur arrondi (coins plus sombres) seulement sous une croix assez longue : sinon l'étoile
+    // ferait un petit carré.
+    if ((m <= 1 || fl > 0.3) && R >= 34.0 && arm >= 2.0 && cheb < 1.5) return vec4(pal(row, m == 0 ? 5 : 3), 1.0);
+    // La lueur autour du nœud (dessinée sous les traits).
+    float gr = (m == 0 ? 0.17 : m == 1 ? 0.12 : m == 2 ? 0.08 : 0.0) * R * (1.0 + 0.7 * fl);
+    float dl = length(d);
+    if (dl < gr) {
+      float g = 1.0 - dl / gr;
+      // En petit, la lueur est plus discrète : sinon elle empâte l'étoile en un pavé.
+      g = g * g * (0.85 + 0.6 * fl) * mix(0.45, 1.0, smoothstep(16.0, 30.0, R));
+      if (g > glowI) { glowI = g; glowRow = row; }
+    }
+  }
+  // 2) Les traits, de l'étoile p vers l'étoile i, avec la lumière qui les parcourt.
+  for (int j = 1; j <= 8; j++) {
+    int i = j == 8 ? 0 : j;
+    int q = par[i];
+    if (q == i) continue;
+    vec2 a = sp[q], b = sp[i];
+    vec2 ab = b - a;
+    vec2 e = p - a;
+    bool xm = abs(ab.x) >= abs(ab.y);
+    float major = xm ? ab.x : ab.y;
+    if (abs(major) < 0.5) continue;
+    float u = (xm ? e.x : e.y) / major;
+    if (u < 0.0 || u > 1.0) continue;
+    float minor = (xm ? e.y - ab.y * u : e.x - ab.x * u) + 0.001;
+    if (minor <= -0.5 || minor > 0.5) continue;
+    float lenP = length(ab);
+    // Le trait s'arrête avant les étoiles, sans jamais disparaître sur un trait court.
+    float gap = min(R >= 22.0 ? 2.0 + float(mag[q] == 0 ? 2 : mag[q] == 1 ? 1 : 0) : 1.0, max(1.0, lenP * 0.3));
+    float gapB = min(R >= 22.0 ? 2.0 + float(mag[i] == 0 ? 2 : mag[i] == 1 ? 1 : 0) : 1.0, max(1.0, lenP * 0.3));
+    if (u * lenP < gap || (1.0 - u) * lenP < gapB) continue;
+    // Lumière : une tête vive et sa traîne sur le trait en cours ; les traits déjà parcourus restent
+    // un peu plus clairs, puis s'éteignent.
+    float rk = arr[i] - 1.0;
+    float age = mod(s - rk, fE);
+    if (age < 1.0) {
+      float behind = (age - u) * lenP;
+      if (behind >= 0.0 && behind < 1.5) return vec4(pal(1, 7), 1.0);
+      float tail = min(lenP * 0.45, 2.0 + R * 0.12);
+      if (behind >= 0.0 && behind < tail) {
+        float f = 1.0 - behind / tail;
+        return vec4(pal(1, f + (dth - 0.5) * 0.5 > 0.45 ? 6 : 5), 1.0);
+      }
+    }
+    float done = age >= 1.0 ? exp(-(age - 1.0) * 0.8) : 0.0;
+    // Sur une petite carte, le trait au repos est un cran plus clair pour que la figure se lise.
+    int lo = R < 16.0 ? 4 : 3;
+    return vec4(pal(1, done + (dth - 0.5) * 0.5 > 0.55 ? 5 : done + (dth - 0.5) * 0.3 > 0.2 ? lo + 1 : lo), 1.0);
+  }
+  // 3) Les lueurs des étoiles, tramées.
+  if (glowI > dth) return vec4(pal(glowRow, glowI > 0.55 + dth * 0.3 ? 3 : 2), 1.0);
+  // 4) Le fond de la carte : bleu nuit, une voie lactée en biais (des nuées tramées), des étoiles
+  //    lointaines plus serrées dans la voie lactée, et (en grand) un cercle et deux méridiens en pointillés.
+  //    Le laiton fait de l'ombre sur la carte, en haut à gauche : elle paraît enchâssée (v139).
+  float r = rp / R;
+  if (bevel > 0.1 && ri - 0.5 - rp < 1.0 + floor(R * 0.03 * bevel)) return vec4(pal(3, 0), 1.0);
+  if (R >= 20.0) {
+    vec2 ip = floor(p);
+    bool dot2 = mod(ip.x + ip.y, 2.0) < 0.5;
+    if (dot2 && abs(rp - floor(R * 0.47) - 0.5) < 0.5) return vec4(pal(1, 1), 1.0);
+    if (dot2 && (abs(p.x - 0.5) < 0.1 || abs(p.y - 0.5) < 0.1) && rp > R * 0.12) return vec4(pal(1, 0), 1.0);
+  }
+  float off = dot(xy, vec2(0.8, 0.6)) - 0.08;
+  float cl = fbm01(vec3(xy * 3.2, 1.7) + uSeed * 0.5, 3);
+  float milk = exp(-off * off / 0.06) * smoothstep(0.3, 0.75, cl);
+  if (R >= 14.0) {
+    float g = hash12(floor(p) + floor(uSeed.xy * 13.0));
+    float th = 0.993 - milk * 0.03;
+    if (g > th) {
+      float tw = sin(TAU * (uPhase * 4.0 + g * 37.0));
+      return vec4(g > 0.998 && tw > 0.3 ? pal(0, 3) : pal(3, g > 0.996 ? 7 : 6), 1.0);
+    }
+  }
+  // En grand, la voie lactée monte d'un cran ; en petit, le fond reste sombre sous la figure.
+  float big = smoothstep(14.0, 30.0, R);
+  float lvl = 1.3 - r * 1.2 + milk * (1.4 + 1.4 * big);
+  int idx = clamp(int(lvl + (dth - 0.5) * 1.1), 0, R >= 20.0 ? 4 : 2);
+  return vec4(pal(3, idx), 1.0);
+}
+
 float cloudDens(vec3 p) {
   if (uD.w > 0.0) {
     vec3 sd = uD.xyz;
@@ -846,8 +1456,12 @@ void main() {
   if (uType == 10) { outColor = fin(portalColor(xy, dth)); return; }
   if (uType == 13) { if (!(dot(xy, xy) <= 2.0)) discard; outColor = fin(nebulaColor(xy, dth, fc)); return; }
   if (uType == 15) { if (!(dot(xy, xy) <= 2.89)) discard; vec4 bb = bigbangColor(xy, dth, fc); outColor = fin(bb.rgb); return; }
+  if (uType == 17) { outColor = fin(lagrangeColor(xy, dth, fc)); return; }
+  if (uType == 18) { if (!(dot(xy, xy) <= 1.44)) discard; outColor = fin(clusterColor(xy, dth, fc)); return; }
+  if (uType == 19) { if (!(dot(xy, xy) <= 1.3)) discard; vec4 cs = constellationColor(xy, dth, fc); if (cs.a < 0.5) discard; outColor = fin(cs.rgb); return; }
 
   bool ast = (shapeKind() > 0 && uLayer == 0);
+  if (uType == 16) gDish = rotY(uTilt * uC.xyz, -uSpin);
   vec3 pv;
   float cut = 0.0;
   if (ast) {
@@ -863,7 +1477,10 @@ void main() {
       z -= max(d * 0.6, 0.006);
       if (z < -bound) break;
     }
-    if (!hit) discard;
+    if (!hit) {
+      if (uType == 16 && uPick == 0) { vec4 w = radioSky(xy, dth); if (w.a < 0.5) discard; outColor = fin(w.rgb); return; }
+      discard;
+    }
     pv = vec3(xy, z);
   } else {
     float r2 = dot(xy, xy);
@@ -881,7 +1498,7 @@ void main() {
 
   vec3 nv = ast ? shapeNormal(pv) : pv;
   // Faces de cassure d'une planète brisée : le cœur brûle encore.
-  if (cut > 0.5) {
+  if (cut > 0.5 && shapeKind() != 10) {
     vec3 cq = rotY(uTilt * pv, -uSpin) * 4.0 + uSeed + vec3(0.0, uPhase * 2.0, 0.0);
     float heat = fbm01(cq, 3) * 0.8 + (1.0 - length(pv) / max(uSh2.z, 1.0)) * 0.6;
     outColor = fin(pal(14, clamp(int(heat * 8.0 + (dth - 0.5) * 1.4), 1, 7)));
@@ -925,6 +1542,7 @@ void main() {
   else if (uType == 6 || uType == 7) s = rockSurf(p, Lt, dth);
   else if (uType == 8) s = starSurf(p, nv, dth);
   else if (uType == 9) { vec3 nc = nl; s = crystalSurf(p, spin, dth, nc); nl = ast ? normalize(nv * 0.6 + nc * 0.4) : nc; }
+  else if (uType == 16) s = radioSurf(pv, nv, cut, dth);
   else s = mechaSurf(p, Lt, dth);
 
   if (uPick == 1) { outColor = vec4(float(s.row) / 255.0, 0.0, 0.0, 1.0); return; }
@@ -1760,6 +2378,8 @@ void main() {
       gl.uniform1i(U('uShadeBias'), P.bias || 0);
       gl.uniform4fv(U('uSh'), sh ? sh.P : ZERO4);
       gl.uniform4fv(U('uSh2'), sh ? sh.Q : ZERO4);
+      // Amas (v139) : la position et l'éclat de ses étoiles.
+      if (b.stars) gl.uniform4fv(U('uStars'), b.S32 || (b.S32 = new Float32Array(b.stars)));
       this.bindPal(pr, b.pal);
       this.quad();
     }
@@ -1892,8 +2512,10 @@ void main() {
       if (b.glow) this.haloPass(4, cx, cy, R, b.glow, [b.glow, 0.95, 0, 0], b.pal, 12, b.seed, light, st);
       if (o.legend) this.haloPass(4, cx, cy, R, 1.75, [1.75, 1.1, 0, 0], this.legendRows, 0, b.seed, light, st);
       // Doré (v107) : le halo d'or, plus large et plus dense, passe désormais après l'atmosphère, la
-      // coque et le bouclier, qui le cachaient. Une nébuleuse le garde derrière elle (le nuage est ajouré).
-      const goldLate = o.golden && b.shader !== OP.SH.NEBULA && b.shader !== OP.SH.BIGBANG;
+      // coque et le bouclier, qui le cachaient. Une nébuleuse le garde derrière elle (le nuage est ajouré),
+      // le radiotélescope aussi (v139 : son pont, ses cailloux et ses ondes dépassent le rayon de l'astre),
+      // comme la grille ajourée du Point de Lagrange, l'Amas et la Constellation (v139 : son cercle gradué reste net).
+      const goldLate = o.golden && b.shader !== OP.SH.NEBULA && b.shader !== OP.SH.BIGBANG && b.shader !== OP.SH.RADIO && b.shader !== OP.SH.LAGRANGE && b.shader !== OP.SH.CLUSTER && b.shader !== OP.SH.CONSTELLATION;
       if (o.golden && !goldLate) this.haloPass(4, cx, cy, R, 1.7, [1.7, 1.25, 0, 0], this.goldRows, 0, b.seed, light, st);
       if (o.ghost) this.haloPass(4, cx, cy, R, 1.45, [1.45, 0.8, 0, 0], this.ghostRows, 0, b.seed, light, st);
       if (b.tail) {

@@ -199,13 +199,21 @@
     // Natures réservées à certaines cartes (jamais tirées au hasard).
     { key: 'glass', label: 'Sphère de verre', w: 0 },
     { key: 'mirror', label: 'Boule miroir', w: 0 },
-    { key: 'bigbang', label: 'Big Bang', w: 0 }
+    { key: 'bigbang', label: 'Big Bang', w: 0 },
+    // Radiotélescope (v139) : un réseau de paraboles sur un plateau de roche flottant.
+    { key: 'radio', label: 'Réseau de radiotélescopes', w: 0 },
+    // Point de Lagrange (v139) : une selle de potentiel en grille d’espace-temps.
+    { key: 'lagrange', label: 'Point de Lagrange', w: 0 },
+    // Amas (v139) : un amas ouvert, des étoiles jeunes dans leurs voiles de poussière bleue.
+    { key: 'cluster', label: 'Amas d’étoiles', w: 0 },
+    // Constellation (v139) : une carte du ciel cerclée d'un astrolabe.
+    { key: 'constellation', label: 'Constellation', w: 0 }
   ];
   const TYPE_BY_KEY = Object.fromEntries(TYPES.map((t) => [t.key, t]));
-  const NO_FACET = new Set(['star', 'portal', 'blackhole', 'crystal', 'comet', 'eclipse', 'nebula', 'glass', 'mirror', 'bigbang']);
+  const NO_FACET = new Set(['star', 'portal', 'blackhole', 'crystal', 'comet', 'eclipse', 'nebula', 'glass', 'mirror', 'bigbang', 'radio', 'lagrange', 'cluster', 'constellation']);
 
   // Identifiants des programmes de surface (doivent correspondre au shader).
-  const SH = { TERRAN: 0, OCEAN: 1, ICE: 2, LAVA: 3, DESERT: 4, GAS: 5, ROCK: 6, ASTEROID: 7, STAR: 8, CRYSTAL: 9, PORTAL: 10, BLACKHOLE: 11, MECHA: 12, NEBULA: 13, GLASS: 14, BIGBANG: 15 };
+  const SH = { TERRAN: 0, OCEAN: 1, ICE: 2, LAVA: 3, DESERT: 4, GAS: 5, ROCK: 6, ASTEROID: 7, STAR: 8, CRYSTAL: 9, PORTAL: 10, BLACKHOLE: 11, MECHA: 12, NEBULA: 13, GLASS: 14, BIGBANG: 15, RADIO: 16, LAGRANGE: 17, CLUSTER: 18, CONSTELLATION: 19 };
 
   function newBody(shader, r) {
     return {
@@ -443,7 +451,7 @@
   }
 
   // Formes non sphériques (dessinées par marche de rayon dans le moteur de rendu).
-  const SHAPE_KEYS = ['double', 'brisee', 'amas', 'anneau', 'bloc', 'monolithe', 'diamant', 'foret', 'antenne', 'fendu'];
+  const SHAPE_KEYS = ['double', 'brisee', 'amas', 'anneau', 'bloc', 'monolithe', 'diamant', 'foret', 'antenne', 'fendu', 'reseau'];
   function makeShape(name, r, body) {
     const tumble = () => { body.roll = r.range(-1.2, 1.2); body.pitch = r.range(-0.9, 0.9); };
     switch (name) {
@@ -498,6 +506,15 @@
         body.roll = r.sign() * r.range(0.3, 0.5);
         body.pitch = r.range(0.06, 0.12);
         return { kind: 9, P: [sep, 0, 0, 0], Q: [0, 1, 1 + sep + 0.08, 0] };
+      }
+      // Réseau interférométrique (v139, nature radio) : un pont hexagonal posé sur une roche en gradins,
+      // des paraboles en Y. Vu un peu d'en haut pour voir le pont ; le plateau tourne lentement et les
+      // paraboles le suivent en restant pointées sur la même étoile. P : [rayon du pont, 0, ouverture
+      // des paraboles, nombre de paraboles] ; Q : [hauteur du pont, 0, rayon englobant (ondes), 0].
+      case 'reseau': {
+        body.roll = r.range(-0.08, 0.08);
+        body.pitch = r.range(0.36, 0.42);
+        return { kind: 10, P: [1, 0, 0.27, 3], Q: [-0.1, 0, 1.3, 0] };
       }
       case 'foret': {
         body.roll = r.range(-0.6, 0.6);
@@ -630,6 +647,37 @@
     return b;
   }
 
+  // Radiotélescope (v139) : un réseau de paraboles sur un plateau de roche flottant (shader RADIO,
+  // silhouette 10 « reseau »). pal 5/6 : le pont de béton ; 11 : joints, câbles et pieds ; 7/8 : la
+  // roche ocre en gradins ; 4 : les paraboles blanches ; 9 : la balise du récepteur ; 10 : les
+  // impulsions qui courent dans les câbles ; 12 (copiée en 1) : l'onde radio. C.xyz : direction visée,
+  // vue de face (vers le haut, à gauche) ; D : [distance de l'étoile visée, ondes par boucle, écart
+  // entre deux ondes, rayon où elles s'éteignent].
+  function bodyRadio(r) {
+    const b = newBody(SH.RADIO, r);
+    const P = b.pal;
+    const rock = r.range(30, 46);
+    P[5] = ramp(0.6, 0.018, 255);
+    P[6] = ramp(0.5, 0.02, 258);
+    P[11] = ramp(0.28, 0.022, 265);
+    P[7] = ramp(0.6, 0.11, rock);
+    P[8] = ramp(0.46, 0.1, rock - 8);
+    P[4] = ramp(0.9, 0.012, 95);
+    P[9] = gradRamp([[0.35, 0.12, 22], [0.58, 0.2, 28], [0.8, 0.16, 48], [0.98, 0.04, 80]]);
+    const wave = r.range(178, 198);
+    P[10] = gradRamp([[0.4, 0.08, wave + 10], [0.65, 0.13, wave], [0.86, 0.11, wave - 6], [0.99, 0.03, wave - 15]]);
+    P[12] = gradRamp([[0.3, 0.06, wave + 25], [0.55, 0.11, wave + 10], [0.8, 0.12, wave], [0.97, 0.04, wave - 12]]);
+    P[1] = P[12];
+    // Visée en haut à droite : la lumière vient toujours de la gauche, le creux des paraboles reste modelé.
+    const a = r.range(0.85, 1.05);
+    const v = [Math.cos(a) * 0.88, Math.sin(a) * 0.88, 0.48];
+    const n = Math.hypot(v[0], v[1], v[2]);
+    b.C = [v[0] / n, v[1] / n, v[2] / n, 0];
+    b.D = [1.1, 8, 0.18, 0.6];
+    b.size = 1;
+    return b;
+  }
+
   // Nébuleuse (v107) : un nuage plat de gaz, sans corps solide (shader NEBULA). Une coquille (pal 0,
   // teinte rim) entoure un gaz intérieur (pal 1, teinte gas) ; une naine blanche brille au centre
   // (pal 2). Styles : anneau (coquille fine, intérieur clair), bulle (remplie), papillon (deux lobes),
@@ -657,6 +705,214 @@
     return b;
   }
 
+  // Point de Lagrange (v139) : une selle de potentiel, sans corps solide (shader LAGRANGE). Un morceau
+  // rond d'espace-temps en fil de fer, vu de trois quarts : il remonte à gauche et à droite, plonge
+  // devant et derrière ; au col brille le point d'équilibre, où trois cailloux piégés oscillent. Rangées
+  // choisies pour que les couleurs par défaut (accentOf, particules) tombent juste : pal 4, les lignes
+  // (violet dans les creux … cyan … blanc sur les crêtes) ; pal 5, la trame de la nappe et sa face du
+  // dessous ; pal 1, le point d'équilibre et les deux lignes maîtresses du col ; pal 6, les cailloux. A : [courbure qui monte, sin de l'élévation, rayon du
+  // morceau, 0] ; B : [angle de vue, balancement, fuite, décalage vertical] ; C : [orbite des cailloux,
+  // onde, puits des cailloux, courbure qui plonge].
+  function bodyLagrange(r) {
+    const b = newBody(SH.LAGRANGE, r);
+    const P = b.pal;
+    P[4] = gradRamp([[0.2, 0.09, 305], [0.36, 0.15, 300], [0.52, 0.16, 285], [0.66, 0.14, 245], [0.8, 0.12, 212], [0.91, 0.08, 198], [0.99, 0.02, 190]]);
+    P[5] = gradRamp([[0.18, 0.07, 300], [0.32, 0.12, 298], [0.46, 0.14, 292], [0.6, 0.13, 282]]);
+    P[1] = gradRamp([[0.5, 0.11, 60], [0.72, 0.14, 78], [0.9, 0.09, 92], [0.995, 0.02, 100]]);
+    P[6] = gradRamp([[0.34, 0.03, 50], [0.52, 0.05, 55], [0.7, 0.06, 65], [0.86, 0.05, 80], [0.97, 0.02, 95]]);
+    // La vue balance entre 0,24 et 0,44 rad : de face, la selle se lirait comme un panier ; au-delà de
+    // 0,74 rad (atan √(kd/kx)), l'équation du shader changerait de forme.
+    const kx = 0.42, kd = 0.36, sinE = 0.58, cosE = Math.sqrt(1 - sinE * sinE), rho = 1.05, view = 0.34, sway = 0.1, fuite = 0.14;
+    b.A = [kx, sinE, rho, 0];
+    b.B = [view, sway, fuite, 0];
+    b.C = [0.52, 0.02, 0.07, kd];
+    // Cadrage : le bord du morceau (balancé d'un côté puis de l'autre) donne la hauteur et la largeur.
+    let y0 = Infinity, y1 = -Infinity, xm = 0;
+    for (const th of [view - sway, view, view + sway]) {
+      for (let i = 0; i < 96; i++) {
+        const a = (i / 96) * TAU, qx = rho * Math.cos(a), qy = rho * Math.sin(a);
+        const x = qx * Math.cos(th) - qy * Math.sin(th), d = qx * Math.sin(th) + qy * Math.cos(th);
+        const y = d * sinE + (kx * qx * qx - kd * qy * qy) * cosE;
+        y0 = Math.min(y0, y); y1 = Math.max(y1, y + 0.08);
+        xm = Math.max(xm, Math.abs(x / (1 + fuite * y)));
+      }
+    }
+    b.B[3] = -(y0 + y1) / 2;
+    b.roll = 0; b.pitch = 0;
+    b.spinCycles = 0; b.spinOffset = 0;
+    b.bound = Math.max(xm, (y1 - y0) / 2) + 0.06;
+    b.size = 1;
+    return b;
+  }
+
+  // Amas ouvert (v139) : une poignée d'étoiles jeunes, bleu-blanc, dans les voiles de poussière qui
+  // renvoient leur lumière (shader CLUSTER), sans corps solide. Les étoiles suivent le dessin des
+  // Pléiades (les Sept Sœurs : [x, y] en minutes d'arc, est à gauche, et magnitude), tourné et un peu
+  // bousculé par la graine, avec quelques étoiles faibles en plus. pal 0 : les étoiles, du bleu au
+  // blanc ; pal 1 : les voiles, de l'indigo au bleu pâle ; pal 2 : quelques étoiles lointaines,
+  // jaune pâle (devant l'amas, comme sur les photos). stars : 12 × [x, y, éclat 0…1, phase du
+  // scintillement] (éclat 0 : fin de la liste). A : [angle des stries, finesse des stries, force des
+  // voiles, étirement des voiles le long des stries].
+  const PLEIADES = [
+    [0, 0, 2.87], [-23, -3.1, 3.62], [35.7, 0.5, 3.7], [22.7, 15.8, 3.87], [15.9, -9.4, 4.18],
+    [31.2, 21.7, 4.3], [-23.3, 1.9, 5.05], [36.7, 11.1, 5.45], [21.6, 27, 5.76]
+  ];
+  function bodyCluster(r, o) {
+    o = o || {};
+    const b = newBody(SH.CLUSTER, r);
+    const h = o.hue != null ? o.hue : r.range(250, 262);
+    b.pal[0] = gradRamp([[0.34, 0.12, h + 8], [0.58, 0.14, h - 6], [0.8, 0.09, h - 22], [0.93, 0.04, h - 35], [1, 0, 0]]);
+    b.pal[1] = gradRamp([[0.2, 0.08, h + 30], [0.34, 0.13, h + 14], [0.5, 0.17, h], [0.67, 0.14, h - 14], [0.85, 0.08, h - 30]]);
+    b.pal[2] = gradRamp([[0.55, 0.08, 50], [0.76, 0.08, 70], [0.9, 0.06, 85], [0.98, 0.02, 95]]);
+    const ang = o.angle != null ? o.angle : r.range(-0.45, 0.45);
+    const flip = o.mirror ? -1 : 1, k = o.scale || 0.033;
+    const c = Math.cos(ang), s = Math.sin(ang);
+    const stars = [];
+    // Le dessin est resserré en largeur et étiré en hauteur : il remplit mieux une petite fiche carrée.
+    for (const [x0, y0, mag] of PLEIADES) {
+      const x = (x0 - 7) * 0.78 * flip + r.range(-1.5, 1.5), y = (y0 - 6) * 1.3 + r.range(-1.5, 1.5);
+      stars.push([(c * x - s * y) * k, (s * x + c * y) * k, 0.3 + 0.7 * Math.pow(10, -0.2 * (mag - 2.87)), r.next()]);
+    }
+    // Le dessin, quel que soit son angle, est centré sur la fiche (milieu de sa boîte).
+    for (const ax of [0, 1]) {
+      const v = stars.map((st) => st[ax]), mid = (Math.min(...v) + Math.max(...v)) / 2;
+      for (const st of stars) st[ax] -= mid;
+    }
+    // Étoiles faibles : loin des autres, dans le disque.
+    const extra = o.faint != null ? o.faint : r.int(2, 3);
+    for (let i = 0, tries = 0; i < extra && tries < 40; tries++) {
+      const a = r.range(0, TAU), d = 0.85 * Math.sqrt(r.range(0.12, 1));
+      const x = Math.cos(a) * d, y = Math.sin(a) * d;
+      if (stars.some((st) => Math.hypot(st[0] - x, st[1] - y) < 0.2)) continue;
+      stars.push([x, y, r.range(0.16, 0.26), r.next()]);
+      i++;
+    }
+    b.stars = [];
+    for (let i = 0; i < 12; i++) b.stars.push(...(stars[i] || [0, 0, 0, 0]));
+    b.A = [o.streak != null ? o.streak : r.range(-0.95, -0.55), r.range(8, 11), o.veil || r.range(0.85, 1), r.range(1.3, 1.6)];
+    b.roll = 0; b.pitch = 0;
+    b.bound = 1.2;
+    b.size = 1;
+    b.meta = { stars: Math.min(12, stars.length) };
+    return b;
+  }
+
+  // Constellation (v139) : une carte du ciel plate, sans corps solide (shader CONSTELLATION). 6 à 8
+  // étoiles reliées par des traits forment une figure tirée de la graine (une marche au hasard, reliée
+  // par l'arbre le plus court, parfois refermée en boucle), sur un fond bleu nuit cerclé d'un astrolabe
+  // gradué. pal 0 : étoiles bleutées ; pal 1 : les traits et la lumière qui les parcourt ; pal 2 : le
+  // laiton du cercle ; pal 3 : le fond de la carte ; pal 4 : étoiles chaudes ; pal 5 : étoiles rouges.
+  // A, B, C, D : les 8 étoiles, deux par vecteur (x, y, x, y). x + 4·p : p est l'étoile d'où part le
+  // trait qui y mène (p = elle-même : aucun trait ; l'étoile 0, d'où part la lumière, peut refermer une
+  // boucle) ; y + 4·(éclat + 4·teinte), éclat 0 (la plus vive) à 3 (étoile seule, hors de la figure).
+  function bodyConstellation(r) {
+    const b = newBody(SH.CONSTELLATION, r);
+    const P = b.pal;
+    P[0] = gradRamp([[0.2, 0.07, 268], [0.42, 0.13, 262], [0.68, 0.11, 245], [0.88, 0.06, 228], [0.995, 0.01, 210]]);
+    P[1] = gradRamp([[0.2, 0.05, 262], [0.38, 0.09, 255], [0.6, 0.1, 238], [0.82, 0.07, 220], [0.98, 0.02, 200]]);
+    P[2] = gradRamp([[0.2, 0.04, 45], [0.36, 0.07, 58], [0.58, 0.1, 72], [0.78, 0.11, 84], [0.92, 0.07, 94], [0.995, 0.02, 100]]);
+    P[3] = gradRamp([[0.1, 0.025, 272], [0.15, 0.04, 270], [0.22, 0.06, 266], [0.32, 0.07, 262], [0.44, 0.07, 258]]);
+    P[4] = gradRamp([[0.3, 0.08, 40], [0.55, 0.13, 55], [0.8, 0.12, 75], [0.93, 0.07, 90], [0.995, 0.02, 100]]);
+    P[5] = gradRamp([[0.28, 0.1, 22], [0.5, 0.17, 28], [0.72, 0.15, 40], [0.9, 0.07, 60], [0.995, 0.02, 80]]);
+    const near = (pts, x, y, d) => pts.some((q) => Math.hypot(q[0] - x, q[1] - y) < d);
+    // La figure : une marche au hasard (une chaîne d'étoiles), puis une ou deux branches.
+    const n = r.int(6, 8);
+    const pts = [[r.range(-0.25, 0.25), r.range(-0.25, 0.25)]];
+    const branches = r.int(1, 2);
+    let head = r.range(0, TAU), fails = 0;
+    for (let tries = 0; pts.length < n && tries < 600; tries++) {
+      // Coincée contre le bord, la marche tourne plus fort, puis laisse la place aux branches.
+      const walk = pts.length < n - branches && fails < 24;
+      const from = walk ? pts[pts.length - 1] : pts[r.int(0, pts.length - 1)];
+      const a = walk ? head + r.sign() * r.range(0.25, Math.min(Math.PI, 1.25 + fails * 0.2)) : r.range(0, TAU);
+      const len = r.range(0.34, 0.52);
+      const x = from[0] + Math.cos(a) * len, y = from[1] + Math.sin(a) * len;
+      if (Math.hypot(x, y) > 0.95 || near(pts, x, y, 0.3)) { fails++; continue; }
+      pts.push([x, y]);
+      if (walk) { head = a; fails = 0; }
+    }
+    // Arbre le plus court (Prim) : jamais de traits qui se croisent ni qui frôlent une autre étoile.
+    const N = pts.length, dist = (i, j) => Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]);
+    const inTree = [true], edges = [];
+    for (let k = 1; k < N; k++) {
+      let best = null;
+      for (let i = 0; i < N; i++) if (inTree[i]) for (let j = 0; j < N; j++) if (!inTree[j] && (!best || dist(i, j) < best[2])) best = [i, j, dist(i, j)];
+      inTree[best[1]] = true;
+      edges.push([best[0], best[1]]);
+    }
+    const adj = pts.map(() => []);
+    for (const [i, j] of edges) { adj[i].push(j); adj[j].push(i); }
+    // Une boucle, parfois : le trait le plus court qui ne croise rien et ne frôle aucune étoile.
+    const cross = (a, b, c, d) => {
+      const o = (p, q, s) => (q[0] - p[0]) * (s[1] - p[1]) - (q[1] - p[1]) * (s[0] - p[0]);
+      return o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0;
+    };
+    const segDist = (p, a, b) => {
+      const dx = b[0] - a[0], dy = b[1] - a[1];
+      const t = clamp(((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy), 0, 1);
+      return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
+    };
+    let loop = null;
+    if (r.chance(0.5)) {
+      for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+        const d = dist(i, j);
+        if (adj[i].includes(j) || d > 0.62 || (loop && d >= loop[2])) continue;
+        if (edges.some(([a, c]) => a !== i && a !== j && c !== i && c !== j && cross(pts[i], pts[j], pts[a], pts[c]))) continue;
+        if (pts.some((q, k) => k !== i && k !== j && segDist(q, pts[i], pts[j]) < 0.16)) continue;
+        loop = [i, j, d];
+      }
+    }
+    // La lumière part d'une extrémité (ou d'un bout de la boucle) et suit la figure en profondeur :
+    // les étoiles sont rangées dans cet ordre, chacune après celle d'où part son trait.
+    const leaves = pts.map((q, i) => i).filter((i) => adj[i].length === 1);
+    const root = loop ? loop[0] : leaves.reduce((m, i) => (pts[i][0] < pts[m][0] ? i : m), leaves[0]);
+    const order = [], parent = new Array(N).fill(-1);
+    const size = (i, from) => 1 + adj[i].filter((j) => j !== from).reduce((s, j) => s + size(j, i), 0);
+    const visit = (i, from) => {
+      order.push(i);
+      parent[i] = from;
+      adj[i].filter((j) => j !== from).sort((x, y) => size(x, i) - size(y, i)).forEach((j) => visit(j, i));
+    };
+    visit(root, -1);
+    // Cadrage : la figure, centrée, remplit le fond de la carte.
+    let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
+    for (const q of pts) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]); }
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    const reach = Math.max(...pts.map((q) => Math.hypot(q[0] - cx, q[1] - cy)), 0.2);
+    const k = 0.7 / reach;
+    const stars = order.map((i) => ({ x: (pts[i][0] - cx) * k, y: (pts[i][1] - cy) * k, p: parent[i] < 0 ? -1 : order.indexOf(parent[i]), mag: 2, tint: 0 }));
+    stars[0].p = loop ? order.indexOf(loop[1]) : 0;
+    // Éclats : une étoile vive (parfois chaude ou rouge), deux moyennes, les autres faibles.
+    // Mélange de Fisher-Yates (un tri au hasard ne donnerait pas le même ordre sur tous les navigateurs).
+    const ids = stars.map((s, i) => i);
+    for (let i = ids.length - 1; i > 0; i--) { const j = r.int(0, i); const t = ids[i]; ids[i] = ids[j]; ids[j] = t; }
+    stars[ids[0]].mag = 0;
+    stars[ids[0]].tint = r.weighted([{ v: 0, w: 4 }, { v: 1, w: 3 }, { v: 2, w: 2 }]).v;
+    stars[ids[1]].mag = 1;
+    stars[ids[2]].mag = 1;
+    if (r.chance(0.6)) stars[ids[3]].tint = stars[ids[0]].tint === 1 ? 2 : 1;
+    // Des étoiles seules complètent les 8 places, loin de la figure et de ses traits.
+    const segs = stars.map((s, i) => (s.p >= 0 && s.p !== i ? [[s.x, s.y], [stars[s.p].x, stars[s.p].y]] : null)).filter(Boolean);
+    for (let tries = 0; stars.length < 8 && tries < 300; tries++) {
+      const a = r.range(0, TAU), d = Math.sqrt(r.next()) * 0.74;
+      const x = Math.cos(a) * d, y = Math.sin(a) * d;
+      if (near(stars.map((s) => [s.x, s.y]), x, y, 0.24) || segs.some((sg) => segDist([x, y], sg[0], sg[1]) < 0.12)) continue;
+      stars.push({ x, y, p: stars.length, mag: 3, tint: r.chance(0.25) ? 1 : 0 });
+    }
+    while (stars.length < 8) stars.push({ x: 0, y: 0, p: stars.length, mag: 3, tint: 0, off: true });
+    const v = stars.map((s, i) => [s.x + 4 * (s.p < 0 ? i : s.p), (s.off ? 1.4 : s.y) + 4 * (s.mag + 4 * s.tint)]);
+    b.A = [v[0][0], v[0][1], v[1][0], v[1][1]];
+    b.B = [v[2][0], v[2][1], v[3][0], v[3][1]];
+    b.C = [v[4][0], v[4][1], v[5][0], v[5][1]];
+    b.D = [v[6][0], v[6][1], v[7][0], v[7][1]];
+    b.roll = 0; b.pitch = 0;
+    b.spinCycles = 0;
+    b.bound = 1.14;
+    b.size = 1;
+    b.meta = { stars: stars.filter((s) => !s.off).length, links: segs.length };
+    return b;
+  }
+
   function buildBody(key, r, opts) {
     switch (key) {
       case 'earth': return bodyTerran(r, 'earth');
@@ -680,6 +936,10 @@
       case 'glass': return bodyGlass(r, false);
       case 'mirror': return bodyGlass(r, true);
       case 'bigbang': return bodyBigBang(r);
+      case 'radio': return bodyRadio(r);
+      case 'lagrange': return bodyLagrange(r);
+      case 'cluster': return bodyCluster(r, opts && opts.cluster);
+      case 'constellation': return bodyConstellation(r);
       case 'eclipse': {
         const b = bodyStar(r, (opts && opts.starClass) || 'étoile blanche');
         b.B = [0, 0, 0, 1];
@@ -778,7 +1038,7 @@
   const RING_ODDS = {
     terran: [0.12, 0.15], earth: [0.08, 0.12], ocean: [0.1, 0.12], ice: [0.25, 0.2], lava: [0.08, 0.2],
     desert: [0.1, 0.2], gas: [0.6, 0.25], moon: [0.08, 0.25], asteroid: [0, 0.65], star: [0, 0.35],
-    crystal: [0.1, 0.5], toxic: [0.12, 0.15], dead: [0.06, 0.4], portal: [0, 0], blackhole: [0, 0], mecha: [0.1, 0.25], nebula: [0, 0], bigbang: [0, 0]
+    crystal: [0.1, 0.5], toxic: [0.12, 0.15], dead: [0.06, 0.4], portal: [0, 0], blackhole: [0, 0], mecha: [0.1, 0.25], nebula: [0, 0], bigbang: [0, 0], radio: [0, 0], lagrange: [0, 0], cluster: [0, 0], constellation: [0, 0]
   };
 
   const BG_THEMES = [
@@ -886,10 +1146,31 @@
       beings: ['une naine blanche qui s’éteint', 'des étoiles en train de naître', 'la lumière volée aux astres voisins', 'des nuées de poussière qui chantent'],
       facts: ['Plus vaste que mille systèmes.', 'Elle aspire tout ce qui passe.', 'Ses couleurs trahissent l’oxygène et l’hydrogène.']
     },
+    // Point de Lagrange (v139).
+    lagrange: {
+      places: [['Le col de la selle', 0], ['Les orbites en haricot', 1], ['La zone d’équilibre', 0], ['Les pentes du puits', 1]],
+      beings: ['des astéroïdes troyens piégés depuis l’aube du système', 'un télescope qui ne dérive jamais', 'une flotte de sondes en orbite de halo', 'des poussières qui refusent de tomber', 'une balise laissée par un peuple disparu'],
+      facts: ['Les attractions s’y annulent exactement.', 'Un objet posé là ne tombe d’aucun côté.', 'Le meilleur poste d’observation du système.', 'La moindre poussée suffit à en sortir.']
+    },
+    cluster: {
+      places: [['Le cœur de l’amas', 0], ['Les voiles bleus', 1], ['Les étoiles jeunes', 1], ['La poussière de réflexion', 0]],
+      beings: ['sept sœurs nées du même nuage', 'des étoiles de cent millions d’années à peine', 'des disques de poussière où naissent des mondes', 'un nuage de passage qui s’illumine', 'des comètes arrachées aux étoiles voisines'],
+      facts: ['Le bleu des voiles n’est que la lumière des étoiles, renvoyée par la poussière.', 'Ses étoiles se disperseront dans quelques centaines de millions d’années.', 'Visible à l’œil nu depuis des milliers de mondes.']
+    },
+    constellation: {
+      places: [['L’étoile la plus vive', 0], ['Les traits de la figure', 1], ['Le cercle gradué', 0], ['Les étoiles sans nom', 1]],
+      beings: ['des navigateurs qui y lisent leur route', 'un récit plus vieux que les mondes', 'des soleils qui ne se sont jamais vus', 'la mémoire de tous les peuples qui l’ont nommée'],
+      facts: ['Ses étoiles ne sont proches qu’en apparence.', 'Chaque peuple y voit une figure différente.', 'Elle tourne lentement autour du pôle.']
+    },
     blackhole: {
       places: [['Le disque d’accrétion', 0], ['L’horizon des événements', 0], ['La sphère de photons', 0]],
       beings: ['des étoiles déchiquetées', 'la lumière de mille soleils engloutis', 'une épave figée dans le temps'],
       facts: ['Le temps y ralentit jusqu’à s’arrêter.', 'Ne pas approcher.', 'Même la lumière n’en ressort pas.']
+    },
+    radio: {
+      places: [['Les paraboles', 1], ['Le récepteur central', 0], ['Les câbles du réseau', 1], ['Le plateau flottant', 0]],
+      beings: ['un signal venu d’une étoile morte', 'des astronomes qui ne dorment jamais', 'une voix qui répète un nombre premier', 'l’écho du premier matin du monde'],
+      facts: ['Les paraboles écoutent la même étoile, à l’unisson.', 'Le signal reçu double chaque nuit.', 'Le plateau dérive sans jamais tomber.']
     },
     mecha: {
       places: [['Les tranchées', 1], ['Le grand œil', 0], ['Les panneaux de coque', 1], ['Les hangars', 1]],
@@ -905,7 +1186,11 @@
     lava: [2400, 11000, 350, 1400], dead: [3000, 9000, -190, -80], desert: [3000, 13000, 20, 85], gas: [38000, 170000, -210, -90],
     moon: [300, 4200, -180, 120], asteroid: [2, 950, -200, -40], star: [200000, 9000000, 2600, 32000], crystal: [900, 7000, -150, 20],
     toxic: [4000, 14000, 30, 140], portal: [40, 900, null, null], blackhole: [8, 300, null, null], mecha: [90, 1200, -120, -20],
-    comet: [1, 60, -240, -80], eclipse: [200000, 2000000, 4000, 9000], nebula: [9e12, 9e13, null, null]
+    comet: [1, 60, -240, -80], eclipse: [200000, 2000000, 4000, 9000], nebula: [9e12, 9e13, null, null],
+    radio: [3, 40, -170, -60],
+    lagrange: [40000, 1500000, null, null],
+    cluster: [5e13, 2e14, null, null],
+    constellation: [4e14, 9e15, null, null]
   };
 
   const fmtNum = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
@@ -922,6 +1207,11 @@
     if (g.type === 'portal') name = 'ANOMALIE ' + base.toUpperCase();
     if (g.type === 'comet') name = 'COMÈTE ' + base.toUpperCase();
     if (g.type === 'nebula') name = 'NÉBULEUSE ' + base.toUpperCase();
+    if (g.type === 'radio') name = 'RÉSEAU ' + base.toUpperCase();
+    // Point de Lagrange (v139) : le nom du système, puis le numéro du point (L1 à L5).
+    if (g.type === 'lagrange') name = base.toUpperCase() + ' L' + (1 + (hashSeed(g.seed, 12) % 5));
+    if (g.type === 'cluster') name = 'AMAS ' + base.toUpperCase();
+    if (g.type === 'constellation') name = 'CONSTELLATION ' + base.toUpperCase();
     const code = 'ARC-' + String(r.int(1000, 9999)) + '-' + 'abcdefgh'[r.int(0, 7)];
     const lore = LORE[LORE_ALIAS[g.type] || g.type] || LORE.terran;
     const place = r.pick(lore.places);
@@ -934,11 +1224,14 @@
     if (g.type === 'blackhole') stats.push(['HORIZON', fmtNum(diam) + ' KM']);
     else stats.push(['DIAMÈTRE', fmtNum(diam) + ' KM']);
     if (st[2] != null) stats.push(['TEMPÉRATURE', (g.type === 'star' ? fmtNum(r.range(st[2], st[3])) + ' K' : Math.round(r.range(st[2], st[3])) + ' °C')]);
-    if (g.type !== 'portal' && g.type !== 'blackhole' && g.type !== 'star' && g.type !== 'nebula') stats.push(['GRAVITÉ', r.range(0.05, 2.4).toFixed(2) + ' G']);
-    stats.push([g.type === 'star' ? 'PLANÈTES' : 'LUNES', String(g.moons.length)]);
+    // Au point de Lagrange, les attractions s'annulent (v139).
+    if (g.type === 'lagrange') stats.push(['GRAVITÉ', '0.00 G']);
+    else if (g.type !== 'portal' && g.type !== 'blackhole' && g.type !== 'star' && g.type !== 'nebula' && g.type !== 'cluster' && g.type !== 'constellation') stats.push(['GRAVITÉ', r.range(0.05, 2.4).toFixed(2) + ' G']);
+    if (g.type === 'cluster' || g.type === 'constellation') stats.push(['ÉTOILES', String(g.body.meta.stars)]);
+    else stats.push([g.type === 'star' ? 'PLANÈTES' : 'LUNES', String(g.moons.length)]);
     stats.push(['ANNEAUX', g.ring || g.debris ? 'OUI' : 'NON']);
     const signals = [['AUCUN', 45], ['BRUIT DE FOND', 25], ['FAIBLE, IRRÉGULIER', 15], ['RÉGULIER — ARTIFICIEL ?', 10], ['MESSAGE EN BOUCLE', 5]];
-    let signal = r.weighted(signals.map((s) => ({ v: s[0], w: g.type === 'mecha' ? (s[1] < 20 ? 30 : 5) : s[1] }))).v;
+    let signal = r.weighted(signals.map((s) => ({ v: s[0], w: g.type === 'mecha' || g.type === 'radio' ? (s[1] < 20 ? 30 : 5) : s[1] }))).v;
     stats.push(['SIGNAL', signal]);
     return { name, code, desc, stats };
   }
@@ -1172,6 +1465,8 @@
     // Silhouette : imposée par le jeu, ou tirée au hasard pour certaines natures dans l'atelier.
     const shr = makeRng(hashSeed(seed, 11));
     let shapeName = opts.shape;
+    // Radiotélescope (v139) : sa silhouette fait sa nature (le shader lit les pièces du réseau).
+    if (key === 'radio') shapeName = 'reseau';
     if (shapeName == null && !compact) {
       const pool = { asteroid: ['double', 'brisee'], moon: ['double', 'brisee'], dead: ['brisee'], lava: ['brisee'], crystal: ['amas', 'diamant', 'bloc'], mecha: ['anneau', 'bloc', 'foret'], desert: ['monolithe', 'brisee'], toxic: ['anneau'] }[key];
       if (pool && shr.chance(0.2)) shapeName = shr.pick(pool);
@@ -1293,7 +1588,7 @@
     const mr = makeRng(hashSeed(seed, 4));
     let nMoons;
     if (opts.moons != null) nMoons = opts.moons;
-    else if (key === 'portal' || key === 'blackhole' || key === 'nebula' || key === 'bigbang') nMoons = 0;
+    else if (key === 'portal' || key === 'blackhole' || key === 'nebula' || key === 'bigbang' || key === 'radio' || key === 'lagrange' || key === 'cluster' || key === 'constellation') nMoons = 0;
     else if (key === 'star') nMoons = mr.int(0, compact ? 2 : 3);
     else if (key === 'asteroid' || key === 'moon') nMoons = mr.chance(0.3) ? 1 : 0;
     else nMoons = mr.weighted([{ v: 0, w: 30 }, { v: 1, w: 35 }, { v: 2, w: 20 }, { v: 3, w: 10 }, { v: 4, w: 5 }]).v;
@@ -1336,7 +1631,7 @@
     // plain : pas de décor tiré au hasard (satellites, étincelles, comète, astre lointain) ; les astres
     // de Mon système n'ont que ce que leurs améliorations leur donnent.
     if (!compact && !opts.plain) {
-      const satOdds = key === 'mecha' ? 0.8 : body.meta && body.meta.cities ? 0.4 : 0.06;
+      const satOdds = key === 'mecha' || key === 'radio' ? 0.8 : key === 'cluster' ? 0 : body.meta && body.meta.cities ? 0.4 : 0.06;
       if (dr.chance(satOdds)) {
         const n = dr.int(1, 4);
         for (let i = 0; i < n; i++) {
@@ -1414,8 +1709,9 @@
   function accentOf(g) {
     const P = g.body.pal;
     switch (g.body.shader) {
-      case SH.STAR: case SH.PORTAL: case SH.NEBULA: case SH.BIGBANG: return P[0][6];
+      case SH.STAR: case SH.PORTAL: case SH.NEBULA: case SH.BIGBANG: case SH.CLUSTER: case SH.CONSTELLATION: return P[0][6];
       case SH.BLACKHOLE: return P[9][6];
+      case SH.RADIO: return P[12][6];
       case SH.GAS: return P[0][5];
       case SH.LAVA: return P[9][6];
       case SH.CRYSTAL: return P[2][5];
