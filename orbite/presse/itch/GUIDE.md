@@ -65,6 +65,19 @@ Dans la **console Firebase** (projet `orbite-739f9`) → **Authentication** → 
 3. Tout va bien → **Visibility : Public** → Save. Publie ensuite le premier devlog (`PAGE.md`, partie 3).
 4. Remarque : sur itch.io, la progression des joueurs est séparée de celle du site web (chaque site garde ses données) ; la connexion Google relie les deux.
 
-## Mettre à jour le jeu plus tard
+## Mettre à jour le jeu plus tard (automatique)
 
-À chaque nouvelle version, je refabrique le ZIP (`tools/itch-zip.sh`) ; tu le téléverses à la place de l’ancien dans **Uploads** (supprime l’ancien fichier). Les sauvegardes des joueurs sont conservées.
+Le dépôt a une action GitHub, **« itch.io (ORBITE) »** (`.github/workflows/itch-orbite.yml`). Elle fabrique le ZIP et
+l’envoie sur la page avec butler, l’outil officiel d’itch.io. Elle se lance toute seule à chaque nouvelle version du jeu
+sur `main`, ou à la main (onglet **Actions** → « itch.io (ORBITE) » → **Run workflow**).
+
+À faire une seule fois :
+1. Sur itch.io : **Settings → API keys** (https://itch.io/user/settings/api-keys) → **Generate new API key**, puis
+   copie la clé.
+2. Sur GitHub, dans le dépôt : **Settings → Secrets and variables → Actions → New repository secret**.
+   Nom : `BUTLER_API_KEY`, valeur : la clé. (Ne la colle nulle part ailleurs.)
+3. Après le premier envoi, dans **Edit game → Uploads**, le fichier arrive sous le nom du canal `html5`. Coche
+   **This file will be played in the browser** sur ce fichier, et supprime l’ancien ZIP envoyé à la main. Les envois
+   suivants remplacent ce même fichier, la case reste cochée.
+
+Les sauvegardes des joueurs sont conservées. Sans le secret, l’action ne fait rien (simple avertissement).

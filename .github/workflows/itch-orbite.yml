@@ -1,0 +1,57 @@
+# ORBITE → itch.io : fabrique le ZIP du jeu (orbite/tools/itch-zip.sh) et l'envoie sur
+# https://edda-studio.itch.io/orbite avec butler, l'outil officiel d'itch.io.
+# - À la main : onglet Actions → « itch.io (ORBITE) » → Run workflow.
+# - Tout seul : à chaque nouvelle version du jeu sur main (orbite/version.json change).
+# La clé vient du secret BUTLER_API_KEY du dépôt (itch.io → Settings → API keys), jamais du code.
+name: itch.io (ORBITE)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['orbite/version.json']
+
+concurrency:
+  group: itch-orbite
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  envoi:
+    runs-on: ubuntu-latest
+    env:
+      BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+      CIBLE: edda-studio/orbite:html5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clé itch.io présente ?
+        id: cle
+        run: |
+          if [ -z "$BUTLER_API_KEY" ]; then
+            echo "::warning::Le secret BUTLER_API_KEY manque : rien n'est envoyé (Settings → Secrets and variables → Actions)."
+            echo "ok=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Paquet du jeu
+        if: steps.cle.outputs.ok == '1'
+        run: bash orbite/tools/itch-zip.sh "$RUNNER_TEMP/orbite-itch.zip"
+
+      - name: butler
+        if: steps.cle.outputs.ok == '1'
+        run: |
+          curl -sSL -o "$RUNNER_TEMP/butler.zip" https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+          unzip -q "$RUNNER_TEMP/butler.zip" -d "$RUNNER_TEMP/butler"
+          chmod +x "$RUNNER_TEMP/butler/butler"
+          "$RUNNER_TEMP/butler/butler" -V
+
+      - name: Envoi sur itch.io
+        if: steps.cle.outputs.ok == '1'
+        run: |
+          V="$(sed -n 's/.*"v": *\([0-9]*\).*/\1/p' orbite/version.json)"
+          "$RUNNER_TEMP/butler/butler" push "$RUNNER_TEMP/orbite-itch.zip" "$CIBLE" --userversion "$V"
+          "$RUNNER_TEMP/butler/butler" status "$CIBLE"
