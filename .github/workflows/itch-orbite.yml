@@ -23,7 +23,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-      CIBLE: edda-studio/orbite:html5
     steps:
       - uses: actions/checkout@v4
 
@@ -55,8 +54,38 @@ jobs:
           chmod +x "$RUNNER_TEMP/butler/butler"
           "$RUNNER_TEMP/butler/butler" -V
 
+      # La cible exacte (nom d'utilisateur itch.io / adresse de la page) est demandée à itch.io avec la clé :
+      # le nom du compte peut s'écrire autrement que son adresse (edda_studio pour edda-studio.itch.io).
+      - name: Trouver la page ORBITE
+        id: cible
+        if: steps.cle.outputs.ok == '1'
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request
+          k = os.environ['BUTLER_API_KEY']
+          def get(path):
+              with urllib.request.urlopen('https://itch.io/api/1/%s/%s' % (k, path), timeout=30) as r:
+                  return json.load(r)
+          me = get('me').get('user', {})
+          games = get('my-games').get('games', [])
+          print('compte itch.io :', me.get('username'), me.get('url'))
+          for g in games:
+              print('page :', g.get('title'), '|', g.get('url'), '|', 'publiée' if g.get('published') else 'brouillon')
+          pick = [g for g in games if (g.get('url') or '').rstrip('/').endswith('/orbite')] or [g for g in games if (g.get('title') or '').strip().upper() == 'ORBITE']
+          if not pick:
+              print('::error::Aucune page ORBITE sur ce compte itch.io : créez-la (Dashboard → Create new project, Project URL « orbite », Kind of project HTML), puis enregistrez.')
+              raise SystemExit(1)
+          slug = pick[0]['url'].rstrip('/').split('/')[-1]
+          target = '%s/%s:html5' % (me['username'], slug)
+          print('cible :', target)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write('cible=%s\n' % target)
+          PY
+
       - name: Envoi sur itch.io
         if: steps.cle.outputs.ok == '1'
+        env:
+          CIBLE: ${{ steps.cible.outputs.cible }}
         run: |
           V="$(sed -n 's/.*"v": *\([0-9]*\).*/\1/p' orbite/version.json)"
           "$RUNNER_TEMP/butler/butler" push "$RUNNER_TEMP/orbite-itch.zip" "$CIBLE" --userversion "$V"
