@@ -8,8 +8,8 @@ Page : **https://edda-studio.itch.io/orbite-game**. Compte : `EDDA_STUDIO`.
 |---|---|
 | Le jeu (ZIP à téléverser, ~15 Mo, 158 fichiers) | `orbite-itch.zip` que je t’envoie ; refaisable avec `tools/itch-zip.sh` |
 | Tous les textes de la page (EN + FR) | `presse/itch/PAGE.md` |
-| Couverture 630×500 | la tienne, ou `presse/itch/couverture-bataille-630x500.png` / `couverture-trou-noir-630x500.png` |
-| Bannière d’en-tête | `presse/visuels/orbite-banniere-4x1.png` |
+| Couverture 630×500 | `presse/itch/page/couverture-logo-630x500.png` (le trou noir avec le logo) ; autres choix : `presse/itch/couverture-bataille-630x500.png`, `couverture-trou-noir-630x500.png` |
+| Habillage de la page | `presse/itch/page/` : bannière transparente (`banniere-960.png`), fond (`fond-voie-lactee-1920x1080.png`, ou `fond-nebuleuse-1920x1080.png`), GIF d’un vrai combat (`combat-en.gif`, `combat-fr.gif`), familles (`familles-en.png`, `familles-fr.png`) et légendaires (`legendaires-en.png`, `legendaires-fr.png`) |
 | Captures conseillées (dans l’ordre) | `presse/captures/pc-4-combat-en.png`, `pc-3-creation-en.png`, `pc-1-menu-en.png`, `pc-6-codex-en.png`, `telephone-3-creation-en.png` |
 
 Toutes ces images font moins de 3 Mo (limite d’itch.io par image).
@@ -17,7 +17,7 @@ Toutes ces images font moins de 3 Mo (limite d’itch.io par image).
 ## 1. Créer la page (en brouillon)
 
 1. Sur itch.io, menu de ton compte → **Dashboard** → **Create new project**.
-2. **Title** : `ORBITE`. **Project URL** : `orbite` (garde-le : les invitations envoyées depuis itch.io pointent vers cette adresse).
+2. **Title** : `ORBITE`. **Project URL** : `orbite-game` (garde-le : les invitations envoyées depuis itch.io pointent vers cette adresse).
 3. **Short description or tagline** : celle de `PAGE.md` (partie 1).
 4. **Classification** : `Games`. **Kind of project** : **`HTML`**. **Release status** : `In development`.
 5. **Pricing** : `No payments` (le plus simple) ou `$0 or donate` si tu veux accepter des dons.
@@ -35,19 +35,21 @@ Toutes ces images font moins de 3 Mo (limite d’itch.io par image).
 
 ## 3. Remplir la page
 
-1. **Description** : colle la partie 2 de `PAGE.md` (anglais puis français), copiée depuis un **aperçu** du fichier (sur GitHub ou dans VS Code), pour que les titres et le gras passent.
+1. **Description** : colle la partie 2 de `PAGE.md` (anglais puis français), copiée depuis un **aperçu** du fichier (sur GitHub ou dans VS Code), pour que les titres et le gras passent. Puis ajoute les images avec le bouton image de l’éditeur : `combat-en.gif` sous la phrase « Free, in your browser… », `familles-en.png` sous le titre « Families and content », `legendaires-en.png` après le paragraphe « 144 orbs » ; pareil en français avec les fichiers `-fr`.
 2. **Genre** : `Strategy`. **Tags** : les 10 de `PAGE.md` (prends la forme proposée par l’autocomplétion).
 3. **AI generation disclosure** : à toi de répondre honnêtement (voir `PAGE.md`, partie 1 : tes visuels viennent d’images générées avec Higgsfield ; les astres du jeu sont dessinés par le code).
 4. Langues, entrées (souris, tactile), nombre de joueurs : comme dans `PAGE.md`.
-5. **Cover image** : ta couverture 630×500.
+5. **Cover image** : `presse/itch/page/couverture-logo-630x500.png`.
 6. **Screenshots** : les 5 captures ci-dessus.
 7. **Visibility** : **Draft** pour l’instant → **Save**.
 
 ## 4. L’habiller (Edit theme)
 
 Sur la page, bouton **Edit theme** :
-- **Banner** : `orbite-banniere-4x1.png`.
-- Couleurs : fond `#000000`, texte `#e8ecf2`, liens et boutons `#f6c453` (l’or du jeu).
+- **Banner** : `presse/itch/page/banniere-960.png` (fond transparent : les étoiles du fond passent derrière).
+- **Background image** : `presse/itch/page/fond-voie-lactee-1920x1080.png`, sans répétition, en haut au centre (son bas s’éteint en noir).
+- Couleurs : fond `#000000`, fond de la colonne `#07080f`, texte `#e8ecf2`, liens et boutons `#f6c453` (l’or du jeu).
+- Police des titres : **Pixelify Sans** si la liste la propose (la police du logo).
 - **Screenshots** : `Sidebar` (sinon itch.io les cache quand le jeu est intégré).
 
 ## 5. Brancher la connexion Google (pour le mode en ligne)
